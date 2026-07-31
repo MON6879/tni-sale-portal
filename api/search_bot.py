@@ -1292,7 +1292,7 @@ def ensure_webhook_locked_bg():
         return
     def _do():
         try:
-            target_url = "https://tni-bot.vercel.app/api/search_bot"
+            target_url = "https://tni-done.vercel.app/api/search_bot"
             requests.get(f"https://api.telegram.org/bot{TOKEN}/setWebhook?url={target_url}", timeout=5)
         except Exception as e:
             logger.error(f"ensure_webhook_locked_bg error: {e}")
