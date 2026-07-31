@@ -1256,11 +1256,8 @@ def handle(update: dict) -> None:
                 for chunk in split_messages(reply):
                     tg_send(chat_id, chunk)
             else:
-                # Không tìm thấy trong GID_INFO → fallback về lookup_tni (Task/WO)
-                tg_send(chat_id, f"⚠️ <b>Info: {html.escape(tni)}</b> not in Site Info sheet.\n🔍 Searching Task/WO instead...")
-                result = lookup_tni(tni)
-                for chunk in split_messages(result):
-                    tg_send(chat_id, chunk)
+                # Không tìm thấy trong GID_INFO → CHỈ báo không tìm thấy, KHÔNG fallback sang Task/WO
+                tg_send(chat_id, f"❌ <b>Info: {html.escape(tni)}</b> — không tìm thấy trong Site Info sheet.\n💡 Dùng <b>{html.escape(tni)}</b> (không có 'Info:') để tra Task & WO.")
         except Exception as err:
             logger.error(f"Info error [{tni}]: {err}")
             tg_send(chat_id, f"❌ Lookup error: {html.escape(str(err))}")
