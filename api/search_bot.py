@@ -1,7 +1,7 @@
-"""
+﻿"""
 Vercel webhook handler — TNI Search Bot + Daily Report
 Bot: @SEARCHTNITASKWOBOT
-URL: https://tni-bot.vercel.app/api/search_bot
+URL: https://tni-done.vercel.app/api/search_bot
 
 Chức năng:
   - TNI lookup: gõ mã TNI → tra Site/Task/WO
@@ -975,9 +975,9 @@ def ensure_webhook_active():
         def _check():
             r = requests.get(f"https://api.telegram.org/bot{TOKEN}/getWebhookInfo", timeout=5).json()
             wh_url = r.get("result", {}).get("url", "")
-            if wh_url != "https://tni-bot.vercel.app/api/search_bot":
+            if wh_url != "https://tni-done.vercel.app/api/search_bot":
                 logger.warning(f"Webhook was missing ({wh_url}), re-hooking to Vercel...")
-                requests.get(f"https://api.telegram.org/bot{TOKEN}/setWebhook?url=https://tni-bot.vercel.app/api/search_bot", timeout=5)
+                requests.get(f"https://api.telegram.org/bot{TOKEN}/setWebhook?url=https://tni-done.vercel.app/api/search_bot", timeout=5)
         threading.Thread(target=_check, daemon=True).start()
     except Exception as e:
         logger.error(f"ensure_webhook_active error: {e}")
@@ -1398,3 +1398,4 @@ class handler(BaseHTTPRequestHandler):
         self.wfile.write(msg.encode())
 
     def log_message(self, *a): pass
+
