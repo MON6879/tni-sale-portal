@@ -1,0 +1,9 @@
+{
+  "builds": [
+    { "src": "api/search_bot.py", "use": "@vercel/python", "config": { "maxDuration": 30 } }
+  ],
+  "routes": [
+    { "src": "/api/search_bot", "dest": "api/search_bot.py" },
+    { "src": "/(.*)",           "dest": "/$1" }
+  ]
+}
