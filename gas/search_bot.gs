@@ -150,3 +150,36 @@ function _registerEntry(type, body) {
     return corsResponse({ status: "error", message: err.toString() });
   }
 }
+
+
+// ── Search Bot Keepalive (thay GitHub Actions) ─────────────────────────────
+/**
+ * Ping tni-done.vercel.app mỗi 5 phút để giữ webhook luôn active.
+ * Setup: chạy setupSearchBotKeepalive() 1 lần để cài trigger tự động.
+ */
+function pingSearchBot() {
+  try {
+    UrlFetchApp.fetch("https://tni-done.vercel.app/api/search_bot", {
+      method: "get",
+      muteHttpExceptions: true,
+      followRedirects: true,
+    });
+    Logger.log("[Keepalive] ✅ Pinged tni-done.vercel.app at " + new Date().toISOString());
+  } catch (e) {
+    Logger.log("[Keepalive] ⚠️ Ping failed: " + e.message);
+  }
+}
+
+/** Chạy 1 lần để cài trigger pingSearchBot mỗi 5 phút */
+function setupSearchBotKeepalive() {
+  // Xóa trigger cũ nếu có
+  ScriptApp.getProjectTriggers()
+    .filter(t => t.getHandlerFunction() === "pingSearchBot")
+    .forEach(t => ScriptApp.deleteTrigger(t));
+  // Tạo trigger mới mỗi 5 phút
+  ScriptApp.newTrigger("pingSearchBot")
+    .timeBased()
+    .everyMinutes(5)
+    .create();
+  Logger.log("✅ Trigger pingSearchBot mỗi 5 phút đã cài đặt.");
+}
