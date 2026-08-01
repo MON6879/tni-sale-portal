@@ -1,4 +1,4 @@
-﻿"""
+"""
 Vercel webhook handler — TNI Search Bot + Daily Report
 Bot: @SEARCHTNITASKWOBOT
 URL: https://tni-done.vercel.app/api/search_bot
@@ -220,14 +220,7 @@ def tg_get_file(file_id: str) -> str | None:
         logger.error(f"tg_get_file: {ex}")
     return None
 
-# ── CSV loader ────────────────────────────────────────────────────────────────
-def fetch_csv(gid: str) -> pd.DataFrame:
-    url  = BASE_URL + gid
-    hdrs = {"User-Agent": "Mozilla/5.0"}
-    resp = requests.get(url, headers=hdrs, timeout=8, allow_redirects=True)
-    resp.raise_for_status()
-    content = resp.content.decode("utf-8", errors="replace")
-    return pd.read_csv(io.StringIO(content), header=None, dtype=str, on_bad_lines="skip")
+# fetch_csv với cache đã được định nghĩa ở dòng 46 — không định nghĩa lại ở đây
 
 def log_search_bg(user_name: str, user_id, tni_code: str) -> None:
     """Ghi log search trong background thread — không block response user."""
@@ -925,7 +918,7 @@ def submit_daily(chat_id: int, user_id: int, first_name: str, text: str) -> None
         return
     try:
         resp   = requests.post(DAILY_APPS_SCRIPT_URL,
-                               json={"action": "daily_add",
+                               json={"action": "submit_daily",
                                      "telegram_id": str(user_id),
                                      "user_name": first_name or str(user_id),
                                      "fields": parsed},
@@ -952,7 +945,7 @@ def submit_photo(chat_id: int, user_id: int, file_id: str) -> None:
     tg_url = f"https://api.telegram.org/file/bot{TOKEN}/{file_path}"
     try:
         resp   = requests.post(DAILY_APPS_SCRIPT_URL,
-                               json={"action": "daily_photo",
+                               json={"action": "save_photo",
                                      "telegram_id": str(user_id),
                                      "tg_url": tg_url},
                                timeout=60)

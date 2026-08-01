@@ -158,15 +158,12 @@ function _registerEntry(type, body) {
  * Setup: chạy setupSearchBotKeepalive() 1 lần để cài trigger tự động.
  */
 function pingSearchBot() {
+  const WEBHOOK_URL = "https://tni-done.vercel.app/api/search_bot";
   try {
-    UrlFetchApp.fetch("https://tni-done.vercel.app/api/search_bot", {
-      method: "get",
-      muteHttpExceptions: true,
-      followRedirects: true,
-    });
+    UrlFetchApp.fetch(WEBHOOK_URL, { method: "get", muteHttpExceptions: true });
     Logger.log("[Keepalive] ✅ Pinged tni-done.vercel.app at " + new Date().toISOString());
   } catch (e) {
-    Logger.log("[Keepalive] ⚠️ Ping failed: " + e.message);
+    Logger.log("[Keepalive] ⚠️ Failed: " + e.message);
   }
 }
 

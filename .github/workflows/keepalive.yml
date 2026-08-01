@@ -16,7 +16,7 @@ jobs:
       - name: Ping Search Bot (keep warm)
         run: |
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            "https://tni-search.vercel.app/api/search_bot" \
+            "https://tni-done.vercel.app/api/search_bot" \
             --max-time 10)
           echo "Search Bot status: $STATUS"
           if [ "$STATUS" != "200" ] && [ "$STATUS" != "405" ]; then
