@@ -77,7 +77,7 @@ def get_keywords() -> list:
 
 
 # ── Send data to Asset Google Sheet via Apps Script ──────────────────────
-def post_sheet(payload: dict, timeout: int = 15):
+def post_sheet(payload: dict, timeout: int = 35):
     """POST JSON to Asset Apps Script Web App."""
     if not APPS_SCRIPT_URL:
         logger.error("APPS_SCRIPT_URL not set.")
