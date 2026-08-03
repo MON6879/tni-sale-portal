@@ -1320,17 +1320,21 @@ def handle(update: dict) -> None:
         if len(parts) > 1:
             text_clean = parts[1].strip()
 
-    tni_match = re.search(r"\b(TNI\w+)", text_clean, re.IGNORECASE)
-    if not tni_match:
+    # Tìm tất cả mã TNI (tách rời các mã TNI bị dính liền như TNI0080TNI0057)
+    tni_list = re.findall(r"TNI\d{4}|TNI[A-Z0-9]{4,5}", text_clean, re.IGNORECASE)
+    if not tni_list:
         return
 
-    tni = tni_match.group(1).upper()
-    # Ghi log tìm kiếm trong background — không block kết quả trả về user
-    log_search_bg(first_name or str(user_id), user_id, tni)
+    # Khử trùng lặp giữ nguyên thứ tự
+    seen = set()
+    unique_tnis = [x.upper() for x in tni_list if not (x.upper() in seen or seen.add(x.upper()))]
 
-    result = lookup_tni(tni)
-    for chunk in split_messages(result):
-        tg_send(chat_id, chunk)
+    for tni in unique_tnis:
+        # Ghi log tìm kiếm riêng từng mã TNI trong background
+        log_search_bg(first_name or str(user_id), user_id, tni)
+        result = lookup_tni(tni)
+        for chunk in split_messages(result):
+            tg_send(chat_id, chunk)
 
 
 def ensure_webhook_locked_bg():
