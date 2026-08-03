@@ -1255,22 +1255,10 @@ def handle(update: dict) -> None:
             tg_send(chat_id, f"❌ Error: {html.escape(str(err)[:80])}")
         return
 
-    # ── 2. KEY "INFO": Info: TNIxxxx — CHÍNH XÁC prefix "info:" hoặc "info " ──
-    # RULE: chỉ khi text BẮT ĐẦU BẰNG "info:" hoặc "info " (không phải TNI search)
-    text_stripped = text.strip()
-    text_stripped_low = text_stripped.lower()
-    info_tni = None
-    if text_stripped_low.startswith("info:") or text_stripped_low.startswith("info "):
-        # Lấy phần sau "info:" hoặc "info "
-        after = text_stripped[5:].strip()  # bỏ "info:" (5 ký tự)
-        if not after and text_stripped_low.startswith("info "):
-            after = text_stripped[5:].strip()
-        tni_m = re.match(r"(TNI\w+)", after, re.IGNORECASE)
-        if tni_m:
-            info_tni = tni_m.group(1).upper()
-
-    if info_tni:
-        tni = info_tni
+    # ── 2. KEY "INFO": Info: TNIxxxx / Info TNIxxxx / Info:TNIxxxx ───────────────
+    info_match = re.search(r"^\s*info[:\s]+\s*(TNI\w+)", text.strip(), re.IGNORECASE)
+    if info_match:
+        tni = info_match.group(1).upper()
         logger.info(f"Info lookup: {tni} | chat={chat_id}")
         log_search_bg(first_name or str(user_id), user_id, f"Info:{tni}")
         try:
