@@ -1324,12 +1324,21 @@ def handle(update: dict) -> None:
             tg_send(chat_id, f"❌ Lookup error: {html.escape(str(err))}")
         return
 
-    # ── 3. KEY "TNI": TNIxxxx — tra cứu Task & WO (mặc định) ────────────────────
+    # ── 3. KEY "TNI": TNIxxxx — tra cứu Task & WO (chỉ khi câu lệnh BẮT ĐẦU bằng TNI, /tni, /find) ──
     text_clean = text.strip()
-    if text_clean.lower().startswith("/tni"):
+    text_l = text_clean.lower()
+
+    # CHỈ TRA CỨU NẾU TIN NHẮN BẮT ĐẦU BẰNG 'tni', '/tni', '/find'
+    # Nếu TNI nằm ở giữa/cuối đoạn chat trò chuyện (vd: "V Hot task: TNI0067...") -> KHÔNG TRA CỨU
+    if not (text_l.startswith("tni") or text_l.startswith("/tni") or text_l.startswith("/find")):
+        return
+
+    if text_l.startswith("/tni") or text_l.startswith("/find"):
         parts = text_clean.split(maxsplit=1)
         if len(parts) > 1:
             text_clean = parts[1].strip()
+        else:
+            return
 
     # Tìm tất cả mã TNI (tách rời các mã TNI bị dính liền như TNI0080TNI0057)
     tni_list = re.findall(r"TNI\d{4}|TNI[A-Z0-9]{4,5}", text_clean, re.IGNORECASE)
