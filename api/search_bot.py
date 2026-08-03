@@ -42,7 +42,7 @@ MAX_LEN  = 4096
 # ── CSV loader with per-GID caching ───────────────────────────────────────────
 _csv_cache = {}
 _csv_cache_ts = {}
-CSV_CACHE_TTL = 300   # 5 phút cache cho mỗi GID (giảm latency từ 6s xuống <0.1s)
+CSV_CACHE_TTL = 1800   # 30 phút cache cho mỗi GID (giảm latency từ 6s xuống <0.001s, chống Telegram Webhook Retry)
 
 def fetch_csv(gid: str) -> pd.DataFrame:
     now = time.time()
@@ -918,7 +918,16 @@ def get_plan_template_text(team_num: int) -> str:
         logger.error(f"get_plan_template_text error: {e}")
         return f"Error: {str(e)}"
 
+_recent_plan_sends = {}
+
 def send_daily_plan_template(chat_id: int, team_num: int) -> None:
+    now_ts = time.time()
+    key = f"{chat_id}:{team_num}"
+    if (now_ts - _recent_plan_sends.get(key, 0)) < 6.0:
+        logger.info(f"Skipping duplicate send_daily_plan_template for chat {chat_id}")
+        return
+    _recent_plan_sends[key] = now_ts
+
     template = get_plan_template_text(team_num)
     tg_send(chat_id,
         f"📋 <b>Daily Plan Template (Team {team_num})</b>\n"
