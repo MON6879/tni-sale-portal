@@ -1340,19 +1340,7 @@ class handler(BaseHTTPRequestHandler):
                     self.wfile.write(json.dumps({"status": "error", "message": "Missing chat_id or text"}).encode("utf-8"))
                     return
 
-            # ✅ FIX v3.5: Trả lời 200 OK ngay lập tức (<0.1s) để Telegram KHÔNG bị timeout 5s
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(b'{"ok":true}')
-            try:
-                self.wfile.flush()
-            except Exception:
-                pass
-
-            # ✅ Xử lý handle() SYNCHRONOUSLY trước khi do_POST() return.
-            # do_POST() chưa return → Vercel giữ process sống (up to 60s maxDuration).
-            # handle() có đủ thời gian fetch CSV và gửi tin nhắn Telegram.
+            # ✅ Run handle(data) SYNCHRONOUSLY FIRST so Vercel lambda container stays alive
             try:
                 handle(data)
             except Exception as ex:
@@ -1366,6 +1354,12 @@ class handler(BaseHTTPRequestHandler):
                         tg_send(chat_id, f"⚠️ <b>Error:</b>\n<pre>{html.escape(tb[:2000])}</pre>")
                 except Exception:
                     pass
+
+            # ✅ Trả lời 200 OK cho Vercel SAU KHI handle() hoàn tất
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(b'{"ok":true}')
 
         except Exception as ex:
             logger.error(f"Webhook POST parse error: {ex}")
