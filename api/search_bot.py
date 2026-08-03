@@ -844,8 +844,8 @@ def send_daily_template(chat_id: int) -> None:
     template = "\n".join(lines)
     
     tg_send(chat_id,
-        f"📋 <b>Mẫu Daily Result</b>\n"
-        f"Nhấn copy → chỉnh sửa → gửi lại:\n\n"
+        f"📋 <b>Daily Result Template</b>\n"
+        f"Copy → Edit → Send back:\n\n"
         f"<pre>{html.escape(template)}</pre>"
     )
 
@@ -946,11 +946,11 @@ def send_help_menu(chat_id: int) -> None:
 
     tg_send(chat_id,
         "👋 <b>TNI Search Bot</b>\n\n"
-        "• Tra cứu Task/WO: Gõ <code>TNI0001</code> hoặc <code>/tni TNI0001</code>\n"
-        "• Tra cứu Not Close: Gõ <code>t1notclose</code>, <code>t2notclose</code>...\n"
-        "• Tra cứu Wait CD: Gõ <code>t1waitcd</code>, <code>t2waitcd</code>...\n"
-        "• Tra cứu Cá nhân: Gõ <code>mysite</code>, <code>mycable</code>, <code>mydata</code>...\n"
-        "• Lấy mẫu báo cáo: Gõ <code>/daily</code> hoặc <code>/plan</code>",
+        "• Lookup Task/WO: Type <code>TNI0001</code> or <code>/tni TNI0001</code>\n"
+        "• Lookup Not Close: Type <code>t1notclose</code>, <code>t2notclose</code>...\n"
+        "• Lookup Wait CD: Type <code>t1waitcd</code>, <code>t2waitcd</code>...\n"
+        "• Personal Lookup: Type <code>mysite</code>, <code>mycable</code>, <code>mydata</code>...\n"
+        "• Get Report Templates: Type <code>/daily</code> or <code>/plan</code>",
         parse_mode="HTML")
 
 _recent_daily_submits = {}
