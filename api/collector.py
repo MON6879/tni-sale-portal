@@ -257,6 +257,15 @@ def is_daily_plan(text: str) -> bool:
     """Detect plan message: first 3 lines have 'plan', text has date d/m/yyyy."""
     if not text:
         return False
+    text_l = text.lower()
+    # 🛑 LOẠI BỎ TẤT CẢ CÁC BẢN TIN MẪU CỦA BOT HOẶC BÁO CÁO TỰ ĐỘNG
+    if any(kw in text_l for kw in (
+        "daily plan template", "copy → edit", "copy -> edit", "note: /find /tnixxxx",
+        "comparison of plan for", "auto report", "plan stats:", "report — daily plan",
+        "crosscheck", "plan tomorrow status", "plan vs actual", "eod summary"
+    )):
+        return False
+
     lines = [line.strip().lower() for line in text.split("\n") if line.strip()]
     first_few_lines = " ".join(lines[:3]) if lines else ""
     has_plan = "plan" in first_few_lines
