@@ -209,6 +209,11 @@ def tg_send(chat_id: int, text: str, parse_mode: str = "HTML", reply_markup: dic
             )
             if r.status_code != 200:
                 logger.error(f"tg_send API error: {r.status_code} {r.text[:200]}")
+                # Fallback: nếu lỗi HTML parse entity -> tự động gửi dạng plain text để không bị mất tin!
+                if "can't parse entities" in r.text or "BAD_REQUEST" in r.text or "parse" in r.text.lower():
+                    payload.pop("parse_mode", None)
+                    payload["text"] = re.sub(r"<[^>]+>", "", chunk)
+                    requests.post(f"{TG_API}/sendMessage", json=payload, timeout=10)
         except Exception as ex:
             logger.error(f"tg_send error: {ex}")
 
