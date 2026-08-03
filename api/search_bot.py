@@ -1340,21 +1340,19 @@ def handle(update: dict) -> None:
         else:
             return
 
-    # Tìm tất cả mã TNI (tách rời các mã TNI bị dính liền như TNI0080TNI0057)
+    # Tìm tất cả mã TNI (lấy mã TNI đầu tiên chuẩn 4-5 ký tự)
     tni_list = re.findall(r"TNI\d{4}|TNI[A-Z0-9]{4,5}", text_clean, re.IGNORECASE)
     if not tni_list:
         return
 
-    # Khử trùng lặp giữ nguyên thứ tự
-    seen = set()
-    unique_tnis = [x.upper() for x in tni_list if not (x.upper() in seen or seen.add(x.upper()))]
+    # CHỈ TRA CỨU DUY NHẤT 1 MÃ TNI ĐẦU TIÊN THEO YÊU CẦU
+    tni = tni_list[0].upper()
 
-    for tni in unique_tnis:
-        # Ghi log tìm kiếm riêng từng mã TNI trong background
-        log_search_bg(first_name or str(user_id), user_id, tni)
-        result = lookup_tni(tni)
-        for chunk in split_messages(result):
-            tg_send(chat_id, chunk)
+    # Ghi log tìm kiếm mã TNI trong background
+    log_search_bg(first_name or str(user_id), user_id, tni)
+    result = lookup_tni(tni)
+    for chunk in split_messages(result):
+        tg_send(chat_id, chunk)
 
 
 def ensure_webhook_locked_bg():
