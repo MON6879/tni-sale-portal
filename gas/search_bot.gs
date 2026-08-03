@@ -181,10 +181,12 @@ function _registerEntry(type, body) {
  * Setup: chạy setupSearchBotKeepalive() 1 lần để cài trigger tự động.
  */
 function pingSearchBot() {
-  const WEBHOOK_URL = "https://tni-done.vercel.app/api/search_bot";
+  const URL1 = "https://tni-bot.vercel.app/api/search_bot?action=reset";
+  const URL2 = "https://tni-done.vercel.app/api/search_bot?action=reset";
   try {
-    UrlFetchApp.fetch(WEBHOOK_URL, { method: "get", muteHttpExceptions: true });
-    Logger.log("[Keepalive] ✅ Pinged tni-done.vercel.app at " + new Date().toISOString());
+    UrlFetchApp.fetch(URL1, { method: "get", muteHttpExceptions: true });
+    UrlFetchApp.fetch(URL2, { method: "get", muteHttpExceptions: true });
+    Logger.log("[Keepalive] ✅ Pinged Search Bot endpoints at " + new Date().toISOString());
   } catch (e) {
     Logger.log("[Keepalive] ⚠️ Failed: " + e.message);
   }
