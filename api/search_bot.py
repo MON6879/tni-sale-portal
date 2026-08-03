@@ -1304,8 +1304,8 @@ def handle(update: dict) -> None:
             tg_send(chat_id, f"❌ Error: {html.escape(str(err)[:80])}")
         return
 
-    # ── 1. KEY "CLEAR": CLEAR TNIxxxx — tra cứu Lịch sử Clear Site ──────────────
-    clear_match = re.search(r"\bclear[:\s]+\s*(TNI\w+)", text.strip(), re.IGNORECASE)
+    # ── 1. KEY "CLEAR": CLEAR TNIxxxx / /clear TNIxxxx — tra cứu Lịch sử Clear Site ──────────────
+    clear_match = re.search(r"^\s*(?:/clear|clear)[:\s]+\s*(TNI[A-Z0-9_]+)", text.strip(), re.IGNORECASE)
     if clear_match:
         tni = clear_match.group(1).upper()
         logger.info(f"Clear site lookup: {tni} | chat={chat_id}")
@@ -1319,8 +1319,8 @@ def handle(update: dict) -> None:
             tg_send(chat_id, f"❌ Error: {html.escape(str(err)[:80])}")
         return
 
-    # ── 2. KEY "INFO": Info: TNIxxxx / Info TNIxxxx / Info:TNIxxxx ───────────────
-    info_match = re.search(r"^\s*info[:\s]+\s*(TNI\w+)", text.strip(), re.IGNORECASE)
+    # ── 2. KEY "INFO": Info: TNIxxxx / Info TNIxxxx / /info TNIxxxx ───────────────
+    info_match = re.search(r"^\s*(?:/info|info)[:\s]+\s*(TNI[A-Z0-9_]+)", text.strip(), re.IGNORECASE)
     if info_match:
         tni = info_match.group(1).upper()
         logger.info(f"Info lookup: {tni} | chat={chat_id}")
@@ -1333,13 +1333,13 @@ def handle(update: dict) -> None:
                     tg_send(chat_id, chunk)
             else:
                 # Không tìm thấy trong GID_INFO → CHỈ báo không tìm thấy, KHÔNG fallback sang Task/WO
-                tg_send(chat_id, f"❌ <b>Info: {html.escape(tni)}</b> — không tìm thấy trong Site Info sheet.\n💡 Dùng <b>{html.escape(tni)}</b> (không có 'Info:') để tra Task & WO.")
+                tg_send(chat_id, f"❌ <b>Info: {html.escape(tni)}</b> — not found in Site Info sheet.\n💡 Type <b>{html.escape(tni)}</b> (without 'Info:') to lookup Task & WO.")
         except Exception as err:
             logger.error(f"Info error [{tni}]: {err}")
             tg_send(chat_id, f"❌ Lookup error: {html.escape(str(err))}")
         return
 
-    # ── 3. KEY "TNI": TNIxxxx — tra cứu Task & WO (chỉ khi câu lệnh BẮT ĐẦU bằng TNI, /tni, /find) ──
+    # ── 3. KEY "TNI": TNIxxxx / TNIxxxx_0x — tra cứu Task & WO (chỉ khi câu lệnh BẮT ĐẦU bằng TNI, /tni, /find) ──
     text_clean = text.strip()
     text_l = text_clean.lower()
 
@@ -1355,8 +1355,8 @@ def handle(update: dict) -> None:
         else:
             return
 
-    # Tìm tất cả mã TNI (lấy mã TNI đầu tiên chuẩn 4-5 ký tự)
-    tni_list = re.findall(r"TNI\d{4}|TNI[A-Z0-9]{4,5}", text_clean, re.IGNORECASE)
+    # Tìm mã TNI (hỗ trợ cả suffix như TNI0007_01 hoặc TNI0007_1)
+    tni_list = re.findall(r"TNI[A-Z0-9_]{4,10}", text_clean, re.IGNORECASE)
     if not tni_list:
         return
 
