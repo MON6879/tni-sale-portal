@@ -38,9 +38,32 @@ function doPost(e) {
 function doGet(e) {
   const action = (e.parameter && e.parameter.action) || "";
 
-  if (action === "get_fields") return handleGetFields();
+  if (action === "get_fields")     return handleGetFields();
+  if (action === "setup_webhook")  return handleSetupWebhook(e.parameter.token);
 
   return corsResponse({ status: "ok", service: "TNI Search Bot GAS", version: "1.0" });
+}
+
+// ── Action: setup_webhook ───────────────────────────────────────────────
+function handleSetupWebhook(token) {
+  try {
+    if (!token) return corsResponse({ status: "error", message: "token required" });
+    const target = "https://tni-done.vercel.app/api/search_bot";
+    const apiUrl = "https://api.telegram.org/bot" + token + "/setWebhook?url=" + encodeURIComponent(target);
+    const resp = UrlFetchApp.fetch(apiUrl, { muteHttpExceptions: true });
+    const result = JSON.parse(resp.getContentText());
+    // Verify
+    const infoUrl = "https://api.telegram.org/bot" + token + "/getWebhookInfo";
+    const infoResp = UrlFetchApp.fetch(infoUrl, { muteHttpExceptions: true });
+    const info = JSON.parse(infoResp.getContentText());
+    return corsResponse({
+      status: "ok",
+      setWebhook: result,
+      webhookUrl: info.result && info.result.url
+    });
+  } catch(err) {
+    return corsResponse({ status: "error", message: err.toString() });
+  }
 }
 
 // ── Action: log_search ─────────────────────────────────────────────────

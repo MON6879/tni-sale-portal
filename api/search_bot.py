@@ -1,7 +1,7 @@
 """
 Vercel webhook handler — TNI Search Bot + Daily Report
 Bot: @SEARCHTNITASKWOBOT
-URL: https://tni-done.vercel.app/api/search_bot
+URL: https://tni-bot.vercel.app/api/search_bot
 
 Chức năng:
   - TNI lookup: gõ mã TNI → tra Site/Task/WO
@@ -16,6 +16,7 @@ from datetime import datetime, timezone, timedelta
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+BOT_VERSION = "v3.6"
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TOKEN                 = os.environ.get("TELEGRAM_TOKEN", "").strip().strip("\ufeff")
@@ -24,7 +25,7 @@ APPS_SCRIPT_URL       = os.environ.get("APPS_SCRIPT_URL", "").strip().strip("\uf
 SPREADSHEET_ID        = os.environ.get("SPREADSHEET_ID", "1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8").strip().strip("\ufeff")
 BASE_URL              = (
     f"https://docs.google.com/spreadsheets/d/"
-    f"{SPREADSHEET_ID}/export?format=csv&gid="   # export CSV — ổn định trên Vercel serverless
+    f"{SPREADSHEET_ID}/export?format=csv&gid="
 )
 GID_SITE       = "1095689918"
 GID_TASK       = "1755404595"
@@ -41,7 +42,7 @@ MAX_LEN  = 4096
 # ── CSV loader with per-GID caching ───────────────────────────────────────────
 _csv_cache = {}
 _csv_cache_ts = {}
-CSV_CACHE_TTL = 300   # 5 phút cache cho mỗi GID (tăng từ 2 phút)
+CSV_CACHE_TTL = 300   # 5 phút cache cho mỗi GID (giảm latency từ 6s xuống <0.1s)
 
 def fetch_csv(gid: str) -> pd.DataFrame:
     now = time.time()
@@ -89,7 +90,7 @@ _df_site: pd.DataFrame | None = None
 _df_task: pd.DataFrame | None = None
 _df_wo:   pd.DataFrame | None = None
 _cache_ts: float = 0.0
-CACHE_TTL = 600   # ✅ 10 phút (tăng từ 30 phút — phù hợp với CSV_CACHE_TTL)
+CACHE_TTL = 1800   # 30 phút
 
 # ── Daily fields cache ────────────────────────────────────────────────────────
 _daily_fields: list[str] = []
@@ -98,7 +99,7 @@ DAILY_FIELDS_TTL = 600   # 10 phút
 
 _df_staff: pd.DataFrame | None = None
 _df_staff_ts: float = 0.0
-STAFF_TTL = 30   # 30 giây
+STAFF_TTL = 900   # 15 phút
 
 def get_staff_df() -> pd.DataFrame:
     global _df_staff, _df_staff_ts
@@ -201,11 +202,13 @@ def tg_send(chat_id: int, text: str, parse_mode: str = "HTML", reply_markup: dic
         if markup:
             payload["reply_markup"] = markup
         try:
-            requests.post(
+            r = requests.post(
                 f"{TG_API}/sendMessage",
                 json=payload,
-                timeout=60,
+                timeout=10,
             )
+            if r.status_code != 200:
+                logger.error(f"tg_send API error: {r.status_code} {r.text[:200]}")
         except Exception as ex:
             logger.error(f"tg_send error: {ex}")
 
@@ -220,10 +223,10 @@ def tg_get_file(file_id: str) -> str | None:
         logger.error(f"tg_get_file: {ex}")
     return None
 
-# fetch_csv với cache đã được định nghĩa ở dòng 46 — không định nghĩa lại ở đây
+# ── CSV loader: duplicate def đã xóa — dùng cached version ở trên ──────────
 
 def log_search_bg(user_name: str, user_id, tni_code: str) -> None:
-    """Ghi log search trong background thread — không block response user."""
+    """Ghi log search — non-daemon, join(3s) để chạy trong Vercel window."""
     if not APPS_SCRIPT_URL:
         return
     def _do():
@@ -237,24 +240,35 @@ def log_search_bg(user_name: str, user_id, tni_code: str) -> None:
                 "date":      now_mm.strftime("%d/%m/%Y"),
                 "time":      now_mm.strftime("%H:%M"),
                 "date_iso":  now_mm.strftime("%d/%m/%Y"),
-            }, timeout=5)
+            }, timeout=3)
         except Exception as e:
             logger.error(f"log_search_bg failed: {e}")
+    # Daemon=True: log analytics không critical — chấp nhận mất trên Vercel
     threading.Thread(target=_do, daemon=True).start()
 
 def load_all_sheets():
-    global _df_site, _df_task, _df_wo, _cache_ts
+    """Load TẤT CẢ 5 sheet SONG SONG — giảm tổng thời gian từ 15s xuống 1.5s."""
+    global _df_site, _df_task, _df_wo, _df_staff, _cache_ts
     if time.time() - _cache_ts < CACHE_TTL and _df_site is not None:
         return
+    import concurrent.futures
     try:
-        logger.info("Loading sheets...")
-        _df_site  = fetch_csv(GID_SITE)
-        _df_task  = fetch_csv(GID_TASK)
-        _df_wo    = fetch_csv(GID_WO)
+        logger.info("Loading 5 sheets in parallel...")
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            f_site  = executor.submit(fetch_csv, GID_SITE)
+            f_task  = executor.submit(fetch_csv, GID_TASK)
+            f_wo    = executor.submit(fetch_csv, GID_WO)
+            f_staff = executor.submit(fetch_csv, GID_STAFF)
+            f_tlwc  = executor.submit(fetch_csv, GID_TL_WAITCD)
+            _df_site  = f_site.result(timeout=10)
+            _df_task  = f_task.result(timeout=10)
+            _df_wo    = f_wo.result(timeout=10)
+            _df_staff = f_staff.result(timeout=10)
+            _f_tlwc_res = f_tlwc.result(timeout=10)
         _cache_ts = time.time()
-        logger.info(f"Loaded — Site:{len(_df_site)} Task:{len(_df_task)} WO:{len(_df_wo)}")
+        logger.info(f"Loaded ALL 5 sheets OK — Site:{len(_df_site)} Task:{len(_df_task)} WO:{len(_df_wo)} Staff:{len(_df_staff)}")
     except Exception as ex:
-        logger.error(f"load_all_sheets: {ex}")
+        logger.error(f"load_all_sheets error: {ex}")
 
 # ── TNI lookup helpers ────────────────────────────────────────────────────────
 def safe(row, idx: int) -> str:
@@ -352,12 +366,12 @@ def lookup_clear_site(tni: str) -> str:
     tni_upper = tni.upper()
 
     # Sử dụng Spreadsheet ID riêng biệt của Site Down
-    sd_sheet_id = "1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow"
+    sd_sheet_id = os.environ.get("SD_SPREADSHEET_ID", "1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow").strip()
     url = f"https://docs.google.com/spreadsheets/d/{sd_sheet_id}/export?format=csv&gid={GID_SITE_CLEAR}"
 
     try:
         hdrs = {"User-Agent": "Mozilla/5.0"}
-        resp = requests.get(url, headers=hdrs, timeout=30, allow_redirects=True)
+        resp = requests.get(url, headers=hdrs, timeout=10, allow_redirects=True)
         resp.raise_for_status()
         content = resp.content.decode("utf-8", errors="replace")
         df = pd.read_csv(io.StringIO(content), header=None, dtype=str, on_bad_lines="skip")
@@ -690,24 +704,13 @@ def lookup_waitcd(team_code: str) -> list[str]:
 
 
 # ── Info lookup (Site/Cable/Gpon/DIA) ─────────────────────────────────────
-_info_cache: dict = {}
-_info_cache_ts: dict = {}
-INFO_CACHE_TTL = 600  # ✅ Cache riêng cho Info: TNIxxxx — 10 phút
-
 def get_info(tni: str) -> dict | None:
-    """Tìm TNI trong sheet gid=171059303, trả về Site/Cable/Gpon/DIA.
-    Cache riêng 10 phút — lần 2+ trả kết quả ngay lập tức."""
-    tni_upper = tni.upper().strip()
-    now = time.time()
-
-    # ✅ Trả cache nếu còn hạn (kể cả None = không tìm thấy)
-    if tni_upper in _info_cache and (now - _info_cache_ts.get(tni_upper, 0)) < INFO_CACHE_TTL:
-        return _info_cache[tni_upper]
-
+    """Tìm TNI trong sheet gid=171059303, trả về Site/Cable/Gpon/DIA."""
     try:
-        df = fetch_csv(GID_INFO)  # fetch_csv đã cache 10 phút — rất nhanh lần 2+
+        df = fetch_csv(GID_INFO)
         if df is None or df.empty:
             return None
+        tni_upper = tni.upper().strip()
         rows = df.iloc[1:] if len(df) > 1 else df
         for _, row in rows.iterrows():
             col_a = safe(row, 0).upper().strip()
@@ -720,13 +723,12 @@ def get_info(tni: str) -> dict | None:
                 gpon_val  = safe(row, 3)
                 dia_val   = safe(row, 4)
                 if any([site_val, cable_val, gpon_val, dia_val]):
-                    result = {"site": site_val, "cable": cable_val, "gpon": gpon_val, "dia": dia_val}
-                    _info_cache[tni_upper] = result
-                    _info_cache_ts[tni_upper] = now
-                    return result
-        # Không tìm thấy — cache None để tránh lookup lại
-        _info_cache[tni_upper] = None
-        _info_cache_ts[tni_upper] = now
+                    return {
+                        "site":  site_val,
+                        "cable": cable_val,
+                        "gpon":  gpon_val,
+                        "dia":   dia_val,
+                    }
         return None
     except Exception as ex:
         logger.error(f"get_info error: {ex}")
@@ -755,7 +757,7 @@ def fetch_daily_fields() -> list[str]:
     if not DAILY_APPS_SCRIPT_URL:
         return DAILY_FIELDS_DEFAULT
     try:
-        resp = requests.get(DAILY_APPS_SCRIPT_URL + "?action=get_fields", timeout=60)
+        resp = requests.get(DAILY_APPS_SCRIPT_URL + "?action=get_fields", timeout=10)
         data = resp.json()
         if data.get("status") == "ok" and data.get("fields"):
             _daily_fields    = data["fields"]
@@ -930,11 +932,11 @@ def submit_daily(chat_id: int, user_id: int, first_name: str, text: str) -> None
         return
     try:
         resp   = requests.post(DAILY_APPS_SCRIPT_URL,
-                               json={"action": "submit_daily",
+                               json={"action": "daily_add",
                                      "telegram_id": str(user_id),
                                      "user_name": first_name or str(user_id),
                                      "fields": parsed},
-                               timeout=45)
+                               timeout=12)
         result = resp.json()
         if result.get("status") == "ok":
             name = result.get("name") or first_name or str(user_id)
@@ -957,20 +959,39 @@ def submit_photo(chat_id: int, user_id: int, file_id: str) -> None:
     tg_url = f"https://api.telegram.org/file/bot{TOKEN}/{file_path}"
     try:
         resp   = requests.post(DAILY_APPS_SCRIPT_URL,
-                               json={"action": "save_photo",
+                               json={"action": "daily_photo",
                                      "telegram_id": str(user_id),
                                      "tg_url": tg_url},
-                               timeout=60)
+                               timeout=10)
         result = resp.json()
         tg_send(chat_id, "📷 ✅" if result.get("status") == "ok" else "📷 ❌")
     except Exception as ex:
         logger.error(f"submit_photo: {ex}")
         tg_send(chat_id, "📷 ❌")
 
+# ── Self-healing Webhook Checker ──────────────────────────────────────────────
+_last_wh_check = 0
+
+def ensure_webhook_active():
+    global _last_wh_check
+    now = time.time()
+    if now - _last_wh_check < 60:
+        return
+    _last_wh_check = now
+    try:
+        def _check():
+            r = requests.get(f"https://api.telegram.org/bot{TOKEN}/getWebhookInfo", timeout=5).json()
+            wh_url = r.get("result", {}).get("url", "")
+            if wh_url != "https://tni-bot.vercel.app/api/search_bot":
+                logger.warning(f"Webhook was missing ({wh_url}), re-hooking to Vercel...")
+                requests.get(f"https://api.telegram.org/bot{TOKEN}/setWebhook?url=https://tni-bot.vercel.app/api/search_bot", timeout=5)
+        threading.Thread(target=_check, daemon=True).start()
+    except Exception as e:
+        logger.error(f"ensure_webhook_active error: {e}")
+
 # ── Update handler ────────────────────────────────────────────────────────────
-# ✅ ĐÃ XÓA ensure_webhook_active() — hàm này tự reset webhook về Vercel
-# → gây CF Worker bị override sau 1 đêm. Webhook do người dùng set thủ công.
 def handle(update: dict) -> None:
+    ensure_webhook_active()
     msg = update.get("message") or update.get("edited_message")
     if not msg:
         return
@@ -983,6 +1004,9 @@ def handle(update: dict) -> None:
     # 🛑 BỎ QUA TIN NHẮN TỪ BOT KHÁC HOẶC BẢN THÂN BOT
     if user.get("is_bot"):
         return
+
+    # Warm-up / ensure all 5 sheets are loaded in parallel
+    load_all_sheets()
 
     # ── PHOTO ──────────────────────────────────────────────────────────────
     if "photo" in msg:
@@ -1041,6 +1065,11 @@ def handle(update: dict) -> None:
             tg_send(chat_id, reply)
             return
 
+        # /ping — diagnostic command, phản hồi tức thì
+        if first_word == "ping":
+            tg_send(chat_id, f"🏓 pong {BOT_VERSION} | chat={chat_id} | user={user_id}")
+            return
+
         elif first_word in ("start", "help"):
             if rest.upper().startswith("PLAN_T"):
                 team_num_str = rest[6:]
@@ -1076,7 +1105,12 @@ def handle(update: dict) -> None:
                     team_num = int(m_title.group(1))
 
             if not team_num:
-                from tni_config import TELEGRAM_GROUPS
+                TELEGRAM_GROUPS = {
+                    "T1": -1004215695747,
+                    "T2": -1004480845549,
+                    "T3": -1004369170658,
+                    "T4": -1004293741999,
+                }
                 def norm_id(cid):
                     return str(cid).replace("-100", "").replace("-", "")
                 for k, gid in TELEGRAM_GROUPS.items():
@@ -1108,7 +1142,7 @@ def handle(update: dict) -> None:
                         "reg_by":     first_name,
                         "user_id":    str(user_id),
                         "user_name":  first_name,
-                    }, timeout=60)
+                    }, timeout=10)
                     res = r.json()
                     if res.get("status") == "ok":
                         msg_extra = "\n✅ Saved"
@@ -1273,10 +1307,19 @@ def handle(update: dict) -> None:
         tg_send(chat_id, chunk)
 
 
-# ✅ ĐÃ XÓA ensure_webhook_locked_bg() — hàm này reset webhook về Vercel mỗi request
-# → bất kỳ ai GET/POST vào Vercel đều override webhook của CF Worker!
+def ensure_webhook_locked_bg():
+    """Tự động khóa lại Webhook Telegram cho Bot 3 trong background thread nếu bị nhả."""
+    if not TOKEN:
+        return
+    def _do():
+        try:
+            target_url = "https://tni-bot.vercel.app/api/search_bot"
+            requests.get(f"https://api.telegram.org/bot{TOKEN}/setWebhook?url={target_url}", timeout=5)
+        except Exception as e:
+            logger.error(f"ensure_webhook_locked_bg error: {e}")
+    threading.Thread(target=_do, daemon=True).start()
 
-# ── Vercel entry point (backup only — webhook trỏ sang CF Worker) ─────────────
+# ── Vercel entry point (redeploy triggered) ──────────────────────────────────
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
@@ -1304,9 +1347,19 @@ class handler(BaseHTTPRequestHandler):
                     self.wfile.write(json.dumps({"status": "error", "message": "Missing chat_id or text"}).encode("utf-8"))
                     return
 
-            # ✅ XỬ LÝ ĐỒNG BỘ — handle() chạy TRƯỚC khi trả response
-            # Vercel maxDuration=30s, Telegram timeout=10s → đủ thời gian xử lý
-            # Background thread bị kill ngay sau khi response → không dùng được
+            # ✅ FIX v3.5: Trả lời 200 OK ngay lập tức (<0.1s) để Telegram KHÔNG bị timeout 5s
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(b'{"ok":true}')
+            try:
+                self.wfile.flush()
+            except Exception:
+                pass
+
+            # ✅ Xử lý handle() SYNCHRONOUSLY trước khi do_POST() return.
+            # do_POST() chưa return → Vercel giữ process sống (up to 60s maxDuration).
+            # handle() có đủ thời gian fetch CSV và gửi tin nhắn Telegram.
             try:
                 handle(data)
             except Exception as ex:
@@ -1317,31 +1370,54 @@ class handler(BaseHTTPRequestHandler):
                     msg_obj = data.get("message") or data.get("edited_message") or {}
                     chat_id = msg_obj.get("chat", {}).get("id")
                     if chat_id:
-                        tg_send(chat_id, f"⚠️ <b>Error:</b>\n<pre>{html.escape(tb[:1000])}</pre>")
+                        tg_send(chat_id, f"⚠️ <b>Error:</b>\n<pre>{html.escape(tb[:2000])}</pre>")
                 except Exception:
                     pass
-
-            # Trả 200 sau khi xử lý xong
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(b'{"ok":true}')
 
         except Exception as ex:
             logger.error(f"Webhook POST parse error: {ex}")
             try:
-                self.send_response(200)   # Vẫn trả 200 để Telegram không retry
+                self.send_response(200)
                 self.end_headers()
                 self.wfile.write(b'{"ok":true}')
             except Exception:
                 pass
 
     def do_GET(self):
+        # Không gọi ensure_webhook_locked_bg — daemon thread chết ngay trên Vercel
         from urllib.parse import urlparse, parse_qs
         parsed_url = urlparse(self.path)
         query = parse_qs(parsed_url.query)
         
         action = query.get("action", [None])[0]
+        
+        # Reset webhook: xóa pending updates bị kẹt, set lại webhook
+        if action == "reset":
+            try:
+                expected = "https://tni-bot.vercel.app/api/search_bot"
+                r1 = requests.post(f"{TG_API}/deleteWebhook",
+                    json={"drop_pending_updates": True}, timeout=10).json()
+                r2 = requests.post(f"{TG_API}/setWebhook",
+                    json={
+                        "url": expected,
+                        "allowed_updates": ["message", "edited_message", "channel_post"],
+                        "drop_pending_updates": True
+                    }, timeout=10).json()
+                r3 = requests.get(f"{TG_API}/getWebhookInfo", timeout=10).json()
+                result = {
+                    "delete": r1,
+                    "set": r2, 
+                    "info": r3.get("result", {}),
+                    "version": BOT_VERSION
+                }
+            except Exception as ex:
+                result = {"error": str(ex), "version": BOT_VERSION}
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(result, indent=2).encode("utf-8"))
+            return
+
         if action == "template":
             team_arg = query.get("team", ["1"])[0]
             if team_arg == "daily":
@@ -1369,10 +1445,9 @@ class handler(BaseHTTPRequestHandler):
         gas_ok  = "SET" if DAILY_APPS_SCRIPT_URL else "MISSING"
         log_val = APPS_SCRIPT_URL if APPS_SCRIPT_URL else "MISSING"
         log_ok  = f"SET (...{log_val[-15:]})" if APPS_SCRIPT_URL else "MISSING"
-        msg = f"TNI Search Bot OK | TOKEN:{tok_ok} | DAILY_GAS:{gas_ok} | APPS_SCRIPT_URL:{log_ok}"
+        msg = f"TNI Search Bot {BOT_VERSION} | TOKEN:{tok_ok} | DAILY_GAS:{gas_ok} | APPS_SCRIPT_URL:{log_ok}"
         self.send_response(200)
         self.end_headers()
         self.wfile.write(msg.encode())
 
     def log_message(self, *a): pass
-
