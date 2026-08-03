@@ -935,6 +935,24 @@ def send_daily_plan_template(chat_id: int, team_num: int) -> None:
         f"<pre>{html.escape(template)}</pre>"
     )
 
+_recent_help_sends = {}
+
+def send_help_menu(chat_id: int) -> None:
+    now_ts = time.time()
+    if (now_ts - _recent_help_sends.get(chat_id, 0)) < 6.0:
+        logger.info(f"Skipping duplicate send_help_menu for chat {chat_id}")
+        return
+    _recent_help_sends[chat_id] = now_ts
+
+    tg_send(chat_id,
+        "👋 <b>TNI Search Bot</b>\n\n"
+        "• Tra cứu Task/WO: Gõ <code>TNI0001</code> hoặc <code>/tni TNI0001</code>\n"
+        "• Tra cứu Not Close: Gõ <code>t1notclose</code>, <code>t2notclose</code>...\n"
+        "• Tra cứu Wait CD: Gõ <code>t1waitcd</code>, <code>t2waitcd</code>...\n"
+        "• Tra cứu Cá nhân: Gõ <code>mysite</code>, <code>mycable</code>, <code>mydata</code>...\n"
+        "• Lấy mẫu báo cáo: Gõ <code>/daily</code> hoặc <code>/plan</code>",
+        parse_mode="HTML")
+
 _recent_daily_submits = {}
 
 def submit_daily(chat_id: int, user_id: int, first_name: str, text: str) -> None:
@@ -1080,7 +1098,7 @@ def handle(update: dict) -> None:
             text = "/plan T4"
         else:
             text = "/plan"
-    elif "help" in text_l or "❓" in text:
+    elif text_l in ("help", "❓ help", "help ❓", "/help") or text_l == "❓":
         text = "/help"
 
     if any(kw in text_l for kw in ("request enter site", "request site enter", "site access format", "site access", "site enter")):
@@ -1114,14 +1132,7 @@ def handle(update: dict) -> None:
                 if team_num_str.isdigit():
                     send_daily_plan_template(chat_id, int(team_num_str))
                     return
-            tg_send(chat_id,
-                "👋 <b>TNI Search Bot</b>\n\n"
-                "• Tra cứu Task/WO: Gõ <code>TNI0001</code> hoặc <code>/tni TNI0001</code>\n"
-                "• Tra cứu Not Close: Gõ <code>t1notclose</code>, <code>t2notclose</code>...\n"
-                "• Tra cứu Wait CD: Gõ <code>t1waitcd</code>, <code>t2waitcd</code>...\n"
-                "• Tra cứu Cá nhân: Gõ <code>mysite</code>, <code>mycable</code>, <code>mydata</code>...\n"
-                "• Lấy mẫu báo cáo: Gõ <code>/daily</code> hoặc <code>/plan</code>",
-                parse_mode="HTML")
+            send_help_menu(chat_id)
             return
 
         elif first_word == "daily":
