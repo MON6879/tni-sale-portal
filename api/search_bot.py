@@ -1360,6 +1360,8 @@ def ensure_webhook_locked_bg():
             logger.error(f"ensure_webhook_locked_bg error: {e}")
     threading.Thread(target=_do, daemon=True).start()
 
+_processed_updates = set()
+
 # ── Vercel entry point (redeploy triggered) ──────────────────────────────────
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
@@ -1368,27 +1370,36 @@ class handler(BaseHTTPRequestHandler):
             raw    = self.rfile.read(length)
             data   = json.loads(raw)
 
+            # 1. Trả về 200 OK NGAY LẬP TỨC cho Telegram (< 10ms) để Telegram KHÔNG BAO GIỜ retry kết nối
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(b'{"ok":true}')
+            try:
+                self.wfile.flush()
+            except Exception:
+                pass
+
+            # 2. Lọc trùng update_id (nếu Telegram có trôi request)
+            up_id = data.get("update_id")
+            if up_id:
+                if up_id in _processed_updates:
+                    logger.info(f"Skipping duplicate update_id {up_id}")
+                    return
+                _processed_updates.add(up_id)
+                if len(_processed_updates) > 1000:
+                    _processed_updates.clear()
+
             action = data.get("action")
             if action == "submit_plan":
                 chat_id = data.get("chat_id")
                 text = data.get("text", "")
                 if chat_id and text:
                     tg_send(int(chat_id), text)
-                    self.send_response(200)
-                    self.send_header("Content-Type", "application/json")
-                    self.send_header("Access-Control-Allow-Origin", "*")
-                    self.end_headers()
-                    self.wfile.write(json.dumps({"status": "ok"}).encode("utf-8"))
-                    return
-                else:
-                    self.send_response(400)
-                    self.send_header("Content-Type", "application/json")
-                    self.send_header("Access-Control-Allow-Origin", "*")
-                    self.end_headers()
-                    self.wfile.write(json.dumps({"status": "error", "message": "Missing chat_id or text"}).encode("utf-8"))
-                    return
+                return
 
-            # ✅ Run handle(data) SYNCHRONOUSLY FIRST so Vercel lambda container stays alive
+            # 3. Chạy handle(data) để xử lý logic
             try:
                 handle(data)
             except Exception as ex:
@@ -1403,20 +1414,8 @@ class handler(BaseHTTPRequestHandler):
                 except Exception:
                     pass
 
-            # ✅ Trả lời 200 OK cho Vercel SAU KHI handle() hoàn tất
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(b'{"ok":true}')
-
         except Exception as ex:
             logger.error(f"Webhook POST parse error: {ex}")
-            try:
-                self.send_response(200)
-                self.end_headers()
-                self.wfile.write(b'{"ok":true}')
-            except Exception:
-                pass
 
     def do_GET(self):
         # Không gọi ensure_webhook_locked_bg — daemon thread chết ngay trên Vercel
