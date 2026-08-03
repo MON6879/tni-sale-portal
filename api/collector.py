@@ -313,6 +313,11 @@ def is_collector_msg(text: str) -> bool:
     """Match keyword at start of any line, case-insensitive, with or without ':', or via slash command."""
     if not text:
         return False
+    # 🛑 LOẠI BỎ DAILY RESULT VÀ DAILY PLAN (Do Search bot @SEARCHTNITASKWOBOT xử lý)
+    text_l = text.lower()
+    if "daily result" in text_l or "daily plan" in text_l:
+        return False
+
     # Xử lý lệnh dạng /order hoặc /order@TNIASSETOrderREQUEST_BOT
     clean_text = text.strip()
     if clean_text.startswith("/"):

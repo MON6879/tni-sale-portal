@@ -935,7 +935,16 @@ def send_daily_plan_template(chat_id: int, team_num: int) -> None:
         f"<pre>{html.escape(template)}</pre>"
     )
 
+_recent_daily_submits = {}
+
 def submit_daily(chat_id: int, user_id: int, first_name: str, text: str) -> None:
+    now_ts = time.time()
+    dedup_key = f"{user_id}:{text.strip()[:60]}"
+    if (now_ts - _recent_daily_submits.get(dedup_key, 0)) < 10.0:
+        logger.info(f"Skipping duplicate submit_daily for user {user_id}")
+        return
+    _recent_daily_submits[dedup_key] = now_ts
+
     fields = fetch_daily_fields()
     parsed = parse_daily_report(text, fields)
     now_mm = datetime.now(TZ_MM)
