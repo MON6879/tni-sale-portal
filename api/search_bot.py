@@ -772,6 +772,11 @@ def fetch_daily_fields() -> list[str]:
         logger.warning(f"fetch_daily_fields: {ex}")
     return _daily_fields or DAILY_FIELDS_DEFAULT
 
+def clean_field_name(s: str) -> str:
+    """Làm sạch nhãn cột: loại bỏ số thứ tự hoặc số La Mã đầu câu (1., 3., VII., I., etc.)."""
+    s = re.sub(r'^[0-9ivxlcdmIVXLCDM]+[\.\s_\-]*', '', s.strip(), flags=re.IGNORECASE)
+    return s.strip().lower()
+
 def parse_daily_report(text: str, fields: list[str]) -> dict:
     result, cur_key, cur_val = {}, None, []
 
@@ -788,6 +793,7 @@ def parse_daily_report(text: str, fields: list[str]) -> dict:
             val   = line[colon + 1:].strip()
             matched = None
             label_l = label.lower()
+            clean_lbl = clean_field_name(label)
             
             # Nếu label chứa chữ "result" hoặc "daily", tự động khớp với "Daily report"
             if "result" in label_l or "daily" in label_l:
@@ -798,8 +804,17 @@ def parse_daily_report(text: str, fields: list[str]) -> dict:
             
             if not matched:
                 for f in fields:
+                    clean_f = clean_field_name(f)
+                    if clean_f and clean_lbl and (clean_f in clean_lbl or clean_lbl in clean_f):
+                        matched = f
+                        break
+
+            if not matched:
+                for f in fields:
                     if f.lower() in label_l or label_l in f.lower():
-                        matched = f; break
+                        matched = f
+                        break
+
             if matched:
                 flush(); cur_key = matched
                 cur_val = [val] if val else []
