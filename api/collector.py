@@ -77,16 +77,23 @@ def get_keywords() -> list:
 
 
 # ── Send data to Asset Google Sheet via Apps Script ──────────────────────
-def post_sheet(payload: dict, timeout: int = 35):
+def post_sheet(payload: dict, timeout: int = 40):
     """POST JSON to Asset Apps Script Web App."""
     if not APPS_SCRIPT_URL:
         logger.error("APPS_SCRIPT_URL not set.")
         return {"status": "error", "message": "APPS_SCRIPT_URL not configured"}
     try:
-        resp = requests.post(APPS_SCRIPT_URL, json=payload, timeout=timeout)
+        session = requests.Session()
+        headers = {"Content-Type": "application/json"}
+        resp = session.post(APPS_SCRIPT_URL, json=payload, headers=headers, timeout=timeout)
+        
+        if resp.status_code == 404:
+            logger.error(f"Apps Script 404 error on URL: {resp.url}")
+            return {"status": "error", "message": "Apps Script Web App 404 Not Found (Deployment URL expired or access not set to Anyone)"}
+            
         resp.raise_for_status()
         logger.info(f"Apps Script response: {resp.text[:300]}")
-        # Handle empty response body (GAS timeout / redirect trả về HTML rỗng)
+        
         if not resp.text or not resp.text.strip():
             logger.error("Apps Script returned empty response")
             return {"status": "error", "message": "Apps Script returned empty response (possible timeout or session expired)"}
@@ -95,6 +102,9 @@ def post_sheet(payload: dict, timeout: int = 35):
         except ValueError as je:
             logger.error(f"Apps Script non-JSON response: {resp.text[:200]}")
             return {"status": "error", "message": f"Invalid response from Apps Script: {resp.text[:100]}"}
+    except requests.exceptions.Timeout:
+        logger.error("Apps Script request timed out")
+        return {"status": "error", "message": "Apps Script timeout (GAS took >40s to process image)"}
     except Exception as e:
         logger.error(f"Apps Script POST error: {e}")
         return {"status": "error", "message": str(e)}
