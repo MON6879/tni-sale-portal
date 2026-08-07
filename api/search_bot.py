@@ -16,7 +16,7 @@ from datetime import datetime, timezone, timedelta
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-BOT_VERSION = "v3.6"
+BOT_VERSION = "v3.9"
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TOKEN                 = os.environ.get("TELEGRAM_TOKEN", "").strip().strip("\ufeff")
@@ -25,7 +25,7 @@ APPS_SCRIPT_URL       = os.environ.get("APPS_SCRIPT_URL", "").strip().strip("\uf
 SPREADSHEET_ID        = os.environ.get("SPREADSHEET_ID", "1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8").strip().strip("\ufeff")
 BASE_URL              = (
     f"https://docs.google.com/spreadsheets/d/"
-    f"{SPREADSHEET_ID}/export?format=csv&gid="
+    f"{SPREADSHEET_ID}/gviz/tq?tqx=out:csv&gid="
 )
 GID_SITE       = "1095689918"
 GID_TASK       = "1755404595"
@@ -38,39 +38,256 @@ GID_STAFF      = "1684930643"  # Tab: Staff — col A=Telegram ID, row 1=headers
 
 TZ_MM    = timezone(timedelta(hours=6, minutes=30))   # Myanmar UTC+6:30
 MAX_LEN  = 4096
+TG_API   = f"https://api.telegram.org/bot{TOKEN if TOKEN else 'MISSING'}"
 
-# ── CSV loader with per-GID caching ───────────────────────────────────────────
-_csv_cache = {}
-_csv_cache_ts = {}
-CSV_CACHE_TTL = 1800   # 30 phút cache cho mỗi GID (giảm latency từ 6s xuống <0.001s, chống Telegram Webhook Retry)
+# ── Daily fields cache ─────────────────────────────────────────────────────────
+DAILY_FIELDS_DEFAULT = [
+    "Daily report",
+    "Transportation Used", "Full Name", "Detail WO", "Detail task",
+    "Name Site rescue", "Name Cell rescue", "Resuce Cable",
+    "Name and detail Site repair alarm",
+    "Name Site follow partner refuel", "Other task",
+    "Name and detail Site go busines trip start go",
+    "Name and detail Site go busines trip end go",
+    "Km moto bike start", "Km moto bike the end",
+]
+DAILY_FIELDS_TTL = 600
+_daily_fields: list = []
+_daily_fields_ts: float = 0.0
 
-def fetch_csv(gid: str) -> pd.DataFrame:
-    now = time.time()
-    if gid in _csv_cache and (now - _csv_cache_ts.get(gid, 0)) < CSV_CACHE_TTL:
-        return _csv_cache[gid]
+# ── Sheet cache ────────────────────────────────────────────────────────────────
+_cache_ts: float = 0.0
+CACHE_TTL: float = 120.0
+
+# ── split_messages PHẢI đứng trước tg_send ────────────────────────────────────
+def split_messages(text: str) -> list:
+    """Tách text thành các chunk ≤ MAX_LEN ký tự, cắt theo dòng."""
+    chunks, current = [], ""
+    for line in text.split("\n"):
+        candidate = (current + "\n" + line) if current else line
+        if len(candidate) <= MAX_LEN:
+            current = candidate
+        else:
+            if current:
+                chunks.append(current)
+            while len(line) > MAX_LEN:
+                chunks.append(line[:MAX_LEN])
+                line = line[MAX_LEN:]
+            current = line
+    if current:
+        chunks.append(current)
+    return chunks or [""]
+
+# ── Telegram helpers ───────────────────────────────────────────────────────────
+def tg_send(chat_id, text, parse_mode="HTML"):
+    """Gửi tin nhắn Telegram, tự chia chunk nếu quá dài."""
+    if not TOKEN:
+        logger.error("TELEGRAM_TOKEN missing")
+        return
+    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+    for chunk in split_messages(text):
+        try:
+            r = requests.post(url, json={
+                "chat_id": chat_id,
+                "text": chunk,
+                "parse_mode": parse_mode,
+                "disable_web_page_preview": True,
+            }, timeout=30)
+            if not r.ok:
+                logger.error(f"tg_send error: {r.text[:200]}")
+        except Exception as ex:
+            logger.error(f"tg_send exception: {ex}")
+
+def tg_get_file(file_id: str) -> str | None:
+    """Lấy file_path từ Telegram file_id."""
     try:
-        url  = BASE_URL + gid
-        hdrs = {"User-Agent": "Mozilla/5.0"}
-        resp = requests.get(url, headers=hdrs, timeout=8, allow_redirects=True)
-        resp.raise_for_status()
-        content = resp.content.decode("utf-8", errors="replace")
-        df = pd.read_csv(io.StringIO(content), header=None, dtype=str, on_bad_lines="skip")
-        _csv_cache[gid] = df
-        _csv_cache_ts[gid] = now
-        return df
-    except Exception as e:
-        logger.error(f"fetch_csv error [gid={gid}]: {e}")
-        if gid in _csv_cache:
-            return _csv_cache[gid]
-        raise e
+        r = requests.get(
+            f"https://api.telegram.org/bot{TOKEN}/getFile",
+            params={"file_id": file_id}, timeout=10
+        ).json()
+        return r.get("result", {}).get("file_path")
+    except Exception as ex:
+        logger.error(f"tg_get_file: {ex}")
+        return None
 
+
+
+# ── Staff & Sheet helpers ──────────────────────────────────────────────────────
+_staff_df_cache = None
+_staff_df_ts: float = 0.0
+
+def get_staff_df():
+    """Lấy Staff sheet — ưu tiên đọc từ data_cache.json (0.001s), fallback Google Sheets."""
+    global _staff_df_cache, _staff_df_ts
+    now = time.time()
+    if _staff_df_cache is not None and (now - _staff_df_ts) < CSV_CACHE_TTL:
+        return _staff_df_cache
+
+    # ── Fast path: data_cache.json (GitHub Actions build mỗi 5 phút) ──
+    cache_path = os.path.join(os.path.dirname(__file__), "data_cache.json")
+    if os.path.exists(cache_path):
+        try:
+            with open(cache_path, encoding="utf-8") as cf:
+                cache_data = json.load(cf)
+            staff_rows = cache_data.get("staff_rows")
+            built_at_str = cache_data.get("built_at", "")
+            if staff_rows and built_at_str:
+                from datetime import datetime as _dt, timezone as _tz
+                built_ts = _dt.strptime(built_at_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=_tz.utc).timestamp()
+                age_min = (time.time() - built_ts) / 60
+                if age_min < 30:   # Dùng file nếu cache mới hơn 30 phút
+                    _staff_df_cache = pd.DataFrame(staff_rows, dtype=str)
+                    _staff_df_ts    = time.time()
+                    logger.info(f"Loaded staff from data_cache.json (age={age_min:.1f}m) — {len(_staff_df_cache)} rows")
+                    return _staff_df_cache
+        except Exception as fe:
+            logger.warning(f"data_cache.json staff load error: {fe}")
+
+    # ── Fallback: fetch từ Google Sheets (~3-5s) ──
+    df = fetch_single_csv(GID_STAFF)
+    if df is not None:
+        _staff_df_cache = df
+        _staff_df_ts    = now
+    return _staff_df_cache
+
+
+def load_all_sheets():
+    """Warm-up: tải song song 2 sheet chính vào cache."""
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        ex.submit(fetch_single_csv, GID_INFO)
+        ex.submit(fetch_single_csv, GID_TEAM_SUM)
+
+def get_staff_data(user_id: int, field_name: str | None = None) -> str:
+    """Tra cứu dữ liệu cá nhân từ Staff sheet theo Telegram user_id."""
+    def e(s): return html.escape(str(s))
+    df = get_staff_df()
+    if df is None or df.empty:
+        return "❌ Staff sheet empty."
+    headers = df.iloc[0]
+    data    = df.iloc[1:]
+    sid     = str(user_id).strip()
+    col_a   = data.iloc[:, 0].astype(str).str.strip().str.replace(r'\.0$', '', regex=True)
+    matched = data[col_a == sid]
+    if matched.empty:
+        return f"❌ No data for your ID.\nYour ID: <code>{e(sid)}</code>"
+    row = matched.iloc[0]
+
+    def clean(v: str) -> str:
+        return "" if v.lower() in ("nan", "none", "", "#n/a", "#na", "#ref!", "#value!") else v
+
+    if field_name is None:
+        results = []
+        for ci in range(len(headers)):
+            h = str(headers.iloc[ci]).strip()
+            if h.lower().startswith("my") and h.lower() not in ("nan", "none", ""):
+                val = clean(safe(row, ci))
+                results.append(f"• <b>{e(h)}:</b> {e(val) if val else '—'}")
+        if not results:
+            return "ℹ️ No 'my*' columns found."
+        return "👤 <b>My Stats</b>\n━━━━━━━━━━━━━━━━━━━━\n" + "\n".join(results) + "\n━━━━━━━━━━━━━━━━━━━━"
+    else:
+        for ci in range(len(headers)):
+            if str(headers.iloc[ci]).strip().lower() == field_name.lower():
+                val = clean(safe(row, ci))
+                if not val:
+                    return f"ℹ️ <b>{e(field_name)}:</b> (empty)"
+                return f"📊 <b>{e(field_name)}:</b>\n{e(val)}"
+        return f"❌ Column '<b>{e(field_name)}</b>' not found."
+
+# ── Log search (fire-and-forget background) ────────────────────────────────────
+def log_search_bg(user_name: str, user_id: int, tni_code: str):
+    """Ghi log tìm kiếm vào GAS (background thread, không block)."""
+    if not APPS_SCRIPT_URL:
+        return
+    now_mm = datetime.now(TZ_MM)
+    payload = {
+        "action":    "log_search",
+        "user_name": user_name,
+        "user_id":   str(user_id),
+        "tni_code":  tni_code,
+        "date":      now_mm.strftime("%Y-%m-%d"),
+        "time":      now_mm.strftime("%H:%M"),
+    }
+    def _post():
+        try:
+            requests.post(APPS_SCRIPT_URL, json=payload, timeout=20)
+        except Exception:
+            pass
+    threading.Thread(target=_post, daemon=True).start()
+
+# ── Team lookups ───────────────────────────────────────────────────────────────
+GID_TL_SUM = GID_TEAM_SUM  # alias
+
+def _lookup_sheet_col(gid: str, col_match_idx: int, match_val: str, col_result_idx: int) -> list:
+    """Generic: tìm rows theo col_match_idx == match_val, trả về col_result_idx."""
+    df = fetch_single_csv(gid)
+    if df is None or df.empty:
+        return []
+    results = []
+    for _, row in df.iterrows():
+        cell = safe(row, col_match_idx).upper()
+        if cell == match_val.upper():
+            val = safe(row, col_result_idx)
+            if val:
+                results.append(val)
+    return results
+
+def lookup_team(team_code: str) -> list:
+    """Tra cứu TL team summary (GID_TEAM_SUM col B=team_code, col H=content)."""
+    df = fetch_single_csv(GID_TEAM_SUM)
+    if df is None or df.empty:
+        return [f"❌ No data for {html.escape(team_code)}"]
+    results = []
+    for _, row in df.iterrows():
+        col_b = safe(row, 1).strip().upper()
+        if col_b.startswith(team_code.upper()):
+            col_h = safe(row, 7)
+            if col_h:
+                results.append(col_h.strip().lstrip("~ ").strip())
+    if not results:
+        return [f"❌ No data found for team <b>{html.escape(team_code)}</b>"]
+    return [split_messages(r)[0] for r in results]
+
+def lookup_notclose(team_code: str) -> list:
+    """Tra cứu WO Not Close (GID_TL_WAITCD col H='T1notclose', col I=nội dung)."""
+    df = fetch_single_csv(GID_TL_WAITCD)
+    if df is None or df.empty:
+        return [f"\u274c No data for {html.escape(team_code)} not close"]
+    target = f"{team_code}notclose".lower()
+    results = []
+    for _, row in df.iterrows():
+        col_h = safe(row, 7).strip().lower()   # col H = category label
+        if col_h == target:
+            col_i = safe(row, 8)               # col I = formatted content
+            if col_i:
+                results.append(col_i.strip())
+    if not results:
+        return [f"\u274c No Not Close data for <b>{html.escape(team_code)}</b>"]
+    return [split_messages(r)[0] for r in results]
+
+def lookup_waitcd(team_code: str) -> list:
+    """Tra cứu WO Wait CD (GID_TL_WAITCD col H='T1waitcd', col I=nội dung)."""
+    df = fetch_single_csv(GID_TL_WAITCD)
+    if df is None or df.empty:
+        return [f"\u274c No data for {html.escape(team_code)} wait CD"]
+    target = f"{team_code}waitcd".lower()
+    results = []
+    for _, row in df.iterrows():
+        col_h = safe(row, 7).strip().lower()   # col H = category label
+        if col_h == target:
+            col_i = safe(row, 8)               # col I = formatted content
+            if col_i:
+                results.append(col_i.strip())
+    if not results:
+        return [f"\u274c No Wait CD data for <b>{html.escape(team_code)}</b>"]
+    return [split_messages(r)[0] for r in results]
+
+# ── Site Access Template ───────────────────────────────────────────────────────
 def get_site_access_template(site_id: str = "TNI0401", date_str: str = None) -> str:
     if not site_id or site_id.startswith("/"):
         site_id = "TNI0401"
     if not date_str:
-        from datetime import datetime
-        mm_now = datetime.now(TZ_MM)
-        date_str = mm_now.strftime("%d/%m/%Y")
+        date_str = datetime.now(TZ_MM).strftime("%d/%m/%Y")
     return (
         f"Site access format\n"
         f"Site ID: {site_id}\n"
@@ -85,671 +302,245 @@ def get_site_access_template(site_id: str = "TNI0401", date_str: str = None) -> 
         f"Activity End Time: 4 PM"
     )
 
-# ── Data cache (module-level, shared within Vercel instance) ──────────────────
-_df_site: pd.DataFrame | None = None
-_df_task: pd.DataFrame | None = None
-_df_wo:   pd.DataFrame | None = None
-_cache_ts: float = 0.0
-CACHE_TTL = 1800   # 30 phút
-
-# ── Daily fields cache ────────────────────────────────────────────────────────
-_daily_fields: list[str] = []
-_daily_fields_ts: float  = 0.0
-DAILY_FIELDS_TTL = 600   # 10 phút
-
-_df_staff: pd.DataFrame | None = None
-_df_staff_ts: float = 0.0
-STAFF_TTL = 900   # 15 phút
-
-def get_staff_df() -> pd.DataFrame:
-    global _df_staff, _df_staff_ts
-    import time
-    now_ts = time.time()
-    
-    should_reload = False
-    if _df_staff is None:
-        should_reload = True
-    else:
-        try:
-            # Check if it has passed 23:00 MM time on a new day
-            last_mm = datetime.fromtimestamp(_df_staff_ts, tz=TZ_MM)
-            now_mm = datetime.now(TZ_MM)
-            if now_mm.date() > last_mm.date():
-                if now_mm.hour >= 23:
-                    should_reload = True
-            elif (now_ts - _df_staff_ts) > 86400:  # Fallback 24 hours
-                should_reload = True
-        except Exception:
-            should_reload = True
-
-    if _df_staff is not None and not should_reload:
-        return _df_staff
-
+# ── Bot menu commands ──────────────────────────────────────────────────────────
+def setup_bot_menu_commands():
+    """Cài đặt menu lệnh cho bot."""
+    commands = [
+        {"command": "request_enter_site", "description": "Request enter Site towerco format"},
+        {"command": "mysite",  "description": "All Site you control"},
+        {"command": "mycable", "description": "All your cable route"},
+        {"command": "mydia",   "description": "All your customer DIA"},
+        {"command": "myolt",   "description": "All Site have OLT"},
+        {"command": "mysn",    "description": "All SN you control"},
+        {"command": "mydata",  "description": "All your personal stats"},
+        {"command": "daily",   "description": "Daily report template"},
+        {"command": "plan",    "description": "Daily plan template"},
+        {"command": "help",    "description": "Show help menu"},
+    ]
     try:
-        df = fetch_csv(GID_STAFF)
-        _df_staff = df
-        _df_staff_ts = now_ts
-        return df
-    except Exception as e:
-        logger.error(f"get_staff_df fetch error: {e}")
-        if _df_staff is not None:
-            return _df_staff
-        raise e
-
-_allowed_info_ids: set[str] | None = None
-_allowed_info_ids_ts: float = 0.0
-ALLOWED_IDS_TTL = 300 # 5 minutes cache
-
-def get_allowed_info_search_ids() -> set[str]:
-    global _allowed_info_ids, _allowed_info_ids_ts
-    import time
-    if _allowed_info_ids is not None and time.time() - _allowed_info_ids_ts < ALLOWED_IDS_TTL:
-        return _allowed_info_ids
-    try:
-        df = fetch_csv("1236389870")
-        allowed_ids = set()
-        for idx in range(1, len(df)):
-            row = df.iloc[idx]
-            if len(row) > 4:
-                val = str(row.iloc[4]).strip()
-                if val and val != "-" and val.lower() != "nan" and val.lower() != "none":
-                    if val.endswith(".0"):
-                        val = val[:-2]
-                    allowed_ids.add(val)
-        _allowed_info_ids = allowed_ids
-        _allowed_info_ids_ts = time.time()
-        logger.info(f"Loaded allowed Info search IDs: {allowed_ids}")
-        return allowed_ids
-    except Exception as e:
-        logger.error(f"Error fetching allowed info search IDs: {e}")
-        if _allowed_info_ids is not None:
-            return _allowed_info_ids
-        return set()
-
-DAILY_FIELDS_DEFAULT = [
-    "Daily Result",
-    "Full Name",
-    "Transportation Used",
-    "I. Hot task rescue Site down >24 :",
-    "II Hot task Cell rescue",
-    "III. Hot task Repair DG abnomal",
-    "IV. Hot task Repair DG run>16H:",
-    "V. Hot task other:",
-    "VII. Detail WO",
-    "VII. Detail task",
-    "Name and detail Site go busines trip start go",
-    "Name and detail Site go busines trip end go",
-    "Km moto bike start",
-    "Km moto bike the end",
-]
-
-# ── Telegram API helper ───────────────────────────────────────────────────────
-TG_API = f"https://api.telegram.org/bot{TOKEN}"
-
-def tg_send(chat_id: int, text: str, parse_mode: str = "HTML", reply_markup: dict | None = None) -> None:
-    """Gửi tin nhắn Telegram, tự chia chunk nếu > 4096 ký tự."""
-    chunks = split_messages(text)
-    for i, chunk in enumerate(chunks):
-        markup = reply_markup if i == len(chunks) - 1 else None
-        if chat_id > 0 and not markup:
-            markup = {"remove_keyboard": True}
-        payload = {
-            "chat_id": chat_id,
-            "text": chunk,
-            "parse_mode": parse_mode,
-            "disable_web_page_preview": True
-        }
-        if markup:
-            payload["reply_markup"] = markup
-        try:
-            r = requests.post(
-                f"{TG_API}/sendMessage",
-                json=payload,
-                timeout=10,
-            )
-            if r.status_code != 200:
-                logger.error(f"tg_send API error: {r.status_code} {r.text[:200]}")
-                # Fallback: nếu lỗi HTML parse entity -> tự động gửi dạng plain text để không bị mất tin!
-                if "can't parse entities" in r.text or "BAD_REQUEST" in r.text or "parse" in r.text.lower():
-                    payload.pop("parse_mode", None)
-                    payload["text"] = re.sub(r"<[^>]+>", "", chunk)
-                    requests.post(f"{TG_API}/sendMessage", json=payload, timeout=10)
-        except Exception as ex:
-            logger.error(f"tg_send error: {ex}")
-
-def tg_get_file(file_id: str) -> str | None:
-    """Lấy file_path từ Telegram."""
-    try:
-        resp = requests.get(f"{TG_API}/getFile?file_id={file_id}", timeout=10)
-        data = resp.json()
-        if data.get("ok"):
-            return data["result"]["file_path"]
-    except Exception as ex:
-        logger.error(f"tg_get_file: {ex}")
-    return None
-
-# ── CSV loader: duplicate def đã xóa — dùng cached version ở trên ──────────
-
-def log_search_bg(user_name: str, user_id, tni_code: str) -> None:
-    """Ghi log search — non-daemon, join(3s) để chạy trong Vercel window."""
-    if not APPS_SCRIPT_URL:
-        return
-    def _do():
-        try:
-            now_mm = datetime.now(TZ_MM)
-            requests.post(APPS_SCRIPT_URL, json={
-                "action":    "log_search",
-                "user_name": user_name,
-                "user_id":   str(user_id),
-                "tni_code":  tni_code,
-                "date":      now_mm.strftime("%d/%m/%Y"),
-                "time":      now_mm.strftime("%H:%M"),
-                "date_iso":  now_mm.strftime("%d/%m/%Y"),
-            }, timeout=3)
-        except Exception as e:
-            logger.error(f"log_search_bg failed: {e}")
-    # Daemon=True: log analytics không critical — chấp nhận mất trên Vercel
-    threading.Thread(target=_do, daemon=True).start()
-
-def load_all_sheets():
-    """Load TẤT CẢ 5 sheet SONG SONG — giảm tổng thời gian từ 15s xuống 1.5s."""
-    global _df_site, _df_task, _df_wo, _df_staff, _cache_ts
-    if time.time() - _cache_ts < CACHE_TTL and _df_site is not None:
-        return
-    import concurrent.futures
-    try:
-        logger.info("Loading 5 sheets in parallel...")
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-            f_site  = executor.submit(fetch_csv, GID_SITE)
-            f_task  = executor.submit(fetch_csv, GID_TASK)
-            f_wo    = executor.submit(fetch_csv, GID_WO)
-            f_staff = executor.submit(fetch_csv, GID_STAFF)
-            f_tlwc  = executor.submit(fetch_csv, GID_TL_WAITCD)
-            _df_site  = f_site.result(timeout=10)
-            _df_task  = f_task.result(timeout=10)
-            _df_wo    = f_wo.result(timeout=10)
-            _df_staff = f_staff.result(timeout=10)
-            _f_tlwc_res = f_tlwc.result(timeout=10)
-        _cache_ts = time.time()
-        logger.info(f"Loaded ALL 5 sheets OK — Site:{len(_df_site)} Task:{len(_df_task)} WO:{len(_df_wo)} Staff:{len(_df_staff)}")
-    except Exception as ex:
-        logger.error(f"load_all_sheets error: {ex}")
-
-# ── TNI lookup helpers ────────────────────────────────────────────────────────
-def safe(row, idx: int) -> str:
-    try:
-        v = row.iloc[idx]
-        if pd.isna(v): return ""
-        s = str(v).strip()
-        return "" if s.lower() in ("nan", "none") else s
-    except Exception:
-        return ""
-
-def get_site_info(tni: str) -> str:
-    if _df_site is None or _df_site.empty: return ""
-    try:
-        label_row = _df_site.iloc[0]
-        data      = _df_site.iloc[1:]
-        matched   = data[data.iloc[:, 1].str.upper() == tni.upper()]
-        if matched.empty: return ""
-        row  = matched.iloc[0]
-        parts = []
-        for idx in [17, 19, 20, 21, 24, 26]:
-            label = safe(label_row, idx)
-            val   = safe(row, idx)
-            if not label or val in ("", "0", "0.0"): continue
-            try:
-                num = round(float(val), 1)
-                if num: parts.append(f"{label}: {num}")
-            except ValueError:
-                if val: parts.append(f"{label}: {val}")
-        return ", ".join(parts)
-    except Exception as ex:
-        logger.error(f"get_site_info: {ex}")
-        return ""
-
-def get_tasks(tni: str) -> list:
-    if _df_task is None or _df_task.empty: return []
-    tasks = []
-    try:
-        for _, row in _df_task.iloc[2:].iterrows():
-            if safe(row, 19).upper() != tni.upper(): continue
-            if safe(row, 9): continue   # already done
-            d = safe(row, 3); e = safe(row, 4)
-            k = safe(row, 10); h = safe(row, 7)
-            tasks.append(f"{d} : {e} : {k} + {h}")
-    except Exception as ex:
-        logger.error(f"get_tasks: {ex}")
-    return tasks
-
-def get_wos(tni: str) -> list:
-    if _df_wo is None or _df_wo.empty: return []
-    wos = []
-    try:
-        for _, row in _df_wo.iloc[3:].iterrows():
-            if safe(row, 4).upper() != tni.upper(): continue
-            a = safe(row, 0); b = safe(row, 1)
-            c = safe(row, 2); f = safe(row, 5)
-            wos.append(f"{a} + {b} : {c} + {f}")
-    except Exception as ex:
-        logger.error(f"get_wos: {ex}")
-    return wos
-
-def lookup_tni(tni: str) -> str:
-    """Tra cứu TNIxxxx từ cột H (nội dung gộp sẵn) trong sheet Tên Sum WO."""
-    def e(s): return html.escape(str(s))
-    tni_upper = tni.upper()
-
-    try:
-        df = fetch_csv(GID_TEAM_SUM)
-    except Exception as ex:
-        logger.error(f"lookup_tni fetch error: {ex}")
-        return f"❌ Error loading data: {e(str(ex)[:80])}"
-
-    if df is None or df.empty:
-        return "❌ No data available."
-
-    # Tìm row có cột B (index 1) = TNI code
-    for _, row in df.iterrows():
-        col_b = safe(row, 1).strip().upper()
-        if col_b != tni_upper:
-            continue
-        col_h = safe(row, 7)  # Cột H (index 7) = nội dung gộp sẵn
-        if not col_h:
-            continue
-
-        # Hiển thị nguyên nội dung cột H
-        clean = col_h.strip().lstrip("~ ").strip()
-        return f"🔍 <b>{e(tni_upper)}</b>\n━━━━━━━━━━━━━━━━━━━━\n{e(clean)}\n━━━━━━━━━━━━━━━━━━━━"
-
-    return f"❌ No data found for <b>{e(tni_upper)}</b>"
-
-def lookup_clear_site(tni: str) -> str:
-    """Tra cứu TNIxxxx trong dòng 4 (index 3) của sheet Search Site Clear (GID 610944071).
-    Sheet này nằm trên Spreadsheet Site Down: 1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow."""
-    def e(s): return html.escape(str(s))
-    tni_upper = tni.upper()
-
-    # Sử dụng Spreadsheet ID riêng biệt của Site Down
-    sd_sheet_id = os.environ.get("SD_SPREADSHEET_ID", "1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow").strip()
-    url = f"https://docs.google.com/spreadsheets/d/{sd_sheet_id}/export?format=csv&gid={GID_SITE_CLEAR}"
-
-    try:
-        hdrs = {"User-Agent": "Mozilla/5.0"}
-        resp = requests.get(url, headers=hdrs, timeout=10, allow_redirects=True)
-        resp.raise_for_status()
-        content = resp.content.decode("utf-8", errors="replace")
-        df = pd.read_csv(io.StringIO(content), header=None, dtype=str, on_bad_lines="skip")
-    except Exception as ex:
-        logger.error(f"lookup_clear_site fetch error: {ex}")
-        return f"❌ Error loading data: {e(str(ex)[:80])}"
-
-    if df is None or df.empty:
-        return "❌ No data available."
-
-    # Dòng 4 trong Sheet là index 3 (0-based) trong pandas DataFrame
-    if len(df) <= 3:
-        return "❌ Sheet has fewer than 4 rows."
-
-    col_idx = None
-    row_3 = df.iloc[3]
-    for col in range(1, len(df.columns)):
-        val = str(row_3.iloc[col]).strip().upper() if col < len(row_3) else ""
-        if val == tni_upper:
-            col_idx = col
-            break
-
-    if col_idx is None:
-        return f"❌ Not found <b>{e(tni_upper)}</b> in Row 4 of Search Site Clear."
-
-    # Lấy toàn bộ dữ liệu của cột đó
-    lines = []
-    lines.append(f"🔍 <b>Clear History for {e(tni_upper)}</b>")
-    lines.append("━━━━━━━━━━━━━━━━━━━━")
-
-    for r in range(len(df)):
-        val = str(df.iloc[r, col_idx]).strip() if col_idx < len(df.columns) else ""
-        label = str(df.iloc[r, 0]).strip() if 0 < len(df.columns) else ""
-
-        # Bỏ qua các giá trị rỗng, nan hoặc gạch ngang
-        if not val or val.lower() in ("nan", "", "-"):
-            continue
-
-        # Format label cho ngắn gọn
-        if label and label.lower() not in ("nan", ""):
-            if "newsite" in label.lower() or "salary" in label.lower():
-                label = "Site Code"
-            lines.append(f"• <b>{e(label)}:</b> {e(val)}")
-        else:
-            lines.append(f"• {e(val)}")
-
-    lines.append("━━━━━━━━━━━━━━━━━━━━")
-    return "\n".join(lines)
-
-# ── Staff personal lookup ──────────────────────────────────────────────
-def get_staff_data(sender_id: int | str, field_name: str | None = None) -> str:
-    """
-    Tra cứu dữ liệu cá nhân từ Staff sheet (gid=1684930643).
-    - Col A (index 0) : Telegram ID người dùng
-    - Row 1 (index 0) : headers — mysite, mycable, myolt, mysn, mydia ...
-    field_name=None → trả tất cả cột bắt đầu bằng 'my'
-    field_name=str  → trả cột đó
-    """
-    def e(s): return html.escape(str(s))
-    try:
-        df = get_staff_df()   # row 0 = headers, row 1+ = data
-    except Exception as ex:
-        logger.error(f"get_staff_data fetch: {ex}")
-        return f"❌ Error loading Staff data: {e(str(ex)[:80])}"
-    if df is None or df.empty:
-        return "❌ Staff sheet empty."
-
-    headers = df.iloc[0]
-    data    = df.iloc[1:]
-
-    # Tìm row có col A = sender_id (so sánh string, bỏ ".0" nếu có)
-    sid = str(sender_id).strip()
-    col_a = data.iloc[:, 0].astype(str).str.strip().str.replace(r'\.0$', '', regex=True)
-    matched = data[col_a == sid]
-    if matched.empty:
-        return (
-            f"❌ No data found for your Telegram ID in Staff sheet.\n"
-            f"Your ID: <code>{e(sid)}</code>"
+        requests.post(
+            f"https://api.telegram.org/bot{TOKEN}/setMyCommands",
+            json={"commands": commands}, timeout=10
         )
-    row = matched.iloc[0]
-
-    def clean(v: str) -> str:
-        return "" if v.strip().lower() in ("nan","none","","#n/a","#na","#ref!","#value!") else v.strip()
-
-    if field_name is None or field_name.lower() == "mydata":
-        # Trả tất cả cột 'my*'
-        parts = []
-        for i in range(len(headers)):
-            h = clean(str(headers.iloc[i]))
-            if h.lower().startswith("my"):
-                v = clean(safe(row, i))
-                parts.append(f"• <b>{e(h)}:</b> {e(v) if v else '—'}")
-        if not parts:
-            return "ℹ️ No 'my*' columns found in Staff sheet."
-        return "\n".join([
-            "👤 <b>My Stats Summary</b>",
-            "━" * 20,
-            *parts,
-            "━" * 20,
-        ])
-    else:
-        # Tìm cột khớp field_name
-        target = None
-        fn_low = field_name.lower()
-        for i in range(len(headers)):
-            if clean(str(headers.iloc[i])).lower() == fn_low:
-                target = i
-                break
-        if target is None:
-            return f"❌ Column '<b>{e(field_name)}</b>' not found in Staff sheet."
-        v = clean(safe(row, target))
-        if not v:
-            return f"ℹ️ <b>{e(field_name)}:</b> (empty)"
-        return f"📊 <b>{e(field_name)}:</b>\n{e(v)}"
-
-
-def split_messages(text: str) -> list:
-    chunks, current = [], ""
-    for line in text.split("\n"):
-        candidate = (current + "\n" + line) if current else line
-        if len(candidate) <= MAX_LEN:
-            current = candidate
-        else:
-            if current: chunks.append(current)
-            while len(line) > MAX_LEN:
-                chunks.append(line[:MAX_LEN]); line = line[MAX_LEN:]
-            current = line
-    if current: chunks.append(current)
-    return chunks
-
-def split_by_site_blocks(blocks: list[str]) -> list[str]:
-    """Ghép các site block lại thành tin nhắn, mỗi tin <= MAX_LEN.
-    Mỗi block là 1 site hoàn chỉnh — không bao giờ bị cắt giữa chừng."""
-    messages, current = [], ""
-    for block in blocks:
-        candidate = (current + "\n" + block) if current else block
-        if len(candidate) <= MAX_LEN:
-            current = candidate
-        else:
-            if current:
-                messages.append(current)
-            # Nếu 1 block > MAX_LEN, dùng split_messages để chia nhỏ
-            if len(block) > MAX_LEN:
-                messages.extend(split_messages(block))
-                current = ""
-            else:
-                current = block
-    if current:
-        messages.append(current)
-    return messages
-
-
-# ── Team Leader search (T1/T2/T3/T4) ─────────────────────────────────────
-def lookup_team(team_code: str) -> list[str]:
-    """Tra cứu tất cả site thuộc team (T1/T2/T3/T4) từ sheet Tên Sum WO.
-    Đọc trực tiếp cột G (index 6) — nội dung đã gộp sẵn."""
-    team_code_upper = team_code.upper()
-    team_names = {
-        "T1": "Team 1 — Dawei",
-        "T2": "Team 2 — Myeik",
-        "T3": "Team 3 — Bokpyin",
-        "T4": "Team 4 — Kawthoung",
-    }
-    team_label = team_names.get(team_code_upper, team_code_upper)
-
-    try:
-        df = fetch_csv(GID_TEAM_SUM)
     except Exception as ex:
-        logger.error(f"lookup_team fetch error: {ex}")
-        return [f"❌ Error loading data: {html.escape(str(ex)[:80])}"]
+        logger.error(f"setup_bot_menu_commands: {ex}")
 
-    if df is None or df.empty:
-        return ["❌ No data available."]
+# ── ULTRA-FAST HIGH-PERFORMANCE SEARCH ENGINE (Parallel + SWR + O(1) Hash Indexing) ──
+from concurrent.futures import ThreadPoolExecutor
 
-    # Gom nội dung cột J từ các row có cột I = team code
-    raw_entries = []
-    for _, row in df.iterrows():
-        col_i = safe(row, 8).strip().upper()  # Cột I = filter tag
-        if col_i != team_code_upper:
-            continue
-        col_j = safe(row, 9)  # Cột J = nội dung gộp sẵn
-        if col_j:
-            raw_entries.append(col_j)
+_csv_cache = {}
+_csv_cache_ts = {}
+CSV_CACHE_TTL = 120  # 2 phút cache sống
 
-    if not raw_entries:
-        return [f"❌ No sites found for <b>{html.escape(team_code_upper)}</b>"]
+_tni_info_index = {}
+_tni_team_sum_index = {}
+_index_last_built = 0.0
+_index_building = False
 
-    # Gộp tất cả rồi tách theo ~ cho mỗi site
-    full_raw = " ".join(raw_entries)
-    sites = [s.strip() for s in full_raw.split("~") if s.strip()]
+def fetch_single_csv(gid: str) -> pd.DataFrame | None:
+    # Cache check — tránh fetch 2 lần (load_all_sheets + build_search_indexes)
+    cached = _csv_cache.get(gid)
+    if cached is not None and (time.time() - _csv_cache_ts.get(gid, 0)) < CSV_CACHE_TTL:
+        return cached
+    url = BASE_URL + str(gid)
+    hdrs = {"User-Agent": "Mozilla/5.0"}
+    for attempt in range(1, 3):
+        try:
+            resp = requests.get(url, headers=hdrs, timeout=8, allow_redirects=True)
+            resp.raise_for_status()
+            content = resp.content.decode("utf-8", errors="replace")
+            df = pd.read_csv(io.StringIO(content), header=None, dtype=str, on_bad_lines="skip")
+            _csv_cache[gid] = df
+            _csv_cache_ts[gid] = time.time()
+            return df
+        except Exception as ex:
+            logger.warning(f"fetch_single_csv retry {attempt}/2 [gid={gid}]: {ex}")
+            if attempt < 2:
+                time.sleep(0.5)
+    return _csv_cache.get(gid)
 
-    # Header
-    now_mm = datetime.now(TZ_MM)
-    header = (
-        f"🔍 <b>{html.escape(team_label)}</b> — "
-        f"{len(sites)} sites\n"
-        f"📅 {now_mm.strftime('%d/%m/%Y %H:%M')}\n"
-        f"━━━━━━━━━━━━━━━━━━━━\n"
-    )
+def safe(row, idx: int) -> str:
+    if idx < len(row):
+        val = str(row.iloc[idx]).strip()
+        if val.lower() != "nan" and val != "-":
+            return val
+    return ""
 
-    # Build site blocks — mỗi site 1 block
-    site_blocks = []
-    for site_text in sites:
-        # Tách <+> thành các dòng riêng với bullet
-        parts = [p.strip() for p in site_text.split("<+>") if p.strip()]
-        lines = []
-        for p in parts:
-            lines.append(f"• {html.escape(p)}")
-        site_blocks.append("\n".join(lines))
+def build_search_indexes(force: bool = False):
+    global _tni_info_index, _tni_team_sum_index, _index_last_built, _index_building
+    now = time.time()
 
-    if not site_blocks:
-        return [f"❌ No sites found for <b>{html.escape(team_code_upper)}</b>"]
-
-    # Ghép header vào block đầu
-    site_blocks[0] = header + site_blocks[0]
-    site_blocks[-1] = site_blocks[-1] + "\n━━━━━━━━━━━━━━━━━━━━"
-
-    return split_by_site_blocks(site_blocks)
-
-
-# ── Not Close search (T1notclose / T2notclose / ...) ─────────────────────────
-def lookup_notclose(team_code: str) -> list[str]:
-    """Tra cứu WO chưa close của team từ sheet 'Team leader Wait CD + Not Close'.
-    Lọc theo cột H (index 7). Hiển thị cột B,C,E,F,G (bỏ D)."""
-    tag = f"{team_code.upper()}NOTCLOSE"  # e.g. "T1NOTCLOSE"
-    team_names = {
-        "T1": "Team 1 — Dawei",
-        "T2": "Team 2 — Myeik",
-        "T3": "Team 3 — Bokpyin",
-        "T4": "Team 4 — Kawthoung",
-    }
-    team_label = team_names.get(team_code.upper(), team_code.upper())
-
+    if not force and _tni_info_index and (now - _index_last_built) < CSV_CACHE_TTL:
+        return
+    if _index_building:
+        return
+    _index_building = True
     try:
-        df = fetch_csv(GID_TL_WAITCD)
-    except Exception as ex:
-        logger.error(f"lookup_notclose fetch error: {ex}")
-        return [f"❌ Error loading data: {html.escape(str(ex)[:80])}"]
+        # ── 1. Fast path: data_cache.json (GitHub Actions build mỗi 5 phút) ──
+        cache_path = os.path.join(os.path.dirname(__file__), "data_cache.json")
+        if os.path.exists(cache_path):
+            try:
+                with open(cache_path, encoding="utf-8") as cf:
+                    cache_data = json.load(cf)
+                built_at_str = cache_data.get("built_at", "")
+                if built_at_str:
+                    from datetime import datetime as _dt, timezone as _tz
+                    built_ts = _dt.strptime(built_at_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=_tz.utc).timestamp()
+                    age_min = (time.time() - built_ts) / 60
+                    if age_min < 30:   # Dùng file nếu cache mới hơn 30 phút (GH Actions rebuild mỗi 5 phút)
+                        _tni_info_index     = cache_data.get("info", {})
+                        _tni_team_sum_index = cache_data.get("team", {})
+                        _index_last_built   = time.time()
+                        logger.info(f"Loaded index from data_cache.json (age={age_min:.1f}m) — Info:{len(_tni_info_index)}, Team:{len(_tni_team_sum_index)}")
+                        return
+            except Exception as fe:
+                logger.warning(f"data_cache.json load error: {fe}")
 
-    if df is None or df.empty:
-        return ["❌ No data available."]
+        # ── 2. Fallback: fetch trực tiếp từ Google Sheets (~3-5s) ──
+        logger.info("data_cache.json missing/stale — fetching from Google Sheets...")
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            f_info = executor.submit(fetch_single_csv, GID_INFO)
+            f_team = executor.submit(fetch_single_csv, GID_TEAM_SUM)
+            df_info = f_info.result()
+            df_team = f_team.result()
 
-    entries = []
-    for _, row in df.iterrows():
-        col_ar = safe(row, 43).strip().upper()  # Cột AR = filter tag
-        if col_ar != tag:
-            continue
-        col_as = safe(row, 44)  # Cột AS = nội dung gộp sẵn
-        if col_as:
-            entries.append(col_as)
+        new_info_idx = {}
+        if df_info is not None and not df_info.empty:
+            rows = df_info.iloc[1:] if len(df_info) > 1 else df_info
+            for _, row in rows.iterrows():
+                col_a = safe(row, 0).upper().strip()
+                if not col_a: continue
+                code_part = col_a.split(":")[0].strip()
+                new_info_idx[code_part] = {
+                    "site": safe(row, 1),
+                    "cable": safe(row, 2),
+                    "gpon": safe(row, 3),
+                    "dia": safe(row, 4)
+                }
 
-    if not entries:
-        return [f"❌ No WO Not Close found for <b>{html.escape(team_code.upper())}</b>"]
+        new_team_idx = {}
+        if df_team is not None and not df_team.empty:
+            for _, row in df_team.iterrows():
+                col_b = safe(row, 1).strip().upper()
+                if not col_b: continue
+                col_h = safe(row, 7)
+                if col_h:
+                    new_team_idx[col_b] = col_h.strip().lstrip("~ ").strip()
 
-    # Gộp tất cả rồi tách theo ~ cho mỗi WO
-    full_raw = " ".join(entries)
-    items = [s.strip() for s in full_raw.split("~") if s.strip()]
+        _tni_info_index     = new_info_idx
+        _tni_team_sum_index = new_team_idx
+        _index_last_built   = time.time()
+        logger.info(f"Built index from Sheets — Info:{len(new_info_idx)}, Team:{len(new_team_idx)}")
 
-    now_mm = datetime.now(TZ_MM)
-    header = (
-        f"🔴 <b>{html.escape(team_label)} — WO Not Close</b>\n"
-        f"📅 {now_mm.strftime('%d/%m/%Y %H:%M')}\n"
-        f"📊 Total: {len(items)} WOs\n"
-        f"━━━━━━━━━━━━━━━━━━━━\n"
-    )
-
-    # Mỗi item hiển thị nguyên, tách | thành dòng mới
-    lines = []
-    for item in items:
-        parts = [p.strip() for p in item.split("|") if p.strip()]
-        lines.append("• " + "\n  ".join(html.escape(p) for p in parts))
-
-    full_text = header + "\n".join(lines) + "\n━━━━━━━━━━━━━━━━━━━━"
-    return split_messages(full_text)
-
-
-# ── Wait CD search (T1waitcd / T2waitcd / ...) ───────────────────────────────
-def lookup_waitcd(team_code: str) -> list[str]:
-    """Tra cứu WO đang chờ CD của team từ sheet 'Team leader Wait CD + Not Close'.
-    Lọc theo cột AM (index 38). Hiển thị cột AG,AH,AJ,AK,AL (bỏ AI)."""
-    tag = f"{team_code.upper()}WAITCD"  # e.g. "T1WAITCD"
-    team_names = {
-        "T1": "Team 1 — Dawei",
-        "T2": "Team 2 — Myeik",
-        "T3": "Team 3 — Bokpyin",
-        "T4": "Team 4 — Kawthoung",
-    }
-    team_label = team_names.get(team_code.upper(), team_code.upper())
-
-    try:
-        df = fetch_csv(GID_TL_WAITCD)
-    except Exception as ex:
-        logger.error(f"lookup_waitcd fetch error: {ex}")
-        return [f"❌ Error loading data: {html.escape(str(ex)[:80])}"]
-
-    if df is None or df.empty:
-        return ["❌ No data available."]
-
-    entries = []
-    for _, row in df.iterrows():
-        col_ao = safe(row, 40).strip().upper()  # Cột AO = filter tag
-        if col_ao != tag:
-            continue
-        col_ap = safe(row, 41)  # Cột AP = nội dung gộp sẵn
-        if col_ap:
-            entries.append(col_ap)
-
-    if not entries:
-        return [f"❌ No WO Wait CD found for <b>{html.escape(team_code.upper())}</b>"]
-
-    # Gộp tất cả rồi tách theo ~ cho mỗi WO
-    full_raw = " ".join(entries)
-    items = [s.strip() for s in full_raw.split("~") if s.strip()]
-
-    now_mm = datetime.now(TZ_MM)
-    header = (
-        f"🟡 <b>{html.escape(team_label)} — WO Wait CD</b>\n"
-        f"📅 {now_mm.strftime('%d/%m/%Y %H:%M')}\n"
-        f"📊 Total: {len(items)} WOs\n"
-        f"━━━━━━━━━━━━━━━━━━━━\n"
-    )
-
-    lines = []
-    for item in items:
-        parts = [p.strip() for p in item.split("|") if p.strip()]
-        lines.append("• " + "\n  ".join(html.escape(p) for p in parts))
-
-    full_text = header + "\n".join(lines) + "\n━━━━━━━━━━━━━━━━━━━━"
-    return split_messages(full_text)
+    except Exception as err:
+        logger.error(f"Error building search indexes: {err}")
+    finally:
+        _index_building = False
 
 
-# ── Info lookup (Site/Cable/Gpon/DIA) ─────────────────────────────────────
-def get_info(tni: str) -> dict | None:
-    """Tìm TNI trong sheet gid=171059303, trả về Site/Cable/Gpon/DIA."""
-    try:
-        df = fetch_csv(GID_INFO)
-        if df is None or df.empty:
-            return None
-        tni_upper = tni.upper().strip()
-        rows = df.iloc[1:] if len(df) > 1 else df
-        for _, row in rows.iterrows():
-            col_a = safe(row, 0).upper().strip()
-            if not col_a:
-                continue
-            code_part = col_a.split(":")[0].strip()
-            if code_part == tni_upper or col_a == tni_upper or col_a.startswith(tni_upper):
-                site_val  = safe(row, 1)
-                cable_val = safe(row, 2)
-                gpon_val  = safe(row, 3)
-                dia_val   = safe(row, 4)
-                if any([site_val, cable_val, gpon_val, dia_val]):
-                    return {
-                        "site":  site_val,
-                        "cable": cable_val,
-                        "gpon":  gpon_val,
-                        "dia":   dia_val,
-                    }
-        return None
-    except Exception as ex:
-        logger.error(f"get_info error: {ex}")
-        return None
+def trigger_bg_index_refresh():
+    """Chạy làm mới cache trong background thread để không bắt user chờ."""
+    def _bg():
+        build_search_indexes(force=True)
+    t = threading.Thread(target=_bg, daemon=True)
+    t.start()
 
-def build_info_reply(tni: str, info: dict) -> str:
+def format_task_wo(raw: str) -> str:
+    """Render col H content thành HTML sạch — hỗ trợ 2 định dạng:
+       1. Old pre-formatted (có ─────): strip header/footer, giữ nội dung.
+       2. Raw /Alarm: <+> /Task: <+> /WO: format: parse thành emoji sections."""
     e = html.escape
-    lines = [f"📡 <b>Info: {e(tni)}</b>\n━━━━━━━━━━━━━━━━━━━━"]
-    if info.get("site"):
-        lines.append(f"\n🏢 <b>Site</b>\n{e(info['site'])}")
-    if info.get("cable"):
-        lines.append(f"\n🔌 <b>Cable</b>\n{e(info['cable'])}")
-    if info.get("gpon"):
-        lines.append(f"\n📶 <b>Gpon</b>\n{e(info['gpon'])}")
-    if info.get("dia"):
-        lines.append(f"\n🌐 <b>DIA</b>\n{e(info['dia'])}")
+    if not raw:
+        return ""
+
+    # ── Format 1: Old pre-formatted (🔍 TNI...\n─────\n📍 Site Info\n...\n─────) ──
+    if "\u2500\u2500\u2500\u2500\u2500" in raw:      # ─────
+        lines = raw.split("\n")
+        content_lines = []
+        in_content = False
+        for line in lines:
+            if "\u2500\u2500\u2500\u2500\u2500" in line:
+                if not in_content:
+                    in_content = True
+                else:
+                    break
+            elif in_content:
+                content_lines.append(line)
+        if content_lines:
+            return e("\n".join(content_lines).strip())
+
+    # ── Format 2: Raw /Alarm: <+> /Task: ... <+> /WO: ... ──
+    if "<+>" in raw:
+        sections = raw.split("<+>")
+        parts = []
+        for sec in sections:
+            sec = sec.strip()
+            if sec.startswith("/Alarm:"):
+                content = sec[7:].strip()
+                if content:
+                    parts.append(f"🔔 <b>Alarm:</b> {e(content[:300])}")
+            elif sec.startswith("/Task:"):
+                content = sec[6:].strip()
+                if content and content.lower() not in ("no see", ""):
+                    tasks = [t.strip() for t in content.split("/") if t.strip()]
+                    parts.append("📋 <b>Task:</b>\n" + "\n".join(f"• {e(t[:150])}" for t in tasks[:5]))
+            elif sec.startswith("/WO:"):
+                content = sec[4:].strip()
+                if content:
+                    wos = [w.strip() for w in content.split("/") if w.strip()]
+                    parts.append("🔧 <b>WO:</b>\n" + "\n".join(f"• {e(w[:150])}" for w in wos[:3]))
+        return "\n".join(parts) if parts else e(raw[:500])
+
+    # ── Format 3: Unknown — escape và cắt bớt ──
+    return e(raw[:500])
+
+
+def perform_unified_tni_search(tni: str, full_info: bool = False) -> str:
+    """Tra cứu TNI O(1) — nhanh < 0.01s.
+    full_info=False (TNI0122):      Task + WO ngắn gọn.
+    full_info=True  (Info:TNI0122): Site + Cable + DIA + Task/WO đầy đủ."""
+    e = html.escape
+    tni_upper = tni.upper().strip()
+
+    now = time.time()
+    if not _tni_info_index:
+        build_search_indexes(force=True)
+    elif (now - _index_last_built) >= CSV_CACHE_TTL:
+        trigger_bg_index_refresh()
+
+    info    = _tni_info_index.get(tni_upper)
+    task_wo = _tni_team_sum_index.get(tni_upper)
+
+    has_info  = bool(info and any(info.values()))
+    has_tasks = bool(task_wo)
+
+    if not has_info and not has_tasks:
+        return f"❌ No data found for <b>{e(tni_upper)}</b>"
+
+    lines = [f"🔍 <b>{e(tni_upper)}</b>\n━━━━━━━━━━━━━━━━━━━━"]
+
+    if full_info:
+        # ── Info: TNI0122 → CHỈ Site + Cable + GPON + DIA (không gộp Task/WO) ──
+        if not has_info:
+            return f"❌ No site/cable/DIA info for <b>{e(tni_upper)}</b>"
+        if info.get("site"):
+            lines.append(f"\n🏢 <b>Site</b>\n{e(info['site'][:500])}")
+        if info.get("cable"):
+            lines.append(f"\n🔌 <b>Cable</b>\n{e(info['cable'][:500])}")
+        if info.get("gpon"):
+            lines.append(f"\n📶 <b>Gpon</b>\n{e(info['gpon'][:300])}")
+        if info.get("dia"):
+            dia_text = info["dia"]
+            suffix = "..." if len(dia_text) > 500 else ""
+            lines.append(f"\n🌐 <b>DIA</b>\n{e(dia_text[:500])}{suffix}")
+    else:
+        # ── TNI0122 → CHỈ Task + WO (không gộp Site/Cable/DIA) ──
+        if not has_tasks:
+            return f"❌ No task/WO data for <b>{e(tni_upper)}</b>"
+        formatted = format_task_wo(task_wo)
+        if formatted:
+            lines.append(f"\n{formatted}")
+
     lines.append("━━━━━━━━━━━━━━━━━━━━")
     return "\n".join(lines)
 
@@ -759,18 +550,8 @@ def fetch_daily_fields() -> list[str]:
     now = time.time()
     if _daily_fields and (now - _daily_fields_ts) < DAILY_FIELDS_TTL:
         return _daily_fields
-    if not DAILY_APPS_SCRIPT_URL:
-        return DAILY_FIELDS_DEFAULT
-    try:
-        resp = requests.get(DAILY_APPS_SCRIPT_URL + "?action=get_fields", timeout=10)
-        data = resp.json()
-        if data.get("status") == "ok" and data.get("fields"):
-            _daily_fields    = data["fields"]
-            _daily_fields_ts = now
-            return _daily_fields
-    except Exception as ex:
-        logger.warning(f"fetch_daily_fields: {ex}")
-    return _daily_fields or DAILY_FIELDS_DEFAULT
+    # Dùng ngay danh sách trường chuẩn có sẵn để phản hồi tức thì (tránh chờ 10s Google Apps Script)
+    return DAILY_FIELDS_DEFAULT
 
 def clean_field_name(s: str) -> str:
     """Làm sạch nhãn cột: loại bỏ số thứ tự hoặc số La Mã đầu câu (1., 3., VII., I., etc.)."""
@@ -933,7 +714,109 @@ def get_plan_template_text(team_num: int) -> str:
         logger.error(f"get_plan_template_text error: {e}")
         return f"Error: {str(e)}"
 
+def is_daily_plan(text: str) -> bool:
+    """Detect plan message: text has 'plan'/'kế hoạch' and date, excluding bot auto reports."""
+    if not text:
+        return False
+    text_l = text.lower()
+    if any(kw in text_l for kw in (
+        "comparison of plan for", "auto report", "plan stats:", "report — daily plan",
+        "crosscheck", "plan tomorrow status", "plan vs actual", "eod summary",
+        "shows detailed site assignments", "tasks grouped by department", "recent plans",
+        "plans for ", "plan updated", "plan saved", "ref:", "ref:dp-", "đã lưu",
+        "tni personal find task", "ft result daily", "personal find task", "find task + wo",
+        "list name ft"
+    )):
+        return False
+
+    has_plan = "plan" in text_l or "kế hoạch" in text_l
+    has_date = bool(re.search(r'\b\d{1,2}[\/\.-]\d{1,2}(?:[\/\.-]\d{2,4})?\b', text))
+    return has_plan and has_date
+
+
+def parse_plan_fields(text: str, chat_id: int | None = None, chat_title: str | None = None) -> tuple:
+    """Extract (date, team, content) from plan message, with fallback to chat ID/title for team inference."""
+    lines = text.strip().split("\n")
+    date_str = ""
+    date_m = re.search(r'(?:daily\s*plan|plan\s*for)[:\s]+(\d{1,2}[\/\.-]\d{1,2}(?:[\/\.-]\d{2,4})?)', text, re.IGNORECASE)
+    if not date_m:
+        date_m = re.search(r'(\d{1,2}[\/\.-]\d{1,2}(?:[\/\.-]\d{2,4})?)', text)
+    if date_m:
+        raw_d = date_m.group(1)
+        parts = re.split(r'[\/\.-]', raw_d)
+        now_mm = datetime.now(TZ_MM)
+        if len(parts) == 3:
+            d, m, y = parts
+            if len(y) == 2:
+                y = "20" + y
+            date_str = f"{int(d):02d}/{int(m):02d}/{y}"
+        elif len(parts) == 2:
+            d, m = parts
+            date_str = f"{int(d):02d}/{int(m):02d}/{now_mm.year}"
+    if not date_str:
+        now_mm = datetime.now(TZ_MM)
+        date_str = now_mm.strftime("%d/%m/%Y")
+
+    team_str = ""
+    team_m = re.search(r'\bTeam\s*0?([1-5])\b', text, re.IGNORECASE)
+    if not team_m:
+        team_m = re.search(r'\bT([1-5])\b', text, re.IGNORECASE)
+    if team_m:
+        team_str = f"Team {team_m.group(1)}"
+
+    # Fallback to chat_title or chat_id if team is not explicitly written in text
+    if not team_str and chat_title:
+        title_m = re.search(r'TEAM\s*0?([1-5])', chat_title, re.IGNORECASE)
+        if title_m:
+            team_str = f"Team {title_m.group(1)}"
+    if not team_str and chat_id:
+        TELEGRAM_GROUPS = {
+            "Team 1": -1004215695747,
+            "Team 2": -1004480845549,
+            "Team 3": -1004369170658,
+            "Team 4": -1004293741999,
+        }
+        def norm_id(cid): return str(cid).replace("-100", "").replace("-", "")
+        for tname, gid in TELEGRAM_GROUPS.items():
+            if norm_id(chat_id) == norm_id(gid):
+                team_str = tname
+                break
+
+    team_line_idx = 0
+    for i, line in enumerate(lines[1:], 1):
+        if re.match(r'^\s*Team\s*0?[1-5]\s*$', line.strip(), re.IGNORECASE):
+            team_line_idx = i
+            break
+    start_idx = max(1, team_line_idx + 1 if team_line_idx > 0 else 1)
+    content_lines = []
+    for i in range(start_idx, len(lines)):
+        line = lines[i].strip()
+        if not content_lines and not line:
+            continue
+        content_lines.append(lines[i])
+    content = "\n".join(content_lines).strip()
+    return date_str, team_str, content
+
+
+def store_daily_plan_to_sheet(date_str: str, team_str: str, content: str) -> dict:
+    url = DAILY_APPS_SCRIPT_URL or APPS_SCRIPT_URL or "https://script.google.com/macros/s/AKfycbzGFdnESGcSMt0Of7PrBIOHDXmuLCZsiraGv5iNzWrw4rjdxm8CGBDuVIP8pnPEkAULww/exec"
+    try:
+        r = requests.post(url, json={
+            "action": "store_daily_plan",
+            "date": date_str,
+            "team": team_str,
+            "content": content,
+            "daily_report": "",
+            "comparison": ""
+        }, timeout=25)
+        return r.json()
+    except Exception as e:
+        logger.error(f"store_daily_plan_to_sheet error: {e}")
+        return {}
+
+
 _recent_plan_sends = {}
+_recent_plan_msg_hashes = {}
 
 def send_daily_plan_template(chat_id: int, team_num: int) -> None:
     now_ts = time.time()
@@ -962,9 +845,12 @@ def send_help_menu(chat_id: int) -> None:
     tg_send(chat_id,
         "👋 <b>TNI Search Bot</b>\n\n"
         "• Lookup Task/WO: Type <code>TNI0001</code> or <code>/tni TNI0001</code>\n"
+        "• Lookup Info: Type <code>info TNI0001</code>\n"
+        "• Lookup Clear Site: Type <code>CLEAR TNI0001</code>\n"
         "• Lookup Not Close: Type <code>t1notclose</code>, <code>t2notclose</code>...\n"
         "• Lookup Wait CD: Type <code>t1waitcd</code>, <code>t2waitcd</code>...\n"
-        "• Personal Lookup: Type <code>mysite</code>, <code>mycable</code>, <code>mydata</code>...\n"
+        "• Personal Lookup: <code>mysite</code>, <code>mycable</code>, <code>mydia</code>, <code>myolt</code>, <code>mysn</code>, <code>mydata</code>\n"
+        "• <b>Admin Lookup:</b> <code>mysite &lt;ID&gt;</code>, <code>mycable &lt;ID&gt;</code>, <code>mydia &lt;ID&gt;</code>, <code>myolt &lt;ID&gt;</code>, <code>mysn &lt;ID&gt;</code>, <code>mydata &lt;ID&gt;</code>\n"
         "• Get Report Templates: Type <code>/daily</code> or <code>/plan</code>",
         parse_mode="HTML")
 
@@ -1053,15 +939,6 @@ _processed_updates = set()
 
 # ── Update handler ────────────────────────────────────────────────────────────
 def handle(update: dict) -> None:
-    update_id = update.get("update_id")
-    if update_id:
-        if update_id in _processed_updates:
-            logger.info(f"Ignoring duplicate Telegram update_id: {update_id}")
-            return
-        _processed_updates.add(update_id)
-        if len(_processed_updates) > 1000:
-            _processed_updates.clear()
-
     ensure_webhook_active()
     msg = update.get("message") or update.get("edited_message")
     if not msg:
@@ -1076,8 +953,8 @@ def handle(update: dict) -> None:
     if user.get("is_bot"):
         return
 
-    # Warm-up / ensure all 5 sheets are loaded in parallel
-    load_all_sheets()
+    # build_search_indexes() trong perform_unified_tni_search() đã fetch đủ
+    # Không cần warm-up riêng (Vercel stateless, cache không persist giữa invocations)
 
     # ── PHOTO ──────────────────────────────────────────────────────────────
     if "photo" in msg:
@@ -1102,14 +979,14 @@ def handle(update: dict) -> None:
 
     # Map reply keyboard button labels to actual commands
     text_l = text.lower().strip()
-    if "plan" in text_l and "📋" in text:
-        if "t1" in text_l or "1" in text_l:
+    if not is_daily_plan(text) and "plan" in text_l and "📋" in text and len(text.splitlines()) <= 2:
+        if re.search(r'\bt1\b|\bteam\s*1\b', text_l):
             text = "/plan T1"
-        elif "t2" in text_l or "2" in text_l:
+        elif re.search(r'\bt2\b|\bteam\s*2\b', text_l):
             text = "/plan T2"
-        elif "t3" in text_l or "3" in text_l:
+        elif re.search(r'\bt3\b|\bteam\s*3\b', text_l):
             text = "/plan T3"
-        elif "t4" in text_l or "4" in text_l:
+        elif re.search(r'\bt4\b|\bteam\s*4\b', text_l):
             text = "/plan T4"
         else:
             text = "/plan"
@@ -1244,8 +1121,46 @@ def handle(update: dict) -> None:
         submit_daily(chat_id, user_id, first_name, text)
         return
 
-    # ── STAFF PERSONAL LOOKUP: "mysite" / "mycable" / ... hoặc range "Q1:U1" ──
+    # ── REALTIME DAILY PLAN COLLECTION ──────────────────────────────────────
+    if is_daily_plan(text):
+        now_ts = time.time()
+        msg_key = f"{chat_id}:{hash(text)}"
+        if (now_ts - _recent_plan_msg_hashes.get(msg_key, 0)) < 15.0:
+            logger.info(f"Skipping duplicate plan execution for key {msg_key}")
+            return
+        _recent_plan_msg_hashes[msg_key] = now_ts
+
+        chat_title = msg.get("chat", {}).get("title", "")
+        date_str, team_str, content = parse_plan_fields(text, chat_id, chat_title)
+        if date_str and team_str:
+            logger.info(f"Storing daily plan from Search Bot: {date_str} {team_str}")
+            res = store_daily_plan_to_sheet(date_str, team_str, content or text)
+            if res.get("status") in ("ok", "duplicate"):
+                ref = res.get("ref", "?")
+                dup = res.get("duplicate", False)
+                icon = "✅"
+                msg_reply = f"{icon} <b>Plan {'updated' if dup else 'saved'}</b> — REF:<b>{ref}</b> | {team_str} | {date_str}"
+                tg_send(chat_id, msg_reply)
+            else:
+                err = str(res.get("message", "unknown"))[:80]
+                logger.warning(f"Plan save skipped/failed for chat {chat_id}: {err}")
+            return
+
+    # ── STAFF PERSONAL LOOKUP: "mysite" / "mycable" / ... hoặc "mysite <id>" (admin) ──
     text_low = text.lower().strip()
+
+    # Admin lookup: "mysite 6859790680" / "mydata 1234567890" — xem data của bất kỳ user nào
+    admin_lookup = re.match(r'^(my\S+)\s+(\d{6,12})$', text_low)
+    if admin_lookup:
+        field_name = admin_lookup.group(1)           # e.g. "mysite", "mydata"
+        target_id  = int(admin_lookup.group(2))
+        field      = None if field_name in ("mydata", "myall") else field_name
+        reply = get_staff_data(target_id, field)
+        # Thêm header cho admin biết đang xem data của ai
+        header = f"👤 <b>Viewing ID:</b> <code>{target_id}</code>\n"
+        tg_send(chat_id, header + reply)
+        return
+
     is_my_field    = (text_low.startswith("my") and len(text_low) > 2 and " " not in text_low)
     is_range_query = bool(re.match(r'^[A-Z]\d+:[A-Z]\d+$', text, re.IGNORECASE))
     if is_my_field or is_range_query:
@@ -1319,55 +1234,49 @@ def handle(update: dict) -> None:
             tg_send(chat_id, f"❌ Error: {html.escape(str(err)[:80])}")
         return
 
-    # ── 2. KEY "INFO": Info: TNIxxxx / Info TNIxxxx / /info TNIxxxx ───────────────
-    info_match = re.search(r"^\s*(?:/info|info)[:\s]+\s*(TNI[A-Z0-9_]+)", text.strip(), re.IGNORECASE)
-    if info_match:
-        tni = info_match.group(1).upper()
-        logger.info(f"Info lookup: {tni} | chat={chat_id}")
-        log_search_bg(first_name or str(user_id), user_id, f"Info:{tni}")
-        try:
-            info = get_info(tni)
-            if info and any(info.values()):
-                reply = build_info_reply(tni, info)
-                for chunk in split_messages(reply):
-                    tg_send(chat_id, chunk)
-            else:
-                # Không tìm thấy trong GID_INFO → CHỈ báo không tìm thấy, KHÔNG fallback sang Task/WO
-                tg_send(chat_id, f"❌ <b>Info: {html.escape(tni)}</b> — not found in Site Info sheet.\n💡 Type <b>{html.escape(tni)}</b> (without 'Info:') to lookup Task & WO.")
-        except Exception as err:
-            logger.error(f"Info error [{tni}]: {err}")
-            tg_send(chat_id, f"❌ Lookup error: {html.escape(str(err))}")
-        return
-
-    # ── 3. KEY "TNI": TNIxxxx / TNIxxxx_0x — tra cứu Task & WO (chỉ khi câu lệnh BẮT ĐẦU bằng TNI, /tni, /find) ──
+    # ── 2. KEY "INFO" & "TNI" SEARCH: Hợp nhất 100% cho Info: TNIxxxx, TNIxxxx, /tni, /info, /find ───────────────
     text_clean = text.strip()
     text_l = text_clean.lower()
 
-    # CHỈ TRA CỨU NẾU TIN NHẮN BẮT ĐẦU BẰNG 'tni', '/tni', '/find'
-    # Nếu TNI nằm ở giữa/cuối đoạn chat trò chuyện (vd: "V Hot task: TNI0067...") -> KHÔNG TRA CỨU
-    if not (text_l.startswith("tni") or text_l.startswith("/tni") or text_l.startswith("/find")):
+    # Kiểm tra xem có lệnh Info: TNIxxxx hoặc /info TNIxxxx hay không
+    info_match = re.search(r"^\s*(?:/info|info)[:\s]+\s*(TNI[A-Z0-9_]+)", text_clean, re.IGNORECASE)
+    if info_match:
+        tni = info_match.group(1).upper()
+        logger.info(f"Unified Info/TNI lookup: {tni} | chat={chat_id}")
+        log_search_bg(first_name or str(user_id), user_id, f"Info:{tni}")
+        try:
+            result = perform_unified_tni_search(tni, full_info=True)   # Info: → Site+Cable+DIA only
+            for chunk in split_messages(result):
+                tg_send(chat_id, chunk)
+        except Exception as err:
+            logger.error(f"Unified search error [{tni}]: {err}")
+            tg_send(chat_id, f"❌ Lookup error: {html.escape(str(err))}")
         return
 
-    if text_l.startswith("/tni") or text_l.startswith("/find"):
-        parts = text_clean.split(maxsplit=1)
-        if len(parts) > 1:
-            text_clean = parts[1].strip()
-        else:
+    # Kiểm tra lệnh TNIxxxx / /tni TNIxxxx / /find TNIxxxx
+    if text_l.startswith("tni") or text_l.startswith("/tni") or text_l.startswith("/find"):
+        if text_l.startswith("/tni") or text_l.startswith("/find"):
+            parts = text_clean.split(maxsplit=1)
+            if len(parts) > 1:
+                text_clean = parts[1].strip()
+            else:
+                return
+
+        tni_list = re.findall(r"TNI[A-Z0-9_]{4,10}", text_clean, re.IGNORECASE)
+        if not tni_list:
             return
 
-    # Tìm mã TNI (hỗ trợ cả suffix như TNI0007_01 hoặc TNI0007_1)
-    tni_list = re.findall(r"TNI[A-Z0-9_]{4,10}", text_clean, re.IGNORECASE)
-    if not tni_list:
+        tni = tni_list[0].upper()
+        logger.info(f"Unified TNI lookup: {tni} | chat={chat_id}")
+        log_search_bg(first_name or str(user_id), user_id, tni)
+        try:
+            result = perform_unified_tni_search(tni, full_info=False)  # TNI0122 → Task+WO only
+            for chunk in split_messages(result):
+                tg_send(chat_id, chunk)
+        except Exception as err:
+            logger.error(f"Unified search error [{tni}]: {err}")
+            tg_send(chat_id, f"❌ Lookup error: {html.escape(str(err))}")
         return
-
-    # CHỈ TRA CỨU DUY NHẤT 1 MÃ TNI ĐẦU TIÊN THEO YÊU CẦU
-    tni = tni_list[0].upper()
-
-    # Ghi log tìm kiếm mã TNI trong background
-    log_search_bg(first_name or str(user_id), user_id, tni)
-    result = lookup_tni(tni)
-    for chunk in split_messages(result):
-        tg_send(chat_id, chunk)
 
 
 def ensure_webhook_locked_bg():
@@ -1419,7 +1328,7 @@ class handler(BaseHTTPRequestHandler):
                     self.wfile.write(json.dumps({"status": "ok"}).encode("utf-8"))
                     return
 
-            # 2. Xử lý handle(data) TRƯỚC KHI phát 200 OK để Vercel không đóng băng Lambda tiến trình
+            # 2. Xử lý logic TRƯỚC (Vercel kill function sau khi flush response)
             try:
                 handle(data)
             except Exception as ex:
@@ -1434,7 +1343,7 @@ class handler(BaseHTTPRequestHandler):
                 except Exception:
                     pass
 
-            # 3. Trả về 200 OK SAU KHI handle(data) hoàn tất 100%
+            # 3. Trả về 200 OK sau khi xử lý xong (Telegram chờ tối đa 60s)
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Access-Control-Allow-Origin", "*")
@@ -1471,9 +1380,11 @@ class handler(BaseHTTPRequestHandler):
                         "drop_pending_updates": True
                     }, timeout=10).json()
                 r3 = requests.get(f"{TG_API}/getWebhookInfo", timeout=10).json()
+                setup_bot_menu_commands()
                 result = {
                     "delete": r1,
                     "set": r2, 
+                    "menu": "updated",
                     "info": r3.get("result", {}),
                     "version": BOT_VERSION
                 }
@@ -1507,6 +1418,16 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({"template": template_text}).encode("utf-8"))
             return
+
+        if TOKEN and not action:
+            try:
+                requests.post(
+                    f"https://api.telegram.org/bot{TOKEN}/setWebhook",
+                    json={"url": "https://tni-bot.vercel.app/api/search_bot", "allowed_updates": ["message", "edited_message", "channel_post"]},
+                    timeout=5
+                )
+            except Exception:
+                pass
 
         tok_ok  = "SET" if TOKEN else "MISSING"
         gas_ok  = "SET" if DAILY_APPS_SCRIPT_URL else "MISSING"
