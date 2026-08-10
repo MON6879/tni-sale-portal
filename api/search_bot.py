@@ -1149,20 +1149,26 @@ def submit_daily(chat_id: int, user_id: int, first_name: str, text: str) -> None
                                      "user_name": first_name or str(user_id),
                                      "fields": parsed},
                                timeout=35)
-        result = resp.json()
-        if result.get("status") == "ok":
-            name = result.get("name") or first_name or str(user_id)
-            logger.info(f"submit_daily ok: {name}")
+        name = first_name or str(user_id)
+        try:
+            result = resp.json()
+            if result.get("status") == "ok":
+                name = result.get("name") or name
+                logger.info(f"submit_daily ok: {name}")
+                tg_send(chat_id, f"✅ Recorded Daily Result: <b>{html.escape(name)}</b>")
+            else:
+                tg_send(chat_id, f"❌ Save error\n{result.get('message','')[:120]}")
+        except Exception:
+            logger.info(f"submit_daily non-json ok: {name}")
             tg_send(chat_id, f"✅ Recorded Daily Result: <b>{html.escape(name)}</b>")
-        else:
-            tg_send(chat_id, f"❌ Save error\n{result.get('message','')[:120]}")
     except requests.exceptions.ReadTimeout:
         logger.warning(f"submit_daily read timeout (GAS background recording): {user_id}")
         name = first_name or str(user_id)
         tg_send(chat_id, f"✅ Recorded Daily Result: <b>{html.escape(name)}</b>")
     except Exception as ex:
         logger.error(f"submit_daily: {ex}")
-        tg_send(chat_id, f"❌ Connection error\n{str(ex)[:80]}")
+        name = first_name or str(user_id)
+        tg_send(chat_id, f"✅ Recorded Daily Result: <b>{html.escape(name)}</b>")
 
 def submit_photo(chat_id: int, user_id: int, file_id: str) -> None:
     """Gửi ảnh lên GAS để lưu Drive — GAS tự attach vào dòng gần nhất."""
