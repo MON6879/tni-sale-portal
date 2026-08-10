@@ -105,6 +105,11 @@ Hệ thống được quy hoạch hoàn chỉnh thành **3 CHUYẾN TÀU CHÍNH 
   - `Ghế 1G2`: Team 2 Rank & Target (`Rank #2` | `54.8%/50%` | `✅ Met`)
   - `Ghế 1G3`: Team 3 Rank & Target (`Rank #3` | `33.7%/50%` | `❌ Not Met`)
   - `Ghế 1G4`: Team 4 Rank & Target (`Rank #1` | `78.6%/50%` | `✅ Met`)
+- **Dãy Ghế 1H (Plan 11/08/2026 — Cột M Google Sheet — Màu Hồng Đậm `#EC4899`)**:
+  - `Ghế 1H1`: Plan 11/08 Team 1 Dawei (`40 WOs` — Deep Pink `#EC4899`)
+  - `Ghế 1H2`: Plan 11/08 Team 2 Myeik (`11 WOs` — Deep Pink `#EC4899`)
+  - `Ghế 1H3`: Plan 11/08 Team 3 Bokpyin (`8 WOs` — Deep Pink `#EC4899`)
+  - `Ghế 1H4`: Plan 11/08 Team 4 Kawthoung (`3 WOs` — Deep Pink `#EC4899`)
 
 #### **TOA 2: 📊 PERFORMANCE COMPARISON CHART SYNC (HÌNH 2 — ĐỒ THỊ CHART)**
 - `Ghế 2A`: Dataset Total WO — Realtime Auto-Sync `[394, 209, 95, 103]` từ Ghế 1A1-1A4.
