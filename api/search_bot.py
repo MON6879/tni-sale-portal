@@ -1551,6 +1551,21 @@ class handler(BaseHTTPRequestHandler):
             raw  = self.rfile.read(length)
             data = json.loads(raw)
 
+            # ── Deduplication for Telegram Retries ──
+            update_id = data.get("update_id")
+            if update_id:
+                if update_id in _processed_updates:
+                    logger.info(f"Skipping duplicate Telegram update_id: {update_id}")
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json")
+                    self.send_header("Access-Control-Allow-Origin", "*")
+                    self.end_headers()
+                    self.wfile.write(b'{"ok":true}')
+                    return
+                _processed_updates.add(update_id)
+                if len(_processed_updates) > 5000:
+                    _processed_updates.clear()
+
             # ── Xử lý submit_plan (đồng bộ, cần response body) ──
             action = data.get("action")
             if action == "submit_plan":
