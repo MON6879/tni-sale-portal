@@ -1094,8 +1094,9 @@ async def scan_plan_tomorrow(client, group_key: str, chat_id: int,
                     dt = parse_plan_date(parsed.get("date", ""))
                     if dt and dt.strftime("%d/%m/%Y") == target_date_str:
                         return candidate  # Match chính xác ngày mục tiêu
-                    # Fallback: Nếu tin nhắn được gửi sau 14:00 MMT và chưa có candidate fallback thì lưu lại
-                    if fallback_result is None and dt_mm.hour >= 14:
+                    # Fallback: Chỉ chấp nhận tin nhắn được gửi BẰNG CHÍNH NGÀY HÔM NAY và sau 14:00 MMT
+                    today_date = myanmar_now().date()
+                    if fallback_result is None and dt_mm.date() == today_date and dt_mm.hour >= 14:
                         fallback_result = candidate
     except Exception as e:
         logger.error(f"scan_plan_tomorrow {group_key} error: {e}")
