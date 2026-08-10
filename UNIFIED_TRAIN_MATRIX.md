@@ -1,93 +1,56 @@
-# 🚂 UNIFIED CODE TRAIN & NUCLEAR INTERCONNECTION MATRIX (Đoàn Tàu Code Thống Nhất & Sợi Dây Liên Kết Hạt Nhân)
+# 🚂 BẢN ĐỒ CHI TIẾT TỔNG THỂ CÁC CHUYẾN TÀU CODE THỐNG NHẤT (MASTER UNIFIED TRAIN MANIFEST V6.0)
 
-> **Document Status:** Official Master System Architecture (v5.0 — Top 1% World-Class Grade)  
-> **Last Updated:** 2026-08-10  
-> **System Name:** TNI Bot System — Unified Code Train ("Đoàn Tàu Code Thống Nhất")
+Hệ thống được quy hoạch hoàn chỉnh thành **3 CHUYẾN TÀU CHÍNH (3 MAIN TRAIN LINES)** phân định rõ ràng đến từng **Toa Tàu (Carriage)**, **Hàng Ghế (Row of Seats / Trigger)**, **Số Ghế (Target Seat / Column Index)**, **Hạt Nhân Xử Lý (Core Nucleus / Sheet GID)** và **Sợi Dây Liên Kết (Pipeline Wires)**:
 
 ---
 
-## 📌 1. TỔNG QUAN MÔ HÌNH ĐOÀN TÀU CODE THỐNG NHẤT
+## 🔵 CHUYẾN TÀU 1: CHUYẾN TÀU SEARCH & TRA CỨU REALTIME 24/7 (SEARCH ENGINE LINE)
+> **Cơ chế vận hành**: Realtime Serverless Webhook (< 0.1s) trên Vercel Cloud (`https://tni-bot.vercel.app/api/search_bot`). Trực chiến 24/7 phản hồi tức thì.
 
-Hệ thống được thiết kế như **1 Đoàn Tàu Code Thống Nhất**, trong đó:
-- **Toa Tàu (Carriage)**: Phân chia theo miền nghiệp vụ cụ thể (Search Engine, Auto Reports, Asset Collector, Site Down Relay, Refuel, Daily Plan, Construction).
-- **Hàng Ghế (Row of Seats)**: Phân chia từ khóa kích hoạt (Search Key / Slash Commands) hoặc Cột dữ liệu (Data Column / Tab GID).
-- **Sợi Dây Liên Kết (Interconnection Wires)**: Luồng dữ liệu tự động nối liền từ Giao diện Telegram Bot $\rightarrow$ Engine Classifier $\rightarrow$ Vercel/Telethon/GAS $\rightarrow$ Hạt Nhân Bảng Tính Google Sheets.
-
-```
-                                  🚂 ĐẦU KÉO THỐNG NHẤT (UNIFIED TRAIN SYSTEM)
-                                                        │
-   ┌──────────────────────┬─────────────────────────────┼─────────────────────────────┬─────────────────────────────┐
-   │                      │                             │                             │                             │
-🔍 SEARCH BOT TRAINS     📊 AUTO REPORT TRAINS         📋 DAILY PLAN TRAINS          ⛽ REFUEL & CABLE TRAINS      🏗️ CONSTRUCTION TRAIN
-(Toa 1 - 9 Telegram)     (Toa 1+11: 05:48 & 15:48)     (Toa 3,4,5: Plan Reports)     (Toa 7-11: Refuel & Cable)    (Toa 8: Cons Search)
-```
-
----
-
-## 🚆 2. MA TRẬN PHÂN CHIA TOA TÀU, HÀNG GHẾ & SỢI DÂY LIÊN KẾT (FULL INTERCONNECTION MATRIX)
-
-### 🅰️ NHÓM TOA TÀU SEARCH TELEGRAM BOT (REALTIME SEARCH ENGINE)
-
-| Toa # | Tên Toa | Hàng Ghế (Search Key / Trigger) | Sợi Dây Liên Kết (Core Pipeline / Wire) | Data Sheet / GID | Hạt Nhân Xử Lý (Core Engine Function) | Kết Quả Phản Hồi (Target Output) |
+| Toa # | Tên Toa Tàu | Hàng Ghế (Trigger Key) | Số Ghế (Cột Dữ Liệu) | Sợi Dây Liên Kết (Pipeline Wire) | Hạt Nhân Xử Lý & Sheet GID | Thông Tin Cuối Cùng (Final Output) |
 |---|---|---|---|---|---|---|
-| **TOA 1** | 📋 Task & WO | `TNIxxxx`, `TNIxxxx_0x`, `/tni`, `/find` | Telegram $\rightarrow$ `api/search_bot.py` $\rightarrow$ `format_task_wo()` | `Team_Sum` (GID `893574714`) Col B $\rightarrow$ Col H | `perform_unified_tni_search(full_info=False)` | 📋 Task list, 🔧 WO list, 🔔 Alarms (Excludes Site Info) |
-| **TOA 2** | 🏢 Site Info & Cable | `Info: TNIxxxx`, `info TNIxxxx`, `/info` | Telegram $\rightarrow$ `api/search_bot.py` $\rightarrow$ `perform_unified_tni_search()` | `Name Site` (GID `171059303`) Col A $\rightarrow$ B,C,D,E | `perform_unified_tni_search(full_info=True)` | 🏢 Site Info, 🔌 Cable, 📶 GPON, 🌐 DIA (Excludes Task/WO) |
-| **TOA 3** | 📑 Open / Not Close WOs | `T1notclose`, `T2notclose`, `T3notclose`, `T4notclose`, `/t1notclose` | Telegram $\rightarrow$ `tni_search_core` $\rightarrow$ `lookup_notclose()` | `TL_WaitCD` (GID `1110926116`) Col H $\rightarrow$ Col I | `lookup_notclose(team_code)` | 📑 Open / Unclosed WOs for specified Team |
-| **TOA 4** | ⏳ Wait CD WOs | `T1waitcd`, `T2waitcd`, `T3waitcd`, `T4waitcd`, `/t1waitcd` | Telegram $\rightarrow$ `tni_search_core` $\rightarrow$ `lookup_waitcd()` | `TL_WaitCD` (GID `1110926116`) Col H $\rightarrow$ Col I | `lookup_waitcd(team_code)` | ⏳ WOs waiting for CD for specified Team |
-| **TOA 5** | 🧹 Clear Site History | `Clear TNIxxxx`, `clear TNIxxxx`, `/clear` | Telegram $\rightarrow$ Site Down Sheet CSV Export | `Site Clear` (GID `610944071`) on Sheet `1FvDhIwq...` | `lookup_clear_site(tni)` | 🧹 Clear Site History Records |
-| **TOA 6** | 📊 Team Leader Summary | `T1`, `T2`, `T3`, `T4` (Private Chat) | Telegram $\rightarrow$ `lookup_team()` | `Team_Sum` (GID `893574714`) Col B $\rightarrow$ Col H | `lookup_team(team_code)` | 📊 Team Leader Operational Summary |
-| **TOA 7** | 👤 Staff Personal Lookup | `mysite`, `mycable`, `mydia`, `mydata`, `mysite <ID>` | Telegram $\rightarrow$ `get_staff_data()` | `Staff` (GID `1684930643`) Col A (User ID) | `get_staff_data(user_id, field)` | 👤 Personal Assignments & Staff Records |
-| **TOA 8** | 🏗️ Construction Search | `cons TNIxxxx`, `pro TNIxxxx`, `/cons`, `/pro`, `construction` | Telegram $\rightarrow$ Construction Sheet `1ViXXv5P...` CSV Export | `Search Construction` tab Col A $\rightarrow$ Col B,C,D,E | `lookup_construction_site(tni)` | 🏗️ Construction Progress, Installation & Remove details |
-| **TOA 9** | 📋 Menu & Command Guide | `menu`, `/menu`, `men`, `/men`, `help`, `/help`, `/start` | Telegram $\rightarrow$ `send_help_menu()` | Internal Menu Engine | `send_help_menu(chat_id)` | 📋 9-Carriage Command Directory with clickable code examples |
+| **Toa 1** | 📋 Task & WO Search | `TNIxxxx`, `TNIxxxx_0x`, `/tni` | Ghế 1A: Col B (`TNI Code`)<br>Ghế 1B: Col H (`Task/WO String`) | Telegram $\rightarrow$ `search_bot.py` $\rightarrow$ `format_task_wo()` | `perform_unified_tni_search(full_info=False)` (`Team_Sum` GID `893574714`) | Chỉ 📋 Task & 🔧 WO list (Đã lọc bỏ Site Info) |
+| **Toa 2** | 🏢 Site Info & Cable & DIA | `Info: TNIxxxx`, `/info` | Ghế 2A: Col B (`Site Info`)<br>Ghế 2B: Col C (`Cable`)<br>Ghế 2C: Col D (`GPON`)<br>Ghế 2D: Col E (`DIA`) | Telegram $\rightarrow$ `search_bot.py` $\rightarrow$ `perform_unified_tni_search()` | `perform_unified_tni_search(full_info=True)` (`Name Site` GID `171059303`) | Chỉ 🏢 Site, 🔌 Cable, 📶 GPON, 🌐 DIA (Đã lọc bỏ Task/WO) |
+| **Toa 3** | 📑 Open / Not Close WOs | `/t1notclose` .. `/t4notclose` | Ghế 3A: Col H (`Category Label`)<br>Ghế 3B: Col I (`WO Content`) | Telegram $\rightarrow$ `search_bot.py` $\rightarrow$ `lookup_notclose()` | `lookup_notclose()` (`TL_WaitCD` GID `1110926116`) | Danh sách 📑 WOs chưa đóng của Team |
+| **Toa 4** | ⏳ Wait CD WOs | `/t1waitcd` .. `/t4waitcd` | Ghế 4A: Col H (`Category Label`)<br>Ghế 4B: Col I (`WO Content`) | Telegram $\rightarrow$ `search_bot.py` $\rightarrow$ `lookup_waitcd()` | `lookup_waitcd()` (`TL_WaitCD` GID `1110926116`) | Danh sách ⏳ WOs chờ CD của Team |
+| **Toa 5** | 🧹 Clear Site History | `Clear TNIxxxx`, `/clear` | Ghế 5A: Header Scan Col Index<br>Ghế 5B: Content Rows | Telegram $\rightarrow$ CSV Export Site Down Sheet | `lookup_clear_site()` (`Search Site Clear` GID `610944071`) | Bảng 🧹 Lịch sử Clear Site & Sự cố |
+| **Toa 6** | 📊 Team Leader Summary | `T1`, `T2`, `T3`, `T4` (Private) | Ghế 6A: Col B (`Team Code`)<br>Ghế 6B: Col H (`Summary Text`) | Telegram $\rightarrow$ `search_bot.py` $\rightarrow$ `lookup_team()` | `lookup_team()` (`Team_Sum` GID `893574714`) | Báo cáo 📊 Tổng hợp Team Leader |
+| **Toa 7** | 👤 Staff Personal Lookup | `mysite`, `mycable`, `mydia` | Ghế 7A: Col A (`User ID`)<br>Ghế 7B: Col C, D, E, F | Telegram $\rightarrow$ `get_staff_data()` | `get_staff_data()` (`Staff` GID `1684930643`) | Bảng 👤 Trạm, Tuyến cáp, DIA phân công cá nhân |
+| **Toa 8** | 🏗️ Construction Search | `cons TNIxxxx`, `/cons`, `/pro` | Ghế 8A: Col A (`TNI Code`)<br>Ghế 8B: Col B (`Install`)<br>Ghế 8C: Col C (`Remove`) | Telegram $\rightarrow$ Construction Sheet Export | `lookup_construction_site()` (Spreadsheet `1ViXXv5P8jSgx5heBqEP419ZkSR77C3OsflK0xpHMoi8`) | Báo cáo 🏗️ Tiến độ thi công, Vật tư Lắp đặt & Thu hồi |
+| **Toa 9** | 📋 Menu Directory | `menu`, `/menu`, `help` | Ghế 9A: Directory Categories<br>Ghế 9B: Clickable Command Links | Telegram $\rightarrow$ `send_help_menu()` | Internal Menu Engine (`search_bot.py`) | Bảng 📋 Danh mục 9 Toa Tàu kèm lệnh mẫu |
 
 ---
 
-### 🅱️ NHÓM TOA TÀU TỰ ĐỘNG HÓA 5 PHÚT (GITHUB ACTIONS CRON `train_5min.yml`)
+## 🟢 CHUYẾN TÀU 2: CHUYẾN TÀU THU THẬP & GHI DỮ LIỆU VÀO DÒNG 2 (DATA INGESTION LINE)
+> **Cơ chế vận hành**: Sự kiện & Cron Automation Ingestion. **Quy tắc tuyệt đối 100%: Chèn dữ liệu mới vào Dòng 2 (`insertRowsBefore(2)`)** ngay bên dưới Hàng Tiêu Đề Header Row 1.
 
-| Toa # | Tên Toa | Giờ Khởi Hành (MMT) | Engine & Script | Sợi Dây Liên Kết (Dependencies) | Hạt Nhân Bảo Vệ / Fail-safe |
-|---|---|---|---|---|---|
-| **Toa 0** | 🏥 Keepalive & Webhook Lock | Mọi chuyến (*/5 offset 3) | cURL $\rightarrow$ `train_5min.yml` step 1 | Search Bot (`/api/search_bot`), Asset Collector (`/api/collector`), Site Down Relay (`/api/site_down_relay`), Main GAS, Construction GAS | Sưởi Vercel Serverless không bị cold-start; Khóa `setWebhook` Telegram |
-| **PRE** | 🔔 Pre-Warm | 05:43, 15:43 | cURL $\rightarrow$ `train_5min.yml` step 1 | Ping kích hoạt toàn bộ GAS & Vercel Endpoints 5 phút trước giờ báo cáo | Đảm bảo RAM/Cache Vercel và Google Sheets sẵn sàng 100% |
-| **Toa 1+11** | 📊 Reports 1,2,3,4 + BOD | 05:48, 15:48 | 🤖 Bot API $\rightarrow$ `cron_send.py`, `daily_bod_assign.py` | `SEND_BOT_TOKEN`, `REPORT_TASK_BOT_TOKEN`, `TECHNICAL_DEP_BOT_TOKEN`, Apps Script API | Chạy song song độc lập bằng Bot API tokens |
-| **Toa 3** | 📋 Plan 5A (EOD) | 05:58, 15:58 | 📱 Telethon $\rightarrow$ `daily_plan_report.py --mode eod` | Telegram Client (@Phongha79), Google Sheets `daily_plan` | Quét Telegram 200 msgs $\rightarrow$ Deduplicate Newest-First $\rightarrow$ Insert Sheet row 2 |
-| **Toa 4** | 📋 Plan 5B (Update) | 21:03 | 📱 Telethon $\rightarrow$ `daily_plan_report.py --mode update` | Telegram Client (@Phongha79), Sheet `daily_plan` | Đọc tin nhắn điều chỉnh kế hoạch ban đêm |
-| **Toa 5** | 📋 Plan 5C (Morning) | 05:28, 08:28, 09:53, 15:23, 19:03, 22:03 | 📱 Telethon $\rightarrow$ `daily_plan_report.py --mode morning` | Telegram Client (@Phongha79), `is_daily_plan_msg()`, `deduplicate_plans_by_date()` | Quét plan hôm nay; Fallback lấy từ Sheet nếu scan rỗng |
-| **Toa 6** | 📖 Report 6 (Read) | 14:03, 16:03, 17:18, 19:08, 20:33 | 📱 Telethon $\rightarrow$ `daily_read_report.py` | Telegram Client (@Phongha79), Sheet `read_log` | Quét ai đã đọc tin nhắn chỉ đạo |
-| **Toa 7** | 🔌 Cable Daily Report | 05:53, 15:53 | 🤖 Bot API $\rightarrow$ `cable_report.py` | `COLLECTOR_BOT_TOKEN`, `CABLE_APPS_SCRIPT_URL` | Báo cáo sự cố & tiến độ cáp |
-| **Toa 8** | ⛽ Refuel Request | 05:53, 13:03, 15:53 | 🤖 Bot API $\rightarrow$ `refuel_send.py` | `REFUEL_BOT_TOKEN`, `REFUEL_APPS_SCRIPT_URL` | Báo cáo yêu cầu nhiên liệu máy phát |
-| **Toa 9** | ⛽ Refuel Plan 1 | 13:08, 22:08 | 📱 Telethon $\rightarrow$ `refuel_plan_report.py --report 1` | Telegram Client (@Phongha79), `REFUEL_BOT_TOKEN` | Tổng hợp kế hoạch đổ dầu Team |
-| **Toa 10** | ⛽ Refuel Plan 2 + 2.1 | 13:13, 18:03, 22:13 | 📱 Telethon $\rightarrow$ `refuel_plan_report.py --report 2` | Telegram Client (@Phongha79), `REFUEL_BOT_TOKEN` | Kiểm tra ngày giám sát FT & Kế hoạch cấp phát |
-| **Toa 11** | ⛽ Refuel Plan 4 | 22:18 | 📱 Telethon $\rightarrow$ `refuel_plan_report.py --report 4` | Telegram Client (@Phongha79), `REFUEL_BOT_TOKEN` | Tổng kết nhiên liệu cuối ngày |
+| Toa # | Tên Toa Tàu | Hàng Ghế (Từ Khóa Quét) | Số Ghế (Vị Trí Cột Lưu) | Sợi Dây Liên Kết (Pipeline Wire) | Hạt Nhân Xử Lý & Target Sheet | Quy Tắc Chèn Bắt Buộc |
+|---|---|---|---|---|---|---|
+| **Toa 1** | 🏗️ Construction Collector | Tin nhắn có từ `Pro` / `/pro` | Col A: TNI Code<br>Col B: Install/Remove<br>Col F: Link Drive `📥 DOWNLOAD ALL` | Telegram Bot `10 TNI_SITE` (`8903841312`) $\rightarrow$ GAS | `13_TNI_CONSTRUCTION.gs` (Spreadsheet `1ViXXv5P8jSgx5heBqEP419ZkSR77C3OsflK0xpHMoi8`) | **Dòng 2 (`insertRowsBefore(2)`)** |
+| **Toa 2** | 📦 Asset & Material Order Collector | Đơn đăng ký vật tư & tài sản | Col A: User ID<br>Col B: Form Data<br>Col C: Timestamp | Telegram Bot `@TNIASSETorderREQUEST_BOT` $\rightarrow$ Vercel | `api/collector.py` $\rightarrow$ `REFUEL_APPS_SCRIPT_URL` | **Dòng 2 (`insertRowsBefore(2)`)** |
+| **Toa 3** | ⛽ Refuel & DG Collector | Tin nhắn kế hoạch cấp phát dầu | Col A: Team<br>Col B: Fuel Volume<br>Col C: DG Hours | Telethon `@Phongha79` $\rightarrow$ GAS Backend | `refuel_plan_report.py` $\rightarrow$ Refuel GAS | **Dòng 2 (`insertRowsBefore(2)`)** |
+| **Toa 4** | 🚨 Site Down Incident Collector | Nhóm Botlookup NOC Pro | Col A: TNI Code<br>Col B: Incident Type<br>Col C: Timestamp | Telethon `@Phongha79` $\rightarrow$ GAS Backend | `botlookup_relay.py` $\rightarrow$ `SD_APPS_SCRIPT_URL` (`1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow`) | **Dòng 2 (`insertRowsBefore(2)`)** |
+| **Toa 5** | 📋 Daily Plan Collector | Tin nhắn `daily plan`, `hot task` | Col A: Date<br>Col B: Team<br>Col C: Plan Content | Telethon `@Phongha79` / Search Bot $\rightarrow$ GAS | `daily_plan_report.py` $\rightarrow$ `DAILY_APPS_SCRIPT_URL` (`daily_plan`) | **Dòng 2 (`insertRowsBefore(2)`)** |
+| **Toa 6** | 🛠️ Daily Maintenance Collector | Lệnh `/daily` & Ảnh đính kèm | Col A: User ID<br>Col B: Form Fields<br>Col C: Drive Photo Link | Search Bot `@SEARCHTNITASKWOBOT` $\rightarrow$ GAS | `submit_daily()` + `submit_photo()` $\rightarrow$ `DAILY_APPS_SCRIPT_URL` | **Dòng 2 (`insertRowsBefore(2)`)** |
+| **Toa 7** | 📖 Read Group Logs Collector | Lịch sử đã xem tin nhắn | Col A: User ID<br>Col B: Group ID<br>Col C: Read Timestamp | Telethon `@Phongha79` $\rightarrow$ GAS | `daily_read_report.py` $\rightarrow$ Sheet `read_log` | **Dòng 2 (`insertRowsBefore(2)`)** |
+| **Toa 8** | 🔌 Cable Cut Incident Collector | Báo cáo đứt cáp & suy hao | Col A: Cable Route<br>Col B: Loss Point<br>Col C: Solution | Telethon `@Phongha79` $\rightarrow$ GAS | `cable_report.py` $\rightarrow$ Sheet `cable_log` | **Dòng 2 (`insertRowsBefore(2)`)** |
 
 ---
 
-## 🧬 3. SÁU HẠT NHÂN QUY TẮC BẮT BUỘC (NUCLEAR LOGIC RULES)
+## 🔴 CHUYẾN TÀU 3: CHUYẾN TÀU TỰ ĐỘNG BÁO CÁO & GIÁM SÁT HẸN GIỜ (SCHEDULED AUTOMATION LINE)
+> **Cơ chế vận hành**: GitHub Actions `train_5min.yml` (cron `3/5 * * * *`) + `botlookup_relay.yml` (cron `6,36 * * * *`).
 
-1. **Hạt Nhân Webhook Async Decoupling (3s Telegram SLA):**
-   * Mọi Webhook endpoint trên Vercel phải trả về `HTTP 200 OK` ngay lập tức (~10ms) trước khi thực thi logic nặng bằng `threading.Thread`.
-
-2. **Hạt Nhân Quét Plan & Exclusion Blocklist:**
-   * `is_daily_plan_msg()` tuyệt đối KHÔNG chứa các từ khóa trong nội dung Plan hợp lệ của Team Leader.
-   * `deduplicate_plans_by_date()` phải giữ bản tin MỚI NHẤT (Newest-First): `if key not in latest_map: latest_map[key] = p`.
-
-3. **Hạt Nhân Chống Xung Đột Telethon Session:**
-   * Mọi tác vụ dùng Telethon (`@Phongha79`) phải dàn xếp lệch thời gian tối thiểu 5 phút. Không bao giờ cho 2 script Telethon chạy đồng thời trong cùng 1 tick 5 phút.
-
-4. **Hạt Nhân Phút Lẻ Offset 3 Chống Nghẽn Cron:**
-   * Mọi cron schedule chính của hệ thống phải đặt ở phút lẻ `:03, :08, :13, :18, :23, :28, :33, :38, :43, :48, :53, :58` để tránh nghẽn hàng đợi GitHub Actions toàn cầu ở phút tròn.
-
-5. **Hạt Nhân Thu Thập Dữ Liệu Ghi Đầu Bảng Tính (Top Row Insertion):**
-   * Mọi bộ thu thập dữ liệu (Daily Plan, Read Log, Refuel, Inventory...) khi ghi vào Google Sheets BẮT BUỘC phải chèn dòng mới lên đầu (Dòng 2, bên dưới Header Row 1) bằng `insertRowsBefore(2, ...)`. Tuyệt đối không dùng `appendRow()`.
-
-6. **Hạt Nhân Khung Thời Gian Botlookup Relay 6 Phút:**
-   * Botlookup Relay chạy tại phút `:06 & :36` MMT — đúng 6 phút sau khi Bot công ty đăng tin tổng hợp lúc `:00 & :30`.
-
----
-
-## 🛡️ 4. QUY TRÌNH "LƯU ĐI" BẮT BUỘC 6 BƯỚC (STRICT SAVE PROCEDURE)
-
-```
-[Bước 1: Snapshot Backup] ──► [Bước 2: Đồng Bộ Mã Nguồn] ──► [Bước 3: Commit & Push All Repos]
-                                                                            │
-[Bước 6: Live Output Verification] ◄── [Bước 5: Full Cross-Sync] ◄── [Bước 4: Dọn Pycache]
-```
+| Toa # | Tên Toa Tàu | Giờ Khởi Hành (MMT) | Hàng Ghế (Nhiệm Vụ) | Sợi Dây Liên Kết (Pipeline Wire) | Hạt Nhân Xử Lý & Target Bot | Thông Tin Phản Hồi |
+|---|---|---|---|---|---|---|
+| **Toa 0** | 🏥 Keepalive & Webhook Lock | Mọi 5 phút 24/7 | Sưởi Vercel & Khóa Webhook | `train_5min.yml` step 1 $\rightarrow$ cURL | Ping Vercel `/api/search_bot`, `/collector`, `/relay` | Giữ sưởi Vercel RAM & Khóa Telegram Webhook URL |
+| **PRE** | 🔔 Pre-Warm | 05:43 & 15:43 MMT | Warmup RAM trước 5 phút | `train_5min.yml` step 1 $\rightarrow$ cURL | Warmup Google Sheets CSV & Vercel Cache | Chuẩn bị tài nguyên sẵn sàng trước giờ báo cáo lớn |
+| **Toa 1+11** | 📊 Reports 1-4 + BOD | 05:48 & 15:48 MMT | Báo cáo Backlog, Cron & BOD | `backlog_send.py` + `cron_send.py` + `daily_bod_assign.py` | Bot API Tokens $\rightarrow$ Telegram Groups | Tự động gửi báo cáo công việc hàng ngày |
+| **Toa 3** | 📋 Plan 5A (EOD) | 05:58 & 15:58 MMT | Quét Kế hoạch EOD | `daily_plan_report.py --mode eod` | Telethon `@Phongha79` $\rightarrow$ Sheet `daily_plan` Row 2 | Quét plan EOD $\rightarrow$ Chèn Dòng 2 Google Sheets |
+| **Toa 4** | 📋 Plan 5B (Update) | 21:03 MMT | Quét Plan điều chỉnh đêm | `daily_plan_report.py --mode update` | Telethon `@Phongha79` $\rightarrow$ Sheet `daily_plan` Row 2 | Quét plan update $\rightarrow$ Chèn Dòng 2 Google Sheets |
+| **Toa 5** | 📋 Plan 5C (Morning) | 05:28, 08:28, 09:53, 15:23, 19:03, 22:03 MMT | Quét Plan sáng & chiều | `daily_plan_report.py --mode morning` | Telethon `@Phongha79` $\rightarrow$ Sheet `daily_plan` Row 2 | Quét plan sáng/chiều $\rightarrow$ Chèn Dòng 2 Google Sheets |
+| **Toa 6** | 📖 Report 6 (Read) | 14:03, 16:03, 17:18, 19:08, 20:33 MMT | Quét nhật ký đọc tin | `daily_read_report.py` | Telethon `@Phongha79` $\rightarrow$ Sheet `read_log` Row 2 | Quét nhật ký đọc tin nhắn chỉ đạo |
+| **Toa 7+8** | 🔌 Cable & Refuel Req | 05:53, 13:03, 15:53 MMT | Báo cáo Cáp & Cấp dầu | `cable_report.py` + `refuel_send.py` | Bot API Tokens $\rightarrow$ Telegram Groups | Báo cáo sự cố cáp & Yêu cầu cấp nhiên liệu |
+| **Toa 9** | ⛽ Refuel Plan 1 | 13:08 & 22:08 MMT | Kế hoạch đổ dầu Team | `refuel_plan_report.py --report 1` | Telethon `@Phongha79` $\rightarrow$ Refuel GAS | Tổng hợp kế hoạch đổ dầu Team |
+| **Toa 10** | ⛽ Refuel Plan 2 + 2.1 | 13:13, 18:03, 22:13 MMT | Cấp phát & Giám sát FT | `refuel_plan_report.py --report 2` + `--report 21` | Telethon `@Phongha79` $\rightarrow$ Refuel GAS | Kế hoạch cấp phát & Giám sát FT |
+| **Toa 11** | ⛽ Refuel Plan 4 | 22:18 MMT | Tổng kết dầu cuối ngày | `refuel_plan_report.py --report 4` | Telethon `@Phongha79` $\rightarrow$ Refuel GAS | Tổng kết nhiên liệu máy phát cuối ngày |
+| **ĐỘC LẬP** | 🚨 Site Down Relay | Phút `:06` & `:36` hàng giờ | Cào tin trạm sập NOC Pro | `botlookup_relay.yml` $\rightarrow$ `botlookup_relay.py` | Telethon `@Phongha79` $\rightarrow$ Sheet Site Down Row 2 | Cào tin trạm sập NOC Pro $\rightarrow$ Bắn cảnh báo Telegram |
