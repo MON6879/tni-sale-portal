@@ -434,12 +434,13 @@ def build_search_indexes(force: bool = False):
                 col_a = safe(row, 0).upper().strip()
                 if not col_a: continue
                 code_part = col_a.split(":")[0].strip()
-                new_info_idx[code_part] = {
-                    "site": safe(row, 1),
-                    "cable": safe(row, 2),
-                    "gpon": safe(row, 3),
-                    "dia": safe(row, 4)
-                }
+                if code_part not in new_info_idx:   # Ưu tiên lấy dòng mới nhất ở trên cùng
+                    new_info_idx[code_part] = {
+                        "site": safe(row, 1),
+                        "cable": safe(row, 2),
+                        "gpon": safe(row, 3),
+                        "dia": safe(row, 4)
+                    }
 
         new_team_idx = {}
         if df_team is not None and not df_team.empty:
@@ -447,7 +448,7 @@ def build_search_indexes(force: bool = False):
                 col_b = safe(row, 1).strip().upper()
                 if not col_b: continue
                 col_h = safe(row, 7)
-                if col_h:
+                if col_h and col_b not in new_team_idx:   # Ưu tiên lấy dòng mới nhất ở trên cùng
                     new_team_idx[col_b] = col_h.strip().lstrip("~ ").strip()
 
         if new_info_idx:
