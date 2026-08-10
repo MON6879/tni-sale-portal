@@ -8,7 +8,7 @@ Routing:
 
 Webhook URL: https://tni-bot.vercel.app/api/collector
 """
-import os, re, json, asyncio, logging, requests, html, base64
+import os, re, json, asyncio, logging, requests, html, base64, time
 from http.server import BaseHTTPRequestHandler
 from telegram import Bot, Update
 from datetime import datetime, timezone, timedelta
@@ -17,15 +17,22 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 COLLECTOR_BOT_TOKEN   = os.environ.get("COLLECTOR_BOT_TOKEN", "").strip().strip("\ufeff")
-DEFAULT_ASSET_GAS_URL = "https://script.google.com/macros/s/AKfycbwi3J0VrrIE91mnPvIUuykPjwGvNc4y9JDxCNPvJTtOmVAvvalDXu5ZwYZmu5jW-fSo0w/exec"
-APPS_SCRIPT_URL        = os.environ.get("APPS_SCRIPT_URL", DEFAULT_ASSET_GAS_URL).strip().strip("\ufeff") or DEFAULT_ASSET_GAS_URL
+APPS_SCRIPT_URL        = os.environ.get("APPS_SCRIPT_URL", "").strip().strip("\ufeff")
 CABLE_APPS_SCRIPT_URL  = os.environ.get("CABLE_APPS_SCRIPT_URL", "").strip().lstrip('\ufeff')
+
+MAIN_GAS_FALLBACK = "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
+if not APPS_SCRIPT_URL or "AKfycbzGFdnE" in APPS_SCRIPT_URL:
+    APPS_SCRIPT_URL = MAIN_GAS_FALLBACK
+
 try:
     CABLE_CHAT_ID = int(os.environ.get("CABLE_CHAT_ID", "-5531350787").strip())
 except ValueError:
     CABLE_CHAT_ID = -5531350787
 
 MDG_APPS_SCRIPT_URL = os.environ.get("MDG_APPS_SCRIPT_URL", "").strip().lstrip('\ufeff')
+if not MDG_APPS_SCRIPT_URL or "AKfycbzGFdnE" in MDG_APPS_SCRIPT_URL:
+    MDG_APPS_SCRIPT_URL = APPS_SCRIPT_URL or MAIN_GAS_FALLBACK
+
 try:
     MDG_CHAT_ID = int(os.environ.get("MDG_CHAT_ID", "-5412512982").strip())
 except ValueError:
@@ -44,57 +51,110 @@ CABLE_FIELDS_LIST   = [
     "team name", "wo", "materials list",
 ]
 _keywords_cache = None
+_config_templates_cache = None
+_config_templates_ts = 0
+_last_daily_sync_date = ""
 
-def get_keywords() -> list:
-    """Load keywords from Config sheet col A (text before ':'), cache result."""
-    global _keywords_cache
-    if _keywords_cache is not None:
-        return _keywords_cache
+def fetch_config_templates(force: bool = False) -> dict:
+    """Fetch Column A (A2:A) from 'Config' tab (gid=1236389870) in Google Sheet 1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8.
+    Automatically refreshes at 01:08 AM MMT daily or when cache is >30 minutes old.
+    """
+    global _config_templates_cache, _config_templates_ts, _last_daily_sync_date, _keywords_cache
+    now = time.time()
+    now_mm = datetime.now(TZ_MM)
+    today_str = now_mm.strftime("%Y-%m-%d")
+    
+    # Check if 01:08 AM MMT has passed today and we haven't synced for today yet
+    is_sync_time = (now_mm.hour == 1 and now_mm.minute >= 8) or (now_mm.hour > 1)
+    need_daily_sync = is_sync_time and (_last_daily_sync_date != today_str)
+
+    if not force and not need_daily_sync and _config_templates_cache and (now - _config_templates_ts < 1800):
+        return _config_templates_cache
+
     try:
         url = (
             "https://docs.google.com/spreadsheets/d/"
             "1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8"
-            "/gviz/tq?tqx=out:csv&gid=1236389870&tq=select+A+limit+30"
+            "/gviz/tq?tqx=out:csv&gid=1236389870&tq=select+A"
         )
         resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
         import csv, io
         rows = list(csv.reader(io.StringIO(resp.text)))
-        kws = []
-        for row in rows[1:]:  # skip header
+        lines = []
+        mapping = {}
+        keywords = []
+        for row in rows[1:]:  # Skip Header 'Field Name'
             val = (row[0] if row else "").strip()
-            if ":" in val:
-                kw = val.split(":")[0].strip().lower()
-                if kw and kw not in kws:
-                    kws.append(kw)
-        if kws:
-            _keywords_cache = kws
-            logger.info(f"Keywords from Config: {kws}")
-            return kws
+            if val:
+                lines.append(val)
+                if ":" in val:
+                    kw = val.split(":")[0].strip().lower()
+                    mapping[kw] = val
+                    if kw not in keywords:
+                        keywords.append(kw)
+                else:
+                    first_word = val.split()[0].strip().lower()
+                    mapping[first_word] = val
+                    if first_word not in keywords:
+                        keywords.append(first_word)
+        if lines:
+            _config_templates_cache = {"all": lines, "map": mapping}
+            _config_templates_ts = now
+            _keywords_cache = keywords
+            if is_sync_time:
+                _last_daily_sync_date = today_str
+            logger.info(f"Loaded {len(lines)} templates from Config sheet A2:A")
+            return _config_templates_cache
     except Exception as e:
-        logger.warning(f"Config keyword load failed: {e}, using defaults")
-    _keywords_cache = KEYWORDS_DEFAULT
-    return _keywords_cache
+        logger.warning(f"Config templates load failed: {e}")
+
+    if _config_templates_cache:
+        return _config_templates_cache
+    return {"all": [], "map": {}}
+
+def get_keywords() -> list:
+    """Load keywords from Config sheet col A (text before ':'), cache result."""
+    data = fetch_config_templates()
+    if data and data.get("map"):
+        return list(data["map"].keys())
+    return KEYWORDS_DEFAULT
+
+def get_template_text(cmd_name: str) -> str:
+    """Find matching template for command name from Config sheet Column A2:A."""
+    data = fetch_config_templates()
+    lines = data.get("all", [])
+    mapping = data.get("map", {})
+    
+    clean_cmd = cmd_name.lstrip("/").strip().lower()
+    
+    # 1. Exact match in mapping
+    if clean_cmd in mapping:
+        return mapping[clean_cmd]
+        
+    # 2. Match lines starting with command name (e.g. /inventory -> all "Inventory..." lines)
+    matching = [line for line in lines if line.lower().startswith(clean_cmd)]
+    if matching:
+        return "\n".join(matching)
+        
+    # 3. Fallback: all lines if /template or /all
+    if clean_cmd in ("template", "templates", "all", "help"):
+        return "\n".join(lines) if lines else ""
+
+    return ""
 
 
 
 # ── Send data to Asset Google Sheet via Apps Script ──────────────────────
-def post_sheet(payload: dict, timeout: int = 40):
+def post_sheet(payload: dict, timeout: int = 35):
     """POST JSON to Asset Apps Script Web App."""
     if not APPS_SCRIPT_URL:
         logger.error("APPS_SCRIPT_URL not set.")
         return {"status": "error", "message": "APPS_SCRIPT_URL not configured"}
     try:
-        session = requests.Session()
-        headers = {"Content-Type": "application/json"}
-        resp = session.post(APPS_SCRIPT_URL, json=payload, headers=headers, timeout=timeout)
-        
-        if resp.status_code == 404:
-            logger.error(f"Apps Script 404 error on URL: {resp.url}")
-            return {"status": "error", "message": "Apps Script Web App 404 Not Found (Deployment URL expired or access not set to Anyone)"}
-            
+        resp = requests.post(APPS_SCRIPT_URL, json=payload, timeout=timeout)
         resp.raise_for_status()
         logger.info(f"Apps Script response: {resp.text[:300]}")
-        
+        # Handle empty response body (GAS timeout / redirect trả về HTML rỗng)
         if not resp.text or not resp.text.strip():
             logger.error("Apps Script returned empty response")
             return {"status": "error", "message": "Apps Script returned empty response (possible timeout or session expired)"}
@@ -103,9 +163,6 @@ def post_sheet(payload: dict, timeout: int = 40):
         except ValueError as je:
             logger.error(f"Apps Script non-JSON response: {resp.text[:200]}")
             return {"status": "error", "message": f"Invalid response from Apps Script: {resp.text[:100]}"}
-    except requests.exceptions.Timeout:
-        logger.error("Apps Script request timed out")
-        return {"status": "error", "message": "Apps Script timeout (GAS took >40s to process image)"}
     except Exception as e:
         logger.error(f"Apps Script POST error: {e}")
         return {"status": "error", "message": str(e)}
@@ -265,45 +322,50 @@ def parse_cable_fields(text: str) -> dict:
 
 # ── Daily Plan detection ──────────────────────────────────────────────────
 def is_daily_plan(text: str) -> bool:
-    """Detect plan message: first 3 lines have 'plan', text has date d/m/yyyy."""
+    """Detect plan message: text has 'plan' and date d/m/yyyy, excluding bot auto reports."""
     if not text:
         return False
     text_l = text.lower()
-    # 🛑 LOẠI BỎ TẤT CẢ CÁC BẢN TIN MẪU CỦA BOT HOẶC BÁO CÁO TỰ ĐỘNG
     if any(kw in text_l for kw in (
-        "daily plan template", "copy → edit", "copy -> edit", "note: /find /tnixxxx",
         "comparison of plan for", "auto report", "plan stats:", "report — daily plan",
         "crosscheck", "plan tomorrow status", "plan vs actual", "eod summary",
         "shows detailed site assignments", "tasks grouped by department", "recent plans",
-        "plans for "
+        "plans for ", "tni personal find task", "ft result daily", "personal find task",
+        "find task + wo", "list name ft"
     )):
         return False
 
-    lines = [line.strip().lower() for line in text.split("\n") if line.strip()]
-    first_few_lines = " ".join(lines[:3]) if lines else ""
-    has_plan = "plan" in first_few_lines
-    has_date = bool(re.search(r'\d{1,2}/\d{1,2}/\d{2,4}', text))
+    has_plan = "plan" in text_l
+    has_date = bool(re.search(r'\b\d{1,2}[\/\.]\d{1,2}[\/\.]\d{2,4}\b', text))
     return has_plan and has_date
 
 
 def parse_plan_fields(text: str) -> tuple:
     """Extract (date, team, content) from plan message."""
     lines = text.strip().split("\n")
-    # Date: tìm ngày trong toàn bộ text
+    # Date: tìm ngày trong toàn bộ text (ưu tiên theo chữ 'daily plan' hoặc 'plan for')
     date_str = ""
-    date_m = re.search(r'(\d{1,2}/\d{1,2}/\d{2,4})', text)
+    date_m = re.search(r'(?:daily\s*plan|plan\s*for)[:\s]+(\d{1,2}[\/\.]\d{1,2}[\/\.]\d{2,4})', text, re.IGNORECASE)
+    if not date_m:
+        date_m = re.search(r'(\d{1,2}[\/\.]\d{1,2}[\/\.]\d{2,4})', text)
     if date_m:
-        parts = date_m.group(1).split("/")
+        raw_d = date_m.group(1)
+        parts = re.split(r'[\/\.]', raw_d)
         if len(parts) == 3:
             d, m, y = parts
             if len(y) == 2:
                 y = "20" + y
-            date_str = f"{d.zfill(2)}/{m.zfill(2)}/{y}"
+            date_str = f"{int(d):02d}/{int(m):02d}/{y}"
+    if not date_str:
+        now_mm = datetime.now(TZ_MM)
+        date_str = now_mm.strftime("%d/%m/%Y")
+
     # Team: tìm Team + số
     team_str = ""
     team_m = re.search(r'Team\s*0?([1-5])', text, re.IGNORECASE)
     if team_m:
         team_str = f"Team {team_m.group(1)}"
+
     # Content: mọi thứ sau dòng header (dòng đầu có 'plan') và dòng team
     team_line_idx = 0
     for i, line in enumerate(lines[1:], 1):
@@ -642,16 +704,14 @@ async def handle_mdg(msg, bot, now, user, sender_name, sender_id):
         elif cmd == "/inventory":
             await bot.send_message(
                 chat_id,
-                "📝 <b>Template: Inventory Fuel</b>\n"
-                "<i>(Tap the code block below to copy)</i>\n\n"
-                "<pre><code>Inventory fuel:\n"
+                "Inventory fuel:\n"
                 "DG ID: TNIXXXX\n"
                 "Fuel cm: \n"
                 "Fuel %: \n"
                 "Fuel level: \n"
                 "Kwh: \n"
                 "Rh: \n"
-                "Note: </code></pre>",
+                "Note: ",
                 parse_mode="HTML"
             )
             return
@@ -683,8 +743,12 @@ async def handle_mdg(msg, bot, now, user, sender_name, sender_id):
                 await bot.send_message(chat_id, f"⚠️ Confirm failed: {err}", parse_mode="HTML")
         return
 
-    # ── Inventory Report message ─────────────────────────────────────────
-    if "inventory fuel" in text.lower():
+    # ── Inventory Report message (Strict Template Match) ──────────────────
+    text_l = text.lower()
+    has_inv_kw = "inventory fuel" in text_l
+    inv_field_cnt = sum(1 for k in ("dg id:", "fuel cm:", "fuel %:", "fuel level:", "kwh:", "rh:", "note:") if k in text_l)
+
+    if has_inv_kw and (inv_field_cnt >= 2 or "dg id:" in text_l):
         # FIX: forward từ Viber → trim text từ dòng đầu có "inventory fuel"
         lines_inv = text.splitlines()
         inv_start_idx = next(
@@ -724,8 +788,11 @@ async def handle_mdg(msg, bot, now, user, sender_name, sender_id):
             await bot.send_message(chat_id, f"⚠️ Failed to record: {err}", parse_mode="HTML")
         return
 
-    # ── MDG Report message ───────────────────────────────────────────────
-    if "mdg" in text.lower():
+    # ── MDG Report message (Strict Template Match) ───────────────────────
+    has_mdg_kw = "mdg" in text_l or "run mdg" in text_l or "m&e" in text_l
+    mdg_field_cnt = sum(1 for k in ("site id:", "mdg id:", "run time:", "kwh:", "dg id:", "start time:", "end time:") if k in text_l)
+
+    if has_mdg_kw and (mdg_field_cnt >= 2 or "site id:" in text_l or "mdg id:" in text_l):
         # FIX: forward từ Viber / copy-paste có thể có text thừa trước "MDG ::Report"
         # → tìm dòng đầu tiên có chữ "MDG" và parse từ đó
         lines = text.splitlines()
@@ -778,6 +845,10 @@ async def handle(data: dict):
 
         msg         = update.message
         user        = msg.from_user
+        if not user or user.is_bot:
+            logger.info("Ignoring message from bot or missing user")
+            return
+
         chat_id     = msg.chat_id
         now         = datetime.now(TZ_MM)          # Myanmar time for all groups
         sender_name = (user.full_name if user else "") or ""
@@ -906,97 +977,40 @@ async def handle(data: dict):
                 date_s = now_mm.strftime("%d/%m/%Y")
                 template_text = (
                     f"Daily result: {date_s}\n"
-                    "1. Full Name:\n"
-                    "2. Transportation Used:\n"
-                    "3. I. Hot task rescue Site down >24:\n"
-                    "4. II Hot task Cell rescue:\n"
-                    "5. III. Hot task Repair DG abnormal:\n"
-                    "6. IV. Hot task Repair DG run>16H:\n"
-                    "7. V. Hot task other:\n"
-                    "8. VII. Detail WO:\n"
-                    "9. VII. Detail task:\n"
-                    "10. Name and detail Site go busines trip start go:\n"
-                    "11. Name and detail Site go busines trip end go:\n"
-                    "12. Km moto bike start:\n"
-                    "13. Km moto bike the end:"
+                    "Transportation Used:\n"
+                    "Full Name:\n"
+                    "Detail WO:\n"
+                    "Detail task:\n"
+                    "Name Site rescue:\n"
+                    "Name Cell rescue:\n"
+                    "Resuce Cable:\n"
+                    "Name and detail Site repair alarm:\n"
+                    "Name Site follow partner refuel:\n"
+                    "Other task:\n"
+                    "Name and detail Site go busines trip start go:\n"
+                    "Name and detail Site go busines trip end go:\n"
+                    "Km moto bike start:\n"
+                    "Km moto bike the end:"
                 )
                 await bot.send_message(
                     chat_id,
-                    f"📋 <b>Mẫu Daily Result</b>\n"
-                    f"Nhấn copy → chỉnh sửa → gửi lại:\n\n"
-                    f"<pre><code>{html.escape(template_text)}</code></pre>",
+                    template_text,
                     parse_mode="HTML"
                 )
                 return
-            elif cmd == "/inventory":
-                await bot.send_message(
-                    chat_id,
-                    "📝 <b>Template: Inventory Fuel</b>\n"
-                    "<i>(Tap the code block below to copy)</i>\n\n"
-                    "<pre><code>Inventory fuel:\n"
-                    "DG ID: TNIXXXX\n"
-                    "Fuel cm: \n"
-                    "Fuel %: \n"
-                    "Fuel level: \n"
-                    "Kwh: \n"
-                    "Rh: \n"
-                    "Note: </code></pre>",
-                    parse_mode="HTML"
-                )
-                return
-            elif cmd == "/order" and chat_id != MDG_CHAT_ID:
-                await bot.send_message(
-                    chat_id,
-                    "📝 <b>Template: Order</b>\n"
-                    "<i>(Tap the code block below to copy)</i>\n\n"
-                    "<pre><code>Order: TNIXXXX [Description/Item detail]</code></pre>",
-                    parse_mode="HTML"
-                )
-                return
-            elif cmd == "/revoke" and chat_id != MDG_CHAT_ID:
-                await bot.send_message(
-                    chat_id,
-                    "📝 <b>Template: Revoke</b>\n"
-                    "<i>(Tap the code block below to copy)</i>\n\n"
-                    "<pre><code>Revoke: TNIXXXX [Description/Reason]</code></pre>",
-                    parse_mode="HTML"
-                )
-                return
-            elif cmd == "/move" and chat_id != MDG_CHAT_ID:
-                await bot.send_message(
-                    chat_id,
-                    "📝 <b>Template: Move</b>\n"
-                    "<i>(Tap the code block below to copy)</i>\n\n"
-                    "<pre><code>Move: TNIXXXX [From station A to station B]</code></pre>",
-                    parse_mode="HTML"
-                )
-                return
-            elif cmd == "/export" and chat_id != MDG_CHAT_ID:
-                await bot.send_message(
-                    chat_id,
-                    "📝 <b>Template: Export</b>\n"
-                    "<i>(Tap the code block below to copy)</i>\n\n"
-                    "<pre><code>Export: TNIXXXX [Detail]</code></pre>",
-                    parse_mode="HTML"
-                )
-                return
-            elif cmd == "/done" and chat_id != MDG_CHAT_ID:
-                await bot.send_message(
-                    chat_id,
-                    "📝 <b>Template: Done</b>\n"
-                    "<i>(Tap the code block below to copy)</i>\n\n"
-                    "<pre><code>Done: #XXXXX [Action taken]</code></pre>",
-                    parse_mode="HTML"
-                )
-                return
-            elif cmd == "/find" and chat_id != MDG_CHAT_ID:
-                await bot.send_message(
-                    chat_id,
-                    "🔍 <b>How to Search:</b>\n\n"
-                    "Just send the site code (e.g. <code>TNI0001</code>) or staff name directly to the bot to search for tasks, WOs, or site details.",
-                    parse_mode="HTML"
-                )
-                return
+            else:
+                tpl_txt = get_template_text(cmd)
+                if tpl_txt:
+                    await bot.send_message(chat_id, tpl_txt, parse_mode="HTML")
+                    return
+                elif cmd == "/find" and chat_id != MDG_CHAT_ID:
+                    await bot.send_message(
+                        chat_id,
+                        "🔍 <b>How to Search:</b>\n\n"
+                        "Just send the site code (e.g. <code>TNI0001</code>) or staff name directly to the bot to search for tasks, WOs, or site details.",
+                        parse_mode="HTML"
+                    )
+                    return
 
         # ── Done ──────────────────────────────────────────────────────────
         if re.match(r"^done\b", text, re.IGNORECASE):
@@ -1073,32 +1087,9 @@ async def handle(data: dict):
             return
 
 
-        # ── Daily Plan → store to Team leader assign Plan sheet ─────────
+        # ── Daily Plan → Handled exclusively by Search Bot (@SEARCHTNITASKWOBOT) ──
         if is_daily_plan(text):
-            date_str, team_str, content = parse_plan_fields(text)
-            if date_str and team_str:
-                result = post_sheet({
-                    "action":      "store_daily_plan",
-                    "date":        date_str,
-                    "team":        team_str,
-                    "content":     content or text,
-                    "daily_report": "",
-                    "comparison":  "",
-                })
-                status = result.get("status", "")
-                if status == "ok":
-                    ref = result.get("ref", "?")
-                    dup = result.get("duplicate", False)
-                    icon = "⏭️" if dup else "📋"
-                    await bot.send_message(
-                        chat_id,
-                        f"{icon} Plan {'updated' if dup else 'saved'}"
-                        f" — REF:{ref} | {team_str} | {date_str}",
-                    )
-                else:
-                    err = html.escape(result.get("message", "unknown")[:80])
-                    await bot.send_message(chat_id, f"⚠️ Plan save failed: {err}", parse_mode="HTML")
-                return
+            return
 
         # ── Collector commands ─────────────────────────────────────────────
         if is_collector_msg(text):
@@ -1165,16 +1156,22 @@ def ensure_collector_webhook_active() -> None:
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
-            ensure_collector_webhook_active()
             length = int(self.headers.get("Content-Length", 0))
             data   = json.loads(self.rfile.read(length))
+            
+            # Trả 200 OK Ngay Lập Tức cho Telegram để không bị Telegram Hủy/Xóa Webhook
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(b"OK")
+            try:
+                self.wfile.flush()
+            except Exception:
+                pass
+
             asyncio.run(handle(data))
         except Exception as e:
             logger.error(f"Webhook error: {e}")
-        finally:
-            self.send_response(200)
-            self.end_headers()
-            self.wfile.write(b"OK")
 
     def do_GET(self):
         from urllib.parse import urlparse, parse_qs
