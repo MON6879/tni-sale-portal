@@ -497,7 +497,12 @@ def trigger_bg_index_refresh():
 def format_task_wo(raw: str) -> str:
     """Render col H content thành HTML sạch cho Toa 1 (Task & WO).
        Loại bỏ 100% phần 'Site Info' nếu có trong chuỗi thô."""
-    e = html.escape
+def e(s) -> str:
+    if not s: return ""
+    clean = str(s).replace("&amp;gt;", ">").replace("&gt;", ">").replace("&amp;lt;", "<").replace("&lt;", "<")
+    return html.escape(clean)
+
+def format_task_wo(raw: str) -> str:
     if not raw:
         return ""
 
@@ -1545,12 +1550,12 @@ class handler(BaseHTTPRequestHandler):
             try:
                 expected = "https://tni-bot.vercel.app/api/search_bot"
                 r1 = requests.post(f"{TG_API}/deleteWebhook",
-                    json={"drop_pending_updates": True}, timeout=10).json()
+                    json={"drop_pending_updates": False}, timeout=10).json()
                 r2 = requests.post(f"{TG_API}/setWebhook",
                     json={
                         "url": expected,
                         "allowed_updates": ["message", "edited_message", "channel_post"],
-                        "drop_pending_updates": True
+                        "drop_pending_updates": False
                     }, timeout=10).json()
                 r3 = requests.get(f"{TG_API}/getWebhookInfo", timeout=10).json()
                 setup_bot_menu_commands()
