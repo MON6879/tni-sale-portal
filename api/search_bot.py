@@ -295,46 +295,94 @@ def lookup_team(team_code: str) -> list:
     return [split_messages(r)[0] for r in results]
 
 def lookup_notclose(team_code: str) -> list:
-    """Tra cứu WO Not Close (GID_TL_WAITCD col H='T1notclose', col I=nội dung)."""
+    """Tra cứu WO Not Close (CD Not Yet Close A) cho Team T1..T4 từ Sheet TL_WaitCD."""
     df = fetch_single_csv(GID_TL_WAITCD)
     e = html.escape
     t_clean = team_code.upper().replace("TEAM", "T").strip()
+    t_num = "".join(filter(str.isdigit, t_clean)) or "1"
+    
     if df is None or df.empty:
-        return [f"❌ No data for <b>{e(t_clean)}</b> not close"]
-    target = f"{t_clean}notclose".lower()
+        return [f"❌ No data for <b>T{e(t_num)}</b> not close"]
+
     results = []
     for _, row in df.iterrows():
-        col_h = safe(row, 7).strip().lower()   # col H = category label
-        if col_h == target:
-            col_i = safe(row, 8)               # col I = formatted content
-            if col_i and col_i.strip() not in ("~   0", "0"):
-                results.append(col_i.strip().lstrip("~ ").strip())
+        col_b = safe(row, 1).strip()
+        if not col_b or col_b.lower() == "nan":
+            continue
+        col_c = safe(row, 2).strip()
+        col_d = safe(row, 3).strip().lower()
+        col_h = safe(row, 7).strip().lower()
+
+        matched = False
+        if f"team0{t_num}" in col_d or f"team {t_num}" in col_d or f"t{t_num}" in col_h:
+            matched = True
+        elif t_num == "1" and ("dawei" in col_d or "t1" in col_h):
+            matched = True
+        elif t_num == "2" and ("myeik" in col_d or "t2" in col_h):
+            matched = True
+        elif t_num == "3" and ("kawthaung" in col_d or "t3" in col_h):
+            matched = True
+        elif t_num == "4" and ("tanintharyi" in col_d or "kawthoung" in col_d or "t4" in col_h):
+            matched = True
+
+        if matched:
+            col_a = safe(row, 0).strip()
+            reason_str = f" | (Reason Code: {e(col_a)})" if col_a and col_a.lower() != "nan" else ""
+            item_str = f"{e(col_b)} | {e(col_c)}{reason_str}"
+            results.append(item_str)
+
     if not results:
-        return [f"❌ No Not Close data for <b>{e(t_clean)}</b>"]
-    header = f"📑 <b>NOT CLOSE WOs: {e(t_clean)} ({len(results)})</b>\n━━━━━━━━━━━━━━━━━━━━\n"
-    items_text = "\n".join(f"• {e(r)}" for r in results)
+        return [f"❌ No Not Close data for <b>T{e(t_num)}</b>"]
+
+    header = f"📑 <b>CD NOT YET CLOSE WOs: T{e(t_num)} ({len(results)})</b>\n━━━━━━━━━━━━━━━━━━━━\n"
+    items_text = "\n".join(f"• {r}" for r in results)
     footer = "\n━━━━━━━━━━━━━━━━━━━━"
     return split_messages(header + items_text + footer)
 
+
 def lookup_waitcd(team_code: str) -> list:
-    """Tra cứu WO Wait CD (GID_TL_WAITCD col H='T1waitcd', col I=nội dung)."""
+    """Tra cứu WO Wait CD (Col A có Reason Code) cho Team T1..T4 từ Sheet TL_WaitCD."""
     df = fetch_single_csv(GID_TL_WAITCD)
     e = html.escape
     t_clean = team_code.upper().replace("TEAM", "T").strip()
+    t_num = "".join(filter(str.isdigit, t_clean)) or "1"
+    
     if df is None or df.empty:
-        return [f"⏳ No data for <b>{e(t_clean)}</b> wait CD"]
-    target = f"{t_clean}waitcd".lower()
+        return [f"⏳ No data for <b>T{e(t_num)}</b> wait CD"]
+
     results = []
     for _, row in df.iterrows():
-        col_h = safe(row, 7).strip().lower()   # col H = category label
-        if col_h == target:
-            col_i = safe(row, 8)               # col I = formatted content
-            if col_i and col_i.strip() not in ("~   0", "0"):
-                results.append(col_i.strip().lstrip("~ ").strip())
+        col_a = safe(row, 0).strip()
+        if not col_a or col_a.lower() == "nan":
+            continue
+        col_b = safe(row, 1).strip()
+        if not col_b or col_b.lower() == "nan":
+            continue
+        col_c = safe(row, 2).strip()
+        col_d = safe(row, 3).strip().lower()
+        col_h = safe(row, 7).strip().lower()
+
+        matched = False
+        if f"team0{t_num}" in col_d or f"team {t_num}" in col_d or f"t{t_num}" in col_h:
+            matched = True
+        elif t_num == "1" and ("dawei" in col_d or "t1" in col_h):
+            matched = True
+        elif t_num == "2" and ("myeik" in col_d or "t2" in col_h):
+            matched = True
+        elif t_num == "3" and ("kawthaung" in col_d or "t3" in col_h):
+            matched = True
+        elif t_num == "4" and ("tanintharyi" in col_d or "kawthoung" in col_d or "t4" in col_h):
+            matched = True
+
+        if matched:
+            item_str = f"{e(col_b)} | {e(col_c)} | (Reason Code: {e(col_a)})"
+            results.append(item_str)
+
     if not results:
-        return [f"⏳ No Wait CD data for <b>{e(t_clean)}</b>"]
-    header = f"⏳ <b>WAIT CD WOs: {e(t_clean)} ({len(results)})</b>\n━━━━━━━━━━━━━━━━━━━━\n"
-    items_text = "\n".join(f"• {e(r)}" for r in results)
+        return [f"⏳ No Wait CD data for <b>T{e(t_num)}</b>"]
+
+    header = f"⏳ <b>WAIT CD WOs: T{e(t_num)} ({len(results)})</b>\n━━━━━━━━━━━━━━━━━━━━\n"
+    items_text = "\n".join(f"• {r}" for r in results)
     footer = "\n━━━━━━━━━━━━━━━━━━━━"
     return split_messages(header + items_text + footer)
 
