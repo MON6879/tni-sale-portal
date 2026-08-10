@@ -3,7 +3,7 @@ Vercel webhook handler for Collector Bot (TNIAsset_BO).
 
 Routing:
   - TNI CABLE ROUTE group  (CABLE_CHAT_ID) → handle_cable()
-  - TNI COLLECT MDG RUN    (MDG_CHAT_ID)   → handle_mdg()
+  - 6. TNI Run MDG + Invetory Fuel (MDG_CHAT_ID) → handle_mdg()
   - All other chats                         → existing Asset handler
 
 Webhook URL: https://tni-bot.vercel.app/api/collector
@@ -608,7 +608,7 @@ async def handle_cable(msg, bot, now, user, sender_name, sender_id):
 # MDG GROUP HANDLER
 # ============================================================
 async def handle_mdg(msg, bot, now, user, sender_name, sender_id):
-    """Handle all messages from the TNI COLLECT MDG RUN group."""
+    """Handle all messages from group `6. TNI Run MDG + Invetory Fuel`."""
     chat_id = msg.chat_id
 
     # ── Photos ──────────────────────────────────────────────────────────
