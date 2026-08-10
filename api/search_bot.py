@@ -1113,12 +1113,8 @@ def handle(update: dict) -> None:
     if user.get("is_bot"):
         return
 
-    # build_search_indexes() trong perform_unified_tni_search() đã fetch đủ
-    # Không cần warm-up riêng (Vercel stateless, cache không persist giữa invocations)
-
     # ── PHOTO ──────────────────────────────────────────────────────────────
     if "photo" in msg:
-        # Lấy ảnh chất lượng cao nhất
         file_id = msg["photo"][-1]["file_id"]
         submit_photo(chat_id, user_id, file_id)
         return
@@ -1139,20 +1135,6 @@ def handle(update: dict) -> None:
 
     # Map reply keyboard button labels to actual commands
     text_l = text.lower().strip()
-    if not is_daily_plan(text) and "plan" in text_l and "📋" in text and len(text.splitlines()) <= 2:
-        if re.search(r'\bt1\b|\bteam\s*1\b', text_l):
-            text = "/plan T1"
-        elif re.search(r'\bt2\b|\bteam\s*2\b', text_l):
-            text = "/plan T2"
-        elif re.search(r'\bt3\b|\bteam\s*3\b', text_l):
-            text = "/plan T3"
-        elif re.search(r'\bt4\b|\bteam\s*4\b', text_l):
-            text = "/plan T4"
-        else:
-            text = "/plan"
-    elif text_l in ("help", "❓ help", "help ❓", "/help") or text_l == "❓":
-        text = "/help"
-
     if any(kw in text_l for kw in ("request enter site", "request site enter", "site access format", "site access", "site enter")):
         parts = text.split(maxsplit=1)
         passed_site = parts[1].upper().strip() if len(parts) > 1 and parts[1].upper().startswith("TNI") else "TNI0401"
@@ -1161,24 +1143,23 @@ def handle(update: dict) -> None:
         return
 
     # ── UNIFIED COMMAND NORMALIZATION: Tự động loại bỏ '/' và '@bot_username' ──
-    if text.startswith("/"):
-        parts = text.split(maxsplit=1)
+    clean_text = text
+    if clean_text.startswith("/"):
+        parts = clean_text.split(maxsplit=1)
         first_word = parts[0][1:].lower().split("@")[0]  # e.g. "/t4notclose@bot" -> "t4notclose"
         rest = parts[1] if len(parts) > 1 else ""
-        
-        # Xử lý các hệ thống lệnh chính
+
         if first_word in ("request_enter_site", "request_site_enter", "site_access", "siteaccess", "site_enter", "request_site"):
             passed_site = rest.upper().strip() if rest else "TNI0401"
             reply = get_site_access_template(passed_site)
             tg_send(chat_id, reply)
             return
 
-        # /ping — diagnostic command, phản hồi tức thì
         if first_word == "ping":
             tg_send(chat_id, f"🏓 pong {BOT_VERSION} | chat={chat_id} | user={user_id}")
             return
 
-        elif first_word in ("start", "help"):
+        if first_word in ("start", "help", "menu", "men"):
             if rest.upper().startswith("PLAN_T"):
                 team_num_str = rest[6:]
                 if team_num_str.isdigit():
@@ -1187,13 +1168,13 @@ def handle(update: dict) -> None:
             send_help_menu(chat_id)
             return
 
-        elif first_word == "daily":
+        if first_word == "daily":
             if is_duplicate_search(chat_id, user_id, "DAILY"):
                 return
             send_daily_template(chat_id)
             return
 
-        elif first_word in ("plan", "dailyplan"):
+        if first_word in ("plan", "dailyplan"):
             if is_duplicate_search(chat_id, user_id, f"PLAN:{text}"):
                 return
             team_num = None
@@ -1202,186 +1183,124 @@ def handle(update: dict) -> None:
                 m = re.match(r"^(T(?:EAM)?\s*([1-4])|[1-4])$", team_arg, re.IGNORECASE)
                 if m:
                     team_num = int(m.group(2) if m.group(2) else m.group(1))
-            
-            title = (msg.get("chat", {}).get("title") or "").upper()
             if not team_num:
-                m_title = re.search(r"TEAM\s*([1-4])", title)
-                if m_title:
-                    team_num = int(m_title.group(1))
-
-            if not team_num:
-                TELEGRAM_GROUPS = {
-                    "T1": -1004215695747,
-                    "T2": -1004480845549,
-                    "T3": -1004369170658,
-                    "T4": -1004293741999,
-                }
-                def norm_id(cid):
-                    return str(cid).replace("-100", "").replace("-", "")
-                for k, gid in TELEGRAM_GROUPS.items():
-                    if norm_id(chat_id) == norm_id(gid):
-                        if k.startswith("T") and k[1:].isdigit():
-                            team_num = int(k[1:])
-                            break
-
-            if not team_num:
-                team_num = get_user_team_number(user_id)
-            
-            if not team_num:
-                team_num = 1
-            
+                team_num = get_user_team_number(user_id) or 1
             send_daily_plan_template(chat_id, team_num)
             return
 
-        elif first_word in ("id", "myid"):
+        if first_word in ("id", "myid"):
             chat_title = msg["chat"].get("title") or first_name or "Private"
             chat_type  = msg["chat"].get("type", "private")
-            msg_extra  = ""
-            if APPS_SCRIPT_URL:
-                try:
-                    r = requests.post(APPS_SCRIPT_URL, json={
-                        "action":     "register_chat" if first_word == "id" else "register_user",
-                        "chat_id":    str(chat_id),
-                        "chat_title": chat_title,
-                        "chat_type":  chat_type,
-                        "reg_by":     first_name,
-                        "user_id":    str(user_id),
-                        "user_name":  first_name,
-                    }, timeout=10)
-                    res = r.json()
-                    if res.get("status") == "ok":
-                        msg_extra = "\n✅ Saved"
-                    elif res.get("status") == "duplicate":
-                        msg_extra = "\n⚠️ Already exists"
-                except Exception:
-                    pass
-            tg_send(chat_id,
-                f"👤 <b>{html.escape(first_name)}</b>\n"
-                f"🔑 ID: <code>{user_id}</code>\n"
-                f"💬 Chat: <code>{chat_id}</code>\n"
-                f"📍 Type: {chat_type}"
-                + msg_extra)
+            tg_send(chat_id, f"👤 <b>{html.escape(first_name)}</b>\n🔑 ID: <code>{user_id}</code>\n💬 Chat: <code>{chat_id}</code>\n📍 Type: {chat_type}")
             return
 
-        elif first_word == "reload":
-            global _cache_ts
-            _cache_ts = 0
+        if first_word == "reload":
             load_all_sheets()
             tg_send(chat_id, "✅ Data reloaded")
             return
 
-        elif first_word == "tni":
-            if rest:
-                text = rest
-            else:
-                tg_send(chat_id, "🔍 Gõ mã trạm sau lệnh, ví dụ: <code>/tni TNI0001</code>")
-                return
-        else:
-            # Tự động chuyển tất cả các lệnh gõ '/' khác (như /t4notclose, /t1waitcd, /mysite) thành chuỗi thô để tra cứu đồng nhất
-            text = f"{first_word} {rest}".strip()
+        clean_text = f"{first_word} {rest}".strip()
 
-    # ── DAILY REPORT ────────────────────────────────────────────────────────
-    if is_daily(text):
-        submit_daily(chat_id, user_id, first_name, text)
+    # ── CLASSIFY QUERY VIA SSOT ENGINE FIRST ──
+    classified = classify_query(clean_text) if classify_query else None
+    action = classified.get("action") if classified else None
+    code = classified.get("code") if classified else None
+
+    if action == "MENU":
+        logger.info(f"[SSOT Router] Help menu requested | chat={chat_id}")
+        send_help_menu(chat_id)
         return
 
-    # ── REALTIME DAILY PLAN COLLECTION ──────────────────────────────────────
-    if is_daily_plan(text):
-        now_ts = time.time()
-        msg_key = f"{chat_id}:{hash(text)}"
-        if (now_ts - _recent_plan_msg_hashes.get(msg_key, 0)) < 15.0:
-            logger.info(f"Skipping duplicate plan execution for key {msg_key}")
-            return
-        _recent_plan_msg_hashes[msg_key] = now_ts
+    if action == "CONS":
+        if is_duplicate_search and is_duplicate_search(chat_id, user_id, f"CONS:{code}"): return
+        log_search_bg(first_name or str(user_id), user_id, f"CONS {code}")
+        message = lookup_construction_site(code)
+        for chunk in split_messages(message): tg_send(chat_id, chunk)
+        return
 
+    if action == "NOTCLOSE":
+        if is_duplicate_search and is_duplicate_search(chat_id, user_id, f"NOTCLOSE:{code}"): return
+        log_search_bg(first_name or str(user_id), user_id, f"{code}notclose")
+        messages = lookup_notclose(code)
+        full_text = f"📑 <b>{code} NOT CLOSE</b> ({len(messages)} items)\n\n" + "\n\n".join(messages)
+        for chunk in split_messages(full_text): tg_send(chat_id, chunk)
+        return
+
+    if action == "WAITCD":
+        if is_duplicate_search and is_duplicate_search(chat_id, user_id, f"WAITCD:{code}"): return
+        log_search_bg(first_name or str(user_id), user_id, f"{code}waitcd")
+        messages = lookup_waitcd(code)
+        full_text = f"⏳ <b>{code} WAIT CD</b> ({len(messages)} items)\n\n" + "\n\n".join(messages)
+        for chunk in split_messages(full_text): tg_send(chat_id, chunk)
+        return
+
+    if action == "CLEAR":
+        if is_duplicate_search and is_duplicate_search(chat_id, user_id, f"CLEAR:{code}"): return
+        log_search_bg(first_name or str(user_id), user_id, f"CLEAR {code}")
+        message = lookup_clear_site(code)
+        for chunk in split_messages(message): tg_send(chat_id, chunk)
+        return
+
+    if action == "INFO":
+        if is_duplicate_search and is_duplicate_search(chat_id, user_id, f"INFO:{code}"): return
+        log_search_bg(first_name or str(user_id), user_id, f"Info:{code}")
+        result = perform_unified_tni_search(code, full_info=True)
+        for chunk in split_messages(result): tg_send(chat_id, chunk)
+        return
+
+    if action == "TNI":
+        if is_duplicate_search and is_duplicate_search(chat_id, user_id, f"TNI:{code}"): return
+        log_search_bg(first_name or str(user_id), user_id, code)
+        result = perform_unified_tni_search(code, full_info=False)
+        for chunk in split_messages(result): tg_send(chat_id, chunk)
+        return
+
+    if action == "ADMIN_LOOKUP":
+        field_name = classified.get("field")
+        target_id  = int(classified.get("target_id"))
+        field      = None if field_name in ("mydata", "myall") else field_name
+        reply = get_staff_data(target_id, field)
+        header = f"👤 <b>Viewing ID:</b> <code>{target_id}</code> ({html.escape(field_name)})\n"
+        for chunk in split_messages(header + reply): tg_send(chat_id, chunk)
+        return
+
+    # ── DAILY REPORT SUBMIT ──
+    if is_daily(clean_text):
+        submit_daily(chat_id, user_id, first_name, clean_text)
+        return
+
+    # ── DAILY PLAN SUBMIT ──
+    if is_daily_plan(clean_text):
         chat_title = msg.get("chat", {}).get("title", "")
-        date_str, team_str, content = parse_plan_fields(text, chat_id, chat_title)
+        date_str, team_str, content = parse_plan_fields(clean_text, chat_id, chat_title)
         if date_str and team_str:
-            logger.info(f"Storing daily plan from Search Bot: {date_str} {team_str}")
-            res = store_daily_plan_to_sheet(date_str, team_str, content or text)
+            res = store_daily_plan_to_sheet(date_str, team_str, content or clean_text)
             if res.get("status") in ("ok", "duplicate"):
                 ref = res.get("ref", "?")
                 dup = res.get("duplicate", False)
-                icon = "✅"
-                msg_reply = f"{icon} <b>Plan {'updated' if dup else 'saved'}</b> — REF:<b>{ref}</b> | {team_str} | {date_str}"
-                tg_send(chat_id, msg_reply)
-            else:
-                err = str(res.get("message", "unknown"))[:80]
-                logger.warning(f"Plan save skipped/failed for chat {chat_id}: {err}")
+                tg_send(chat_id, f"✅ <b>Plan {'updated' if dup else 'saved'}</b> — REF:<b>{ref}</b> | {team_str} | {date_str}")
             return
 
-    # ── STAFF PERSONAL LOOKUP: "mysite" / "mycable" / ... hoặc "mysite <id>" (admin) ──
-    text_low = text.lower().strip()
-
-    # Admin lookup: "mysite 6859790680", "/mydata 6361576236" — xem data của bất kỳ user nào
-    admin_lookup = re.match(r'^/?(my\S+)\s+(\d{6,12})$', text_low)
-    if admin_lookup:
-        field_name = admin_lookup.group(1).lower()   # e.g. "mysite", "mydata"
-        target_id  = int(admin_lookup.group(2))
-        field      = None if field_name in ("mydata", "myall") else field_name
-        reply = get_staff_data(target_id, field)
-        # Thêm header cho admin biết đang xem data của ai
-        header = f"👤 <b>Viewing ID:</b> <code>{target_id}</code> ({html.escape(field_name)})\n"
-        for chunk in split_messages(header + reply):
-            tg_send(chat_id, chunk)
-        return
-
+    # ── STAFF PERSONAL LOOKUP (mysite / mycable / mydia / mydata / myolt) ──
+    text_low = clean_text.lower().strip()
     is_my_field    = (text_low.startswith("my") and len(text_low) > 2 and " " not in text_low)
-    is_range_query = bool(re.match(r'^[A-Z]\d+:[A-Z]\d+$', text, re.IGNORECASE))
+    is_range_query = bool(re.match(r'^[A-Z]\d+:[A-Z]\d+$', clean_text, re.IGNORECASE))
     if is_my_field or is_range_query:
         field = None if is_range_query else text_low
         reply = get_staff_data(user_id, field)
         tg_send(chat_id, reply)
         return
 
-    # ── TEAM LEADER SEARCH (T1/T2/T3/T4) — BỎ khỏi Nhóm (chỉ chạy trong Chat Riêng) ──
+    # ── TEAM LEADER SEARCH (T1/T2/T3/T4) ──
     chat_type = msg.get("chat", {}).get("type", "private")
-    team_match = re.match(r"^(T[1-4])$", text.strip(), re.IGNORECASE)
+    team_match = re.match(r"^(T[1-4])$", clean_text.strip(), re.IGNORECASE)
     if team_match:
         if chat_type == "private":
             team_code = team_match.group(1).upper()
-            logger.info(f"Team lookup: {team_code} | chat={chat_id}")
             log_search_bg(first_name or str(user_id), user_id, team_code)
-            try:
-                messages = lookup_team(team_code)
-                full_text = f"📋 <b>{team_code} Summary</b> ({len(messages)} items)\n\n" + "\n\n".join(messages)
-                for chunk in split_messages(full_text):
-                    tg_send(chat_id, chunk)
-            except Exception as err:
-                logger.error(f"Team lookup error [{team_code}]: {err}")
-                tg_send(chat_id, f"❌ Error: {html.escape(str(err)[:80])}")
-        return
-
-    # ── NOT CLOSE SEARCH (T1notclose / T1 not close / T1_notclose ...) ──────
-    nc_match = re.match(r"^(T[1-4])[\s_]?(not[\s_]?close|notclose)$", text.strip(), re.IGNORECASE)
-    if nc_match:
-        team_code = nc_match.group(1).upper()
-        logger.info(f"NotClose lookup: {team_code} | chat={chat_id}")
-        log_search_bg(first_name or str(user_id), user_id, f"{team_code}notclose")
-        try:
-            messages = lookup_notclose(team_code)
-            full_text = f"📑 <b>{team_code} NOT CLOSE</b> ({len(messages)} WOs)\n\n" + "\n\n".join(messages)
-            for chunk in split_messages(full_text):
-                tg_send(chat_id, chunk)
-        except Exception as err:
-            logger.error(f"NotClose lookup error [{team_code}]: {err}")
-            tg_send(chat_id, f"❌ Error: {html.escape(str(err)[:80])}")
-        return
-
-    # ── WAIT CD SEARCH (T1waitcd / T1 wait cd / T1_waitcd ...) ──────────────
-    wc_match = re.match(r"^(T[1-4])[\s_]?(wait[\s_]?cd|waitcd)$", text.strip(), re.IGNORECASE)
-    if wc_match:
-        team_code = wc_match.group(1).upper()
-        logger.info(f"WaitCD lookup: {team_code} | chat={chat_id}")
-        log_search_bg(first_name or str(user_id), user_id, f"{team_code}waitcd")
-        try:
-            messages = lookup_waitcd(team_code)
-            full_text = f"⏳ <b>{team_code} WAIT CD</b> ({len(messages)} WOs)\n\n" + "\n\n".join(messages)
-            for chunk in split_messages(full_text):
-                tg_send(chat_id, chunk)
-        except Exception as err:
-            logger.error(f"WaitCD lookup error [{team_code}]: {err}")
-            tg_send(chat_id, f"❌ Error: {html.escape(str(err)[:80])}")
+            messages = lookup_team(team_code)
+            full_text = f"📋 <b>{team_code} Summary</b> ({len(messages)} items)\n\n" + "\n\n".join(messages)
+            for chunk in split_messages(full_text): tg_send(chat_id, chunk)
         return
 
     # ── CLASSIFY QUERY VIA SSOT SEARCH ENGINE ─────────────────────────────────
