@@ -1152,7 +1152,7 @@ def ensure_collector_webhook_active() -> None:
         logger.error(f"ensure_collector_webhook_active error: {e}")
 
 
-_processed_collector_updates = set()
+_processed_collector_updates = {}   # update_id -> timestamp
 
 # ── Vercel entry point ────────────────────────────────────────────────────
 class handler(BaseHTTPRequestHandler):
@@ -1161,9 +1161,14 @@ class handler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", 0))
             data   = json.loads(self.rfile.read(length))
             
-            # ── Deduplication for Telegram Retries ──
+            # ── Deduplication for Telegram Retries (TTL = 15s) ──
             update_id = data.get("update_id")
+            now_ts = time.time()
             if update_id:
+                stale_uids = [uid for uid, ts in list(_processed_collector_updates.items()) if now_ts - ts > 15]
+                for uid in stale_uids:
+                    _processed_collector_updates.pop(uid, None)
+
                 if update_id in _processed_collector_updates:
                     logger.info(f"Skipping duplicate Collector update_id: {update_id}")
                     self.send_response(200)
@@ -1171,9 +1176,7 @@ class handler(BaseHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(b"OK")
                     return
-                _processed_collector_updates.add(update_id)
-                if len(_processed_collector_updates) > 5000:
-                    _processed_collector_updates.clear()
+                _processed_collector_updates[update_id] = now_ts
 
             # Execute synchronously FIRST before returning 200 OK to prevent Vercel process freeze
             asyncio.run(handle(data))

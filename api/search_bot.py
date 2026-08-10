@@ -1525,7 +1525,7 @@ def ensure_webhook_locked_bg():
             logger.error(f"ensure_webhook_locked_bg error: {e}")
     threading.Thread(target=_do, daemon=True).start()
 
-_processed_updates = set()
+_processed_updates = {}   # update_id -> timestamp
 
 # ── Vercel entry point (redeploy triggered) ──────────────────────────────────
 class handler(BaseHTTPRequestHandler):
@@ -1551,9 +1551,15 @@ class handler(BaseHTTPRequestHandler):
             raw  = self.rfile.read(length)
             data = json.loads(raw)
 
-            # ── Deduplication for Telegram Retries ──
+            # ── Deduplication for Telegram Retries (TTL = 15 seconds) ──
             update_id = data.get("update_id")
+            now_ts = time.time()
             if update_id:
+                # Cleanup stale entries older than 15s
+                stale_uids = [uid for uid, ts in list(_processed_updates.items()) if now_ts - ts > 15]
+                for uid in stale_uids:
+                    _processed_updates.pop(uid, None)
+
                 if update_id in _processed_updates:
                     logger.info(f"Skipping duplicate Telegram update_id: {update_id}")
                     self.send_response(200)
@@ -1562,9 +1568,7 @@ class handler(BaseHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(b'{"ok":true}')
                     return
-                _processed_updates.add(update_id)
-                if len(_processed_updates) > 5000:
-                    _processed_updates.clear()
+                _processed_updates[update_id] = now_ts
 
             # ── Xử lý submit_plan (đồng bộ, cần response body) ──
             action = data.get("action")
