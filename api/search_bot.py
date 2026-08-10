@@ -879,17 +879,31 @@ def send_help_menu(chat_id: int) -> None:
         return
     _recent_help_sends[chat_id] = now_ts
 
-    tg_send(chat_id,
-        "👋 <b>TNI Search Bot</b>\n\n"
-        "• Lookup Task/WO: Type <code>TNI0001</code> or <code>/tni TNI0001</code>\n"
-        "• Lookup Info: Type <code>info TNI0001</code>\n"
-        "• Lookup Clear Site: Type <code>CLEAR TNI0001</code>\n"
-        "• Lookup Not Close: Type <code>t1notclose</code>, <code>t2notclose</code>...\n"
-        "• Lookup Wait CD: Type <code>t1waitcd</code>, <code>t2waitcd</code>...\n"
-        "• Personal Lookup: <code>mysite</code>, <code>mycable</code>, <code>mydia</code>, <code>myolt</code>, <code>mysn</code>, <code>mydata</code>\n"
-        "• <b>Admin Lookup:</b> <code>mysite &lt;ID&gt;</code>, <code>mycable &lt;ID&gt;</code>, <code>mydia &lt;ID&gt;</code>, <code>myolt &lt;ID&gt;</code>, <code>mysn &lt;ID&gt;</code>, <code>mydata &lt;ID&gt;</code>\n"
-        "• Get Report Templates: Type <code>/daily</code> or <code>/plan</code>",
-        parse_mode="HTML")
+    menu_text = (
+        "🚂 <b>TNI SEARCH BOT — COMMAND DIRECTORY</b>\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        "<b>[TOA 1] Task & Work Order Search</b>\n"
+        "• Type: <code>TNI0129</code> or <code>TNI0129_01</code> or <code>/tni TNI0129</code>\n\n"
+        "<b>[TOA 2] Site Info & Cable & DIA Search</b>\n"
+        "• Type: <code>Info: TNI0129</code> or <code>info TNI0129</code> or <code>/info TNI0129</code>\n\n"
+        "<b>[TOA 3] Open / Not Close WOs Search</b>\n"
+        "• Type: <code>/t1notclose</code>, <code>/t2notclose</code>, <code>/t3notclose</code>, <code>/t4notclose</code>\n\n"
+        "<b>[TOA 4] Wait CD WOs Search</b>\n"
+        "• Type: <code>/t1waitcd</code>, <code>/t2waitcd</code>, <code>/t3waitcd</code>, <code>/t4waitcd</code>\n\n"
+        "<b>[TOA 5] Clear Site History Search</b>\n"
+        "• Type: <code>Clear TNI0129</code> or <code>/clear TNI0129</code>\n\n"
+        "<b>[TOA 6] Team Summary (Private Chat)</b>\n"
+        "• Type: <code>T1</code>, <code>T2</code>, <code>T3</code>, <code>T4</code>\n\n"
+        "<b>[TOA 7] Staff Personal Lookup</b>\n"
+        "• Type: <code>mysite</code>, <code>mycable</code>, <code>mydia</code>, <code>mydata</code>\n"
+        "• Admin: <code>mysite &lt;ID&gt;</code>, <code>mydata &lt;ID&gt;</code>\n\n"
+        "<b>[TOA 8] Construction Search</b>\n"
+        "• Type: <code>cons TNI0310</code> or <code>pro TNI0310</code> or <code>/cons TNI0310</code>\n\n"
+        "<b>[TOA 9] Help & Interactive Menu</b>\n"
+        "• Type: <code>menu</code> or <code>/menu</code> or <code>help</code>\n"
+        "━━━━━━━━━━━━━━━━━━━━"
+    )
+    tg_send(chat_id, menu_text, parse_mode="HTML")
 
 _recent_daily_submits = {}
 _recent_search_keys = {}
@@ -944,6 +958,52 @@ def lookup_clear_site(tni: str) -> str:
     except Exception as e:
         logger.error(f"lookup_clear_site error [{tni_u}]: {e}")
         return f"❌ Error loading clear site data: {html.escape(str(e)[:80])}"
+
+CONS_SPREADSHEET_ID = "1ViXXv5P8jSgx5heBqEP419ZkSR77C3OsflK0xpHMoi8"
+
+def lookup_construction_site(tni: str) -> str:
+    """Tra cứu thông tin Construction từ tab Search Construction (Toa 8)."""
+    e = html.escape
+    tni_upper = tni.upper().strip()
+    url = f"https://docs.google.com/spreadsheets/d/{CONS_SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=Search%20Construction"
+    
+    try:
+        r = requests.get(url, timeout=10)
+        if r.status_code != 200:
+            return f"❌ Failed to fetch Construction data (HTTP {r.status_code})."
+        import pandas as pd, io
+        df = pd.read_csv(io.StringIO(r.text))
+        if df.empty:
+            return f"❌ Construction sheet is empty."
+
+        clean_target = tni_upper.replace("-", "").replace("_", "").replace(" ", "")
+        matched_row = None
+        headers = df.columns.tolist()
+
+        for idx, row in df.iterrows():
+            col_a = str(row.iloc[0]).strip().upper() if len(row) > 0 else ""
+            clean_col_a = col_a.replace("-", "").replace("_", "").replace(" ", "")
+            if clean_col_a and (clean_col_a == clean_target or clean_target in clean_col_a or clean_col_a in clean_target):
+                matched_row = row
+                break
+
+        if matched_row is None:
+            return f"❌ No construction info found for <b>{e(tni_upper)}</b>"
+
+        code_title = str(matched_row.iloc[0]).strip() if len(matched_row) > 0 else tni_upper
+        lines = [f"🏗️ <b>CONSTRUCTION INFO: {e(code_title)}</b>\n━━━━━━━━━━━━━━━━━━━━"]
+
+        for col_i in range(1, len(matched_row)):
+            val = str(matched_row.iloc[col_i]).strip()
+            if val and val.lower() != "nan":
+                hdr = headers[col_i] if col_i < len(headers) and "Unnamed" not in str(headers[col_i]) else f"Item {col_i}"
+                lines.append(f"🔹 <b>{e(hdr)}:</b>\n<code>{e(val)}</code>")
+
+        lines.append("━━━━━━━━━━━━━━━━━━━━")
+        return "\n\n".join(lines)
+    except Exception as err:
+        logger.error(f"lookup_construction_site error [{tni_upper}]: {err}")
+        return f"❌ Construction search error: {e(str(err)[:100])}"
 
 def submit_daily(chat_id: int, user_id: int, first_name: str, text: str) -> None:
     now_ts = time.time()
@@ -1328,6 +1388,28 @@ def handle(update: dict) -> None:
     classified = classify_query(text) if classify_query else None
     action = classified.get("action") if classified else None
     code = classified.get("code") if classified else None
+
+    # ── TOA 9: MENU DIRECTORY (menu, /menu, help) ─────────────────────────────
+    if action == "MENU":
+        logger.info(f"[SSOT Router] Help menu requested | chat={chat_id}")
+        send_help_menu(chat_id)
+        return
+
+    # ── TOA 8: CONSTRUCTION SEARCH (cons TNIxxxx, pro TNIxxxx) ─────────────────
+    if action == "CONS":
+        tni = code
+        if is_duplicate_search and is_duplicate_search(chat_id, user_id, f"CONS:{tni}"):
+            return
+        logger.info(f"[SSOT Router] Construction site lookup: {tni} | chat={chat_id}")
+        log_search_bg(first_name or str(user_id), user_id, f"CONS {tni}")
+        try:
+            message = lookup_construction_site(tni)
+            for chunk in split_messages(message):
+                tg_send(chat_id, chunk)
+        except Exception as err:
+            logger.error(f"Construction lookup error [{tni}]: {err}")
+            tg_send(chat_id, f"❌ Error: {html.escape(str(err)[:80])}")
+        return
 
     # ── TOA 3: NOT CLOSE SEARCH (/t1notclose, t4notclose...) ──────────────────
     if action == "NOTCLOSE":
