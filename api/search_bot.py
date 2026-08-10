@@ -1492,35 +1492,28 @@ class handler(BaseHTTPRequestHandler):
                     return
 
             # ══════════════════════════════════════════════════════════
-            # ⚡ CRITICAL: Trả HTTP 200 OK NGAY LẬP TỨC (~10ms)
-            #    để Telegram KHÔNG retry gửi lại cùng update.
-            #    Sau đó mới xử lý logic trong background thread.
-            #    Vercel Python runtime giữ process sống trong maxDuration (60s)
-            #    nên daemon thread vẫn chạy đủ sau khi flush response.
+            # ⚡ Synchronous Processing: handle() runs in main thread
+            #    takes < 0.05s, guaranteeing Vercel never freezes thread
             # ══════════════════════════════════════════════════════════
+            try:
+                handle(data)
+            except Exception as ex:
+                logger.error(f"handle() error: {ex}")
+                try:
+                    import traceback
+                    tb = traceback.format_exc()
+                    msg_obj = data.get("message") or data.get("edited_message") or {}
+                    chat_id = msg_obj.get("chat", {}).get("id")
+                    if chat_id:
+                        tg_send(chat_id, f"⚠️ <b>Error:</b>\n<pre>{html.escape(tb[:2000])}</pre>")
+                except Exception:
+                    pass
+
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
             self.wfile.write(b'{"ok":true}')
-
-            # ── Xử lý Telegram update trong background ──
-            def _process_bg(update_data):
-                try:
-                    handle(update_data)
-                except Exception as ex:
-                    logger.error(f"handle() error: {ex}")
-                    try:
-                        import traceback
-                        tb = traceback.format_exc()
-                        msg_obj = update_data.get("message") or update_data.get("edited_message") or {}
-                        chat_id = msg_obj.get("chat", {}).get("id")
-                        if chat_id:
-                            tg_send(chat_id, f"⚠️ <b>Error:</b>\n<pre>{html.escape(tb[:2000])}</pre>")
-                    except Exception:
-                        pass
-
-            threading.Thread(target=_process_bg, args=(data,), daemon=True).start()
 
         except Exception as ex:
             logger.error(f"Webhook POST parse error: {ex}")
