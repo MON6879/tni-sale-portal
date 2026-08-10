@@ -21,6 +21,7 @@ on:
         type: choice
         options:
           - 'Reports 1, 2, 3, 4 - Daily Task & Backlog'
+          - 'Report 3.1 - Asset progress for material'
           - 'Report 2 (BOD) - BOD Assign'
           - 'Report 5A - Plan EOD'
           - 'Report 5B - Plan Update'
@@ -243,6 +244,7 @@ jobs:
           steps.sched.outputs.r1234 == 'true' ||
           (github.event_name == 'workflow_dispatch' && (
             inputs.report_type == 'Reports 1, 2, 3, 4 - Daily Task & Backlog' ||
+            inputs.report_type == 'Report 3.1 - Asset progress for material' ||
             inputs.report_type == 'Report 2 (BOD) - BOD Assign'
           ))
         env:
