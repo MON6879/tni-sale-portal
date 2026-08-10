@@ -384,6 +384,19 @@ _tni_team_sum_index = {}
 _index_last_built = 0.0
 _index_building = False
 
+# ── Module-level instant index preloading (0ms cold start latency) ──
+try:
+    _cache_path = os.path.join(os.path.dirname(__file__), "data_cache.json")
+    if os.path.exists(_cache_path):
+        with open(_cache_path, encoding="utf-8") as _cf:
+            _cdata = json.load(_cf)
+        _tni_info_index = _cdata.get("info", {})
+        _tni_team_sum_index = _cdata.get("team", {})
+        _index_last_built = time.time()
+        logger.info(f"[Module Boot] Instant index preloaded — Info:{len(_tni_info_index)}, Team:{len(_tni_team_sum_index)}")
+except Exception as _ex:
+    logger.warning(f"[Module Boot] Index preload error: {_ex}")
+
 def fetch_single_csv(gid: str, is_sd: bool = False) -> pd.DataFrame | None:
     cache_key = f"{'sd_' if is_sd else ''}{gid}"
     cached = _csv_cache.get(cache_key)
