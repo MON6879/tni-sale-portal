@@ -212,6 +212,27 @@ jobs:
         run: pip install python-telegram-bot requests pandas python-dotenv telethon openpyxl
 
       # ═══════════════════════════════════════════════
+      # 🚨 TOA SITE DOWN RELAY: Botlookup Relay (Ưu tiên hàng đầu 100% không trễ)
+      # 📱 Engine: Telethon + GAS
+      # ⏰ Schedule: Phút :03 & :33 MMT hàng giờ
+      # ═══════════════════════════════════════════════
+      - name: "🚨 Toa Site Down Relay — Botlookup Relay"
+        continue-on-error: true
+        if: |
+          steps.sched.outputs.botlookup_relay == 'true' ||
+          (github.event_name == 'workflow_dispatch' && inputs.report_type == 'Task - Bot Lookup Relay')
+        env:
+          TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+          TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+          TELEGRAM_SESSION: ${{ secrets.TELEGRAM_SESSION }}
+          SD_APPS_SCRIPT_URL: ${{ secrets.SD_APPS_SCRIPT_URL }}
+          APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
+          REFUEL_APPS_SCRIPT_URL: ${{ secrets.REFUEL_APPS_SCRIPT_URL }}
+          SD_BOTLOOKUP_CHAT_ID: ${{ secrets.SD_BOTLOOKUP_CHAT_ID }}
+          SKIP_DELAY: '1'
+        run: python botlookup_relay.py
+
+      # ═══════════════════════════════════════════════
       # 📊 TOA 1+11: Reports 1,2,3,4 + BOD Assign
       # 🤖 Engine: Bot API (SEND_BOT + REPORT_TASK_BOT + TECHNICAL_DEP_BOT)
       # ⏰ Schedule: 05:48, 15:48 Myanmar
@@ -412,23 +433,3 @@ jobs:
           TELEGRAM_SESSION: ${{ secrets.TELEGRAM_SESSION }}
           APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
         run: python check_read_status.py
-
-      # ═══════════════════════════════════════════════
-      # 🚨 TOA SITE DOWN RELAY: Botlookup Relay
-      # 📱 Engine: Telethon + GAS
-      # ⏰ Schedule: Phút :06 & :36 MMT hàng giờ
-      # ═══════════════════════════════════════════════
-      - name: "🚨 Toa Site Down Relay — Botlookup Relay"
-        if: |
-          steps.sched.outputs.botlookup_relay == 'true' ||
-          (github.event_name == 'workflow_dispatch' && inputs.report_type == 'Task - Bot Lookup Relay')
-        env:
-          TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
-          TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
-          TELEGRAM_SESSION: ${{ secrets.TELEGRAM_SESSION }}
-          SD_APPS_SCRIPT_URL: ${{ secrets.SD_APPS_SCRIPT_URL }}
-          APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
-          REFUEL_APPS_SCRIPT_URL: ${{ secrets.REFUEL_APPS_SCRIPT_URL }}
-          SD_BOTLOOKUP_CHAT_ID: ${{ secrets.SD_BOTLOOKUP_CHAT_ID }}
-          SKIP_DELAY: '1'
-        run: python botlookup_relay.py
