@@ -55,6 +55,41 @@ Hệ thống được quy hoạch hoàn chỉnh thành **3 CHUYẾN TÀU CHÍNH 
 | **Toa 11** | ⛽ Refuel Plan 4 | 22:18 MMT | Tổng kết dầu cuối ngày | `refuel_plan_report.py --report 4` | Telethon `@Phongha79` $\rightarrow$ Refuel GAS | Tổng kết nhiên liệu máy phát cuối ngày |
 | **ĐỘC LẬP** | 🟢 1. CRON ĐỘC LẬP (Site Down Relay) | Phút `:03` & `:33` hàng giờ (Ví dụ: 14:03, 14:33, 15:03, 15:33, 16:03, 16:33...) | Cào tin trạm sập NOC Pro CHÍNH THỨC | `botlookup_relay.yml` | Telethon `@Phongha79` $\rightarrow$ Sheet Site Down Row 2 | Cào tin trạm sập NOC Pro CHÍNH THỨC không trễ 1s (Chạy độc lập siêu tốc ~5s) |
 
+### ⛽ MA TRẬN GHẾ HẠT NHÂN BÁO CÁO NHIÊN LIỆU (FUEL REPORTS SEATS MATRIX):
+
+#### **TOA 7+8: 🔌 CABLE & REFUEL REQUEST (05:53, 13:03, 15:53 MMT)**
+- **Dãy Ghế F-REQ (Yêu Cầu Cấp Nhiên Liệu Khẩn Cấp)**:
+  - `Ghế F-REQ1`: Yêu cầu cấp nhiên liệu Team 1 Dawei $\rightarrow$ Bot API $\rightarrow$ Group `9 TNI REQUEST REFUEL`
+  - `Ghế F-REQ2`: Yêu cầu cấp nhiên liệu Team 2 Myeik $\rightarrow$ Bot API $\rightarrow$ Group `9 TNI REQUEST REFUEL`
+  - `Ghế F-REQ3`: Yêu cầu cấp nhiên liệu Team 3 Bokpyin $\rightarrow$ Bot API $\rightarrow$ Group `9 TNI REQUEST REFUEL`
+  - `Ghế F-REQ4`: Yêu cầu cấp nhiên liệu Team 4 Kawthoung $\rightarrow$ Bot API $\rightarrow$ Group `9 TNI REQUEST REFUEL`
+
+#### **TOA 9: ⛽ REFUEL PLAN 1 (13:08 & 22:08 MMT)**
+- **Dãy Ghế F-P1 (Kế Hoạch Dự Trù Nhiên Liệu Máy Phát Team)**:
+  - `Ghế F-P1-T1`: Refuel Plan 1 Team 1 Dawei (`refuel_plan_report.py --report 1`) $\rightarrow$ Telethon $\rightarrow$ Refuel GAS
+  - `Ghế F-P1-T2`: Refuel Plan 1 Team 2 Myeik (`refuel_plan_report.py --report 1`) $\rightarrow$ Telethon $\rightarrow$ Refuel GAS
+  - `Ghế F-P1-T3`: Refuel Plan 1 Team 3 Bokpyin (`refuel_plan_report.py --report 1`) $\rightarrow$ Telethon $\rightarrow$ Refuel GAS
+  - `Ghế F-P1-T4`: Refuel Plan 1 Team 4 Kawthoung (`refuel_plan_report.py --report 1`) $\rightarrow$ Telethon $\rightarrow$ Refuel GAS
+
+#### **TOA 10: ⛽ REFUEL PLAN 2 & 2.1 (13:13, 18:03, 22:13 MMT)**
+- **Dãy Ghế F-P2 (Cấp Phát & Giám Sát Nhiên Liệu Kỹ Thuật Viên FT)**:
+  - `Ghế F-P2-T1`: Refuel Plan 2 Team 1 Dawei (`refuel_plan_report.py --report 2`) $\rightarrow$ Telethon $\rightarrow$ Refuel GAS
+  - `Ghế F-P2-T2`: Refuel Plan 2 Team 2 Myeik (`refuel_plan_report.py --report 2`) $\rightarrow$ Telethon $\rightarrow$ Refuel GAS
+  - `Ghế F-P2-T3`: Refuel Plan 2 Team 3 Bokpyin (`refuel_plan_report.py --report 2`) $\rightarrow$ Telethon $\rightarrow$ Refuel GAS
+  - `Ghế F-P2-T4`: Refuel Plan 2 Team 4 Kawthoung (`refuel_plan_report.py --report 2`) $\rightarrow$ Telethon $\rightarrow$ Refuel GAS
+- **Dãy Ghế F-P21 (Nhật Ký Tiêu Thụ Nhiên Liệu Máy Phát Hàng Giờ)**:
+  - `Ghế F-P21-T1`: Refuel Plan 2.1 Team 1 Dawei (`refuel_plan_report.py --report 21`) $\rightarrow$ Telethon $\rightarrow$ Refuel GAS
+  - `Ghế F-P21-T2`: Refuel Plan 2.1 Team 2 Myeik (`refuel_plan_report.py --report 21`) $\rightarrow$ Telethon $\rightarrow$ Refuel GAS
+  - `Ghế F-P21-T3`: Refuel Plan 2.1 Team 3 Bokpyin (`refuel_plan_report.py --report 21`) $\rightarrow$ Telethon $\rightarrow$ Refuel GAS
+  - `Ghế F-P21-T4`: Refuel Plan 2.1 Team 4 Kawthoung (`refuel_plan_report.py --report 21`) $\rightarrow$ Telethon $\rightarrow$ Refuel GAS
+
+#### **TOA 11: ⛽ REFUEL PLAN 4 (22:18 MMT)**
+- **Dãy Ghế F-P4 (Quyết Toán Tổng Kết Nhiên Liệu Cuối Ngày)**:
+  - `Ghế F-P4-T1`: Refuel Plan 4 Team 1 Dawei (`refuel_plan_report.py --report 4`) $\rightarrow$ Telethon $\rightarrow$ Refuel GAS
+  - `Ghế F-P4-T2`: Refuel Plan 4 Team 2 Myeik (`refuel_plan_report.py --report 4`) $\rightarrow$ Telethon $\rightarrow$ Refuel GAS
+  - `Ghế F-P4-T3`: Refuel Plan 4 Team 3 Bokpyin (`refuel_plan_report.py --report 4`) $\rightarrow$ Telethon $\rightarrow$ Refuel GAS
+  - `Ghế F-P4-T4`: Refuel Plan 4 Team 4 Kawthoung (`refuel_plan_report.py --report 4`) $\rightarrow$ Telethon $\rightarrow$ Refuel GAS
+
 ---
 
 ## 📊 CHUYẾN TÀU SỐ 4: EXECUTIVE WEB BI PORTAL SYNC LINE (`https://tni-bot.vercel.app`)
