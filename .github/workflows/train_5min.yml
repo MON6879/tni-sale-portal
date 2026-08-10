@@ -407,8 +407,7 @@ jobs:
           TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
           TELEGRAM_SESSION: ${{ secrets.TELEGRAM_SESSION }}
         run: |
-          python refuel_plan_report.py --report 2
-          python refuel_plan_report.py --report 21
+          python refuel_plan_report.py --report 2 1
 
       # ═══════════════════════════════════════════════
       # ⛽ TOA 11: Refuel Plan Report 4
