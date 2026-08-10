@@ -257,9 +257,13 @@ jobs:
           TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
           TELEGRAM_SESSION: ${{ secrets.TELEGRAM_SESSION }}
         run: |
-          python daily_bod_assign.py
-          python backlog_send.py --now
-          python cron_send.py
+          if [ "${{ inputs.report_type }}" = "Report 3.1 - Asset progress for material" ]; then
+            python cron_send.py --asset_only
+          else
+            python daily_bod_assign.py
+            python backlog_send.py --now
+            python cron_send.py
+          fi
 
       # ═══════════════════════════════════════════════
       # 📋 TOA 3: Report 5A — Plan EOD

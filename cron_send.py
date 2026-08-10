@@ -1512,9 +1512,30 @@ async def send_msg(bot, cid, text, label="", parse_mode=None, reply_to=None):
 
 
 async def main():
+    import sys
     now = datetime.now(TZ_MM)
     now_str = now.strftime("%d/%m/%Y %H:%M")
     logger.info(f"🚀 Cron send start – {now_str}")
+
+    is_asset_only = ("--asset_only" in sys.argv or "--asset-only" in sys.argv)
+    if is_asset_only:
+        logger.info("🚀 Running Asset Progress 3.1 Report only...")
+        asset_data = get_asset_stats()
+        asset_msg = build_asset_msg(now_str, asset_data)
+        if asset_msg and SEND_BOT_TOKEN:
+            async with Bot(token=SEND_BOT_TOKEN) as bot:
+                if APPS_SCRIPT_URL:
+                    delete_old_messages_bot(SEND_BOT_TOKEN, CONTROL_CHAT_ID, APPS_SCRIPT_URL, "CRON_ASSET_CONTROL")
+                await send_msg(bot, CONTROL_CHAT_ID, asset_msg, "ASSET_PROGRESS_31")
+                GID_TO_TEAM = {v: k for k, v in TEAM_GROUPS.items()}
+                for gid, team_key in GID_TO_TEAM.items():
+                    team_asset_msg = build_team_asset_msg(team_key, now_str, asset_data)
+                    if team_asset_msg:
+                        if APPS_SCRIPT_URL:
+                            delete_old_messages_bot(SEND_BOT_TOKEN, gid, APPS_SCRIPT_URL, f"CRON_ASSET_{team_key}")
+                        await send_msg(bot, gid, team_asset_msg, f"TEAM_ASSET_PROGRESS_31_{team_key}")
+        logger.info("✅ Asset Progress 3.1 Report complete!")
+        return
 
     # ── 1. Read full sheet ──
     resp = requests.get(SHEET_URL, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}, timeout=30)
