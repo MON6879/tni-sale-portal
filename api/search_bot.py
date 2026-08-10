@@ -9,23 +9,40 @@ Chức năng:
   - Ảnh: gửi kèm báo cáo → lưu Drive qua GAS
   - /daily → gửi mẫu báo cáo
 """
-import os, re, io, json, html, time, asyncio, logging, requests, threading
+import os, re, io, json, html, time, asyncio, logging, requests, threading, sys
 import pandas as pd
 from http.server import BaseHTTPRequestHandler
 from datetime import datetime, timezone, timedelta
 
+# ── SSOT Engine Import ────────────────────────────────────────────────────────
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+try:
+    from tni_search_core import classify_query, is_duplicate_search
+except ImportError:
+    try:
+        from api.tni_search_core import classify_query, is_duplicate_search
+    except ImportError:
+        classify_query = None
+        is_duplicate_search = None
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-BOT_VERSION = "v3.9"
+BOT_VERSION = "v4.0"
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TOKEN                 = os.environ.get("TELEGRAM_TOKEN", "").strip().strip("\ufeff")
+TELEGRAM_SECRET_TOKEN = os.environ.get("TELEGRAM_SECRET_TOKEN", "").strip().strip("\ufeff")
 DAILY_APPS_SCRIPT_URL = os.environ.get("DAILY_APPS_SCRIPT_URL", "").strip().strip("\ufeff")
 APPS_SCRIPT_URL       = os.environ.get("APPS_SCRIPT_URL", "").strip().strip("\ufeff")
 SPREADSHEET_ID        = os.environ.get("SPREADSHEET_ID", "1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8").strip().strip("\ufeff")
+SD_SPREADSHEET_ID     = "1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow"
 BASE_URL              = (
     f"https://docs.google.com/spreadsheets/d/"
     f"{SPREADSHEET_ID}/gviz/tq?tqx=out:csv&gid="
+)
+SD_BASE_URL           = (
+    f"https://docs.google.com/spreadsheets/d/"
+    f"{SD_SPREADSHEET_ID}/gviz/tq?tqx=out:csv&gid="
 )
 GID_SITE       = "1095689918"
 GID_TASK       = "1755404595"
@@ -43,13 +60,20 @@ TG_API   = f"https://api.telegram.org/bot{TOKEN if TOKEN else 'MISSING'}"
 # ── Daily fields cache ─────────────────────────────────────────────────────────
 DAILY_FIELDS_DEFAULT = [
     "Daily report",
-    "Transportation Used", "Full Name", "Detail WO", "Detail task",
-    "Name Site rescue", "Name Cell rescue", "Resuce Cable",
+    "Transportation Used",
+    "Full Name",
+    "Detail WO",
+    "Detail task",
+    "Name Site rescue",
+    "Name Cell rescue",
+    "Resuce Cable",
     "Name and detail Site repair alarm",
-    "Name Site follow partner refuel", "Other task",
+    "Name Site follow partner refuel",
+    "Other task",
     "Name and detail Site go busines trip start go",
     "Name and detail Site go busines trip end go",
-    "Km moto bike start", "Km moto bike the end",
+    "Km moto bike start",
+    "Km moto bike the end",
 ]
 DAILY_FIELDS_TTL = 600
 _daily_fields: list = []
@@ -337,12 +361,13 @@ _tni_team_sum_index = {}
 _index_last_built = 0.0
 _index_building = False
 
-def fetch_single_csv(gid: str) -> pd.DataFrame | None:
-    # Cache check — tránh fetch 2 lần (load_all_sheets + build_search_indexes)
-    cached = _csv_cache.get(gid)
-    if cached is not None and (time.time() - _csv_cache_ts.get(gid, 0)) < CSV_CACHE_TTL:
+def fetch_single_csv(gid: str, is_sd: bool = False) -> pd.DataFrame | None:
+    cache_key = f"{'sd_' if is_sd else ''}{gid}"
+    cached = _csv_cache.get(cache_key)
+    if cached is not None and (time.time() - _csv_cache_ts.get(cache_key, 0)) < CSV_CACHE_TTL:
         return cached
-    url = BASE_URL + str(gid)
+    base = SD_BASE_URL if is_sd else BASE_URL
+    url = base + str(gid)
     hdrs = {"User-Agent": "Mozilla/5.0"}
     for attempt in range(1, 3):
         try:
@@ -350,14 +375,14 @@ def fetch_single_csv(gid: str) -> pd.DataFrame | None:
             resp.raise_for_status()
             content = resp.content.decode("utf-8", errors="replace")
             df = pd.read_csv(io.StringIO(content), header=None, dtype=str, on_bad_lines="skip")
-            _csv_cache[gid] = df
-            _csv_cache_ts[gid] = time.time()
+            _csv_cache[cache_key] = df
+            _csv_cache_ts[cache_key] = time.time()
             return df
         except Exception as ex:
             logger.warning(f"fetch_single_csv retry {attempt}/2 [gid={gid}]: {ex}")
             if attempt < 2:
                 time.sleep(0.5)
-    return _csv_cache.get(gid)
+    return _csv_cache.get(cache_key)
 
 def safe(row, idx: int) -> str:
     if idx < len(row):
@@ -446,16 +471,36 @@ def trigger_bg_index_refresh():
     t.start()
 
 def format_task_wo(raw: str) -> str:
-    """Render col H content thành HTML sạch — hỗ trợ 2 định dạng:
-       1. Old pre-formatted (có ─────): strip header/footer, giữ nội dung.
-       2. Raw /Alarm: <+> /Task: <+> /WO: format: parse thành emoji sections."""
+    """Render col H content thành HTML sạch cho Toa 1 (Task & WO).
+       Loại bỏ 100% phần 'Site Info' nếu có trong chuỗi thô."""
     e = html.escape
     if not raw:
         return ""
 
-    # ── Format 1: Old pre-formatted (🔍 TNI...\n─────\n📍 Site Info\n...\n─────) ──
-    if "\u2500\u2500\u2500\u2500\u2500" in raw:      # ─────
-        lines = raw.split("\n")
+    raw_clean = raw
+    if "📍 Site Info" in raw_clean or "📍 <b>Site Info</b>" in raw_clean or "🏢 Site" in raw_clean:
+        task_pos = raw_clean.find("📋")
+        wo_pos = raw_clean.find("🔧")
+        alarm_pos = raw_clean.find("🔔")
+        positions = [p for p in (task_pos, wo_pos, alarm_pos) if p != -1]
+        if positions:
+            raw_clean = raw_clean[min(positions):].strip()
+        else:
+            lines = []
+            skip = False
+            for line in raw_clean.split("\n"):
+                if "Site Info" in line or "🏢 Site" in line:
+                    skip = True
+                elif skip and ("Task" in line or "WO" in line or "Alarm" in line):
+                    skip = False
+                    lines.append(line)
+                elif not skip:
+                    lines.append(line)
+            raw_clean = "\n".join(lines).strip()
+
+    # ── Format 1: Pre-formatted có ───── ──
+    if "\u2500\u2500\u2500\u2500\u2500" in raw_clean:      # ─────
+        lines = raw_clean.split("\n")
         content_lines = []
         in_content = False
         for line in lines:
@@ -465,34 +510,35 @@ def format_task_wo(raw: str) -> str:
                 else:
                     break
             elif in_content:
-                content_lines.append(line)
+                if "Site Info" not in line:
+                    content_lines.append(line)
         if content_lines:
             return e("\n".join(content_lines).strip())
 
-    # ── Format 2: Raw /Alarm: <+> /Task: ... <+> /WO: ... ──
-    if "<+>" in raw:
-        sections = raw.split("<+>")
+    # ── Format 2: Raw /Alarm: ... <+> /Task: ... <+> /WO: ... ──
+    if "<+>" in raw_clean or "/Task:" in raw_clean or "/WO:" in raw_clean:
+        sections = raw_clean.split("<+>")
         parts = []
         for sec in sections:
             sec = sec.strip()
-            if sec.startswith("/Alarm:"):
-                content = sec[7:].strip()
+            if "/Alarm:" in sec:
+                content = sec[sec.find("/Alarm:") + 7:].strip()
                 if content:
                     parts.append(f"🔔 <b>Alarm:</b> {e(content[:300])}")
-            elif sec.startswith("/Task:"):
-                content = sec[6:].strip()
+            elif "/Task:" in sec:
+                content = sec[sec.find("/Task:") + 6:].strip()
                 if content and content.lower() not in ("no see", ""):
                     tasks = [t.strip() for t in content.split("/") if t.strip()]
                     parts.append("📋 <b>Task:</b>\n" + "\n".join(f"• {e(t[:150])}" for t in tasks[:5]))
-            elif sec.startswith("/WO:"):
-                content = sec[4:].strip()
+            elif "/WO:" in sec:
+                content = sec[sec.find("/WO:") + 4:].strip()
                 if content:
                     wos = [w.strip() for w in content.split("/") if w.strip()]
                     parts.append("🔧 <b>WO:</b>\n" + "\n".join(f"• {e(w[:150])}" for w in wos[:3]))
-        return "\n".join(parts) if parts else e(raw[:500])
+        if parts:
+            return "\n".join(parts)
 
-    # ── Format 3: Unknown — escape và cắt bớt ──
-    return e(raw[:500])
+    return e(raw_clean[:500])
 
 
 def perform_unified_tni_search(tni: str, full_info: bool = False) -> str:
@@ -610,7 +656,7 @@ def is_daily(text: str) -> bool:
         return False
     if "above are the end-of-day" in text_l or "note:" in text_l or "ft result daily" in text_l or "find task" in text_l or "auto report" in text_l or "ref:" in text_l or "đã lưu" in text_l:
         return False
-    if "daily result" not in text_l:
+    if "daily result" not in text_l and "daily report" not in text_l:
         return False
     has_date = bool(re.search(r'\b\d{1,2}[/\.-]\d{1,2}[/\.-]\d{2,4}\b', text))
     return has_date
@@ -634,16 +680,11 @@ def get_copy_markup(chat_id: int, team_arg: str, text_label: str) -> dict:
 def send_daily_template(chat_id: int) -> None:
     fields = fetch_daily_fields()
     now_mm = datetime.now(TZ_MM)
-    lines  = [f"Daily result: {now_mm.strftime('%d/%m/%Y')}"]
-    for i, f in enumerate(fields[1:], start=1):
-        lines.append(f"{i}. {f}:")
+    lines  = [f"Daily report: {now_mm.strftime('%d/%m/%Y')}"]
+    for f in fields[1:]:
+        lines.append(f"{f}:")
     template = "\n".join(lines)
-    
-    tg_send(chat_id,
-        f"📋 <b>Daily Result Template</b>\n"
-        f"Copy → Edit → Send back:\n\n"
-        f"<pre>{html.escape(template)}</pre>"
-    )
+    tg_send(chat_id, template)
 
 def get_user_team_number(user_id: int) -> int | None:
     try:
@@ -706,8 +747,8 @@ def get_plan_template_text(team_num: int) -> str:
             "VII. List name FT : Name Site ( WO + Task)"
         ]
         
-        for i, name in enumerate(matched_staff, start=1):
-            lines.append(f"{i}. {name}: ")
+        for name in matched_staff:
+            lines.append(f"{name}: ")
             
         return "\n".join(lines)
     except Exception as e:
@@ -799,7 +840,7 @@ def parse_plan_fields(text: str, chat_id: int | None = None, chat_title: str | N
 
 
 def store_daily_plan_to_sheet(date_str: str, team_str: str, content: str) -> dict:
-    url = DAILY_APPS_SCRIPT_URL or APPS_SCRIPT_URL or "https://script.google.com/macros/s/AKfycbzGFdnESGcSMt0Of7PrBIOHDXmuLCZsiraGv5iNzWrw4rjdxm8CGBDuVIP8pnPEkAULww/exec"
+    url = DAILY_APPS_SCRIPT_URL or APPS_SCRIPT_URL or "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
     try:
         r = requests.post(url, json={
             "action": "store_daily_plan",
@@ -827,11 +868,7 @@ def send_daily_plan_template(chat_id: int, team_num: int) -> None:
     _recent_plan_sends[key] = now_ts
 
     template = get_plan_template_text(team_num)
-    tg_send(chat_id,
-        f"📋 <b>Daily Plan Template (Team {team_num})</b>\n"
-        f"Copy → Edit → Send back:\n\n"
-        f"<pre>{html.escape(template)}</pre>"
-    )
+    tg_send(chat_id, template)
 
 _recent_help_sends = {}
 
@@ -855,6 +892,58 @@ def send_help_menu(chat_id: int) -> None:
         parse_mode="HTML")
 
 _recent_daily_submits = {}
+_recent_search_keys = {}
+_recent_update_ids = {}
+
+def is_duplicate_search(chat_id: int, user_id: int, query_key: str) -> bool:
+    now = time.time()
+    dedup = f"{chat_id}:{user_id}:{query_key.upper()}"
+    last_time = _recent_search_keys.get(dedup, 0)
+    if (now - last_time) < 10.0:  # 10s cooldown cho cùng query trong cùng chat
+        logger.info(f"Skipping duplicate search for key {dedup}")
+        return True
+    _recent_search_keys[dedup] = now
+    if len(_recent_search_keys) > 500:
+        _recent_search_keys.clear()
+    return False
+
+def lookup_clear_site(tni: str) -> str:
+    """Tra cứu Lịch sử Clear Site từ tab Search Site Clear (GID_SITE_CLEAR)."""
+    tni_u = tni.upper()
+    try:
+        df = fetch_single_csv(GID_SITE_CLEAR, is_sd=True)
+        if df is None or df.empty or len(df) < 4:
+            return f"❌ Search Site Clear sheet missing or empty."
+
+        col_idx = -1
+        # Tìm cột chứa mã trạm trong các hàng tiêu đề (hàng 0, 1, 2, 3, 4)
+        for r_idx in range(min(5, len(df))):
+            row = df.iloc[r_idx]
+            for col in range(1, len(row)):
+                val = str(row.iloc[col]).strip().upper()
+                if val == tni_u:
+                    col_idx = col
+                    break
+            if col_idx >= 0:
+                break
+
+        if col_idx < 0:
+            return f"❌ Not found <b>{html.escape(tni_u)}</b> in Clear Site sheet."
+
+        lines = [f"🔍 <b>Clear History for {html.escape(tni_u)}</b>", "━━━━━━━━━━━━━━━━━━━━"]
+        for r in range(len(df)):
+            row = df.iloc[r]
+            val = safe(row, col_idx)
+            label = str(row.iloc[0]).strip() if len(row) > 0 else ""
+
+            if not val or val.lower() in ("nan", "-", ""):
+                continue
+            if label and label.lower() != "nan":
+                lines.append(f"• <b>{html.escape(label)}:</b> {html.escape(val)}")
+        return "\n".join(lines)
+    except Exception as e:
+        logger.error(f"lookup_clear_site error [{tni_u}]: {e}")
+        return f"❌ Error loading clear site data: {html.escape(str(e)[:80])}"
 
 def submit_daily(chat_id: int, user_id: int, first_name: str, text: str) -> None:
     now_ts = time.time()
@@ -949,6 +1038,17 @@ def handle(update: dict) -> None:
     user_id    = user.get("id", 0)
     first_name = user.get("first_name", "")
 
+    # 🛑 BỎ QUA TIN NHẮN TRÙNG LẬP THEO UPDATE_ID
+    update_id = update.get("update_id")
+    if update_id:
+        now_ts = time.time()
+        if (now_ts - _recent_update_ids.get(update_id, 0)) < 15.0:
+            logger.info(f"Skipping duplicate update_id {update_id}")
+            return
+        _recent_update_ids[update_id] = now_ts
+        if len(_recent_update_ids) > 1000:
+            _recent_update_ids.clear()
+
     # 🛑 BỎ QUA TIN NHẮN TỪ BOT KHÁC HOẶC BẢN THÂN BOT
     if user.get("is_bot"):
         return
@@ -1028,10 +1128,14 @@ def handle(update: dict) -> None:
             return
 
         elif first_word == "daily":
+            if is_duplicate_search(chat_id, user_id, "DAILY"):
+                return
             send_daily_template(chat_id)
             return
 
         elif first_word in ("plan", "dailyplan"):
+            if is_duplicate_search(chat_id, user_id, f"PLAN:{text}"):
+                return
             team_num = None
             if rest:
                 team_arg = rest.upper()
@@ -1149,16 +1253,17 @@ def handle(update: dict) -> None:
     # ── STAFF PERSONAL LOOKUP: "mysite" / "mycable" / ... hoặc "mysite <id>" (admin) ──
     text_low = text.lower().strip()
 
-    # Admin lookup: "mysite 6859790680" / "mydata 1234567890" — xem data của bất kỳ user nào
-    admin_lookup = re.match(r'^(my\S+)\s+(\d{6,12})$', text_low)
+    # Admin lookup: "mysite 6859790680", "/mydata 6361576236" — xem data của bất kỳ user nào
+    admin_lookup = re.match(r'^/?(my\S+)\s+(\d{6,12})$', text_low)
     if admin_lookup:
-        field_name = admin_lookup.group(1)           # e.g. "mysite", "mydata"
+        field_name = admin_lookup.group(1).lower()   # e.g. "mysite", "mydata"
         target_id  = int(admin_lookup.group(2))
         field      = None if field_name in ("mydata", "myall") else field_name
         reply = get_staff_data(target_id, field)
         # Thêm header cho admin biết đang xem data của ai
-        header = f"👤 <b>Viewing ID:</b> <code>{target_id}</code>\n"
-        tg_send(chat_id, header + reply)
+        header = f"👤 <b>Viewing ID:</b> <code>{target_id}</code> ({html.escape(field_name)})\n"
+        for chunk in split_messages(header + reply):
+            tg_send(chat_id, chunk)
         return
 
     is_my_field    = (text_low.startswith("my") and len(text_low) > 2 and " " not in text_low)
@@ -1176,12 +1281,12 @@ def handle(update: dict) -> None:
         if chat_type == "private":
             team_code = team_match.group(1).upper()
             logger.info(f"Team lookup: {team_code} | chat={chat_id}")
-            tg_send(chat_id, f"⏳ Loading <b>{html.escape(team_code)}</b> data...")
             log_search_bg(first_name or str(user_id), user_id, team_code)
             try:
                 messages = lookup_team(team_code)
-                for msg_txt in messages:
-                    tg_send(chat_id, msg_txt)
+                full_text = f"📋 <b>{team_code} Summary</b> ({len(messages)} items)\n\n" + "\n\n".join(messages)
+                for chunk in split_messages(full_text):
+                    tg_send(chat_id, chunk)
             except Exception as err:
                 logger.error(f"Team lookup error [{team_code}]: {err}")
                 tg_send(chat_id, f"❌ Error: {html.escape(str(err)[:80])}")
@@ -1192,12 +1297,12 @@ def handle(update: dict) -> None:
     if nc_match:
         team_code = nc_match.group(1).upper()
         logger.info(f"NotClose lookup: {team_code} | chat={chat_id}")
-        tg_send(chat_id, f"⏳ Loading <b>{html.escape(team_code)} Not Close</b> data...")
         log_search_bg(first_name or str(user_id), user_id, f"{team_code}notclose")
         try:
             messages = lookup_notclose(team_code)
-            for msg_txt in messages:
-                tg_send(chat_id, msg_txt)
+            full_text = f"📑 <b>{team_code} NOT CLOSE</b> ({len(messages)} WOs)\n\n" + "\n\n".join(messages)
+            for chunk in split_messages(full_text):
+                tg_send(chat_id, chunk)
         except Exception as err:
             logger.error(f"NotClose lookup error [{team_code}]: {err}")
             tg_send(chat_id, f"❌ Error: {html.escape(str(err)[:80])}")
@@ -1208,41 +1313,78 @@ def handle(update: dict) -> None:
     if wc_match:
         team_code = wc_match.group(1).upper()
         logger.info(f"WaitCD lookup: {team_code} | chat={chat_id}")
-        tg_send(chat_id, f"⏳ Loading <b>{html.escape(team_code)} Wait CD</b> data...")
         log_search_bg(first_name or str(user_id), user_id, f"{team_code}waitcd")
         try:
             messages = lookup_waitcd(team_code)
-            for msg_txt in messages:
-                tg_send(chat_id, msg_txt)
+            full_text = f"⏳ <b>{team_code} WAIT CD</b> ({len(messages)} WOs)\n\n" + "\n\n".join(messages)
+            for chunk in split_messages(full_text):
+                tg_send(chat_id, chunk)
+        except Exception as err:
+            logger.error(f"WaitCD lookup error [{team_code}]: {err}")
+            tg_send(chat_id, f"❌ Error: {html.escape(str(err)[:80])}")
+        return
+
+    # ── CLASSIFY QUERY VIA SSOT SEARCH ENGINE ─────────────────────────────────
+    classified = classify_query(text) if classify_query else None
+    action = classified.get("action") if classified else None
+    code = classified.get("code") if classified else None
+
+    # ── TOA 3: NOT CLOSE SEARCH (/t1notclose, t4notclose...) ──────────────────
+    if action == "NOTCLOSE":
+        team_code = code
+        if is_duplicate_search and is_duplicate_search(chat_id, user_id, f"NOTCLOSE:{team_code}"):
+            return
+        logger.info(f"[SSOT Router] NotClose lookup: {team_code} | chat={chat_id}")
+        log_search_bg(first_name or str(user_id), user_id, f"{team_code}notclose")
+        try:
+            messages = lookup_notclose(team_code)
+            full_text = f"📑 <b>{team_code} NOT CLOSE</b> ({len(messages)} WOs)\n\n" + "\n\n".join(messages)
+            for chunk in split_messages(full_text):
+                tg_send(chat_id, chunk)
+        except Exception as err:
+            logger.error(f"NotClose lookup error [{team_code}]: {err}")
+            tg_send(chat_id, f"❌ Error: {html.escape(str(err)[:80])}")
+        return
+
+    # ── TOA 4: WAIT CD SEARCH (/t1waitcd, t4waitcd...) ────────────────────────
+    if action == "WAITCD":
+        team_code = code
+        if is_duplicate_search and is_duplicate_search(chat_id, user_id, f"WAITCD:{team_code}"):
+            return
+        logger.info(f"[SSOT Router] WaitCD lookup: {team_code} | chat={chat_id}")
+        log_search_bg(first_name or str(user_id), user_id, f"{team_code}waitcd")
+        try:
+            messages = lookup_waitcd(team_code)
+            full_text = f"⏳ <b>{team_code} WAIT CD</b> ({len(messages)} WOs)\n\n" + "\n\n".join(messages)
+            for chunk in split_messages(full_text):
+                tg_send(chat_id, chunk)
         except Exception as err:
             logger.error(f"WaitCD lookup error [{team_code}]: {err}")
             tg_send(chat_id, f"❌ Error: {html.escape(str(err)[:80])}")
         return
 
     # ── 1. KEY "CLEAR": CLEAR TNIxxxx / /clear TNIxxxx — tra cứu Lịch sử Clear Site ──────────────
-    clear_match = re.search(r"^\s*(?:/clear|clear)[:\s]+\s*(TNI[A-Z0-9_]+)", text.strip(), re.IGNORECASE)
-    if clear_match:
-        tni = clear_match.group(1).upper()
-        logger.info(f"Clear site lookup: {tni} | chat={chat_id}")
-        tg_send(chat_id, f"⏳ Loading clear data for <b>{html.escape(tni)}</b>...")
+    if action == "CLEAR":
+        tni = code
+        if is_duplicate_search and is_duplicate_search(chat_id, user_id, f"CLEAR:{tni}"):
+            return
+        logger.info(f"[SSOT Router] Clear site lookup: {tni} | chat={chat_id}")
         log_search_bg(first_name or str(user_id), user_id, f"CLEAR {tni}")
         try:
             message = lookup_clear_site(tni)
-            tg_send(chat_id, message)
+            for chunk in split_messages(message):
+                tg_send(chat_id, chunk)
         except Exception as err:
             logger.error(f"Clear lookup error [{tni}]: {err}")
             tg_send(chat_id, f"❌ Error: {html.escape(str(err)[:80])}")
         return
 
-    # ── 2. KEY "INFO" & "TNI" SEARCH: Hợp nhất 100% cho Info: TNIxxxx, TNIxxxx, /tni, /info, /find ───────────────
-    text_clean = text.strip()
-    text_l = text_clean.lower()
-
-    # Kiểm tra xem có lệnh Info: TNIxxxx hoặc /info TNIxxxx hay không
-    info_match = re.search(r"^\s*(?:/info|info)[:\s]+\s*(TNI[A-Z0-9_]+)", text_clean, re.IGNORECASE)
-    if info_match:
-        tni = info_match.group(1).upper()
-        logger.info(f"Unified Info/TNI lookup: {tni} | chat={chat_id}")
+    # ── 2. KEY "INFO" SEARCH: /info TNIxxxx hoặc info: TNIxxxx ─────────────────────
+    if action == "INFO":
+        tni = code
+        if is_duplicate_search and is_duplicate_search(chat_id, user_id, f"INFO:{tni}"):
+            return
+        logger.info(f"[SSOT Router] Unified Info lookup: {tni} | chat={chat_id}")
         log_search_bg(first_name or str(user_id), user_id, f"Info:{tni}")
         try:
             result = perform_unified_tni_search(tni, full_info=True)   # Info: → Site+Cable+DIA only
@@ -1253,21 +1395,12 @@ def handle(update: dict) -> None:
             tg_send(chat_id, f"❌ Lookup error: {html.escape(str(err))}")
         return
 
-    # Kiểm tra lệnh TNIxxxx / /tni TNIxxxx / /find TNIxxxx
-    if text_l.startswith("tni") or text_l.startswith("/tni") or text_l.startswith("/find"):
-        if text_l.startswith("/tni") or text_l.startswith("/find"):
-            parts = text_clean.split(maxsplit=1)
-            if len(parts) > 1:
-                text_clean = parts[1].strip()
-            else:
-                return
-
-        tni_list = re.findall(r"TNI[A-Z0-9_]{4,10}", text_clean, re.IGNORECASE)
-        if not tni_list:
+    # ── 3. KEY "TNI" SEARCH: TNIxxxx / TNIxxxx_01 / /tni TNIxxxx ───────────────────
+    if action == "TNI":
+        tni = code
+        if is_duplicate_search and is_duplicate_search(chat_id, user_id, f"TNI:{tni}"):
             return
-
-        tni = tni_list[0].upper()
-        logger.info(f"Unified TNI lookup: {tni} | chat={chat_id}")
+        logger.info(f"[SSOT Router] Unified TNI lookup: {tni} | chat={chat_id}")
         log_search_bg(first_name or str(user_id), user_id, tni)
         try:
             result = perform_unified_tni_search(tni, full_info=False)  # TNI0122 → Task+WO only
@@ -1298,23 +1431,26 @@ class handler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
             length = int(self.headers.get("Content-Length", 0))
-            raw    = self.rfile.read(length)
-            data   = json.loads(raw)
+            if length > 2 * 1024 * 1024:  # 2MB Limit protection
+                logger.warning("Rejected POST request: Payload size exceeds 2MB limit.")
+                self.send_response(413)
+                self.end_headers()
+                self.wfile.write(b'{"error":"Payload Too Large"}')
+                return
 
-            # 1. Lọc trùng update_id (nếu Telegram có trôi request)
-            up_id = data.get("update_id")
-            if up_id:
-                if up_id in _processed_updates:
-                    logger.info(f"Skipping duplicate update_id {up_id}")
-                    self.send_response(200)
-                    self.send_header("Content-Type", "application/json")
+            if TELEGRAM_SECRET_TOKEN:
+                secret_header = self.headers.get("X-Telegram-Bot-Api-Secret-Token", "")
+                if secret_header != TELEGRAM_SECRET_TOKEN:
+                    logger.warning("Rejected POST request: Secret token mismatch.")
+                    self.send_response(403)
                     self.end_headers()
-                    self.wfile.write(b'{"ok":true}')
+                    self.wfile.write(b'{"error":"Forbidden"}')
                     return
-                _processed_updates.add(up_id)
-                if len(_processed_updates) > 1000:
-                    _processed_updates.clear()
 
+            raw  = self.rfile.read(length)
+            data = json.loads(raw)
+
+            # ── Xử lý submit_plan (đồng bộ, cần response body) ──
             action = data.get("action")
             if action == "submit_plan":
                 chat_id = data.get("chat_id")
@@ -1328,27 +1464,36 @@ class handler(BaseHTTPRequestHandler):
                     self.wfile.write(json.dumps({"status": "ok"}).encode("utf-8"))
                     return
 
-            # 2. Xử lý logic TRƯỚC (Vercel kill function sau khi flush response)
-            try:
-                handle(data)
-            except Exception as ex:
-                logger.error(f"handle() error: {ex}")
-                try:
-                    import traceback
-                    tb = traceback.format_exc()
-                    msg_obj = data.get("message") or data.get("edited_message") or {}
-                    chat_id = msg_obj.get("chat", {}).get("id")
-                    if chat_id:
-                        tg_send(chat_id, f"⚠️ <b>Error:</b>\n<pre>{html.escape(tb[:2000])}</pre>")
-                except Exception:
-                    pass
-
-            # 3. Trả về 200 OK sau khi xử lý xong (Telegram chờ tối đa 60s)
+            # ══════════════════════════════════════════════════════════
+            # ⚡ CRITICAL: Trả HTTP 200 OK NGAY LẬP TỨC (~10ms)
+            #    để Telegram KHÔNG retry gửi lại cùng update.
+            #    Sau đó mới xử lý logic trong background thread.
+            #    Vercel Python runtime giữ process sống trong maxDuration (60s)
+            #    nên daemon thread vẫn chạy đủ sau khi flush response.
+            # ══════════════════════════════════════════════════════════
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
             self.wfile.write(b'{"ok":true}')
+
+            # ── Xử lý Telegram update trong background ──
+            def _process_bg(update_data):
+                try:
+                    handle(update_data)
+                except Exception as ex:
+                    logger.error(f"handle() error: {ex}")
+                    try:
+                        import traceback
+                        tb = traceback.format_exc()
+                        msg_obj = update_data.get("message") or update_data.get("edited_message") or {}
+                        chat_id = msg_obj.get("chat", {}).get("id")
+                        if chat_id:
+                            tg_send(chat_id, f"⚠️ <b>Error:</b>\n<pre>{html.escape(tb[:2000])}</pre>")
+                    except Exception:
+                        pass
+
+            threading.Thread(target=_process_bg, args=(data,), daemon=True).start()
 
         except Exception as ex:
             logger.error(f"Webhook POST parse error: {ex}")
