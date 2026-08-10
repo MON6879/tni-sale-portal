@@ -43,9 +43,9 @@ WAIT_REPLY_SEC = 35
 ACTIVE_START   = (3, 30)
 ACTIVE_END     = (22, 15)
 
-MIN_DELAY_SEC  = 3 * 60   # 3 phút
-MAX_DELAY_SEC  = 8 * 60   # 8 phút
-SKIP_DELAY     = os.environ.get("SKIP_DELAY", "0") == "1"
+MIN_DELAY_SEC  = 0
+MAX_DELAY_SEC  = 0
+SKIP_DELAY     = os.environ.get("SKIP_DELAY", "1") == "1"
 # ──────────────────────────────────────────────────────────────────
 
 def myanmar_now() -> str:
