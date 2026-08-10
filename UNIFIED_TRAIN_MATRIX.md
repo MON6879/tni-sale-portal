@@ -78,6 +78,13 @@ Hệ thống được quy hoạch hoàn chỉnh thành **3 CHUYẾN TÀU CHÍNH 
   - `Ghế F-P2-T2`: Refuel Plan 2 Team 2 Myeik (`refuel_plan_report.py --report 2`) $\rightarrow$ Telethon $\rightarrow$ Refuel GAS
   - `Ghế F-P2-T3`: Refuel Plan 2 Team 3 Bokpyin (`refuel_plan_report.py --report 2`) $\rightarrow$ Telethon $\rightarrow$ Refuel GAS
   - `Ghế F-P2-T4`: Refuel Plan 2 Team 4 Kawthoung (`refuel_plan_report.py --report 2`) $\rightarrow$ Telethon $\rightarrow$ Refuel GAS
+
+#### **TOA SITE DOWN RELAY: 🚨 BOTLOOKUP RELAY (PHÚT :03 & :33 MMT HÀNG GIỜ)**
+- **Dãy Ghế SD-RELAY (Ghế Giám Sát & Cào Tin Trạm Sập NOC Pro 24/7)**:
+  - `Ghế SD-RELAY-1`: Cron Độc Lập `botlookup_relay.yml` / `botlookup_relay.py` $\rightarrow$ Telethon `@Phongha79` $\rightarrow$ Bắn lệnh `/down_tni@auto_nocpro_bot` sang NOC Pro.
+  - `Ghế SD-RELAY-2`: Sợi Dây Liên Kết Ingest $\rightarrow$ Đón tin nhắn tổng hợp trạm sập từ NOC Pro $\rightarrow$ Phân tích HTML/Text.
+  - `Ghế SD-RELAY-3`: Sợi Dây Liên Kết Relay $\rightarrow$ Forward tin nhắn trạm sập sang nhóm `BOT LOOKUP` (`-1002287739509`) và các nhóm Team 1-4.
+  - `Ghế SD-RELAY-4`: Sợi Dây Liên Kết Save Sheet $\rightarrow$ Chèn bản ghi trạm sập vào Dòng 2 (`insertRowsBefore(2)`) Google Sheet Site Down (`10_TNI_SITE_DOWN`).
 - **Dãy Ghế F-P21 (Nhật Ký Tiêu Thụ Nhiên Liệu Máy Phát Hàng Giờ)**:
   - `Ghế F-P21-T1`: Refuel Plan 2.1 Team 1 Dawei (`refuel_plan_report.py --report 21`) $\rightarrow$ Telethon $\rightarrow$ Refuel GAS
   - `Ghế F-P21-T2`: Refuel Plan 2.1 Team 2 Myeik (`refuel_plan_report.py --report 21`) $\rightarrow$ Telethon $\rightarrow$ Refuel GAS
