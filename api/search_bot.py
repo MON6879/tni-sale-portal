@@ -678,7 +678,17 @@ def perform_unified_tni_search(tni: str, full_info: bool = False) -> str:
         if not has_info:
             return f"❌ No site/cable/DIA info for <b>{e(tni_upper)}</b>"
         if info.get("site"):
-            lines.append(f"\n🏢 <b>Site</b>\n{e(info['site'][:500])}")
+            # Lọc bỏ 100% phần Task & WO nếu có trong chuỗi site
+            site_raw = info['site']
+            clean_lines = []
+            for line in site_raw.splitlines():
+                ll = line.lower()
+                if "📋 task" in ll or "🔧 wo" in ll or "task (" in ll or "wo (" in ll:
+                    break
+                clean_lines.append(line)
+            clean_site = "\n".join(clean_lines).strip()
+            if clean_site:
+                lines.append(f"\n🏢 <b>Site Info</b>\n{e(clean_site[:500])}")
         if info.get("cable"):
             lines.append(f"\n🔌 <b>Cable</b>\n{e(info['cable'][:500])}")
         if info.get("gpon"):
