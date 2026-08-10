@@ -1861,6 +1861,21 @@ async def main():
             (0, detail_msg, CONTROL_CHAT_ID, "TECHDEP_DETAIL")
         )
 
+    # ── 7d. Gửi STANDALONE BÁO CÁO 3.1 Asset progress for material → CONTROL & TEAMS ──
+    if asset_msg and SEND_BOT_TOKEN:
+        logger.info("[Cron] Queuing 3.1 Asset progress for material report...")
+        # 1. Bắn tin tổng hợp 3.1 vào CONTROL_CHAT_ID (-5251698940)
+        groups.setdefault(SEND_BOT_TOKEN, []).append(
+            (0, asset_msg, CONTROL_CHAT_ID, "ASSET_PROGRESS_31")
+        )
+        # 2. Bắn tin chi tiết cho từng Team (T1, T2, T3, T4)
+        for gid, team_key in GID_TO_TEAM.items():
+            team_asset_msg = build_team_asset_msg(team_key, now_str, asset_data)
+            if team_asset_msg:
+                groups.setdefault(SEND_BOT_TOKEN, []).append(
+                    (0, team_asset_msg, str(gid), "TEAM_ASSET_PROGRESS_31")
+                )
+
     # ── Mapping chat_id → GAS key để delete-old / save-new ──
     CHATID_TO_KEY = {
         str(TELEGRAM_GROUPS["T1"]): "CRON_TEAM_T1",
