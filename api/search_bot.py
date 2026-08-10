@@ -297,36 +297,46 @@ def lookup_team(team_code: str) -> list:
 def lookup_notclose(team_code: str) -> list:
     """Tra cứu WO Not Close (GID_TL_WAITCD col H='T1notclose', col I=nội dung)."""
     df = fetch_single_csv(GID_TL_WAITCD)
+    e = html.escape
+    t_clean = team_code.upper().replace("TEAM", "T").strip()
     if df is None or df.empty:
-        return [f"\u274c No data for {html.escape(team_code)} not close"]
-    target = f"{team_code}notclose".lower()
+        return [f"❌ No data for <b>{e(t_clean)}</b> not close"]
+    target = f"{t_clean}notclose".lower()
     results = []
     for _, row in df.iterrows():
         col_h = safe(row, 7).strip().lower()   # col H = category label
         if col_h == target:
             col_i = safe(row, 8)               # col I = formatted content
-            if col_i:
-                results.append(col_i.strip())
+            if col_i and col_i.strip() not in ("~   0", "0"):
+                results.append(col_i.strip().lstrip("~ ").strip())
     if not results:
-        return [f"\u274c No Not Close data for <b>{html.escape(team_code)}</b>"]
-    return [split_messages(r)[0] for r in results]
+        return [f"❌ No Not Close data for <b>{e(t_clean)}</b>"]
+    header = f"📑 <b>NOT CLOSE WOs: {e(t_clean)} ({len(results)})</b>\n━━━━━━━━━━━━━━━━━━━━\n"
+    items_text = "\n".join(f"• {e(r)}" for r in results)
+    footer = "\n━━━━━━━━━━━━━━━━━━━━"
+    return split_messages(header + items_text + footer)
 
 def lookup_waitcd(team_code: str) -> list:
     """Tra cứu WO Wait CD (GID_TL_WAITCD col H='T1waitcd', col I=nội dung)."""
     df = fetch_single_csv(GID_TL_WAITCD)
+    e = html.escape
+    t_clean = team_code.upper().replace("TEAM", "T").strip()
     if df is None or df.empty:
-        return [f"\u274c No data for {html.escape(team_code)} wait CD"]
-    target = f"{team_code}waitcd".lower()
+        return [f"⏳ No data for <b>{e(t_clean)}</b> wait CD"]
+    target = f"{t_clean}waitcd".lower()
     results = []
     for _, row in df.iterrows():
         col_h = safe(row, 7).strip().lower()   # col H = category label
         if col_h == target:
             col_i = safe(row, 8)               # col I = formatted content
-            if col_i:
-                results.append(col_i.strip())
+            if col_i and col_i.strip() not in ("~   0", "0"):
+                results.append(col_i.strip().lstrip("~ ").strip())
     if not results:
-        return [f"\u274c No Wait CD data for <b>{html.escape(team_code)}</b>"]
-    return [split_messages(r)[0] for r in results]
+        return [f"⏳ No Wait CD data for <b>{e(t_clean)}</b>"]
+    header = f"⏳ <b>WAIT CD WOs: {e(t_clean)} ({len(results)})</b>\n━━━━━━━━━━━━━━━━━━━━\n"
+    items_text = "\n".join(f"• {e(r)}" for r in results)
+    footer = "\n━━━━━━━━━━━━━━━━━━━━"
+    return split_messages(header + items_text + footer)
 
 # ── Site Access Template ───────────────────────────────────────────────────────
 def get_site_access_template(site_id: str = "TNI0401", date_str: str = None) -> str:
@@ -352,6 +362,14 @@ def get_site_access_template(site_id: str = "TNI0401", date_str: str = None) -> 
 def setup_bot_menu_commands():
     """Cài đặt menu lệnh cho bot."""
     commands = [
+        {"command": "t1notclose",   "description": "Team 1 Not Close WOs"},
+        {"command": "t2notclose",   "description": "Team 2 Not Close WOs"},
+        {"command": "t3notclose",   "description": "Team 3 Not Close WOs"},
+        {"command": "t4notclose",   "description": "Team 4 Not Close WOs"},
+        {"command": "t1waitcd",     "description": "Team 1 Wait CD WOs"},
+        {"command": "t2waitcd",     "description": "Team 2 Wait CD WOs"},
+        {"command": "t3waitcd",     "description": "Team 3 Wait CD WOs"},
+        {"command": "t4waitcd",     "description": "Team 4 Wait CD WOs"},
         {"command": "request_enter_site", "description": "Request enter Site towerco format"},
         {"command": "mysite",       "description": "All Site you control"},
         {"command": "mycable",      "description": "All your cable route"},
@@ -1247,17 +1265,15 @@ def handle(update: dict) -> None:
     if action == "NOTCLOSE":
         if is_duplicate_search and is_duplicate_search(chat_id, user_id, f"NOTCLOSE:{code}"): return
         log_search_bg(first_name or str(user_id), user_id, f"{code}notclose")
-        messages = lookup_notclose(code)
-        full_text = f"📑 <b>{code} NOT CLOSE</b> ({len(messages)} items)\n\n" + "\n\n".join(messages)
-        for chunk in split_messages(full_text): tg_send(chat_id, chunk)
+        chunks = lookup_notclose(code)
+        for chunk in chunks: tg_send(chat_id, chunk)
         return
 
     if action == "WAITCD":
         if is_duplicate_search and is_duplicate_search(chat_id, user_id, f"WAITCD:{code}"): return
         log_search_bg(first_name or str(user_id), user_id, f"{code}waitcd")
-        messages = lookup_waitcd(code)
-        full_text = f"⏳ <b>{code} WAIT CD</b> ({len(messages)} items)\n\n" + "\n\n".join(messages)
-        for chunk in split_messages(full_text): tg_send(chat_id, chunk)
+        chunks = lookup_waitcd(code)
+        for chunk in chunks: tg_send(chat_id, chunk)
         return
 
     if action == "CLEAR":
