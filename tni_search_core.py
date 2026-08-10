@@ -43,7 +43,7 @@ ADMIN_LOOKUP_RE = re.compile(r"^\s*/?(my\S+)\s+(\d{6,12})\s*$", re.IGNORECASE)
 
 # ── DEDUPLICATION CACHE ENGINE ────────────────────────────────────────────────
 _recent_search_keys = {}
-DEDUP_TTL_SECONDS = 10.0
+DEDUP_TTL_SECONDS = 1.5
 
 def is_duplicate_search(chat_id: int, user_id: int, query: str, ttl: float = DEDUP_TTL_SECONDS) -> bool:
     """
