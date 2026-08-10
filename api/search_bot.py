@@ -769,15 +769,20 @@ def parse_daily_report(text: str, fields: list[str]) -> dict:
     return result
 
 def is_daily(text: str) -> bool:
+    if not text:
+        return False
     text_l = text.lower()
-    if "daily plan" in text_l or "plan:" in text_l or "kế hoạch" in text_l:
+    if any(kw in text_l for kw in ("daily plan", "plan:", "kế hoạch", "above are the end-of-day", "auto report", "ref:dp-", "đã lưu", "team leader assign")):
         return False
-    if "above are the end-of-day" in text_l or "note:" in text_l or "ft result daily" in text_l or "find task" in text_l or "auto report" in text_l or "ref:" in text_l or "đã lưu" in text_l:
-        return False
-    if "daily result" not in text_l and "daily report" not in text_l:
-        return False
+    
+    # Từ khóa linh hoạt đại diện cho bài nộp Daily Result của kỹ thuật viên
+    has_daily_kw = any(kw in text_l for kw in (
+        "daily result", "daily report", "transportation used", "detail wo:", "detail task:",
+        "name site rescue:", "name cell rescue:", "resuce cable:", "site repair alarm:",
+        "full name", "daily result:", "1. full name", "2. transportation", "hot task rescue"
+    ))
     has_date = bool(re.search(r'\b\d{1,2}[/\.-]\d{1,2}[/\.-]\d{2,4}\b', text))
-    return has_date
+    return has_daily_kw and has_date
 
 
 def get_copy_markup(chat_id: int, team_arg: str, text_label: str) -> dict:
