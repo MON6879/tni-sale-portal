@@ -67,3 +67,53 @@ Hệ thống được quy hoạch hoàn chỉnh thành **3 CHUYẾN TÀU CHÍNH 
 | **Toa 2** | 📊 Performance Comparison Chart Sync (Hình 2) | **Dãy B**: Đồ thị Bar Chart So sánh 4 Teams | • **Ghế 2A**: Total WO (P+G)<br>• **Ghế 2B**: FOT Close (G)<br>• **Ghế 2C**: Remain WO (P)<br>• **Ghế 2D**: Remain Overdue (N)<br>• **Ghế 2E**: CD Not Close (A) | JS Dynamic Event `syncWebBiPortalData()` | Web BI Portal `woChartInstance` (`index.html`) | **Bắt buộc tự động đọc 100% dữ liệu từ Hình 1**, đảm bảo Hình 1 và Hình 2 luôn bằng nhau |
 | **Toa 3** | 📋 Summary All Name System Roster (Bảng 3) | **Dãy C**: Bảng Roster 24 Nhân Viên Kỹ Thuật | • **Ghế 3A**: Ranking & Completion Rate % 24 FTs | Google Sheets `Tên Sum WO` $\rightarrow$ Vercel | Web BI Portal Table 3 (`index.html`) | Tự động sắp xếp từ % cao xuống % thấp |
 
+### 🔍 MA TRẬN GHẾ HẠT NHÂN CHI TIẾT (NUCLEUS SEATS DETAIL MATRIX):
+
+#### **TOA 1: 🏢 EXECUTIVE TEAM CARDS SYNC (HÌNH 1 — 4 THẺ TEAM LEADERS)**
+- **Dãy Ghế 1A (Total Assigned WOs)**:
+  - `Ghế 1A1`: Total Assigned WO Team 1 Dawei (`394 WOs`)
+  - `Ghế 1A2`: Total Assigned WO Team 2 Myeik (`209 WOs`)
+  - `Ghế 1A3`: Total Assigned WO Team 3 Bokpyin (`95 WOs`)
+  - `Ghế 1A4`: Total Assigned WO Team 4 Kawthoung (`103 WOs`)
+- **Dãy Ghế 1B (WO Close — G)**:
+  - `Ghế 1B1`: FOT Close (G) Team 1 Dawei (`72 WOs`)
+  - `Ghế 1B2`: FOT Close (G) Team 2 Myeik (`119 WOs`)
+  - `Ghế 1B3`: FOT Close (G) Team 3 Bokpyin (`32 WOs`)
+  - `Ghế 1B4`: FOT Close (G) Team 4 Kawthoung (`81 WOs`)
+- **Dãy Ghế 1C (Overdue FOT — N)**:
+  - `Ghế 1C1`: Overdue FOT (N) Team 1 Dawei (`151 WOs`)
+  - `Ghế 1C2`: Overdue FOT (N) Team 2 Myeik (`24 WOs`)
+  - `Ghế 1C3`: Overdue FOT (N) Team 3 Bokpyin (`14 WOs`)
+  - `Ghế 1C4`: Overdue FOT (N) Team 4 Kawthoung (`0 WOs`)
+- **Dãy Ghế 1D (WO Remain — P)**:
+  - `Ghế 1D1`: WO Remain (P) Team 1 Dawei (`322 WOs`)
+  - `Ghế 1D2`: WO Remain (P) Team 2 Myeik (`90 WOs`)
+  - `Ghế 1D3`: WO Remain (P) Team 3 Bokpyin (`63 WOs`)
+  - `Ghế 1D4`: WO Remain (P) Team 4 Kawthoung (`22 WOs`)
+- **Dãy Ghế 1E (Wait CD & CD Not Close — A)**:
+  - `Ghế 1E1`: Wait CD Team 1 (`23 WOs`) | CD Not Close (A) Team 1 (`41 WOs`)
+  - `Ghế 1E2`: Wait CD Team 2 (`8 WOs`) | CD Not Close (A) Team 2 (`23 WOs`)
+  - `Ghế 1E3`: Wait CD Team 3 (`0 WOs`) | CD Not Close (A) Team 3 (`3 WOs`)
+  - `Ghế 1E4`: Wait CD Team 4 (`0 WOs`) | CD Not Close (A) Team 4 (`2 WOs`)
+- **Dãy Ghế 1F (WO Close 3-Day History)**:
+  - `Ghế 1F1`: Team 1 3-Day Close (`09/08: 7 WOs` | `08/08: 1 WO` | `07/08: 1 WO`)
+  - `Ghế 1F2`: Team 2 3-Day Close (`09/08: 14 WOs` | `08/08: 0 WO` | `07/08: 1 WO`)
+  - `Ghế 1F3`: Team 3 3-Day Close (`09/08: 5 WOs` | `08/08: 0 WO` | `07/08: 0 WO`)
+  - `Ghế 1F4`: Team 4 3-Day Close (`09/08: 14 WOs` | `08/08: 0 WO` | `07/08: 0 WO`)
+- **Dãy Ghế 1G (Rank & Completion Status)**:
+  - `Ghế 1G1`: Team 1 Rank & Target (`Rank #4` | `17.3%/50%` | `❌ Not Met`)
+  - `Ghế 1G2`: Team 2 Rank & Target (`Rank #2` | `54.8%/50%` | `✅ Met`)
+  - `Ghế 1G3`: Team 3 Rank & Target (`Rank #3` | `33.7%/50%` | `❌ Not Met`)
+  - `Ghế 1G4`: Team 4 Rank & Target (`Rank #1` | `78.6%/50%` | `✅ Met`)
+
+#### **TOA 2: 📊 PERFORMANCE COMPARISON CHART SYNC (HÌNH 2 — ĐỒ THỊ CHART)**
+- `Ghế 2A`: Dataset Total WO — Realtime Auto-Sync `[394, 209, 95, 103]` từ Ghế 1A1-1A4.
+- `Ghế 2B`: Dataset FOT Close (G) — Realtime Auto-Sync `[72, 119, 32, 81]` từ Ghế 1B1-1B4.
+- `Ghế 2C`: Dataset Remain WO (P) — Realtime Auto-Sync `[322, 90, 63, 22]` từ Ghế 1D1-1D4.
+- `Ghế 2D`: Dataset Overdue FOT (N) — Realtime Auto-Sync `[151, 24, 14, 0]` từ Ghế 1C1-1C4.
+- `Ghế 2E`: Dataset CD Not Close (A) — Realtime Auto-Sync `[41, 23, 3, 2]` từ Ghế 1E1-1E4.
+
+#### **TOA 3: 📋 SUMMARY ALL NAME SYSTEM ROSTER (BẢNG 3 — ROSTER 24 FTs)**
+- `Ghế 3A`: Bảng Roster 24 nhân viên kỹ thuật đồng bộ % hoàn thành và phân hạng tự động.
+
+
