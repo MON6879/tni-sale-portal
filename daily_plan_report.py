@@ -122,9 +122,9 @@ def is_daily_plan_msg(text: str) -> bool:
     )):
         return False
 
-    # Bắt buộc chứa từ khóa Plan chuẩn của Team Leader và ngày tháng
+    # Bắt buộc chứa từ khóa Plan chuẩn của Team Leader (Daily Plan:, I. Hot task, Plan for, Plan:) và ngày tháng
     has_plan_keyword = any(kw in text_l for kw in (
-        "daily plan", "plan for", "plan:", "hot task", "kế hoạch", "plan "
+        "daily plan", "i. hot task", "hot task", "plan for", "plan:", "kế hoạch"
     ))
     has_date = bool(re.search(r'\b\d{1,2}[\/\.]\d{1,2}[\/\.]\d{2,4}\b', text))
     return has_plan_keyword and has_date

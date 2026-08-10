@@ -772,14 +772,13 @@ def is_daily(text: str) -> bool:
     if not text:
         return False
     text_l = text.lower()
-    if any(kw in text_l for kw in ("daily plan", "plan:", "kế hoạch", "above are the end-of-day", "auto report", "ref:dp-", "đã lưu", "team leader assign")):
+    if any(kw in text_l for kw in ("daily plan", "plan:", "kế hoạch", "i. hot task", "above are the end-of-day", "auto report", "ref:dp-", "đã lưu", "team leader assign")):
         return False
     
-    # Từ khóa linh hoạt đại diện cho bài nộp Daily Result của kỹ thuật viên
+    # Từ khóa nhận dạng chính xác bài nộp Daily Result của kỹ thuật viên
     has_daily_kw = any(kw in text_l for kw in (
-        "daily result", "daily report", "transportation used", "detail wo:", "detail task:",
-        "name site rescue:", "name cell rescue:", "resuce cable:", "site repair alarm:",
-        "full name", "daily result:", "1. full name", "2. transportation", "hot task rescue"
+        "daily result", "daily result:", "1. transportation used", "transportation used",
+        "transportation", "detail wo:", "detail task:", "1. full name", "full name", "daily report"
     ))
     has_date = bool(re.search(r'\b\d{1,2}[/\.-]\d{1,2}[/\.-]\d{2,4}\b', text))
     return has_daily_kw and has_date
