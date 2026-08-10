@@ -733,10 +733,9 @@ async def handle_mdg(msg, bot, now, user, sender_name, sender_id):
                 "date":         now.strftime("%d/%m/%Y %H:%M"),
             })
             if result.get("status") == "ok":
-                seat_lbl = "🪑 <b>Ghế 2B: Inventory Fuel</b>" if "INVENTORY" in reply_text.upper() else "🪑 <b>Ghế 2A: MDG Run Report</b>"
                 await bot.send_message(
                     chat_id,
-                    f"✅ <b>REF:{str(ref_id).zfill(5)}</b> | {seat_lbl} — Confirmed by {html.escape(sender_name)}",
+                    f"✅ <b>REF:{str(ref_id).zfill(5)}</b> — Confirmed by {html.escape(sender_name)}",
                     parse_mode="HTML",
                 )
             else:
