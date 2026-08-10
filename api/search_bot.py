@@ -401,28 +401,26 @@ def build_search_indexes(force: bool = False):
         return
     _index_building = True
     try:
-        # ── 1. Fast path: data_cache.json (GitHub Actions build mỗi 5 phút) ──
+        # ── 1. Fast path: data_cache.json ──
         cache_path = os.path.join(os.path.dirname(__file__), "data_cache.json")
         if os.path.exists(cache_path):
             try:
                 with open(cache_path, encoding="utf-8") as cf:
                     cache_data = json.load(cf)
-                built_at_str = cache_data.get("built_at", "")
-                if built_at_str:
-                    from datetime import datetime as _dt, timezone as _tz
-                    built_ts = _dt.strptime(built_at_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=_tz.utc).timestamp()
-                    age_min = (time.time() - built_ts) / 60
-                    if age_min < 30:   # Dùng file nếu cache mới hơn 30 phút (GH Actions rebuild mỗi 5 phút)
-                        _tni_info_index     = cache_data.get("info", {})
-                        _tni_team_sum_index = cache_data.get("team", {})
-                        _index_last_built   = time.time()
-                        logger.info(f"Loaded index from data_cache.json (age={age_min:.1f}m) — Info:{len(_tni_info_index)}, Team:{len(_tni_team_sum_index)}")
+                info_data = cache_data.get("info", {})
+                team_data = cache_data.get("team", {})
+                if info_data or team_data:
+                    _tni_info_index = info_data
+                    _tni_team_sum_index = team_data
+                    _index_last_built = time.time()
+                    logger.info(f"Loaded index from data_cache.json — Info:{len(_tni_info_index)}, Team:{len(_tni_team_sum_index)}")
+                    if not force:
                         return
             except Exception as fe:
                 logger.warning(f"data_cache.json load error: {fe}")
 
         # ── 2. Fallback: fetch trực tiếp từ Google Sheets (~3-5s) ──
-        logger.info("data_cache.json missing/stale — fetching from Google Sheets...")
+        logger.info("Fetching fresh index from Google Sheets...")
         with ThreadPoolExecutor(max_workers=2) as executor:
             f_info = executor.submit(fetch_single_csv, GID_INFO)
             f_team = executor.submit(fetch_single_csv, GID_TEAM_SUM)
@@ -452,10 +450,12 @@ def build_search_indexes(force: bool = False):
                 if col_h:
                     new_team_idx[col_b] = col_h.strip().lstrip("~ ").strip()
 
-        _tni_info_index     = new_info_idx
-        _tni_team_sum_index = new_team_idx
-        _index_last_built   = time.time()
-        logger.info(f"Built index from Sheets — Info:{len(new_info_idx)}, Team:{len(new_team_idx)}")
+        if new_info_idx:
+            _tni_info_index = new_info_idx
+        if new_team_idx:
+            _tni_team_sum_index = new_team_idx
+        _index_last_built = time.time()
+        logger.info(f"Built index from Sheets — Info:{len(_tni_info_index)}, Team:{len(_tni_team_sum_index)}")
 
     except Exception as err:
         logger.error(f"Error building search indexes: {err}")
