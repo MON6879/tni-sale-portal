@@ -54,3 +54,16 @@ Hệ thống được quy hoạch hoàn chỉnh thành **3 CHUYẾN TÀU CHÍNH 
 | **Toa 10** | ⛽ Refuel Plan 2 + 2.1 | 13:13, 18:03, 22:13 MMT | Cấp phát & Giám sát FT | `refuel_plan_report.py --report 2` + `--report 21` | Telethon `@Phongha79` $\rightarrow$ Refuel GAS | Kế hoạch cấp phát & Giám sát FT |
 | **Toa 11** | ⛽ Refuel Plan 4 | 22:18 MMT | Tổng kết dầu cuối ngày | `refuel_plan_report.py --report 4` | Telethon `@Phongha79` $\rightarrow$ Refuel GAS | Tổng kết nhiên liệu máy phát cuối ngày |
 | **ĐỘC LẬP** | 🚨 Site Down Relay | Phút `:03` & `:33` hàng giờ (Ví dụ: 14:03, 14:33, 15:03, 15:33, 16:03, 16:33...) | Cào tin trạm sập NOC Pro | `botlookup_relay.yml` + `train_5min.yml` | Telethon `@Phongha79` $\rightarrow$ Sheet Site Down Row 2 | Cào tin trạm sập NOC Pro $\rightarrow$ Bắn cảnh báo Telegram tự động không trễ 1s |
+
+---
+
+## 📊 CHUYẾN TÀU SỐ 4: EXECUTIVE WEB BI PORTAL SYNC LINE (`https://tni-bot.vercel.app`)
+
+> **Cơ chế vận hành**: Realtime DOM & Data Cache Auto-Sync. **Quy tắc tuyệt đối 100%: Đồng bộ con số chính xác 1-to-1 giữa Hình 1 (Cards) và Hình 2 (Performance Chart)**.
+
+| Toa # | Tên Toa Tàu | Dãy Ghế & Từ Khóa Quét | Số Ghế (Vị Trí Cột Lưu) | Sợi Dây Liên Kết (Pipeline Wire) | Hạt Nhân Xử Lý & Target Web Portal | Quy Tắc Đồng Bộ Bắt Buộc |
+|---|---|---|---|---|---|---|
+| **Toa 1** | 🏢 Executive Team Cards Sync (Hình 1) | **Dãy A**: 4 Thẻ Team Leaders<br>• Team 1 Dawei<br>• Team 2 Myeik<br>• Team 3 Bokpyin<br>• Team 4 Kawthoung | • **Ghế 1A**: Total Assigned WOs<br>• **Ghế 1B**: WO Close (G) & Completion %<br>• **Ghế 1C**: Overdue FOT (N) & Remain WO (P)<br>• **Ghế 1D**: Wait CD & CD Not Close (A) | Google Sheets `Tên Sum WO` $\rightarrow$ Vercel `data_cache.json` | Web BI Portal `tni-bot.vercel.app` (`index.html`) | Đọc số liệu thực tế realtime từ Google Sheets |
+| **Toa 2** | 📊 Performance Comparison Chart Sync (Hình 2) | **Dãy B**: Đồ thị Bar Chart So sánh 4 Teams | • **Ghế 2A**: Total WO (P+G)<br>• **Ghế 2B**: FOT Close (G)<br>• **Ghế 2C**: Remain WO (P)<br>• **Ghế 2D**: Remain Overdue (N)<br>• **Ghế 2E**: CD Not Close (A) | JS Dynamic Event `syncWebBiPortalData()` | Web BI Portal `woChartInstance` (`index.html`) | **Bắt buộc tự động đọc 100% dữ liệu từ Hình 1**, đảm bảo Hình 1 và Hình 2 luôn bằng nhau |
+| **Toa 3** | 📋 Summary All Name System Roster (Bảng 3) | **Dãy C**: Bảng Roster 24 Nhân Viên Kỹ Thuật | • **Ghế 3A**: Ranking & Completion Rate % 24 FTs | Google Sheets `Tên Sum WO` $\rightarrow$ Vercel | Web BI Portal Table 3 (`index.html`) | Tự động sắp xếp từ % cao xuống % thấp |
+
