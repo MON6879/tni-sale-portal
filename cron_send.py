@@ -523,6 +523,21 @@ def build_no_search_list(team_key: str, report_data: dict, no_id_members: dict |
 
 
 
+ACTION_SQUARES = {
+    "export": "🟦",
+    "import": "🟩",
+    "return": "🟨",
+    "transfer": "🟧",
+    "collect": "🟪",
+}
+
+def get_action_square(at_name: str) -> str:
+    clean = str(at_name).lower()
+    for k, sq in ACTION_SQUARES.items():
+        if k in clean:
+            return sq
+    return "🟦"
+
 def build_asset_msg(now_str, asset_data):
     """Build compact asset stats message with 3-day/7-day/month."""
     if not asset_data.get("actionTypes"):
@@ -555,12 +570,15 @@ def build_asset_msg(now_str, asset_data):
 
     PERIOD_KEYS = ["d0","d1","d2","d6","d15","done_d0","done_d1","done_d2","done_d6","done_d15"]
 
-    lines = [f"📦 Asset Stats – {now_str}"]
+    lines = [f"3.1 Asset progress for material – {now_str}", "━━━━━━━━━━━━━━━━━━━━"]
 
     for tm in teams:
         tm_short = TEAM_SHORT.get(tm, tm)
-        parts = [f"{at}: {fmt(stats.get(at,{}).get(tm,{}))}" for at in action_types]
-        lines.append(f"🏷️ {tm_short}: " + " | ".join(parts))
+        lines.append(f"🏷️ {tm_short}:")
+        for at in action_types:
+            sq = get_action_square(at)
+            val = fmt(stats.get(at,{}).get(tm,{}))
+            lines.append(f"   {sq} {at}: {val}")
         team_total = {k: 0 for k in PERIOD_KEYS}
         for at in action_types:
             s = stats.get(at, {}).get(tm, {})
@@ -569,8 +587,11 @@ def build_asset_msg(now_str, asset_data):
         lines.append(f"   📅 {fmt_period(team_total)}")
 
     # Grand total
-    parts = [f"{at}: {fmt(grand.get(at,{}))}" for at in action_types]
-    lines.append(f"📊 Total: " + " | ".join(parts))
+    lines.append(f"📊 Total:")
+    for at in action_types:
+        sq = get_action_square(at)
+        val = fmt(grand.get(at,{}))
+        lines.append(f"   {sq} {at}: {val}")
 
     # Grand period
     g_period = {k: 0 for k in PERIOD_KEYS}
@@ -592,7 +613,7 @@ def build_team_asset_section(team_key: str, asset_data: dict) -> str:
     stats = asset_data.get("stats", {})
     PERIOD_KEYS = ["d0","d1","d2","d6","d15","done_d0","done_d1","done_d2","done_d6","done_d15"]
 
-    parts = []
+    key_lines = []
     has_data = False
     for at in action_types:
         ts = stats.get(at, {}).get(team_key, {})
@@ -600,7 +621,8 @@ def build_team_asset_section(team_key: str, asset_data: dict) -> str:
         done = ts.get("done", 0)
         if total > 0 or done > 0:
             has_data = True
-        parts.append(f"{at}: {total} /{done}")
+        sq = get_action_square(at)
+        key_lines.append(f"   {sq} {at}: {total} /{done}")
 
     if not has_data:
         return ""
@@ -620,7 +642,8 @@ def build_team_asset_section(team_key: str, asset_data: dict) -> str:
     )
 
     return (
-        f"📦 Asset: " + " | ".join(parts) + "\n"
+        f"📦 3.1 Asset progress for material:\n" +
+        "\n".join(key_lines) + "\n" +
         f"   📅 {period_line}"
     )
 
@@ -656,7 +679,11 @@ def build_team_asset_msg(team_key, now_str, asset_data):
 
     PERIOD_KEYS = ["d0","d1","d2","d6","d15","done_d0","done_d1","done_d2","done_d6","done_d15"]
 
-    parts = [f"{at}: {fmt(stats.get(at,{}).get(team_key,{}))}" for at in action_types]
+    key_lines = []
+    for at in action_types:
+        sq = get_action_square(at)
+        val = fmt(stats.get(at,{}).get(team_key,{}))
+        key_lines.append(f"   {sq} {at}: {val}")
     
     # Calculate period totals for this team
     team_total = {k: 0 for k in PERIOD_KEYS}
@@ -666,9 +693,9 @@ def build_team_asset_msg(team_key, now_str, asset_data):
             team_total[k] += s.get(k, 0)
 
     lines = [
-        f"📦 Asset Stats – {t_name} – {now_str}",
-        "━━━━━━━━━━━━━━━━━━━━",
-        " | ".join(parts),
+        f"3.1 Asset progress for material – {t_name} – {now_str}",
+        "━━━━━━━━━━━━━━━━━━━━"
+    ] + key_lines + [
         f"   📅 {fmt_period(team_total)}"
     ]
     return "\n".join(lines)
