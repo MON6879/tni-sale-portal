@@ -146,13 +146,13 @@ jobs:
           #  16:03 → Report 6 Read (📱 Telethon)
           check_time 16 03 && R6=true && NEED_PYTHON=true && echo "🚃 Toa 6: Report 6 Read"
 
-          # ═══════ 🚨 HOURLY SITE DOWN RELAY (Phút :03-:04 & :33-:34 MMT Window — Max +1 Min Delay) ═══════
-          # Khóa cứng khoảng từ phút 03-04 (ca :03) và 33-34 (ca :33) MMT
+          # ═══════ 🚨 HOURLY SITE DOWN RELAY (Phút :03 đến :08 & :33 đến :38 MMT Window — 100% Never Loss Safety) ═══════
+          # Khóa khoảng từ phút 03-08 (ca :03) và 33-38 (ca :33) MMT để 100% không bao giờ trượt tin nếu GitHub Actions delay 2-3 phút
           local_M=$((10#$M))
-          if [ $local_M -eq 3 -o $local_M -eq 4 ] || [ $local_M -eq 33 -o $local_M -eq 34 ]; then
+          if [ $local_M -ge 3 -a $local_M -le 8 ] || [ $local_M -ge 33 -a $local_M -le 38 ]; then
             BOTLOOKUP_RELAY=true
             NEED_PYTHON=true
-            echo "🚃 Toa Site Down Relay: Executing botlookup_relay.py for window :03-:04 / :33-:34 MMT (current min: $M)"
+            echo "🚃 Toa Site Down Relay: Executing botlookup_relay.py for window :03-:08 / :33-:38 MMT (current min: $M)"
           fi
 
           # ═══════ 🌙 EVENING BLOCK (17:00-22:30) ═══════
