@@ -733,9 +733,10 @@ async def handle_mdg(msg, bot, now, user, sender_name, sender_id):
                 "date":         now.strftime("%d/%m/%Y %H:%M"),
             })
             if result.get("status") == "ok":
+                seat_lbl = "🪑 <b>Ghế 2B: Inventory Fuel</b>" if "INVENTORY" in reply_text.upper() else "🪑 <b>Ghế 2A: MDG Run Report</b>"
                 await bot.send_message(
                     chat_id,
-                    f"✅ <b>REF:{str(ref_id).zfill(5)}</b> — Confirmed by {html.escape(sender_name)}",
+                    f"✅ <b>REF:{str(ref_id).zfill(5)}</b> | {seat_lbl} — Confirmed by {html.escape(sender_name)}",
                     parse_mode="HTML",
                 )
             else:
@@ -779,8 +780,8 @@ async def handle_mdg(msg, bot, now, user, sender_name, sender_id):
             dg_show = html.escape(dg_id) if dg_id else "—"
             await bot.send_message(
                 chat_id,
-                f"⛽ <b>REF:{ref}</b> | INVENTORY | {dg_show} | {now.strftime('%d/%m/%Y %H:%M')}\n"
-                f"✅ Reply <code>Confirm</code> to close | 📷 Photo → reply this msg",
+                f"⛽ <b>REF:{ref}</b> | 🪑 <b>Ghế 2B: Inventory Fuel</b> | {dg_show} | {now.strftime('%d/%m/%Y %H:%M')}\n"
+                f"✅ Reply <code>Confirm</code> to close | 📸 Photo → reply this msg",
                 parse_mode="HTML",
             )
         else:
@@ -824,7 +825,7 @@ async def handle_mdg(msg, bot, now, user, sender_name, sender_id):
             site_show = html.escape(site_id) if site_id else "—"
             await bot.send_message(
                 chat_id,
-                f"⚡ <b>REF:{ref}</b> | MDG | {site_show} | {now.strftime('%d/%m/%Y %H:%M')}\n"
+                f"⚡ <b>REF:{ref}</b> | 🪑 <b>Ghế 2A: MDG Run Report</b> | {site_show} | {now.strftime('%d/%m/%Y %H:%M')}\n"
                 f"✅ Reply <code>Confirm</code> to close | 📷 Photo → reply this msg",
                 parse_mode="HTML",
             )
