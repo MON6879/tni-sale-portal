@@ -1096,31 +1096,12 @@ def submit_photo(chat_id: int, user_id: int, file_id: str) -> None:
         logger.error(f"submit_photo: {ex}")
         tg_send(chat_id, "📷 ❌")
 
-# ── Self-healing Webhook Checker ──────────────────────────────────────────────
-_last_wh_check = 0
 
-def ensure_webhook_active():
-    global _last_wh_check
-    now = time.time()
-    if now - _last_wh_check < 60:
-        return
-    _last_wh_check = now
-    try:
-        def _check():
-            r = requests.get(f"https://api.telegram.org/bot{TOKEN}/getWebhookInfo", timeout=5).json()
-            wh_url = r.get("result", {}).get("url", "")
-            if wh_url != "https://tni-bot.vercel.app/api/search_bot":
-                logger.warning(f"Webhook was missing ({wh_url}), re-hooking to Vercel...")
-                requests.get(f"https://api.telegram.org/bot{TOKEN}/setWebhook?url=https://tni-bot.vercel.app/api/search_bot", timeout=5)
-        threading.Thread(target=_check, daemon=True).start()
-    except Exception as e:
-        logger.error(f"ensure_webhook_active error: {e}")
 
 _processed_updates = set()
 
 # ── Update handler ────────────────────────────────────────────────────────────
 def handle(update: dict) -> None:
-    ensure_webhook_active()
     msg = update.get("message") or update.get("edited_message")
     if not msg:
         return
