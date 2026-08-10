@@ -1066,7 +1066,7 @@ async def scan_plan_tomorrow(client, group_key: str, chat_id: int,
         "plan": dict or None
     }
     """
-    result = {"found": False, "sent_time": "", "content": "", "plan": None}
+    fallback_result = None
     try:
         history = await client(GetHistoryRequest(
             peer=chat_id, limit=200,
@@ -1076,24 +1076,26 @@ async def scan_plan_tomorrow(client, group_key: str, chat_id: int,
         for msg in history.messages:
             if msg.date < since_utc:
                 break
-            # Collect any daily plan in group (not restricted to specific leader IDs)
             if msg.message and is_daily_plan_msg(msg.message):
                 parsed = parse_daily_plan(msg.message)
                 if parsed:
+                    dt_mm = msg.date.astimezone(MYANMAR_TZ) if msg.date.tzinfo else \
+                        msg.date.replace(tzinfo=timezone.utc).astimezone(MYANMAR_TZ)
+                    candidate = {
+                        "found": True,
+                        "sent_time": dt_mm.strftime("%d/%m/%Y %H:%M"),
+                        "content": clean_plan_content(parsed.get("content", msg.message)),
+                        "plan": parsed,
+                    }
                     dt = parse_plan_date(parsed.get("date", ""))
                     if dt and dt.strftime("%d/%m/%Y") == target_date_str:
-                        dt_mm = msg.date.astimezone(MYANMAR_TZ) if msg.date.tzinfo else \
-                            msg.date.replace(tzinfo=timezone.utc).astimezone(MYANMAR_TZ)
-                        result = {
-                            "found": True,
-                            "sent_time": dt_mm.strftime("%d/%m/%Y %H:%M"),
-                            "content": clean_plan_content(parsed.get("content", msg.message)),
-                            "plan": parsed,
-                        }
-                        return result  # Lấy plan mới nhất (messages desc)
+                        return candidate  # Match chính xác ngày mục tiêu
+                    # Fallback: Nếu tin nhắn được gửi sau 14:00 MMT và chưa có candidate fallback thì lưu lại
+                    if fallback_result is None and dt_mm.hour >= 14:
+                        fallback_result = candidate
     except Exception as e:
         logger.error(f"scan_plan_tomorrow {group_key} error: {e}")
-    return result
+    return fallback_result if fallback_result else result
 
 
 def calc_3day_completion_rate(all_plans: list, team_comparisons: dict,
