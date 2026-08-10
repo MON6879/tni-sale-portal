@@ -1159,19 +1159,20 @@ class handler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", 0))
             data   = json.loads(self.rfile.read(length))
             
-            # Trả 200 OK Ngay Lập Tức cho Telegram để không bị Telegram Hủy/Xóa Webhook
+            # Execute synchronously FIRST before returning 200 OK to prevent Vercel process freeze
+            asyncio.run(handle(data))
+
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(b"OK")
-            try:
-                self.wfile.flush()
-            except Exception:
-                pass
-
-            asyncio.run(handle(data))
         except Exception as e:
             logger.error(f"Webhook error: {e}")
+            try:
+                self.send_response(500)
+                self.end_headers()
+            except Exception:
+                pass
 
     def do_GET(self):
         from urllib.parse import urlparse, parse_qs
