@@ -353,15 +353,16 @@ def setup_bot_menu_commands():
     """Cài đặt menu lệnh cho bot."""
     commands = [
         {"command": "request_enter_site", "description": "Request enter Site towerco format"},
-        {"command": "mysite",  "description": "All Site you control"},
-        {"command": "mycable", "description": "All your cable route"},
-        {"command": "mydia",   "description": "All your customer DIA"},
-        {"command": "myolt",   "description": "All Site have OLT"},
-        {"command": "mysn",    "description": "All SN you control"},
-        {"command": "mydata",  "description": "All your personal stats"},
-        {"command": "daily",   "description": "Daily report template"},
-        {"command": "plan",    "description": "Daily plan template"},
-        {"command": "help",    "description": "Show help menu"},
+        {"command": "mysite",       "description": "All Site you control"},
+        {"command": "mycable",      "description": "All your cable route"},
+        {"command": "mydia",        "description": "All your customer DIA"},
+        {"command": "myolt",        "description": "All Site have OLT"},
+        {"command": "mysn",         "description": "All SN you control"},
+        {"command": "mydata",       "description": "All your personal stats"},
+        {"command": "daily",        "description": "Daily Result template"},
+        {"command": "daily_result", "description": "Daily Result template"},
+        {"command": "plan",         "description": "Daily plan template"},
+        {"command": "help",         "description": "Show help menu"},
     ]
     try:
         requests.post(
@@ -1184,7 +1185,7 @@ def handle(update: dict) -> None:
             send_help_menu(chat_id)
             return
 
-        if first_word == "daily":
+        if first_word in ("daily", "daily_result", "dailyresult"):
             if is_duplicate_search(chat_id, user_id, "DAILY"):
                 return
             send_daily_template(chat_id)
