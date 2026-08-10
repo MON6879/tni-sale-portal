@@ -46,4 +46,4 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
    - **Bước 4:** Dọn dẹp sạch sẽ tất cả cache `__pycache__`.
    - **Bước 5:** **Đồng bộ 100% tất cả logic liên quan (Full Logical Cross-Sync)** — Khi sửa Endpoint/URL/Cron Schedule/Tra cứu, phải đồng bộ tức thì tất cả các file code, workflow step condition, fallback variables và tài liệu docs liên quan.
    - **Bước 6:** **Kiểm thử thực tế (Live Output Verification)** — Chạy test payload/script để xác nhận 0 lỗi phát sinh và phản hồi thực tế chính xác 100%.
-   - **Bước 7:** **Báo cáo rõ Số Toa Tàu & Số Ghế (Toa # - Ghế #) đã sửa đổi trong câu trả lời cho Người Dùng (KHÔNG chèn tên/số ghế vào nội dung tin nhắn Telegram Chatbot gửi cho nhân viên)!**
+   - **Bước 7:** **Báo cáo rõ Số Chuyến Tàu, Số Toa Tàu & Số Ghế (Chuyến Tàu Số # — Toa # — Ghế #) đã sửa đổi trong câu trả lời cho Người Dùng (KHÔNG chèn tên/số ghế vào nội dung tin nhắn Telegram Chatbot gửi cho nhân viên)!**
