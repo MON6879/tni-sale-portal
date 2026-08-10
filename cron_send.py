@@ -104,11 +104,14 @@ def get_asset_stats():
 
 def get_report_data():
     """Get search stats from Apps Script (employees, leaders, teamSummary, grandTotal)."""
-    data = call_apps_script({"action": "get_report_data"}, timeout=120)
-    if data.get("status") != "ok":
-        logger.warning(f"get_report_data failed: {data.get('message', 'unknown')}")
-        return {}
-    return data
+    try:
+        data = call_apps_script({"action": "get_report_data"}, timeout=35)
+        if isinstance(data, dict) and data.get("status") == "ok":
+            return data
+        logger.warning(f"get_report_data returned non-ok: {data}")
+    except Exception as ex:
+        logger.error(f"get_report_data exception: {ex}")
+    return {}
 
 
 def build_search_summary(now_str, report_data):
