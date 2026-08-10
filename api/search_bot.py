@@ -59,7 +59,7 @@ TG_API   = f"https://api.telegram.org/bot{TOKEN if TOKEN else 'MISSING'}"
 
 # ── Daily fields cache ─────────────────────────────────────────────────────────
 DAILY_FIELDS_DEFAULT = [
-    "Daily report",
+    "Daily result",
     "Transportation Used",
     "Full Name",
     "Detail WO",
@@ -78,6 +78,28 @@ DAILY_FIELDS_DEFAULT = [
 DAILY_FIELDS_TTL = 600
 _daily_fields: list = []
 _daily_fields_ts: float = 0.0
+
+def send_daily_template(chat_id: int) -> None:
+    now_mm = datetime.now(TZ_MM)
+    date_str = now_mm.strftime("%d/%m/%Y")
+    template = (
+        f"Daily result: {date_str}\n"
+        f"Transportation Used:\n"
+        f"Full Name:\n"
+        f"Detail WO:\n"
+        f"Detail task:\n"
+        f"Name Site rescue:\n"
+        f"Name Cell rescue:\n"
+        f"Resuce Cable:\n"
+        f"Name and detail Site repair alarm:\n"
+        f"Name Site follow partner refuel:\n"
+        f"Other task:\n"
+        f"Name and detail Site go busines trip start go:\n"
+        f"Name and detail Site go busines trip end go:\n"
+        f"Km moto bike start:\n"
+        f"Km moto bike the end:"
+    )
+    tg_send(chat_id, template)
 
 # ── Sheet cache ────────────────────────────────────────────────────────────────
 _cache_ts: float = 0.0
@@ -678,14 +700,7 @@ def get_copy_markup(chat_id: int, team_arg: str, text_label: str) -> dict:
             ]
         }
 
-def send_daily_template(chat_id: int) -> None:
-    fields = fetch_daily_fields()
-    now_mm = datetime.now(TZ_MM)
-    lines  = [f"Daily report: {now_mm.strftime('%d/%m/%Y')}"]
-    for f in fields[1:]:
-        lines.append(f"{f}:")
-    template = "\n".join(lines)
-    tg_send(chat_id, template)
+
 
 def get_user_team_number(user_id: int) -> int | None:
     try:
