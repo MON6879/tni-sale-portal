@@ -100,14 +100,14 @@ jobs:
           R6=false; CABLE=false; REFUEL_REQ=false
           REFUEL_P1=false; REFUEL_P2=false; REFUEL_P21=false; REFUEL_P4=false; BOTLOOKUP_RELAY=false
 
-          # check_time <hour> <target_minute> — returns 0 if within ±2 min
+          # check_time <hour> <target_minute> — returns 0 if within ±35 min (để không bao giờ trượt do GitHub delay)
           check_time() {
             local TH=$1 TM=$2
-            if [ "$H" = "$TH" ] || [ "$((10#$H))" = "$((10#$TH))" ]; then
-              local DIFF=$(( 10#$M - 10#$TM ))
-              [ $DIFF -lt 0 ] && DIFF=$(( -DIFF ))
-              [ $DIFF -le 2 ] && return 0
-            fi
+            local CURR_MIN=$(( 10#$H * 60 + 10#$M ))
+            local TARG_MIN=$(( 10#$TH * 60 + 10#$TM ))
+            local DIFF=$(( CURR_MIN - TARG_MIN ))
+            [ $DIFF -lt 0 ] && DIFF=$(( -DIFF ))
+            [ $DIFF -le 35 ] && return 0
             return 1
           }
 
