@@ -743,12 +743,12 @@ async def handle_mdg(msg, bot, now, user, sender_name, sender_id):
                 await bot.send_message(chat_id, f"⚠️ Confirm failed: {err}", parse_mode="HTML")
         return
 
-    # ── Inventory Report message (Strict Template Match) ──────────────────
+    # ── Inventory Report message (Strict Rule: Requires "inventory fuel" AND "dg id: tni") ──
     text_l = text.lower()
     has_inv_kw = "inventory fuel" in text_l
-    inv_field_cnt = sum(1 for k in ("dg id:", "fuel cm:", "fuel %:", "fuel level:", "kwh:", "rh:", "note:") if k in text_l)
+    has_dg_tni = "dg id: tni" in text_l or "dg id:tni" in text_l or ("dg id:" in text_l and "tni" in text_l)
 
-    if has_inv_kw and (inv_field_cnt >= 2 or "dg id:" in text_l):
+    if has_inv_kw and has_dg_tni:
         # FIX: forward từ Viber → trim text từ dòng đầu có "inventory fuel"
         lines_inv = text.splitlines()
         inv_start_idx = next(
@@ -788,11 +788,11 @@ async def handle_mdg(msg, bot, now, user, sender_name, sender_id):
             await bot.send_message(chat_id, f"⚠️ Failed to record: {err}", parse_mode="HTML")
         return
 
-    # ── MDG Report message (Strict Template Match) ───────────────────────
-    has_mdg_kw = "mdg" in text_l or "run mdg" in text_l or "m&e" in text_l
-    mdg_field_cnt = sum(1 for k in ("site id:", "mdg id:", "run time:", "kwh:", "dg id:", "start time:", "end time:") if k in text_l)
+    # ── MDG Report message (Strict Rule: Requires "mdg" AND "site id: tni") ──
+    has_mdg_kw = "mdg" in text_l
+    has_site_tni = "site id: tni" in text_l or "site id:tni" in text_l or ("site id:" in text_l and "tni" in text_l)
 
-    if has_mdg_kw and (mdg_field_cnt >= 2 or "site id:" in text_l or "mdg id:" in text_l):
+    if has_mdg_kw and has_site_tni:
         # FIX: forward từ Viber / copy-paste có thể có text thừa trước "MDG ::Report"
         # → tìm dòng đầu tiên có chữ "MDG" và parse từ đó
         lines = text.splitlines()
