@@ -107,23 +107,27 @@ def is_daily_plan_msg(text: str) -> bool:
         return False
     text_l = text.lower()
 
-    # 🛑 CHỈ LOẠI BỎ CÁC BẢN TIN BÁO CÁO TỰ ĐỘNG VÀ PHẢN HỒI XÁC NHẬN CỦA BOT
+    # 🛑 LOẠI BỎ CÁC BẢN TIN BÁO CÁO TỰ ĐỘNG (Report 1-4, Refuel Plan, BOD, Auto Report...)
     if any(kw in text_l for kw in (
-        "5.1 report", "5. report", "submission history", "3-day completion rate",
-        "comparison of plan for", "auto report", "plan stats:", "report — daily plan",
-        "crosscheck", "plan tomorrow status", "plan vs actual", "eod summary",
-        "shows detailed site assignments", "tasks grouped by department", "recent plans",
-        "plans for ", "plan updated", "plan saved", "ref:", "ref:dp-", "đã lưu",
-        "tni personal find task", "ft result daily", "personal find task", "find task + wo",
-        "team leader: submitted", "plan content:", "overall: no data",
+        "5.1 report", "5. report", "4. report", "4 report", "report 4", "refuel plan",
+        "report 1", "report 2", "report 3", "refuel plan 4", "submission history",
+        "3-day completion rate", "comparison of plan for", "auto report", "plan stats:",
+        "report — daily plan", "crosscheck", "plan tomorrow status", "plan vs actual",
+        "eod summary", "shows detailed site assignments", "tasks grouped by department",
+        "recent plans", "plans for ", "plan updated", "plan saved", "ref:", "ref:dp-",
+        "đã lưu", "tni personal find task", "ft result daily", "personal find task",
+        "find task + wo", "team leader: submitted", "plan content:", "overall: no data",
         "submitted ✓", "submitted v", "not yet submitted", "daily plan & results",
         "tni auto report", "tni team"
     )):
         return False
 
-    has_plan_word = "plan" in text_l
+    # Bắt buộc chứa từ khóa Plan chuẩn của Team Leader và ngày tháng
+    has_plan_keyword = any(kw in text_l for kw in (
+        "daily plan", "plan for", "plan:", "hot task", "kế hoạch", "plan "
+    ))
     has_date = bool(re.search(r'\b\d{1,2}[\/\.]\d{1,2}[\/\.]\d{2,4}\b', text))
-    return has_plan_word and has_date
+    return has_plan_keyword and has_date
 
 
 def clean_plan_content(content: str) -> str:
