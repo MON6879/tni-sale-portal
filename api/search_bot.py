@@ -891,7 +891,7 @@ _recent_help_sends = {}
 
 def send_help_menu(chat_id: int) -> None:
     now_ts = time.time()
-    if (now_ts - _recent_help_sends.get(chat_id, 0)) < 6.0:
+    if (now_ts - _recent_help_sends.get(chat_id, 0)) < 1.5:
         logger.info(f"Skipping duplicate send_help_menu for chat {chat_id}")
         return
     _recent_help_sends[chat_id] = now_ts
@@ -930,7 +930,7 @@ def is_duplicate_search(chat_id: int, user_id: int, query_key: str) -> bool:
     now = time.time()
     dedup = f"{chat_id}:{user_id}:{query_key.upper()}"
     last_time = _recent_search_keys.get(dedup, 0)
-    if (now - last_time) < 10.0:  # 10s cooldown cho cùng query trong cùng chat
+    if (now - last_time) < 1.5:  # Giảm xuống 1.5s để phản hồi siêu tốc (< 1s)
         logger.info(f"Skipping duplicate search for key {dedup}")
         return True
     _recent_search_keys[dedup] = now
