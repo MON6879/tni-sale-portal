@@ -727,28 +727,38 @@ def get_user_team_number(user_id: int) -> int | None:
         logger.error(f"get_user_team_number error: {e}")
     return None
 
-def get_plan_template_text(team_num: int) -> str:
+_team_staff_map = {}
+
+def get_team_staff_names(team_num: int) -> list[str]:
+    global _team_staff_map
+    if team_num in _team_staff_map:
+        return _team_staff_map[team_num]
     try:
         df = get_staff_df()
-        if df is None or df.empty:
-            return "Error loading staff data"
-        
-        data = df.iloc[2:]
-        team_str = f"Team 0{team_num}"
-        
-        matched_staff = []
-        for idx, row in data.iterrows():
-            row_team = str(row.iloc[12]).strip()
-            probation_status = str(row.iloc[13]).strip().lower()
-            if "resign" in probation_status or "nghi" in probation_status or "nghỉ" in probation_status:
-                continue
-                
-            if row_team.lower() == team_str.lower() or row_team.lower() == f"team {team_num}":
-                full_name = str(row.iloc[5]).strip()
-                if full_name and full_name.lower() != "nan" and full_name != "-":
-                    if full_name not in matched_staff:
-                        matched_staff.append(full_name)
-                    
+        if df is not None and not df.empty:
+            data = df.iloc[2:]
+            tmap = {1: [], 2: [], 3: [], 4: [], 5: []}
+            for row in data.itertuples(index=False):
+                if len(row) > 13:
+                    probation_status = str(row[13]).strip().lower()
+                    if "resign" in probation_status or "nghi" in probation_status or "nghỉ" in probation_status:
+                        continue
+                    row_team = str(row[12]).strip().lower()
+                    full_name = str(row[5]).strip()
+                    if full_name and full_name.lower() != "nan" and full_name != "-":
+                        for t in (1, 2, 3, 4, 5):
+                            if f"team 0{t}" in row_team or f"team {t}" in row_team or row_team == f"t{t}":
+                                if full_name not in tmap[t]:
+                                    tmap[t].append(full_name)
+            _team_staff_map = tmap
+            return _team_staff_map.get(team_num, [])
+    except Exception as e:
+        logger.error(f"get_team_staff_names error: {e}")
+    return []
+
+def get_plan_template_text(team_num: int) -> str:
+    try:
+        matched_staff = get_team_staff_names(team_num)
         now_mm = datetime.now(TZ_MM)
         date_str = now_mm.strftime("%d/%m/%Y")
         
