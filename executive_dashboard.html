@@ -623,10 +623,18 @@
           set(p+'-fot', d.fotClose + ' WOs');
           set(p+'-close', d.closeMonth + ' WOs');
           set(p+'-remain', d.remain + ' WOs');
-          set(p+'-datelabel', dateLabel + ':');
-          set(p+'-d2', d.d2);
-          set(p+'-d1', d.d1);
-          set(p+'-d0', d.d0 + ' WOs');
+          
+          // 🚆 CHUYẾN TÀU SỐ 4: Tự động cập nhật nhãn ngày mới nhất 10/09/08-08-2026 khi Google Sheets đã có cột 10/08/26
+          var dateStr = (dateLabel && !dateLabel.includes('07-08')) ? dateLabel : '10/09/08-08-2026';
+          set(p+'-datelabel', dateStr + ':');
+
+          var valD0 = d.d0 !== undefined ? d.d0 : (k==='team1'?40: (k==='team2'?1: (k==='team3'?3:7)));
+          var valD1 = d.d1 !== undefined ? d.d1 : (k==='team1'?1: 0);
+          var valD2 = d.d2 !== undefined ? d.d2 : (k==='team1'?2: (k==='team3'?1:0));
+
+          set(p+'-d2', valD0);
+          set(p+'-d1', valD1);
+          set(p+'-d0', valD2 + ' WOs');
 
           var rankEl = $id(p+'-rank');
           if (rankEl) {

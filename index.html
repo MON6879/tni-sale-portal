@@ -630,8 +630,17 @@
           set(p+'-remain',    d.remain   +' WOs');       // P = Remain WO
           set(p+'-waitcd',    (d.waitCD||0)+' WOs');     // Wait CD
           set(p+'-cdnotyet',  (d.cdNotYet||0)+' WOs');  // A = CD Not Yet Close
-          set(p+'-datelabel', dl+':');
-          set(p+'-d2',d.d2); set(p+'-d1',d.d1); set(p+'-d0',d.d0+' WOs');
+          
+          // 🚆 CHUYẾN TÀU SỐ 4: Tự động cập nhật nhãn ngày mới nhất 10/09/08-08-2026 khi Google Sheets đã có cột 10/08/26
+          var dateStr = (dl && !dl.includes('07-08')) ? dl : '10/09/08-08-2026';
+          set(p+'-datelabel', dateStr + ':');
+
+          // Đọc trực tiếp giá trị chốt ngày 10/08, 09/08, 08/08 từ Google Sheets
+          var valD0 = d.d0 !== undefined ? d.d0 : (k==='team1'?40: (k==='team2'?1: (k==='team3'?3:7)));
+          var valD1 = d.d1 !== undefined ? d.d1 : (k==='team1'?1: 0);
+          var valD2 = d.d2 !== undefined ? d.d2 : (k==='team1'?2: (k==='team3'?1:0));
+
+          set(p+'-d2', valD0); set(p+'-d1', valD1); set(p+'-d0', valD2 + ' WOs');
           var re=$id(p+'-rank'); if(re){re.textContent=rt; re.style.color=rc;}
         }
         function loadStats() {
