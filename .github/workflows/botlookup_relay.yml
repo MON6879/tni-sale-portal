@@ -2,7 +2,7 @@ name: Botlookup Relay
 
 on:
   schedule:
-    - cron: '3,33 * * * *'   # Chạy đúng phút :03 và :33 MMT (14:03, 14:33, 15:03...)
+    - cron: '*/5 * * * *'   # Chạy liên tục mỗi 5 phút để không bao giờ bị trễ cửa sổ :03 và :33 MMT
   workflow_dispatch:
     inputs:
       skip_delay:
