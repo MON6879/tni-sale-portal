@@ -46,39 +46,38 @@ ACTIVE_END     = (22, 15)
 MIN_DELAY_SEC  = 0
 MAX_DELAY_SEC  = 0
 SKIP_DELAY     = os.environ.get("SKIP_DELAY", "1") == "1"
-# ──────────────────────────────────────────────────────────────────
-
 def myanmar_now() -> str:
     tz = timezone(timedelta(hours=6, minutes=30))
     return datetime.now(tz).strftime("%H:%M %d/%m/%Y")
 
 
 def in_active_window() -> bool:
-    tz  = timezone(timedelta(hours=6, minutes=30))
+    tz = timezone(timedelta(hours=6, minutes=30))
     now = datetime.now(tz)
     return ACTIVE_START <= (now.hour, now.minute) <= ACTIVE_END
 
 
-def split_message(text: str, max_len: int) -> list[str]:
-    if len(text) <= max_len:
-        return [text]
-    parts = []
-    while text:
-        if len(text) <= max_len:
-            parts.append(text)
-            break
-        cut = text.rfind("\n", 0, max_len)
-        if cut == -1:
-            cut = max_len
-        parts.append(text[:cut])
-        text = text[cut:].lstrip("\n")
-    return parts
+def is_target_relay_window() -> bool:
+    """Check if current Myanmar minute is strictly within :03-:08 or :33-:38 MMT."""
+    import sys
+    if "--force" in sys.argv or os.environ.get("FORCE_RUN") == "1" or os.environ.get("GITHUB_EVENT_NAME") == "workflow_dispatch":
+        return True
+    tz = timezone(timedelta(hours=6, minutes=30))
+    now = datetime.now(tz)
+    m = now.minute
+    return (3 <= m <= 8) or (33 <= m <= 38)
 
 
 async def main():
-    # ── 0. Kiểm tra khung giờ ────────────────────────────────────
+    # ── 0. Kiểm tra khung giờ & phút ─────────────────────────────
     if not in_active_window():
         print(f"[{myanmar_now()}] 🌙 Ngoài khung giờ 04:30–21:30. Kết thúc.")
+        return
+
+    if not is_target_relay_window():
+        tz = timezone(timedelta(hours=6, minutes=30))
+        now = datetime.now(tz)
+        print(f"[{myanmar_now()}] ⏭️ Bỏ qua ca chạy lúc {now.strftime('%H:%M')} MMT (Chỉ chạy đúng cửa sổ :03-:08 và :33-:38 MMT để không bao giờ trễ tin).")
         return
 
     # ── 2. Kết nối Telegram ───────────────────────────────────────
