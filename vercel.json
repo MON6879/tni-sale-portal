@@ -8,7 +8,8 @@
     { "src": "api/attendance.py",      "use": "@vercel/python", "config": { "maxDuration": 30 } },
     { "src": "api/refuel_collector.py","use": "@vercel/python", "config": { "maxDuration": 30 } },
     { "src": "api/site_down_relay.py", "use": "@vercel/python", "config": { "maxDuration": 30 } },
-    { "src": "api/trigger_workflow.py", "use": "@vercel/python", "config": { "maxDuration": 30 } }
+    { "src": "api/trigger_workflow.py", "use": "@vercel/python", "config": { "maxDuration": 30 } },
+    { "src": "api/bi_data.py",          "use": "@vercel/python", "config": { "maxDuration": 30 } }
   ],
   "routes": [
     { "src": "/",                      "dest": "index.html", "headers": { "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0" } },
@@ -21,6 +22,7 @@
     { "src": "/api/refuel_collector",  "dest": "api/refuel_collector.py" },
     { "src": "/api/site_down_relay",   "dest": "api/site_down_relay.py" },
     { "src": "/api/trigger_workflow",  "dest": "api/trigger_workflow.py" },
+    { "src": "/api/bi_data",           "dest": "api/bi_data.py" },
     { "src": "/(.*)",                  "dest": "/$1", "headers": { "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0" } }
   ]
 }
