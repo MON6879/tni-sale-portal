@@ -881,21 +881,22 @@ def get_plan_template_text(team_num: int) -> str:
         return f"Error: {str(e)}"
 
 def is_daily_plan(text: str) -> bool:
-    """Detect plan message: text has 'plan'/'kế hoạch' and date, excluding bot auto reports."""
+    """Detect plan message: text has explicit plan keyword ('daily plan', 'i. hot task', 'plan for', etc.) and date."""
     if not text:
         return False
     text_l = text.lower()
     if any(kw in text_l for kw in (
+        "5.1 report", "5. report", "4. report", "report 4", "refuel plan",
         "comparison of plan for", "auto report", "plan stats:", "report — daily plan",
         "crosscheck", "plan tomorrow status", "plan vs actual", "eod summary",
         "shows detailed site assignments", "tasks grouped by department", "recent plans",
         "plans for ", "plan updated", "plan saved", "ref:", "ref:dp-", "đã lưu",
         "tni personal find task", "ft result daily", "personal find task", "find task + wo",
-        "list name ft"
+        "submitted ✓", "submitted v", "not yet submitted"
     )):
         return False
 
-    has_plan = "plan" in text_l or "kế hoạch" in text_l
+    has_plan = any(kw in text_l for kw in ("daily plan", "i. hot task", "hot task", "plan for", "plan:", "kế hoạch"))
     has_date = bool(re.search(r'\b\d{1,2}[\/\.-]\d{1,2}(?:[\/\.-]\d{2,4})?\b', text))
     return has_plan and has_date
 
@@ -933,20 +934,19 @@ def parse_plan_fields(text: str, chat_id: int | None = None, chat_title: str | N
     # Fallback to chat_title or chat_id if team is not explicitly written in text
     if not team_str and chat_title:
         title_m = re.search(r'TEAM\s*0?([1-5])', chat_title, re.IGNORECASE)
+        if not title_m:
+            title_m = re.search(r'T([1-5])\b', chat_title, re.IGNORECASE)
         if title_m:
             team_str = f"Team {title_m.group(1)}"
     if not team_str and chat_id:
-        TELEGRAM_GROUPS = {
-            "Team 1": -1004215695747,
-            "Team 2": -1004480845549,
-            "Team 3": -1004369170658,
-            "Team 4": -1004293741999,
-        }
         def norm_id(cid): return str(cid).replace("-100", "").replace("-", "")
-        for tname, gid in TELEGRAM_GROUPS.items():
+        for tk, gid in TELEGRAM_GROUPS.items():
             if norm_id(chat_id) == norm_id(gid):
-                team_str = tname
+                team_num = tk.replace("T", "")
+                team_str = f"Team {team_num}"
                 break
+    if not team_str:
+        team_str = "Team 1"  # Fallback safety default
 
     team_line_idx = 0
     for i, line in enumerate(lines[1:], 1):
