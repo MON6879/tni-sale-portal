@@ -611,12 +611,13 @@
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec';
         const TEAMS = ['team1','team2','team3','team4'];
         const PREFIX = {team1:'t1', team2:'t2', team3:'t3', team4:'t4'};
+        var CSV_URL = 'https://docs.google.com/spreadsheets/d/1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8/export?format=csv&gid=1840482617';
 
         function $id(id) { return document.getElementById(id); }
         function set(id, val) { var el=$id(id); if(el) el.textContent=val; }
         function setHTML(id, val) { var el=$id(id); if(el) el.innerHTML=val; }
 
-        function applyTeam(key, d, dateLabel) {
+        function applyTeam(key, d, dateLabel, planLabel) {
           var p = PREFIX[key];
           var met = d.metTarget;
           var rankColor = met ? 'var(--emerald)' : (d.rank <= 2 ? 'var(--amber)' : 'var(--rose)');
@@ -625,22 +626,22 @@
           set(p+'-engineers', d.engineers);
           set(p+'-assigned', d.totalAssigned + ' WOs');
           set(p+'-fot', d.fotClose + ' WOs');
-          set(p+'-close', d.closeMonth + ' WOs');
+          set(p+'-close', (d.overdueF || 0) + ' WOs');
           set(p+'-remain', d.remain + ' WOs');
-          var valPlanM = d.planM !== undefined ? d.planM : (key==='team1'?40: (key==='team2'?11: (key==='team3'?8:3)));
+          var valPlanM = d.planM !== undefined ? d.planM : (key==='team1'?42: (key==='team2'?12: (key==='team3'?8:3)));
+          set(p+'-planlabel', planLabel || d.planLabel || '🎯 Plan 12/08/2026 (M):');
           set(p+'-planm', valPlanM + ' WOs');
           
-          // 🚆 CHUYẾN TÀU SỐ 4: Tự động cập nhật nhãn ngày mới nhất 10/09/08-08-2026 khi Google Sheets đã có cột 10/08/26
-          var dateStr = (dateLabel && !dateLabel.includes('07-08')) ? dateLabel : '10/09/08-08-2026';
+          var dateStr = dateLabel || d.dateLabel || '11/10/09-08-2026';
           set(p+'-datelabel', dateStr + ':');
 
-          var valD0 = d.d0 !== undefined ? d.d0 : (k==='team1'?40: (k==='team2'?1: (k==='team3'?3:7)));
-          var valD1 = d.d1 !== undefined ? d.d1 : (k==='team1'?1: 0);
-          var valD2 = d.d2 !== undefined ? d.d2 : (k==='team1'?2: (k==='team3'?1:0));
+          var valD0 = d.d0 !== undefined ? d.d0 : (key==='team1'?0: (key==='team2'?1: (key==='team3'?1:4)));
+          var valD1 = d.d1 !== undefined ? d.d1 : (key==='team1'?7: (key==='team2'?14: (key==='team3'?5:14)));
+          var valD2 = d.d2 !== undefined ? d.d2 : (key==='team1'?1: (key==='team2'?0: (key==='team3'?0:0)));
 
-          set(p+'-d2', valD0);
+          set(p+'-d2', valD2);
           set(p+'-d1', valD1);
-          set(p+'-d0', valD2 + ' WOs');
+          set(p+'-d0', valD0 + ' WOs');
 
           var rankEl = $id(p+'-rank');
           if (rankEl) {
@@ -649,39 +650,121 @@
           }
         }
 
+        function parseCSV(text) {
+          var lines = text.split('\n');
+          var result = [];
+          for (var i = 0; i < lines.length; i++) {
+            var row = [], cell = '', inQuotes = false;
+            for (var j = 0; j < lines[i].length; j++) {
+              var c = lines[i][j];
+              if (c === '"') { inQuotes = !inQuotes; }
+              else if (c === ',' && !inQuotes) { row.push(cell.trim()); cell = ''; }
+              else { cell += c; }
+            }
+            row.push(cell.trim());
+            result.push(row);
+          }
+          return result;
+        }
+
         function loadTeamStats() {
-          fetch('/api/bi_data')
+          fetch(CSV_URL)
             .then(function(r){
-              if(!r.ok) throw new Error('API status '+r.status);
-              return r.json();
+              if(!r.ok) throw new Error('CSV status '+r.status);
+              return r.text();
             })
-            .catch(function(){
-              return fetch(GAS_URL + '?action=get_team_wo_stats').then(function(r){ return r.json(); });
-            })
-            .then(function(resp) {
-              if (resp.status !== 'ok' || !resp.data) {
-                setHTML('team-stats-badge', '⚠️ Could not load live data: ' + (resp.message || 'unknown error'));
-                return;
+            .then(function(csvText){
+              var rows = parseCSV(csvText);
+              if (rows.length < 56) throw new Error('CSV rows insufficient ('+rows.length+')');
+
+              var hdr2 = rows[1] || [];
+              var rawJ = hdr2[9] || '11/08';
+              var rawK = hdr2[10] || '10/08';
+              var rawL = hdr2[11] || '09/08';
+              var rawM = hdr2[12] || 'Plan: 12/08/26';
+
+              var mJ = rawJ.match(/(\d{2}\/\d{2})/); var dJStr = mJ ? mJ[1] : '11/08';
+              var mK = rawK.match(/(\d{2}\/\d{2})/); var dKStr = mK ? mK[1] : '10/08';
+              var mL = rawL.match(/(\d{2}\/\d{2})/); var dLStr = mL ? mL[1] : '09/08';
+              var mM = rawM.match(/(\d{2}\/\d{2}(?:\/\d{2,4})?)/); var dMStr = mM ? mM[1] : '12/08/2026';
+
+              var fullMDate = dMStr.includes('/') && dMStr.split('/').length === 3 ? dMStr : dMStr + '/2026';
+              var planLabel = '🎯 Plan ' + fullMDate + ' (M):';
+
+              var mJDay = dJStr.split('/')[0], mKDay = dKStr.split('/')[0], mLDay = dLStr.split('/')[0];
+              var mMonth = dJStr.split('/')[1] || '08';
+              var dateLabel = mJDay + '/' + mKDay + '/' + mLDay + '-' + mMonth + '-2026';
+
+              var teamData = {};
+              var tKeys = ['team1', 'team2', 'team3', 'team4'];
+              var tEngs  = {team1:10, team2:11, team3:4, team4:4};
+              var tRanks = [];
+
+              for (var idx = 0; idx < 4; idx++) {
+                var tk = tKeys[idx];
+                var row = rows[52 + idx] || [];
+                var cdNotYet = parseInt((row[0]||'0').replace(/[^\d]/g,''), 10) || 0;
+                var fotClose  = parseInt((row[6]||'0').replace(/[^\d]/g,''), 10) || 0;
+                var d2Close   = parseInt((row[9]||'0').replace(/[^\d]/g,''), 10) || 0;
+                var d1Close   = parseInt((row[10]||'0').replace(/[^\d]/g,''), 10) || 0;
+                var d0Close   = parseInt((row[11]||'0').replace(/[^\d]/g,''), 10) || 0;
+                var planM     = parseInt((row[12]||'0').replace(/[^\d]/g,''), 10) || 0;
+                var overdueF  = parseInt((row[13]||'0').replace(/[^\d]/g,''), 10) || 0;
+                var remainWO  = parseInt((row[15]||'0').replace(/[^\d]/g,''), 10) || 0;
+
+                var totalAssigned = fotClose + remainWO;
+                var pct = totalAssigned > 0 ? Math.round((fotClose / totalAssigned) * 100) : 0;
+
+                teamData[tk] = {
+                  name: (tk==='team1'?'Team 1 Dawei':(tk==='team2'?'Team 2 Myeik':(tk==='team3'?'Team 3 Bokpyin':'Team 4 Kawthoung'))),
+                  engineers: tEngs[tk],
+                  totalAssigned: totalAssigned,
+                  fotClose: fotClose,
+                  remain: remainWO,
+                  overdueF: overdueF,
+                  waitCD: (tk==='team1'?23:(tk==='team2'?8:(tk==='team3'?3:2))),
+                  cdNotYet: cdNotYet,
+                  planM: planM,
+                  d0: d0Close, d1: d1Close, d2: d2Close,
+                  pct: pct, closeRate: pct, metTarget: (pct >= 50)
+                };
+                tRanks.push({ k: tk, pct: pct });
               }
-              var d = resp.data;
-              var dl = resp.dateLabel || '';
-              var pl = resp.planLabel || '';
-              TEAMS.forEach(function(k) {
-                if (d[k]) applyTeam(k, d[k], dl, pl);
+
+              tRanks.sort(function(a,b){ return b.pct - a.pct; });
+              tRanks.forEach(function(r, i){ teamData[r.k].rank = i + 1; });
+
+              tKeys.forEach(function(k){
+                applyTeam(k, teamData[k], dateLabel, planLabel);
               });
+
+              var now = new Date();
+              var nowStr = ('0'+now.getDate()).slice(-2)+'/'+('0'+(now.getMonth()+1)).slice(-2)+'/'+now.getFullYear()+' '+('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2);
               var badge = $id('team-stats-badge');
               if (badge) {
-                badge.innerHTML = '🔴 LIVE &nbsp;|&nbsp; ✅ Data synced from Google Sheets &nbsp;|&nbsp; Period: <strong>' + (resp.period||'') + '</strong> &nbsp;|&nbsp; Updated: <strong>' + resp.updatedAt + '</strong>';
+                badge.innerHTML = '🔴 LIVE &nbsp;|&nbsp; ✅ Realtime Synced from Google Sheets — ' + nowStr + ' MMT &nbsp;|&nbsp; Period: <strong>21/07 – 20/08</strong> &nbsp;|&nbsp; <span style="color:var(--emerald); font-weight:700;">Auto-update on change (30s)</span>';
                 badge.style.color = 'var(--emerald)';
                 badge.style.fontWeight = '600';
               }
             })
             .catch(function(e) {
-              setHTML('team-stats-badge', '⚠️ Fetch error: ' + e.message);
+              fetch(GAS_URL + '?action=get_team_wo_stats')
+                .then(function(r){ return r.json(); })
+                .then(function(resp){
+                  if (resp.status !== 'ok' || !resp.data) return;
+                  TEAMS.forEach(function(k){
+                    if (resp.data[k]) applyTeam(k, resp.data[k], resp.dateLabel, resp.planLabel);
+                  });
+                })
+                .catch(function(err){ setHTML('team-stats-badge', '⚠️ Fetch error: ' + err.message); });
             });
         }
 
-        // Load on DOM ready
+        function initStats() {
+          loadTeamStats();
+          setInterval(loadTeamStats, 30 * 1000);
+        }
+
         if (document.readyState === 'loading') {
           document.addEventListener('DOMContentLoaded', function() {
             loadTeamStats();
