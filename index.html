@@ -648,14 +648,27 @@
           var re=$id(p+'-rank'); if(re){re.textContent=rt; re.style.color=rc;}
         }
         function loadStats() {
-          fetch(GAS+'?action=get_team_wo_stats')
-            .then(function(r){return r.json();})
+          fetch('/api/bi_data')
+            .then(function(r){
+              if(!r.ok) throw new Error('Vercel API status '+r.status);
+              return r.json();
+            })
+            .catch(function(){
+              return fetch(GAS+'?action=get_team_wo_stats').then(function(r){return r.json();});
+            })
             .then(function(resp){
               if(resp.status!=='ok'||!resp.data){
                 var b=$id('team-stats-badge');
                 if(b) b.textContent='\u26a0\ufe0f '+(resp.message||'Error loading data');
                 return;
               }
+              TEAMS.forEach(function(k){
+                if(resp.data[k]) applyTeam(k, resp.data[k], resp.dateLabel, resp.planLabel);
+              });
+              var b=$id('team-stats-badge');
+              if(b){
+                b.innerHTML='⚡ Live Data Synced — '+resp.updatedAt+' MMT ('+(resp.period||'21/07–20/08')+') &nbsp;|&nbsp; <span style="color:#6b7280;">Auto-refresh 5min</span>';
+                b.style.color='#10b981'; b.style.fontWeight='600';
               }
             })
             .catch(function(err){

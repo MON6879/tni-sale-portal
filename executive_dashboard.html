@@ -650,8 +650,14 @@
         }
 
         function loadTeamStats() {
-          fetch(GAS_URL + '?action=get_team_wo_stats')
-            .then(function(r){ return r.json(); })
+          fetch('/api/bi_data')
+            .then(function(r){
+              if(!r.ok) throw new Error('API status '+r.status);
+              return r.json();
+            })
+            .catch(function(){
+              return fetch(GAS_URL + '?action=get_team_wo_stats').then(function(r){ return r.json(); });
+            })
             .then(function(resp) {
               if (resp.status !== 'ok' || !resp.data) {
                 setHTML('team-stats-badge', '⚠️ Could not load live data: ' + (resp.message || 'unknown error'));
@@ -659,8 +665,9 @@
               }
               var d = resp.data;
               var dl = resp.dateLabel || '';
+              var pl = resp.planLabel || '';
               TEAMS.forEach(function(k) {
-                if (d[k]) applyTeam(k, d[k], dl);
+                if (d[k]) applyTeam(k, d[k], dl, pl);
               });
               var badge = $id('team-stats-badge');
               if (badge) {
@@ -669,8 +676,8 @@
                 badge.style.fontWeight = '600';
               }
             })
-            .catch(function(err) {
-              setHTML('team-stats-badge', '⚠️ Fetch error — ' + err.message + '. Please refresh.');
+            .catch(function(e) {
+              setHTML('team-stats-badge', '⚠️ Fetch error: ' + e.message);
             });
         }
 
