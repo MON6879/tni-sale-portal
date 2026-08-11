@@ -1130,6 +1130,25 @@ def lookup_construction_site(tni: str) -> str:
         logger.error(f"lookup_construction_site error [{tni_upper}]: {err}")
         return f"❌ Construction search error: {e(str(err)[:100])}"
 
+def send_ingestion_alarm(sheet_name: str, group_name: str, user_info: str, reason: str):
+    """GHẾ 9.1: Báo động thu thập dữ liệu/ảnh Google Sheet thất bại về Nhóm 9 (9 TNI REQUEST REFUEL)."""
+    refuel_req_chat_id = -5469544739
+    now_str = datetime.now(TZ_MM).strftime('%d/%m/%Y %H:%M:%S')
+    msg = (
+        f"🚨 <b>[CẢNH BÁO THU THẬP LỖI - GHẾ 9.1]</b>\n"
+        f"━━━━━━━━━━━━━━━━━━━━\n"
+        f"❌ <b>Tên Sheet không thu thập được thông tin:</b>\n"
+        f"<code>{html.escape(sheet_name)}</code>\n\n"
+        f"📱 <b>Nhóm / Người nộp:</b> {html.escape(group_name)} ({html.escape(user_info)})\n"
+        f"⏱️ <b>Thời gian kiểm tra:</b> {now_str} MMT\n"
+        f"⚠️ <b>Nguyên nhân lỗi:</b> {html.escape(reason[:150])}\n"
+        f"━━━━━━━━━━━━━━━━━━━━"
+    )
+    try:
+        tg_send(refuel_req_chat_id, msg)
+    except Exception as e:
+        logger.error(f"send_ingestion_alarm error: {e}")
+
 def submit_daily(chat_id: int, user_id: int, first_name: str, text: str) -> None:
     now_ts = time.time()
     dedup_key = f"{user_id}:{text.strip()[:60]}"
@@ -1145,6 +1164,7 @@ def submit_daily(chat_id: int, user_id: int, first_name: str, text: str) -> None
         parsed["Daily report"] = now_mm.strftime("%d/%m/%Y")
     if not DAILY_APPS_SCRIPT_URL:
         tg_send(chat_id, "❌ Bot DAILY_APPS_SCRIPT_URL not configured")
+        send_ingestion_alarm("Daily report and Bussiness", str(chat_id), first_name or str(user_id), "DAILY_APPS_SCRIPT_URL not configured")
         return
     try:
         resp   = requests.post(DAILY_APPS_SCRIPT_URL,
@@ -1163,8 +1183,10 @@ def submit_daily(chat_id: int, user_id: int, first_name: str, text: str) -> None
                 logger.info(f"submit_daily ok: {name} (ref={ref_str})")
                 tg_send(chat_id, f"✅ Recorded Daily Result: <b>{html.escape(name)}</b>{ref_tag}")
             else:
-                tg_send(chat_id, f"❌ Save error\n{result.get('message','')[:120]}")
-        except Exception:
+                err_msg = result.get('message','')[:120]
+                tg_send(chat_id, f"❌ Save error\n{err_msg}")
+                send_ingestion_alarm("Daily report and Bussiness", str(chat_id), name, f"GAS Error: {err_msg}")
+        except Exception as parse_ex:
             logger.info(f"submit_daily non-json ok: {name}")
             tg_send(chat_id, f"✅ Recorded Daily Result: <b>{html.escape(name)}</b>")
     except requests.exceptions.ReadTimeout:
@@ -1174,7 +1196,8 @@ def submit_daily(chat_id: int, user_id: int, first_name: str, text: str) -> None
     except Exception as ex:
         logger.error(f"submit_daily: {ex}")
         name = first_name or str(user_id)
-        tg_send(chat_id, f"✅ Recorded Daily Result: <b>{html.escape(name)}</b>")
+        tg_send(chat_id, f"❌ Save error: {html.escape(str(ex)[:100])}")
+        send_ingestion_alarm("Daily report and Bussiness", str(chat_id), name, str(ex))
 
 def submit_photo(chat_id: int, user_id: int, file_id: str) -> None:
     """Gửi ảnh lên GAS để lưu Drive — GAS tự attach vào dòng gần nhất."""
