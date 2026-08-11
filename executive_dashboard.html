@@ -746,6 +746,9 @@
                 badge.style.color = 'var(--emerald)';
                 badge.style.fontWeight = '600';
               }
+              document.querySelectorAll('.sync-timestamp-tag').forEach(function(el){
+                el.textContent = nowStr + ' MMT';
+              });
             })
             .catch(function(e) {
               fetch(GAS_URL + '?action=get_team_wo_stats')
@@ -779,6 +782,9 @@
 
       <!-- TABLE 2: DEPARTMENT POINT MATRIX (Range X50:AD56) -->
       <div class="card">
+        <div style="text-align:center; font-size:0.75rem; font-weight:700; color:#10b981; margin-bottom:0.6rem;">
+          ⚡ Realtime Synced from Google Sheets — <span class="sync-timestamp-tag">11/08/2026 21:40 MMT</span> | <span style="color:#38bdf8;">Auto-update on change (Every 30s)</span>
+        </div>
         <div class="section-head"><i class="fa-solid fa-sitemap"></i> Table 2: Department Point Matrix — Range X50:AD56 (Sheet 'Sum all WO Team')</div>
         <table class="data-table">
           <thead>
@@ -840,12 +846,18 @@
 
       <!-- Performance Comparison Chart -->
       <div class="card">
+        <div style="text-align:center; font-size:0.75rem; font-weight:700; color:#10b981; margin-bottom:0.6rem;">
+          ⚡ Realtime Synced from Google Sheets — <span class="sync-timestamp-tag">11/08/2026 21:40 MMT</span> | <span style="color:#38bdf8;">Auto-update on change (Every 30s)</span>
+        </div>
         <div class="section-head"><i class="fa-solid fa-chart-column"></i> Performance Comparison Chart: Total WO (P+G), FOT Close (G), Remain WO (P), Remain Overdue (N), CD Not Close (A)</div>
         <canvas id="woChart" style="max-height: 290px;"></canvas>
       </div>
 
       <!-- TABLE 3: SUMMARY ALL NAME SYSTEM PERFORMANCE ROSTER (ALL 4 TEAMS — SORTED % HIGH TO LOW) -->
       <div class="card" id="all-engineers-summary-card">
+        <div style="text-align:center; font-size:0.75rem; font-weight:700; color:#10b981; margin-bottom:0.6rem;">
+          ⚡ Realtime Synced from Google Sheets — <span class="sync-timestamp-tag">11/08/2026 21:40 MMT</span> | <span style="color:#38bdf8;">Auto-update on change (Every 30s)</span>
+        </div>
         <div class="section-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
           <span><i class="fa-solid fa-users"></i> Table 3: Summary All Name System Roster — Direct Google Sheet Raw Data (Sum all WO Team)</span>
           <button class="filter-btn active" style="background:linear-gradient(135deg, #10B981, #06B6D4); color:#fff; border:none; padding:0.4rem 0.9rem; font-weight:700; border-radius:8px; cursor:pointer;" onclick="openAllEngineersModal()"><i class="fa-solid fa-expand"></i> View Full Modal</button>
