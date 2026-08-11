@@ -575,19 +575,14 @@ def trigger_bg_index_refresh():
     t = threading.Thread(target=_bg, daemon=True)
     t.start()
 
-def format_task_wo(raw: str) -> str:
-    """Render col H content thành HTML sạch cho Toa 1 (Task & WO).
-       Loại bỏ 100% phần 'Site Info' nếu có trong chuỗi thô."""
 def linkify_text(text: str) -> str:
-    """Format text: Y NGUYÊN 100% không thêm bất kỳ chữ hay icon nào (chỉ convert HTTP/HTTPS link nếu có)."""
+    """Format text: Y NGUYÊN 100% không thêm bất kỳ icon hay chữ nào."""
     if not text:
         return ""
     clean = html.escape(str(text).replace("&amp;gt;", ">").replace("&gt;", ">").replace("&amp;lt;", "<").replace("&lt;", "<"))
-    
-    # Chỉ convert HTTP/HTTPS URLs thành HTML link nếu có
     def _url_sub(m):
         url = m.group(0)
-        return f'<a href="{url}">🔗 Link</a>'
+        return f'<a href="{url}">{url}</a>'
     clean = re.sub(r'https?://[^\s<]+', _url_sub, clean)
     return clean
 
@@ -595,7 +590,7 @@ def e(s) -> str:
     return linkify_text(s)
 
 def format_task_wo(raw: str) -> str:
-    """Trả về Y NGUYÊN 100% dữ liệu gốc từ Google Sheet cell (không tự ý ngắt dòng, không tự chèn thêm icon hay đầu dòng)."""
+    """Trả về Y NGUYÊN 100% dữ liệu gốc từ Google Sheet cell (0 icon thêm vào)."""
     if not raw:
         return ""
     clean_raw = str(raw).strip().lstrip("~ ").strip()
@@ -603,7 +598,7 @@ def format_task_wo(raw: str) -> str:
 
 
 def perform_unified_tni_search(tni: str, full_info: bool = False) -> str:
-    """Tra cứu TNI O(1) — 100% Full Data (Không cắt bớt), kèm Link trực tiếp."""
+    """Tra cứu TNI O(1) — 100% Dữ liệu thô Y NGUYÊN từ Google Sheet (0 ICON thêm vào)."""
     tni_upper = tni.upper().strip()
 
     now = time.time()
@@ -619,41 +614,28 @@ def perform_unified_tni_search(tni: str, full_info: bool = False) -> str:
     has_tasks = bool(task_wo)
 
     if not has_info and not has_tasks:
-        return f"❌ No data found for <b>{html.escape(tni_upper)}</b>"
+        return f"No data found for {html.escape(tni_upper)}"
 
-    lines = [f"🔍 <b>{html.escape(tni_upper)}</b>\n━━━━━━━━━━━━━━━━━━━━"]
+    lines = []
 
-    if full_info:
-        # ── Info: TNI0122 → CHỈ Site + Cable + GPON + DIA (không gộp Task/WO) ──
-        if not has_info:
-            return f"❌ No site/cable/DIA info for <b>{html.escape(tni_upper)}</b>"
-        if info.get("site"):
-            site_raw = info['site']
-            clean_lines = []
-            for line in site_raw.splitlines():
-                ll = line.lower()
-                if "📋 task" in ll or "🔧 wo" in ll or "task (" in ll or "wo (" in ll:
-                    break
-                clean_lines.append(line)
-            clean_site = "\n".join(clean_lines).strip()
-            if clean_site:
-                lines.append(f"\n🏢 <b>Site Info</b>\n{linkify_text(clean_site)}")
-        if info.get("cable"):
-            lines.append(f"\n🔌 <b>Cable</b>\n{linkify_text(info['cable'])}")
-        if info.get("gpon"):
-            lines.append(f"\n📶 <b>Gpon</b>\n{linkify_text(info['gpon'])}")
-        if info.get("dia"):
-            lines.append(f"\n🌐 <b>DIA</b>\n{linkify_text(info['dia'])}")
-    else:
-        # ── TNI0122 → CHỈ Task + WO (không gộp Site/Cable/DIA) ──
-        if not has_tasks:
-            return f"❌ No task/WO data for <b>{html.escape(tni_upper)}</b>"
+    # 1. Dữ liệu Task & WO thô nguyên bản từ Google Sheet cell (0 icon)
+    if has_tasks:
         formatted = format_task_wo(task_wo)
         if formatted:
-            lines.append(f"\n{formatted}")
+            lines.append(formatted)
 
-    lines.append("━━━━━━━━━━━━━━━━━━━━")
-    return "\n".join(lines)
+    # 2. Dữ liệu Site Info, Cable, GPON, DIA thô nguyên bản nếu có (0 icon)
+    if has_info:
+        if info.get("site") and info['site'].strip():
+            lines.append(linkify_text(info['site'].strip()))
+        if info.get("cable") and info['cable'].strip():
+            lines.append(linkify_text(info['cable'].strip()))
+        if info.get("gpon") and info['gpon'].strip():
+            lines.append(linkify_text(info['gpon'].strip()))
+        if info.get("dia") and info['dia'].strip():
+            lines.append(linkify_text(info['dia'].strip()))
+
+    return "\n\n".join(lines).strip()
 
 # ── Daily Report ──────────────────────────────────────────────────────────────
 def fetch_daily_fields() -> list[str]:
