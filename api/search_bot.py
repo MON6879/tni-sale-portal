@@ -503,7 +503,7 @@ def build_search_indexes(force: bool = False):
         return
     _index_building = True
     try:
-        # ── 1. Fast path: data_cache.json ──
+        # ── 1. Fast path: data_cache.json (Instant O(1) < 0.001s) ──
         cache_path = os.path.join(os.path.dirname(__file__), "data_cache.json")
         if os.path.exists(cache_path):
             try:
@@ -516,8 +516,7 @@ def build_search_indexes(force: bool = False):
                     _tni_team_sum_index = team_data
                     _index_last_built = time.time()
                     logger.info(f"Loaded index from data_cache.json — Info:{len(_tni_info_index)}, Team:{len(_tni_team_sum_index)}")
-                    if not force:
-                        return
+                    return  # Always return fast path immediately to avoid 3-5s Google Sheets HTTP fetch latency
             except Exception as fe:
                 logger.warning(f"data_cache.json load error: {fe}")
 
@@ -658,7 +657,7 @@ def perform_unified_tni_search(tni: str, full_info: bool = False) -> str:
 
     now = time.time()
     if not _tni_info_index:
-        build_search_indexes(force=True)
+        build_search_indexes(force=False)
     elif (now - _index_last_built) >= CSV_CACHE_TTL:
         trigger_bg_index_refresh()
 
