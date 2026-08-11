@@ -421,7 +421,7 @@ function processSiteDownColC(sheet) {
 // LUỒNG 2 — XỬ LÝ AW7 (TIN 2 — Bảng SUMMARY)
 // Độc lập 100% — Chỉ đọc mốc giờ ô AW7 & ghi chìa khóa TS_KEY_AW7
 // ============================================================
-function processSummaryAwAz(sheet) {
+function processSummaryAwAz(sheet, forceResend) {
   const rawTs = sheet.getRange("AW7").getValue().toString().trim();
   if (!rawTs) {
     Logger.log("[Luồng AW7] Ô AW7 rỗng — Bỏ qua Luồng 2");
@@ -434,14 +434,14 @@ function processSummaryAwAz(sheet) {
   const props  = PropertiesService.getScriptProperties();
   const lastTs = props.getProperty(TS_KEY_AW7) || "";
 
-  if (tsKey === lastTs) {
+  if (!forceResend && tsKey === lastTs) {
     Logger.log("[Luồng AW7] Timestamp AW7 không đổi (" + tsKey + ") → Bỏ qua Luồng 2");
     return false;
   }
 
   // ✅ ĐỘC LẬP: Lưu ngay khóa AW7
   props.setProperty(TS_KEY_AW7, tsKey);
-  Logger.log("[Luồng AW7] 🆕 Timestamp AW7 thay đổi: " + tsKey + " → Đang gửi Tin 2 (SUMMARY)...");
+  Logger.log("[Luồng AW7] 🆕 Timestamp AW7 (" + tsKey + ", forceResend=" + !!forceResend + ") → Đang gửi Tin 2 (SUMMARY)...");
 
   const awaz  = readAwAz(sheet);
   const teams = ["T1", "T2", "T3", "T4"];
@@ -521,6 +521,15 @@ function readAwAz(sheet) {
   return sheet.getRange(7, 49, 9, 4).getValues();
 }
 
+function cleanMetricText(txt) {
+  if (!txt) return "";
+  let s = txt.toString().trim();
+  // Strip duplicate metric label prefixes
+  s = s.replace(/^(Site down|Cell down|DG Abnormal|DG Run>16H|Link down):\s*/i, "").trim();
+  if (s === "T1" || s === "T2" || s === "T3" || s === "T4") return "";
+  return s;
+}
+
 function buildAwAzTeamMessage(teamKey, ts, awaz, colIdx) {
   const label   = "Team " + teamKey.replace("T", "");
   const numRows = awaz.length;
@@ -533,11 +542,13 @@ function buildAwAzTeamMessage(teamKey, ts, awaz, colIdx) {
   for (let r = 0; r < numRows; r++) {
     const txt = ((awaz[r] || [])[colIdx] || "").toString().trim();
     if (!txt || txt === "0") continue;
-    const clean = escHtml(txt.replace(/[*_`]/g, ""));
+    const cleanedText = cleanMetricText(txt);
+    if (!cleanedText || cleanedText === "0") continue;
+    const clean = escHtml(cleanedText.replace(/[*_`]/g, ""));
     if (r < AWAZ_LABELS.length) {
       lines.push(AWAZ_LABELS[r].emoji + " <b>" + AWAZ_LABELS[r].name + ":</b> " + clean);
     } else {
-      const lm = txt.match(/^([^:]+):/);
+      const lm = cleanedText.match(/^([^:]+):/);
       const lb = lm ? lm[1].replace(/[*_`]/g, "").trim() : "Row " + (r + 1);
       lines.push("📌 <b>" + escHtml(lb) + ":</b> " + clean);
     }
@@ -568,11 +579,13 @@ function buildAwAzControlMessage(ts, awaz) {
     for (let r = 0; r < numRows; r++) {
       const txt = ((awaz[r] || [])[t.col] || "").toString().trim();
       if (!txt || txt === "0") continue;
-      const clean = escHtml(txt.replace(/[*_`]/g, ""));
+      const cleanedText = cleanMetricText(txt);
+      if (!cleanedText || cleanedText === "0") continue;
+      const clean = escHtml(cleanedText.replace(/[*_`]/g, ""));
       if (r < AWAZ_LABELS.length) {
         lines.push(AWAZ_LABELS[r].emoji + " <b>" + AWAZ_LABELS[r].name + ":</b> " + clean);
       } else {
-        const lm = txt.match(/^([^:]+):/);
+        const lm = cleanedText.match(/^([^:]+):/);
         const lb = lm ? lm[1].replace(/[*_`]/g, "").trim() : "Row " + (r + 1);
         lines.push("📌 <b>" + escHtml(lb) + ":</b> " + clean);
       }
