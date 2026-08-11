@@ -605,75 +605,11 @@ def e(s) -> str:
     return linkify_text(s)
 
 def format_task_wo(raw: str) -> str:
+    """Trả về Y NGUYÊN 100% dữ liệu gốc từ Google Sheet cell (không tự ý ngắt dòng, không tự chèn thêm icon hay đầu dòng)."""
     if not raw:
         return ""
-
-    raw_clean = raw
-    if "📍 Site Info" in raw_clean or "📍 <b>Site Info</b>" in raw_clean or "🏢 Site" in raw_clean:
-        task_pos = raw_clean.find("📋")
-        wo_pos = raw_clean.find("🔧")
-        alarm_pos = raw_clean.find("🔔")
-        positions = [p for p in (task_pos, wo_pos, alarm_pos) if p != -1]
-        if positions:
-            raw_clean = raw_clean[min(positions):].strip()
-        else:
-            lines = []
-            skip = False
-            for line in raw_clean.split("\n"):
-                if "Site Info" in line or "🏢 Site" in line:
-                    skip = True
-                elif skip and ("Task" in line or "WO" in line or "Alarm" in line):
-                    skip = False
-                    lines.append(line)
-                elif not skip:
-                    lines.append(line)
-            raw_clean = "\n".join(lines).strip()
-
-    # ── Format 1: Pre-formatted ───── ──
-    if "\u2500\u2500\u2500\u2500\u2500" in raw_clean:
-        lines = raw_clean.split("\n")
-        content_lines = []
-        in_content = False
-        for line in lines:
-            if "\u2500\u2500\u2500\u2500\u2500" in line:
-                if not in_content:
-                    in_content = True
-                else:
-                    break
-            elif in_content:
-                if "Site Info" not in line:
-                    content_lines.append(line)
-        if content_lines:
-            return linkify_text("\n".join(content_lines).strip())
-
-    # ── Format 2: Raw /Alarm: ... <+> /Task: ... <+> /WO: ... ──
-    if "<+>" in raw_clean or "/Task:" in raw_clean or "/WO:" in raw_clean:
-        sections = raw_clean.split("<+>")
-        parts = []
-        for sec in sections:
-            sec = sec.strip()
-            if "/Alarm:" in sec:
-                content = sec[sec.find("/Alarm:") + 7:].strip()
-                if content:
-                    parts.append(f"🔔 <b>Alarm:</b> {linkify_text(content)}")
-            elif "/Task:" in sec:
-                content = sec[sec.find("/Task:") + 6:].strip()
-                if content and content.lower() not in ("no see", "~", ""):
-                    raw_tasks = re.split(r'\||\n', content)
-                    tasks = [t.strip().lstrip("~ ").strip() for t in raw_tasks if t.strip() and t.strip() != "~"]
-                    if tasks:
-                        parts.append("📋 <b>Task:</b>\n" + "\n".join(f"• {linkify_text(t)}" for t in tasks))
-            elif "/WO:" in sec:
-                content = sec[sec.find("/WO:") + 4:].strip()
-                if content:
-                    raw_wos = re.split(r'\||\n', content)
-                    wos = [w.strip().lstrip("~ ").strip() for w in raw_wos if w.strip() and w.strip() != "~"]
-                    if wos:
-                        parts.append("🔧 <b>WO:</b>\n" + "\n".join(f"• {linkify_text(w)}" for w in wos))
-        if parts:
-            return "\n\n".join(parts)
-
-    return linkify_text(raw_clean)
+    clean_raw = str(raw).strip().lstrip("~ ").strip()
+    return linkify_text(clean_raw)
 
 
 def perform_unified_tni_search(tni: str, full_info: bool = False) -> str:
