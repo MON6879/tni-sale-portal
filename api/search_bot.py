@@ -578,10 +578,31 @@ def trigger_bg_index_refresh():
 def format_task_wo(raw: str) -> str:
     """Render col H content thành HTML sạch cho Toa 1 (Task & WO).
        Loại bỏ 100% phần 'Site Info' nếu có trong chuỗi thô."""
+def linkify_text(text: str) -> str:
+    """Format text: convert http/https URLs into HTML links, format WO codes with clickable /WO links, 100% full text without truncation."""
+    if not text:
+        return ""
+    clean = html.escape(str(text).replace("&amp;gt;", ">").replace("&gt;", ">").replace("&amp;lt;", "<").replace("&lt;", "<"))
+    
+    # 1. Convert HTTP/HTTPS URLs to HTML links
+    def _url_sub(m):
+        url = m.group(0)
+        return f'<a href="{url}">🔗 Link</a>'
+    clean = re.sub(r'https?://[^\s<]+', _url_sub, clean)
+
+    # 2. Add clickable command /WO_... for WO codes if not already linked
+    def _wo_sub(m):
+        wo_str = m.group(0)
+        nums = re.findall(r'\d{6,}', wo_str)
+        if nums:
+            wo_id = nums[-1]
+            return f'{wo_str} (👉 /WO_{wo_id})'
+        return wo_str
+    clean = re.sub(r'\bWO_[A-Za-z0-9_\-]+\b', _wo_sub, clean)
+    return clean
+
 def e(s) -> str:
-    if not s: return ""
-    clean = str(s).replace("&amp;gt;", ">").replace("&gt;", ">").replace("&amp;lt;", "<").replace("&lt;", "<")
-    return html.escape(clean)
+    return linkify_text(s)
 
 def format_task_wo(raw: str) -> str:
     if not raw:
@@ -608,8 +629,8 @@ def format_task_wo(raw: str) -> str:
                     lines.append(line)
             raw_clean = "\n".join(lines).strip()
 
-    # ── Format 1: Pre-formatted có ───── ──
-    if "\u2500\u2500\u2500\u2500\u2500" in raw_clean:      # ─────
+    # ── Format 1: Pre-formatted ───── ──
+    if "\u2500\u2500\u2500\u2500\u2500" in raw_clean:
         lines = raw_clean.split("\n")
         content_lines = []
         in_content = False
@@ -623,7 +644,7 @@ def format_task_wo(raw: str) -> str:
                 if "Site Info" not in line:
                     content_lines.append(line)
         if content_lines:
-            return e("\n".join(content_lines).strip())
+            return linkify_text("\n".join(content_lines).strip())
 
     # ── Format 2: Raw /Alarm: ... <+> /Task: ... <+> /WO: ... ──
     if "<+>" in raw_clean or "/Task:" in raw_clean or "/WO:" in raw_clean:
@@ -634,28 +655,25 @@ def format_task_wo(raw: str) -> str:
             if "/Alarm:" in sec:
                 content = sec[sec.find("/Alarm:") + 7:].strip()
                 if content:
-                    parts.append(f"🔔 <b>Alarm:</b> {e(content[:300])}")
+                    parts.append(f"🔔 <b>Alarm:</b> {linkify_text(content)}")
             elif "/Task:" in sec:
                 content = sec[sec.find("/Task:") + 6:].strip()
                 if content and content.lower() not in ("no see", ""):
                     tasks = [t.strip() for t in content.split("/") if t.strip()]
-                    parts.append("📋 <b>Task:</b>\n" + "\n".join(f"• {e(t[:150])}" for t in tasks[:5]))
+                    parts.append("📋 <b>Task:</b>\n" + "\n".join(f"• {linkify_text(t)}" for t in tasks))
             elif "/WO:" in sec:
                 content = sec[sec.find("/WO:") + 4:].strip()
                 if content:
                     wos = [w.strip() for w in content.split("/") if w.strip()]
-                    parts.append("🔧 <b>WO:</b>\n" + "\n".join(f"• {e(w[:150])}" for w in wos[:3]))
+                    parts.append("🔧 <b>WO:</b>\n" + "\n".join(f"• {linkify_text(w)}" for w in wos))
         if parts:
             return "\n".join(parts)
 
-    return e(raw_clean[:500])
+    return linkify_text(raw_clean)
 
 
 def perform_unified_tni_search(tni: str, full_info: bool = False) -> str:
-    """Tra cứu TNI O(1) — nhanh < 0.01s.
-    full_info=False (TNI0122):      Task + WO ngắn gọn.
-    full_info=True  (Info:TNI0122): Site + Cable + DIA + Task/WO đầy đủ."""
-    e = html.escape
+    """Tra cứu TNI O(1) — 100% Full Data (Không cắt bớt), kèm Link trực tiếp."""
     tni_upper = tni.upper().strip()
 
     now = time.time()
@@ -671,16 +689,15 @@ def perform_unified_tni_search(tni: str, full_info: bool = False) -> str:
     has_tasks = bool(task_wo)
 
     if not has_info and not has_tasks:
-        return f"❌ No data found for <b>{e(tni_upper)}</b>"
+        return f"❌ No data found for <b>{html.escape(tni_upper)}</b>"
 
-    lines = [f"🔍 <b>{e(tni_upper)}</b>\n━━━━━━━━━━━━━━━━━━━━"]
+    lines = [f"🔍 <b>{html.escape(tni_upper)}</b>\n━━━━━━━━━━━━━━━━━━━━"]
 
     if full_info:
         # ── Info: TNI0122 → CHỈ Site + Cable + GPON + DIA (không gộp Task/WO) ──
         if not has_info:
-            return f"❌ No site/cable/DIA info for <b>{e(tni_upper)}</b>"
+            return f"❌ No site/cable/DIA info for <b>{html.escape(tni_upper)}</b>"
         if info.get("site"):
-            # Lọc bỏ 100% phần Task & WO nếu có trong chuỗi site
             site_raw = info['site']
             clean_lines = []
             for line in site_raw.splitlines():
@@ -690,19 +707,17 @@ def perform_unified_tni_search(tni: str, full_info: bool = False) -> str:
                 clean_lines.append(line)
             clean_site = "\n".join(clean_lines).strip()
             if clean_site:
-                lines.append(f"\n🏢 <b>Site Info</b>\n{e(clean_site[:500])}")
+                lines.append(f"\n🏢 <b>Site Info</b>\n{linkify_text(clean_site)}")
         if info.get("cable"):
-            lines.append(f"\n🔌 <b>Cable</b>\n{e(info['cable'][:500])}")
+            lines.append(f"\n🔌 <b>Cable</b>\n{linkify_text(info['cable'])}")
         if info.get("gpon"):
-            lines.append(f"\n📶 <b>Gpon</b>\n{e(info['gpon'][:300])}")
+            lines.append(f"\n📶 <b>Gpon</b>\n{linkify_text(info['gpon'])}")
         if info.get("dia"):
-            dia_text = info["dia"]
-            suffix = "..." if len(dia_text) > 500 else ""
-            lines.append(f"\n🌐 <b>DIA</b>\n{e(dia_text[:500])}{suffix}")
+            lines.append(f"\n🌐 <b>DIA</b>\n{linkify_text(info['dia'])}")
     else:
         # ── TNI0122 → CHỈ Task + WO (không gộp Site/Cable/DIA) ──
         if not has_tasks:
-            return f"❌ No task/WO data for <b>{e(tni_upper)}</b>"
+            return f"❌ No task/WO data for <b>{html.escape(tni_upper)}</b>"
         formatted = format_task_wo(task_wo)
         if formatted:
             lines.append(f"\n{formatted}")
