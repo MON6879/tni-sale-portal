@@ -725,25 +725,42 @@ def clean_field_name(s: str) -> str:
 def parse_daily_report(text: str, fields: list[str]) -> dict:
     result, cur_key, cur_val = {}, None, []
 
+    KNOWN_KEY_ALIASES = [
+        "daily result", "daily report", "full name", "name", "transportation used", "transportation",
+        "site rescue", "cell rescue", "rescue cable", "repair alarm", "partner refuel", "other task",
+        "detail wo", "detail task", "wo", "task", "busines trip", "km moto bike"
+    ]
+
     def flush():
         if cur_key:
-            result[cur_key] = " ".join(cur_val).strip()
+            result[cur_key] = "\n".join(cur_val).strip()
 
     for line in text.splitlines():
         line = line.strip()
         if not line: continue
+        
+        is_key_line = False
+        label, val = "", ""
         if ":" in line:
             colon = line.index(":")
-            label = line[:colon].strip()
-            val   = line[colon + 1:].strip()
+            lbl_candidate = line[:colon].strip()
+            val_candidate = line[colon + 1:].strip()
+            clean_cand = clean_field_name(lbl_candidate)
+            
+            # Kiểm tra xem label candidate có phải là từ khóa form hợp lệ không
+            if any(alias in clean_cand or clean_cand in alias for alias in KNOWN_KEY_ALIASES):
+                is_key_line = True
+                label = lbl_candidate
+                val = val_candidate
+
+        if is_key_line:
             matched = None
             label_l = label.lower()
             clean_lbl = clean_field_name(label)
             
-            # Nếu label chứa chữ "result" hoặc "daily", tự động khớp với "Daily report"
             if "result" in label_l or "daily" in label_l:
                 for f in fields:
-                    if f.lower() == "daily report":
+                    if f.lower() == "daily report" or f.lower() == "daily result":
                         matched = f
                         break
             
@@ -761,10 +778,13 @@ def parse_daily_report(text: str, fields: list[str]) -> dict:
                         break
 
             if matched:
-                flush(); cur_key = matched
+                flush()
+                cur_key = matched
                 cur_val = [val] if val else []
                 continue
-        if cur_key: cur_val.append(line)
+
+        if cur_key:
+            cur_val.append(line)
     flush()
     return result
 
@@ -1409,7 +1429,7 @@ def handle(update: dict) -> None:
         chat_title = msg.get("chat", {}).get("title", "")
         date_str, team_str, content = parse_plan_fields(clean_text, chat_id, chat_title)
         if date_str and team_str:
-            res = store_daily_plan_to_sheet(date_str, team_str, content or clean_text)
+            res = store_daily_plan_to_sheet(date_str, team_str, clean_text)
             if res.get("status") in ("ok", "duplicate"):
                 ref = res.get("ref", "?")
                 dup = res.get("duplicate", False)
