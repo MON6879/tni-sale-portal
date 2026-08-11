@@ -658,16 +658,20 @@ def format_task_wo(raw: str) -> str:
                     parts.append(f"🔔 <b>Alarm:</b> {linkify_text(content)}")
             elif "/Task:" in sec:
                 content = sec[sec.find("/Task:") + 6:].strip()
-                if content and content.lower() not in ("no see", ""):
-                    tasks = [t.strip() for t in content.split("/") if t.strip()]
-                    parts.append("📋 <b>Task:</b>\n" + "\n".join(f"• {linkify_text(t)}" for t in tasks))
+                if content and content.lower() not in ("no see", "~", ""):
+                    raw_tasks = re.split(r'\||\n', content)
+                    tasks = [t.strip().lstrip("~ ").strip() for t in raw_tasks if t.strip() and t.strip() != "~"]
+                    if tasks:
+                        parts.append("📋 <b>Task:</b>\n" + "\n".join(f"• {linkify_text(t)}" for t in tasks))
             elif "/WO:" in sec:
                 content = sec[sec.find("/WO:") + 4:].strip()
                 if content:
-                    wos = [w.strip() for w in content.split("/") if w.strip()]
-                    parts.append("🔧 <b>WO:</b>\n" + "\n".join(f"• {linkify_text(w)}" for w in wos))
+                    raw_wos = re.split(r'\||\n', content)
+                    wos = [w.strip().lstrip("~ ").strip() for w in raw_wos if w.strip() and w.strip() != "~"]
+                    if wos:
+                        parts.append("🔧 <b>WO:</b>\n" + "\n".join(f"• {linkify_text(w)}" for w in wos))
         if parts:
-            return "\n".join(parts)
+            return "\n\n".join(parts)
 
     return linkify_text(raw_clean)
 
