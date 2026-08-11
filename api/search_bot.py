@@ -1111,12 +1111,9 @@ def submit_daily(chat_id: int, user_id: int, first_name: str, text: str) -> None
     now_mm = datetime.now(TZ_MM)
     if "Daily report" not in parsed:
         parsed["Daily report"] = now_mm.strftime("%d/%m/%Y")
-    if not DAILY_APPS_SCRIPT_URL:
-        tg_send(chat_id, "❌ Bot DAILY_APPS_SCRIPT_URL not configured")
-        send_ingestion_alarm("Daily report and Bussiness", str(chat_id), first_name or str(user_id), "DAILY_APPS_SCRIPT_URL not configured")
-        return
+    url = DAILY_APPS_SCRIPT_URL or APPS_SCRIPT_URL or "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
     try:
-        resp   = requests.post(DAILY_APPS_SCRIPT_URL,
+        resp   = requests.post(url,
                                json={"action": "daily_add",
                                      "telegram_id": str(user_id),
                                      "user_name": first_name or str(user_id),
@@ -1286,6 +1283,22 @@ def handle(update: dict) -> None:
             return
 
         clean_text = f"{first_word} {rest}".strip()
+
+    # ── 1. DAILY PLAN SUBMIT (PRIORITY #1: Process plan BEFORE SSOT classify to prevent TNI code hijacking) ──
+    if is_daily_plan(clean_text) or is_daily_plan(text):
+        chat_title = msg.get("chat", {}).get("title", "")
+        date_str, team_str, content = parse_plan_fields(text, chat_id, chat_title)
+        if date_str and team_str:
+            res = store_daily_plan_to_sheet(date_str, team_str, text)
+            ref = res.get("ref", "?")
+            dup = res.get("duplicate", False)
+            tg_send(chat_id, f"✅ <b>Plan {'updated' if dup else 'saved'}</b> — REF:<b>{ref}</b> | {team_str} | {date_str}")
+            return
+
+    # ── 2. DAILY REPORT SUBMIT (PRIORITY #2: Process daily report BEFORE SSOT classify) ──
+    if is_daily(clean_text) or is_daily(text):
+        submit_daily(chat_id, user_id, first_name, text)
+        return
 
     # ── CLASSIFY QUERY VIA SSOT ENGINE FIRST ──
     classified = classify_query(clean_text) if classify_query else None
