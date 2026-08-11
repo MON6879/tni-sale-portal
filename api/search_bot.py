@@ -473,7 +473,7 @@ def fetch_single_csv(gid: str, is_sd: bool = False) -> pd.DataFrame | None:
     hdrs = {"User-Agent": "Mozilla/5.0"}
     for attempt in range(1, 3):
         try:
-            resp = requests.get(url, headers=hdrs, timeout=8, allow_redirects=True)
+            resp = requests.get(url, headers=hdrs, timeout=3.5, allow_redirects=True)
             resp.raise_for_status()
             content = resp.content.decode("utf-8", errors="replace")
             df = pd.read_csv(io.StringIO(content), header=None, dtype=str, on_bad_lines="skip")
@@ -482,8 +482,11 @@ def fetch_single_csv(gid: str, is_sd: bool = False) -> pd.DataFrame | None:
             return df
         except Exception as ex:
             logger.warning(f"fetch_single_csv retry {attempt}/2 [gid={gid}]: {ex}")
+            if cached is not None:
+                logger.info(f"Returning stale cache for gid={gid} due to fetch error")
+                return cached
             if attempt < 2:
-                time.sleep(0.5)
+                time.sleep(0.1)
     return _csv_cache.get(cache_key)
 
 def safe(row, idx: int) -> str:
