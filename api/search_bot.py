@@ -1158,8 +1158,10 @@ def submit_daily(chat_id: int, user_id: int, first_name: str, text: str) -> None
             result = resp.json()
             if result.get("status") == "ok":
                 name = result.get("name") or name
-                logger.info(f"submit_daily ok: {name}")
-                tg_send(chat_id, f"✅ Recorded Daily Result: <b>{html.escape(name)}</b>")
+                ref_str = result.get("ref", "")
+                ref_tag = f" | REF: <b>{ref_str}</b>" if ref_str else ""
+                logger.info(f"submit_daily ok: {name} (ref={ref_str})")
+                tg_send(chat_id, f"✅ Recorded Daily Result: <b>{html.escape(name)}</b>{ref_tag}")
             else:
                 tg_send(chat_id, f"❌ Save error\n{result.get('message','')[:120]}")
         except Exception:
