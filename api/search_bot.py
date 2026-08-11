@@ -579,26 +579,16 @@ def format_task_wo(raw: str) -> str:
     """Render col H content thành HTML sạch cho Toa 1 (Task & WO).
        Loại bỏ 100% phần 'Site Info' nếu có trong chuỗi thô."""
 def linkify_text(text: str) -> str:
-    """Format text: convert http/https URLs into HTML links, format WO codes with clickable /WO links, 100% full text without truncation."""
+    """Format text: Y NGUYÊN 100% không thêm bất kỳ chữ hay icon nào (chỉ convert HTTP/HTTPS link nếu có)."""
     if not text:
         return ""
     clean = html.escape(str(text).replace("&amp;gt;", ">").replace("&gt;", ">").replace("&amp;lt;", "<").replace("&lt;", "<"))
     
-    # 1. Convert HTTP/HTTPS URLs to HTML links
+    # Chỉ convert HTTP/HTTPS URLs thành HTML link nếu có
     def _url_sub(m):
         url = m.group(0)
         return f'<a href="{url}">🔗 Link</a>'
     clean = re.sub(r'https?://[^\s<]+', _url_sub, clean)
-
-    # 2. Add clickable command /WO_... for WO codes if not already linked
-    def _wo_sub(m):
-        wo_str = m.group(0)
-        nums = re.findall(r'\d{6,}', wo_str)
-        if nums:
-            wo_id = nums[-1]
-            return f'{wo_str} (👉 /WO_{wo_id})'
-        return wo_str
-    clean = re.sub(r'\bWO_[A-Za-z0-9_\-]+\b', _wo_sub, clean)
     return clean
 
 def e(s) -> str:
