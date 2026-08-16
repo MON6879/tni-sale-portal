@@ -1199,17 +1199,16 @@ class handler(BaseHTTPRequestHandler):
         query = parse_qs(parsed_url.query)
         action = query.get("action", [None])[0]
 
-        if action == "reset" and COLLECTOR_BOT_TOKEN:
+        if (action == "reset" or action == "set_webhook") and COLLECTOR_BOT_TOKEN:
             try:
                 expected = "https://tni-bot.vercel.app/api/collector"
-                r1 = requests.post(f"https://api.telegram.org/bot{COLLECTOR_BOT_TOKEN}/deleteWebhook", json={"drop_pending_updates": True}, timeout=10).json()
                 r2 = requests.post(f"https://api.telegram.org/bot{COLLECTOR_BOT_TOKEN}/setWebhook", json={
                     "url": expected,
                     "allowed_updates": ["message", "edited_message", "channel_post"],
-                    "drop_pending_updates": True
-                }, timeout=10).json()
-                r3 = requests.get(f"https://api.telegram.org/bot{COLLECTOR_BOT_TOKEN}/getWebhookInfo", timeout=10).json()
-                res = {"delete": r1, "set": r2, "info": r3.get("result", {})}
+                    "drop_pending_updates": False
+                }, timeout=8).json()
+                r3 = requests.get(f"https://api.telegram.org/bot{COLLECTOR_BOT_TOKEN}/getWebhookInfo", timeout=8).json()
+                res = {"set": r2, "info": r3.get("result", {})}
             except Exception as ex:
                 res = {"error": str(ex)}
             self.send_response(200)

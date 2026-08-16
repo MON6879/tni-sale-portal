@@ -163,33 +163,28 @@ _staff_df_cache = None
 _staff_df_ts: float = 0.0
 
 def get_staff_df():
-    """Lấy Staff sheet — ưu tiên đọc từ data_cache.json (0.001s), fallback Google Sheets."""
+    """Lấy Staff sheet — đọc từ RAM cache hoặc data_cache.json tức thì (< 0.001s)."""
     global _staff_df_cache, _staff_df_ts
     now = time.time()
     if _staff_df_cache is not None and (now - _staff_df_ts) < CSV_CACHE_TTL:
         return _staff_df_cache
 
-    # ── Fast path: data_cache.json (GitHub Actions build mỗi 5 phút) ──
+    # ── Fast path: data_cache.json (đọc ngay lập tức 0.001s) ──
     cache_path = os.path.join(os.path.dirname(__file__), "data_cache.json")
     if os.path.exists(cache_path):
         try:
             with open(cache_path, encoding="utf-8") as cf:
                 cache_data = json.load(cf)
             staff_rows = cache_data.get("staff_rows")
-            built_at_str = cache_data.get("built_at", "")
-            if staff_rows and built_at_str:
-                from datetime import datetime as _dt, timezone as _tz
-                built_ts = _dt.strptime(built_at_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=_tz.utc).timestamp()
-                age_min = (time.time() - built_ts) / 60
-                if age_min < 30:   # Dùng file nếu cache mới hơn 30 phút
-                    _staff_df_cache = pd.DataFrame(staff_rows, dtype=str)
-                    _staff_df_ts    = time.time()
-                    logger.info(f"Loaded staff from data_cache.json (age={age_min:.1f}m) — {len(_staff_df_cache)} rows")
-                    return _staff_df_cache
+            if staff_rows:
+                _staff_df_cache = pd.DataFrame(staff_rows, dtype=str)
+                _staff_df_ts    = now
+                logger.info(f"Loaded staff from data_cache.json — {len(_staff_df_cache)} rows")
+                return _staff_df_cache
         except Exception as fe:
             logger.warning(f"data_cache.json staff load error: {fe}")
 
-    # ── Fallback: fetch từ Google Sheets (~3-5s) ──
+    # ── Fallback: fetch từ Google Sheets ──
     df = fetch_single_csv(GID_STAFF)
     if df is not None:
         _staff_df_cache = df
@@ -1732,22 +1727,19 @@ class handler(BaseHTTPRequestHandler):
         
         action = query.get("action", [None])[0]
         
-        # Reset webhook: xóa pending updates bị kẹt, set lại webhook
-        if action == "reset":
+        # Lock webhook safely (KHÔNG BAO GIỜ GỌI deleteWebhook làm mất kết nối)
+        if action == "reset" or action == "set_webhook":
             try:
                 expected = "https://tni-bot.vercel.app/api/search_bot"
-                r1 = requests.post(f"{TG_API}/deleteWebhook",
-                    json={"drop_pending_updates": False}, timeout=10).json()
                 r2 = requests.post(f"{TG_API}/setWebhook",
                     json={
                         "url": expected,
                         "allowed_updates": ["message", "edited_message", "channel_post"],
                         "drop_pending_updates": False
-                    }, timeout=10).json()
-                r3 = requests.get(f"{TG_API}/getWebhookInfo", timeout=10).json()
+                    }, timeout=8).json()
+                r3 = requests.get(f"{TG_API}/getWebhookInfo", timeout=8).json()
                 setup_bot_menu_commands()
                 result = {
-                    "delete": r1,
                     "set": r2, 
                     "menu": "updated",
                     "info": r3.get("result", {}),
