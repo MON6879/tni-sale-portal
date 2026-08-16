@@ -1070,6 +1070,7 @@ async def scan_plan_tomorrow(client, group_key: str, chat_id: int,
         "plan": dict or None
     }
     """
+    result = {"found": False, "sent_time": "", "content": "", "plan": None}
     fallback_result = None
     try:
         history = await client(GetHistoryRequest(
