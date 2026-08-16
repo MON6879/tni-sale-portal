@@ -57,8 +57,7 @@ const TEAM_COLORS = { T1: "🟠", T2: "🔵", T3: "🟢", T4: "🟡" };
 // ============================================================
 // WEB APP — doPost() (Xử lý dán Cột A — CHỈ GỌI LUỒNG COL C)
 // ============================================================
-// NOTE: renamed from doPost → private, to avoid conflict with apps_script_collector.gs master doPost
-function doPost_siteDownStandalone_(e) {
+function doPost(e) {
   const lock = LockService.getScriptLock();
   try {
     lock.tryLock(8000);
@@ -143,8 +142,7 @@ function doPost_siteDownStandalone_(e) {
   }
 }
 
-// NOTE: renamed from doGet → private, to avoid conflict with apps_script_collector.gs master doGet
-function doGet_siteDownStandalone_(e) {
+function doGet(e) {
   try {
     const action = (e.parameter && e.parameter.action) || "";
 
@@ -209,29 +207,6 @@ function checkAndSend(isWebhookCall) {
       return { sent_tin1: false, sent_tin2: false };
     }
     props.setProperty("SD_LAST_DONE_MINUTE", thisMinute);
-
-    // Kích hoạt cào GitHub ở mốc 5 phút
-    if (minute % 5 === 0) {
-      const cycleSlot = Utilities.formatDate(now, "Asia/Rangoon", "yyyyMMddHH") + (minute < 30 ? "_00" : "_30");
-      const lastSlot  = props.getProperty("SD_DISPATCH_SLOT") || "";
-
-      let count = parseInt(props.getProperty("SD_DISPATCH_COUNT") || "0", 10);
-      if (cycleSlot !== lastSlot) {
-        count = 0;
-        props.setProperty("SD_DISPATCH_SLOT", cycleSlot);
-        props.setProperty("SD_DISPATCH_COUNT", "0");
-      }
-
-      const lastSentSlot   = props.getProperty("SD_LAST_SENT_SLOT") || "";
-      const lastDispatchTs = parseInt(props.getProperty("SD_LAST_DISPATCH_TS") || "0", 10);
-      const minSinceDisp   = (Date.now() - lastDispatchTs) / 60000;
-
-      if (lastSentSlot !== cycleSlot && count < 3 && (lastDispatchTs === 0 || minSinceDisp >= 3)) {
-        Logger.log("⏰ " + mytime + " Myanmar → Ép GitHub dispatch relay");
-        triggerBotlookupRelay();
-        props.setProperty("SD_DISPATCH_COUNT", (count + 1).toString());
-      }
-    }
   }
 
   // ── 3. Mở Google Sheet và THỰC THI 2 LUỒNG TRONG 2 KHỐI TRY/CATCH TÁCH BIỆT ──
@@ -421,7 +396,7 @@ function processSiteDownColC(sheet) {
 // LUỒNG 2 — XỬ LÝ AW7 (TIN 2 — Bảng SUMMARY)
 // Độc lập 100% — Chỉ đọc mốc giờ ô AW7 & ghi chìa khóa TS_KEY_AW7
 // ============================================================
-function processSummaryAwAz(sheet, forceResend) {
+function processSummaryAwAz(sheet, forceSend) {
   const rawTs = sheet.getRange("AW7").getValue().toString().trim();
   if (!rawTs) {
     Logger.log("[Luồng AW7] Ô AW7 rỗng — Bỏ qua Luồng 2");
@@ -434,14 +409,18 @@ function processSummaryAwAz(sheet, forceResend) {
   const props  = PropertiesService.getScriptProperties();
   const lastTs = props.getProperty(TS_KEY_AW7) || "";
 
-  if (!forceResend && tsKey === lastTs) {
+  // forceSend = true khi Tin 1 vừa phát → ép Tin 2 gửi lại ngay dưới Tin 1 (đảm bảo Tin 2 luôn ở đáy chat)
+  if (tsKey === lastTs && !forceSend) {
     Logger.log("[Luồng AW7] Timestamp AW7 không đổi (" + tsKey + ") → Bỏ qua Luồng 2");
     return false;
+  }
+  if (forceSend) {
+    Logger.log("[Luồng AW7] ⚡ forceSend=true (Tin 1 vừa phát) → Ép gửi lại Tin 2 xuống đáy chat!");
   }
 
   // ✅ ĐỘC LẬP: Lưu ngay khóa AW7
   props.setProperty(TS_KEY_AW7, tsKey);
-  Logger.log("[Luồng AW7] 🆕 Timestamp AW7 (" + tsKey + ", forceResend=" + !!forceResend + ") → Đang gửi Tin 2 (SUMMARY)...");
+  Logger.log("[Luồng AW7] 🆕 Timestamp AW7 thay đổi: " + tsKey + " → Đang gửi Tin 2 (SUMMARY)...");
 
   const awaz  = readAwAz(sheet);
   const teams = ["T1", "T2", "T3", "T4"];
@@ -521,15 +500,6 @@ function readAwAz(sheet) {
   return sheet.getRange(7, 49, 9, 4).getValues();
 }
 
-function cleanMetricText(txt) {
-  if (!txt) return "";
-  let s = txt.toString().trim();
-  // Strip duplicate metric label prefixes
-  s = s.replace(/^(Site down|Cell down|DG Abnormal|DG Run>16H|Link down):\s*/i, "").trim();
-  if (s === "T1" || s === "T2" || s === "T3" || s === "T4") return "";
-  return s;
-}
-
 function buildAwAzTeamMessage(teamKey, ts, awaz, colIdx) {
   const label   = "Team " + teamKey.replace("T", "");
   const numRows = awaz.length;
@@ -542,13 +512,11 @@ function buildAwAzTeamMessage(teamKey, ts, awaz, colIdx) {
   for (let r = 0; r < numRows; r++) {
     const txt = ((awaz[r] || [])[colIdx] || "").toString().trim();
     if (!txt || txt === "0") continue;
-    const cleanedText = cleanMetricText(txt);
-    if (!cleanedText || cleanedText === "0") continue;
-    const clean = escHtml(cleanedText.replace(/[*_`]/g, ""));
+    const clean = escHtml(txt.replace(/[*_`]/g, ""));
     if (r < AWAZ_LABELS.length) {
       lines.push(AWAZ_LABELS[r].emoji + " <b>" + AWAZ_LABELS[r].name + ":</b> " + clean);
     } else {
-      const lm = cleanedText.match(/^([^:]+):/);
+      const lm = txt.match(/^([^:]+):/);
       const lb = lm ? lm[1].replace(/[*_`]/g, "").trim() : "Row " + (r + 1);
       lines.push("📌 <b>" + escHtml(lb) + ":</b> " + clean);
     }
@@ -579,13 +547,11 @@ function buildAwAzControlMessage(ts, awaz) {
     for (let r = 0; r < numRows; r++) {
       const txt = ((awaz[r] || [])[t.col] || "").toString().trim();
       if (!txt || txt === "0") continue;
-      const cleanedText = cleanMetricText(txt);
-      if (!cleanedText || cleanedText === "0") continue;
-      const clean = escHtml(cleanedText.replace(/[*_`]/g, ""));
+      const clean = escHtml(txt.replace(/[*_`]/g, ""));
       if (r < AWAZ_LABELS.length) {
         lines.push(AWAZ_LABELS[r].emoji + " <b>" + AWAZ_LABELS[r].name + ":</b> " + clean);
       } else {
-        const lm = cleanedText.match(/^([^:]+):/);
+        const lm = txt.match(/^([^:]+):/);
         const lb = lm ? lm[1].replace(/[*_`]/g, "").trim() : "Row " + (r + 1);
         lines.push("📌 <b>" + escHtml(lb) + ":</b> " + clean);
       }
@@ -756,16 +722,13 @@ function addKeywordIcons(text) {
   s = s.replace(/(?:^|\n|\s*)(Dont\s+Forget)/gi, "\n🔥 Dont Forget");
   s = s.replace(/(?:^|\n|\s*)>(?:\s*)(Cell down:)/gi, "\n🔴 Cell down:");
   s = s.replace(/(?:^|\n|\s*)>(?:\s*)(DG Abnormal:)/gi, "\n⚙️ DG Abnormal:");
+  s = s.replace(/(?:^|\n|\s*)>(?:\s*)(Link down:)/gi, "\n🔗 Link down:");
   s = s.replace(/(?:^|\n|\s*)>(?:\s*)(Duty:)/gi, "\n🕒 Duty:");
   s = s.replace(/\|\s*(DG Abnormal:)/gi, "\n⚙️ DG Abnormal:");
+  s = s.replace(/\|\s*(Link down:)/gi, "\n🔗 Link down:");
   s = s.replace(/\|\s*(Cell down:)/gi, "\n🔴 Cell down:");
   s = s.replace(/\|\s*(Duty:)/gi, "\n🕒 Duty:");
   s = s.replace(/(?:^|\s)(Duty:)/gi, "\n🕒 Duty:");
-
-  s = s.replace(/(?:(?:^|\n|\s*)>|\|)\s*(Link down:)\s*([^\n\|]*)/gi, function(match, keyword, dataStr) {
-     let c = dataStr.replace(/[*_`]/g, "").trim();
-     return "\n🔗 " + keyword + " " + c;
-  });
 
   s = s.replace(/(?:(?:^|\n|\s*)>|\|)\s*(DG Run>16H:)\s*([^\n\|]*)/gi, function(match, keyword, dataStr) {
      let c = dataStr.replace(/[*_]/g, "").trim();
@@ -794,11 +757,20 @@ function triggerBotlookupRelay() {
   const pat   = props.getProperty("GITHUB_PAT") || "";
   if (!pat) return;
   try {
-    UrlFetchApp.fetch("https://api.github.com/repos/phonghdpxd-cmd/tni-bot/actions/workflows/botlookup_relay.yml/dispatches", {
+    // 1. Dispatch to MON6879/tni-sitedown-relay
+    UrlFetchApp.fetch("https://api.github.com/repos/MON6879/tni-sitedown-relay/actions/workflows/botlookup_relay.yml/dispatches", {
       method: "post",
       headers: { "Authorization": "token " + pat, "Accept": "application/vnd.github.v3+json" },
       contentType: "application/json",
       payload: JSON.stringify({ ref: "main", inputs: { skip_delay: "1" } }),
+      muteHttpExceptions: true,
+    });
+    // 2. Fallback dispatch to train_5min.yml
+    UrlFetchApp.fetch("https://api.github.com/repos/MON6879/tni-sitedown-relay/actions/workflows/train_5min.yml/dispatches", {
+      method: "post",
+      headers: { "Authorization": "token " + pat, "Accept": "application/vnd.github.v3+json" },
+      contentType: "application/json",
+      payload: JSON.stringify({ ref: "main", inputs: { report_type: "Task - Bot Lookup Relay", skip_delay: "1" } }),
       muteHttpExceptions: true,
     });
     props.setProperty("SD_LAST_DISPATCH_TS", Date.now().toString());

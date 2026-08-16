@@ -13,7 +13,11 @@ import requests
 import pandas as pd
 from datetime import datetime, timezone, timedelta
 from telegram import Bot
+from telethon import TelegramClient
+from telethon.sessions import StringSession
 from dotenv import load_dotenv
+from delete_old_helper import delete_old_messages_bot, save_msgids, delete_by_titles_batch_telethon
+
 
 load_dotenv()
 logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=logging.INFO)
@@ -176,7 +180,7 @@ async def main():
     df = None
     for attempt in range(5):
         try:
-            resp = requests.get(SHEET_URL, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}, timeout=30)
+            resp = requests.get(SHEET_URL, headers={"User-Agent": "Mozilla/5.0"}, timeout=30)
             resp.raise_for_status()
             df = pd.read_csv(io.StringIO(resp.text), header=None, dtype=str)
             logger.info(f"Đọc thành công bảng tính: {len(df)} dòng.")
@@ -292,19 +296,41 @@ async def main():
             sd["coolant_have"] += to_float(row.iloc[81]) if len(row) > 81 else 0.0
             sd["coolant_diff"] += to_float(row.iloc[82]) if len(row) > 82 else 0.0
 
-    # ── 4. Gửi báo cáo ──
+    # ── 4. Xóa sạch tin cũ Report 1, 2, 3 bằng Telethon Batch Scan ──
+    TELEGRAM_API_ID = int(os.getenv("TELEGRAM_API_ID", "0"))
+    TELEGRAM_API_HASH = os.getenv("TELEGRAM_API_HASH", "")
+    TELEGRAM_SESSION = os.getenv("TELEGRAM_SESSION", "")
+
+    if SEND_BOT_TOKEN and TELEGRAM_SESSION and TELEGRAM_API_ID:
+        try:
+            chat_to_prefixes = {
+                str(cid): [
+                    "📋 1. Report — Daily Backlog",
+                    "📋 2. Report — DailyWO",
+                    "📋 2. Report — Daily Backlog",
+                    "📋 3. Report — Main DG Material Need",
+                ]
+                for cid in TEAM_GROUPS.values()
+            }
+            async with TelegramClient(
+                StringSession(TELEGRAM_SESSION), TELEGRAM_API_ID, TELEGRAM_API_HASH
+            ) as tg_client:
+                logger.info("🗑️ [backlog_send] Quét và xóa sạch Report 1, 2, 3 cũ trước khi gửi mới...")
+                await delete_by_titles_batch_telethon(tg_client, SEND_BOT_TOKEN, chat_to_prefixes)
+        except Exception as tg_err:
+            logger.warning(f"[backlog_send] Telethon delete error: {tg_err}")
+
+    # ── 5. Gửi báo cáo mới ──
     async with Bot(token=SEND_BOT_TOKEN) as bot:
         for t_num, chat_id in TEAM_GROUPS.items():
             t_name = TEAM_NAMES[t_num]
             logger.info(f"--- Bắt đầu gửi báo cáo cho {t_name} ({chat_id}) ---")
 
-            # Xóa tin nhắn cũ của backlog_send.py trước khi gửi mới
             if APPS_SCRIPT_URL:
                 try:
-                    from delete_old_helper import delete_old_messages_bot
                     delete_old_messages_bot(SEND_BOT_TOKEN, chat_id, APPS_SCRIPT_URL, CHATID_TO_KEY[chat_id])
                 except Exception as ex:
-                    logger.warning(f"Lỗi khi xóa tin nhắn cũ của {t_name}: {ex}")
+                    logger.warning(f"Lỗi khi xóa tin nhắn cũ qua GAS của {t_name}: {ex}")
 
             sent_msg_ids = []
 
@@ -325,7 +351,7 @@ async def main():
 
             # ── 4b. Gửi Bản tin 1 (Report 2) ──
             lines1 = [
-                f"📋 2. Report — Daily Backlog (Task Progress) — {t_name}",
+                f"📋 2. Report — DailyWO — {t_name}",
                 f"📅 {now_str}",
                 f"📌 Shows pending tasks and general cable patrol backlogs accumulated from previous days.",
                 "━━━━━━━━━━━━━━━━━━━━"

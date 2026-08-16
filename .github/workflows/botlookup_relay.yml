@@ -1,8 +1,9 @@
-name: Botlookup Relay
+name: "🚨 Botlookup Relay — Dedicated :06/:36 MMT (SOLE Runner)"
 
 on:
   schedule:
-    - cron: '*/5 * * * *'   # Chạy liên tục mỗi 5 phút để không bao giờ bị trễ cửa sổ :03 và :33 MMT
+    # ⚠️ Cron 3,33 UTC = :03 and :33 MMT -> Python sleeps until exact :06 and :36 MMT
+    - cron: '3,33 * * * *'
   workflow_dispatch:
     inputs:
       skip_delay:
@@ -10,10 +11,14 @@ on:
         required: false
         default: '1'
 
+concurrency:
+  group: botlookup-relay
+  cancel-in-progress: false
+
 jobs:
   botlookup-relay:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
 
@@ -34,7 +39,12 @@ jobs:
           APPS_SCRIPT_URL:        ${{ secrets.APPS_SCRIPT_URL }}
           REFUEL_APPS_SCRIPT_URL: ${{ secrets.REFUEL_APPS_SCRIPT_URL }}
           SD_BOTLOOKUP_CHAT_ID:   ${{ secrets.SD_BOTLOOKUP_CHAT_ID }}
+          SEND_BOT_TOKEN:         ${{ secrets.SEND_BOT_TOKEN }}
           SKIP_DELAY:             '1'
-        run: python botlookup_relay.py
-
-
+          MANUAL_RUN:             ${{ github.event_name == 'workflow_dispatch' && '1' || '0' }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            python botlookup_relay.py --force
+          else
+            python botlookup_relay.py
+          fi

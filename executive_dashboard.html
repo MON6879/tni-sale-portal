@@ -528,25 +528,35 @@
       </div>
 
       <div class="section-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
-        <span><i class="fa-solid fa-layer-group"></i> Regional Teams Summary Cards (Click Card for Live Sheet Details)</span>
-        <button class="filter-btn active" style="background:linear-gradient(135deg, #10B981, #06B6D4); color:#fff; border:none; padding:0.5rem 1rem; font-weight:700; border-radius:10px; cursor:pointer;" onclick="openAllEngineersModal()"><i class="fa-solid fa-users-viewfinder"></i> View All 22 Engineers Roster (% High to Low)</button>
+        <div>
+          <span><i class="fa-solid fa-layer-group"></i> Regional Teams Summary Cards (Click Card for Live Sheet Details)</span>
+          <div style="font-size:0.78rem; color:#38BDF8; font-weight:700; margin-top:0.2rem;"><i class="fa-solid fa-clock"></i> Sheet Data Export Time: <span id="sheet-export-time" style="color:#F8FAFC; font-weight:800;">13/08/2026 16:36:00</span></div>
+        </div>
+        <button class="filter-btn active" style="background:linear-gradient(135deg, #10B981, #06B6D4); color:#fff; border:none; padding:0.5rem 1rem; font-weight:700; border-radius:10px; cursor:pointer;" onclick="openAllEngineersModal()"><i class="fa-solid fa-users-viewfinder"></i> View All 29 Engineers Roster (% High to Low)</button>
       </div>
 
-      <!-- 4 Interactive Team Cards (Clickable) -->
+      <!-- 4 Interactive Team Cards — LIVE DATA via GAS -->
       <div class="team-card-grid" id="team-card-grid">
+
         <!-- Team 1 Card -->
         <div class="interactive-team-card" onclick="openTeam1Modal()">
           <div class="team-badge-icon tb-t1"><i class="fa-solid fa-user-tie"></i></div>
           <span class="team-tag tag-t1">Team 1 Dawei</span>
           <h3 style="margin-top:0.6rem; font-size:1.35rem; font-weight:800; color:#fff;">Leader: Paing Aung Soe</h3>
           <p style="font-size:0.75rem; color:var(--text-sub); margin-bottom:0.6rem;">Region: MYT_TNI_TEAM01_Dawei (<span id="t1-engineers">10</span> Staff)</p>
-          <div class="row-detail"><span style="color:var(--text-sub);">Total Assigned:</span><strong id="t1-assigned" style="color:var(--cyan); font-size:1.05rem;">⏳ WOs</strong></div>
-          <div class="row-detail"><span style="color:var(--text-sub);">Total FOT Close:</span><strong id="t1-fot" style="color:var(--emerald);">⏳ WOs</strong></div>
-          <div class="row-detail"><span style="color:var(--text-sub);">WO Close (Period):</span><span id="t1-close" style="font-weight:700; color:var(--amber);">⏳ WOs</span></div>
-          <div class="row-detail"><span style="color:var(--text-sub);">WO Remain:</span><strong id="t1-remain" style="color:var(--rose);">⏳ WOs</strong></div>
-          <div class="row-detail"><span id="t1-planlabel" style="color:var(--text-sub);">🎯 Plan 12/08/2026 (M):</span><strong id="t1-planm" style="color:#EC4899; font-weight:800;">⏳ --</strong></div>
-          <div class="row-detail"><span id="t1-datelabel" style="color:var(--text-sub);">11/10/09-08-2026:</span><span><strong id="t1-d2" style="color:#38BDF8;">⏳</strong> / <strong id="t1-d1" style="color:#38BDF8;">⏳</strong> / <strong id="t1-d0" style="color:#38BDF8;">⏳ WOs</strong></span></div>
-          <div class="row-detail"><span style="color:var(--text-sub);">Rank &amp; Completion Status:</span><span id="t1-rank" style="font-weight:700;">⏳ Loading...</span></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">I. Total WO Assigned:</span><strong id="t1-assigned" style="color:var(--cyan); font-size:1.05rem;">⏳ --</strong></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">✅ WO Close (G):</span><strong id="t1-fot" style="color:var(--emerald);">⏳ --</strong></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">🔴 Overdue FOT (N):</span><span id="t1-close" style="font-weight:700; color:#a78bfa;">⏳ --</span></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">📋 WO Remain (P):</span><strong id="t1-remain" style="color:var(--amber);">⏳ --</strong></div>
+          <div class="row-detail"><span id="t1-planlabel" style="color:var(--text-sub);">🎯 Plan 14/08/2026 (M):</span><strong id="t1-planm" style="color:#EC4899; font-weight:800;">⏳ --</strong></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">⏱️ Wait CD:</span><span id="t1-waitcd" style="font-weight:700; color:#94a3b8;">⏳ --</span></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">📌 CD Not Yet Close (A):</span><span id="t1-cdnotyet" style="font-weight:700; color:var(--amber);">⏳ --</span></div>
+          <div class="row-detail"><span id="t1-datelabel" style="color:var(--text-sub);">🗓️ WO Close 3Day (13/12/11-08):</span><span><strong id="t1-d2" style="color:#38BDF8;">-</strong> / <strong id="t1-d1" style="color:#38BDF8;">-</strong> / <strong id="t1-d0" style="color:#38BDF8;">- WOs</strong></span></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">Rank &amp; Status:</span><span id="t1-rank" style="font-weight:700; color:var(--rose);">⏳ Loading...</span></div>
+          <div style="margin-top:0.6rem; padding-top:0.5rem; border-top:1px dashed rgba(255,255,255,0.15);">
+            <div class="row-detail"><span style="color:var(--cyan); font-weight:800;">II. Total Close/Total Dep Assign:</span><strong id="t1-taskassign" style="color:#F8FAFC; font-weight:800;">0/155</strong></div>
+            <div class="row-detail"><span style="color:var(--text-sub);">📋 Task Close 3Day (D2/D1/D0):</span><strong id="t1-task3day" style="color:#38BDF8; font-weight:800;">0/0/0</strong></div>
+          </div>
           <div style="margin-top:0.8rem; font-size:0.75rem; color:var(--cyan); font-weight:700;">👉 Click for Full Row Details</div>
         </div>
 
@@ -556,13 +566,19 @@
           <span class="team-tag tag-t2">Team 2 Myeik</span>
           <h3 style="margin-top:0.6rem; font-size:1.35rem; font-weight:800; color:#fff;">Leader: Nay Myo Thu</h3>
           <p style="font-size:0.75rem; color:var(--text-sub); margin-bottom:0.6rem;">Region: MYT_TNI_TEAM02_Myeik (<span id="t2-engineers">11</span> Staff)</p>
-          <div class="row-detail"><span style="color:var(--text-sub);">Total Assigned:</span><strong id="t2-assigned" style="color:var(--cyan); font-size:1.05rem;">⏳ WOs</strong></div>
-          <div class="row-detail"><span style="color:var(--text-sub);">Total FOT Close:</span><strong id="t2-fot" style="color:var(--emerald);">⏳ WOs</strong></div>
-          <div class="row-detail"><span style="color:var(--text-sub);">WO Close (Period):</span><span id="t2-close" style="font-weight:700; color:var(--amber);">⏳ WOs</span></div>
-          <div class="row-detail"><span style="color:var(--text-sub);">WO Remain:</span><strong id="t2-remain" style="color:var(--rose);">⏳ WOs</strong></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">I. Total WO Assigned:</span><strong id="t2-assigned" style="color:var(--cyan); font-size:1.05rem;">⏳ --</strong></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">✅ WO Close (G):</span><strong id="t2-fot" style="color:var(--emerald);">⏳ --</strong></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">🔴 Overdue FOT (N):</span><span id="t2-close" style="font-weight:700; color:#a78bfa;">⏳ --</span></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">📋 WO Remain (P):</span><strong id="t2-remain" style="color:var(--amber);">⏳ --</strong></div>
           <div class="row-detail"><span id="t2-planlabel" style="color:var(--text-sub);">🎯 Plan 12/08/2026 (M):</span><strong id="t2-planm" style="color:#EC4899; font-weight:800;">⏳ --</strong></div>
-          <div class="row-detail"><span id="t2-datelabel" style="color:var(--text-sub);">11/10/09-08-2026:</span><span><strong id="t2-d2" style="color:#38BDF8;">⏳</strong> / <strong id="t2-d1" style="color:#38BDF8;">⏳</strong> / <strong id="t2-d0" style="color:#38BDF8;">⏳ WOs</strong></span></div>
-          <div class="row-detail"><span style="color:var(--text-sub);">Rank &amp; Completion Status:</span><span id="t2-rank" style="font-weight:700;">⏳ Loading...</span></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">⏱️ Wait CD:</span><span id="t2-waitcd" style="font-weight:700; color:#94a3b8;">⏳ --</span></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">📌 CD Not Yet Close (A):</span><span id="t2-cdnotyet" style="font-weight:700; color:var(--amber);">⏳ --</span></div>
+          <div class="row-detail"><span id="t2-datelabel" style="color:var(--text-sub);">🗓️ WO Close 3Day (13/12/11-08):</span><span><strong id="t2-d2" style="color:#38BDF8;">-</strong> / <strong id="t2-d1" style="color:#38BDF8;">-</strong> / <strong id="t2-d0" style="color:#38BDF8;">- WOs</strong></span></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">Rank &amp; Status:</span><span id="t2-rank" style="font-weight:700; color:var(--rose);">⏳ Loading...</span></div>
+          <div style="margin-top:0.6rem; padding-top:0.5rem; border-top:1px dashed rgba(255,255,255,0.15);">
+            <div class="row-detail"><span style="color:var(--cyan); font-weight:800;">II. Total Close/Total Dep Assign:</span><strong id="t2-taskassign" style="color:#F8FAFC; font-weight:800;">0/71</strong></div>
+            <div class="row-detail"><span style="color:var(--text-sub);">📋 Task Close 3Day (D2/D1/D0):</span><strong id="t2-task3day" style="color:#38BDF8; font-weight:800;">0/0/0</strong></div>
+          </div>
           <div style="margin-top:0.8rem; font-size:0.75rem; color:var(--cyan); font-weight:700;">👉 Click for Full Row Details</div>
         </div>
 
@@ -572,13 +588,19 @@
           <span class="team-tag tag-t3">Team 3 Bokpyin</span>
           <h3 style="margin-top:0.6rem; font-size:1.35rem; font-weight:800; color:#fff;">Leader: Pyae Phyo Zaw</h3>
           <p style="font-size:0.75rem; color:var(--text-sub); margin-bottom:0.6rem;">Region: MYT_TNI_TEAM03_Bokpyin (<span id="t3-engineers">4</span> Staff)</p>
-          <div class="row-detail"><span style="color:var(--text-sub);">Total Assigned:</span><strong id="t3-assigned" style="color:var(--cyan); font-size:1.05rem;">⏳ WOs</strong></div>
-          <div class="row-detail"><span style="color:var(--text-sub);">Total FOT Close:</span><strong id="t3-fot" style="color:var(--emerald);">⏳ WOs</strong></div>
-          <div class="row-detail"><span style="color:var(--text-sub);">WO Close (Period):</span><span id="t3-close" style="font-weight:700; color:var(--amber);">⏳ WOs</span></div>
-          <div class="row-detail"><span style="color:var(--text-sub);">WO Remain:</span><strong id="t3-remain" style="color:var(--rose);">⏳ WOs</strong></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">I. Total WO Assigned:</span><strong id="t3-assigned" style="color:var(--cyan); font-size:1.05rem;">⏳ --</strong></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">✅ WO Close (G):</span><strong id="t3-fot" style="color:var(--emerald);">⏳ --</strong></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">🔴 Overdue FOT (N):</span><span id="t3-close" style="font-weight:700; color:#a78bfa;">⏳ --</span></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">📋 WO Remain (P):</span><strong id="t3-remain" style="color:var(--amber);">⏳ --</strong></div>
           <div class="row-detail"><span id="t3-planlabel" style="color:var(--text-sub);">🎯 Plan 12/08/2026 (M):</span><strong id="t3-planm" style="color:#EC4899; font-weight:800;">⏳ --</strong></div>
-          <div class="row-detail"><span id="t3-datelabel" style="color:var(--text-sub);">11/10/09-08-2026:</span><span><strong id="t3-d2" style="color:#38BDF8;">⏳</strong> / <strong id="t3-d1" style="color:#38BDF8;">⏳</strong> / <strong id="t3-d0" style="color:#38BDF8;">⏳ WOs</strong></span></div>
-          <div class="row-detail"><span style="color:var(--text-sub);">Rank &amp; Completion Status:</span><span id="t3-rank" style="font-weight:700;">⏳ Loading...</span></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">⏱️ Wait CD:</span><span id="t3-waitcd" style="font-weight:700; color:#94a3b8;">⏳ --</span></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">📌 CD Not Yet Close (A):</span><span id="t3-cdnotyet" style="font-weight:700; color:var(--amber);">⏳ --</span></div>
+          <div class="row-detail"><span id="t3-datelabel" style="color:var(--text-sub);">🗓️ WO Close 3Day (13/12/11-08):</span><span><strong id="t3-d2" style="color:#38BDF8;">-</strong> / <strong id="t3-d1" style="color:#38BDF8;">-</strong> / <strong id="t3-d0" style="color:#38BDF8;">- WOs</strong></span></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">Rank &amp; Status:</span><span id="t3-rank" style="font-weight:700; color:var(--rose);">⏳ Loading...</span></div>
+          <div style="margin-top:0.6rem; padding-top:0.5rem; border-top:1px dashed rgba(255,255,255,0.15);">
+            <div class="row-detail"><span style="color:var(--cyan); font-weight:800;">II. Total Close/Total Dep Assign:</span><strong id="t3-taskassign" style="color:#F8FAFC; font-weight:800;">0/47</strong></div>
+            <div class="row-detail"><span style="color:var(--text-sub);">📋 Task Close 3Day (D2/D1/D0):</span><strong id="t3-task3day" style="color:#38BDF8; font-weight:800;">0/0/0</strong></div>
+          </div>
           <div style="margin-top:0.8rem; font-size:0.75rem; color:var(--cyan); font-weight:700;">👉 Click for Full Row Details</div>
         </div>
 
@@ -588,66 +610,66 @@
           <span class="team-tag tag-t4">Team 4 Kawthoung</span>
           <h3 style="margin-top:0.6rem; font-size:1.35rem; font-weight:800; color:#fff;">Leader: Naing Myo Htun</h3>
           <p style="font-size:0.75rem; color:var(--text-sub); margin-bottom:0.6rem;">Region: MYT_TNI_TEAM04_Kawthoung (<span id="t4-engineers">4</span> Staff)</p>
-          <div class="row-detail"><span style="color:var(--text-sub);">Total Assigned:</span><strong id="t4-assigned" style="color:var(--cyan); font-size:1.05rem;">⏳ WOs</strong></div>
-          <div class="row-detail"><span style="color:var(--text-sub);">Total FOT Close:</span><strong id="t4-fot" style="color:var(--emerald);">⏳ WOs</strong></div>
-          <div class="row-detail"><span style="color:var(--text-sub);">WO Close (Period):</span><span id="t4-close" style="font-weight:700; color:var(--amber);">⏳ WOs</span></div>
-          <div class="row-detail"><span style="color:var(--text-sub);">WO Remain:</span><strong id="t4-remain" style="color:var(--rose);">⏳ WOs</strong></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">I. Total WO Assigned:</span><strong id="t4-assigned" style="color:var(--cyan); font-size:1.05rem;">⏳ --</strong></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">✅ WO Close (G):</span><strong id="t4-fot" style="color:var(--emerald);">⏳ --</strong></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">🔴 Overdue FOT (N):</span><span id="t4-close" style="font-weight:700; color:#a78bfa;">⏳ --</span></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">📋 WO Remain (P):</span><strong id="t4-remain" style="color:var(--amber);">⏳ --</strong></div>
           <div class="row-detail"><span id="t4-planlabel" style="color:var(--text-sub);">🎯 Plan 12/08/2026 (M):</span><strong id="t4-planm" style="color:#EC4899; font-weight:800;">⏳ --</strong></div>
-          <div class="row-detail"><span id="t4-datelabel" style="color:var(--text-sub);">11/10/09-08-2026:</span><span><strong id="t4-d2" style="color:#38BDF8;">⏳</strong> / <strong id="t4-d1" style="color:#38BDF8;">⏳</strong> / <strong id="t4-d0" style="color:#38BDF8;">⏳ WOs</strong></span></div>
-          <div class="row-detail"><span style="color:var(--text-sub);">Rank &amp; Completion Status:</span><span id="t4-rank" style="font-weight:700;">⏳ Loading...</span></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">⏱️ Wait CD:</span><span id="t4-waitcd" style="font-weight:700; color:#94a3b8;">⏳ --</span></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">📌 CD Not Yet Close (A):</span><span id="t4-cdnotyet" style="font-weight:700; color:var(--amber);">⏳ --</span></div>
+          <div class="row-detail"><span id="t4-datelabel" style="color:var(--text-sub);">🗓️ WO Close 3Day (13/12/11-08):</span><span><strong id="t4-d2" style="color:#38BDF8;">-</strong> / <strong id="t4-d1" style="color:#38BDF8;">-</strong> / <strong id="t4-d0" style="color:#38BDF8;">- WOs</strong></span></div>
+          <div class="row-detail"><span style="color:var(--text-sub);">Rank &amp; Status:</span><span id="t4-rank" style="font-weight:700; color:var(--rose);">⏳ Loading...</span></div>
+          <div style="margin-top:0.6rem; padding-top:0.5rem; border-top:1px dashed rgba(255,255,255,0.15);">
+            <div class="row-detail"><span style="color:var(--cyan); font-weight:800;">II. Total Close/Total Dep Assign:</span><strong id="t4-taskassign" style="color:#F8FAFC; font-weight:800;">0/58</strong></div>
+            <div class="row-detail"><span style="color:var(--text-sub);">📋 Task Close 3Day (D2/D1/D0):</span><strong id="t4-task3day" style="color:#38BDF8; font-weight:800;">0/0/0</strong></div>
+          </div>
           <div style="margin-top:0.8rem; font-size:0.75rem; color:var(--cyan); font-weight:700;">👉 Click for Full Row Details</div>
         </div>
-
       </div>
 
-      <!-- Live data update badge -->
-      <div id="team-stats-badge" style="text-align:center; margin-top:0.5rem; font-size:0.72rem; color:var(--text-muted);">
-        ⏳ Loading live data from Apps Script...
+      <!-- Live sync badge -->
+      <div id="team-stats-badge" style="text-align:center; margin-top:0.4rem; font-size:0.72rem; color:#6b7280; padding:0.3rem 0;">
+        ⏳ Loading live data...
       </div>
 
-      <!-- LIVE TEAM STATS FETCH SCRIPT -->
+      <!-- LIVE TEAM WO STATS — Auto-refresh every 30 seconds -->
       <script>
       (function() {
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec';
-        const TEAMS = ['team1','team2','team3','team4'];
-        const PREFIX = {team1:'t1', team2:'t2', team3:'t3', team4:'t4'};
+        var GAS = 'https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec';
         var CSV_URL = 'https://docs.google.com/spreadsheets/d/1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8/export?format=csv&gid=1840482617';
-
-        function $id(id) { return document.getElementById(id); }
-        function set(id, val) { var el=$id(id); if(el) el.textContent=val; }
-        function setHTML(id, val) { var el=$id(id); if(el) el.innerHTML=val; }
-
-        function applyTeam(key, d, dateLabel, planLabel) {
-          var p = PREFIX[key];
-          var met = d.metTarget;
-          var rankColor = met ? 'var(--emerald)' : (d.rank <= 2 ? 'var(--amber)' : 'var(--rose)');
-          var rankText = 'Rank #' + d.rank + ' (' + d.pct + '%/50% ' + (met ? '✅ Meet Target' : '❌ Not Meet Target') + ')';
-
+        var TEAMS = ['team1','team2','team3','team4'];
+        var PFX   = {team1:'t1', team2:'t2', team3:'t3', team4:'t4'};
+        function $id(id)   { return document.getElementById(id); }
+        function set(id,v) { var e=$id(id); if(e) e.textContent=v; }
+        function applyTeam(k, d, dl, pl, targetPct) {
+          var p=PFX[k];
+          var tgt = targetPct || d.targetPct || 75;
+          var met = d.metTarget !== undefined ? d.metTarget : (d.pct >= tgt);
+          var rc=met?'var(--emerald)':(d.rank<=2?'var(--amber)':'var(--rose)');
+          var rate=d.closeRate>0?d.closeRate.toFixed(1)+'':d.pct+'';
+          var rt='#'+d.rank+' ('+rate+'%/' + tgt + '% '+(met?'✅ Met':'❌ Not Met')+')';
           set(p+'-engineers', d.engineers);
-          set(p+'-assigned', d.totalAssigned + ' WOs');
-          set(p+'-fot', d.fotClose + ' WOs');
-          set(p+'-close', (d.overdueF || 0) + ' WOs');
-          set(p+'-remain', d.remain + ' WOs');
-          var valPlanM = d.planM !== undefined ? d.planM : (key==='team1'?42: (key==='team2'?12: (key==='team3'?8:3)));
-          set(p+'-planlabel', planLabel || d.planLabel || '🎯 Plan 12/08/2026 (M):');
-          set(p+'-planm', valPlanM + ' WOs');
+          set(p+'-assigned',  d.totalAssigned+' WOs');
+          set(p+'-fot',       d.fotClose +' WOs');
+          set(p+'-close',     d.overdueF +' WOs');
+          set(p+'-remain',    d.remain   +' WOs');
+          var valPlanM = d.planM !== undefined ? d.planM : (k==='team1'?49: (k==='team2'?15: (k==='team3'?8:3)));
+          set(p+'-planlabel', pl || d.planLabel || '🎯 Plan 12/08/2026 (M):');
+          set(p+'-planm',     valPlanM + ' WOs');
+          set(p+'-waitcd',    (d.waitCD||0)+' WOs');
+          set(p+'-cdnotyet',  (d.cdNotYet||0)+' WOs');
+          set(p+'-taskassign', d.taskAssign || (k==='team1'?'0/155':(k==='team2'?'0/71':(k==='team3'?'0/47':'0/58'))));
+          set(p+'-task3day',   d.task3Day   || '0/0/0');
           
-          var dateStr = dateLabel || d.dateLabel || '11/10/09-08-2026';
+          var dateStr = dl || d.dateLabel || '11/10/09-08-2026';
           set(p+'-datelabel', dateStr + ':');
 
-          var valD0 = d.d0 !== undefined ? d.d0 : (key==='team1'?0: (key==='team2'?1: (key==='team3'?1:4)));
-          var valD1 = d.d1 !== undefined ? d.d1 : (key==='team1'?7: (key==='team2'?14: (key==='team3'?5:14)));
-          var valD2 = d.d2 !== undefined ? d.d2 : (key==='team1'?1: (key==='team2'?0: (key==='team3'?0:0)));
+          var valD0 = d.d0 !== undefined ? d.d0 : (k==='team1'?1: (k==='team2'?0: (k==='team3'?0:0)));
+          var valD1 = d.d1 !== undefined ? d.d1 : (k==='team1'?7: (k==='team2'?14: (k==='team3'?5:14)));
+          var valD2 = d.d2 !== undefined ? d.d2 : (k==='team1'?0: (k==='team2'?1: (k==='team3'?1:4)));
 
-          set(p+'-d2', valD2);
-          set(p+'-d1', valD1);
-          set(p+'-d0', valD0 + ' WOs');
-
-          var rankEl = $id(p+'-rank');
-          if (rankEl) {
-            rankEl.textContent = rankText;
-            rankEl.style.color = rankColor;
-          }
+          set(p+'-d2', valD2); set(p+'-d1', valD1); set(p+'-d0', valD0 + ' WOs');
+          var re=$id(p+'-rank'); if(re){re.textContent=rt; re.style.color=rc;}
         }
 
         function parseCSV(text) {
@@ -667,26 +689,30 @@
           return result;
         }
 
-        function loadTeamStats() {
-          fetch(CSV_URL)
+        function loadStats() {
+          fetch(CSV_URL + '&t=' + Date.now())
             .then(function(r){
               if(!r.ok) throw new Error('CSV status '+r.status);
               return r.text();
             })
             .then(function(csvText){
               var rows = parseCSV(csvText);
-              if (rows.length < 56) throw new Error('CSV rows insufficient ('+rows.length+')');
+              if (rows.length < 2) return;
+
+              var rawTgt = (rows[0] && rows[0][5]) ? rows[0][5] : '75%';
+              var mTgt = rawTgt.match(/(\d+)/);
+              var targetPct = mTgt ? parseInt(mTgt[1], 10) : 75;
 
               var hdr2 = rows[1] || [];
-              var rawJ = hdr2[9] || '11/08';
-              var rawK = hdr2[10] || '10/08';
-              var rawL = hdr2[11] || '09/08';
-              var rawM = hdr2[12] || 'Plan: 12/08/26';
+              var rawJ = hdr2[9] || '13/08';
+              var rawK = hdr2[10] || '12/08';
+              var rawL = hdr2[11] || '11/08';
+              var rawM = hdr2[12] || 'Plan: 14/08/26';
 
-              var mJ = rawJ.match(/(\d{2}\/\d{2})/); var dJStr = mJ ? mJ[1] : '11/08';
-              var mK = rawK.match(/(\d{2}\/\d{2})/); var dKStr = mK ? mK[1] : '10/08';
-              var mL = rawL.match(/(\d{2}\/\d{2})/); var dLStr = mL ? mL[1] : '09/08';
-              var mM = rawM.match(/(\d{2}\/\d{2}(?:\/\d{2,4})?)/); var dMStr = mM ? mM[1] : '12/08/2026';
+              var mJ = rawJ.match(/(\d{2}\/\d{2})/); var dJStr = mJ ? mJ[1] : '13/08';
+              var mK = rawK.match(/(\d{2}\/\d{2})/); var dKStr = mK ? mK[1] : '12/08';
+              var mL = rawL.match(/(\d{2}\/\d{2})/); var dLStr = mL ? mL[1] : '11/08';
+              var mM = rawM.match(/(\d{2}\/\d{2}(?:\/\d{2,4})?)/); var dMStr = mM ? mM[1] : '14/08/2026';
 
               var fullMDate = dMStr.includes('/') && dMStr.split('/').length === 3 ? dMStr : dMStr + '/2026';
               var planLabel = '🎯 Plan ' + fullMDate + ' (M):';
@@ -695,6 +721,7 @@
               var mMonth = dJStr.split('/')[1] || '08';
               var dateLabel = mJDay + '/' + mKDay + '/' + mLDay + '-' + mMonth + '-2026';
 
+              // Parse Rows 53-56 for Team 1 to 4
               var teamData = {};
               var tKeys = ['team1', 'team2', 'team3', 'team4'];
               var tEngs  = {team1:10, team2:11, team3:4, team4:4};
@@ -703,8 +730,10 @@
               for (var idx = 0; idx < 4; idx++) {
                 var tk = tKeys[idx];
                 var row = rows[52 + idx] || [];
-                var cdNotYet = parseInt((row[0]||'0').replace(/[^\d]/g,''), 10) || 0;
+                var cdNotYet  = parseInt((row[0]||'0').replace(/[^\d]/g,''), 10) || 0;
+                var waitCD    = parseInt((row[5]||'0').replace(/[^\d]/g,''), 10) || 0;
                 var fotClose  = parseInt((row[6]||'0').replace(/[^\d]/g,''), 10) || 0;
+                var rawPct    = (row[8]||'').replace(/[^\d]/g,'');
                 var d2Close   = parseInt((row[9]||'0').replace(/[^\d]/g,''), 10) || 0;
                 var d1Close   = parseInt((row[10]||'0').replace(/[^\d]/g,''), 10) || 0;
                 var d0Close   = parseInt((row[11]||'0').replace(/[^\d]/g,''), 10) || 0;
@@ -712,8 +741,17 @@
                 var overdueF  = parseInt((row[13]||'0').replace(/[^\d]/g,''), 10) || 0;
                 var remainWO  = parseInt((row[15]||'0').replace(/[^\d]/g,''), 10) || 0;
 
+                var colDText = row[3] || '';
+                var mAssign  = colDText.match(/\/All Assign:\s*\/?(\d+)\s*=>\s*All task Close:\s*\/?(\d+)/);
+                var taskAssignStr = mAssign ? (mAssign[2] + '/' + mAssign[1]) : (idx===0?'0/155':(idx===1?'0/71':(idx===2?'0/47':'0/58')));
+
+                var m3Day    = colDText.match(/All task Close:.*?3Day:\s*(\d+[\s/]+\d+[\s/]+\d+)/);
+                var task3DayStr = m3Day ? m3Day[1].replace(/\s+/g, '') : '0/0/0';
+
                 var totalAssigned = fotClose + remainWO;
-                var pct = totalAssigned > 0 ? Math.round((fotClose / totalAssigned) * 100) : 0;
+                var calcPct = totalAssigned > 0 ? Math.round((fotClose / totalAssigned) * 100) : 0;
+                var pct = rawPct ? parseInt(rawPct, 10) : calcPct;
+                var metTarget = pct >= targetPct;
 
                 teamData[tk] = {
                   name: (tk==='team1'?'Team 1 Dawei':(tk==='team2'?'Team 2 Myeik':(tk==='team3'?'Team 3 Bokpyin':'Team 4 Kawthoung'))),
@@ -722,11 +760,13 @@
                   fotClose: fotClose,
                   remain: remainWO,
                   overdueF: overdueF,
-                  waitCD: (tk==='team1'?23:(tk==='team2'?8:(tk==='team3'?3:2))),
+                  waitCD: waitCD,
                   cdNotYet: cdNotYet,
+                  taskAssign: taskAssignStr,
+                  task3Day: task3DayStr,
                   planM: planM,
                   d0: d0Close, d1: d1Close, d2: d2Close,
-                  pct: pct, closeRate: pct, metTarget: (pct >= 50)
+                  pct: pct, closeRate: pct, targetPct: targetPct, metTarget: metTarget
                 };
                 tRanks.push({ k: tk, pct: pct });
               }
@@ -735,48 +775,53 @@
               tRanks.forEach(function(r, i){ teamData[r.k].rank = i + 1; });
 
               tKeys.forEach(function(k){
-                applyTeam(k, teamData[k], dateLabel, planLabel);
+                applyTeam(k, teamData[k], dateLabel, planLabel, targetPct);
               });
+
+              var mExp = csvText.match(/Export\s*time:\s*([^\r\n,"]+)/i);
+              var exportTimeStr = (mExp && mExp[1]) ? mExp[1].trim() : '13/08/2026 16:36:48';
+              set('sheet-export-time', exportTimeStr);
+              set('t1-export-hdr', 'Export time: ' + exportTimeStr);
 
               var now = new Date();
               var nowStr = ('0'+now.getDate()).slice(-2)+'/'+('0'+(now.getMonth()+1)).slice(-2)+'/'+now.getFullYear()+' '+('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2);
-              var badge = $id('team-stats-badge');
-              if (badge) {
-                badge.innerHTML = '🔴 LIVE &nbsp;|&nbsp; ✅ Realtime Synced from Google Sheets — ' + nowStr + ' MMT &nbsp;|&nbsp; Period: <strong>21/07 – 20/08</strong> &nbsp;|&nbsp; <span style="color:var(--emerald); font-weight:700;">Auto-update on change (30s)</span>';
-                badge.style.color = 'var(--emerald)';
-                badge.style.fontWeight = '600';
+              var b = $id('team-stats-badge');
+              if (b) {
+                b.innerHTML = '⚡ Realtime Sheet Data Sync &nbsp;|&nbsp; ⏱️ <strong style="color:var(--cyan);">Export Time: ' + exportTimeStr + '</strong> &nbsp;|&nbsp; <span style="color:#10b981; font-weight:700;">Auto-update on change (Every 30s)</span>';
+                b.style.color = '#10b981'; b.style.fontWeight = '600';
               }
               document.querySelectorAll('.sync-timestamp-tag').forEach(function(el){
                 el.textContent = nowStr + ' MMT';
               });
+              if (typeof window.updateWoChart === 'function') {
+                window.updateWoChart();
+              }
             })
-            .catch(function(e) {
-              fetch(GAS_URL + '?action=get_team_wo_stats')
-                .then(function(r){ return r.json(); })
+            .catch(function(err){
+              // Fallback to Apps Script
+              fetch(GAS+'?action=get_team_wo_stats')
+                .then(function(r){return r.json();})
                 .then(function(resp){
-                  if (resp.status !== 'ok' || !resp.data) return;
+                  if(resp.status!=='ok'||!resp.data) return;
                   TEAMS.forEach(function(k){
-                    if (resp.data[k]) applyTeam(k, resp.data[k], resp.dateLabel, resp.planLabel);
+                    if(resp.data[k]) applyTeam(k, resp.data[k], resp.dateLabel, resp.planLabel);
                   });
+                  if (typeof window.updateWoChart === 'function') {
+                    window.updateWoChart();
+                  }
+                  var b=$id('team-stats-badge');
+                  if(b) b.innerHTML='⚡ Synced from Apps Script — '+resp.updatedAt+' MMT';
                 })
-                .catch(function(err){ setHTML('team-stats-badge', '⚠️ Fetch error: ' + err.message); });
+                .catch(function(e){
+                  var b=$id('team-stats-badge');
+                  if(b) b.textContent='⚠️ Sync error: '+e.message;
+                });
             });
         }
-
-        function initStats() {
-          loadTeamStats();
-          setInterval(loadTeamStats, 30 * 1000);
-        }
-
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', function() {
-            loadTeamStats();
-            setInterval(loadTeamStats, 5 * 60 * 1000); // auto-refresh every 5 minutes
-          });
-        } else {
-          loadTeamStats();
-          setInterval(loadTeamStats, 5 * 60 * 1000); // auto-refresh every 5 minutes
-        }
+        function init(){ loadStats(); setInterval(loadStats, 30*1000); }
+        if(document.readyState==='loading'){
+          document.addEventListener('DOMContentLoaded', init);
+        } else { init(); }
       })();
       </script>
 
@@ -993,7 +1038,7 @@
         <div style="max-height: 520px; overflow-y: auto; overflow-x: auto;">
           <table class="data-table">
             <tbody>
-<tr style="background:rgba(56,189,248,0.1);"><th style="background:rgba(15,23,42,0.9); color:var(--cyan); white-space:nowrap;">-</th><th style="background:rgba(15,23,42,0.9); color:var(--cyan); white-space:nowrap;">-</th><th style="background:rgba(15,23,42,0.9); color:var(--cyan); white-space:nowrap;">Export time: 07/08/2026 13:22:31</th><th style="background:rgba(15,23,42,0.9); color:var(--cyan); white-space:nowrap;">T1</th><th style="background:rgba(15,23,42,0.9); color:var(--cyan); white-space:nowrap;">T2</th><th style="background:rgba(15,23,42,0.9); color:var(--cyan); white-space:nowrap;">T3</th><th style="background:rgba(15,23,42,0.9); color:var(--cyan); white-space:nowrap;">T4</th><th style="background:rgba(15,23,42,0.9); color:var(--cyan); white-space:nowrap;">T5</th></tr>
+<tr style="background:rgba(56,189,248,0.1);"><th style="background:rgba(15,23,42,0.9); color:var(--cyan); white-space:nowrap;">-</th><th style="background:rgba(15,23,42,0.9); color:var(--cyan); white-space:nowrap;">-</th><th id="t1-export-hdr" style="background:rgba(15,23,42,0.9); color:var(--cyan); white-space:nowrap;">Export time: 13/08/2026 16:36:48</th><th style="background:rgba(15,23,42,0.9); color:var(--cyan); white-space:nowrap;">T1</th><th style="background:rgba(15,23,42,0.9); color:var(--cyan); white-space:nowrap;">T2</th><th style="background:rgba(15,23,42,0.9); color:var(--cyan); white-space:nowrap;">T3</th><th style="background:rgba(15,23,42,0.9); color:var(--cyan); white-space:nowrap;">T4</th><th style="background:rgba(15,23,42,0.9); color:var(--cyan); white-space:nowrap;">T5</th></tr>
 <tr><td style="font-size:0.8rem; line-height:1.45; ">496</td><td style="font-size:0.8rem; line-height:1.45; ">-</td><td style="font-size:0.8rem; line-height:1.45; ">-</td><td style="font-size:0.8rem; line-height:1.45; ">-</td><td style="font-size:0.8rem; line-height:1.45; ">-</td><td style="font-size:0.8rem; line-height:1.45; ">-</td><td style="font-size:0.8rem; line-height:1.45; ">-</td><td style="font-size:0.8rem; line-height:1.45; ">-</td></tr>
 <tr><td style="font-size:0.8rem; line-height:1.45; ">57</td><td style="font-size:0.8rem; line-height:1.45; ">1</td><td style="font-size:0.8rem; line-height:1.45; ">Cable Patrol for (BB)</td><td style="font-size:0.8rem; line-height:1.45; color:var(--emerald); font-weight:600;">Total: 27 | TNI0147, TNI0148, TNI0206, TNI0005, TNI0050, TNI0060, TNI0018, TNI0056, TNI0071, TNI0065, TNI0089, TNI0170, TNI0247, TNI0053, TNI0055, TNI0062, TNI0067, TNI0059, TNI0049, TNI0073, TNI0257, TNI0068, TNI0066, TNI0265, TNI0013, TNI0006, TNI0150</td><td style="font-size:0.8rem; line-height:1.45; color:var(--emerald); font-weight:600;">Total: 21 | TNI0029, TNI0021, TNI0034, TNI0047, TNI0263, TNI0020, TNI0003, TNI0030, TNI0024, TNI0002, TNI0027, TNI0077, TNI0025, TNI0237, TNI0005, TNI0159, TNI0075, TNI0081, TNI0001, TNI0266, TNI0236</td><td style="font-size:0.8rem; line-height:1.45; color:var(--emerald); font-weight:600;">Total: 5 | TNI0004, TNI0008, TNI0015, TNI0196, TNI0009</td><td style="font-size:0.8rem; line-height:1.45; color:var(--emerald); font-weight:600;">Total: 4 | TNI0037, TNI0016, TNI0057, TNI0011</td><td style="font-size:0.8rem; line-height:1.45; ">-</td></tr>
 <tr><td style="font-size:0.8rem; line-height:1.45; ">23</td><td style="font-size:0.8rem; line-height:1.45; ">2</td><td style="font-size:0.8rem; line-height:1.45; ">Cable Patrol for (AC)</td><td style="font-size:0.8rem; line-height:1.45; color:var(--emerald); font-weight:600;">Total: 10 | TNI0014, TNI0272, TNI0264, TNI0276, TNI0054, TNI0013, TNI0390, TNI0309, TNI0006, TNI0314</td><td style="font-size:0.8rem; line-height:1.45; color:var(--emerald); font-weight:600;">Total: 3 | TNI0167, TNI0232, TNI0346</td><td style="font-size:0.8rem; line-height:1.45; color:var(--emerald); font-weight:600;">Total: 6 | TNI0116, TNI0079, TNI0507, TNI0105, TNI0136, TNI0311</td><td style="font-size:0.8rem; line-height:1.45; color:var(--emerald); font-weight:600;">Total: 4 | TNI0080, TNI0202, TNI0350, TNI0037</td><td style="font-size:0.8rem; line-height:1.45; ">-</td></tr>
@@ -5777,6 +5822,106 @@ Team04>> 2Box</td>
       </div>
     </div>
 
+    <!-- 5. GMAIL ACCESS CONTROL & ROLE PERMISSION PANEL -->
+    <div id="access-control-panel" class="tab-panel">
+      <div class="section-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+        <div>
+          <span><i class="fa-solid fa-user-lock"></i> Gmail Access Control &amp; Role-Based Permissions (Phân Quyền Truy Cập)</span>
+          <div style="font-size:0.78rem; color:#38BDF8; font-weight:700; margin-top:0.2rem;">
+            <i class="fa-solid fa-shield-halved"></i> Quản lý danh sách tài khoản Gmail &amp; phân quyền xem từng Thẻ hệ thống BI Portal
+          </div>
+        </div>
+        <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+          <button class="filter-btn" style="background:rgba(255,255,255,0.08); color:#F8FAFC; border:1px solid rgba(255,255,255,0.2); padding:0.6rem 1rem; border-radius:10px; cursor:pointer;" onclick="resetGmailDefaults()">
+            <i class="fa-solid fa-rotate-left"></i> Khôi phục Mặc định
+          </button>
+          <button class="filter-btn active" style="background:linear-gradient(135deg, var(--cyan), #059669); color:#fff; border:none; padding:0.6rem 1.2rem; font-weight:700; border-radius:10px; cursor:pointer;" onclick="openAddGmailModal()">
+            <i class="fa-solid fa-user-plus"></i> + Thêm / Dán Gmail Hàng Loạt
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Summary Cards for Permissions with Copy Buttons -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
+        <div class="card" style="border-left:4px solid var(--emerald); background:rgba(16,185,129,0.08); padding:1rem; display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <div style="font-size:0.8rem; color:var(--text-sub);"><i class="fa-solid fa-crown"></i> 🌟 Full Access (Admin)</div>
+            <div style="font-size:1.4rem; font-weight:800; color:var(--emerald); margin-top:0.3rem;" id="count-full-access">1 Account</div>
+            <div style="font-size:0.72rem; color:#94a3b8; margin-top:0.2rem;">Toàn quyền xem tất cả 5 Thẻ &amp; Phân quyền</div>
+          </div>
+          <button class="filter-btn" style="margin-top:0.8rem; width:100%; padding:0.35rem; font-size:0.75rem; background:rgba(16,185,129,0.15); color:var(--emerald); border:1px solid rgba(16,185,129,0.3); border-radius:6px; cursor:pointer;" onclick="copyGroupEmails('FULL')">
+            <i class="fa-solid fa-copy"></i> Copy Gmail Nhóm Full Access
+          </button>
+        </div>
+
+        <div class="card" style="border-left:4px solid var(--cyan); background:rgba(6,182,212,0.08); padding:1rem; display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <div style="font-size:0.8rem; color:var(--text-sub);"><i class="fa-solid fa-user-shield"></i> 👑 BOD Assign Group</div>
+            <div style="font-size:1.4rem; font-weight:800; color:var(--cyan); margin-top:0.3rem;" id="count-bod-access">1 Account</div>
+            <div style="font-size:0.72rem; color:#94a3b8; margin-top:0.2rem;">Quyền xem Thẻ BOD Directives</div>
+          </div>
+          <button class="filter-btn" style="margin-top:0.8rem; width:100%; padding:0.35rem; font-size:0.75rem; background:rgba(6,182,212,0.15); color:var(--cyan); border:1px solid rgba(6,182,212,0.3); border-radius:6px; cursor:pointer;" onclick="copyGroupEmails('BOD')">
+            <i class="fa-solid fa-copy"></i> Copy Gmail Nhóm BOD
+          </button>
+        </div>
+
+        <div class="card" style="border-left:4px solid #a78bfa; background:rgba(167,139,250,0.08); padding:1rem; display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <div style="font-size:0.8rem; color:var(--text-sub);"><i class="fa-solid fa-building"></i> 🏢 Dept Assign Group</div>
+            <div style="font-size:1.4rem; font-weight:800; color:#a78bfa; margin-top:0.3rem;" id="count-dept-access">5 Accounts</div>
+            <div style="font-size:0.72rem; color:#94a3b8; margin-top:0.2rem;">Quyền xem Thẻ Phòng Ban &amp; WO</div>
+          </div>
+          <button class="filter-btn" style="margin-top:0.8rem; width:100%; padding:0.35rem; font-size:0.75rem; background:rgba(167,139,250,0.15); color:#a78bfa; border:1px solid rgba(167,139,250,0.3); border-radius:6px; cursor:pointer;" onclick="copyGroupEmails('DEPT')">
+            <i class="fa-solid fa-copy"></i> Copy Gmail Nhóm Dept
+          </button>
+        </div>
+
+        <div class="card" style="border-left:4px solid #f59e0b; background:rgba(245,158,11,0.08); padding:1rem; display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <div style="font-size:0.8rem; color:var(--text-sub);"><i class="fa-solid fa-chart-pie"></i> 📊 Executive Only</div>
+            <div style="font-size:1.4rem; font-weight:800; color:#f59e0b; margin-top:0.3rem;" id="count-exec-access">1 Account</div>
+            <div style="font-size:0.72rem; color:#94a3b8; margin-top:0.2rem;">Quyền xem Báo Cáo Tổng Quan</div>
+          </div>
+          <button class="filter-btn" style="margin-top:0.8rem; width:100%; padding:0.35rem; font-size:0.75rem; background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); border-radius:6px; cursor:pointer;" onclick="copyGroupEmails('EXEC')">
+            <i class="fa-solid fa-copy"></i> Copy Gmail Nhóm Exec
+          </button>
+        </div>
+      </div>
+
+      <!-- Access Control Table Card -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.8rem;">
+          <div>
+            <h3 style="color:#fff; font-size:1.15rem; font-weight:700;"><i class="fa-solid fa-table-list"></i> Authorized Gmail Accounts Roster</h3>
+            <span style="font-size:0.78rem; color:var(--text-sub);">Danh sách tài khoản được cấp quyền truy cập hệ thống TNI BI</span>
+          </div>
+          <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+            <button class="filter-btn" style="padding:0.45rem 0.8rem; font-size:0.8rem; background:rgba(56, 189, 248, 0.15); color:var(--cyan); border:1px solid rgba(56, 189, 248, 0.3); border-radius:8px; cursor:pointer;" onclick="copyGroupEmails('ALL')">
+              <i class="fa-solid fa-copy"></i> Copy Tất Cả Gmail
+            </button>
+            <input type="text" id="searchGmailFilter" onkeyup="filterGmailTable()" placeholder="🔍 Tìm kiếm email hoặc quyền..." style="background:#1E293B; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0.5rem 0.9rem; color:#fff; font-size:0.85rem; width:260px;" />
+          </div>
+        </div>
+        <div style="max-height: 600px; overflow-y: auto;">
+          <table class="data-table" id="accessTable">
+            <thead>
+              <tr>
+                <th style="width:40px;">#</th>
+                <th style="text-align:left !important;">Authorized Gmail Address</th>
+                <th style="text-align:left !important;">Assigned Tab Permissions (Các Thẻ Được Phép Xem)</th>
+                <th>Status</th>
+                <th>Date Added</th>
+                <th style="width:100px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="gmailListTable">
+              <!-- Dynamically populated by JS renderGmailList() -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- TEAM 1 COMPLETE MODAL -->
   <div id="team1Modal" class="modal-backdrop">
     <div class="modal-box" style="max-width: 920px;">
@@ -6089,40 +6234,91 @@ Team04>> 2Box</td>
     </div>
   </div>
 
-  <!-- ADD AUTHORIZED GMAIL MODAL -->
+  <!-- ADD AUTHORIZED GMAIL MODAL (BULK PASTE & CHECKBOX MULTI-SELECT) -->
   <div id="gmailModal" class="modal-backdrop">
-    <div class="modal-box" style="max-width: 580px;">
-      <div class="modal-header">
+    <div class="modal-box" style="max-width: 600px; background:#0F172A; border:1px solid rgba(56, 189, 248, 0.35); border-radius:20px; padding:1.6rem; box-shadow:0 25px 50px -12px rgba(0, 0, 0, 0.85);">
+      <div class="modal-header" style="margin-bottom:1.2rem;">
         <div>
-          <h3 style="color:var(--cyan); font-weight:800; font-size:1.25rem;"><i class="fa-solid fa-user-lock"></i> Add Authorized Gmail Account</h3>
-          <p style="font-size:0.8rem; color:var(--text-sub); margin-top:0.2rem;">Phân quyền truy cập tài khoản Gmail theo Thẻ (Executive / Dept / BOD Assign)</p>
+          <h3 style="color:var(--cyan); font-weight:800; font-size:1.3rem;"><i class="fa-solid fa-user-shield"></i> Thêm &amp; Phân Quyền Gmail Hàng Loạt</h3>
+          <p style="font-size:0.8rem; color:var(--text-sub); margin-top:0.2rem;">Dán danh sách 1 hoặc nhiều Gmail cùng lúc &amp; chọn quyền theo từng Nhóm</p>
         </div>
         <button class="close-btn" onclick="closeAddGmailModal()">&times;</button>
       </div>
       
-      <div class="form-group">
-        <label><i class="fa-solid fa-envelope"></i> Authorized Gmail Address:</label>
-        <input type="email" id="newGmailInput" class="form-input" placeholder="e.g. user@mytel.com.mm or user@gmail.com" required />
+      <div class="form-group" style="margin-bottom:1.2rem;">
+        <label style="display:block; font-weight:700; color:#F8FAFC; margin-bottom:0.4rem; font-size:0.88rem;">
+          <i class="fa-solid fa-envelope" style="color:var(--cyan);"></i> Danh sách Gmail (Dán 1 hoặc hàng loạt cách nhau bằng Xuống dòng / Dấu phẩy):
+        </label>
+        <textarea id="newGmailInput" class="form-input" rows="3" placeholder="Dán danh sách Gmail tại đây...&#10;Ví dụ:&#10;htoolaynyaw@gmail.com&#10;director@mytel.com.mm, technical@gmail.com" style="width:100%; background:#1E293B; border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:0.6rem 0.9rem; color:#fff; font-size:0.92rem; font-family:monospace; resize:vertical;"></textarea>
+      </div>
+
+      <!-- Quick Group Presets -->
+      <div style="margin-bottom:1rem;">
+        <label style="display:block; font-weight:700; color:var(--text-sub); font-size:0.8rem; margin-bottom:0.4rem;">
+          ⚡ Chọn nhanh mẫu phân quyền theo Nhóm chức vụ:
+        </label>
+        <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+          <button type="button" class="filter-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(16, 185, 129, 0.15); color:var(--emerald); border:1px solid rgba(16, 185, 129, 0.3); border-radius:6px; cursor:pointer;" onclick="applyPermissionPreset('FULL')">
+            🌟 Full Access (5 Thẻ)
+          </button>
+          <button type="button" class="filter-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(6, 182, 212, 0.15); color:var(--cyan); border:1px solid rgba(6, 182, 212, 0.3); border-radius:6px; cursor:pointer;" onclick="applyPermissionPreset('BOD')">
+            👑 Nhóm BOD
+          </button>
+          <button type="button" class="filter-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(167, 139, 250, 0.15); color:#a78bfa; border:1px solid rgba(167, 139, 250, 0.3); border-radius:6px; cursor:pointer;" onclick="applyPermissionPreset('DEPT')">
+            🏢 Nhóm Trưởng Phòng
+          </button>
+          <button type="button" class="filter-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(249, 115, 22, 0.15); color:#FB923C; border:1px solid rgba(249, 115, 22, 0.3); border-radius:6px; cursor:pointer;" onclick="applyPermissionPreset('ENGINEER')">
+            👷 Nhóm Kỹ Sư
+          </button>
+          <button type="button" class="filter-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(245, 158, 11, 0.15); color:#f59e0b; border:1px solid rgba(245, 158, 11, 0.3); border-radius:6px; cursor:pointer;" onclick="applyPermissionPreset('EXEC')">
+            📊 Nhóm Báo Cáo
+          </button>
+        </div>
       </div>
 
       <div class="form-group">
-        <label><i class="fa-solid fa-id-card"></i> User Name & Role Description:</label>
-        <input type="text" id="newNameInput" class="form-input" placeholder="e.g. U Thura Aung (BOD Executive Assistant)" required />
-      </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
+          <label style="font-weight:700; color:#F8FAFC; font-size:0.88rem;">
+            <i class="fa-solid fa-square-check" style="color:var(--emerald);"></i> Tích chọn chi tiết các Thẻ được phép xem (Permissions):
+          </label>
+          <button type="button" class="filter-btn" style="padding:0.25rem 0.7rem; font-size:0.75rem; background:rgba(56, 189, 248, 0.15); color:var(--cyan); border:1px solid rgba(56, 189, 248, 0.3); border-radius:6px; cursor:pointer;" onclick="toggleSelectAllPermissions()">
+            <span id="selectAllBtnText">Bỏ Chọn Tất Cả</span>
+          </button>
+        </div>
 
-      <div class="form-group">
-        <label><i class="fa-solid fa-shield-halved"></i> Assigned Tab Access Permission (Phân Quyền Xem Thẻ):</label>
-        <select id="newRoleSelect" class="form-input" style="background:#1E293B; cursor:pointer;">
-          <option value="FULL">🌟 Full Access (Xem Tất Cả Các Thẻ)</option>
-          <option value="BOD">👑 BOD Assign Only (Chỉ xem Thẻ BOD Assign)</option>
-          <option value="DEPT">🏢 Department Assign Only (Chỉ xem Thẻ Phòng Dep)</option>
-          <option value="EXEC">📊 Executive Summary Only (Chỉ xem Thẻ Báo Cáo Tổng Quan)</option>
-        </select>
+        <div style="display:grid; grid-template-columns:1fr; gap:0.55rem; background:#1E293B; border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0.9rem;">
+          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.88rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
+            <input type="checkbox" id="perm_exec" class="perm-checkbox" value="EXEC" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
+            <span>📊 <b>Executive Summary</b> (Báo Cáo Tổng Quan &amp; AI Audio)</span>
+          </label>
+
+          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.88rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
+            <input type="checkbox" id="perm_dept" class="perm-checkbox" value="DEPT" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
+            <span>🏢 <b>Department Assign</b> (Giao Việc Phòng Ban TNI)</span>
+          </label>
+
+          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.88rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
+            <input type="checkbox" id="perm_wo" class="perm-checkbox" value="WO" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
+            <span>📋 <b>WO Detail</b> (Chi Tiết 9 Bảng Work Orders &amp; Kỹ Sư)</span>
+          </label>
+
+          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.88rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
+            <input type="checkbox" id="perm_bod" class="perm-checkbox" value="BOD" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
+            <span>👑 <b>BOD Assign</b> (Chỉ Đạo &amp; Giao Việc Ban Giám Đốc)</span>
+          </label>
+
+          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.88rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
+            <input type="checkbox" id="perm_auth" class="perm-checkbox" value="AUTH" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
+            <span>🔒 <b>Gmail Access List</b> (Quản Lý Phân Quyền Hệ Thống)</span>
+          </label>
+        </div>
       </div>
 
       <div style="display:flex; justify-content:flex-end; gap:0.8rem; margin-top:1.5rem;">
-        <button class="filter-btn" style="background:rgba(255,255,255,0.08);" onclick="closeAddGmailModal()">Cancel</button>
-        <button class="voice-btn" style="background:linear-gradient(135deg, var(--cyan), #059669);" onclick="submitAddGmail()"><i class="fa-solid fa-check"></i> Save & Grant Access</button>
+        <button type="button" class="filter-btn" style="background:rgba(255,255,255,0.08); padding:0.6rem 1.2rem; cursor:pointer;" onclick="closeAddGmailModal()">Hủy (Cancel)</button>
+        <button type="button" class="voice-btn" style="background:linear-gradient(135deg, var(--cyan), #059669); padding:0.6rem 1.4rem; font-weight:800; cursor:pointer;" onclick="submitAddGmail()">
+          <i class="fa-solid fa-check"></i> Lưu &amp; Phân Quyền Hàng Loạt
+        </button>
       </div>
     </div>
   </div>
@@ -6165,45 +6361,258 @@ Team04>> 2Box</td>
       document.getElementById('gmailModal').classList.remove('active');
     }
 
-    function submitAddGmail() {
-      const email = document.getElementById('newGmailInput').value.trim();
-      const name = document.getElementById('newNameInput').value.trim();
-      const roleVal = document.getElementById('newRoleSelect').value;
-      if (!email || !name) return;
+    /* 🔐 GMAIL ACCESS CONTROL & MULTI-PERMISSION PERSISTENCE */
+    const DEFAULT_GMAIL_ACCOUNTS = [
+      { email: "phonghdpxd@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "AUTH"], date: "15/08/2026" },
+      { email: "htoolaynyaw@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "AUTH"], date: "15/08/2026" },
+      { email: "bod.director@mytel.com.mm", perms: ["EXEC", "BOD"], date: "15/08/2026" },
+      { email: "tni.technical@gmail.com", perms: ["DEPT", "WO"], date: "15/08/2026" },
+      { email: "tni.operations@mytel.com.mm", perms: ["EXEC", "DEPT", "WO"], date: "15/08/2026" },
+      { email: "team1.dawei@mytel.com.mm", perms: ["DEPT", "WO"], date: "15/08/2026" },
+      { email: "team2.myeik@mytel.com.mm", perms: ["DEPT", "WO"], date: "15/08/2026" },
+      { email: "team3.bokpyin@mytel.com.mm", perms: ["DEPT", "WO"], date: "15/08/2026" },
+      { email: "team4.kawthoung@mytel.com.mm", perms: ["DEPT", "WO"], date: "15/08/2026" }
+    ];
 
-      let tagClass = 'tag-t2';
-      let roleLabel = '🌟 Full Access';
-      if (roleVal === 'BOD') {
-        tagClass = 'tag-t1';
-        roleLabel = '👑 BOD Assign Only';
-      } else if (roleVal === 'DEPT') {
-        tagClass = 'tag-t3';
-        roleLabel = '🏢 Dept Assign Only';
-      } else if (roleVal === 'EXEC') {
-        tagClass = 'tag-t4';
-        roleLabel = '📊 Executive Only';
+    function getStoredGmailAccounts() {
+      try {
+        const stored = localStorage.getItem('tni_gmail_access_list_v2');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (e) {
+        console.error('Error reading stored accounts', e);
+      }
+      return DEFAULT_GMAIL_ACCOUNTS;
+    }
+
+    function saveStoredGmailAccounts(accounts) {
+      try {
+        localStorage.setItem('tni_gmail_access_list_v2', JSON.stringify(accounts));
+      } catch (e) {
+        console.error('Error saving accounts', e);
+      }
+    }
+
+    function renderPermBadges(perms) {
+      if (!perms || !perms.length) return '<span style="color:var(--rose);">❌ No Access</span>';
+      if (perms.length >= 5 || (perms.includes("EXEC") && perms.includes("DEPT") && perms.includes("WO") && perms.includes("BOD") && perms.includes("AUTH"))) {
+        return '<span class="team-tag tag-t2" style="font-weight:800; font-size:0.8rem;">🌟 Full Access (Tất Cả Các Thẻ)</span>';
       }
 
+      const map = {
+        'EXEC': { label: '📊 Exec Summary', cls: 'tag-t4' },
+        'DEPT': { label: '🏢 Dept Assign', cls: 'tag-t3' },
+        'WO':   { label: '📋 WO Detail', cls: 'tag-t1' },
+        'BOD':  { label: '👑 BOD Assign', cls: 'tag-t1' },
+        'AUTH': { label: '🔒 Access Control', cls: 'tag-t2' }
+      };
+
+      return perms.map(p => {
+        const item = map[p] || { label: p, cls: 'tag-t1' };
+        return `<span class="team-tag ${item.cls}" style="margin:2px 3px; font-size:0.75rem; display:inline-block;">${item.label}</span>`;
+      }).join(' ');
+    }
+
+    function renderGmailList() {
       const tbody = document.getElementById('gmailListTable');
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><strong>${email}</strong></td>
-        <td>${name}</td>
-        <td><span class="team-tag ${tagClass}">${roleLabel}</span></td>
-        <td><span class="status-pill-check sp-verified">✓ Active Authorized</span></td>
-        <td><button class="filter-btn" style="color:var(--rose);" onclick="removeGmail(this)">Remove</button></td>
-      `;
-      tbody.appendChild(tr);
+      if (!tbody) return;
+      const accounts = getStoredGmailAccounts();
+      tbody.innerHTML = '';
 
-      // Clear form inputs
+      let cFull = 0, cBod = 0, cDept = 0, cExec = 0;
+
+      accounts.forEach((acc, idx) => {
+        const perms = Array.isArray(acc.perms) ? acc.perms : (acc.role ? [acc.role] : []);
+        if (perms.includes("AUTH") || perms.length >= 4) cFull++;
+        if (perms.includes("BOD")) cBod++;
+        if (perms.includes("DEPT") || perms.includes("WO")) cDept++;
+        if (perms.includes("EXEC")) cExec++;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${idx + 1}</td>
+          <td style="text-align:left !important;"><strong style="color:var(--cyan); font-size:0.92rem;">${acc.email}</strong></td>
+          <td style="text-align:left !important;">${renderPermBadges(perms)}</td>
+          <td><span class="status-pill-check sp-verified">✓ Active Authorized</span></td>
+          <td style="font-size:0.8rem; color:var(--text-sub);">${acc.date || '15/08/2026'}</td>
+          <td><button class="filter-btn" style="color:var(--rose); padding:0.25rem 0.6rem; font-size:0.75rem; cursor:pointer;" onclick="removeGmailIndex(${idx})"><i class="fa-solid fa-trash"></i> Remove</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      if (document.getElementById('count-full-access')) document.getElementById('count-full-access').textContent = `${cFull} Account${cFull !== 1 ? 's' : ''}`;
+      if (document.getElementById('count-bod-access')) document.getElementById('count-bod-access').textContent = `${cBod} Account${cBod !== 1 ? 's' : ''}`;
+      if (document.getElementById('count-dept-access')) document.getElementById('count-dept-access').textContent = `${cDept} Account${cDept !== 1 ? 's' : ''}`;
+      if (document.getElementById('count-exec-access')) document.getElementById('count-exec-access').textContent = `${cExec} Account${cExec !== 1 ? 's' : ''}`;
+    }
+
+    function applyPermissionPreset(preset) {
+      const cbExec = document.getElementById('perm_exec');
+      const cbDept = document.getElementById('perm_dept');
+      const cbWo   = document.getElementById('perm_wo');
+      const cbBod  = document.getElementById('perm_bod');
+      const cbAuth = document.getElementById('perm_auth');
+
+      // Reset all first
+      cbExec.checked = false;
+      cbDept.checked = false;
+      cbWo.checked   = false;
+      cbBod.checked  = false;
+      cbAuth.checked = false;
+
+      if (preset === 'FULL') {
+        cbExec.checked = true;
+        cbDept.checked = true;
+        cbWo.checked   = true;
+        cbBod.checked  = true;
+        cbAuth.checked = true;
+      } else if (preset === 'BOD') {
+        cbExec.checked = true;
+        cbBod.checked  = true;
+      } else if (preset === 'DEPT') {
+        cbExec.checked = true;
+        cbDept.checked = true;
+        cbWo.checked   = true;
+      } else if (preset === 'ENGINEER') {
+        cbDept.checked = true;
+        cbWo.checked   = true;
+      } else if (preset === 'EXEC') {
+        cbExec.checked = true;
+      }
+
+      const allCheckedNow = cbExec.checked && cbDept.checked && cbWo.checked && cbBod.checked && cbAuth.checked;
+      const btnText = document.getElementById('selectAllBtnText');
+      if (btnText) btnText.textContent = allCheckedNow ? "Bỏ Chọn Tất Cả" : "Chọn Tất Cả";
+    }
+
+    let allChecked = true;
+    function toggleSelectAllPermissions() {
+      const checkboxes = document.querySelectorAll('.perm-checkbox');
+      allChecked = !allChecked;
+      checkboxes.forEach(cb => cb.checked = allChecked);
+      const btnText = document.getElementById('selectAllBtnText');
+      if (btnText) btnText.textContent = allChecked ? "Bỏ Chọn Tất Cả" : "Chọn Tất Cả";
+    }
+
+    function copyGroupEmails(group) {
+      const accounts = getStoredGmailAccounts();
+      let matchedEmails = [];
+
+      accounts.forEach(acc => {
+        const perms = Array.isArray(acc.perms) ? acc.perms : (acc.role ? [acc.role] : []);
+        if (group === 'ALL') {
+          matchedEmails.push(acc.email);
+        } else if (group === 'FULL' && (perms.includes('AUTH') || perms.length >= 5)) {
+          matchedEmails.push(acc.email);
+        } else if (group === 'BOD' && perms.includes('BOD')) {
+          matchedEmails.push(acc.email);
+        } else if (group === 'DEPT' && (perms.includes('DEPT') || perms.includes('WO'))) {
+          matchedEmails.push(acc.email);
+        } else if (group === 'EXEC' && perms.includes('EXEC')) {
+          matchedEmails.push(acc.email);
+        }
+      });
+
+      // Remove duplicates
+      matchedEmails = [...new Set(matchedEmails)];
+
+      if (matchedEmails.length === 0) {
+        alert(`Không có tài khoản nào thuộc nhóm [${group}] để sao chép!`);
+        return;
+      }
+
+      const textToCopy = matchedEmails.join('\n');
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        alert(`📋 Đã sao chép thành công ${matchedEmails.length} địa chỉ Gmail của nhóm [${group}] vào Clipboard!\n\n(Bạn có thể dán trực tiếp vào Excel, Google Sheets, Gmail hoặc Telegram)`);
+      }).catch(err => {
+        prompt('Sao chép danh sách Gmail dưới đây:', textToCopy);
+      });
+    }
+
+    function submitAddGmail() {
+      const rawText = document.getElementById('newGmailInput').value.trim();
+      if (!rawText) {
+        alert('Vui lòng nhập hoặc dán ít nhất 1 Địa chỉ Gmail!');
+        document.getElementById('newGmailInput').focus();
+        return;
+      }
+
+      // Extract all valid emails using regex
+      const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+      const foundEmails = rawText.match(emailRegex) || [];
+      const uniqueEmails = [...new Set(foundEmails.map(e => e.trim().toLowerCase()))];
+
+      if (uniqueEmails.length === 0) {
+        alert('Không tìm thấy địa chỉ Gmail hợp lệ nào trong nội dung đã nhập!\nVui lòng kiểm tra lại định dạng email (e.g. user@gmail.com).');
+        return;
+      }
+
+      const checkedBoxes = Array.from(document.querySelectorAll('.perm-checkbox:checked'));
+      if (checkedBoxes.length === 0) {
+        alert('Vui lòng tích chọn ít nhất 1 Thẻ được phép truy cập!');
+        return;
+      }
+
+      const perms = checkedBoxes.map(cb => cb.value);
+      const accounts = getStoredGmailAccounts();
+      const today = new Date().toLocaleDateString('vi-VN');
+
+      let updatedCount = 0;
+      let addedCount = 0;
+
+      uniqueEmails.forEach(email => {
+        const existingIdx = accounts.findIndex(a => a.email.toLowerCase() === email);
+        if (existingIdx >= 0) {
+          accounts[existingIdx].perms = perms;
+          accounts[existingIdx].date = today;
+          updatedCount++;
+        } else {
+          accounts.unshift({ email, perms, date: today });
+          addedCount++;
+        }
+      });
+
+      saveStoredGmailAccounts(accounts);
+      renderGmailList();
+
       document.getElementById('newGmailInput').value = '';
-      document.getElementById('newNameInput').value = '';
       closeAddGmailModal();
+
+      alert(`✅ Đã phân quyền thành công cho ${uniqueEmails.length} tài khoản Gmail!\n(Thêm mới: ${addedCount}, Cập nhật quyền: ${updatedCount})`);
     }
 
-    function removeGmail(btn) {
-      btn.closest('tr').remove();
+    function removeGmailIndex(index) {
+      const accounts = getStoredGmailAccounts();
+      if (index >= 0 && index < accounts.length) {
+        if (confirm(`Bạn có chắc chắn muốn thu hồi quyền truy cập của ${accounts[index].email}?`)) {
+          accounts.splice(index, 1);
+          saveStoredGmailAccounts(accounts);
+          renderGmailList();
+        }
+      }
     }
+
+    function resetGmailDefaults() {
+      if (confirm('Khôi phục danh sách tài khoản phân quyền về mặc định?')) {
+        saveStoredGmailAccounts(DEFAULT_GMAIL_ACCOUNTS);
+        renderGmailList();
+      }
+    }
+
+    function filterGmailTable() {
+      const q = (document.getElementById('searchGmailFilter').value || '').toLowerCase();
+      const rows = document.querySelectorAll('#gmailListTable tr');
+      rows.forEach(r => {
+        const text = r.innerText.toLowerCase();
+        r.style.display = text.includes(q) ? '' : 'none';
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderGmailList();
+    });
 
     /* 🤖 AI VOICE SPEECH SYNTHESIS ENGINE (FULL COMPREHENSIVE AUDIO REPORT WITH SENTENCE CHUNKING QUEUE) */
     let isSpeaking = false;
@@ -6294,42 +6703,51 @@ Team04>> 2Box</td>
       speakSentence();
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      // 🚆 CHUYẾN TÀU SỐ 4: Dynamic Auto-Sync between Cards (Hình 1) and Chart (Hình 2)
-      function parseCardNum(selector, defaultVal) {
-        const el = document.querySelector(selector);
+    // 🚆 CHUYẾN TÀU SỐ 4: Dynamic Auto-Sync between Cards (Hình 1) and Chart (Hình 2)
+    window.updateWoChart = function() {
+      function parseVal(id, defaultVal) {
+        const el = document.getElementById(id);
         if (!el) return defaultVal;
         const txt = el.textContent.replace(/[^0-9]/g, '');
         return txt ? parseInt(txt, 10) : defaultVal;
       }
 
-      // Tự động đọc số liệu thực tế từ 4 Thẻ Team Leader (Hình 1)
-      const t1Total = parseCardNum('.tag-t1-card .total-wo', 394);
-      const t1Close = parseCardNum('.tag-t1-card .close-wo', 72);
-      const t1Remain = parseCardNum('.tag-t1-card .remain-wo', 322);
-      const t1Overdue = parseCardNum('.tag-t1-card .overdue-wo', 151);
-      const t1Cd = parseCardNum('.tag-t1-card .cd-wo', 41);
+      const t1Total = parseVal('t1-assigned', 369);
+      const t1Close = parseVal('t1-fot', 77);
+      const t1Overdue = parseVal('t1-close', 160);
+      const t1Remain = parseVal('t1-remain', 292);
+      const t1Cd = parseVal('t1-cdnotyet', 7);
 
-      const t2Total = parseCardNum('.tag-t2-card .total-wo', 209);
-      const t2Close = parseCardNum('.tag-t2-card .close-wo', 119);
-      const t2Remain = parseCardNum('.tag-t2-card .remain-wo', 90);
-      const t2Overdue = parseCardNum('.tag-t2-card .overdue-wo', 24);
-      const t2Cd = parseCardNum('.tag-t2-card .cd-wo', 23);
+      const t2Total = parseVal('t2-assigned', 208);
+      const t2Close = parseVal('t2-fot', 125);
+      const t2Overdue = parseVal('t2-close', 25);
+      const t2Remain = parseVal('t2-remain', 83);
+      const t2Cd = parseVal('t2-cdnotyet', 26);
 
-      const t3Total = parseCardNum('.tag-t3-card .total-wo', 95);
-      const t3Close = parseCardNum('.tag-t3-card .close-wo', 32);
-      const t3Remain = parseCardNum('.tag-t3-card .remain-wo', 63);
-      const t3Overdue = parseCardNum('.tag-t3-card .overdue-wo', 14);
-      const t3Cd = parseCardNum('.tag-t3-card .cd-wo', 3);
+      const t3Total = parseVal('t3-assigned', 93);
+      const t3Close = parseVal('t3-fot', 58);
+      const t3Overdue = parseVal('t3-close', 7);
+      const t3Remain = parseVal('t3-remain', 35);
+      const t3Cd = parseVal('t3-cdnotyet', 1);
 
-      const t4Total = parseCardNum('.tag-t4-card .total-wo', 103);
-      const t4Close = parseCardNum('.tag-t4-card .close-wo', 81);
-      const t4Remain = parseCardNum('.tag-t4-card .remain-wo', 22);
-      const t4Overdue = parseCardNum('.tag-t4-card .overdue-wo', 0);
-      const t4Cd = parseCardNum('.tag-t4-card .cd-wo', 2);
+      const t4Total = parseVal('t4-assigned', 105);
+      const t4Close = parseVal('t4-fot', 100);
+      const t4Overdue = parseVal('t4-close', 0);
+      const t4Remain = parseVal('t4-remain', 5);
+      const t4Cd = parseVal('t4-cdnotyet', 0);
 
       const ctx = document.getElementById('woChart')?.getContext('2d');
-      if (ctx) {
+      if (!ctx) return;
+
+      if (window.woChartInstance) {
+        window.woChartInstance.data.datasets[0].data = [t1Total, t2Total, t3Total, t4Total];
+        window.woChartInstance.data.datasets[1].data = [t1Close, t2Close, t3Close, t4Close];
+        window.woChartInstance.data.datasets[2].data = [t1Remain, t2Remain, t3Remain, t4Remain];
+        window.woChartInstance.data.datasets[3].data = [t1Overdue, t2Overdue, t3Overdue, t4Overdue];
+        window.woChartInstance.data.datasets[4].data = [t1Cd, t2Cd, t3Cd, t4Cd];
+        window.woChartInstance.options.scales.y.max = Math.max(t1Total, t2Total, t3Total, t4Total) + 50;
+        window.woChartInstance.update();
+      } else {
         window.woChartInstance = new Chart(ctx, {
           type: 'bar',
           plugins: [ChartDataLabels],
@@ -6362,6 +6780,10 @@ Team04>> 2Box</td>
           }
         });
       }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      window.updateWoChart();
     });
   </script>
 </body>

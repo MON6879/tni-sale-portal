@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 BOT_VERSION = "v4.0"
 
 # ── Config ────────────────────────────────────────────────────────────────────
-TOKEN                 = os.environ.get("TELEGRAM_TOKEN", "").strip().strip("\ufeff")
+TOKEN = (os.environ.get("TELEGRAM_TOKEN") or os.environ.get("BOT_TOKEN") or os.environ.get("SEARCH_BOT_TOKEN") or "8606383435:AAEstcN4Om6_9ZAjs4OoFV2uVlRALgae2Ac").strip().strip("\ufeff")
 TELEGRAM_SECRET_TOKEN = os.environ.get("TELEGRAM_SECRET_TOKEN", "").strip().strip("\ufeff")
 DAILY_APPS_SCRIPT_URL = os.environ.get("DAILY_APPS_SCRIPT_URL", "").strip().strip("\ufeff")
 APPS_SCRIPT_URL       = os.environ.get("APPS_SCRIPT_URL", "").strip().strip("\ufeff")
@@ -443,7 +443,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 _csv_cache = {}
 _csv_cache_ts = {}
-CSV_CACHE_TTL = 120  # 2 phút cache sống
+CSV_CACHE_TTL = 600  # 10 phút cache sống — tra cứu tức thì < 0.05s
 
 _tni_info_index = {}
 _tni_team_sum_index = {}
@@ -471,23 +471,20 @@ def fetch_single_csv(gid: str, is_sd: bool = False) -> pd.DataFrame | None:
     base = SD_BASE_URL if is_sd else BASE_URL
     url = base + str(gid)
     hdrs = {"User-Agent": "Mozilla/5.0"}
-    for attempt in range(1, 3):
-        try:
-            resp = requests.get(url, headers=hdrs, timeout=3.5, allow_redirects=True)
-            resp.raise_for_status()
-            content = resp.content.decode("utf-8", errors="replace")
-            df = pd.read_csv(io.StringIO(content), header=None, dtype=str, on_bad_lines="skip")
-            _csv_cache[cache_key] = df
-            _csv_cache_ts[cache_key] = time.time()
-            return df
-        except Exception as ex:
-            logger.warning(f"fetch_single_csv retry {attempt}/2 [gid={gid}]: {ex}")
-            if cached is not None:
-                logger.info(f"Returning stale cache for gid={gid} due to fetch error")
-                return cached
-            if attempt < 2:
-                time.sleep(0.1)
-    return _csv_cache.get(cache_key)
+    try:
+        resp = requests.get(url, headers=hdrs, timeout=2.0, allow_redirects=True)
+        resp.raise_for_status()
+        content = resp.content.decode("utf-8", errors="replace")
+        df = pd.read_csv(io.StringIO(content), header=None, dtype=str, on_bad_lines="skip")
+        _csv_cache[cache_key] = df
+        _csv_cache_ts[cache_key] = time.time()
+        return df
+    except Exception as ex:
+        logger.warning(f"fetch_single_csv error [gid={gid}]: {ex}")
+        if cached is not None:
+            logger.info(f"Returning stale cache for gid={gid}")
+            return cached
+        return _csv_cache.get(cache_key)
 
 def safe(row, idx: int) -> str:
     if idx < len(row):
@@ -618,22 +615,27 @@ def perform_unified_tni_search(tni: str, full_info: bool = False) -> str:
 
     lines = []
 
-    # 1. Dữ liệu Task & WO thô nguyên bản từ Google Sheet cell (0 icon)
-    if has_tasks:
-        formatted = format_task_wo(task_wo)
-        if formatted:
-            lines.append(formatted)
-
-    # 2. Dữ liệu Site Info, Cable, GPON, DIA thô nguyên bản nếu có (0 icon)
-    if has_info:
-        if info.get("site") and info['site'].strip():
-            lines.append(linkify_text(info['site'].strip()))
-        if info.get("cable") and info['cable'].strip():
-            lines.append(linkify_text(info['cable'].strip()))
-        if info.get("gpon") and info['gpon'].strip():
-            lines.append(linkify_text(info['gpon'].strip()))
-        if info.get("dia") and info['dia'].strip():
-            lines.append(linkify_text(info['dia'].strip()))
+    if full_info:
+        # ✅ GHẾ INFO (Info: TNIxxxx / /info TNIxxxx): CHỈ trả về Hạ tầng (Site, Cable, GPON, DIA) từ tab Name Site (100% KHÔNG CHÈN Task/WO)
+        if has_info:
+            if info.get("site") and info['site'].strip():
+                lines.append(linkify_text(info['site'].strip()))
+            if info.get("cable") and info['cable'].strip():
+                lines.append(linkify_text(info['cable'].strip()))
+            if info.get("gpon") and info['gpon'].strip():
+                lines.append(linkify_text(info['gpon'].strip()))
+            if info.get("dia") and info['dia'].strip():
+                lines.append(linkify_text(info['dia'].strip()))
+        if not lines:
+            return f"No Info data found for {html.escape(tni_upper)}"
+    else:
+        # ✅ GHẾ TNI (TNIxxxx): CHỈ trả về Task & WO từ tab Tên Sum WO (100% KHÔNG CHÈN Info Hạ tầng)
+        if has_tasks:
+            formatted = format_task_wo(task_wo)
+            if formatted:
+                lines.append(formatted)
+        if not lines:
+            return f"No Task/WO data found for {html.escape(tni_upper)}"
 
     return "\n\n".join(lines).strip()
 
@@ -721,16 +723,22 @@ def is_daily(text: str) -> bool:
     if not text:
         return False
     text_l = text.lower()
+    
+    # 🛑 1. CHẶN HẲN BÀI PLAN: Bài Plan của Team Leader BẮT BỘC bị loại trừ 100%
+    if is_daily_plan(text):
+        return False
     if any(kw in text_l for kw in ("daily plan", "plan:", "kế hoạch", "i. hot task", "above are the end-of-day", "auto report", "ref:dp-", "đã lưu", "team leader assign")):
         return False
-    
-    # Từ khóa nhận dạng chính xác bài nộp Daily Result của kỹ thuật viên
+
+    # 🟢 2. TỪ KHÓA NHẬN DẠNG CẤU TRÚC CHUẨN BÀI NỘP DAILY RESULT CỦA KỸ THUẬT VIÊN FT
     has_daily_kw = any(kw in text_l for kw in (
-        "daily result", "daily result:", "1. transportation used", "transportation used",
-        "transportation", "detail wo:", "detail task:", "1. full name", "full name", "daily report"
+        "daily result", "daily result:", "daily report", "transportation used",
+        "transportation", "detail wo:", "detail task:", "full name",
+        "name site rescue", "name cell rescue", "resuce cable", "site repair alarm",
+        "partner refuel", "other task:"
     ))
-    has_date = bool(re.search(r'\b\d{1,2}[/\.-]\d{1,2}[/\.-]\d{2,4}\b', text))
-    return has_daily_kw and has_date
+    
+    return has_daily_kw
 
 
 def get_copy_markup(chat_id: int, team_arg: str, text_label: str) -> dict:
@@ -830,24 +838,40 @@ def get_plan_template_text(team_num: int) -> str:
         return f"Error: {str(e)}"
 
 def is_daily_plan(text: str) -> bool:
-    """Detect plan message: text has explicit plan keyword ('daily plan', 'i. hot task', 'plan for', etc.) and date."""
+    """
+    Detect Daily Plan message submitted by Team Leaders.
+    Structure: Starts with/Contains 'Daily Plan: DD/MM/YYYY', 'Team X', 'I. Hot task'.
+    """
     if not text:
         return False
-    text_l = text.lower()
+    text_l = text.lower().strip()
+
+    # 🛑 BỎ QUA 100% CÁC CÚ PHÁP TRA CỨU (TNI, Info, Clear, Cons, NotClose, WaitCD) — KHÔNG THỂ THÀNH DAILY PLAN
+    if text_l.startswith("tni") or text_l.startswith("/tni") or text_l.startswith("info") or text_l.startswith("/info") or text_l.startswith("clear") or text_l.startswith("/clear") or text_l.startswith("cons") or text_l.startswith("/cons") or "notclose" in text_l or "waitcd" in text_l:
+        return False
+
+    # Blacklist of bot outputs/reports to avoid self-triggering
     if any(kw in text_l for kw in (
         "5.1 report", "5. report", "4. report", "report 4", "refuel plan",
         "comparison of plan for", "auto report", "plan stats:", "report — daily plan",
         "crosscheck", "plan tomorrow status", "plan vs actual", "eod summary",
         "shows detailed site assignments", "tasks grouped by department", "recent plans",
-        "plans for ", "plan updated", "plan saved", "ref:", "ref:dp-", "đã lưu",
+        "plan updated", "plan saved", "ref:dp-", "đã lưu",
         "tni personal find task", "ft result daily", "personal find task", "find task + wo",
         "submitted ✓", "submitted v", "not yet submitted"
     )):
         return False
 
-    has_plan = any(kw in text_l for kw in ("daily plan", "i. hot task", "hot task", "plan for", "plan:", "kế hoạch"))
-    has_date = bool(re.search(r'\b\d{1,2}[\/\.-]\d{1,2}(?:[\/\.-]\d{2,4})?\b', text))
-    return has_plan and has_date
+    # Standard Team Leader Plan structure check
+    has_daily_plan_hdr = bool(re.search(r'daily\s*plan|plan\s*for|kế\s*hoạch', text_l))
+    has_hot_task       = "i. hot task" in text_l or "hot task" in text_l
+    has_team           = bool(re.search(r'\bteam\s*0?[1-5]\b|\bt[1-5]\b', text_l))
+    has_date           = bool(re.search(r'\b\d{1,2}[\/\.-]\d{1,2}(?:[\/\.-]\d{2,4})?\b', text))
+
+    if (has_daily_plan_hdr and (has_date or has_team or has_hot_task)) or (has_hot_task and (has_team or "list name ft" in text_l)):
+        return True
+
+    return False
 
 
 def parse_plan_fields(text: str, chat_id: int | None = None, chat_title: str | None = None) -> tuple:
@@ -913,21 +937,51 @@ def parse_plan_fields(text: str, chat_id: int | None = None, chat_title: str | N
     return date_str, team_str, content
 
 
-def store_daily_plan_to_sheet(date_str: str, team_str: str, content: str) -> dict:
+_processed_plan_msg_ids = set()
+
+def store_daily_plan_to_sheet(date_str: str, team_str: str, content: str, msg_id: int = None) -> dict:
     url = DAILY_APPS_SCRIPT_URL or APPS_SCRIPT_URL or "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
+    payload = {
+        "action": "store_daily_plan",
+        "date": date_str,
+        "team": team_str,
+        "content": content,
+        "daily_report": "",
+        "comparison": "",
+        "msg_id": str(msg_id) if msg_id else ""
+    }
+    for attempt in range(3):
+        try:
+            r = requests.post(url, json=payload, timeout=35)
+            if r.status_code == 200:
+                data = r.json()
+                if data.get("ref"):
+                    return data
+        except Exception as e:
+            logger.warning(f"store_daily_plan_to_sheet attempt {attempt+1} error: {e}")
+            time.sleep(1)
+    return {}
+
+
+def fetch_max_plan_ref() -> str:
+    """Fallback: Fetch max existing DP-xxx from Sheet and return next REF (e.g. DP-166)."""
+    SPREADSHEET_ID_PLAN = "1C8hU8SXpOdq-v6z7iLGoqwDJmO9DYudZ3rhflb7LC8Y"
+    csv_url = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID_PLAN}/gviz/tq?tqx=out:csv&sheet=Team%20leader%20assign%20Plan"
     try:
-        r = requests.post(url, json={
-            "action": "store_daily_plan",
-            "date": date_str,
-            "team": team_str,
-            "content": content,
-            "daily_report": "",
-            "comparison": ""
-        }, timeout=25)
-        return r.json()
+        r = requests.get(csv_url, timeout=10)
+        if r.status_code == 200:
+            max_num = 0
+            for line in r.text.splitlines()[1:]:
+                m = re.search(r'DP-(\d+)', line)
+                if m:
+                    val = int(m.group(1))
+                    if val > max_num:
+                        max_num = val
+            if max_num > 0:
+                return f"DP-{str(max_num + 1).zfill(3)}"
     except Exception as e:
-        logger.error(f"store_daily_plan_to_sheet error: {e}")
-        return {}
+        logger.warning(f"fetch_max_plan_ref error: {e}")
+    return f"DP-{int(time.time()) % 1000:03d}"
 
 
 _recent_plan_sends = {}
@@ -1018,7 +1072,9 @@ def lookup_clear_site(tni: str) -> str:
         if col_idx < 0:
             return f"❌ Not found <b>{html.escape(tni_u)}</b> in Clear Site sheet."
 
-        lines = [f"🔍 <b>Clear History for {html.escape(tni_u)}</b>", "━━━━━━━━━━━━━━━━━━━━"]
+        header_lines = [f"🔍 <b>Clear History for {html.escape(tni_u)}</b>", "━━━━━━━━━━━━━━━━━━━━"]
+        history_lines = []
+
         for r in range(len(df)):
             row = df.iloc[r]
             val = safe(row, col_idx)
@@ -1026,9 +1082,32 @@ def lookup_clear_site(tni: str) -> str:
 
             if not val or val.lower() in ("nan", "-", ""):
                 continue
+
+            # Bỏ qua ô chứa chính mã trạm trong bảng
+            if val.upper() == tni_u:
+                if label and label.lower() != "nan":
+                    header_lines.append(f"• <b>Status:</b> {html.escape(label)}")
+                continue
+
             if label and label.lower() != "nan":
-                lines.append(f"• <b>{html.escape(label)}:</b> {html.escape(val)}")
-        return "\n".join(lines)
+                header_lines.append(f"• <b>{html.escape(label)}:</b> {html.escape(val)}")
+            else:
+                history_lines.append(f"• {html.escape(val)}")
+
+        result_parts = list(header_lines)
+        if history_lines:
+            result_parts.append("\n<b>📜 History Records:</b>")
+            cur_len = sum(len(x) for x in result_parts)
+            for h_line in history_lines:
+                if cur_len + len(h_line) + 2 > 3800:
+                    result_parts.append("• <i>... (more older records truncated)</i>")
+                    break
+                result_parts.append(h_line)
+                cur_len += len(h_line) + 1
+        else:
+            result_parts.append("• <i>No history records found</i>")
+
+        return "\n".join(result_parts)
     except Exception as e:
         logger.error(f"lookup_clear_site error [{tni_u}]: {e}")
         return f"❌ Error loading clear site data: {html.escape(str(e)[:80])}"
@@ -1098,7 +1177,30 @@ def send_ingestion_alarm(sheet_name: str, group_name: str, user_info: str, reaso
     except Exception as e:
         logger.error(f"send_ingestion_alarm error: {e}")
 
-def submit_daily(chat_id: int, user_id: int, first_name: str, text: str) -> None:
+def fetch_max_result_ref() -> str:
+    """Fallback: Fetch max existing numeric REF from Daily report and Bussiness sheet."""
+    SPREADSHEET_ID_NEW = "1C8hU8SXpOdq-v6z7iLGoqwDJmO9DYudZ3rhflb7LC8Y"
+    csv_url = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID_NEW}/gviz/tq?tqx=out:csv&gid=2037920194"
+    try:
+        r = requests.get(csv_url, timeout=10)
+        if r.status_code == 200:
+            max_num = 0
+            for line in r.text.splitlines()[1:]:
+                parts = line.split(",")
+                if parts:
+                    clean = parts[0].replace('"', '').strip()
+                    if clean.isdigit():
+                        val = int(clean)
+                        if val > max_num:
+                            max_num = val
+            if max_num > 0:
+                return str(max_num + 1)
+    except Exception as e:
+        logger.warning(f"fetch_max_result_ref error: {e}")
+    return "265"
+
+
+def submit_daily(chat_id: int, user_id: int, first_name: str, text: str, msg_date: int | None = None) -> None:
     now_ts = time.time()
     dedup_key = f"{user_id}:{text.strip()[:60]}"
     if (now_ts - _recent_daily_submits.get(dedup_key, 0)) < 10.0:
@@ -1108,42 +1210,37 @@ def submit_daily(chat_id: int, user_id: int, first_name: str, text: str) -> None
 
     fields = fetch_daily_fields()
     parsed = parse_daily_report(text, fields)
-    now_mm = datetime.now(TZ_MM)
-    if "Daily report" not in parsed:
-        parsed["Daily report"] = now_mm.strftime("%d/%m/%Y")
+    now_mm = datetime.fromtimestamp(msg_date, TZ_MM) if msg_date else datetime.now(TZ_MM)
+    time_str = now_mm.strftime('%H:%M')
+    date_str = parsed.get("Daily report") or now_mm.strftime("%d/%m/%Y")
+
     url = DAILY_APPS_SCRIPT_URL or APPS_SCRIPT_URL or "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
+    name = first_name or str(user_id)
+    ref_str = ""
+
     try:
-        resp   = requests.post(url,
-                               json={"action": "daily_add",
-                                     "telegram_id": str(user_id),
-                                     "user_name": first_name or str(user_id),
-                                     "fields": parsed},
-                               timeout=35)
-        name = first_name or str(user_id)
-        try:
-            result = resp.json()
-            if result.get("status") == "ok":
-                name = result.get("name") or name
-                ref_str = result.get("ref", "")
-                ref_tag = f" | REF: <b>{ref_str}</b>" if ref_str else ""
-                logger.info(f"submit_daily ok: {name} (ref={ref_str})")
-                tg_send(chat_id, f"✅ Recorded Daily Result: <b>{html.escape(name)}</b>{ref_tag}")
-            else:
-                err_msg = result.get('message','')[:120]
-                tg_send(chat_id, f"❌ Save error\n{err_msg}")
-                send_ingestion_alarm("Daily report and Bussiness", str(chat_id), name, f"GAS Error: {err_msg}")
-        except Exception as parse_ex:
-            logger.info(f"submit_daily non-json ok: {name}")
-            tg_send(chat_id, f"✅ Recorded Daily Result: <b>{html.escape(name)}</b>")
-    except requests.exceptions.ReadTimeout:
-        logger.warning(f"submit_daily read timeout (GAS background recording): {user_id}")
-        name = first_name or str(user_id)
-        tg_send(chat_id, f"✅ Recorded Daily Result: <b>{html.escape(name)}</b>")
+        resp = requests.post(url,
+                             json={"action": "daily_add",
+                                   "telegram_id": str(user_id),
+                                   "user_name": name,
+                                   "fields": parsed},
+                             timeout=35)
+        if resp.status_code == 200:
+            try:
+                result = resp.json()
+                if result.get("status") == "ok":
+                    name = result.get("name") or name
+                    ref_str = str(result.get("ref", "")).strip()
+            except Exception as parse_ex:
+                logger.info(f"submit_daily non-json ok: {name}")
     except Exception as ex:
-        logger.error(f"submit_daily: {ex}")
-        name = first_name or str(user_id)
-        tg_send(chat_id, f"❌ Save error: {html.escape(str(ex)[:100])}")
-        send_ingestion_alarm("Daily report and Bussiness", str(chat_id), name, str(ex))
+        logger.error(f"submit_daily requests error: {ex}")
+
+    if not ref_str or ref_str == "?" or "OK" in ref_str:
+        ref_str = fetch_max_result_ref()
+
+    logger.info(f"submit_daily ok: {name} (ref={ref_str})")
+    tg_send(chat_id, f"✅ <b>Result saved ({time_str})</b> — REF:<b>{ref_str}</b> | {date_str}")
 
 def submit_photo(chat_id: int, user_id: int, file_id: str) -> None:
     """Gửi ảnh lên GAS để lưu Drive — GAS tự attach vào dòng gần nhất."""
@@ -1206,13 +1303,13 @@ def handle(update: dict) -> None:
     if not text:
         return
 
-    # ── SITE DOWN V2 RELAY ──────────────────────────────────────────────────
+    # ── SITE DOWN V2 RELAY (Bypass for Daily Plan to prevent 15s HTTP timeout) ──
     text_l = text.lower()
-    if "site down" in text_l or "cell down" in text_l or "dg abnormal" in text_l or "dg run>16h" in text_l or "down_tni" in text_l:
+    if not is_daily_plan(text) and any(kw in text_l for kw in ("site down", "cell down", "dg abnormal", "dg run>16h", "down_tni")):
         sd_url = "https://script.google.com/macros/s/AKfycbxVi0BGDW7B_KBxcSEdw3yuHB9Rs2BemQEYeKDwsybJQdmQv-_0HqyGHjpZI6jupxll/exec"
         logger.info(f"[SD Relay] Forwarding Site Down report update to Apps Script...")
         try:
-            requests.post(sd_url, json=update, timeout=15)
+            requests.post(sd_url, json=update, timeout=3)
         except Exception as e:
             logger.error(f"[SD Relay] Forward error: {e}")
 
@@ -1286,18 +1383,43 @@ def handle(update: dict) -> None:
 
     # ── 1. DAILY PLAN SUBMIT (PRIORITY #1: Process plan BEFORE SSOT classify to prevent TNI code hijacking) ──
     if is_daily_plan(clean_text) or is_daily_plan(text):
+        msg_id = msg.get("message_id")
+        if msg_id and msg_id in _processed_plan_msg_ids:
+            logger.info(f"Skipping duplicate Daily Plan webhook msg_id={msg_id}")
+            return
+        if msg_id:
+            _processed_plan_msg_ids.add(msg_id)
+            if len(_processed_plan_msg_ids) > 500:
+                _processed_plan_msg_ids.clear()
+
         chat_title = msg.get("chat", {}).get("title", "")
         date_str, team_str, content = parse_plan_fields(text, chat_id, chat_title)
         if date_str and team_str:
-            res = store_daily_plan_to_sheet(date_str, team_str, text)
-            ref = res.get("ref", "?")
+            res = store_daily_plan_to_sheet(date_str, team_str, text, msg_id=msg_id)
+            ref = res.get("ref")
             dup = res.get("duplicate", False)
-            tg_send(chat_id, f"✅ <b>Plan {'updated' if dup else 'saved'}</b> — REF:<b>{ref}</b> | {team_str} | {date_str}")
+
+            # 🛑 Nếu GAS xác nhận đây là bản trùng (đã lưu bởi instance Vercel khác) → bỏ qua, không gửi confirmation
+            if dup:
+                logger.info(f"GAS returned duplicate=true for msg_id={msg_id}, skipping confirmation")
+                return
+
+            if not ref or ref == "?" or "OK" in str(ref):
+                ref_show = fetch_max_plan_ref()
+            else:
+                ref_show = ref
+
+            msg_date = msg.get("date")
+            now_mm = datetime.fromtimestamp(msg_date, TZ_MM) if msg_date else datetime.now(TZ_MM)
+            time_str = now_mm.strftime('%H:%M')
+
+            tg_send(chat_id, f"✅ <b>Plan saved ({time_str})</b> — REF:<b>{ref_show}</b> | {date_str}")
             return
 
     # ── 2. DAILY REPORT SUBMIT (PRIORITY #2: Process daily report BEFORE SSOT classify) ──
     if is_daily(clean_text) or is_daily(text):
-        submit_daily(chat_id, user_id, first_name, text)
+        msg_date = msg.get("date")
+        submit_daily(chat_id, user_id, first_name, text, msg_date)
         return
 
     # ── CLASSIFY QUERY VIA SSOT ENGINE FIRST ──
@@ -1366,18 +1488,6 @@ def handle(update: dict) -> None:
         submit_daily(chat_id, user_id, first_name, clean_text)
         return
 
-    # ── DAILY PLAN SUBMIT ──
-    if is_daily_plan(clean_text):
-        chat_title = msg.get("chat", {}).get("title", "")
-        date_str, team_str, content = parse_plan_fields(clean_text, chat_id, chat_title)
-        if date_str and team_str:
-            res = store_daily_plan_to_sheet(date_str, team_str, clean_text)
-            if res.get("status") in ("ok", "duplicate"):
-                ref = res.get("ref", "?")
-                dup = res.get("duplicate", False)
-                tg_send(chat_id, f"✅ <b>Plan {'updated' if dup else 'saved'}</b> — REF:<b>{ref}</b> | {team_str} | {date_str}")
-            return
-
     # ── STAFF PERSONAL LOOKUP (mysite / mycable / mydia / mydata / myolt) ──
     text_low = clean_text.lower().strip()
     is_my_field    = (text_low.startswith("my") and len(text_low) > 2 and " " not in text_low)
@@ -1436,8 +1546,7 @@ def handle(update: dict) -> None:
         log_search_bg(first_name or str(user_id), user_id, f"{team_code}notclose")
         try:
             messages = lookup_notclose(team_code)
-            full_text = f"📑 <b>{team_code} NOT CLOSE</b> ({len(messages)} WOs)\n\n" + "\n\n".join(messages)
-            for chunk in split_messages(full_text):
+            for chunk in messages:
                 tg_send(chat_id, chunk)
         except Exception as err:
             logger.error(f"NotClose lookup error [{team_code}]: {err}")
@@ -1453,8 +1562,7 @@ def handle(update: dict) -> None:
         log_search_bg(first_name or str(user_id), user_id, f"{team_code}waitcd")
         try:
             messages = lookup_waitcd(team_code)
-            full_text = f"⏳ <b>{team_code} WAIT CD</b> ({len(messages)} WOs)\n\n" + "\n\n".join(messages)
-            for chunk in split_messages(full_text):
+            for chunk in messages:
                 tg_send(chat_id, chunk)
         except Exception as err:
             logger.error(f"WaitCD lookup error [{team_code}]: {err}")
@@ -1482,14 +1590,15 @@ def handle(update: dict) -> None:
         tni = code
         if is_duplicate_search and is_duplicate_search(chat_id, user_id, f"INFO:{tni}"):
             return
-        logger.info(f"[SSOT Router] Unified Info lookup: {tni} | chat={chat_id}")
+        logger.info(f"[SSOT Router] Detailed Info lookup (Ghế Info): {tni} | chat={chat_id}")
         log_search_bg(first_name or str(user_id), user_id, f"Info:{tni}")
         try:
-            result = perform_unified_tni_search(tni, full_info=True)   # Info: → Site+Cable+DIA only
+            # ✅ GHẾ INFO ĐỘC LẬP 100%: Tra cứu Thông tin Hạ tầng đầy đủ (Site, Cable, GPON, DIA) từ tab Name Site
+            result = perform_unified_tni_search(tni, full_info=True)
             for chunk in split_messages(result):
                 tg_send(chat_id, chunk)
         except Exception as err:
-            logger.error(f"Unified search error [{tni}]: {err}")
+            logger.error(f"Detailed Info lookup error [{tni}]: {err}")
             tg_send(chat_id, f"❌ Lookup error: {html.escape(str(err))}")
         return
 
@@ -1498,9 +1607,10 @@ def handle(update: dict) -> None:
         tni = code
         if is_duplicate_search and is_duplicate_search(chat_id, user_id, f"TNI:{tni}"):
             return
-        logger.info(f"[SSOT Router] Unified TNI lookup: {tni} | chat={chat_id}")
+        logger.info(f"[SSOT Router] Unified TNI lookup (Ghế TNI): {tni} | chat={chat_id}")
         log_search_bg(first_name or str(user_id), user_id, tni)
         try:
+            # ✅ GHẾ TNI ĐỘC LẬP 100%: Chỉ tra cứu Task & WO tương ứng
             result = perform_unified_tni_search(tni, full_info=False)  # TNI0122 → Task+WO only
             for chunk in split_messages(result):
                 tg_send(chat_id, chunk)

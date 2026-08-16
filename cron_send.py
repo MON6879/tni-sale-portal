@@ -6,13 +6,14 @@ Dùng 3 bot theo dải row trong sheet Task remain (gid=133591305):
   Row 60-74: SEND_BOT + compiled report (management)
   Row 75-87: @TNITECHINICALDEPREPORT_BOT (technical dept)
 """
-import asyncio, io, logging, os, re, requests, pandas as pd
+import asyncio, csv, io, logging, os, re, requests, pandas as pd
 from datetime import datetime, timezone, timedelta
 from telegram import Bot
 from telethon import TelegramClient
 from telethon.sessions import StringSession
 from dotenv import load_dotenv
-from delete_old_helper import delete_old_messages_bot, save_msgids, delete_by_title_telethon
+from delete_old_helper import delete_old_messages_bot, save_msgids, delete_by_title_telethon, delete_by_titles_batch_telethon
+
 
 load_dotenv()
 logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=logging.INFO)
@@ -80,22 +81,28 @@ def safe(row, idx):
         return ""
 
 
-def call_apps_script(payload, timeout=30):
-    """Call Apps Script and return JSON response."""
+def call_apps_script(payload, timeout=120, retries=3):
+    """Call Apps Script and return JSON response with retry logic."""
     if not APPS_SCRIPT_URL:
         return {}
-    try:
-        resp = requests.post(APPS_SCRIPT_URL, json=payload, timeout=timeout)
-        resp.raise_for_status()
-        return resp.json()
-    except Exception as e:
-        logger.error(f"Apps Script error: {e}")
-        return {}
+    for attempt in range(1, retries + 1):
+        try:
+            resp = requests.post(APPS_SCRIPT_URL, json=payload, timeout=timeout)
+            resp.raise_for_status()
+            res_json = resp.json()
+            if isinstance(res_json, dict) and res_json.get("status") == "ok":
+                return res_json
+            logger.warning(f"Apps Script attempt {attempt}/{retries} non-ok: {res_json}")
+        except Exception as e:
+            logger.warning(f"Apps Script attempt {attempt}/{retries} error: {e}")
+            if attempt < retries:
+                time.sleep(2)
+    return {}
 
 
 def get_asset_stats():
     """Get asset stats from Apps Script."""
-    data = call_apps_script({"action": "get_asset_stats"}, timeout=120)
+    data = call_apps_script({"action": "get_asset_stats"}, timeout=120, retries=3)
     if data.get("status") != "ok":
         logger.warning(f"get_asset_stats failed: {data.get('message', 'unknown')}")
         return {}
@@ -105,13 +112,14 @@ def get_asset_stats():
 def get_report_data():
     """Get search stats from Apps Script (employees, leaders, teamSummary, grandTotal)."""
     try:
-        data = call_apps_script({"action": "get_report_data"}, timeout=35)
+        data = call_apps_script({"action": "get_report_data"}, timeout=120, retries=3)
         if isinstance(data, dict) and data.get("status") == "ok":
             return data
         logger.warning(f"get_report_data returned non-ok: {data}")
     except Exception as ex:
         logger.error(f"get_report_data exception: {ex}")
     return {}
+
 
 
 def build_search_summary(now_str, report_data):
@@ -167,7 +175,7 @@ def get_note_from_sheet() -> str:
 
 
 def get_control_note_from_sheet() -> str:
-    """Read H1:H3 from Config tab (GID 1236389870)."""
+    """Đọc ô H1:H3 từ tab Config của Master Sheet 1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8."""
     try:
         resp = requests.get(CONFIG_SHEET_URL, headers={"User-Agent": "Mozilla/5.0"}, timeout=20)
         resp.raise_for_status()
@@ -527,11 +535,20 @@ def build_no_search_list(team_key: str, report_data: dict, no_id_members: dict |
 
 
 ACTION_SQUARES = {
-    "export": "🟦",
-    "import": "🟩",
-    "return": "🟨",
-    "transfer": "🟧",
-    "collect": "🟪",
+    "order": "🟦",                  # 🟦 Xanh dương (Order)
+    "revoke": "🟨",                 # 🟨 Vàng (Revoke)
+    "export": "🟩",                 # 🟩 Xanh lá (Export)
+    "import": "🟩",                 # 🟩 Xanh lá (Import)
+    "move": "🟧",                   # 🟧 Cam (Move)
+    "transfer": "🟧",               # 🟧 Cam (Transfer)
+    "destroys": "🟥",               # 🟥 Đỏ (Destroys)
+    "destroy": "🟥",                # 🟥 Đỏ (Destroy)
+    "loss": "🟫",                   # 🟫 Nâu (Loss fuel)
+    "inventory oil": "🟪",          # 🟪 Tím (Inventory oil)
+    "inventory water": "⬜",        # ⬜ Trắng (Inventory water coolant)
+    "coolant": "⬜",                # ⬜ Trắng (Coolant)
+    "return": "🟨",                 # 🟨 Vàng (Return)
+    "collect": "🟪",                # 🟪 Tím (Collect)
 }
 
 def get_action_square(at_name: str) -> str:
@@ -539,7 +556,7 @@ def get_action_square(at_name: str) -> str:
     for k, sq in ACTION_SQUARES.items():
         if k in clean:
             return sq
-    return "🟦"
+    return "🔹"
 
 def build_asset_msg(now_str, asset_data):
     """Build compact asset stats message with 3-day/7-day/month."""
@@ -552,10 +569,10 @@ def build_asset_msg(now_str, asset_data):
     grand = asset_data.get("grandTotal", {})
 
     TEAM_SHORT = {
-        "MYT_TNI_TEAM01_Dawei": "Team1(Dawei)",
-        "MYT_TNI_TEAM02_Myeik": "Team2(Myeik)",
-        "MYT_TNI_TEAM03_Bokpyin": "Team3(Bokpyin)",
-        "MYT_TNI_TEAM04_Kawthoung": "Team4(Kawthoung)",
+        "MYT_TNI_TEAM01_Dawei": "🟠 Team1(Dawei)",
+        "MYT_TNI_TEAM02_Myeik": "🔵 Team2(Myeik)",
+        "MYT_TNI_TEAM03_Bokpyin": "🟢 Team3(Bokpyin)",
+        "MYT_TNI_TEAM04_Kawthoung": "🟡 Team4(Kawthoung)",
     }
 
     def fmt(s):
@@ -573,7 +590,7 @@ def build_asset_msg(now_str, asset_data):
 
     PERIOD_KEYS = ["d0","d1","d2","d6","d15","done_d0","done_d1","done_d2","done_d6","done_d15"]
 
-    lines = [f"3.1 Asset progress for material – {now_str}", "━━━━━━━━━━━━━━━━━━━━"]
+    lines = [f"📦 4d. Asset progress for material – {now_str}", "━━━━━━━━━━━━━━━━━━━━"]
 
     for tm in teams:
         tm_short = TEAM_SHORT.get(tm, tm)
@@ -696,11 +713,78 @@ def build_team_asset_msg(team_key, now_str, asset_data):
             team_total[k] += s.get(k, 0)
 
     lines = [
-        f"3.1 Asset progress for material – {t_name} – {now_str}",
+        f"📦 4d. Asset progress for material – {t_name} – {now_str}",
         "━━━━━━━━━━━━━━━━━━━━"
     ] + key_lines + [
         f"   📅 {fmt_period(team_total)}"
     ]
+    return "\n".join(lines)
+
+
+def build_team_employee_summary_table(team_key: str, members: list, now_str: str) -> str:
+    """
+    Build standalone Report 4c: Monospace Table (<pre>) listing each employee's Name, Rank, Close%, WO 3D (0/0/0), Rem, Task A/C.
+    """
+    t_name = {
+        "MYT_TNI_TEAM01_Dawei": "Team 1 Dawei",
+        "MYT_TNI_TEAM02_Myeik": "Team 2 Myeik",
+        "MYT_TNI_TEAM03_Bokpyin": "Team 3 Bokpyin",
+        "MYT_TNI_TEAM04_Kawthoung": "Team 4 Kawthoung",
+    }.get(team_key, team_key)
+
+    team_staff = []
+    for p, name, content, is_tl in members:
+        if not content: continue
+        m_name = re.search(r'^(\*?[^=\n]+?)\s*=\s*Site:', content)
+        disp_name = m_name.group(1).strip().replace("*", "") if m_name else name
+        
+        m_rk = re.search(r'rank:\s*/?([\d]+)', content, re.IGNORECASE)
+        rk_val = m_rk.group(1) if m_rk else "?"
+
+        m_close = re.search(r'=Close:\s*/?([\d\.]+)%', content, re.IGNORECASE)
+        close_val = m_close.group(1) if m_close else "0"
+
+        m_3d = re.search(r'3Day Close:\s*(\d+/\d+/\d+)', content, re.IGNORECASE)
+        wo_3d = m_3d.group(1) if m_3d else "0/0/0"
+
+        m_rem = re.search(r'/?([\d]+)\s*WO Remain', content, re.IGNORECASE)
+        rem_val = m_rem.group(1) if m_rem else "0"
+
+        m_task = re.search(r'Task assign:\s*/?([\d]+)', content, re.IGNORECASE)
+        m_task_c = re.search(r'Task Close Month:\s*/?([\d]+)', content, re.IGNORECASE)
+        task_ac = f"{m_task.group(1) if m_task else '0'}/{m_task_c.group(1) if m_task_c else '0'}"
+
+        is_lost = "/LostTARGET" in content or "/losttarget" in content.lower()
+        color = "🔴" if is_lost else "🟢"
+        if is_tl: color += "🟧"
+
+        team_staff.append({
+            "color": color,
+            "name": disp_name[:15],
+            "rank": rk_val,
+            "close": f"{close_val}%",
+            "wo_3d": wo_3d,
+            "rem": rem_val,
+            "task_ac": task_ac
+        })
+
+    if not team_staff:
+        return ""
+
+    lines = [
+        f"📊 4c. Report — Employee Task & Rank Summary Table — {t_name}",
+        f"📅 {now_str}",
+        "<pre>",
+        f"{'NVKTV':<16} {'Rk':<4} {'Close%':<8} {'WO 3D':>7} {'Rem':>4} {'Task A/C':>8}",
+        "─" * 52
+    ]
+    for s in team_staff:
+        lines.append(
+            f"{s['color']}{s['name']:<14} #{s['rank']:<3} {s['close']:>7} {s['wo_3d']:>7} {s['rem']:>4} {s['task_ac']:>8}"
+        )
+    lines.append("─" * 52)
+    lines.append("</pre>")
+    lines.append(f"👥 Total: {len(team_staff)} members")
     return "\n".join(lines)
 
 
@@ -1624,19 +1708,16 @@ async def main():
     # ── 6. Build management report: TL summaries + Technical Dept only ──
     # BOD/Manager chỉ nhận TL Reports + Technical Dept
     mgmt_parts = [
-        f"📋 4. Report — Daily EOD Task & Stats — Summary",
+        f"📋 4a. Report — Daily EOD Task & Stats — Summary",
         f"📅 {now_str}",
-        f"📌 Today's EOD summary of tasks completed, close rate, rank, asset and search stats.",
+        f"📌 Today's EOD summary of tasks completed, close rate, rank and search stats.",
         "━━━━━━━━━━━━━━━━━━━━"
     ]
-    # search_msg và asset_msg gửi KÈM với mgmt_report
+    # search_msg gửi KÈM với mgmt_report (Asset 3.1 tách thành tin 3.1 độc lập)
     if search_msg:
         mgmt_parts.append("━" * 20)
         mgmt_parts.append(search_msg)
-    if asset_msg:
-        mgmt_parts.append("━" * 20)
-        mgmt_parts.append(asset_msg)
-    # CONTROL NOTE đã được bỏ khỏi tin bot và phát riêng bằng @phongha79
+
     mgmt_report = "\n".join(mgmt_parts)
 
     # Chat ID nhóm "5 TNI TECHNICA DEP CONTROL SITE"
@@ -1711,7 +1792,7 @@ async def main():
                 tech_messages.append((name, content))
             continue
 
-    # ── 7a. Gộp tin nhắn 4 Team → Báo cáo Consolidated gửi vào Control & Gửi riêng từng Team ──
+    # ── 7a. Gộp tin nhắn 4 Team → Báo cáo 4a (Summary) & 4b (Full) gửi riêng từng Team ──
     if SEND_BOT_TOKEN:
         t_names = {
             "MYT_TNI_TEAM01_Dawei": "Team 1 Dawei",
@@ -1743,102 +1824,96 @@ async def main():
             tl_list = [(p, n, c) for p, n, c, is_tl in members if is_tl]
             ft_list = [(p, n, c) for p, n, c, is_tl in members if not is_tl]
 
-            # Control: chỉ TL, thu thập metrics + full col D
+            # Control: thu thập metrics TL
             for prefix, name, content in tl_list:
                 if content:
                     m = parse_tl_metrics(content)
                     if m:
                         all_tl_metrics.append(m)
 
-            # ── 2. Tạo báo cáo chi tiết gửi riêng vào từng nhóm Team (giữ nguyên cột D đầy đủ) ──
-            team_lines_indiv = [
-                f"📋 4. Report — Daily EOD Task & Stats — {t_name}",
-                f"📅 {now_str}",
-                f"📌 Today's EOD summary of tasks completed, close rate, rank, asset and search stats.",
-                "━━━━━━━━━━━━━━━━━━━━"
-            ]
-            # Note sẽ được gửi riêng dưới tên @phongha79 (Telethon reply) sau khi pin Report 4
-            # TL đã có đầy đủ trong Report 4b — không lặp lại ở Report 4
-
-            # NV: parse_emp_metrics → compact 1 dòng với 🔺 prefix
-            # Không dedup — mỗi dòng sheet = 1 người (name = nv_ROW — luôn unique)
-            emp_rows = []
-            for prefix, name, content in ft_list:
-                if content:
-                    m = parse_emp_metrics(content)
-                    if m:
-                        emp_rows.append(m)
-
-            if emp_rows:
-                team_lines_indiv.append("─" * 20)
-                team_lines_indiv.append("👷 FT Staff Summary:")
-                # Header gợi nhớ
-                team_lines_indiv.append("Name | Rk | Site | Mo | 7D | 3Day | OVD | Task")
-                team_lines_indiv.append("─" * 38)
-                for em in emp_rows:
-                    team_lines_indiv.append(
-                        f"{em['color']} {em['name_short']}: "
-                        f"Rk/{em['rank']} Site/{em['site']} "
-                        f"Mo/{em['wo_month']} 7D/{em['wo_7day']} "
-                        f"3D:{em['three_day']} "
-                        f"OVD/{em['overdue']} "
-                        f"Task:{em['task_assign']}/{em['task_close']}"
-                    )
-
-            # Thêm thống kê Asset và Search riêng cho từng Team
-            team_asset = build_team_asset_section(team_key, asset_data)
-            team_search = build_team_search_section(team_key, report_data, now_str, no_id_members)
-            tl_search = build_tl_search_section(team_key, report_data, no_id_members)
-            no_search = build_no_search_list(team_key, report_data, no_id_members)
-
-
-            if team_asset or team_search or tl_search or no_search:
-                team_lines_indiv.append("━━━━━━━━━━━━━━━━━━━━")
-            if team_asset:
-                team_lines_indiv.append(team_asset)
-            if team_asset and (team_search or tl_search or no_search):
-                team_lines_indiv.append("────────────────────")
-            if team_search:
-                team_lines_indiv.append(team_search)
-            if tl_search:
-                team_lines_indiv.append(tl_search)
-            if no_search:
-                team_lines_indiv.append(no_search)
-
-            # NOTE đã hiển thị ở đầu message — không lặp lại cuối
-
-            team_lines_indiv.append("━━━━━━━━━━━━━━━━━━━━")
-            team_lines_indiv.append(f"👥 Total: {len(members)} members")
-
-            team_msg = "\n".join(team_lines_indiv)
-            groups.setdefault(SEND_BOT_TOKEN, []).append(
-                (0, team_msg, str(gid), "TEAM_GROUP")
-            )
-
-            # ── Message 2: Nguyên nội dung cột D (gửi sau bản phân tích) ──
-            full_lines = [
-                f"📓 4b. Full Report — {t_name}",
-                f"📅 {now_str}",
-                "━" * 22,
-            ]
-            # TL full col D
+            # ── BÁO CÁO TẠI GHẾ (1 TEAM = NGHỆ THUẬT CHIA KHỐI 10 NGƯỜI / TIN — KHÔNG NGẮT NỬA CHỪNG) ──
+            # Tạo danh sách các khối (member blocks): 🔴 cho /LostTARGET, 🟢 cho Met target
+            member_blocks = []
             for prefix, name, content in tl_list:
                 if content:
-                    full_lines.append(f"🟧 {content}")
-                    full_lines.append("─" * 18)
-            # NV full col D — không dedup, thêm màu đầu dòng theo LostTARGET
+                    if "/LostTARGET" in content or "/losttarget" in content.lower():
+                        tl_color = "🔴 🟧"
+                    else:
+                        tl_color = "🟢 🟧"
+                    member_blocks.append(f"{tl_color} {content}")
             for prefix, name, content in ft_list:
                 if content:
-                    nv_color = "🔴" if "/LostTARGET" in content else "🟢"
+                    if "/LostTARGET" in content or "/losttarget" in content.lower():
+                        nv_color = "🔴"
+                    else:
+                        nv_color = "🟢"
+                    member_blocks.append(f"{nv_color} {content}")
 
-                    full_lines.append(f"{nv_color} {content}")
-                    full_lines.append("─" * 18)
-            full_lines.append("━" * 22)
+            # Đã gom xong toàn bộ khối nhân viên (không nén, nguyên vẹn Cột D)
+            # Bây giờ chia khối theo số lượng người (10 người / tin nhắn) hoặc tối đa 3000 ký tự
+            MEMBERS_PER_CHUNK = 10
+            chunks = []
+            cur_chunk = []
+            cur_len = 0
 
-            full_msg = "\n".join(full_lines)
-            groups.setdefault(SEND_BOT_TOKEN, []).append(
-                (0, full_msg, str(gid), "TEAM_GROUP_FULL")
-            )
+            for mb in member_blocks:
+                mb_len = len(mb)
+                # Nếu đã đủ 10 người hoặc thêm người này sẽ > 3000 chars ➔ Ngắt sang tin mới!
+                if len(cur_chunk) >= MEMBERS_PER_CHUNK or (cur_len + mb_len > 3000 and cur_chunk):
+                    chunks.append(cur_chunk)
+                    cur_chunk = [mb]
+                    cur_len = mb_len
+                else:
+                    cur_chunk.append(mb)
+                    cur_len += mb_len
+            if cur_chunk:
+                chunks.append(cur_chunk)
+
+            total_parts = len(chunks)
+            for idx, chk in enumerate(chunks, 1):
+                part_title = f"📋 4. Report — Daily EOD Task & Stats — {t_name}"
+                if total_parts > 1:
+                    part_title += f" (Phần {idx}/{total_parts})"
+
+                p_lines = [
+                    part_title,
+                    f"📅 {now_str}",
+                    "━━━━━━━━━━━━━━━━━━━━"
+                ]
+                for mb in chk:
+                    p_lines.append(mb)
+                    p_lines.append("─" * 20)
+
+                # Chỉ gắn phần Search stats và Total vào Part cuối cùng
+                if idx == total_parts:
+                    team_search = build_team_search_section(team_key, report_data, now_str, no_id_members)
+                    tl_search = build_tl_search_section(team_key, report_data, no_id_members)
+                    no_search = build_no_search_list(team_key, report_data, no_id_members)
+
+                    if team_search or tl_search or no_search:
+                        p_lines.append("━━━━━━━━━━━━━━━━━━━━")
+                    if team_search:
+                        p_lines.append(team_search)
+                    if tl_search:
+                        p_lines.append(tl_search)
+                    if no_search:
+                        p_lines.append(no_search)
+
+                    p_lines.append("━━━━━━━━━━━━━━━━━━━━")
+                    p_lines.append(f"👥 Total: {len(members)} members")
+
+                team_msg = "\n".join(p_lines)
+                groups.setdefault(SEND_BOT_TOKEN, []).append(
+                    (0, team_msg, str(gid), f"TEAM_GROUP_P{idx}")
+                )
+
+            # ── 7a2. BÁO CÁO 4c ĐỘC LẬP: Bảng tổng hợp chỉ số nhân viên (<pre> Table) ──
+            emp_table_msg = build_team_employee_summary_table(team_key, members, now_str)
+            if emp_table_msg:
+                groups.setdefault(SEND_BOT_TOKEN, []).append(
+                    (0, emp_table_msg, str(gid), "TEAM_GROUP_4C_TABLE")
+                )
+
         # Build và gửi bảng so sánh TL vào CONTROL
         grp_msg = build_tl_comparison(all_tl_metrics, now_str)
         if grp_msg:
@@ -1885,20 +1960,6 @@ async def main():
             (0, detail_msg, CONTROL_CHAT_ID, "TECHDEP_DETAIL")
         )
 
-    # ── 7d. Gửi STANDALONE BÁO CÁO 3.1 Asset progress for material → CONTROL & TEAMS ──
-    if asset_msg and SEND_BOT_TOKEN:
-        logger.info("[Cron] Queuing 3.1 Asset progress for material report...")
-        # 1. Bắn tin tổng hợp 3.1 vào CONTROL_CHAT_ID (-5251698940)
-        groups.setdefault(SEND_BOT_TOKEN, []).append(
-            (0, asset_msg, CONTROL_CHAT_ID, "ASSET_PROGRESS_31")
-        )
-        # 2. Bắn tin chi tiết cho từng Team (T1, T2, T3, T4)
-        for gid, team_key in GID_TO_TEAM.items():
-            team_asset_msg = build_team_asset_msg(team_key, now_str, asset_data)
-            if team_asset_msg:
-                groups.setdefault(SEND_BOT_TOKEN, []).append(
-                    (0, team_asset_msg, str(gid), "TEAM_ASSET_PROGRESS_31")
-                )
 
     # ── Mapping chat_id → GAS key để delete-old / save-new ──
     CHATID_TO_KEY = {
@@ -1915,34 +1976,52 @@ async def main():
         str(TELEGRAM_GROUPS["T4"]): "CRON_TEAM_T4_FULL",
     }
 
-    # ── Delete old messages theo tiêu đề (Telethon) + fallback GAS msg_id ──
-    # Telethon scan lịch sử chat → xóa TẤT CẢ tin cũ cùng tiêu đề
-    # Fallback: GAS msg_id (xóa tin liền trước nếu Telethon không khả dụng)
+    # ── Delete old messages theo tiêu đề (Telethon Batch) + fallback GAS msg_id ──
+    # Single-pass scan: mỗi nhóm chỉ quét lịch sử 1 lần, cực nhanh < 3s, không bị Timeout/FloodWait!
     if SEND_BOT_TOKEN and TELEGRAM_SESSION and TELEGRAM_API_ID:
-        # Tiêu đề từng loại tin → map (chat_id, title_prefix)
-        delete_tasks = []
-        for del_cid in CHATID_TO_KEY.keys():
-            delete_tasks.append((del_cid, "📋 4. Report — Daily EOD Task & Stats"))
-            delete_tasks.append((del_cid, "📓 4b. Full Report"))
-        delete_tasks += [
-            (str(CONTROL_CHAT_ID), "📋 1. Report — Technical Dept Task Progress"),
-            (str(CONTROL_CHAT_ID), "📋 8. Report — Technical Dep Assign to Team"),
-            (str(CONTROL_CHAT_ID), "📋 4. Report — TL Comparison"),
-            (str(CONTROL_CHAT_ID), "📋 1. BOD"),   # BOD report nếu có
+        team_prefixes = [
+            "📋 1. Report — Daily Backlog",
+            "📋 2. Report — DailyWO",
+            "📋 2. Report — Daily Backlog",
+            "📋 3. Report — Main DG Material Need",
+            "📋 4. Report — Daily EOD Task & Stats",
+            "📋 4a. Report — Daily EOD Task & Stats",
+            "📓 4b. Full Report",
+            "📊 4c. Report — Employee Task & Rank",
+            "📦 4c. Asset progress for material",
+            "📦 4d. Asset progress for material",
+            "4d. Asset progress for material",
+            "📦 3.1 Asset progress for material",
+            "3.1 Asset progress for material",
+            "📋 5. Report — Daily Plan",
         ]
+        chat_to_prefixes = {del_cid: team_prefixes for del_cid in CHATID_TO_KEY.keys()}
+        chat_to_prefixes[str(CONTROL_CHAT_ID)] = [
+            "📋 1. Report — Technical Dept Task Progress",
+            "📋 8. Report — Technical Dep Assign to Team",
+            "📋 4. Report — TL Comparison",
+            "📋 4a. Report — Daily EOD Task & Stats",
+            "📦 4c. Asset progress for material",
+            "4c. Asset progress for material",
+            "📦 3.1 Asset progress for material",
+            "3.1 Asset progress for material",
+            "📋 5. Report — Daily Plan",
+            "📋 1. BOD",
+        ]
+
         try:
             async with TelegramClient(
                 StringSession(TELEGRAM_SESSION), TELEGRAM_API_ID, TELEGRAM_API_HASH
             ) as tg_client:
-                logger.info("🗑️ Delete old messages by title (Telethon)...")
-                for del_cid, title_pfx in delete_tasks:
-                    await delete_by_title_telethon(tg_client, SEND_BOT_TOKEN, del_cid, title_pfx)
+                logger.info("🗑️ Delete old messages by batch (Telethon Fast Scan)...")
+                await delete_by_titles_batch_telethon(tg_client, SEND_BOT_TOKEN, chat_to_prefixes)
         except Exception as tg_err:
-            logger.warning(f"Telethon delete lỗi, fallback GAS: {tg_err}")
+            logger.warning(f"Telethon batch delete lỗi, fallback GAS: {tg_err}")
             # Fallback: GAS msg_id delete
             if APPS_SCRIPT_URL:
                 for del_cid, del_key in CHATID_TO_KEY.items():
                     delete_old_messages_bot(SEND_BOT_TOKEN, del_cid, APPS_SCRIPT_URL, del_key)
+                    delete_old_messages_bot(SEND_BOT_TOKEN, del_cid, APPS_SCRIPT_URL, f"BACKLOG_TEAM_T{del_key[-2:]}")
                 for del_cid, del_key in CHATID_TO_KEY_FULL.items():
                     delete_old_messages_bot(SEND_BOT_TOKEN, del_cid, APPS_SCRIPT_URL, del_key)
                 delete_old_messages_bot(SEND_BOT_TOKEN, CONTROL_CHAT_ID, APPS_SCRIPT_URL, "CRON_TECHDEP_CONTROL")
@@ -1952,6 +2031,7 @@ async def main():
         # Fallback nếu không có Telethon session
         for del_cid, del_key in CHATID_TO_KEY.items():
             delete_old_messages_bot(SEND_BOT_TOKEN, del_cid, APPS_SCRIPT_URL, del_key)
+            delete_old_messages_bot(SEND_BOT_TOKEN, del_cid, APPS_SCRIPT_URL, f"BACKLOG_TEAM_T{del_key[-2:]}")
         for del_cid, del_key in CHATID_TO_KEY_FULL.items():
             delete_old_messages_bot(SEND_BOT_TOKEN, del_cid, APPS_SCRIPT_URL, del_key)
         delete_old_messages_bot(SEND_BOT_TOKEN, CONTROL_CHAT_ID, APPS_SCRIPT_URL, "CRON_TECHDEP_CONTROL")
@@ -1998,43 +2078,15 @@ async def main():
 
     logger.info(f"📊 Done: ✅{ok} | ❌{fail}")
 
-    # ── 7d. Gửi NOTE reply dưới tên user @phongha79 (Telethon) ──
-    # BẮT BỘC gửi bằng tài khoản user @phongha79 để Telegram API (GetMessageReadParticipantsRequest)
-    # đếm được danh sách người đọc cho Report 6 (daily_read_report.py). Tin nhắn từ Bot KHÔNG đếm được người đọc!
-    if control_note and TELEGRAM_SESSION and TELEGRAM_API_ID and pinned_report4_msgids:
-        try:
-            async with TelegramClient(
-                StringSession(TELEGRAM_SESSION), TELEGRAM_API_ID, TELEGRAM_API_HASH
-            ) as tg_note_client:
-                logger.info(f"📝 Gửi Note reply dưới tên user @phongha79 (Telethon) → {len(pinned_report4_msgids)} nhóm...")
-                for cid_str, reply_to_id in pinned_report4_msgids.items():
-                    try:
-                        await tg_note_client.send_message(
-                            entity=int(cid_str),
-                            message=control_note,
-                            reply_to=reply_to_id
-                        )
-                        logger.info(f"  ✅ Note reply (@phongha79) → {cid_str} (reply_to msg_id: {reply_to_id})")
-                        await asyncio.sleep(0.5)
-                    except Exception as note_send_err:
-                        logger.error(f"  ❌ Note reply (@phongha79) thất bại → {cid_str}: {note_send_err}")
-        except Exception as note_client_err:
-            logger.error(f"❌ Telethon Note client lỗi: {note_client_err}")
-    elif not TELEGRAM_SESSION:
-        logger.info("⚠️ TELEGRAM_SESSION not set — skip Note reply (must be sent by Telethon user @phongha79 for Report 6 read tracking)")
-    elif not control_note:
-        logger.info("No control_note — skip Note reply")
-    elif not pinned_report4_msgids:
-        logger.info("No pinned Report 4/4b msg_ids — skip Note reply")
-
-    # ── 8. Gửi Báo cáo Asset 3.1 độc lập tới CONTROL SITE & các Team ──
+    # ── 8. Gửi Báo cáo Asset 4d độc lập tới CONTROL SITE & các Team ──
+    report_4d_msgids = {}
     if asset_msg and SEND_BOT_TOKEN:
-        logger.info("--- Gửi Asset Progress 3.1 độc lập → CONTROL SITE & Teams ---")
+        logger.info("--- Gửi Asset Progress 4d độc lập → CONTROL SITE & Teams ---")
         try:
             async with Bot(token=SEND_BOT_TOKEN) as asset_bot:
                 if APPS_SCRIPT_URL:
                     delete_old_messages_bot(SEND_BOT_TOKEN, CONTROL_CHAT_ID, APPS_SCRIPT_URL, "CRON_ASSET_CONTROL")
-                res, a_ids = await send_msg(asset_bot, CONTROL_CHAT_ID, asset_msg, "ASSET_PROGRESS_31")
+                res, a_ids = await send_msg(asset_bot, CONTROL_CHAT_ID, asset_msg, "ASSET_PROGRESS_4D")
                 if res and a_ids and APPS_SCRIPT_URL:
                     save_msgids(APPS_SCRIPT_URL, "CRON_ASSET_CONTROL", a_ids)
                 
@@ -2044,12 +2096,45 @@ async def main():
                     if team_asset_msg:
                         if APPS_SCRIPT_URL:
                             delete_old_messages_bot(SEND_BOT_TOKEN, gid, APPS_SCRIPT_URL, f"CRON_ASSET_{team_key}")
-                        res_t, t_ids = await send_msg(asset_bot, gid, team_asset_msg, f"TEAM_ASSET_PROGRESS_31_{team_key}")
+                        res_t, t_ids = await send_msg(asset_bot, gid, team_asset_msg, f"TEAM_ASSET_PROGRESS_4D_{team_key}")
                         if res_t and t_ids and APPS_SCRIPT_URL:
                             save_msgids(APPS_SCRIPT_URL, f"CRON_ASSET_{team_key}", t_ids)
-            logger.info("✅ Standalone Asset Progress 3.1 sent to CONTROL SITE & Teams")
+                            report_4d_msgids[str(gid)] = t_ids[-1]  # Lưu ID tin 4d để Note reply vào
+            logger.info(f"✅ Standalone Asset Progress 4d sent to CONTROL SITE & Teams ({len(report_4d_msgids)} groups)")
         except Exception as e:
-            logger.error(f"❌ Standalone Asset Progress 3.1 failed: {e}")
+            logger.error(f"❌ Standalone Asset Progress 4d failed: {e}")
+
+    # Ưu tiên reply vào tin 4d, fallback vào 4b
+    target_reply_msgids = report_4d_msgids if report_4d_msgids else pinned_report4_msgids
+
+    # ── 9. Gửi NOTE reply dưới tên user @phongha79 (Telethon) TRẢ LỜI CHO TIN 4D ──
+    # BẮT BỘC gửi bằng tài khoản user @phongha79 để Telegram API (GetMessageReadParticipantsRequest)
+    # đếm được danh sách người đọc cho Report 6 (daily_read_report.py). Tin nhắn từ Bot KHÔNG đếm được người đọc!
+    if control_note and TELEGRAM_SESSION and TELEGRAM_API_ID and target_reply_msgids:
+        try:
+            async with TelegramClient(
+                StringSession(TELEGRAM_SESSION), TELEGRAM_API_ID, TELEGRAM_API_HASH
+            ) as tg_note_client:
+                logger.info(f"📝 Gửi Note reply dưới tên user @phongha79 (Telethon) TRẢ LỜI CHO 4D → {len(target_reply_msgids)} nhóm...")
+                for cid_str, reply_to_id in target_reply_msgids.items():
+                    try:
+                        await tg_note_client.send_message(
+                            entity=int(cid_str),
+                            message=control_note,
+                            reply_to=reply_to_id
+                        )
+                        logger.info(f"  ✅ Note reply (@phongha79) → {cid_str} (reply_to 4d msg_id: {reply_to_id})")
+                        await asyncio.sleep(0.5)
+                    except Exception as note_send_err:
+                        logger.error(f"  ❌ Note reply (@phongha79) thất bại → {cid_str}: {note_send_err}")
+        except Exception as note_client_err:
+            logger.error(f"❌ Telethon Note client lỗi: {note_client_err}")
+    elif not TELEGRAM_SESSION:
+        logger.info("⚠️ TELEGRAM_SESSION not set — skip Note reply (must be sent by Telethon user @phongha79 for Report 6 read tracking)")
+    elif not control_note:
+        logger.info("No control_note — skip Note reply")
+    elif not target_reply_msgids:
+        logger.info("No target_reply_msgids — skip Note reply")
 
     if mgmt_report and SEND_BOT_TOKEN:
         logger.info("--- Gửi mgmt_report (tổng hợp TL) → CONTROL SITE (-5251698940) ---")
