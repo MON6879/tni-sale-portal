@@ -1,4 +1,4 @@
-<!-- TNI Operations BI Portal v345 - Live BOD Assign Tab Data (481 Rows from Sheet) -->
+<!-- TNI Operations BI Portal v346 - Plan Week Tab + 8 BI Architecture Pillars -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -493,6 +493,9 @@
       </button>
       <button class="nav-tab" onclick="showTab('bod-assign-panel', this)">
         <i class="fa-solid fa-user-shield"></i> BOD Assign
+      </button>
+      <button class="nav-tab" onclick="showTab('plan-week-panel', this)">
+        <i class="fa-solid fa-calendar-week"></i> Plan Week
       </button>
       <button class="nav-tab" onclick="showTab('access-control-panel', this)">
         <i class="fa-solid fa-lock"></i> Gmail Access List
@@ -5922,6 +5925,134 @@ Team04>> 2Box</td>
       </div>
     </div>
 
+    <!-- 6. PLAN WEEK TAB PANEL — Following 8 BI Architecture Pillars -->
+    <div id="plan-week-panel" class="tab-panel">
+      <!-- Header with Week Number -->
+      <div class="section-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+        <div>
+          <span><i class="fa-solid fa-calendar-week"></i> <span id="pdep-week-title">Department Plan — Week Loading...</span></span>
+          <div style="font-size:0.78rem; color:#38BDF8; font-weight:700; margin-top:0.2rem;" id="pdep-week-range">
+            <i class="fa-solid fa-clock"></i> Loading date range...
+          </div>
+        </div>
+        <div style="display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center;">
+          <button class="filter-btn" style="background:rgba(255,255,255,0.08); color:#F8FAFC; border:1px solid rgba(255,255,255,0.2); padding:0.5rem 0.9rem; border-radius:10px; cursor:pointer; font-size:0.8rem;" onclick="PlanWeek.archiveCompleted()">
+            <i class="fa-solid fa-box-archive"></i> Archive Completed
+          </button>
+          <button class="filter-btn active" style="background:linear-gradient(135deg, var(--cyan), #059669); color:#fff; border:none; padding:0.5rem 1rem; font-weight:700; border-radius:10px; cursor:pointer; font-size:0.8rem;" onclick="PlanWeek.openAddModal()">
+            <i class="fa-solid fa-plus"></i> Add New Plan
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Plan Table -->
+      <div class="card" id="pdep-plan-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+          <h3 style="color:#fff; font-size:1.05rem; font-weight:700;"><i class="fa-solid fa-list-check" style="color:var(--cyan);"></i> Active Department Plans <span id="pdep-count" style="color:var(--cyan); font-size:0.85rem;">(0)</span></h3>
+          <div style="font-size:0.72rem; color:var(--text-sub);" id="pdep-sync-time">Last sync: —</div>
+        </div>
+        <div style="max-height: 500px; overflow-y: auto; overflow-x: auto;">
+          <table class="data-table" id="pdep-table">
+            <thead>
+              <tr>
+                <th style="width:40px;">#</th>
+                <th>Date Assign</th>
+                <th>Technical Manager</th>
+                <th style="text-align:left !important;">Detail Task This Week</th>
+                <th style="color:var(--amber);">Progress</th>
+                <th style="color:var(--emerald);">Date Complete</th>
+                <th style="width:80px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="pdep-tbody">
+              <tr><td colspan="7" style="text-align:center; color:var(--text-sub); padding:2rem;"><i class="fa-solid fa-spinner fa-spin"></i> Loading Plan data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- History Section (Collapsible) -->
+      <div style="margin-top:1.5rem;">
+        <button class="filter-btn" style="width:100%; text-align:left; padding:0.8rem 1.2rem; background:rgba(30,41,59,0.7); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:#F8FAFC; font-weight:700; font-size:0.95rem; cursor:pointer; display:flex; justify-content:space-between; align-items:center;" onclick="PlanWeek.toggleHistory()">
+          <span><i class="fa-solid fa-clock-rotate-left" style="color:var(--amber);"></i> History — Previous Weeks Completed Tasks <span id="pdep-history-count" style="color:var(--text-sub); font-size:0.8rem;">(0)</span></span>
+          <i class="fa-solid fa-chevron-down" id="pdep-history-chevron" style="transition:transform 0.3s;"></i>
+        </button>
+        <div id="pdep-history-section" style="display:none; margin-top:0.8rem;">
+          <div class="card" style="border:1px solid rgba(245,158,11,0.2);">
+            <div style="max-height: 400px; overflow-y: auto; overflow-x: auto;">
+              <table class="data-table" id="pdep-history-table">
+                <thead>
+                  <tr>
+                    <th style="width:40px;">#</th>
+                    <th>Date Assign</th>
+                    <th>Technical Manager</th>
+                    <th style="text-align:left !important;">Detail Task This Week</th>
+                    <th>Progress</th>
+                    <th>Date Complete</th>
+                  </tr>
+                </thead>
+                <tbody id="pdep-history-tbody">
+                  <tr><td colspan="6" style="text-align:center; color:var(--text-sub); padding:1.5rem;">No history data</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLAN DEP ADD MODAL -->
+    <div id="planDepAddModal" class="modal-backdrop">
+      <div class="modal-box" style="max-width: 620px; background:#0F172A; border:1px solid rgba(16,185,129,0.35); border-radius:20px; padding:1.6rem; box-shadow:0 25px 50px -12px rgba(0,0,0,0.85);">
+        <div class="modal-header" style="margin-bottom:1.2rem;">
+          <div>
+            <h3 style="color:var(--emerald); font-weight:800; font-size:1.3rem;"><i class="fa-solid fa-plus-circle"></i> Add New Department Plan</h3>
+            <p style="font-size:0.8rem; color:var(--text-sub); margin-top:0.2rem;">Fill in task details. Columns E-F can be edited directly on the table.</p>
+          </div>
+          <button class="close-btn" onclick="PlanWeek.closeAddModal()">&times;</button>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:1rem;">
+          <!-- Date Assign (B) -->
+          <div>
+            <label style="display:block; font-weight:700; color:#F8FAFC; margin-bottom:0.3rem; font-size:0.85rem;"><i class="fa-solid fa-calendar-day" style="color:var(--cyan);"></i> Date Assign (B):</label>
+            <input type="date" id="pdep-add-date" style="width:100%; background:#1E293B; border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:0.55rem 0.9rem; color:#fff; font-size:0.9rem;" />
+          </div>
+
+          <!-- Technical Manager (C) -->
+          <div>
+            <label style="display:block; font-weight:700; color:#F8FAFC; margin-bottom:0.3rem; font-size:0.85rem;"><i class="fa-solid fa-user-tie" style="color:var(--amber);"></i> Technical Manager (C):</label>
+            <select id="pdep-add-manager" style="width:100%; background:#1E293B; border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:0.55rem 0.9rem; color:#fff; font-size:0.9rem;">
+              <option value="">— Select Manager —</option>
+              <option value="Mg Hein Htet Aung">Mg Hein Htet Aung</option>
+              <option value="Mg Kyaw Myo Tun">Mg Kyaw Myo Tun</option>
+              <option value="Mg Aung Zaw Hein">Mg Aung Zaw Hein</option>
+              <option value="Mg Nyi Nyi Aung">Mg Nyi Nyi Aung</option>
+              <option value="Mg Thura Aung">Mg Thura Aung</option>
+              <option value="Mg Zaw Min Oo">Mg Zaw Min Oo</option>
+              <option value="Mg Kyaw Swar">Mg Kyaw Swar</option>
+              <option value="Mg Paing Aung Soe">Mg Paing Aung Soe</option>
+              <option value="Mg Thiha">Mg Thiha</option>
+              <option value="Mg Phone Myat Kyaw">Mg Phone Myat Kyaw</option>
+            </select>
+          </div>
+
+          <!-- Detail Task This Week (D) -->
+          <div>
+            <label style="display:block; font-weight:700; color:#F8FAFC; margin-bottom:0.3rem; font-size:0.85rem;"><i class="fa-solid fa-align-left" style="color:var(--emerald);"></i> Detail Task This Week (D):</label>
+            <textarea id="pdep-add-detail" rows="4" placeholder="Describe the task in detail..." style="width:100%; background:#1E293B; border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:0.55rem 0.9rem; color:#fff; font-size:0.9rem; resize:vertical;"></textarea>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:0.8rem; margin-top:1.5rem;">
+          <button type="button" class="filter-btn" style="background:rgba(255,255,255,0.08); padding:0.55rem 1.1rem; cursor:pointer; font-size:0.85rem;" onclick="PlanWeek.closeAddModal()">Cancel</button>
+          <button type="button" class="voice-btn" style="background:linear-gradient(135deg, var(--emerald), #059669); padding:0.55rem 1.3rem; font-weight:800; cursor:pointer; font-size:0.85rem;" onclick="PlanWeek.submitAdd()">
+            <i class="fa-solid fa-check"></i> Save Plan
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- TEAM 1 COMPLETE MODAL -->
   <div id="team1Modal" class="modal-backdrop">
     <div class="modal-box" style="max-width: 920px;">
@@ -6308,6 +6439,11 @@ Team04>> 2Box</td>
           </label>
 
           <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.88rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
+            <input type="checkbox" id="perm_plan" class="perm-checkbox" value="PLAN" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
+            <span>📅 <b>Plan Week</b> (Kế Hoạch Phòng Ban Theo Tuần)</span>
+          </label>
+
+          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.88rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
             <input type="checkbox" id="perm_auth" class="perm-checkbox" value="AUTH" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
             <span>🔒 <b>Gmail Access List</b> (Quản Lý Phân Quyền Hệ Thống)</span>
           </label>
@@ -6363,15 +6499,15 @@ Team04>> 2Box</td>
 
     /* 🔐 GMAIL ACCESS CONTROL & MULTI-PERMISSION PERSISTENCE */
     const DEFAULT_GMAIL_ACCOUNTS = [
-      { email: "phonghdpxd@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "AUTH"], date: "15/08/2026" },
-      { email: "htoolaynyaw@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "AUTH"], date: "15/08/2026" },
+      { email: "phonghdpxd@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "AUTH"], date: "15/08/2026" },
+      { email: "htoolaynyaw@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "AUTH"], date: "15/08/2026" },
       { email: "bod.director@mytel.com.mm", perms: ["EXEC", "BOD"], date: "15/08/2026" },
-      { email: "tni.technical@gmail.com", perms: ["DEPT", "WO"], date: "15/08/2026" },
-      { email: "tni.operations@mytel.com.mm", perms: ["EXEC", "DEPT", "WO"], date: "15/08/2026" },
-      { email: "team1.dawei@mytel.com.mm", perms: ["DEPT", "WO"], date: "15/08/2026" },
-      { email: "team2.myeik@mytel.com.mm", perms: ["DEPT", "WO"], date: "15/08/2026" },
-      { email: "team3.bokpyin@mytel.com.mm", perms: ["DEPT", "WO"], date: "15/08/2026" },
-      { email: "team4.kawthoung@mytel.com.mm", perms: ["DEPT", "WO"], date: "15/08/2026" }
+      { email: "tni.technical@gmail.com", perms: ["DEPT", "WO", "PLAN"], date: "15/08/2026" },
+      { email: "tni.operations@mytel.com.mm", perms: ["EXEC", "DEPT", "WO", "PLAN"], date: "15/08/2026" },
+      { email: "team1.dawei@mytel.com.mm", perms: ["DEPT", "WO", "PLAN"], date: "15/08/2026" },
+      { email: "team2.myeik@mytel.com.mm", perms: ["DEPT", "WO", "PLAN"], date: "15/08/2026" },
+      { email: "team3.bokpyin@mytel.com.mm", perms: ["DEPT", "WO", "PLAN"], date: "15/08/2026" },
+      { email: "team4.kawthoung@mytel.com.mm", perms: ["DEPT", "WO", "PLAN"], date: "15/08/2026" }
     ];
 
     function getStoredGmailAccounts() {
@@ -6397,7 +6533,7 @@ Team04>> 2Box</td>
 
     function renderPermBadges(perms) {
       if (!perms || !perms.length) return '<span style="color:var(--rose);">❌ No Access</span>';
-      if (perms.length >= 5 || (perms.includes("EXEC") && perms.includes("DEPT") && perms.includes("WO") && perms.includes("BOD") && perms.includes("AUTH"))) {
+      if (perms.length >= 6 || (perms.includes("EXEC") && perms.includes("DEPT") && perms.includes("WO") && perms.includes("BOD") && perms.includes("PLAN") && perms.includes("AUTH"))) {
         return '<span class="team-tag tag-t2" style="font-weight:800; font-size:0.8rem;">🌟 Full Access (Tất Cả Các Thẻ)</span>';
       }
 
@@ -6406,6 +6542,7 @@ Team04>> 2Box</td>
         'DEPT': { label: '🏢 Dept Assign', cls: 'tag-t3' },
         'WO':   { label: '📋 WO Detail', cls: 'tag-t1' },
         'BOD':  { label: '👑 BOD Assign', cls: 'tag-t1' },
+        'PLAN': { label: '📅 Plan Week', cls: 'tag-t3' },
         'AUTH': { label: '🔒 Access Control', cls: 'tag-t2' }
       };
 
@@ -6437,7 +6574,10 @@ Team04>> 2Box</td>
           <td style="text-align:left !important;">${renderPermBadges(perms)}</td>
           <td><span class="status-pill-check sp-verified">✓ Active Authorized</span></td>
           <td style="font-size:0.8rem; color:var(--text-sub);">${acc.date || '15/08/2026'}</td>
-          <td><button class="filter-btn" style="color:var(--rose); padding:0.25rem 0.6rem; font-size:0.75rem; cursor:pointer;" onclick="removeGmailIndex(${idx})"><i class="fa-solid fa-trash"></i> Remove</button></td>
+          <td style="white-space:nowrap;">
+            <button class="filter-btn" style="color:var(--cyan); padding:0.25rem 0.6rem; font-size:0.75rem; cursor:pointer; margin-right:4px;" onclick="editGmailIndex(${idx})"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+            <button class="filter-btn" style="color:var(--rose); padding:0.25rem 0.6rem; font-size:0.75rem; cursor:pointer;" onclick="removeGmailIndex(${idx})"><i class="fa-solid fa-trash"></i> Remove</button>
+          </td>
         `;
         tbody.appendChild(tr);
       });
@@ -6453,6 +6593,7 @@ Team04>> 2Box</td>
       const cbDept = document.getElementById('perm_dept');
       const cbWo   = document.getElementById('perm_wo');
       const cbBod  = document.getElementById('perm_bod');
+      const cbPlan = document.getElementById('perm_plan');
       const cbAuth = document.getElementById('perm_auth');
 
       // Reset all first
@@ -6460,6 +6601,7 @@ Team04>> 2Box</td>
       cbDept.checked = false;
       cbWo.checked   = false;
       cbBod.checked  = false;
+      if (cbPlan) cbPlan.checked = false;
       cbAuth.checked = false;
 
       if (preset === 'FULL') {
@@ -6467,6 +6609,7 @@ Team04>> 2Box</td>
         cbDept.checked = true;
         cbWo.checked   = true;
         cbBod.checked  = true;
+        if (cbPlan) cbPlan.checked = true;
         cbAuth.checked = true;
       } else if (preset === 'BOD') {
         cbExec.checked = true;
@@ -6475,6 +6618,7 @@ Team04>> 2Box</td>
         cbExec.checked = true;
         cbDept.checked = true;
         cbWo.checked   = true;
+        if (cbPlan) cbPlan.checked = true;
       } else if (preset === 'ENGINEER') {
         cbDept.checked = true;
         cbWo.checked   = true;
@@ -6592,6 +6736,28 @@ Team04>> 2Box</td>
           renderGmailList();
         }
       }
+    }
+
+    function editGmailIndex(index) {
+      const accounts = getStoredGmailAccounts();
+      if (index < 0 || index >= accounts.length) return;
+      const acc = accounts[index];
+      const perms = Array.isArray(acc.perms) ? acc.perms : [];
+
+      // Pre-fill email
+      const emailInput = document.getElementById('newGmailInput');
+      if (emailInput) emailInput.value = acc.email;
+
+      // Set checkboxes to current permissions
+      const allPerms = ['exec', 'dept', 'wo', 'bod', 'plan', 'auth'];
+      allPerms.forEach(p => {
+        const cb = document.getElementById('perm_' + p);
+        if (cb) cb.checked = perms.includes(p.toUpperCase());
+      });
+
+      // Open modal
+      const modal = document.getElementById('gmailModal');
+      if (modal) modal.classList.add('active');
     }
 
     function resetGmailDefaults() {
@@ -6782,8 +6948,354 @@ Team04>> 2Box</td>
       }
     };
 
+    // ============================================================
+    // 🏛️ PLAN WEEK TAB — window.PlanWeek Namespace
+    // Following 8 BI Architecture Pillars (v2026-08-17)
+    // Pillar 1: SSOT — All data from GAS API
+    // Pillar 2: Security-First — Server-side permission check
+    // Pillar 3: Separation — Self-contained namespace
+    // Pillar 4: Data Contract — Standard response format
+    // Pillar 5: Error Isolation — try-catch + error banner + retry
+    // ============================================================
+    window.PlanWeek = {
+      // Config — Standalone TNI BI Backend Project (1G790B-ZHinJUQKHr-u0F2NDiaxNDjfYYSo84QysD2c3b9VGZCeevUKCU)
+      GAS_URL: 'https://script.google.com/macros/s/AKfycbzidgWuL0DfKvkdDjKnN4qCRy4HUv8lIzvGiO3ZR84e-VLbu84IITd9H2HPSJW28yzhOw/exec',
+      
+      // State
+      data: [],
+      historyData: [],
+      permits: [],
+      userEmail: '',
+      userRole: 'VIEWER',
+      weekNumber: 0,
+      weekRange: '',
+      historyVisible: false,
+      refreshTimer: null,
+
+      // Department color map
+      deptColors: {
+        'Admin': 'tag-t2', 'Asset': 'tag-t3', 'Technical': 'tag-t1',
+        'Transmission': 'tag-t4', 'CM': 'tag-t1', 'Construction Projects': 'tag-t2',
+        'Finance': 'tag-t4', 'M&E': 'tag-t3', 'PM': 'tag-t1'
+      },
+
+      // ── Init ──
+      init() {
+        try {
+          // Prompt for email on first visit (for permission check)
+          this.userEmail = localStorage.getItem('tni_plan_dep_email') || '';
+          if (!this.userEmail) {
+            this.userEmail = (prompt('Enter your Gmail for Plan Week access control:') || '').trim().toLowerCase();
+            if (this.userEmail) localStorage.setItem('tni_plan_dep_email', this.userEmail);
+          }
+          this.loadData();
+          this.loadPermissions();
+          // Auto-refresh every 30s (Pillar 7: Performance Budget)
+          if (this.refreshTimer) clearInterval(this.refreshTimer);
+          this.refreshTimer = setInterval(() => this.loadData(), 30000);
+        } catch (err) {
+          console.error('[PlanWeek] Init failed:', err);
+          this.renderError('Unable to initialize Plan Week. Please refresh the page.');
+        }
+      },
+
+      // ── Load Permissions (Pillar 2: Security-First) ──
+      async loadPermissions() {
+        try {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 15000);
+          const resp = await fetch(this.GAS_URL + '?action=get_plan_dep_permit', { signal: ctrl.signal });
+          clearTimeout(timer);
+          const json = await resp.json();
+          if (json.status === 'ok' && Array.isArray(json.data)) {
+            this.permits = json.data;
+            const me = this.permits.find(p => p.email === this.userEmail);
+            this.userRole = me ? me.role : 'VIEWER';
+          }
+        } catch (err) {
+          console.warn('[PlanWeek] Permission check failed, defaulting to VIEWER:', err.message);
+          this.userRole = 'VIEWER';
+        }
+        this.updateActionButtons();
+      },
+
+      // ── Load Data (Pillar 1: SSOT + Pillar 4: Data Contract) ──
+      async loadData() {
+        try {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 15000);
+          const resp = await fetch(this.GAS_URL + '?action=get_plan_dep&t=' + Date.now(), { signal: ctrl.signal });
+          clearTimeout(timer);
+          const json = await resp.json();
+          
+          if (json.status !== 'ok') throw new Error(json.error?.message || 'API returned error');
+          
+          this.data = json.data || [];
+          this.historyData = json.history || [];
+          this.weekNumber = json.meta?.weekNumber || 0;
+          this.weekRange = json.meta?.weekRange || '';
+          
+          // Update header
+          const titleEl = document.getElementById('pdep-week-title');
+          if (titleEl) titleEl.textContent = 'Department Plan — Week ' + this.weekNumber;
+          const rangeEl = document.getElementById('pdep-week-range');
+          if (rangeEl) rangeEl.innerHTML = '<i class="fa-solid fa-clock"></i> ' + this.weekRange;
+          
+          // Update sync time
+          const syncEl = document.getElementById('pdep-sync-time');
+          if (syncEl) syncEl.textContent = 'Last sync: ' + new Date().toLocaleTimeString();
+          
+          this.render();
+          this.renderHistory();
+        } catch (err) {
+          console.error('[PlanWeek] Load failed:', err);
+          if (!this.data.length) {
+            this.renderError('Failed to load Plan data: ' + err.message);
+          }
+        }
+      },
+
+      // ── Render Active Plan Table (Pillar 5: Error Isolation) ──
+      render() {
+        const tbody = document.getElementById('pdep-tbody');
+        const countEl = document.getElementById('pdep-count');
+        if (!tbody) return;
+        
+        if (!this.data.length) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-sub); padding:2rem;"><i class="fa-solid fa-inbox"></i> No active plan data. Click "Add New Plan" to get started.</td></tr>';
+          if (countEl) countEl.textContent = '(0)';
+          return;
+        }
+        
+        if (countEl) countEl.textContent = '(' + this.data.length + ')';
+        
+        const isAdmin = this.userRole === 'ADMIN';
+        
+        tbody.innerHTML = this.data.map((item, idx) => {
+          const hasComplete = item.dateComplete && item.dateComplete.trim() !== '';
+          
+          return `<tr style="${hasComplete ? 'opacity:0.6; background:rgba(16,185,129,0.05);' : ''}">
+            <td>${idx + 1}</td>
+            <td style="font-size:0.82rem; white-space:nowrap;">${this.escHtml(item.dateAssign)}</td>
+            <td><strong style="font-size:0.85rem;">${this.escHtml(item.techManager)}</strong></td>
+            <td style="text-align:left !important; max-width:400px; line-height:1.4; font-size:0.82rem; color:var(--text-sub);">${this.escHtml(item.detailTask)}</td>
+            <td style="font-size:0.82rem; color:var(--amber); cursor:pointer; text-decoration:underline dotted;" onclick="PlanWeek.startInlineEdit(${item.row}, 5, this, '${this.escAttr(item.progress)}')" title="Click to edit">${item.progress || '<span style=&quot;color:var(--text-muted);&quot;>— set —</span>'}</td>
+            <td style="font-size:0.82rem; color:var(--emerald); cursor:pointer; text-decoration:underline dotted;" onclick="PlanWeek.startInlineEdit(${item.row}, 6, this, '${this.escAttr(item.dateComplete)}')" title="Click to edit">${item.dateComplete || '<span style=&quot;color:var(--text-muted);&quot;>— set —</span>'}</td>
+            <td>${isAdmin ? '<button style="background:none; border:none; color:var(--rose); cursor:pointer; font-size:0.85rem;" onclick="PlanWeek.deleteRow(' + item.row + ')" title="Delete"><i class="fa-solid fa-trash"></i></button>' : '<span style="color:var(--text-muted); font-size:0.7rem;">🔒</span>'}</td>
+          </tr>`;
+        }).join('');
+      },
+
+      // ── Render History Table ──
+      renderHistory() {
+        const tbody = document.getElementById('pdep-history-tbody');
+        const countEl = document.getElementById('pdep-history-count');
+        if (!tbody) return;
+        
+        if (countEl) countEl.textContent = '(' + this.historyData.length + ')';
+        
+        if (!this.historyData.length) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-sub); padding:1.5rem;"><i class="fa-solid fa-box-open"></i> No archived history yet</td></tr>';
+          return;
+        }
+        
+        tbody.innerHTML = this.historyData.map((item, idx) => {
+          return `<tr>
+            <td>${idx + 1}</td>
+            <td style="font-size:0.82rem; white-space:nowrap;">${this.escHtml(item.dateAssign)}</td>
+            <td><strong style="font-size:0.82rem;">${this.escHtml(item.techManager)}</strong></td>
+            <td style="text-align:left !important; max-width:400px; line-height:1.4; font-size:0.82rem; color:var(--text-sub);">${this.escHtml(item.detailTask)}</td>
+            <td style="font-size:0.82rem;">${this.escHtml(item.progress)}</td>
+            <td style="font-size:0.82rem; color:var(--emerald); font-weight:600;">${this.escHtml(item.dateComplete)} ✓</td>
+          </tr>`;
+        }).join('');
+      },
+
+      // ── Inline Edit for E:F (Click to Edit) ──
+      startInlineEdit(row, col, td, currentVal) {
+        if (td.querySelector('input')) return; // Already editing
+        const original = currentVal || '';
+        td.innerHTML = `<input type="text" value="${this.escAttr(original)}" 
+          style="background:#1E293B; border:1px solid var(--cyan); border-radius:6px; padding:0.3rem 0.5rem; color:#fff; font-size:0.82rem; width:100px;"
+          placeholder="DD/MM/YYYY"
+          onkeydown="if(event.key==='Enter') PlanWeek.saveInlineEdit(${row}, ${col}, this); if(event.key==='Escape') PlanWeek.loadData();"
+          onblur="PlanWeek.saveInlineEdit(${row}, ${col}, this)" />`;
+        td.querySelector('input').focus();
+        td.querySelector('input').select();
+      },
+
+      async saveInlineEdit(row, col, input) {
+        const newVal = input.value.trim();
+        const td = input.parentElement;
+        td.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="color:var(--cyan);"></i>';
+        
+        try {
+          const resp = await fetch(this.GAS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'plan_dep_update', row, col, value: newVal, email: this.userEmail })
+          });
+          const json = await resp.json();
+          if (json.status !== 'ok') throw new Error(json.error?.message || 'Update failed');
+          this.loadData(); // Refresh
+        } catch (err) {
+          alert('Error saving: ' + err.message);
+          this.loadData();
+        }
+      },
+
+      // ── Update Action Buttons Visibility ──
+      updateActionButtons() {
+        // Archive button visible only for ADMIN/EDITOR
+        // Add button visible only for EDITOR/ADMIN
+        // These are already rendered; re-render table to show/hide action column
+        this.render();
+      },
+
+      // ── Open/Close Add Modal ──
+      openAddModal() {
+        if (this.userRole === 'VIEWER') {
+          alert('You need EDITOR or ADMIN permission to add plans. Contact admin.');
+          return;
+        }
+        // Auto-fill today's date
+        const dateInput = document.getElementById('pdep-add-date');
+        if (dateInput) {
+          const now = new Date();
+          const yyyy = now.getFullYear();
+          const mm = String(now.getMonth() + 1).padStart(2, '0');
+          const dd = String(now.getDate()).padStart(2, '0');
+          dateInput.value = yyyy + '-' + mm + '-' + dd;
+        }
+        document.getElementById('planDepAddModal')?.classList.add('active');
+      },
+      closeAddModal() {
+        document.getElementById('planDepAddModal')?.classList.remove('active');
+        // Reset form
+        const dateInput = document.getElementById('pdep-add-date');
+        if (dateInput) dateInput.value = '';
+        const mgr = document.getElementById('pdep-add-manager');
+        if (mgr) mgr.value = '';
+        const detail = document.getElementById('pdep-add-detail');
+        if (detail) detail.value = '';
+      },
+
+      // ── Submit Add (Pillar 2: Security checked at GAS server) ──
+      async submitAdd() {
+        const dateRaw = document.getElementById('pdep-add-date')?.value || '';
+        const techManager = document.getElementById('pdep-add-manager')?.value || '';
+        const detailTask = document.getElementById('pdep-add-detail')?.value?.trim() || '';
+        
+        // Format date to DD/MM/YYYY
+        let dateAssign = '';
+        if (dateRaw) {
+          const d = new Date(dateRaw);
+          dateAssign = String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+        }
+        
+        if (!techManager) { alert('Please select a Technical Manager.'); return; }
+        if (!detailTask) { alert('Please enter Detail Task.'); return; }
+        
+        try {
+          const resp = await fetch(this.GAS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'plan_dep_add',
+              email: this.userEmail,
+              dateAssign,
+              techManager,
+              detailTask
+            })
+          });
+          const json = await resp.json();
+          if (json.status !== 'ok') throw new Error(json.error?.message || 'Add failed');
+          
+          this.closeAddModal();
+          this.loadData();
+        } catch (err) {
+          alert('Error adding plan: ' + err.message);
+        }
+      },
+
+      // ── Delete Row (Pillar 2: ADMIN only, checked at GAS) ──
+      async deleteRow(row) {
+        if (!confirm('Are you sure you want to delete this plan item?')) return;
+        try {
+          const resp = await fetch(this.GAS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'plan_dep_delete', row, email: this.userEmail })
+          });
+          const json = await resp.json();
+          if (json.status !== 'ok') throw new Error(json.error?.message || 'Delete failed');
+          this.loadData();
+        } catch (err) {
+          alert('Error deleting: ' + err.message);
+        }
+      },
+
+      // ── Archive Completed Tasks ──
+      async archiveCompleted() {
+        if (!confirm('Move all completed tasks (with Date Complete before this week) to History?')) return;
+        try {
+          const resp = await fetch(this.GAS_URL + '?action=plan_dep_archive');
+          const json = await resp.json();
+          if (json.status !== 'ok') throw new Error(json.error?.message || 'Archive failed');
+          alert(json.data?.archived + ' task(s) archived successfully.');
+          this.loadData();
+        } catch (err) {
+          alert('Error archiving: ' + err.message);
+        }
+      },
+
+      // ── Toggle History Section ──
+      toggleHistory() {
+        this.historyVisible = !this.historyVisible;
+        const section = document.getElementById('pdep-history-section');
+        const chevron = document.getElementById('pdep-history-chevron');
+        if (section) section.style.display = this.historyVisible ? 'block' : 'none';
+        if (chevron) chevron.style.transform = this.historyVisible ? 'rotate(180deg)' : 'rotate(0deg)';
+      },
+
+      // ── Error Banner (Pillar 5: Error Isolation) ──
+      renderError(msg) {
+        const tbody = document.getElementById('pdep-tbody');
+        if (tbody) {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:2rem;">
+            <div style="color:var(--rose); font-size:1rem; margin-bottom:0.8rem;">
+              <i class="fa-solid fa-triangle-exclamation"></i> ${this.escHtml(msg)}
+            </div>
+            <button class="filter-btn" style="background:rgba(56,189,248,0.15); color:var(--cyan); border:1px solid rgba(56,189,248,0.3); padding:0.5rem 1rem; border-radius:8px; cursor:pointer;" onclick="PlanWeek.init()">
+              <i class="fa-solid fa-rotate-right"></i> Retry
+            </button>
+          </td></tr>`;
+        }
+      },
+
+      // ── Utility: HTML Escape ──
+      escHtml(str) { 
+        const d = document.createElement('div'); 
+        d.textContent = str || ''; 
+        return d.innerHTML; 
+      },
+      escAttr(str) {
+        return (str || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
+    };
+
     window.addEventListener('DOMContentLoaded', () => {
       window.updateWoChart();
+      // Init Plan Week when tab is first shown (lazy load)
+      let planWeekInitialized = false;
+      const origShowTab = window.showTab;
+      window.showTab = function(panelId, tabBtn) {
+        origShowTab(panelId, tabBtn);
+        if (panelId === 'plan-week-panel' && !planWeekInitialized) {
+          planWeekInitialized = true;
+          PlanWeek.init();
+        }
+      };
     });
   </script>
 </body>
