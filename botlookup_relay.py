@@ -130,7 +130,7 @@ def wait_until_target_minute(force: bool = False) -> bool:
 
     print(f"[{myanmar_now()}] ⏱️ Runner khởi động lúc: {now.strftime('%H:%M:%S')} MMT (phút {m}:{s:02d})")
 
-    # 1. Khung nhịp :06 MMT
+    # 1. Khung nhịp :06 MMT (Cửa sổ chặt: chỉ chấp nhận :00-:10)
     if 0 <= m < 6:
         target_sec = (6 - m) * 60 - s
         print(f"[{myanmar_now()}] ⏳ Khởi động sớm trước mốc :06 MMT — Sleep {target_sec}s...")
@@ -138,11 +138,20 @@ def wait_until_target_minute(force: bool = False) -> bool:
         time.sleep(target_sec)
         print(f"[{myanmar_now()}] 🔔 Đã chạm mốc :06:00 MMT. Bắt đầu gửi lệnh!")
         return True
-    elif 6 <= m <= 20:
+    elif 6 <= m <= 10:
         print(f"[{myanmar_now()}] 🎯 Trong cửa sổ nhịp :06 MMT (phút {m}). Chạy ngay lập tức!")
         return True
 
-    # 2. Khung nhịp :36 MMT
+    # 2. Phút :11-:20 → Trễ quá nhịp :06, sleep đến :36
+    elif 11 <= m < 21:
+        target_sec = (36 - m) * 60 - s
+        print(f"[{myanmar_now()}] ⏳ Trễ nhịp :06 — Chuyển hướng sleep {target_sec}s đến :36 MMT...")
+        import time
+        time.sleep(target_sec)
+        print(f"[{myanmar_now()}] 🔔 Đã chạm mốc :36:00 MMT. Bắt đầu gửi lệnh!")
+        return True
+
+    # 3. Khung nhịp :36 MMT (Cửa sổ chặt: chỉ chấp nhận :21-:40)
     elif 21 <= m < 36:
         target_sec = (36 - m) * 60 - s
         print(f"[{myanmar_now()}] ⏳ Khởi động sớm trước mốc :36 MMT — Sleep {target_sec}s...")
@@ -150,22 +159,18 @@ def wait_until_target_minute(force: bool = False) -> bool:
         time.sleep(target_sec)
         print(f"[{myanmar_now()}] 🔔 Đã chạm mốc :36:00 MMT. Bắt đầu gửi lệnh!")
         return True
-    elif 36 <= m <= 50:
+    elif 36 <= m <= 40:
         print(f"[{myanmar_now()}] 🎯 Trong cửa sổ nhịp :36 MMT (phút {m}). Chạy ngay lập tức!")
         return True
 
-    # 3. Khung cuối giờ (:51 - :59) chuyển sang nhịp :06 giờ tiếp theo
+    # 4. Phút :41-:59 → Trễ quá nhịp :36, sleep đến :06 giờ kế tiếp
     else:
         target_sec = (60 - m + 6) * 60 - s
-        if target_sec <= 600:
-            print(f"[{myanmar_now()}] ⏳ Cuối giờ — Sleep {target_sec}s để chạm mốc :06 MMT giờ kế tiếp...")
-            import time
-            time.sleep(target_sec)
-            print(f"[{myanmar_now()}] 🔔 Đã chạm mốc :06:00 MMT. Bắt đầu gửi lệnh!")
-            return True
-
-    print(f"[{myanmar_now()}] 🚀 Bắt đầu relay Site Down...")
-    return True
+        print(f"[{myanmar_now()}] ⏳ Trễ nhịp :36 — Sleep {target_sec}s đến :06 MMT giờ kế tiếp...")
+        import time
+        time.sleep(target_sec)
+        print(f"[{myanmar_now()}] 🔔 Đã chạm mốc :06:00 MMT. Bắt đầu gửi lệnh!")
+        return True
 
 
 async def main():
@@ -296,6 +301,19 @@ async def main():
             await client.send_message(TARGET_CHAT_ID, err)
 
         raw_text = "\n".join(bot_messages) if bot_messages else ""
+
+        # 🛡️ LỌC CHỈ LẤY TANINTHARYI REGION — Không lấy tỉnh khác (Ayeyarwady, Sagaing, v.v.)
+        # Bot /down_tni trả về nhiều tin cho nhiều region. Chỉ giữ tin chứa "Tanintharyi Region".
+        if bot_messages:
+            tni_messages = [m for m in bot_messages if "tanintharyi" in m.lower()]
+            if tni_messages:
+                raw_text = "\n".join(tni_messages)
+                print(f"[{myanmar_now()}] 🎯 Lọc Tanintharyi: {len(tni_messages)}/{len(bot_messages)} tin")
+            else:
+                print(f"[{myanmar_now()}] ⚠️ Không tìm thấy tin Tanintharyi trong {len(bot_messages)} tin bot — bỏ qua!")
+                raw_text = ""
+        else:
+            raw_text = ""
 
         # ── 9. Gọi GAS webhook → ghi Cột A → checkAndSend() gửi tổng hợp ──
         sent_tin1 = True

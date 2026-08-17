@@ -22,6 +22,7 @@ on:
         default: 'Auto'
         options:
           - 'Auto'
+          - 'All Reports (1, 2, 3, 4, 5, 6 - Full Pipeline)'
           - 'Reports 1, 2, 3, 4 - Daily Task & Backlog'
           - 'Report 3.1 - Asset progress for material'
           - 'Report 2 (BOD) - BOD Assign'
@@ -29,6 +30,7 @@ on:
           - 'Report 5B - Plan Update'
           - 'Report 5C - Plan Morning'
           - 'Report 6 - Daily Note Read Report'
+          - 'Report 6.1 - Site Clear Today'
           - 'Task - Cable Daily Report'
           - 'Task - Refuel Request Report'
           - 'Task - Refuel Plan Report 1'
@@ -38,6 +40,7 @@ on:
           - 'Task - Refuel Plan Report 4'
           - 'Task - All Refuel Reports'
           - 'Task - Check Read Status'
+          - 'Ghế AUDITOR-9.1 - Master System Audit'
       skip_delay:
         description: 'Skip random delay (1=yes, 0=no)'
         required: false
@@ -68,17 +71,18 @@ jobs:
 
           echo "1️⃣ Search Bot (Vercel)..."
           curl -s -f "https://api.telegram.org/bot8606383435:AAEstcN4Om6_9ZAjs4OoFV2uVlRALgae2Ac/setWebhook?url=https://tni-bot.vercel.app/api/search_bot" || true
-          curl -s -f "https://tni-bot.vercel.app/api/search_bot?action=reset" || true
+          curl -s -f "https://tni-bot.vercel.app/api/search_bot" || true
 
           echo "2️⃣ Asset Collector (Vercel)..."
-          curl -s -f "https://tni-bot.vercel.app/api/collector?action=reset" || true
+          curl -s -f "https://api.telegram.org/bot8928677923:AAE_cJuEDH1tUf5v0q5Wf0UjDHlcp_k1lGM/setWebhook?url=https://tni-bot.vercel.app/api/collector" || true
+          curl -s -f "https://tni-bot.vercel.app/api/collector" || true
 
           echo "3️⃣ Site Down Relay (Vercel)..."
           curl -s -f "https://tni-sitedown.vercel.app/api/site_down_relay" || true
           curl -s -f "https://api.telegram.org/bot8647102342:AAGwI95-xeyFfJZusOOrIPVBER-z6taZHZI/setWebhook?url=https://tni-sitedown.vercel.app/api/site_down_relay" || true
 
           echo "4️⃣ Main GAS Backend..."
-          curl -s -L "https://script.google.com/macros/s/AKfycbwHyzulEMVGjslfjN_m38HzpFZHRfk2qwbQmdwb6MMqBM8xNm20JJxxzW_4zTNzp3n24Q/exec?action=ping" || true
+          curl -s -L "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec?action=ping" || true
 
           echo "5️⃣ Auto Copy Paste GAS..."
           curl -s -L "https://script.google.com/macros/s/AKfycbwi3J0VrrIE91mnPvIUuykPjwGvNc4y9JDxCNPvJTtOmVAvvalDXu5ZwYZmu5jW-fSo0w/exec?action=ping" || true
@@ -104,8 +108,9 @@ jobs:
           # Flags
           NEED_PYTHON=false
           R1234=false; BOD=false; P5A=false; P5B=false; P5C=false
-          R6=false; CABLE=false; REFUEL_REQ=false
+          R6=false; R61=false; CABLE=false; REFUEL_REQ=false
           REFUEL_P1=false; REFUEL_P2=false; REFUEL_P21=false; REFUEL_P4=false
+          AUDITOR91=false
 
           # check_time <hour> <target_minute> — dung sai ±3 phút (đảm bảo 100% bắt trúng kể cả khi GitHub queue trễ 2-3p)
           check_time() {
@@ -129,18 +134,26 @@ jobs:
           check_time 06 06 && P5C=true && NEED_PYTHON=true && echo "🚃 Toa 5: Report 5 Daily Plan Morning (06:06 MMT)"
           #  07:06 → Refuel Request Catch-up (🤖 Bot API)
           check_time 07 06 && REFUEL_REQ=true && NEED_PYTHON=true && echo "🚃 Toa 8: Refuel Req Catch-up (07:06 MMT)"
+          #  07:18 → Report 6.1 Site Clear Today (🤖 Bot API)
+          check_time 07 18 && R61=true && NEED_PYTHON=true && echo "🚃 Toa 6.1: Report 6.1 Site Clear Today (07:18 MMT)"
           #  08:48 → Report 6 Read Report (Ca 1) (📱 Telethon)
           check_time 08 48 && R6=true && NEED_PYTHON=true && echo "🚃 Toa 6: Report 6 Read (08:48 MMT)"
           #  08:28 → Plan 5C Morning
           check_time 08 28 && P5C=true && NEED_PYTHON=true && echo "🚃 Toa 5: Plan 5C Morning"
+          #  09:00 → Ghế AUDITOR-9.1 (Master System Audit)
+          check_time 09 00 && AUDITOR91=true && NEED_PYTHON=true && echo "🚃 Toa Auditor: Ghế AUDITOR-9.1 (09:00 MMT)"
           #  09:56 → Plan 5C Morning
           check_time 09 56 && P5C=true && NEED_PYTHON=true && echo "🚃 Toa 5: Plan 5C Morning (09:56 MMT)"
+          #  10:18 → Report 6.1 Site Clear Today (🤖 Bot API)
+          check_time 10 18 && R61=true && NEED_PYTHON=true && echo "🚃 Toa 6.1: Report 6.1 Site Clear Today (10:18 MMT)"
 
           # ═══════ 🌤️ AFTERNOON BLOCK (13:00-16:30) ═══════
           #  13:06 → Refuel Request (🤖 Bot API)
           check_time 13 06 && REFUEL_REQ=true && NEED_PYTHON=true && echo "🚃 Toa 8: Refuel Request (13:06 MMT)"
           #  13:11 → Refuel Plan (Report 2 Cấp Dầu - Ca 1) (📱 Telethon)
           check_time 13 11 && REFUEL_P1=true && REFUEL_P2=true && REFUEL_P21=true && NEED_PYTHON=true && echo "🚃 Refuel Plan (13:11 MMT)"
+          #  14:18 → Report 6.1 Site Clear Today (🤖 Bot API)
+          check_time 14 18 && R61=true && NEED_PYTHON=true && echo "🚃 Toa 6.1: Report 6.1 Site Clear Today (14:18 MMT)"
           #  14:58 → Report 6 Read Report (Ca 2) (📱 Telethon)
           check_time 14 58 && R6=true && NEED_PYTHON=true && echo "🚃 Toa 6: Report 6 Read (14:58 MMT)"
           #  15:26 → Plan 5C Evening (📱 Telethon)
@@ -153,8 +166,8 @@ jobs:
           # 🚨 Site Down Relay: ĐÃ TÁCH HẲN sang botlookup_relay.yml (cron 6,36 UTC = :36,:06 MMT)
 
           # ═══════ 🌙 EVENING BLOCK (17:00-22:30) ═══════
-          #  17:18 → Report 6
-          check_time 17 18 && R6=true && NEED_PYTHON=true && echo "🚃 Toa 6: Report 6"
+          #  17:18 → Report 6 & Report 6.1
+          check_time 17 18 && R6=true && R61=true && NEED_PYTHON=true && echo "🚃 Toa 6+6.1: Report 6 + Report 6.1 Site Clear Today (17:18 MMT)"
           #  18:06 → Refuel Plan 2
           check_time 18 06 && REFUEL_P2=true && REFUEL_P21=true && NEED_PYTHON=true && echo "🚃 Toa 10: Refuel Plan 2 (18:06 MMT)"
           #  18:41 → Report 5 (Daily Plan - Ca Chiều / EOD Plan vs Actual) (📱 Telethon)
@@ -176,13 +189,14 @@ jobs:
           echo "p5b=$P5B" >> $GITHUB_OUTPUT
           echo "p5c=$P5C" >> $GITHUB_OUTPUT
           echo "r6=$R6" >> $GITHUB_OUTPUT
+          echo "r61=$R61" >> $GITHUB_OUTPUT
           echo "cable=$CABLE" >> $GITHUB_OUTPUT
           echo "refuel_req=$REFUEL_REQ" >> $GITHUB_OUTPUT
           echo "refuel_p1=$REFUEL_P1" >> $GITHUB_OUTPUT
           echo "refuel_p2=$REFUEL_P2" >> $GITHUB_OUTPUT
           echo "refuel_p21=$REFUEL_P21" >> $GITHUB_OUTPUT
-
           echo "refuel_p4=$REFUEL_P4" >> $GITHUB_OUTPUT
+          echo "auditor91=$AUDITOR91" >> $GITHUB_OUTPUT
 
           if [ "$NEED_PYTHON" = "false" ]; then
             echo "🏥 Keepalive-only tick, no reports to send."
@@ -215,12 +229,14 @@ jobs:
       # ⏰ Schedule: 05:48, 15:48 Myanmar
       # ═══════════════════════════════════════════════
       - name: "📊 Toa 1+11 — Reports 1,2,3,4 + BOD Assign"
+        continue-on-error: true
         if: |
           steps.sched.outputs.r1234 == 'true' ||
           (github.event_name == 'workflow_dispatch' && (
             inputs.report_type == 'Reports 1, 2, 3, 4 - Daily Task & Backlog' ||
             inputs.report_type == 'Report 3.1 - Asset progress for material' ||
-            inputs.report_type == 'Report 2 (BOD) - BOD Assign'
+            inputs.report_type == 'Report 2 (BOD) - BOD Assign' ||
+            inputs.report_type == 'All Reports (1, 2, 3, 4, 5, 6 - Full Pipeline)'
           ))
         env:
           SEND_BOT_TOKEN: ${{ secrets.SEND_BOT_TOKEN }}
@@ -245,6 +261,7 @@ jobs:
       # ⏰ Schedule: 05:58, 15:58 Myanmar
       # ═══════════════════════════════════════════════
       - name: "📋 Toa 3 — Report 5A Plan EOD"
+        continue-on-error: true
         if: |
           steps.sched.outputs.p5a == 'true' ||
           (github.event_name == 'workflow_dispatch' && inputs.report_type == 'Report 5A - Plan EOD')
@@ -254,7 +271,7 @@ jobs:
           TELEGRAM_SESSION: ${{ secrets.TELEGRAM_SESSION }}
           SEND_BOT_TOKEN: ${{ secrets.SEND_BOT_TOKEN }}
           APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
-        run: python daily_plan_report.py --mode eod
+        run: python daily_plan_report.py --mode eod || true
 
       # ═══════════════════════════════════════════════
       # 📋 TOA 4: Report 5B — Plan Update
@@ -262,6 +279,7 @@ jobs:
       # ⏰ Schedule: 21:03 Myanmar
       # ═══════════════════════════════════════════════
       - name: "📋 Toa 4 — Report 5B Plan Update"
+        continue-on-error: true
         if: |
           steps.sched.outputs.p5b == 'true' ||
           (github.event_name == 'workflow_dispatch' && inputs.report_type == 'Report 5B - Plan Update')
@@ -271,7 +289,7 @@ jobs:
           TELEGRAM_SESSION: ${{ secrets.TELEGRAM_SESSION }}
           SEND_BOT_TOKEN: ${{ secrets.SEND_BOT_TOKEN }}
           APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
-        run: python daily_plan_report.py --mode update
+        run: python daily_plan_report.py --mode update || true
 
       # ═══════════════════════════════════════════════
       # 📋 TOA 5: Report 5C — Plan Morning/Evening
@@ -279,16 +297,20 @@ jobs:
       # ⏰ Schedule: 05:28, 08:28, 09:53, 15:23, 19:03, 22:03 Myanmar
       # ═══════════════════════════════════════════════
       - name: "📋 Toa 5 — Report 5C Plan Morning/Evening"
+        continue-on-error: true
         if: |
           steps.sched.outputs.p5c == 'true' ||
-          (github.event_name == 'workflow_dispatch' && inputs.report_type == 'Report 5C - Plan Morning')
+          (github.event_name == 'workflow_dispatch' && (
+            inputs.report_type == 'Report 5C - Plan Morning' ||
+            inputs.report_type == 'All Reports (1, 2, 3, 4, 5, 6 - Full Pipeline)'
+          ))
         env:
           TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
           TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
           TELEGRAM_SESSION: ${{ secrets.TELEGRAM_SESSION }}
           SEND_BOT_TOKEN: ${{ secrets.SEND_BOT_TOKEN }}
           APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
-        run: python daily_plan_report.py --mode morning
+        run: python daily_plan_report.py --mode morning || true
 
       # ═══════════════════════════════════════════════
       # 📖 TOA 6: Report 6 — Daily Note Read Report
@@ -296,16 +318,38 @@ jobs:
       # ⏰ Schedule: 14:03, 16:03, 17:18, 19:08, 20:33 Myanmar
       # ═══════════════════════════════════════════════
       - name: "📖 Toa 6 — Report 6 Read Report"
+        continue-on-error: true
         if: |
           steps.sched.outputs.r6 == 'true' ||
-          (github.event_name == 'workflow_dispatch' && inputs.report_type == 'Report 6 - Daily Note Read Report')
+          (github.event_name == 'workflow_dispatch' && (
+            inputs.report_type == 'Report 6 - Daily Note Read Report' ||
+            inputs.report_type == 'All Reports (1, 2, 3, 4, 5, 6 - Full Pipeline)'
+          ))
         env:
           TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
           TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
           TELEGRAM_SESSION: ${{ secrets.TELEGRAM_SESSION }}
           SEND_BOT_TOKEN: ${{ secrets.SEND_BOT_TOKEN }}
           APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
-        run: python daily_read_report.py
+        run: python daily_read_report.py || true
+
+      # ═══════════════════════════════════════════════
+      # 📋 TOA 6.1: Report 6.1 Site Clear Today
+      # 🤖 Engine: Bot API (SEND_BOT)
+      # ⏰ Schedule: 07:18, 10:18, 14:18, 17:18 Myanmar
+      # ═══════════════════════════════════════════════
+      - name: "📋 Toa 6.1 — Report 6.1 Site Clear Today"
+        continue-on-error: true
+        if: |
+          steps.sched.outputs.r61 == 'true' ||
+          (github.event_name == 'workflow_dispatch' && (
+            inputs.report_type == 'Report 6.1 - Site Clear Today' ||
+            inputs.report_type == 'All Reports (1, 2, 3, 4, 5, 6 - Full Pipeline)'
+          ))
+        env:
+          SEND_BOT_TOKEN: ${{ secrets.SEND_BOT_TOKEN }}
+          APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
+        run: python site_clear_report.py || true
 
       # ═══════════════════════════════════════════════
       # 🔌 TOA 7: Cable Daily Report
@@ -313,6 +357,7 @@ jobs:
       # ⏰ Schedule: 05:53, 15:53 Myanmar
       # ═══════════════════════════════════════════════
       - name: "🔌 Toa 7 — Cable Daily Report"
+        continue-on-error: true
         if: |
           steps.sched.outputs.cable == 'true' ||
           (github.event_name == 'workflow_dispatch' && inputs.report_type == 'Task - Cable Daily Report')
@@ -321,7 +366,7 @@ jobs:
           CABLE_APPS_SCRIPT_URL: ${{ secrets.CABLE_APPS_SCRIPT_URL }}
           CABLE_CHAT_ID: ${{ secrets.CABLE_CHAT_ID }}
           APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
-        run: python cable_report.py
+        run: python cable_report.py || true
 
       # ═══════════════════════════════════════════════
       # ⛽ TOA 8: Refuel Request Report
@@ -329,6 +374,7 @@ jobs:
       # ⏰ Schedule: 05:53, 13:03, 15:53 Myanmar
       # ═══════════════════════════════════════════════
       - name: "⛽ Toa 8 — Refuel Request Report"
+        continue-on-error: true
         if: |
           steps.sched.outputs.refuel_req == 'true' ||
           (github.event_name == 'workflow_dispatch' && (
@@ -347,6 +393,7 @@ jobs:
       # ⏰ Schedule: 13:08, 22:08 Myanmar
       # ═══════════════════════════════════════════════
       - name: "⛽ Toa 9 — Refuel Plan Report 1"
+        continue-on-error: true
         if: |
           steps.sched.outputs.refuel_p1 == 'true' ||
           (github.event_name == 'workflow_dispatch' && (
@@ -367,6 +414,7 @@ jobs:
       # ⏰ Schedule: 13:13, 18:03, 22:13 Myanmar
       # ═══════════════════════════════════════════════
       - name: "⛽ Toa 10 — Refuel Plan Report 2 + 2.1"
+        continue-on-error: true
         if: |
           steps.sched.outputs.refuel_p2 == 'true' ||
           (github.event_name == 'workflow_dispatch' && (
@@ -390,6 +438,7 @@ jobs:
       # ⏰ Schedule: 22:18 Myanmar
       # ═══════════════════════════════════════════════
       - name: "⛽ Toa 11 — Refuel Plan Report 4"
+        continue-on-error: true
         if: |
           steps.sched.outputs.refuel_p4 == 'true' ||
           (github.event_name == 'workflow_dispatch' && (
@@ -408,12 +457,28 @@ jobs:
       # 🔍 CHECK READ STATUS (Manual only)
       # ═══════════════════════════════════════════════
       - name: "🔍 Task — Check Read Status"
+        continue-on-error: true
         if: github.event_name == 'workflow_dispatch' && inputs.report_type == 'Task - Check Read Status'
         env:
           TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
           TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
           TELEGRAM_SESSION: ${{ secrets.TELEGRAM_SESSION }}
           APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
-        run: python check_read_status.py
+        run: python check_read_status.py || true
+
+      # ═══════════════════════════════════════════════
+      # 👑 TOA AUDITOR: Ghế AUDITOR-9.1 — System Master Healthcheck
+      # ⏰ Schedule: 09:00 AM Myanmar Daily
+      # ═══════════════════════════════════════════════
+      - name: "👑 Toa Auditor — Ghế AUDITOR-9.1 System Master Healthcheck"
+        continue-on-error: true
+        if: |
+          steps.sched.outputs.auditor91 == 'true' ||
+          (github.event_name == 'workflow_dispatch' && inputs.report_type == 'Ghế AUDITOR-9.1 - Master System Audit')
+        env:
+          ADMIN_CHAT_ID: "6859790680"
+          SEND_BOT_TOKEN: ${{ secrets.SEND_BOT_TOKEN }}
+        run: python system_auditor.py || true
+
 
 
