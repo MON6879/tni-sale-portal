@@ -587,6 +587,13 @@ async def main():
 
             chat_id = GROUPS[gk]
             await delete_old_messages_telethon(client, chat_id, GAS_URL, f"READREPORT_{gk}")
+            try:
+                async for old_m in client.iter_messages(chat_id, limit=30):
+                    if old_m.text and ("6. Report — Daily Note Read Report" in old_m.text or "Daily Note Read Report" in old_m.text):
+                        try:
+                            await client.delete_messages(chat_id, [old_m.id], revoke=True)
+                        except Exception: pass
+            except Exception: pass
             sent = await client.send_message(chat_id, "\n".join(tl))
             save_msgids(GAS_URL, f"READREPORT_{gk}", [sent.id])
             print(f"📤 Report sent to {gk}")
@@ -642,6 +649,13 @@ async def main():
         report = "\n".join(lines)
         control_id = GROUPS["CONTROL"]
         await delete_old_messages_telethon(client, control_id, GAS_URL, "READREPORT_CONTROL")
+        try:
+            async for old_m in client.iter_messages(control_id, limit=30):
+                if old_m.text and ("6. Report — Daily Note Read Report" in old_m.text or "Daily Note Read Report" in old_m.text):
+                    try:
+                        await client.delete_messages(control_id, [old_m.id], revoke=True)
+                    except Exception: pass
+        except Exception: pass
         sent = await client.send_message(control_id, report)
         save_msgids(GAS_URL, "READREPORT_CONTROL", [sent.id])
         print(f"📤 Consolidated report sent to CONTROL SITE")

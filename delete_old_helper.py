@@ -12,25 +12,17 @@ import asyncio
 import requests
 
 
-MAIN_GAS_FALLBACK = "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
-
-def _clean_gas_url(url: str) -> str:
-    if not url or "AKfycbzGFdnE" in url or "AKfycbz-" not in url:
-        return MAIN_GAS_FALLBACK
-    return url
-
 # ── GAS API helpers ─────────────────────────────────────────────
 
 def get_old_msgids(gas_url: str, key: str) -> list[int]:
     """Đọc message_ids cũ từ GAS PropertiesService.
     Returns list of message_id (int). Rỗng nếu lỗi hoặc chưa có.
     """
-    url = _clean_gas_url(gas_url)
-    if not url or not key:
+    if not gas_url or not key:
         return []
     try:
         resp = requests.get(
-            url,
+            gas_url,
             params={"action": "get_msgids", "key": key},
             timeout=30,
             allow_redirects=True
@@ -46,8 +38,7 @@ def get_old_msgids(gas_url: str, key: str) -> list[int]:
 
 def save_msgids(gas_url: str, key: str, msgids: list[int]):
     """Lưu message_ids mới vào GAS PropertiesService."""
-    url = _clean_gas_url(gas_url)
-    if not url or not key or not msgids:
+    if not gas_url or not key or not msgids:
         return
     try:
         resp = requests.post(

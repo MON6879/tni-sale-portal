@@ -37,8 +37,8 @@ from telethon.sessions import StringSession
 from telethon.tl.functions.messages import GetHistoryRequest
 from telegram import Bot
 from dotenv import load_dotenv
-load_dotenv()
 from delete_old_helper import delete_old_messages_bot, save_msgids
+from tg_utils import tg_delete_by_title
 
 # ── Logging ─────────────────────────────────────────────────────
 logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=logging.INFO)
@@ -1070,7 +1070,6 @@ async def scan_plan_tomorrow(client, group_key: str, chat_id: int,
         "plan": dict or None
     }
     """
-    result = {"found": False, "sent_time": "", "content": "", "plan": None}
     fallback_result = None
     try:
         history = await client(GetHistoryRequest(
@@ -1551,6 +1550,10 @@ async def run_eod_or_update(mode: str):
             msg = "\n".join(lines)
             delete_key = f"{delete_prefix}_{group_key}"
             delete_old_messages_bot(SEND_BOT_TOKEN, chat_id, APPS_SCRIPT_URL, delete_key)
+            try:
+                tg_delete_by_title(str(chat_id), f"📋 5.1 Report — Plan", bot_token=SEND_BOT_TOKEN)
+                tg_delete_by_title(str(chat_id), f"📋 5. Report — Daily Plan", bot_token=SEND_BOT_TOKEN)
+            except Exception: pass
             ok, msg_ids = await send_msg(bot, chat_id, msg, f"PLAN-{mode_label}-{group_key}")
             if ok and msg_ids:
                 save_msgids(APPS_SCRIPT_URL, delete_key, msg_ids)
@@ -1647,6 +1650,10 @@ async def run_eod_or_update(mode: str):
         ctrl_msg = "\n".join(ctrl_lines)
         ctrl_delete_key = f"{delete_prefix}_CONTROL"
         delete_old_messages_bot(SEND_BOT_TOKEN, CONTROL_CHAT_ID, APPS_SCRIPT_URL, ctrl_delete_key)
+        try:
+            tg_delete_by_title(str(CONTROL_CHAT_ID), f"📋 5.1 Report — Plan", bot_token=SEND_BOT_TOKEN)
+            tg_delete_by_title(str(CONTROL_CHAT_ID), f"📋 5. Report — Daily Plan", bot_token=SEND_BOT_TOKEN)
+        except Exception: pass
         ok, msg_ids = await send_msg(bot, CONTROL_CHAT_ID, ctrl_msg, f"PLAN-{mode_label}-CONTROL")
         if ok and msg_ids:
             save_msgids(APPS_SCRIPT_URL, ctrl_delete_key, msg_ids)
@@ -1798,6 +1805,10 @@ async def run_morning():
             msg = "\n".join(lines)
             delete_key = f"{delete_prefix}_{group_key}"
             delete_old_messages_bot(SEND_BOT_TOKEN, chat_id, APPS_SCRIPT_URL, delete_key)
+            try:
+                tg_delete_by_title(str(chat_id), f"📋 5.1 Report — Plan", bot_token=SEND_BOT_TOKEN)
+                tg_delete_by_title(str(chat_id), f"5.1 Report — Plan", bot_token=SEND_BOT_TOKEN)
+            except Exception: pass
             ok, msg_ids = await send_msg(bot, chat_id, msg, f"PLAN-MRN-{group_key}")
             if ok and msg_ids:
                 save_msgids(APPS_SCRIPT_URL, delete_key, msg_ids)
@@ -1867,6 +1878,10 @@ async def run_morning():
         ctrl_msg = "\n".join(ctrl_lines)
         ctrl_delete_key = f"{delete_prefix}_CONTROL"
         delete_old_messages_bot(SEND_BOT_TOKEN, CONTROL_CHAT_ID, APPS_SCRIPT_URL, ctrl_delete_key)
+        try:
+            tg_delete_by_title(str(CONTROL_CHAT_ID), f"📋 5.1 Report — Plan", bot_token=SEND_BOT_TOKEN)
+            tg_delete_by_title(str(CONTROL_CHAT_ID), f"5.1 Report — Plan", bot_token=SEND_BOT_TOKEN)
+        except Exception: pass
         ok, msg_ids = await send_msg(bot, CONTROL_CHAT_ID, ctrl_msg, "PLAN-MRN-CONTROL")
         if ok and msg_ids:
             save_msgids(APPS_SCRIPT_URL, ctrl_delete_key, msg_ids)

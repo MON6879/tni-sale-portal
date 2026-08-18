@@ -39,7 +39,7 @@ TEAM_GROUPS = {
     3: TELEGRAM_GROUPS["T3"],
     4: TELEGRAM_GROUPS["T4"],
 }
-CONTROL_CHAT_ID = -5251698940
+CONTROL_CHAT_ID = -1005251698940
 
 MAIN_GAS_FALLBACK = "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
 APPS_SCRIPT_URL = os.getenv("APPS_SCRIPT_URL", "").strip()
