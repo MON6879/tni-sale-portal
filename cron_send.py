@@ -6,7 +6,15 @@ Dùng 3 bot theo dải row trong sheet Task remain (gid=133591305):
   Row 60-74: SEND_BOT + compiled report (management)
   Row 75-87: @TNITECHINICALDEPREPORT_BOT (technical dept)
 """
-import asyncio, csv, io, logging, os, re, requests, time, pandas as pd
+import asyncio
+import csv
+import io
+import logging
+import os
+import re
+import requests
+import time
+import pandas as pd
 from datetime import datetime, timezone, timedelta
 from telegram import Bot
 from telethon import TelegramClient
