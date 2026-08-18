@@ -6,7 +6,7 @@ Dùng 3 bot theo dải row trong sheet Task remain (gid=133591305):
   Row 60-74: SEND_BOT + compiled report (management)
   Row 75-87: @TNITECHINICALDEPREPORT_BOT (technical dept)
 """
-import asyncio, csv, io, logging, os, re, requests, pandas as pd
+import asyncio, csv, io, logging, os, re, requests, time, pandas as pd
 from datetime import datetime, timezone, timedelta
 from telegram import Bot
 from telethon import TelegramClient
@@ -24,7 +24,7 @@ REPORT_TASK_BOT_TOKEN   = os.getenv("REPORT_TASK_BOT_TOKEN", "")
 TECHNICAL_DEP_BOT_TOKEN = os.getenv("TECHNICAL_DEP_BOT_TOKEN", "")
 MAIN_GAS_FALLBACK   = "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
 APPS_SCRIPT_URL   = os.getenv("APPS_SCRIPT_URL", "").strip()
-if not APPS_SCRIPT_URL or "AKfycbzGFdnE" in APPS_SCRIPT_URL:
+if not APPS_SCRIPT_URL or "AKfycbzGFdnE" in APPS_SCRIPT_URL or APPS_SCRIPT_URL == MAIN_GAS_FALLBACK:
     APPS_SCRIPT_URL = MAIN_GAS_FALLBACK
 TELEGRAM_API_ID         = int(os.getenv("TELEGRAM_API_ID", "0"))
 TELEGRAM_API_HASH       = os.getenv("TELEGRAM_API_HASH", "")
@@ -82,21 +82,28 @@ def safe(row, idx):
 
 
 def call_apps_script(payload, timeout=120, retries=3):
-    """Call Apps Script and return JSON response with retry logic."""
-    if not APPS_SCRIPT_URL:
-        return {}
-    for attempt in range(1, retries + 1):
-        try:
-            resp = requests.post(APPS_SCRIPT_URL, json=payload, timeout=timeout)
-            resp.raise_for_status()
-            res_json = resp.json()
-            if isinstance(res_json, dict) and res_json.get("status") == "ok":
-                return res_json
-            logger.warning(f"Apps Script attempt {attempt}/{retries} non-ok: {res_json}")
-        except Exception as e:
-            logger.warning(f"Apps Script attempt {attempt}/{retries} error: {e}")
-            if attempt < retries:
-                time.sleep(2)
+    """Call Apps Script and return JSON response with retry logic and fallback."""
+    global APPS_SCRIPT_URL
+    urls = [APPS_SCRIPT_URL] if APPS_SCRIPT_URL else []
+    if MAIN_GAS_FALLBACK not in urls:
+        urls.append(MAIN_GAS_FALLBACK)
+
+    for target_url in urls:
+        for attempt in range(1, retries + 1):
+            try:
+                resp = requests.post(target_url, json=payload, timeout=timeout)
+                if resp.status_code == 404:
+                    logger.warning(f"Apps Script 404 at {target_url[:45]}..., trying fallback...")
+                    break
+                resp.raise_for_status()
+                res_json = resp.json()
+                if isinstance(res_json, dict) and res_json.get("status") == "ok":
+                    return res_json
+                logger.warning(f"Apps Script attempt {attempt}/{retries} non-ok: {res_json}")
+            except Exception as e:
+                logger.warning(f"Apps Script attempt {attempt}/{retries} error: {e}")
+                if attempt < retries:
+                    time.sleep(2)
     return {}
 
 

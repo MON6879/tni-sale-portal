@@ -76,11 +76,43 @@ def parse_date(val):
     return None
 
 async def send_msg(bot: Bot, chat_id: int, text: str, label: str, reply_markup=None):
-    """Gửi tin nhắn Telegram an toàn."""
+    """Gửi tin nhắn Telegram an toàn với bộ chia nhỏ khi quá dài."""
+    MAX = 3800
+
+    def chunk_text(t):
+        parts, current = [], ""
+        for line in t.split("\n"):
+            while len(line) > MAX:
+                segment = line[:MAX]
+                if current:
+                    parts.append(current)
+                    current = ""
+                parts.append(segment)
+                line = line[MAX:]
+            if len(current) + len(line) + 1 > MAX:
+                parts.append(current)
+                current = line
+            else:
+                current += ("\n" if current else "") + line
+        if current:
+            parts.append(current)
+        return parts
+
     try:
-        sent = await bot.send_message(chat_id=chat_id, text=text, parse_mode="HTML", reply_markup=reply_markup)
-        logger.info(f"✅ Sent message to {chat_id} ({label})")
-        return True, [sent.message_id]
+        msg_ids = []
+        if len(text) <= MAX:
+            sent = await bot.send_message(chat_id=chat_id, text=text, parse_mode="HTML", reply_markup=reply_markup)
+            logger.info(f"✅ Sent message to {chat_id} ({label})")
+            return True, [sent.message_id]
+        else:
+            chunks = chunk_text(text)
+            for idx, p in enumerate(chunks):
+                rm = reply_markup if idx == len(chunks) - 1 else None
+                sent = await bot.send_message(chat_id=chat_id, text=p, parse_mode="HTML", reply_markup=rm)
+                msg_ids.append(sent.message_id)
+                await asyncio.sleep(0.3)
+            logger.info(f"✅ Sent {len(chunks)} chunks to {chat_id} ({label})")
+            return True, msg_ids
     except Exception as e:
         logger.error(f"❌ Error sending message to {chat_id} ({label}): {e}")
         return False, []

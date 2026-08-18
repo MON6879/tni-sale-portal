@@ -13,46 +13,56 @@ import requests
 
 
 # ── GAS API helpers ─────────────────────────────────────────────
+MAIN_GAS_FALLBACK = "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
 
 def get_old_msgids(gas_url: str, key: str) -> list[int]:
     """Đọc message_ids cũ từ GAS PropertiesService.
     Returns list of message_id (int). Rỗng nếu lỗi hoặc chưa có.
     """
-    if not gas_url or not key:
+    urls = [gas_url] if gas_url else []
+    if MAIN_GAS_FALLBACK not in urls:
+        urls.append(MAIN_GAS_FALLBACK)
+    if not key:
         return []
-    try:
-        resp = requests.get(
-            gas_url,
-            params={"action": "get_msgids", "key": key},
-            timeout=30,
-            allow_redirects=True
-        )
-        if resp.status_code == 200:
-            data = resp.json()
-            raw = data.get("msgids", [])
-            return [int(x) for x in raw]
-    except Exception as ex:
-        print(f"[delete_old] ⚠️ get_msgids({key}) lỗi: {ex}")
+    for u in urls:
+        try:
+            resp = requests.get(
+                u,
+                params={"action": "get_msgids", "key": key},
+                timeout=30,
+                allow_redirects=True
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                raw = data.get("msgids", [])
+                return [int(x) for x in raw]
+        except Exception as ex:
+            print(f"[delete_old] ⚠️ get_msgids({key}) lỗi: {ex}")
     return []
 
 
 def save_msgids(gas_url: str, key: str, msgids: list[int]):
     """Lưu message_ids mới vào GAS PropertiesService."""
-    if not gas_url or not key or not msgids:
+    urls = [gas_url] if gas_url else []
+    if MAIN_GAS_FALLBACK not in urls:
+        urls.append(MAIN_GAS_FALLBACK)
+    if not key or not msgids:
         return
-    try:
-        resp = requests.post(
-            gas_url,
-            json={"action": "save_msgids", "key": key, "msgids": msgids},
-            timeout=30,
-            allow_redirects=True
-        )
-        if resp.status_code == 200:
-            print(f"[delete_old] 💾 Saved {key} = {msgids}")
-        else:
-            print(f"[delete_old] ⚠️ save_msgids({key}) HTTP {resp.status_code}")
-    except Exception as ex:
-        print(f"[delete_old] ⚠️ save_msgids({key}) lỗi: {ex}")
+    for u in urls:
+        try:
+            resp = requests.post(
+                u,
+                json={"action": "save_msgids", "key": key, "msgids": msgids},
+                timeout=30,
+                allow_redirects=True
+            )
+            if resp.status_code == 200:
+                print(f"[delete_old] 💾 Saved {key} = {msgids}")
+                return
+            else:
+                print(f"[delete_old] ⚠️ save_msgids({key}) HTTP {resp.status_code} at {u[:45]}...")
+        except Exception as ex:
+            print(f"[delete_old] ⚠️ save_msgids({key}) lỗi: {ex}")
 
 
 # ── Bot API delete ──────────────────────────────────────────────
