@@ -1972,13 +1972,9 @@ async def main():
     }
 
     # ── Delete old messages theo tiêu đề (Telethon Batch) + fallback GAS msg_id ──
-    # Single-pass scan: mỗi nhóm chỉ quét lịch sử 1 lần, cực nhanh < 3s, không bị Timeout/FloodWait!
+    # STRICT RULE: TIN NÀO XÓA TIN NẤY — cron_send.py CHỈ XÓA tin Report 4 & Report 3.1 của chính mình!
     if SEND_BOT_TOKEN and TELEGRAM_SESSION and TELEGRAM_API_ID:
         team_prefixes = [
-            "📋 1. Report — Daily Backlog",
-            "📋 2. Report — DailyWO",
-            "📋 2. Report — Daily Backlog",
-            "📋 3. Report — Main DG Material Need",
             "📋 4. Report — Daily EOD Task & Stats",
             "📋 4a. Report — Daily EOD Task & Stats",
             "📓 4b. Full Report",
@@ -1988,7 +1984,6 @@ async def main():
             "4d. Asset progress for material",
             "📦 3.1 Asset progress for material",
             "3.1 Asset progress for material",
-            "📋 5. Report — Daily Plan",
         ]
         chat_to_prefixes = {del_cid: team_prefixes for del_cid in CHATID_TO_KEY.keys()}
         chat_to_prefixes[str(CONTROL_CHAT_ID)] = [
@@ -2000,23 +1995,20 @@ async def main():
             "4c. Asset progress for material",
             "📦 3.1 Asset progress for material",
             "3.1 Asset progress for material",
-            "📋 5. Report — Daily Plan",
-            "📋 1. BOD",
         ]
 
         try:
             async with TelegramClient(
                 StringSession(TELEGRAM_SESSION), TELEGRAM_API_ID, TELEGRAM_API_HASH
             ) as tg_client:
-                logger.info("🗑️ Delete old messages by batch (Telethon Fast Scan)...")
+                logger.info("🗑️ Delete old messages by batch (Telethon Fast Scan - Strict Report 4/3.1 only)...")
                 await delete_by_titles_batch_telethon(tg_client, SEND_BOT_TOKEN, chat_to_prefixes)
         except Exception as tg_err:
             logger.warning(f"Telethon batch delete lỗi, fallback GAS: {tg_err}")
-            # Fallback: GAS msg_id delete
+            # Fallback: GAS msg_id delete (Chỉ xóa key của cron_send)
             if APPS_SCRIPT_URL:
                 for del_cid, del_key in CHATID_TO_KEY.items():
                     delete_old_messages_bot(SEND_BOT_TOKEN, del_cid, APPS_SCRIPT_URL, del_key)
-                    delete_old_messages_bot(SEND_BOT_TOKEN, del_cid, APPS_SCRIPT_URL, f"BACKLOG_TEAM_T{del_key[-2:]}")
                 for del_cid, del_key in CHATID_TO_KEY_FULL.items():
                     delete_old_messages_bot(SEND_BOT_TOKEN, del_cid, APPS_SCRIPT_URL, del_key)
                 delete_old_messages_bot(SEND_BOT_TOKEN, CONTROL_CHAT_ID, APPS_SCRIPT_URL, "CRON_TECHDEP_CONTROL")
@@ -2026,7 +2018,6 @@ async def main():
         # Fallback nếu không có Telethon session
         for del_cid, del_key in CHATID_TO_KEY.items():
             delete_old_messages_bot(SEND_BOT_TOKEN, del_cid, APPS_SCRIPT_URL, del_key)
-            delete_old_messages_bot(SEND_BOT_TOKEN, del_cid, APPS_SCRIPT_URL, f"BACKLOG_TEAM_T{del_key[-2:]}")
         for del_cid, del_key in CHATID_TO_KEY_FULL.items():
             delete_old_messages_bot(SEND_BOT_TOKEN, del_cid, APPS_SCRIPT_URL, del_key)
         delete_old_messages_bot(SEND_BOT_TOKEN, CONTROL_CHAT_ID, APPS_SCRIPT_URL, "CRON_TECHDEP_CONTROL")
