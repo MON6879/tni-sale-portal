@@ -1,3 +1,13 @@
+# 🎯 STRICT RULE: CHÍNH XÁC PHẠM VI — SỬA ĐÚNG NƠI ĐÚNG CHỖ, TUYỆT ĐỐI KHÔNG TIỆN TAY SỬA TẦM BẬY SANG CHỖ KHÁC (STRICT SCOPE ISOLATION & ZERO-SIDE-EFFECT POLICY)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (SCOPE ISOLATION & ZERO-COLLATERAL-DAMAGE)**:
+> 1. **Sửa Đúng Nơi Đúng Chỗ (Strict Targeted Execution)**: Khi Người Dùng yêu cầu sửa lỗi hay tính năng ở thành phần nào, BẮT BUỘC chỉ tìm đúng file, đúng hàm, đúng dòng liên quan trực tiếp đến thành phần đó để xử lý.
+> 2. **Tuyệt Đối Không Tiện Tay Sửa Tầm Bậy (Zero Collateral Modification)**: CẤM TUYỆT ĐỐI việc tiện tay sửa, đổi tên, tái cấu trúc (refactor) hoặc can thiệp vào bất kỳ file, hàm, biến hay component nào khác ngoài phạm vi được yêu cầu!
+> 3. **Nhìn Thấy Hết ID & Bản Đồ Trước Khi Sửa (Verify Exact ID First)**: BẮT BUỘC phải tra cứu đối chiếu đúng Script ID, Spreadsheet ID, Bot Token và Webhook URL trong system_map.md và AGENTS.md. TUYỆT ĐỐI KHÔNG ĐƯỢC đoán mò hay gán nhầm endpoint của dự án này sang dự án khác!
+> 4. **Kiểm Tra Không Ảnh Hưởng Chéo (Zero Side-Effect Verification)**: Sau khi sửa, BẮT BUỘC phải chạy kiểm thử live output để chứng minh thành phần được sửa đã hoạt động chính xác 100% VÀ toàn bộ các thành phần khác trong hệ thống vẫn hoạt động nguyên vẹn, không phát sinh bất kỳ lỗi mới nào!
+
+---
+
 # 💎 STRICT RULE: LÀM TRIỆT ĐỂ 100% — KHÔNG BỎ CUỘC KHI GIÁN ĐOẠN, NHÌN THẤY HẾT DỮ LIỆU MỚI ĐƯA PHƯƠNG ÁN (100% PERSISTENT & EXHAUSTIVE EXECUTION POLICY)
 
 > ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (ZERO-SHORTCUT & PERSISTENCE POLICY)**: 
