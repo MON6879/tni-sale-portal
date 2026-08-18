@@ -1,3 +1,13 @@
+# 💎 STRICT RULE: LÀM TRIỆT ĐỂ 100% — KHÔNG BỎ CUỘC KHI GIÁN ĐOẠN, NHÌN THẤY HẾT DỮ LIỆU MỚI ĐƯA PHƯƠNG ÁN (100% PERSISTENT & EXHAUSTIVE EXECUTION POLICY)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (ZERO-SHORTCUT & PERSISTENCE POLICY)**: 
+> 1. **Làm Triệt Để 100% (Exhaustive Full Scope)**: Tuyệt đối KHÔNG làm tiện tay, không sửa nửa vời, không để lại bất kỳ dữ liệu tĩnh cũ, ngày tháng sai lệch hay layout lỗi trên bất kỳ component nào.
+> 2. **Không Bỏ Cuộc Khi Gián Đoạn (Persistent Continuation)**: Khi gặp lỗi gián đoạn (timeout, disconnected, network error, browser cache, API error...), BẮT BUỘC phải tự động kiên trì tiếp tục thực hiện từng bước, retry liên tục cho đến khi hoàn tất trọn vẹn 100% mục tiêu, KHÔNG được dừng lại giữa chừng rồi báo cáo hoàn thành ảo!
+> 3. **Nhìn Thấy Hết Dữ Liệu Thực Tế Mới Đưa Phương Án (Look at All Real Data First)**: Trước khi đề xuất phương án hoặc viết code, BẮT BUỘC phải dùng script/query quét và đọc trực tiếp 100% dữ liệu nguồn thực tế (Google Sheets, Live Web DOM, Telegram API, GAS), nhìn thấy toàn bộ các dòng, cột, modal, table rồi mới đưa ra giải pháp xử lý triệt để, KHÔNG được giả định hay đoán mò!
+> 4. **Kiểm Tra Thực Tế & Đầy Đủ Bằng Chứng (Live Output Verification)**: Sau khi thực hiện, phải kiểm tra live (HTTP 200, grep so khớp, live log), chứng minh đã chạy thông suốt rồi mới bàn giao cho Người Dùng.
+
+---
+
 # ⚡ STRICT PRIORITY RULE: GAS DIRECT SENDING FIRST, GITHUB ACTIONS FALLBACK SECOND
 
 > ⚠️ **QUY TẮC BẮT BUỘC**: MỌI BẢN TIN / THÔNG BÁO / BÁO CÁO CÓ THỂ GỬI ĐƯỢC BẰNG GOOGLE APPS SCRIPT (GAS) QUA `UrlFetchApp.fetch()` BẮT BUỘC PHẢI ƯU TIÊN GỬI TRỰC TIẾP TỪ GAS TRÊN GOOGLE CLOUD; CHỈ KHI GAS KHÔNG THỂ XỬ LÝ ĐƯỢC (TÁC VỤ CẦN TÀI KHOẢN NICK CÁ NHÂN USER ACCOUNT TELETHON SEED HOẶC THAO TÁC CÀO DỮ LIỆU ĐẶC THÙ) MỚI DÙNG GITHUB ACTIONS DỰ PHÒNG!
