@@ -1,4 +1,4 @@
-<!-- TNI Operations BI Portal v345 - Live BOD Assign Tab Data (481 Rows from Sheet) -->
+<!-- TNI Operations BI Portal v346 - Plan Week Tab + 8 BI Architecture Pillars -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -349,6 +349,39 @@
     .row-detail:last-child { border-bottom: none; }
 
     /* Custom Tables */
+
+    /* Universal Resizable Table Columns */
+    table {
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+    table th, table td {
+      position: relative;
+    }
+    table th.resizable, table td.resizable {
+      position: relative;
+      user-select: none;
+    }
+    table th .resizer, table td .resizer {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 7px;
+      cursor: col-resize;
+      user-select: none;
+      height: 100%;
+      z-index: 30;
+      border-right: 2px solid rgba(255, 255, 255, 0.12);
+      transition: border-color 0.15s, background 0.15s;
+    }
+    table th .resizer:hover,
+    table th .resizer.resizing,
+    table td .resizer:hover,
+    table td .resizer.resizing {
+      border-right: 2px solid var(--cyan) !important;
+      background: rgba(56, 189, 248, 0.35) !important;
+    }
+    
     .data-table {
       width: 100%;
       border-collapse: separate;
@@ -369,6 +402,28 @@
       color: var(--text-sub);
       border-bottom: 2px solid var(--border-color);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    .data-table th.resizable {
+      position: sticky;
+      user-select: none;
+    }
+    .data-table th .resizer {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 8px;
+      cursor: col-resize;
+      user-select: none;
+      height: 100%;
+      z-index: 20;
+      border-right: 2px solid rgba(255, 255, 255, 0.1);
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .data-table th .resizer:hover,
+    .data-table th .resizer.resizing {
+      border-right: 2px solid var(--cyan);
+      background: rgba(56, 189, 248, 0.2);
     }
 
     .data-table td {
@@ -493,6 +548,9 @@
       </button>
       <button class="nav-tab" onclick="showTab('bod-assign-panel', this)">
         <i class="fa-solid fa-user-shield"></i> BOD Assign
+      </button>
+      <button class="nav-tab" onclick="showTab('plan-week-panel', this)">
+        <i class="fa-solid fa-calendar-week"></i> Plan Week
       </button>
       <button class="nav-tab" onclick="showTab('access-control-panel', this)">
         <i class="fa-solid fa-lock"></i> Gmail Access List
@@ -689,6 +747,215 @@
           return result;
         }
 
+        
+        /* ══════════════════════════════════════════════════════════════════
+           👑 TOA 3 & TOA 4: DYNAMIC MODAL RENDERER & UNIVERSAL TABLE RESIZER
+           ══════════════════════════════════════════════════════════════════ */
+        function renderTeamModalContent(teamKey, teamCode, teamTitle, teamColor, teamSummary, deptPoints, engineers, dates) {
+          var d0Str = dates.d0Str || '17/08';
+          var d1Str = dates.d1Str || '16/08';
+          var d2Str = dates.d2Str || '15/08';
+          var planStr = dates.planStr || '18/08';
+          
+          var teamEngs = engineers.filter(function(e) { return (e.team_code || '').indexOf(teamCode) !== -1; });
+          teamEngs.sort(function(a, b) {
+            var pa = parseFloat((a.rate || '0').replace(/[^\d.]/g, '')) || 0;
+            var pb = parseFloat((b.rate || '0').replace(/[^\d.]/g, '')) || 0;
+            return pb - pa;
+          });
+
+          var html = '';
+          html += '<div style="background:rgba(56, 189, 248, 0.12); border:1px solid rgba(56, 189, 248, 0.3); border-radius:16px; padding:1.2rem; margin-bottom:1.2rem;">';
+          html += '  <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">';
+          html += '    <span>CD Not Yet Close: <strong style="color:var(--amber); font-size:1.1rem;">' + (teamSummary.cdNotYet || 0) + ' WOs</strong></span>';
+          html += '    <span>Total Assigned: <strong style="color:var(--cyan); font-size:1.1rem;">' + (teamSummary.totalAssigned || 0) + ' WOs</strong></span>';
+          html += '  </div>';
+          html += '  <div style="display:flex; justify-content:space-between;">';
+          html += '    <span>Plan ' + planStr + ': <strong style="color:var(--amber);">' + (teamSummary.planM || 0) + ' WOs</strong></span>';
+          html += '    <span>Total FOT Close: <strong style="color:var(--emerald);">' + (teamSummary.fotClose || 0) + ' WOs</strong></span>';
+          html += '  </div>';
+          html += '  <div style="display:flex; justify-content:space-between; margin-top:0.5rem;">';
+          html += '    <span>Close ' + d0Str + ': <strong style="color:var(--cyan);">' + (teamSummary.d0 || 0) + ' WOs</strong></span>';
+          html += '    <span>Completion Benchmark: <strong style="color:' + (teamSummary.metTarget ? 'var(--emerald)' : 'var(--rose)') + ';">' + (teamSummary.pct || 0) + '% (Rank #' + (teamSummary.rank || 1) + ')</strong></span>';
+          html += '  </div>';
+          html += '</div>';
+
+          html += '<h4 style="color:var(--cyan); margin-bottom:0.8rem;"><i class="fa-solid fa-list-check"></i> Point & Department Breakdown for ' + teamTitle + '</h4>';
+          html += '<div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.8rem; margin-bottom:1.5rem;">';
+          html += '  <div class="row-detail"><span>Asset Tasks:</span><strong>' + (deptPoints.asset || 'TL:0 /0 P:0') + '</strong></div>';
+          html += '  <div class="row-detail"><span>Finance Tasks:</span><strong>' + (deptPoints.finance || 'TL:0 /0 P:0') + '</strong></div>';
+          html += '  <div class="row-detail"><span>Manager Tasks:</span><strong>' + (deptPoints.manager || 'TL:0 /0 P:0') + '</strong></div>';
+          html += '  <div class="row-detail"><span>Preventive Maintenance (PM):</span><strong>' + (deptPoints.pm || 'TL:0 /0 P:0') + '</strong></div>';
+          html += '  <div class="row-detail"><span>Corrective Maintenance (CM):</span><strong>' + (deptPoints.cm || 'TL:0 /0 P:0') + '</strong></div>';
+          html += '  <div class="row-detail"><span>M&E Tasks:</span><strong>' + (deptPoints.me || 'TL:0 /0 P:0') + '</strong></div>';
+          html += '</div>';
+
+          html += '<h4 style="color:var(--cyan); margin-bottom:0.8rem;"><i class="fa-solid fa-users"></i> ' + teamTitle + ' Engineer Roster & Performance (Sorted by % Completion High to Low)</h4>';
+          html += '<table class="data-table">';
+          html += '  <thead>';
+          html += '    <tr>';
+          html += '      <th>#</th>';
+          html += '      <th style="color:var(--cyan);">Name System</th>';
+          html += '      <th>Completed WOs</th>';
+          html += '      <th>Completion Rate</th>';
+          html += '      <th style="color:#38BDF8 !important; font-weight:800;">Close ' + d0Str + '</th>';
+          html += '      <th style="color:#38BDF8 !important; font-weight:800;">Close ' + d1Str + '</th>';
+          html += '      <th style="color:#38BDF8 !important; font-weight:800;">Close ' + d2Str + '</th>';
+          html += '      <th style="color:#EC4899 !important; font-weight:800;">Plan ' + planStr + '</th>';
+          html += '      <th style="color:#EA580C; font-weight:800;">Overdue FOT</th>';
+          html += '      <th>Not Yet On Time</th>';
+          html += '      <th>Sum Not Yet + Wait CD</th>';
+          html += '    </tr>';
+          html += '  </thead>';
+          html += '  <tbody>';
+          for (var i = 0; i < teamEngs.length; i++) {
+            var e = teamEngs[i];
+            var pVal = parseFloat((e.rate || '0').replace(/[^\d.]/g, '')) || 0;
+            var rateColor = pVal >= 75 ? 'var(--emerald)' : (pVal >= 25 ? 'var(--amber)' : 'var(--rose)');
+            var planVal = (e.plan === '#DIV/0!' || e.plan === '0' || !e.plan) ? '0' : e.plan;
+            html += '    <tr>';
+            html += '      <td>' + (i + 1) + '</td>';
+            html += '      <td><code>' + e.nsys + '</code></td>';
+            html += '      <td>' + (e.completed || 0) + '</td>';
+            html += '      <td><strong style="color:' + rateColor + ';">' + e.rate + '</strong></td>';
+            html += '      <td>' + (parseInt(e.d0, 10) > 0 ? '<strong style="color:#38BDF8;">' + e.d0 + '</strong>' : '0') + '</td>';
+            html += '      <td>' + (parseInt(e.d1, 10) > 0 ? '<strong style="color:#38BDF8;">' + e.d1 + '</strong>' : '0') + '</td>';
+            html += '      <td>' + (parseInt(e.d2, 10) > 0 ? '<strong style="color:#38BDF8;">' + e.d2 + '</strong>' : '0') + '</td>';
+            html += '      <td>' + (parseInt(planVal, 10) > 0 ? '<strong style="color:#EC4899;">' + planVal + '</strong>' : '0') + '</td>';
+            html += '      <td>' + (parseInt(e.overdue, 10) > 0 ? '<strong style="color:#EA580C;">' + e.overdue + '</strong>' : '0') + '</td>';
+            html += '      <td>' + (e.notyet || 0) + '</td>';
+            html += '      <td>' + (e.sum_remain || 0) + '</td>';
+            html += '    </tr>';
+          }
+          html += '  </tbody>';
+          html += '</table>';
+          return html;
+        }
+
+        function renderAllEngineersTableHtml(engineers, dates) {
+          var d0Str = dates.d0Str || '17/08';
+          var d1Str = dates.d1Str || '16/08';
+          var d2Str = dates.d2Str || '15/08';
+          var planStr = dates.planStr || '18/08';
+
+          var sorted = engineers.slice().sort(function(a, b) {
+            var pa = parseFloat((a.rate || '0').replace(/[^\d.]/g, '')) || 0;
+            var pb = parseFloat((b.rate || '0').replace(/[^\d.]/g, '')) || 0;
+            return pb - pa;
+          });
+
+          var html = '';
+          html += '<table class="data-table">';
+          html += '  <thead>';
+          html += '    <tr>';
+          html += '      <th>#</th>';
+          html += '      <th style="color:var(--cyan);">NAME SYSTEM</th>';
+          html += '      <th>TEAM REGION</th>';
+          html += '      <th style="color:var(--cyan);">RANK</th>';
+          html += '      <th>COMPLETED WOS</th>';
+          html += '      <th style="color:var(--emerald);">COMPLETION RATE</th>';
+          html += '      <th style="color:#38BDF8 !important; font-weight:800;">CLOSE ' + d0Str + '</th>';
+          html += '      <th style="color:#38BDF8 !important; font-weight:800;">CLOSE ' + d1Str + '</th>';
+          html += '      <th style="color:#38BDF8 !important; font-weight:800;">CLOSE ' + d2Str + '</th>';
+          html += '      <th style="color:#EC4899 !important; font-weight:800;">PLAN ' + planStr + '</th>';
+          html += '      <th style="color:#EA580C !important; font-weight:800;">OVERDUE FOT</th>';
+          html += '      <th>NOT YET ON TIME</th>';
+          html += '      <th>SUM NOT YET + WAIT CD</th>';
+          html += '    </tr>';
+          html += '  </thead>';
+          html += '  <tbody>';
+
+          var teamTags = {
+            'TEAM01': '<span class="team-tag tag-t1">Team 1 Dawei</span>',
+            'TEAM02': '<span class="team-tag tag-t2">Team 2 Myeik</span>',
+            'TEAM03': '<span class="team-tag tag-t3">Team 3 Bokpyin</span>',
+            'TEAM04': '<span class="team-tag tag-t4">Team 4 Kawthoung</span>'
+          };
+
+          for (var i = 0; i < sorted.length; i++) {
+            var e = sorted[i];
+            var pVal = parseFloat((e.rate || '0').replace(/[^\d.]/g, '')) || 0;
+            var rateColor = pVal >= 75 ? 'var(--emerald)' : (pVal >= 25 ? 'var(--amber)' : 'var(--rose)');
+            var planVal = (e.plan === '#DIV/0!' || e.plan === '0' || !e.plan) ? '0' : e.plan;
+            var tTag = '<span class="team-tag">Other</span>';
+            for (var tk in teamTags) {
+              if ((e.team_code || '').indexOf(tk) !== -1) { tTag = teamTags[tk]; break; }
+            }
+
+            html += '    <tr>';
+            html += '      <td>' + (i + 1) + '</td>';
+            html += '      <td><code>' + e.nsys + '</code></td>';
+            html += '      <td>' + tTag + '</td>';
+            html += '      <td><strong style="color:var(--cyan);">' + (i + 1) + '</strong></td>';
+            html += '      <td>' + (e.completed || 0) + '</td>';
+            html += '      <td><strong style="color:' + rateColor + ';">' + e.rate + '</strong></td>';
+            html += '      <td>' + (parseInt(e.d0, 10) > 0 ? '<strong style="color:#38BDF8;">' + e.d0 + '</strong>' : '0') + '</td>';
+            html += '      <td>' + (parseInt(e.d1, 10) > 0 ? '<strong style="color:#38BDF8;">' + e.d1 + '</strong>' : '0') + '</td>';
+            html += '      <td>' + (parseInt(e.d2, 10) > 0 ? '<strong style="color:#38BDF8;">' + e.d2 + '</strong>' : '0') + '</td>';
+            html += '      <td>' + (parseInt(planVal, 10) > 0 ? '<strong style="color:#EC4899 !important;">' + planVal + '</strong>' : '0') + '</td>';
+            html += '      <td>' + (parseInt(e.overdue, 10) > 0 ? '<strong style="color:#EA580C !important;">' + e.overdue + '</strong>' : '0') + '</td>';
+            html += '      <td>' + (e.notyet || 0) + '</td>';
+            html += '      <td>' + (e.sum_remain || 0) + '</td>';
+            html += '    </tr>';
+          }
+          html += '  </tbody>';
+          html += '</table>';
+          return html;
+        }
+
+        window.makeAllTablesResizable = function() {
+          document.querySelectorAll('table').forEach(function(table) {
+            var ths = table.querySelectorAll('thead th');
+            if (ths.length === 0) {
+              var firstRow = table.querySelector('tr');
+              if (firstRow) { ths = firstRow.querySelectorAll('th, td'); }
+            }
+            if (!ths || ths.length === 0) return;
+
+            ths.forEach(function(th) {
+              if (th.querySelector('.resizer')) return;
+              th.style.position = 'relative';
+              th.classList.add('resizable');
+
+              var resizer = document.createElement('div');
+              resizer.className = 'resizer';
+              th.appendChild(resizer);
+
+              var startX = 0, startWidth = 0;
+
+              var onMouseDown = function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                startX = e.pageX;
+                startWidth = th.offsetWidth;
+                resizer.classList.add('resizing');
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+
+                var onMouseMove = function(moveEvent) {
+                  var diff = moveEvent.pageX - startX;
+                  var newWidth = Math.max(25, startWidth + diff);
+                  th.style.width = newWidth + 'px';
+                  th.style.minWidth = newWidth + 'px';
+                };
+
+                var onMouseUp = function() {
+                  resizer.classList.remove('resizing');
+                  document.body.style.cursor = '';
+                  document.body.style.userSelect = '';
+                  document.removeEventListener('mousemove', onMouseMove);
+                  document.removeEventListener('mouseup', onMouseUp);
+                };
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+              };
+
+              resizer.addEventListener('mousedown', onMouseDown);
+            });
+          });
+        };
+
         function loadStats() {
           fetch(CSV_URL + '&t=' + Date.now())
             .then(function(r){
@@ -704,15 +971,15 @@
               var targetPct = mTgt ? parseInt(mTgt[1], 10) : 75;
 
               var hdr2 = rows[1] || [];
-              var rawJ = hdr2[9] || '13/08';
-              var rawK = hdr2[10] || '12/08';
-              var rawL = hdr2[11] || '11/08';
-              var rawM = hdr2[12] || 'Plan: 14/08/26';
+              var rawJ = hdr2[9] || '17/08';
+              var rawK = hdr2[10] || '16/08';
+              var rawL = hdr2[11] || '15/08';
+              var rawM = hdr2[12] || 'Plan: 18/08/26';
 
-              var mJ = rawJ.match(/(\d{2}\/\d{2})/); var dJStr = mJ ? mJ[1] : '13/08';
-              var mK = rawK.match(/(\d{2}\/\d{2})/); var dKStr = mK ? mK[1] : '12/08';
-              var mL = rawL.match(/(\d{2}\/\d{2})/); var dLStr = mL ? mL[1] : '11/08';
-              var mM = rawM.match(/(\d{2}\/\d{2}(?:\/\d{2,4})?)/); var dMStr = mM ? mM[1] : '14/08/2026';
+              var mJ = rawJ.match(/(\d{2}\/\d{2})/); var dJStr = mJ ? mJ[1] : '17/08';
+              var mK = rawK.match(/(\d{2}\/\d{2})/); var dKStr = mK ? mK[1] : '16/08';
+              var mL = rawL.match(/(\d{2}\/\d{2})/); var dLStr = mL ? mL[1] : '15/08';
+              var mM = rawM.match(/(\d{2}\/\d{2}(?:\/\d{2,4})?)/); var dMStr = mM ? mM[1] : '18/08/2026';
 
               var fullMDate = dMStr.includes('/') && dMStr.split('/').length === 3 ? dMStr : dMStr + '/2026';
               var planLabel = '🎯 Plan ' + fullMDate + ' (M):';
@@ -721,9 +988,48 @@
               var mMonth = dJStr.split('/')[1] || '08';
               var dateLabel = mJDay + '/' + mKDay + '/' + mLDay + '-' + mMonth + '-2026';
 
-              // Parse Rows 53-56 for Team 1 to 4
+              var datesObj = {
+                d0Str: dJStr,
+                d1Str: dKStr,
+                d2Str: dLStr,
+                planStr: fullMDate,
+                dateLabel: dateLabel,
+                planLabel: planLabel
+              };
+
+              // Parse 28 Engineers (Rows 4 to 31)
+              var allEngineers = [];
+              for (var r = 3; r < Math.min(32, rows.length); r++) {
+                var rowData = rows[r] || [];
+                var tCode = rowData[4] || '';
+                if (tCode.indexOf('TEAM') !== -1) {
+                  allEngineers.push({
+                    stt: rowData[1] || '',
+                    real_name: rowData[2] || '',
+                    nsys: rowData[3] || '',
+                    team_code: tCode,
+                    wait_cd: rowData[5] || '0',
+                    completed: parseInt(rowData[6] || '0', 10) || 0,
+                    rank: rowData[7] || '',
+                    rate: rowData[8] || '0%',
+                    d0: rowData[9] || '0',
+                    d1: rowData[10] || '0',
+                    d2: rowData[11] || '0',
+                    plan: rowData[12] || '0',
+                    overdue: rowData[13] || '0',
+                    notyet: rowData[14] || '0',
+                    sum_remain: rowData[15] || '0'
+                  });
+                }
+              }
+
+              // Parse Rows 53-56 for Team 1 to 4 Summary
               var teamData = {};
+              var deptPointsMap = {};
               var tKeys = ['team1', 'team2', 'team3', 'team4'];
+              var tCodes = ['MYT_TNI_TEAM01_Dawei', 'MYT_TNI_TEAM02_Myeik', 'MYT_TNI_TEAM03_Bokpyin', 'MYT_TNI_TEAM04_Kawthoung'];
+              var tTitles = ['Team 1 (Paing Aung Soe - Dawei)', 'Team 2 (Nay Myo Thu - Myeik)', 'Team 3 (Pyae Phyo Zaw - Bokpyin)', 'Team 4 (Naing Myo Htun - Kawthoung)'];
+              var tColors = ['var(--rose)', 'var(--cyan)', 'var(--emerald)', 'var(--amber)'];
               var tEngs  = {team1:10, team2:11, team3:4, team4:4};
               var tRanks = [];
 
@@ -769,6 +1075,16 @@
                   pct: pct, closeRate: pct, targetPct: targetPct, metTarget: metTarget
                 };
                 tRanks.push({ k: tk, pct: pct });
+
+                deptPointsMap[tk] = {
+                  manager: row[23] || 'TL:0 /0 P:0',
+                  asset: row[24] || 'TL:0 /0 P:0',
+                  cm: row[25] || 'TL:0 /0 P:0',
+                  me: row[26] || 'TL:0 /0 P:0',
+                  pm: row[27] || 'TL:0 /0 P:0',
+                  construction: row[28] || 'TL:0 /0 P:0',
+                  finance: row[29] || 'TL:0 /0 P:0'
+                };
               }
 
               tRanks.sort(function(a,b){ return b.pct - a.pct; });
@@ -778,8 +1094,27 @@
                 applyTeam(k, teamData[k], dateLabel, planLabel, targetPct);
               });
 
+              // 👑 RENDER DYNAMICALLY INTO 4 TEAM MODALS
+              for (var i = 0; i < 4; i++) {
+                var tk = tKeys[i];
+                var mEl = document.getElementById(tk + 'ModalContent');
+                if (mEl) {
+                  mEl.innerHTML = renderTeamModalContent(tk, tCodes[i], tTitles[i], tColors[i], teamData[tk], deptPointsMap[tk], allEngineers, datesObj);
+                }
+              }
+
+              // 👑 RENDER DYNAMICALLY INTO ALL ENGINEERS MODAL & TABLE 3
+              var allModEl = document.getElementById('allEngineersModalContent');
+              if (allModEl) {
+                allModEl.innerHTML = renderAllEngineersTableHtml(allEngineers, datesObj);
+              }
+              var t3Cont = document.getElementById('table3-dynamic-container');
+              if (t3Cont) {
+                t3Cont.innerHTML = renderAllEngineersTableHtml(allEngineers, datesObj);
+              }
+
               var mExp = csvText.match(/Export\s*time:\s*([^\r\n,"]+)/i);
-              var exportTimeStr = (mExp && mExp[1]) ? mExp[1].trim() : '13/08/2026 16:36:48';
+              var exportTimeStr = (mExp && mExp[1]) ? mExp[1].trim() : '17/08/2026 15:52:02';
               set('sheet-export-time', exportTimeStr);
               set('t1-export-hdr', 'Export time: ' + exportTimeStr);
 
@@ -796,9 +1131,11 @@
               if (typeof window.updateWoChart === 'function') {
                 window.updateWoChart();
               }
+              if (typeof window.makeAllTablesResizable === 'function') {
+                window.makeAllTablesResizable();
+              }
             })
             .catch(function(err){
-              // Fallback to Apps Script
               fetch(GAS+'?action=get_team_wo_stats')
                 .then(function(r){return r.json();})
                 .then(function(resp){
@@ -809,6 +1146,9 @@
                   if (typeof window.updateWoChart === 'function') {
                     window.updateWoChart();
                   }
+                  if (typeof window.makeAllTablesResizable === 'function') {
+                    window.makeAllTablesResizable();
+                  }
                   var b=$id('team-stats-badge');
                   if(b) b.innerHTML='⚡ Synced from Apps Script — '+resp.updatedAt+' MMT';
                 })
@@ -818,6 +1158,7 @@
                 });
             });
         }
+
         function init(){ loadStats(); setInterval(loadStats, 30*1000); }
         if(document.readyState==='loading'){
           document.addEventListener('DOMContentLoaded', init);
@@ -901,58 +1242,13 @@
       <!-- TABLE 3: SUMMARY ALL NAME SYSTEM PERFORMANCE ROSTER (ALL 4 TEAMS — SORTED % HIGH TO LOW) -->
       <div class="card" id="all-engineers-summary-card">
         <div style="text-align:center; font-size:0.75rem; font-weight:700; color:#10b981; margin-bottom:0.6rem;">
-          ⚡ Realtime Synced from Google Sheets — <span class="sync-timestamp-tag">11/08/2026 21:40 MMT</span> | <span style="color:#38bdf8;">Auto-update on change (Every 30s)</span>
+          ⚡ Realtime Synced from Google Sheets — <span class="sync-timestamp-tag">18/08/2026 06:30 MMT</span> | <span style="color:#38bdf8;">Auto-update on change (Every 30s)</span>
         </div>
         <div class="section-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
           <span><i class="fa-solid fa-users"></i> Table 3: Summary All Name System Roster — Direct Google Sheet Raw Data (Sum all WO Team)</span>
           <button class="filter-btn active" style="background:linear-gradient(135deg, #10B981, #06B6D4); color:#fff; border:none; padding:0.4rem 0.9rem; font-weight:700; border-radius:8px; cursor:pointer;" onclick="openAllEngineersModal()"><i class="fa-solid fa-expand"></i> View Full Modal</button>
         </div>
-        <div style="max-height: 520px; overflow-y: auto;">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th style="color:var(--cyan);">NAME SYSTEM</th>
-                <th>TEAM REGION</th>
-                <th style="color:var(--cyan);">RANK</th>
-                <th>COMPLETED WOS</th>
-                <th style="color:var(--emerald);">COMPLETION RATE</th>
-                <th style="color:#38BDF8 !important; font-weight:800;">CLOSE 06/08</th>
-                <th style="color:#38BDF8 !important; font-weight:800;">CLOSE 05/08</th>
-                <th style="color:#38BDF8 !important; font-weight:800;">CLOSE 04/08</th>
-                <th style="color:#EC4899 !important; font-weight:800;">PLAN 07/08</th>
-                <th style="color:#EA580C !important; font-weight:800;">OVERDUE FOT</th>
-                <th>NOT YET ON TIME</th>
-                <th>SUM NOT YET + WAIT CD</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>1</td><td><code>myt_khantchaw.nyo</code></td><td><span class="team-tag tag-t4">Team 4 Kawthoung</span></td><td><strong style="color:var(--cyan);">1</strong></td><td>26</td><td><strong style="color:var(--emerald);">81%</strong></td><td>0</td><td><strong style="color:#38BDF8;">2</strong></td><td><strong style="color:#38BDF8;">6</strong></td><td><strong style="color:#EC4899 !important;">1</strong></td><td>0</td><td>6</td><td>6</td></tr>
-              <tr><td>2</td><td><code>myt_aungthin.mya</code></td><td><span class="team-tag tag-t1">Team 1 Dawei</span></td><td><strong style="color:var(--cyan);">2</strong></td><td>14</td><td><strong style="color:var(--emerald);">78%</strong></td><td><strong style="color:#38BDF8;">6</strong></td><td>0</td><td><strong style="color:#38BDF8;">1</strong></td><td><span style="color:#EC4899 !important; opacity:0.6;">0</span></td><td><strong style="color:#EA580C !important;">4</strong></td><td>0</td><td>4</td></tr>
-              <tr><td>3</td><td><code>myt_winhtet.aung11</code></td><td><span class="team-tag tag-t2">Team 2 Myeik</span></td><td><strong style="color:var(--cyan);">3</strong></td><td>15</td><td><strong style="color:var(--emerald);">75%</strong></td><td>0</td><td><strong style="color:#38BDF8;">5</strong></td><td>0</td><td><strong style="color:#EC4899 !important;">1</strong></td><td><strong style="color:#EA580C !important;">1</strong></td><td>4</td><td>5</td></tr>
-              <tr><td>4</td><td><code>myt_tinmaung.win</code></td><td><span class="team-tag tag-t4">Team 4 Kawthoung</span></td><td><strong style="color:var(--cyan);">6</strong></td><td>27</td><td><strong style="color:var(--emerald);">50%</strong></td><td>0</td><td><strong style="color:#38BDF8;">2</strong></td><td><strong style="color:#38BDF8;">2</strong></td><td><strong style="color:#EC4899 !important;">3</strong></td><td>0</td><td>27</td><td>27</td></tr>
-              <tr><td>5</td><td><code>myt_pyikyaw.aung</code></td><td><span class="team-tag tag-t2">Team 2 Myeik</span></td><td><strong style="color:var(--cyan);">7</strong></td><td>31</td><td><strong style="color:var(--emerald);">49%</strong></td><td>0</td><td><strong style="color:#38BDF8;">11</strong></td><td>0</td><td><strong style="color:#EC4899 !important;">3</strong></td><td>0</td><td>32</td><td>32</td></tr>
-              <tr><td>6</td><td><code>myt_tinnaing.lin11</code></td><td><span class="team-tag tag-t3">Team 3 Bokpyin</span></td><td><strong style="color:var(--cyan);">8</strong></td><td>6</td><td><strong style="color:var(--emerald);">35%</strong></td><td>0</td><td><strong style="color:#38BDF8;">2</strong></td><td>0</td><td><strong style="color:#EC4899 !important;">1</strong></td><td><strong style="color:#EA580C !important;">2</strong></td><td>9</td><td>11</td></tr>
-              <tr><td>7</td><td><code>myt_ye.lin22</code></td><td><span class="team-tag tag-t2">Team 2 Myeik</span></td><td><strong style="color:var(--cyan);">9</strong></td><td>3</td><td><strong style="color:var(--emerald);">33%</strong></td><td>0</td><td>0</td><td>0</td><td><strong style="color:#EC4899 !important;">1</strong></td><td><strong style="color:#EA580C !important;">2</strong></td><td>4</td><td>6</td></tr>
-              <tr><td>8</td><td><code>myt_myintkoko.aung</code></td><td><span class="team-tag tag-t3">Team 3 Bokpyin</span></td><td><strong style="color:var(--cyan);">10</strong></td><td>5</td><td><strong style="color:var(--amber);">29%</strong></td><td>0</td><td>0</td><td>0</td><td><strong style="color:#EC4899 !important;">1</strong></td><td><strong style="color:#EA580C !important;">1</strong></td><td>11</td><td>12</td></tr>
-              <tr><td>9</td><td><code>myt_sithu.htun</code></td><td><span class="team-tag tag-t3">Team 3 Bokpyin</span></td><td><strong style="color:var(--cyan);">12</strong></td><td>15</td><td><strong style="color:var(--amber);">29%</strong></td><td>0</td><td>0</td><td><strong style="color:#38BDF8;">6</strong></td><td><strong style="color:#EC4899 !important;">3</strong></td><td><strong style="color:#EA580C !important;">6</strong></td><td>31</td><td>37</td></tr>
-              <tr><td>10</td><td><code>myt_bhonehtet.aung</code></td><td><span class="team-tag tag-t1">Team 1 Dawei</span></td><td><strong style="color:var(--cyan);">13</strong></td><td>14</td><td><strong style="color:var(--amber);">23%</strong></td><td>0</td><td>0</td><td><strong style="color:#38BDF8;">5</strong></td><td><strong style="color:#EC4899 !important;">4</strong></td><td><strong style="color:#EA580C !important;">21</strong></td><td>25</td><td>46</td></tr>
-              <tr><td>11</td><td><code>myt_bonemyat.naing1</code></td><td><span class="team-tag tag-t1">Team 1 Dawei</span></td><td><strong style="color:var(--cyan);">14</strong></td><td>16</td><td><strong style="color:var(--amber);">23%</strong></td><td>0</td><td>0</td><td>0</td><td><strong style="color:#EC4899 !important;">5</strong></td><td><strong style="color:#EA580C !important;">38</strong></td><td>15</td><td>53</td></tr>
-              <tr><td>12</td><td><code>myt_aunglwin.phyo</code></td><td><span class="team-tag tag-t1">Team 1 Dawei</span></td><td><strong style="color:var(--cyan);">15</strong></td><td>17</td><td><strong style="color:var(--amber);">20%</strong></td><td><strong style="color:#38BDF8;">1</strong></td><td>0</td><td>0</td><td><strong style="color:#EC4899 !important;">6</strong></td><td><strong style="color:#EA580C !important;">13</strong></td><td>57</td><td>70</td></tr>
-              <tr><td>13</td><td><code>myt_maung.maung11</code></td><td><span class="team-tag tag-t2">Team 2 Myeik</span></td><td><strong style="color:var(--cyan);">16</strong></td><td>4</td><td><strong style="color:var(--rose);">14%</strong></td><td>0</td><td>0</td><td>0</td><td><strong style="color:#EC4899 !important;">2</strong></td><td><strong style="color:#EA580C !important;">3</strong></td><td>22</td><td>25</td></tr>
-              <tr><td>14</td><td><code>myt_phyoko.ko44</code></td><td><span class="team-tag tag-t1">Team 1 Dawei</span></td><td><strong style="color:var(--cyan);">17</strong></td><td>6</td><td><strong style="color:var(--rose);">12%</strong></td><td>0</td><td>0</td><td>0</td><td><strong style="color:#EC4899 !important;">4</strong></td><td><strong style="color:#EA580C !important;">12</strong></td><td>32</td><td>44</td></tr>
-              <tr><td>15</td><td><code>myt_zinmin.shein</code></td><td><span class="team-tag tag-t2">Team 2 Myeik</span></td><td><strong style="color:var(--cyan);">18</strong></td><td>1</td><td><strong style="color:var(--rose);">11%</strong></td><td><strong style="color:#38BDF8;">1</strong></td><td>0</td><td>0</td><td><strong style="color:#EC4899 !important;">1</strong></td><td><strong style="color:#EA580C !important;">1</strong></td><td>7</td><td>8</td></tr>
-              <tr><td>16</td><td><code>myt_wanna.oo2</code></td><td><span class="team-tag tag-t2">Team 2 Myeik</span></td><td><strong style="color:var(--cyan);">19</strong></td><td>2</td><td><strong style="color:var(--rose);">9%</strong></td><td>0</td><td><strong style="color:#38BDF8;">2</strong></td><td>0</td><td><strong style="color:#EC4899 !important;">2</strong></td><td><strong style="color:#EA580C !important;">3</strong></td><td>18</td><td>21</td></tr>
-              <tr><td>17</td><td><code>myt_tharhtoo.aung11</code></td><td><span class="team-tag tag-t1">Team 1 Dawei</span></td><td><strong style="color:var(--cyan);">20</strong></td><td>1</td><td><strong style="color:var(--rose);">1%</strong></td><td>0</td><td>0</td><td><strong style="color:#38BDF8;">1</strong></td><td><strong style="color:#EC4899 !important;">7</strong></td><td><strong style="color:#EA580C !important;">48</strong></td><td>30</td><td>78</td></tr>
-              <tr><td>18</td><td><code>myt_myothant.htoo</code></td><td><span class="team-tag tag-t1">Team 1 Dawei</span></td><td><strong style="color:var(--cyan);">21</strong></td><td>0</td><td><strong style="color:var(--rose);">0%</strong></td><td>0</td><td>0</td><td>0</td><td><span style="color:#EC4899 !important; opacity:0.6;">0</span></td><td><strong style="color:#EA580C !important;">2</strong></td><td>0</td><td>2</td></tr>
-              <tr><td>19</td><td><code>myt_nyi.nyi23</code></td><td><span class="team-tag tag-t1">Team 1 Dawei</span></td><td><strong style="color:var(--cyan);">21</strong></td><td>0</td><td><strong style="color:var(--rose);">0%</strong></td><td>0</td><td>0</td><td>0</td><td><span style="color:#EC4899 !important; opacity:0.6;">0</span></td><td>0</td><td>1</td><td>1</td></tr>
-              <tr><td>20</td><td><code>myt_aungkyaw.latt</code></td><td><span class="team-tag tag-t2">Team 2 Myeik</span></td><td><strong style="color:var(--cyan);">21</strong></td><td>0</td><td><strong style="color:var(--rose);">0%</strong></td><td>0</td><td>0</td><td>0</td><td><span style="color:#EC4899 !important; opacity:0.6;">0</span></td><td><strong style="color:#EA580C !important;">1</strong></td><td>1</td><td>2</td></tr>
-              <tr><td>21</td><td><code>myt_minpaing.oo</code></td><td><span class="team-tag tag-t2">Team 2 Myeik</span></td><td><strong style="color:var(--cyan);">21</strong></td><td>0</td><td><strong style="color:var(--rose);">0%</strong></td><td>0</td><td>0</td><td>0</td><td><strong style="color:#EC4899 !important;">1</strong></td><td><strong style="color:#EA580C !important;">7</strong></td><td>5</td><td>12</td></tr>
-              <tr><td>22</td><td><code>myt_naythurain.oo</code></td><td><span class="team-tag tag-t2">Team 2 Myeik</span></td><td><strong style="color:var(--cyan);">21</strong></td><td>0</td><td><strong style="color:var(--rose);">0%</strong></td><td>0</td><td>0</td><td>0</td><td><span style="color:#EC4899 !important; opacity:0.6;">0</span></td><td>0</td><td>2</td><td>2</td></tr>
-              <tr><td>23</td><td><code>myt_phyoko</code></td><td><span class="team-tag tag-t2">Team 2 Myeik</span></td><td><strong style="color:var(--cyan);">21</strong></td><td>0</td><td><strong style="color:var(--rose);">0%</strong></td><td>0</td><td>0</td><td>0</td><td><span style="color:#EC4899 !important; opacity:0.6;">0</span></td><td><strong style="color:#EA580C !important;">1</strong></td><td>0</td><td>1</td></tr>
-              <tr><td>24</td><td><code>myt_kyawnyein.thu</code></td><td><span class="team-tag tag-t4">Team 4 Kawthoung</span></td><td><strong style="color:var(--cyan);">21</strong></td><td>1</td><td><strong style="color:var(--rose);">0%</strong></td><td>0</td><td>0</td><td>0</td><td><span style="color:#EC4899 !important; opacity:0.6;">0</span></td><td>0</td><td>0</td><td>0</td></tr>
-            </tbody>
-          </table>
+        <div id="table3-dynamic-container" style="max-height: 520px; overflow-y: auto;">
         </div>
       </div>
 
@@ -5922,6 +6218,133 @@ Team04>> 2Box</td>
       </div>
     </div>
 
+    <!-- 6. PLAN WEEK TAB PANEL — Following 8 BI Architecture Pillars -->
+    <div id="plan-week-panel" class="tab-panel">
+      <!-- Header with Week Number -->
+      <div class="section-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+        <div>
+          <span><i class="fa-solid fa-calendar-week"></i> <span id="pdep-week-title">Department Plan — Week Loading...</span></span>
+          <div style="font-size:0.78rem; color:#38BDF8; font-weight:700; margin-top:0.2rem;" id="pdep-week-range">
+            <i class="fa-solid fa-clock"></i> Loading date range...
+          </div>
+        </div>
+        <div style="display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center;">
+          <button class="filter-btn" style="background:rgba(255,255,255,0.08); color:#F8FAFC; border:1px solid rgba(255,255,255,0.2); padding:0.5rem 0.9rem; border-radius:10px; cursor:pointer; font-size:0.8rem;" onclick="PlanWeek.archiveCompleted()">
+            <i class="fa-solid fa-box-archive"></i> Archive Completed
+          </button>
+          <button class="filter-btn active" style="background:linear-gradient(135deg, var(--cyan), #059669); color:#fff; border:none; padding:0.5rem 1rem; font-weight:700; border-radius:10px; cursor:pointer; font-size:0.8rem;" onclick="PlanWeek.openAddModal()">
+            <i class="fa-solid fa-plus"></i> Add New Plan
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Plan Table -->
+      <div class="card" id="pdep-plan-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+          <h3 style="color:#fff; font-size:1.05rem; font-weight:700;"><i class="fa-solid fa-list-check" style="color:var(--cyan);"></i> Active Department Plans <span id="pdep-count" style="color:var(--cyan); font-size:0.85rem;">(0)</span></h3>
+          <div style="font-size:0.72rem; color:var(--text-sub);" id="pdep-sync-time">Last sync: —</div>
+        </div>
+        <div style="max-height: 500px; overflow-y: auto; overflow-x: auto;">
+          <table class="data-table" id="pdep-table">
+            <thead>
+              <tr>
+                <th style="width:40px;">#</th>
+                <th>Date Assign</th>
+                <th>Technical Manager</th>
+                <th style="text-align:left !important;">Detail Task This Week</th>
+                <th style="color:var(--amber);">Progress</th>
+                <th style="color:var(--emerald);">Date Complete</th>
+                <th style="width:80px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="pdep-tbody">
+              <tr><td colspan="7" style="text-align:center; color:var(--text-sub); padding:2rem;"><i class="fa-solid fa-spinner fa-spin"></i> Loading Plan data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- History Section (Collapsible) -->
+      <div style="margin-top:1.5rem;">
+        <button class="filter-btn" style="width:100%; text-align:left; padding:0.8rem 1.2rem; background:rgba(30,41,59,0.7); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:#F8FAFC; font-weight:700; font-size:0.95rem; cursor:pointer; display:flex; justify-content:space-between; align-items:center;" onclick="PlanWeek.toggleHistory()">
+          <span><i class="fa-solid fa-clock-rotate-left" style="color:var(--amber);"></i> History — Previous Weeks Completed Tasks <span id="pdep-history-count" style="color:var(--text-sub); font-size:0.8rem;">(0)</span></span>
+          <i class="fa-solid fa-chevron-down" id="pdep-history-chevron" style="transition:transform 0.3s;"></i>
+        </button>
+        <div id="pdep-history-section" style="display:none; margin-top:0.8rem;">
+          <div class="card" style="border:1px solid rgba(245,158,11,0.2);">
+            <div style="max-height: 400px; overflow-y: auto; overflow-x: auto;">
+              <table class="data-table" id="pdep-history-table">
+                <thead>
+                  <tr>
+                    <th style="width:40px;">#</th>
+                    <th>Date Assign</th>
+                    <th>Technical Manager</th>
+                    <th style="text-align:left !important;">Detail Task This Week</th>
+                    <th>Progress</th>
+                    <th>Date Complete</th>
+                  </tr>
+                </thead>
+                <tbody id="pdep-history-tbody">
+                  <tr><td colspan="6" style="text-align:center; color:var(--text-sub); padding:1.5rem;">No history data</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLAN DEP ADD MODAL -->
+    <div id="planDepAddModal" class="modal-backdrop">
+      <div class="modal-box" style="max-width: 620px; background:#0F172A; border:1px solid rgba(16,185,129,0.35); border-radius:20px; padding:1.6rem; box-shadow:0 25px 50px -12px rgba(0,0,0,0.85);">
+        <div class="modal-header" style="margin-bottom:1.2rem;">
+          <div>
+            <h3 style="color:var(--emerald); font-weight:800; font-size:1.3rem;"><i class="fa-solid fa-plus-circle"></i> Add New Department Plan</h3>
+            <p style="font-size:0.8rem; color:var(--text-sub); margin-top:0.2rem;">Fill in task details. Columns E-F can be edited directly on the table.</p>
+          </div>
+          <button class="close-btn" onclick="PlanWeek.closeAddModal()">&times;</button>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:1rem;">
+          <!-- Date Assign (B) -->
+          <div>
+            <label style="display:block; font-weight:700; color:#F8FAFC; margin-bottom:0.3rem; font-size:0.85rem;"><i class="fa-solid fa-calendar-day" style="color:var(--cyan);"></i> Date Assign (B):</label>
+            <input type="date" id="pdep-add-date" style="width:100%; background:#1E293B; border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:0.55rem 0.9rem; color:#fff; font-size:0.9rem;" />
+          </div>
+
+          <!-- Technical Manager (C) -->
+          <div>
+            <label style="display:block; font-weight:700; color:#F8FAFC; margin-bottom:0.3rem; font-size:0.85rem;"><i class="fa-solid fa-user-tie" style="color:var(--amber);"></i> Technical Manager / Backoffice (C):</label>
+            <select id="pdep-add-manager" style="width:100%; background:#1E293B; border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:0.55rem 0.9rem; color:#fff; font-size:0.9rem;">
+              <option value="">— Select Backoffice / Manager —</option>
+              <option value="Admin">Admin</option>
+              <option value="Asset">Asset</option>
+              <option value="CM">CM</option>
+              <option value="Finance">Finance</option>
+              <option value="HR">HR</option>
+              <option value="M&E">M&E</option>
+              <option value="Manager">Manager</option>
+              <option value="PM">PM</option>
+              <option value="Transmission">Transmission</option>
+            </select>
+          </div>
+
+          <!-- Detail Task This Week (D) -->
+          <div>
+            <label style="display:block; font-weight:700; color:#F8FAFC; margin-bottom:0.3rem; font-size:0.85rem;"><i class="fa-solid fa-align-left" style="color:var(--emerald);"></i> Detail Task This Week (D):</label>
+            <textarea id="pdep-add-detail" rows="4" placeholder="Describe the task in detail..." style="width:100%; background:#1E293B; border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:0.55rem 0.9rem; color:#fff; font-size:0.9rem; resize:vertical;"></textarea>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:0.8rem; margin-top:1.5rem;">
+          <button type="button" class="filter-btn" style="background:rgba(255,255,255,0.08); padding:0.55rem 1.1rem; cursor:pointer; font-size:0.85rem;" onclick="PlanWeek.closeAddModal()">Cancel</button>
+          <button type="button" class="voice-btn" style="background:linear-gradient(135deg, var(--emerald), #059669); padding:0.55rem 1.3rem; font-weight:800; cursor:pointer; font-size:0.85rem;" onclick="PlanWeek.submitAdd()">
+            <i class="fa-solid fa-check"></i> Save Plan
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- TEAM 1 COMPLETE MODAL -->
   <div id="team1Modal" class="modal-backdrop">
     <div class="modal-box" style="max-width: 920px;">
@@ -5931,7 +6354,8 @@ Team04>> 2Box</td>
         </div>
         <button class="close-btn" onclick="closeTeam1Modal()">&times;</button>
       </div>
-      <div style="max-height: 480px; overflow-y: auto;">
+      <div id="team1ModalContent" style="max-height: 480px; overflow-y: auto;">
+
         <div style="background:rgba(56, 189, 248, 0.12); border:1px solid rgba(56, 189, 248, 0.3); border-radius:16px; padding:1.2rem; margin-bottom:1.2rem;">
           <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
             <span>CD Not Yet Close: <strong style="color:var(--amber); font-size:1.1rem;">41 WOs</strong></span>
@@ -5983,6 +6407,7 @@ Team04>> 2Box</td>
             <tr><td>8</td><td><code>myt_nyi.nyi23</code></td><td>0</td><td><strong style="color:var(--rose);">0%</strong></td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td></tr>
           </tbody>
         </table>
+      
       </div>
     </div>
   </div>
@@ -5996,7 +6421,8 @@ Team04>> 2Box</td>
         </div>
         <button class="close-btn" onclick="closeTeam2Modal()">&times;</button>
       </div>
-      <div style="max-height: 480px; overflow-y: auto;">
+      <div id="team2ModalContent" style="max-height: 480px; overflow-y: auto;">
+
         <div style="background:rgba(16, 185, 129, 0.12); border:1px solid rgba(16, 185, 129, 0.3); border-radius:16px; padding:1.2rem; margin-bottom:1.2rem;">
           <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
             <span>CD Not Yet Close: <strong style="color:var(--amber); font-size:1.1rem;">1 WOs</strong></span>
@@ -6050,6 +6476,7 @@ Team04>> 2Box</td>
             <tr><td>10</td><td><code>myt_phyoko</code></td><td>0</td><td><strong style="color:var(--rose);">0%</strong></td><td>0</td><td>0</td><td>0</td><td>0</td><td><strong style="color:#EA580C;">1</strong></td><td>0</td><td>1</td></tr>
           </tbody>
         </table>
+      
       </div>
     </div>
   </div>
@@ -6063,7 +6490,8 @@ Team04>> 2Box</td>
         </div>
         <button class="close-btn" onclick="closeTeam3Modal()">&times;</button>
       </div>
-      <div style="max-height: 480px; overflow-y: auto;">
+      <div id="team3ModalContent" style="max-height: 480px; overflow-y: auto;">
+
         <div style="background:rgba(56, 189, 248, 0.12); border:1px solid rgba(56, 189, 248, 0.3); border-radius:16px; padding:1.2rem; margin-bottom:1.2rem;">
           <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
             <span>CD Not Yet Close: <strong style="color:var(--amber); font-size:1.1rem;">0 WOs</strong></span>
@@ -6110,6 +6538,7 @@ Team04>> 2Box</td>
             <tr><td>3</td><td><code>myt_sithu.htun</code></td><td>15</td><td><strong style="color:var(--amber);">29%</strong></td><td>0</td><td>0</td><td><strong style="color:#38BDF8;">6</strong></td><td><strong style="color:#EC4899;">3</strong></td><td><strong style="color:#EA580C;">6</strong></td><td>31</td><td>37</td></tr>
           </tbody>
         </table>
+      
       </div>
     </div>
   </div>
@@ -6123,7 +6552,8 @@ Team04>> 2Box</td>
         </div>
         <button class="close-btn" onclick="closeTeam4Modal()">&times;</button>
       </div>
-      <div style="max-height: 480px; overflow-y: auto;">
+      <div id="team4ModalContent" style="max-height: 480px; overflow-y: auto;">
+
         <div style="background:rgba(234, 179, 8, 0.12); border:1px solid rgba(234, 179, 8, 0.3); border-radius:16px; padding:1.2rem; margin-bottom:1.2rem;">
           <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
             <span>CD Not Yet Close: <strong style="color:var(--amber); font-size:1.1rem;">3 WOs</strong></span>
@@ -6170,21 +6600,22 @@ Team04>> 2Box</td>
             <tr><td>3</td><td><code>myt_kyawnyein.thu</code></td><td>1</td><td><strong style="color:var(--rose);">0%</strong></td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
           </tbody>
         </table>
+      
       </div>
     </div>
   </div>
 
   <!-- ALL ENGINEERS SUMMARY MODAL -->
   <div id="allEngineersModal" class="modal-backdrop">
-    <div class="modal-box" style="max-width: 950px;">
+    <div class="modal-box" style="max-width: 1050px;">
       <div class="modal-header">
         <div>
-          <h3 style="color:var(--cyan); font-weight:800; font-size:1.3rem;"><i class="fa-solid fa-users"></i> Summary All Name System Performance Roster (All 4 Teams)</h3>
-          <p style="font-size:0.8rem; color:var(--text-sub); margin-top:0.2rem;">Sorted by % Completion Rate from High to Low (All 22 Active Engineers)</p>
+          <h3 style="color:var(--cyan); font-weight:800; font-size:1.3rem;"><i class="fa-solid fa-users"></i> All 28 Engineers Performance Roster (Sorted by % Completion High to Low)</h3>
         </div>
         <button class="close-btn" onclick="closeAllEngineersModal()">&times;</button>
       </div>
-      <div style="max-height: 520px; overflow-y: auto;">
+      <div id="allEngineersModalContent" style="max-height: 520px; overflow-y: auto;">
+
         <table class="data-table">
           <thead>
             <tr>
@@ -6230,6 +6661,7 @@ Team04>> 2Box</td>
               <tr><td>24</td><td><code>myt_kyawnyein.thu</code></td><td><span class="team-tag tag-t4">Team 4 Kawthoung</span></td><td><strong style="color:var(--cyan);">21</strong></td><td>1</td><td><strong style="color:var(--rose);">0%</strong></td><td>0</td><td>0</td><td>0</td><td><span style="color:#EC4899 !important; opacity:0.6;">0</span></td><td>0</td><td>0</td><td>0</td></tr>
           </tbody>
         </table>
+      
       </div>
     </div>
   </div>
@@ -6308,6 +6740,11 @@ Team04>> 2Box</td>
           </label>
 
           <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.88rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
+            <input type="checkbox" id="perm_plan" class="perm-checkbox" value="PLAN" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
+            <span>📅 <b>Plan Week</b> (Kế Hoạch Phòng Ban Theo Tuần)</span>
+          </label>
+
+          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.88rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
             <input type="checkbox" id="perm_auth" class="perm-checkbox" value="AUTH" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
             <span>🔒 <b>Gmail Access List</b> (Quản Lý Phân Quyền Hệ Thống)</span>
           </label>
@@ -6337,15 +6774,15 @@ Team04>> 2Box</td>
     }
 
     /* Modal Handlers */
-    function openTeam1Modal() { document.getElementById('team1Modal').classList.add('active'); }
+    function openTeam1Modal() { document.getElementById("team1Modal").classList.add("active"); setTimeout(function(){ if(typeof window.makeAllTablesResizable==="function") window.makeAllTablesResizable(); }, 50); } document.getElementById('team1Modal').classList.add('active'); }
     function closeTeam1Modal() { document.getElementById('team1Modal').classList.remove('active'); }
-    function openTeam2Modal() { document.getElementById('team2Modal').classList.add('active'); }
+    function openTeam2Modal() { document.getElementById("team2Modal").classList.add("active"); setTimeout(function(){ if(typeof window.makeAllTablesResizable==="function") window.makeAllTablesResizable(); }, 50); } document.getElementById('team2Modal').classList.add('active'); }
     function closeTeam2Modal() { document.getElementById('team2Modal').classList.remove('active'); }
-    function openTeam3Modal() { document.getElementById('team3Modal').classList.add('active'); }
+    function openTeam3Modal() { document.getElementById("team3Modal").classList.add("active"); setTimeout(function(){ if(typeof window.makeAllTablesResizable==="function") window.makeAllTablesResizable(); }, 50); } document.getElementById('team3Modal').classList.add('active'); }
     function closeTeam3Modal() { document.getElementById('team3Modal').classList.remove('active'); }
-    function openTeam4Modal() { document.getElementById('team4Modal').classList.add('active'); }
+    function openTeam4Modal() { document.getElementById("team4Modal").classList.add("active"); setTimeout(function(){ if(typeof window.makeAllTablesResizable==="function") window.makeAllTablesResizable(); }, 50); } document.getElementById('team4Modal').classList.add('active'); }
     function closeTeam4Modal() { document.getElementById('team4Modal').classList.remove('active'); }
-    function openAllEngineersModal() { document.getElementById('allEngineersModal').classList.add('active'); }
+    function openAllEngineersModal() { document.getElementById("allEngineersModal").classList.add("active"); setTimeout(function(){ if(typeof window.makeAllTablesResizable==="function") window.makeAllTablesResizable(); }, 50); } document.getElementById('allEngineersModal').classList.add('active'); }
     function closeAllEngineersModal() { document.getElementById('allEngineersModal').classList.remove('active'); }
 
     function openAddGmailModal() {
@@ -6363,15 +6800,15 @@ Team04>> 2Box</td>
 
     /* 🔐 GMAIL ACCESS CONTROL & MULTI-PERMISSION PERSISTENCE */
     const DEFAULT_GMAIL_ACCOUNTS = [
-      { email: "phonghdpxd@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "AUTH"], date: "15/08/2026" },
-      { email: "htoolaynyaw@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "AUTH"], date: "15/08/2026" },
+      { email: "phonghdpxd@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "AUTH"], date: "15/08/2026" },
+      { email: "htoolaynyaw@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "AUTH"], date: "15/08/2026" },
       { email: "bod.director@mytel.com.mm", perms: ["EXEC", "BOD"], date: "15/08/2026" },
-      { email: "tni.technical@gmail.com", perms: ["DEPT", "WO"], date: "15/08/2026" },
-      { email: "tni.operations@mytel.com.mm", perms: ["EXEC", "DEPT", "WO"], date: "15/08/2026" },
-      { email: "team1.dawei@mytel.com.mm", perms: ["DEPT", "WO"], date: "15/08/2026" },
-      { email: "team2.myeik@mytel.com.mm", perms: ["DEPT", "WO"], date: "15/08/2026" },
-      { email: "team3.bokpyin@mytel.com.mm", perms: ["DEPT", "WO"], date: "15/08/2026" },
-      { email: "team4.kawthoung@mytel.com.mm", perms: ["DEPT", "WO"], date: "15/08/2026" }
+      { email: "tni.technical@gmail.com", perms: ["DEPT", "WO", "PLAN"], date: "15/08/2026" },
+      { email: "tni.operations@mytel.com.mm", perms: ["EXEC", "DEPT", "WO", "PLAN"], date: "15/08/2026" },
+      { email: "team1.dawei@mytel.com.mm", perms: ["DEPT", "WO", "PLAN"], date: "15/08/2026" },
+      { email: "team2.myeik@mytel.com.mm", perms: ["DEPT", "WO", "PLAN"], date: "15/08/2026" },
+      { email: "team3.bokpyin@mytel.com.mm", perms: ["DEPT", "WO", "PLAN"], date: "15/08/2026" },
+      { email: "team4.kawthoung@mytel.com.mm", perms: ["DEPT", "WO", "PLAN"], date: "15/08/2026" }
     ];
 
     function getStoredGmailAccounts() {
@@ -6397,7 +6834,7 @@ Team04>> 2Box</td>
 
     function renderPermBadges(perms) {
       if (!perms || !perms.length) return '<span style="color:var(--rose);">❌ No Access</span>';
-      if (perms.length >= 5 || (perms.includes("EXEC") && perms.includes("DEPT") && perms.includes("WO") && perms.includes("BOD") && perms.includes("AUTH"))) {
+      if (perms.length >= 6 || (perms.includes("EXEC") && perms.includes("DEPT") && perms.includes("WO") && perms.includes("BOD") && perms.includes("PLAN") && perms.includes("AUTH"))) {
         return '<span class="team-tag tag-t2" style="font-weight:800; font-size:0.8rem;">🌟 Full Access (Tất Cả Các Thẻ)</span>';
       }
 
@@ -6406,6 +6843,7 @@ Team04>> 2Box</td>
         'DEPT': { label: '🏢 Dept Assign', cls: 'tag-t3' },
         'WO':   { label: '📋 WO Detail', cls: 'tag-t1' },
         'BOD':  { label: '👑 BOD Assign', cls: 'tag-t1' },
+        'PLAN': { label: '📅 Plan Week', cls: 'tag-t3' },
         'AUTH': { label: '🔒 Access Control', cls: 'tag-t2' }
       };
 
@@ -6437,7 +6875,10 @@ Team04>> 2Box</td>
           <td style="text-align:left !important;">${renderPermBadges(perms)}</td>
           <td><span class="status-pill-check sp-verified">✓ Active Authorized</span></td>
           <td style="font-size:0.8rem; color:var(--text-sub);">${acc.date || '15/08/2026'}</td>
-          <td><button class="filter-btn" style="color:var(--rose); padding:0.25rem 0.6rem; font-size:0.75rem; cursor:pointer;" onclick="removeGmailIndex(${idx})"><i class="fa-solid fa-trash"></i> Remove</button></td>
+          <td style="white-space:nowrap;">
+            <button class="filter-btn" style="color:var(--cyan); padding:0.25rem 0.6rem; font-size:0.75rem; cursor:pointer; margin-right:4px;" onclick="editGmailIndex(${idx})"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+            <button class="filter-btn" style="color:var(--rose); padding:0.25rem 0.6rem; font-size:0.75rem; cursor:pointer;" onclick="removeGmailIndex(${idx})"><i class="fa-solid fa-trash"></i> Remove</button>
+          </td>
         `;
         tbody.appendChild(tr);
       });
@@ -6453,6 +6894,7 @@ Team04>> 2Box</td>
       const cbDept = document.getElementById('perm_dept');
       const cbWo   = document.getElementById('perm_wo');
       const cbBod  = document.getElementById('perm_bod');
+      const cbPlan = document.getElementById('perm_plan');
       const cbAuth = document.getElementById('perm_auth');
 
       // Reset all first
@@ -6460,6 +6902,7 @@ Team04>> 2Box</td>
       cbDept.checked = false;
       cbWo.checked   = false;
       cbBod.checked  = false;
+      if (cbPlan) cbPlan.checked = false;
       cbAuth.checked = false;
 
       if (preset === 'FULL') {
@@ -6467,6 +6910,7 @@ Team04>> 2Box</td>
         cbDept.checked = true;
         cbWo.checked   = true;
         cbBod.checked  = true;
+        if (cbPlan) cbPlan.checked = true;
         cbAuth.checked = true;
       } else if (preset === 'BOD') {
         cbExec.checked = true;
@@ -6475,6 +6919,7 @@ Team04>> 2Box</td>
         cbExec.checked = true;
         cbDept.checked = true;
         cbWo.checked   = true;
+        if (cbPlan) cbPlan.checked = true;
       } else if (preset === 'ENGINEER') {
         cbDept.checked = true;
         cbWo.checked   = true;
@@ -6592,6 +7037,28 @@ Team04>> 2Box</td>
           renderGmailList();
         }
       }
+    }
+
+    function editGmailIndex(index) {
+      const accounts = getStoredGmailAccounts();
+      if (index < 0 || index >= accounts.length) return;
+      const acc = accounts[index];
+      const perms = Array.isArray(acc.perms) ? acc.perms : [];
+
+      // Pre-fill email
+      const emailInput = document.getElementById('newGmailInput');
+      if (emailInput) emailInput.value = acc.email;
+
+      // Set checkboxes to current permissions
+      const allPerms = ['exec', 'dept', 'wo', 'bod', 'plan', 'auth'];
+      allPerms.forEach(p => {
+        const cb = document.getElementById('perm_' + p);
+        if (cb) cb.checked = perms.includes(p.toUpperCase());
+      });
+
+      // Open modal
+      const modal = document.getElementById('gmailModal');
+      if (modal) modal.classList.add('active');
     }
 
     function resetGmailDefaults() {
@@ -6782,8 +7249,511 @@ Team04>> 2Box</td>
       }
     };
 
+    // ============================================================
+    // 🏛️ PLAN WEEK TAB — window.PlanWeek Namespace
+    // Following 8 BI Architecture Pillars (v2026-08-17)
+    // Pillar 1: SSOT — All data from GAS API
+    // Pillar 2: Security-First — Server-side permission check
+    // Pillar 3: Separation — Self-contained namespace
+    // Pillar 4: Data Contract — Standard response format
+    // Pillar 5: Error Isolation — try-catch + error banner + retry
+    // ============================================================
+    window.PlanWeek = {
+      // Config — Same-origin Vercel Proxy Endpoint (Zero CORS failures)
+      GAS_URL: '/api/plan_dep',
+      
+      // State
+      data: [],
+      historyData: [],
+      permits: [],
+      userEmail: '',
+      userRole: 'VIEWER',
+      weekNumber: 0,
+      weekRange: '',
+      historyVisible: false,
+      refreshTimer: null,
+
+      // Department color map
+      deptColors: {
+        'Admin': 'tag-t2', 'Asset': 'tag-t3', 'Technical': 'tag-t1',
+        'Transmission': 'tag-t4', 'CM': 'tag-t1', 'Construction Projects': 'tag-t2',
+        'Finance': 'tag-t4', 'M&E': 'tag-t3', 'PM': 'tag-t1'
+      },
+
+      // ── Init ──
+      init() {
+        try {
+          this.userEmail = localStorage.getItem('tni_plan_dep_email') || '';
+          this.loadData();
+          this.loadPermissions();
+          this.initResizable();
+          // Auto-refresh every 30s (Pillar 7: Performance Budget)
+          if (this.refreshTimer) clearInterval(this.refreshTimer);
+          this.refreshTimer = setInterval(() => this.loadData(), 30000);
+        } catch (err) {
+          console.error('[PlanWeek] Init failed:', err);
+          this.renderError('Unable to initialize Plan Week. Please refresh the page.');
+        }
+      },
+
+      // ── Make Tables Column Resizable with Mouse Drag ──
+      initResizable() {
+        const setupTable = (tableId, storageKey) => {
+          const table = document.getElementById(tableId);
+          if (!table) return;
+          const ths = table.querySelectorAll('thead th');
+          
+          const savedWidths = JSON.parse(localStorage.getItem(storageKey) || '{}');
+          ths.forEach((th, idx) => {
+            if (savedWidths[idx]) {
+              th.style.width = savedWidths[idx] + 'px';
+              th.style.minWidth = savedWidths[idx] + 'px';
+            }
+          });
+
+          ths.forEach((th, idx) => {
+            if (th.querySelector('.resizer')) return;
+            th.classList.add('resizable');
+            
+            const resizer = document.createElement('div');
+            resizer.className = 'resizer';
+            th.appendChild(resizer);
+
+            let startX = 0;
+            let startWidth = 0;
+
+            const onMouseDown = (e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              startX = e.pageX;
+              startWidth = th.offsetWidth;
+              resizer.classList.add('resizing');
+              document.body.style.cursor = 'col-resize';
+              document.body.style.userSelect = 'none';
+
+              const onMouseMove = (moveEvent) => {
+                const diff = moveEvent.pageX - startX;
+                const newWidth = Math.max(40, startWidth + diff);
+                th.style.width = newWidth + 'px';
+                th.style.minWidth = newWidth + 'px';
+              };
+
+              const onMouseUp = () => {
+                resizer.classList.remove('resizing');
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+                
+                const widths = {};
+                ths.forEach((h, i) => {
+                  widths[i] = h.offsetWidth;
+                });
+                localStorage.setItem(storageKey, JSON.stringify(widths));
+              };
+
+              document.addEventListener('mousemove', onMouseMove);
+              document.addEventListener('mouseup', onMouseUp);
+            };
+
+            resizer.addEventListener('mousedown', onMouseDown);
+          });
+        };
+
+        setupTable('pdep-table', 'tni_pdep_active_widths');
+        setupTable('pdep-history-table', 'tni_pdep_history_widths');
+      },
+
+      // ── Load Permissions (Pillar 2: Security-First) ──
+      async loadPermissions() {
+        try {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 15000);
+          const resp = await fetch(this.GAS_URL + '?action=get_plan_dep_permit', { signal: ctrl.signal });
+          clearTimeout(timer);
+          const json = await resp.json();
+          if (json.status === 'ok' && Array.isArray(json.data)) {
+            this.permits = json.data;
+            const me = this.permits.find(p => p.email === this.userEmail);
+            this.userRole = me ? me.role : 'VIEWER';
+          }
+        } catch (err) {
+          console.warn('[PlanWeek] Permission check failed, defaulting to VIEWER:', err.message);
+          this.userRole = 'VIEWER';
+        }
+        this.updateActionButtons();
+      },
+
+      // ── Load Data (Pillar 1: SSOT + Pillar 4: Data Contract) ──
+      async loadData() {
+        // 🛡️ Không vẽ lại bảng khi người dùng đang gõ dở nội dung (tránh bị out)
+        if (document.querySelector('#pdep-tbody input') || document.getElementById('planDepAddModal')?.classList.contains('active')) {
+          return;
+        }
+
+        try {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 15000);
+          const resp = await fetch(this.GAS_URL + '?action=get_plan_dep&t=' + Date.now(), { signal: ctrl.signal });
+          clearTimeout(timer);
+          const json = await resp.json();
+          
+          if (json.status !== 'ok') throw new Error(json.error?.message || 'API returned error');
+          
+          this.data = json.data || [];
+          this.historyData = json.history || [];
+          this.weekNumber = json.meta?.weekNumber || 0;
+          this.weekRange = json.meta?.weekRange || '';
+          
+          // Update header
+          const titleEl = document.getElementById('pdep-week-title');
+          if (titleEl) titleEl.textContent = 'Department Plan — Week ' + this.weekNumber;
+          const rangeEl = document.getElementById('pdep-week-range');
+          if (rangeEl) rangeEl.innerHTML = '<i class="fa-solid fa-clock"></i> ' + this.weekRange;
+          
+          // Update sync time
+          const syncEl = document.getElementById('pdep-sync-time');
+          if (syncEl) syncEl.textContent = 'Last sync: ' + new Date().toLocaleTimeString();
+          
+          // Dynamic update Backoffice dropdown from Column J
+          if (json.meta?.backofficeList && Array.isArray(json.meta.backofficeList) && json.meta.backofficeList.length > 0) {
+            const selectEl = document.getElementById('pdep-add-manager');
+            if (selectEl) {
+              const currentVal = selectEl.value;
+              selectEl.innerHTML = '<option value="">— Select Backoffice / Manager —</option>' + 
+                json.meta.backofficeList.map(item => `<option value="${this.escAttr(item)}">${this.escHtml(item)}</option>`).join('');
+              if (currentVal) selectEl.value = currentVal;
+            }
+          }
+
+          this.render();
+          this.renderHistory();
+        } catch (err) {
+          console.error('[PlanWeek] Load failed:', err);
+          if (!this.data.length) {
+            this.renderError('Failed to load Plan data: ' + err.message);
+          }
+        }
+      },
+
+      // ── Render Active Plan Table (Pillar 5: Error Isolation) ──
+      render() {
+        const tbody = document.getElementById('pdep-tbody');
+        const countEl = document.getElementById('pdep-count');
+        if (!tbody) return;
+        
+        if (!this.data.length) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-sub); padding:2rem;"><i class="fa-solid fa-inbox"></i> No active plan data. Click "Add New Plan" to get started.</td></tr>';
+          if (countEl) countEl.textContent = '(0)';
+          return;
+        }
+        
+        if (countEl) countEl.textContent = '(' + this.data.length + ')';
+        
+        // Sort: Ngày lớn lên đầu (Cột B), sau đó gom theo Technical Manager (Cột C)
+        const parseD = s => {
+          if (!s) return 0;
+          const p = String(s).trim().split('/');
+          return p.length === 3 ? new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0])).getTime() || 0 : 0;
+        };
+        this.data.sort((a, b) => {
+          const da = parseD(a.dateAssign);
+          const db = parseD(b.dateAssign);
+          if (db !== da) return db - da; // Ngày lớn lên đầu
+          return (a.techManager || '').localeCompare(b.techManager || ''); // Gom theo Manager
+        });
+
+        tbody.innerHTML = this.data.map((item, idx) => {
+          const hasComplete = item.dateComplete && item.dateComplete.trim() !== '';
+          
+          return `<tr style="${hasComplete ? 'opacity:0.6; background:rgba(16,185,129,0.05);' : ''}">
+            <td>${idx + 1}</td>
+            <td style="font-size:0.82rem; white-space:nowrap;">${this.escHtml(item.dateAssign)}</td>
+            <td><strong style="font-size:0.85rem;">${this.escHtml(item.techManager)}</strong></td>
+            <td style="text-align:left !important; max-width:400px; line-height:1.4; font-size:0.82rem; color:var(--text-sub);">${this.escHtml(item.detailTask)}</td>
+            <td style="font-size:0.82rem; color:var(--amber); cursor:pointer;" onclick="PlanWeek.startInlineEdit(${item.row}, 5, this, '${this.escAttr(item.progress)}', 'text')" title="Click to edit">${item.progress ? this.escHtml(item.progress) : '<span style="color:var(--text-muted); text-decoration:underline dotted;">— set —</span>'}</td>
+            <td style="font-size:0.82rem; color:var(--emerald); cursor:pointer;" onclick="PlanWeek.startInlineEdit(${item.row}, 6, this, '${this.escAttr(item.dateComplete)}', 'date')" title="Click to edit">${item.dateComplete ? this.escHtml(item.dateComplete) + ' ✓' : '<span style="color:var(--text-muted); text-decoration:underline dotted;">— set —</span>'}</td>
+            <td><button style="background:none; border:none; color:var(--rose); cursor:pointer; font-size:0.85rem;" onclick="PlanWeek.deleteRow(${item.row}, this)" title="Delete"><i class="fa-solid fa-trash"></i></button></td>
+          </tr>`;
+        }).join('');
+      },
+
+      // ── Render History Table ──
+      renderHistory() {
+        const tbody = document.getElementById('pdep-history-tbody');
+        const countEl = document.getElementById('pdep-history-count');
+        if (!tbody) return;
+        
+        if (countEl) countEl.textContent = '(' + this.historyData.length + ')';
+        
+        if (!this.historyData.length) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-sub); padding:1.5rem;"><i class="fa-solid fa-box-open"></i> No archived history yet</td></tr>';
+          return;
+        }
+        
+        tbody.innerHTML = this.historyData.map((item, idx) => {
+          return `<tr>
+            <td>${idx + 1}</td>
+            <td style="font-size:0.82rem; white-space:nowrap;">${this.escHtml(item.dateAssign)}</td>
+            <td><strong style="font-size:0.82rem;">${this.escHtml(item.techManager)}</strong></td>
+            <td style="text-align:left !important; max-width:400px; line-height:1.4; font-size:0.82rem; color:var(--text-sub);">${this.escHtml(item.detailTask)}</td>
+            <td style="font-size:0.82rem;">${this.escHtml(item.progress)}</td>
+            <td style="font-size:0.82rem; color:var(--emerald); font-weight:600;">${this.escHtml(item.dateComplete)} ✓</td>
+          </tr>`;
+        }).join('');
+      },
+
+      // ── Inline Edit for E:F (Click to Edit with Full Control) ──
+      startInlineEdit(row, col, td, currentVal, type) {
+        if (td.querySelector('input')) return; // Already editing
+        const original = currentVal || '';
+        
+        let inputHtml = '';
+        if (type === 'date') {
+          // Convert DD/MM/YYYY to YYYY-MM-DD for date input
+          let isoDate = '';
+          if (original && original.indexOf('/') !== -1) {
+            const p = original.split('/');
+            if (p.length === 3) isoDate = `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+          }
+          if (!isoDate) {
+            const n = new Date();
+            isoDate = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+          }
+          inputHtml = `<div style="display:flex; align-items:center; gap:4px;" onclick="event.stopPropagation();">
+            <input type="date" value="${isoDate}" id="pdep-inline-${row}-${col}"
+              style="background:#0F172A; border:1px solid var(--emerald); border-radius:6px; padding:0.25rem 0.4rem; color:#fff; font-size:0.8rem; width:125px;"
+              onkeydown="if(event.key==='Enter') PlanWeek.saveInlineDate(${row}, ${col}, this.value); if(event.key==='Escape') PlanWeek.render();" />
+            <button onclick="PlanWeek.saveInlineDate(${row}, ${col}, document.getElementById('pdep-inline-${row}-${col}').value)" 
+              style="background:var(--emerald); color:#fff; border:none; border-radius:4px; padding:0.25rem 0.45rem; cursor:pointer; font-size:0.75rem;" title="Save">✓</button>
+            <button onclick="PlanWeek.render()" 
+              style="background:#334155; color:#fff; border:none; border-radius:4px; padding:0.25rem 0.45rem; cursor:pointer; font-size:0.75rem;" title="Cancel">✕</button>
+          </div>`;
+        } else {
+          inputHtml = `<div style="display:flex; align-items:center; gap:4px;" onclick="event.stopPropagation();">
+            <input type="text" value="${this.escAttr(original)}" id="pdep-inline-${row}-${col}"
+              style="background:#0F172A; border:1px solid var(--amber); border-radius:6px; padding:0.25rem 0.5rem; color:#fff; font-size:0.8rem; width:130px;"
+              placeholder="Enter progress..."
+              onkeydown="if(event.key==='Enter') PlanWeek.saveInlineText(${row}, ${col}, this.value); if(event.key==='Escape') PlanWeek.render();" />
+            <button onclick="PlanWeek.saveInlineText(${row}, ${col}, document.getElementById('pdep-inline-${row}-${col}').value)" 
+              style="background:var(--amber); color:#000; font-weight:bold; border:none; border-radius:4px; padding:0.25rem 0.45rem; cursor:pointer; font-size:0.75rem;" title="Save">✓</button>
+            <button onclick="PlanWeek.render()" 
+              style="background:#334155; color:#fff; border:none; border-radius:4px; padding:0.25rem 0.45rem; cursor:pointer; font-size:0.75rem;" title="Cancel">✕</button>
+          </div>`;
+        }
+
+        td.innerHTML = inputHtml;
+        const inp = td.querySelector('input');
+        if (inp) {
+          inp.focus();
+          if (type !== 'date') inp.select();
+        }
+      },
+
+      async saveInlineDate(row, col, ymdVal) {
+        let formatted = '';
+        if (ymdVal) {
+          const p = ymdVal.split('-');
+          if (p.length === 3) formatted = `${p[2]}/${p[1]}/${p[0]}`;
+        }
+        await this.executeInlineSave(row, col, formatted);
+      },
+
+      async saveInlineText(row, col, textVal) {
+        await this.executeInlineSave(row, col, (textVal || '').trim());
+      },
+
+      async executeInlineSave(row, col, newVal) {
+        const tbody = document.getElementById('pdep-tbody');
+        if (tbody) tbody.style.pointerEvents = 'none';
+        
+        try {
+          const resp = await fetch(this.GAS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'plan_dep_update', row, col, value: newVal, email: this.userEmail })
+          });
+          const json = await resp.json();
+          if (json.status !== 'ok') throw new Error(json.error?.message || 'Update failed');
+          await this.loadData();
+        } catch (err) {
+          alert('Error saving: ' + err.message);
+          await this.loadData();
+        } finally {
+          if (tbody) tbody.style.pointerEvents = 'auto';
+        }
+      },
+
+      // ── Update Action Buttons Visibility ──
+      updateActionButtons() {
+        // Archive button visible only for ADMIN/EDITOR
+        // Add button visible only for EDITOR/ADMIN
+        // These are already rendered; re-render table to show/hide action column
+        this.render();
+      },
+
+      // ── Open/Close Add Modal (Mọi người đều có quyền thêm) ──
+      openAddModal() {
+        // Auto-fill today's date
+        const dateInput = document.getElementById('pdep-add-date');
+        if (dateInput) {
+          const now = new Date();
+          const yyyy = now.getFullYear();
+          const mm = String(now.getMonth() + 1).padStart(2, '0');
+          const dd = String(now.getDate()).padStart(2, '0');
+          dateInput.value = yyyy + '-' + mm + '-' + dd;
+        }
+        document.getElementById('planDepAddModal')?.classList.add('active');
+      },
+      closeAddModal() {
+        document.getElementById('planDepAddModal')?.classList.remove('active');
+        // Reset form
+        const dateInput = document.getElementById('pdep-add-date');
+        if (dateInput) dateInput.value = '';
+        const mgr = document.getElementById('pdep-add-manager');
+        if (mgr) mgr.value = '';
+        const detail = document.getElementById('pdep-add-detail');
+        if (detail) detail.value = '';
+      },
+
+      // ── Submit Add (Pillar 2: Security checked at GAS server) ──
+      async submitAdd() {
+        const dateRaw = document.getElementById('pdep-add-date')?.value || '';
+        const techManager = document.getElementById('pdep-add-manager')?.value || '';
+        const detailTask = document.getElementById('pdep-add-detail')?.value?.trim() || '';
+        
+        // Format date to DD/MM/YYYY
+        let dateAssign = '';
+        if (dateRaw) {
+          const d = new Date(dateRaw);
+          dateAssign = String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+        }
+        
+        if (!techManager) { alert('Please select a Technical Manager.'); return; }
+        if (!detailTask) { alert('Please enter Detail Task.'); return; }
+        
+        const saveBtn = document.querySelector('#planDepAddModal button[onclick="PlanWeek.submitAdd()"]');
+        if (saveBtn) {
+          saveBtn.disabled = true;
+          saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+        }
+        
+        try {
+          const email = this.userEmail || localStorage.getItem('tni_plan_dep_email') || 'phonghdpxd@gmail.com';
+          const resp = await fetch(this.GAS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              action: 'plan_dep_add',
+              email: email,
+              dateAssign,
+              techManager,
+              detailTask
+            })
+          });
+          const json = await resp.json();
+          if (json.status !== 'ok') throw new Error(json.error?.message || 'Add failed');
+          
+          this.closeAddModal();
+          await this.loadData();
+        } catch (err) {
+          alert('Error adding plan: ' + err.message);
+        } finally {
+          if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fa-solid fa-check"></i> Add Plan';
+          }
+        }
+      },
+
+      // ── Delete Row (CHỈ ADMIN MỚI CÓ QUYỀN XÓA) ──
+      async deleteRow(row, btnEl) {
+        if (!confirm('Are you sure you want to delete this plan item?')) return;
+        const email = this.userEmail || localStorage.getItem('tni_plan_dep_email') || 'phonghdpxd@gmail.com';
+        
+        // Optimistic UI: làm mờ hàng và đổi icon đang xóa để người dùng không phải chờ
+        const tr = btnEl ? btnEl.closest('tr') : null;
+        if (tr) {
+          tr.style.opacity = '0.3';
+          tr.style.pointerEvents = 'none';
+        }
+
+        try {
+          const resp = await fetch(this.GAS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'plan_dep_delete', row, email: email })
+          });
+          const json = await resp.json();
+          if (json.status !== 'ok') throw new Error(json.error?.message || 'Delete failed');
+          await this.loadData();
+        } catch (err) {
+          alert('Error deleting: ' + err.message);
+          await this.loadData();
+        }
+      },
+
+      // ── Archive Completed Tasks ──
+      async archiveCompleted() {
+        if (!confirm('Move all completed tasks (with Date Complete before this week) to History?')) return;
+        try {
+          const resp = await fetch(this.GAS_URL + '?action=plan_dep_archive');
+          const json = await resp.json();
+          if (json.status !== 'ok') throw new Error(json.error?.message || 'Archive failed');
+          alert(json.data?.archived + ' task(s) archived successfully.');
+          this.loadData();
+        } catch (err) {
+          alert('Error archiving: ' + err.message);
+        }
+      },
+
+      // ── Toggle History Section ──
+      toggleHistory() {
+        this.historyVisible = !this.historyVisible;
+        const section = document.getElementById('pdep-history-section');
+        const chevron = document.getElementById('pdep-history-chevron');
+        if (section) section.style.display = this.historyVisible ? 'block' : 'none';
+        if (chevron) chevron.style.transform = this.historyVisible ? 'rotate(180deg)' : 'rotate(0deg)';
+      },
+
+      // ── Error Banner (Pillar 5: Error Isolation) ──
+      renderError(msg) {
+        const tbody = document.getElementById('pdep-tbody');
+        if (tbody) {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:2rem;">
+            <div style="color:var(--rose); font-size:1rem; margin-bottom:0.8rem;">
+              <i class="fa-solid fa-triangle-exclamation"></i> ${this.escHtml(msg)}
+            </div>
+            <button class="filter-btn" style="background:rgba(56,189,248,0.15); color:var(--cyan); border:1px solid rgba(56,189,248,0.3); padding:0.5rem 1rem; border-radius:8px; cursor:pointer;" onclick="PlanWeek.init()">
+              <i class="fa-solid fa-rotate-right"></i> Retry
+            </button>
+          </td></tr>`;
+        }
+      },
+
+      // ── Utility: HTML Escape ──
+      escHtml(str) { 
+        const d = document.createElement('div'); 
+        d.textContent = str || ''; 
+        return d.innerHTML; 
+      },
+      escAttr(str) {
+        return (str || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
+    };
+
     window.addEventListener('DOMContentLoaded', () => {
       window.updateWoChart();
+      // Init Plan Week when tab is first shown (lazy load)
+      let planWeekInitialized = false;
+      const origShowTab = window.showTab;
+      window.showTab = function(panelId, tabBtn) {
+        origShowTab(panelId, tabBtn);
+        if (panelId === 'plan-week-panel' && !planWeekInitialized) {
+          planWeekInitialized = true;
+          PlanWeek.init();
+        }
+      };
     });
   </script>
 </body>
