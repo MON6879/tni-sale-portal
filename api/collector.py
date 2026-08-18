@@ -590,12 +590,11 @@ async def handle_cable(msg, bot, now, user, sender_name, sender_id):
         type_emoji = {"rescue": "🚨", "request change": "🔄",
                       "maintenance": "🔧", "deploy": "🚀"}
         t_emoji = type_emoji.get((cable_type or "").lower(), "🔌")
-        type_label = html.escape(cable_type or "Unknown")
-
+        inc_name = html.escape(fields.get('incident name') or 'Route')
         await bot.send_message(
             chat_id,
-            f"{t_emoji} <b>REF:{ref}</b> | {type_label} | {now.strftime('%d/%m/%Y %H:%M')}\n"
-            f"✅ Reply <code>Confirm</code> to close | 📷 Photo → reply this msg",
+            f"{t_emoji} Cable {type_label} ✅ #{ref} | 📍 {inc_name} | 🗓️ {now.strftime('%d/%m/%Y %H:%M')}\n"
+            f"📸 Reply photo to attach",
             parse_mode="HTML",
         )
     else:
@@ -779,8 +778,8 @@ async def handle_mdg(msg, bot, now, user, sender_name, sender_id):
             dg_show = html.escape(dg_id) if dg_id else "—"
             await bot.send_message(
                 chat_id,
-                f"⛽ <b>REF:{ref}</b> | 🪑 <b>Ghế 2B: Inventory Fuel</b> | {dg_show} | {now.strftime('%d/%m/%Y %H:%M')}\n"
-                f"✅ Reply <code>Confirm</code> to close | 📸 Photo → reply this msg",
+                f"⛽ Inventory ✅ #{ref} | 📍 {dg_show} | 🗓️ {now.strftime('%d/%m/%Y %H:%M')}\n"
+                f"📸 Reply photo to attach",
                 parse_mode="HTML",
             )
         else:
@@ -824,8 +823,8 @@ async def handle_mdg(msg, bot, now, user, sender_name, sender_id):
             site_show = html.escape(site_id) if site_id else "—"
             await bot.send_message(
                 chat_id,
-                f"⚡ <b>REF:{ref}</b> | 🪑 <b>Ghế 2A: MDG Run Report</b> | {site_show} | {now.strftime('%d/%m/%Y %H:%M')}\n"
-                f"✅ Reply <code>Confirm</code> to close | 📷 Photo → reply this msg",
+                f"⚡ MDG Run ✅ #{ref} | 📍 {site_show} | 🗓️ {now.strftime('%d/%m/%Y %H:%M')}\n"
+                f"📸 Reply photo to attach",
                 parse_mode="HTML",
             )
         else:
