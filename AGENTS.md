@@ -1,3 +1,11 @@
+# 💬 STRICT RULE: TEMPLATE PHẢN HỒI THU THẬP CHUẨN GỌN TỐI ĐA 2 DÒNG (MAX 2-LINE BOT ACKNOWLEDGMENT POLICY)
+
+> ⚠️ **QUY TẮC BẮT BUỘC (2-LINE TEMPLATE STANDARD)**: MỌI TIN NHẮN PHẢN HỒI THU THẬP TỰ ĐỘNG CỦA BOT (INVENTORY, MDG, CABLE, ASSET, V.V.) BẮT BUỘC PHẢI NGẮN GỌN TỐI ĐA ĐÚNG 2 DÒNG, TUYỆT ĐỐI KHÔNG CHÈN TÊN/SỐ GHẾ, KHÔNG RƯỜM RÀ:
+> - **Dòng 1**: [Icon] [Tên Tác Vụ] ✅ #[Mã REF] | 📍 [Mã Trạm / Tuyến] | 🗓️ [DD/MM/YYYY HH:MM]
+> - **Dòng 2**: 📸 Reply photo to attach (hoặc hành động tiếp theo)
+
+---
+
 # 🎯 STRICT RULE: CHÍNH XÁC PHẠM VI — SỬA ĐÚNG NƠI ĐÚNG CHỖ, TUYỆT ĐỐI KHÔNG TIỆN TAY SỬA TẦM BẬY SANG CHỖ KHÁC (STRICT SCOPE ISOLATION & ZERO-SIDE-EFFECT POLICY)
 
 > ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (SCOPE ISOLATION & ZERO-COLLATERAL-DAMAGE)**:
