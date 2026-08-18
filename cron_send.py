@@ -1849,42 +1849,30 @@ async def main():
                         nv_color = "🟢"
                     member_blocks.append(f"{nv_color} {content}")
 
-            # Đã gom xong toàn bộ khối nhân viên (không nén, nguyên vẹn Cột D)
-            # Bây giờ chia khối theo số lượng người (10 người / tin nhắn) hoặc tối đa 3000 ký tự
-            MEMBERS_PER_CHUNK = 10
-            chunks = []
-            cur_chunk = []
-            cur_len = 0
-
-            for mb in member_blocks:
-                mb_len = len(mb)
-                # Nếu đã đủ 10 người hoặc thêm người này sẽ > 3000 chars ➔ Ngắt sang tin mới!
-                if len(cur_chunk) >= MEMBERS_PER_CHUNK or (cur_len + mb_len > 3000 and cur_chunk):
-                    chunks.append(cur_chunk)
-                    cur_chunk = [mb]
-                    cur_len = mb_len
-                else:
-                    cur_chunk.append(mb)
-                    cur_len += mb_len
-            if cur_chunk:
-                chunks.append(cur_chunk)
+            # ── BÁO CÁO REPORT 4: BĂM ĐỀU LÀM 3 PHẦN NỐI TIẾP (KHÔNG LẶP LẠI TIÊU ĐỀ) ──
+            M = len(member_blocks)
+            if M <= 3:
+                chunks = [[mb] for mb in member_blocks]
+            else:
+                k, m = divmod(M, 3)
+                chunks = [member_blocks[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(3)]
+                chunks = [c for c in chunks if c]
 
             total_parts = len(chunks)
             for idx, chk in enumerate(chunks, 1):
-                part_title = f"📋 4. Report — Daily EOD Task & Stats — {t_name}"
-                if total_parts > 1:
-                    part_title += f" (Phần {idx}/{total_parts})"
+                p_lines = []
+                # CHỈ PHẦN 1 MỚI CÓ TIÊU ĐỀ BÁO CÁO & NGÀY THÁNG
+                if idx == 1:
+                    part_title = f"📋 4. Report — Daily EOD Task & Stats — {t_name}"
+                    p_lines.append(part_title)
+                    p_lines.append(f"📅 {now_str}")
+                    p_lines.append("━━━━━━━━━━━━━━━━━━━━")
 
-                p_lines = [
-                    part_title,
-                    f"📅 {now_str}",
-                    "━━━━━━━━━━━━━━━━━━━━"
-                ]
                 for mb in chk:
                     p_lines.append(mb)
                     p_lines.append("─" * 20)
 
-                # Chỉ gắn phần Search stats và Total vào Part cuối cùng
+                # CHỈ GẮN PHẦN TỔNG KẾT & SEARCH STATS VÀO PHẦN CUỐI CÙNG
                 if idx == total_parts:
                     team_search = build_team_search_section(team_key, report_data, now_str, no_id_members)
                     tl_search = build_tl_search_section(team_key, report_data, no_id_members)
