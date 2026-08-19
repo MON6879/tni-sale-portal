@@ -38,11 +38,11 @@ SPREADSHEET_ID        = os.environ.get("SPREADSHEET_ID", "1Etd2PmbY5LgPaYhkdykT7
 SD_SPREADSHEET_ID     = "1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow"
 BASE_URL              = (
     f"https://docs.google.com/spreadsheets/d/"
-    f"{SPREADSHEET_ID}/gviz/tq?tqx=out:csv&gid="
+    f"{SPREADSHEET_ID}/export?format=csv&gid="
 )
 SD_BASE_URL           = (
     f"https://docs.google.com/spreadsheets/d/"
-    f"{SD_SPREADSHEET_ID}/gviz/tq?tqx=out:csv&gid="
+    f"{SD_SPREADSHEET_ID}/export?format=csv&gid="
 )
 GID_SITE       = "1095689918"
 GID_TASK       = "1755404595"
@@ -443,25 +443,12 @@ from concurrent.futures import ThreadPoolExecutor
 
 _csv_cache = {}
 _csv_cache_ts = {}
-CSV_CACHE_TTL = 600  # 10 phút cache sống — tra cứu tức thì < 0.05s
+CSV_CACHE_TTL = 60  # 60 giây cache sống — đảm bảo cập nhật dữ liệu mới sau tối đa 1 phút
 
 _tni_info_index = {}
 _tni_team_sum_index = {}
 _index_last_built = 0.0
 _index_building = False
-
-# ── Module-level instant index preloading (0ms cold start latency) ──
-try:
-    _cache_path = os.path.join(os.path.dirname(__file__), "data_cache.json")
-    if os.path.exists(_cache_path):
-        with open(_cache_path, encoding="utf-8") as _cf:
-            _cdata = json.load(_cf)
-        _tni_info_index = _cdata.get("info", {})
-        _tni_team_sum_index = _cdata.get("team", {})
-        _index_last_built = time.time()
-        logger.info(f"[Module Boot] Instant index preloaded — Info:{len(_tni_info_index)}, Team:{len(_tni_team_sum_index)}")
-except Exception as _ex:
-    logger.warning(f"[Module Boot] Index preload error: {_ex}")
 
 def fetch_single_csv(gid: str, is_sd: bool = False) -> pd.DataFrame | None:
     cache_key = f"{'sd_' if is_sd else ''}{gid}"
@@ -472,7 +459,7 @@ def fetch_single_csv(gid: str, is_sd: bool = False) -> pd.DataFrame | None:
     url = base + str(gid)
     hdrs = {"User-Agent": "Mozilla/5.0"}
     try:
-        resp = requests.get(url, headers=hdrs, timeout=2.0, allow_redirects=True)
+        resp = requests.get(url, headers=hdrs, timeout=5.0, allow_redirects=True)
         resp.raise_for_status()
         content = resp.content.decode("utf-8", errors="replace")
         df = pd.read_csv(io.StringIO(content), header=None, dtype=str, on_bad_lines="skip")
@@ -503,25 +490,8 @@ def build_search_indexes(force: bool = False):
         return
     _index_building = True
     try:
-        # ── 1. Fast path: data_cache.json (Instant O(1) < 0.001s) ──
-        cache_path = os.path.join(os.path.dirname(__file__), "data_cache.json")
-        if os.path.exists(cache_path):
-            try:
-                with open(cache_path, encoding="utf-8") as cf:
-                    cache_data = json.load(cf)
-                info_data = cache_data.get("info", {})
-                team_data = cache_data.get("team", {})
-                if info_data or team_data:
-                    _tni_info_index = info_data
-                    _tni_team_sum_index = team_data
-                    _index_last_built = time.time()
-                    logger.info(f"Loaded index from data_cache.json — Info:{len(_tni_info_index)}, Team:{len(_tni_team_sum_index)}")
-                    return  # Always return fast path immediately to avoid 3-5s Google Sheets HTTP fetch latency
-            except Exception as fe:
-                logger.warning(f"data_cache.json load error: {fe}")
-
-        # ── 2. Fallback: fetch trực tiếp từ Google Sheets (~3-5s) ──
-        logger.info("Fetching fresh index from Google Sheets...")
+        # ── 1. Fetch trực tiếp từ Google Sheets LIVE qua export CSV (~0.5s) ──
+        logger.info("Fetching fresh index from Google Sheets LIVE...")
         with ThreadPoolExecutor(max_workers=2) as executor:
             f_info = executor.submit(fetch_single_csv, GID_INFO)
             f_team = executor.submit(fetch_single_csv, GID_TEAM_SUM)
