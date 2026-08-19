@@ -1084,8 +1084,13 @@ def is_daily_plan(text: str) -> bool:
         "shows detailed site assignments", "tasks grouped by department", "recent plans",
         "plan updated", "plan saved", "ref:dp-", "đã lưu",
         "tni personal find task", "ft result daily", "personal find task", "find task + wo",
-        "submitted ✓", "submitted v", "not yet submitted"
+        "submitted ✓", "submitted v", "not yet submitted", "3. tni personal",
+        "sent folow menu", "follow menu", "all material using new or move"
     )):
+        return False
+
+    # 🛑 BỎ QUA TEMPLATE MẪU CỦA BOT (Nếu có link nhóm menu hoặc chưa điền bất kỳ nội dung task/trạm nào)
+    if "https://t.me/+atexsvtj13gyyji1" in text_l or "vi. note: /find /tnixxxx" in text_l or "3. tni personal find task" in text_l:
         return False
 
     # Standard Team Leader Plan structure check

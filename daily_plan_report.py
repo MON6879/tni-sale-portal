@@ -118,8 +118,13 @@ def is_daily_plan_msg(text: str) -> bool:
         "đã lưu", "tni personal find task", "ft result daily", "personal find task",
         "find task + wo", "team leader: submitted", "plan content:", "overall: no data",
         "submitted ✓", "submitted v", "not yet submitted", "daily plan & results",
-        "tni auto report", "tni team"
+        "tni auto report", "tni team", "all material using new or move", "sent folow menu",
+        "follow menu", "3. tni personal"
     )):
+        return False
+
+    # 🛑 BỎ QUA TEMPLATE MẪU CỦA BOT (Nếu có link menu bot hoặc chưa điền bất kỳ nội dung task/trạm nào)
+    if "https://t.me/+atexsvtj13gyyji1" in text_l or "vi. note: /find /tnixxxx" in text_l or "3. tni personal find task" in text_l:
         return False
 
     # Bắt buộc chứa từ khóa Plan chuẩn của Team Leader (Daily Plan:, I. Hot task, Plan for, Plan:) và ngày tháng
@@ -902,6 +907,16 @@ async def scan_group_for_plans(client, chat_id: int, since_utc: datetime, leader
         for msg in history.messages:
             if msg.date < since_utc:
                 break
+            # 🛑 BỎ QUA TIN NHẮN TỪ BOT HOẶC GỬI TỰ ĐỘNG
+            if getattr(msg, 'via_bot_id', None) or getattr(msg, 'out', False):
+                continue
+            if hasattr(msg, 'from_id') and msg.from_id:
+                try:
+                    sender = await client.get_entity(msg.from_id)
+                    if sender and getattr(sender, 'bot', False):
+                        continue
+                except Exception:
+                    pass
             # Collect any daily plan in group (not restricted to specific leader IDs)
             if msg.message and is_daily_plan_msg(msg.message):
                 parsed = parse_daily_plan(msg.message)
@@ -1080,6 +1095,16 @@ async def scan_plan_tomorrow(client, group_key: str, chat_id: int,
         for msg in history.messages:
             if msg.date < since_utc:
                 break
+            # 🛑 BỎ QUA TIN NHẮN TỪ BOT HOẶC GỬI TỰ ĐỘNG
+            if getattr(msg, 'via_bot_id', None) or getattr(msg, 'out', False):
+                continue
+            if hasattr(msg, 'from_id') and msg.from_id:
+                try:
+                    sender = await client.get_entity(msg.from_id)
+                    if sender and getattr(sender, 'bot', False):
+                        continue
+                except Exception:
+                    pass
             if msg.message and is_daily_plan_msg(msg.message):
                 parsed = parse_daily_plan(msg.message)
                 if parsed:
