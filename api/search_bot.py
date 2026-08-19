@@ -31,9 +31,13 @@ BOT_VERSION = "v4.0"
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TOKEN = (os.environ.get("TELEGRAM_TOKEN") or os.environ.get("BOT_TOKEN") or os.environ.get("SEARCH_BOT_TOKEN") or "8606383435:AAEstcN4Om6_9ZAjs4OoFV2uVlRALgae2Ac").strip().strip("\ufeff")
-TELEGRAM_SECRET_TOKEN = os.environ.get("TELEGRAM_SECRET_TOKEN", "").strip().strip("\ufeff")
+PRIMARY_GAS_URL       = "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
 DAILY_APPS_SCRIPT_URL = os.environ.get("DAILY_APPS_SCRIPT_URL", "").strip().strip("\ufeff")
 APPS_SCRIPT_URL       = os.environ.get("APPS_SCRIPT_URL", "").strip().strip("\ufeff")
+if not DAILY_APPS_SCRIPT_URL or "AKfycbz-NZlBk8q2" not in DAILY_APPS_SCRIPT_URL:
+    DAILY_APPS_SCRIPT_URL = PRIMARY_GAS_URL
+if not APPS_SCRIPT_URL or "AKfycbz-NZlBk8q2" not in APPS_SCRIPT_URL:
+    APPS_SCRIPT_URL = PRIMARY_GAS_URL
 SPREADSHEET_ID        = os.environ.get("SPREADSHEET_ID", "1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8").strip().strip("\ufeff")
 SD_SPREADSHEET_ID     = "1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow"
 BASE_URL              = (
