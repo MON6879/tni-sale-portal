@@ -165,6 +165,13 @@ SCHEDULE_RULES = [
         "target_times": ["05:48", "05:56", "07:06", "13:06", "15:56"],
         "title_patterns": [r"Refuel", r"Yêu\s*cầu.*dầu", r"Request\s*Refuel"],
         "max_delay_min": 4
+    },
+    {
+        "report_name": "Site Down Cột C (Nhịp :06 & :36)",
+        "group_key": "CONTROL",
+        "target_times": [f"{h:02d}:{m:02d}" for h in range(4, 23) for m in (6, 36)],
+        "title_patterns": [r"TNI\s*Site\s*down", r"Total\s*Site\s*down", r"Site\s*down\s*\(not\s*include"],
+        "max_delay_min": 6
     }
 ]
 
@@ -296,10 +303,24 @@ def audit_sheets_connectors():
             dur = time.time() - t0
             if resp.status_code == 200 and len(resp.text) > 50:
                 lines = resp.text.split("\n")
+                extra_note = ""
+                # Kiểm tra độ tươi mới của ô A1 cho Sheet Site Down
+                if "10_TNI_SITE_DOWN" in name and lines:
+                    a1_line = lines[0]
+                    m = re.search(r'(\d{2}/\d{2}/\d{4}\s+\d{2}:\d{2})', a1_line)
+                    if m:
+                        try:
+                            a1_dt = datetime.strptime(m.group(1), "%d/%m/%Y %H:%M").replace(tzinfo=TZ_MM)
+                            now_mm = datetime.now(TZ_MM)
+                            diff_min = (now_mm - a1_dt).total_seconds() / 60
+                            if 4 <= now_mm.hour <= 22 and diff_min > 50:
+                                extra_note = f" ⚠️ Cảnh báo: A1 trễ {int(diff_min)}p ({m.group(1)})"
+                        except Exception:
+                            pass
                 results.append({
                     "name": name,
-                    "status": "PASS",
-                    "reason": f"Kết nối tốt ({len(lines)} dòng | {dur:.2f}s)",
+                    "status": "WARN" if extra_note else "PASS",
+                    "reason": f"Kết nối tốt ({len(lines)} dòng | {dur:.2f}s){extra_note}",
                     "latency": f"{dur:.2f}s"
                 })
             else:
