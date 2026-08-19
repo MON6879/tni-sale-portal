@@ -1063,10 +1063,6 @@ def is_daily_plan(text: str) -> bool:
     )):
         return False
 
-    # 🛑 BỎ QUA TEMPLATE MẪU CỦA BOT (Nếu có link nhóm menu hoặc chưa điền bất kỳ nội dung task/trạm nào)
-    if "https://t.me/+atexsvtj13gyyji1" in text_l or "vi. note: /find /tnixxxx" in text_l or "3. tni personal find task" in text_l:
-        return False
-
     # BẮT BUỘC: Phải có Tiêu đề 'Daily Plan: DD/MM/YYYY' (hoặc 'Plan for DD/MM/YYYY') VÀ có 'Team'
     has_header = bool(re.search(r'(?:daily\s*plan|plan\s*for)[:\s]+\d{1,2}[\/\.-]\d{1,2}(?:[\/\.-]\d{2,4})?', text, re.IGNORECASE))
     has_team = bool(re.search(r'\bteam\s*0?[1-5]\b|\bt[1-5]\b', text, re.IGNORECASE))
