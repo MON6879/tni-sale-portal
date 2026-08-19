@@ -163,28 +163,33 @@ _staff_df_cache = None
 _staff_df_ts: float = 0.0
 
 def get_staff_df():
-    """Lấy Staff sheet — đọc từ RAM cache hoặc data_cache.json tức thì (< 0.001s)."""
+    """Lấy Staff sheet — ưu tiên đọc từ data_cache.json (0.001s), fallback Google Sheets."""
     global _staff_df_cache, _staff_df_ts
     now = time.time()
     if _staff_df_cache is not None and (now - _staff_df_ts) < CSV_CACHE_TTL:
         return _staff_df_cache
 
-    # ── Fast path: data_cache.json (đọc ngay lập tức 0.001s) ──
+    # ── Fast path: data_cache.json (GitHub Actions build mỗi 5 phút) ──
     cache_path = os.path.join(os.path.dirname(__file__), "data_cache.json")
     if os.path.exists(cache_path):
         try:
             with open(cache_path, encoding="utf-8") as cf:
                 cache_data = json.load(cf)
             staff_rows = cache_data.get("staff_rows")
-            if staff_rows:
-                _staff_df_cache = pd.DataFrame(staff_rows, dtype=str)
-                _staff_df_ts    = now
-                logger.info(f"Loaded staff from data_cache.json — {len(_staff_df_cache)} rows")
-                return _staff_df_cache
+            built_at_str = cache_data.get("built_at", "")
+            if staff_rows and built_at_str:
+                from datetime import datetime as _dt, timezone as _tz
+                built_ts = _dt.strptime(built_at_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=_tz.utc).timestamp()
+                age_min = (time.time() - built_ts) / 60
+                if age_min < 30:   # Dùng file nếu cache mới hơn 30 phút
+                    _staff_df_cache = pd.DataFrame(staff_rows, dtype=str)
+                    _staff_df_ts    = time.time()
+                    logger.info(f"Loaded staff from data_cache.json (age={age_min:.1f}m) — {len(_staff_df_cache)} rows")
+                    return _staff_df_cache
         except Exception as fe:
             logger.warning(f"data_cache.json staff load error: {fe}")
 
-    # ── Fallback: fetch từ Google Sheets ──
+    # ── Fallback: fetch từ Google Sheets (~3-5s) ──
     df = fetch_single_csv(GID_STAFF)
     if df is not None:
         _staff_df_cache = df
@@ -780,6 +785,32 @@ def get_user_team_number(user_id: int) -> int | None:
 _team_staff_map = {}
 
 def get_team_staff_names(team_num: int) -> list[str]:
+    # 1. Fetch from Template Attendance SSOT (18zQB4i0Fu4QfKKkkUZUd6SKWIEbdWDiwdpgNSaL9v54 gid=1366655674)
+    try:
+        import csv
+        url = "https://docs.google.com/spreadsheets/d/18zQB4i0Fu4QfKKkkUZUd6SKWIEbdWDiwdpgNSaL9v54/gviz/tq?tqx=out:csv&gid=1366655674"
+        resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+        if resp.status_code == 200:
+            reader = list(csv.reader(io.StringIO(resp.text)))
+            team_col_map = {1: 5, 2: 6, 3: 7, 4: 8}
+            col_idx = team_col_map.get(team_num, 5)
+            names = []
+            for r in reader[2:]:
+                if len(r) > col_idx:
+                    val = r[col_idx].strip()
+                    if not val:
+                        continue
+                    clean = re.sub(r'^\d+[\.\s\-]+', '', val)
+                    clean = re.sub(r':\s*/.*$', '', clean).strip()
+                    clean = re.sub(r':\s*$', '', clean).strip()
+                    if clean and clean not in names and clean.lower() not in ('nan', 'none', '-'):
+                        names.append(clean)
+            if names:
+                return names
+    except Exception as e:
+        logger.warning(f"Error fetching staff from attendance template: {e}")
+
+    # 2. Fallback to Staff sheet
     global _team_staff_map
     if team_num in _team_staff_map:
         return _team_staff_map[team_num]
@@ -824,13 +855,213 @@ def get_plan_template_text(team_num: int) -> str:
             "VII. List name FT : Name Site ( WO + Task)"
         ]
         
-        for name in matched_staff:
-            lines.append(f"{name}: ")
+        for i, name in enumerate(matched_staff, 1):
+            lines.append(f"{i}. {name}: ")
             
         return "\n".join(lines)
     except Exception as e:
         logger.error(f"get_plan_template_text error: {e}")
         return f"Error: {str(e)}"
+
+_attendance_cache = {"time": 0, "data": None}
+
+def get_attendance_template_text(team_num: int = None, header_only: bool = False) -> str:
+    """Tải động mẫu điểm danh từ tab Template Attendance của Spreadsheet 18zQB4i0Fu4QfKKkkUZUd6SKWIEbdWDiwdpgNSaL9v54 (gid=1366655674)."""
+    global _attendance_cache
+    now_ts = time.time()
+    df = None
+    
+    if _attendance_cache["data"] is not None and now_ts - _attendance_cache["time"] < 60:
+        df = _attendance_cache["data"]
+    else:
+        try:
+            url = "https://docs.google.com/spreadsheets/d/18zQB4i0Fu4QfKKkkUZUd6SKWIEbdWDiwdpgNSaL9v54/gviz/tq?tqx=out:csv&gid=1366655674"
+            resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
+            if resp.status_code == 200:
+                df = pd.read_csv(io.StringIO(resp.text), header=None)
+                _attendance_cache = {"time": now_ts, "data": df}
+        except Exception as e:
+            logger.error(f"Error fetching attendance template: {e}")
+            if _attendance_cache["data"] is not None:
+                df = _attendance_cache["data"]
+    
+    if df is None:
+        return "⚠️ Could not load attendance template from Google Sheets."
+
+    team_col_map = {1: 5, 2: 6, 3: 7, 4: 8}
+    now_mm = datetime.now(TZ_MM)
+    date_short = now_mm.strftime("%d/%m/%y")
+
+    def extract_team_lines(t):
+        col_idx = team_col_map.get(t)
+        if col_idx is None or col_idx >= df.shape[1]:
+            return []
+        lines = []
+        for r in range(len(df)):
+            v = df.iloc[r, col_idx]
+            if pd.notna(v) and str(v).strip() != "":
+                v_str = str(v).strip()
+                if v_str.lower().startswith("total:"):
+                    continue
+                if r == 0 and "report:" in v_str.lower():
+                    v_str = f"Team 0{t} Attendane report: {date_short}"
+                lines.append(v_str)
+                if header_only and len(lines) >= 1:
+                    break
+        return lines
+
+    if team_num in team_col_map:
+        lines = extract_team_lines(team_num)
+        if not lines:
+            return f"⚠️ No template found for Team {team_num}."
+        return "\n".join(lines)
+    else:
+        all_blocks = []
+        for t in (1, 2, 3, 4):
+            lines = extract_team_lines(t)
+            if lines:
+                all_blocks.append("\n".join(lines))
+        if header_only:
+            return "\n".join(all_blocks)
+        return "\n\n".join(all_blocks)
+
+
+def get_leave_template_text(leave_type: str = None) -> str:
+    """Tải động 2 mẫu xin nghỉ phép (Cột A: Half Day, Cột B: Full Day) từ tab Template Attendance."""
+    global _attendance_cache
+    now_ts = time.time()
+    df = None
+    
+    if _attendance_cache["data"] is not None and now_ts - _attendance_cache["time"] < 60:
+        df = _attendance_cache["data"]
+    else:
+        try:
+            url = "https://docs.google.com/spreadsheets/d/18zQB4i0Fu4QfKKkkUZUd6SKWIEbdWDiwdpgNSaL9v54/gviz/tq?tqx=out:csv&gid=1366655674"
+            resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
+            if resp.status_code == 200:
+                df = pd.read_csv(io.StringIO(resp.text), header=None)
+                _attendance_cache = {"time": now_ts, "data": df}
+        except Exception as e:
+            logger.error(f"Error fetching leave template: {e}")
+            if _attendance_cache["data"] is not None:
+                df = _attendance_cache["data"]
+    
+    if df is None:
+        return "⚠️ Could not load leave template from Google Sheets."
+
+    def extract_col_lines(c_idx):
+        if c_idx >= df.shape[1]:
+            return []
+        lines = []
+        for r in range(len(df)):
+            v = df.iloc[r, c_idx]
+            if pd.notna(v) and str(v).strip() != "":
+                lines.append(str(v).strip())
+        return lines
+
+    col_a = extract_col_lines(0)
+    col_b = extract_col_lines(1)
+
+    str_a = "\n".join(col_a) if col_a else "Full Name: take leave half day\nReason:"
+    str_b = "\n".join(col_b) if col_b else "Full Name: Take leave\nReason:"
+
+    if leave_type == "half":
+        return str_a
+    elif leave_type == "all" or leave_type == "both":
+        return f"{str_a}\n\n{str_b}"
+    else:
+        # Default: Full-day leave (Col B)
+        return str_b
+
+
+
+_processed_attendance_msg_ids = set()
+
+def is_attendance_report(text: str) -> bool:
+    if not text:
+        return False
+    text_l = text.lower().strip()
+    if re.search(r"team\s*0?[1-4]\s*attendan[ce]+\s*report", text_l):
+        return True
+    if re.match(r"^[^:\n]+:\s*take\s*leave", text_l):
+        return True
+    return False
+
+def parse_attendance_report(text: str, default_tg_id: str = "") -> list:
+    records = []
+    lines = [l.strip() for l in text.strip().split("\n") if l.strip()]
+    if not lines:
+        return []
+    
+    # 1. Team Leader Attendance report (Multi-person)
+    m_team = re.search(r"team\s*0?([1-4])\s*attendan[ce]+\s*report[:\s]*(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})", lines[0], re.IGNORECASE)
+    if m_team:
+        date_str = m_team.group(2)
+        current_rec = None
+        for line in lines[1:]:
+            m_p = re.match(r"^(?:\d+[\.\)]\s*)?([^:]+):\s*(.*)$", line)
+            if m_p and not m_p.group(1).lower().startswith("reason") and not m_p.group(1).lower().startswith("total"):
+                if current_rec:
+                    records.append(current_rec)
+                p_name = m_p.group(1).strip()
+                p_stat = m_p.group(2).strip().lower()
+                work = "Work" if "work" in p_stat and "leave" not in p_stat else ""
+                half_day = "Half day" if "half" in p_stat else ""
+                take_leave = "Take leave" if "leave" in p_stat and "half" not in p_stat else ""
+                current_rec = {
+                    "date": date_str,
+                    "name": p_name,
+                    "work": work,
+                    "takeLeave": take_leave,
+                    "halfDay": half_day,
+                    "reason": "",
+                    "telegramId": ""
+                }
+            elif line.lower().startswith("reason:") and current_rec:
+                current_rec["reason"] = line.split(":", 1)[1].strip()
+        if current_rec:
+            records.append(current_rec)
+        return records
+
+    # 2. Individual leave / half day format
+    m_indiv = re.match(r"^([^:]+):\s*take\s*leave(?:\s*(half\s*day|full\s*day))?", lines[0], re.IGNORECASE)
+    if m_indiv:
+        name = m_indiv.group(1).strip()
+        hd_match = m_indiv.group(2)
+        half_day = "Half day" if (hd_match and "half" in hd_match.lower()) or "half" in lines[0].lower() else ""
+        take_leave = "Take leave" if not half_day else ""
+        reason = ""
+        for line in lines[1:]:
+            if line.lower().startswith("reason:"):
+                reason = line.split(":", 1)[1].strip()
+        now_mm = datetime.now(TZ_MM)
+        date_str = now_mm.strftime("%d/%m/%Y")
+        records.append({
+            "date": date_str,
+            "name": name,
+            "work": "",
+            "takeLeave": take_leave,
+            "halfDay": half_day,
+            "reason": reason,
+            "telegramId": str(default_tg_id or "")
+        })
+        return records
+
+    return []
+
+def store_attendance_to_sheet(items: list) -> dict:
+    try:
+        url = "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
+        payload = {
+            "action": "attendance_add",
+            "items": items
+        }
+        resp = requests.post(url, json=payload, timeout=10)
+        return resp.json()
+    except Exception as e:
+        logger.error(f"store_attendance_to_sheet error: {e}")
+        return {"status": "error", "message": str(e)}
+
 
 def is_daily_plan(text: str) -> bool:
     """
@@ -1022,7 +1253,9 @@ def send_help_menu(chat_id: int) -> None:
         "• Admin: <code>mysite &lt;ID&gt;</code>, <code>mydata &lt;ID&gt;</code>\n\n"
         "<b>[TOA 8] Construction Search</b>\n"
         "• Type: <code>cons TNI0310</code> or <code>pro TNI0310</code> or <code>/cons TNI0310</code>\n\n"
-        "<b>[TOA 9] Help & Interactive Menu</b>\n"
+        "<b>[TOA 9] Attendance & Form Templates</b>\n"
+        "• Type: <code>template attendance</code>, <code>template leave</code>, <code>template team 1-4</code>, <code>template header</code>, <code>daily</code>, <code>plan</code>\n\n"
+        "<b>[TOA 10] Help & Interactive Menu</b>\n"
         "• Type: <code>menu</code> or <code>/menu</code> or <code>help</code>\n"
         "━━━━━━━━━━━━━━━━━━━━"
     )
@@ -1317,6 +1550,29 @@ def handle(update: dict) -> None:
         tg_send(chat_id, reply)
         return
 
+    # Plain text command for Attendance Template
+    if any(text_l.startswith(p) for p in ("template attendance", "attendance template", "template attend", "template diemdanh", "template att", "template team", "template t1", "template t2", "template t3", "template t4", "template_team")) and len(text_l.split()) <= 4:
+        header_only = any(kw in text_l for kw in ("header", "title", "tieude", "short"))
+        team_num = None
+        if re.search(r"team\s*0?1|\bt1\b|_team1\b|team_1\b|template_team1\b|\b1\b", text_l):
+            team_num = 1
+        elif re.search(r"team\s*0?2|\bt2\b|_team2\b|team_2\b|template_team2\b|\b2\b", text_l):
+            team_num = 2
+        elif re.search(r"team\s*0?3|\bt3\b|_team3\b|team_3\b|template_team3\b|\b3\b", text_l):
+            team_num = 3
+        elif re.search(r"team\s*0?4|\bt4\b|_team4\b|team_4\b|template_team4\b|\b4\b", text_l):
+            team_num = 4
+        reply = get_attendance_template_text(team_num, header_only=header_only)
+        tg_send(chat_id, reply)
+        return
+
+    # Plain text command for Leave Template (Xin nghỉ phép: Cột A & B)
+    if any(text_l.startswith(p) for p in ("template leave", "leave template", "template take leave", "take leave", "leave half day", "leave full day", "xin nghi", "xin phep", "leave")) and len(text_l.split()) <= 4:
+        l_type = "half" if "half" in text_l else ("full" if "full" in text_l else None)
+        reply = get_leave_template_text(l_type)
+        tg_send(chat_id, reply)
+        return
+
     # ── UNIFIED COMMAND NORMALIZATION: Tự động loại bỏ '/' và '@bot_username' ──
     clean_text = text
     if clean_text.startswith("/"):
@@ -1330,16 +1586,7 @@ def handle(update: dict) -> None:
             tg_send(chat_id, reply)
             return
 
-        if first_word == "ping":
-            tg_send(chat_id, f"🏓 pong {BOT_VERSION} | chat={chat_id} | user={user_id}")
-            return
-
-        if first_word in ("start", "help", "menu", "men"):
-            if rest.upper().startswith("PLAN_T"):
-                team_num_str = rest[6:]
-                if team_num_str.isdigit():
-                    send_daily_plan_template(chat_id, int(team_num_str))
-                    return
+        if first_word in ("start", "help", "menu"):
             send_help_menu(chat_id)
             return
 
@@ -1354,12 +1601,23 @@ def handle(update: dict) -> None:
                 return
             team_num = None
             if rest:
-                team_arg = rest.upper()
+                team_arg = rest.upper().strip()
                 m = re.match(r"^(T(?:EAM)?\s*([1-4])|[1-4])$", team_arg, re.IGNORECASE)
                 if m:
                     team_num = int(m.group(2) if m.group(2) else m.group(1))
             if not team_num:
-                team_num = get_user_team_number(user_id) or 1
+                chat_title = (msg.get("chat", {}).get("title") or "").lower()
+                cid_str = str(chat_id)
+                if "4215695747" in cid_str or "team 1" in chat_title or "dawei" in chat_title:
+                    team_num = 1
+                elif "4480845549" in cid_str or "team 2" in chat_title or "myeik" in chat_title:
+                    team_num = 2
+                elif "4369170658" in cid_str or "team 3" in chat_title or "bokpyin" in chat_title:
+                    team_num = 3
+                elif "4293741999" in cid_str or "team 4" in chat_title or "kawthoung" in chat_title:
+                    team_num = 4
+                else:
+                    team_num = get_user_team_number(user_id) or 1
             send_daily_plan_template(chat_id, team_num)
             return
 
@@ -1369,12 +1627,55 @@ def handle(update: dict) -> None:
             tg_send(chat_id, f"👤 <b>{html.escape(first_name)}</b>\n🔑 ID: <code>{user_id}</code>\n💬 Chat: <code>{chat_id}</code>\n📍 Type: {chat_type}")
             return
 
+        if first_word in ("attendance", "attend", "diemdanh", "att") or first_word.startswith("template_team") or first_word.startswith("template_t") or (first_word == "template" and ("attend" in rest.lower() or "diemdanh" in rest.lower() or "att" in rest.lower())):
+            full_cmd = f"{first_word} {rest}".lower()
+            header_only = any(kw in full_cmd for kw in ("header", "title", "tieude", "short"))
+            team_num = None
+            if re.search(r"team\s*0?1|\bt1\b|_team1\b|team_1\b|template_team1\b|\b1\b", full_cmd):
+                team_num = 1
+            elif re.search(r"team\s*0?2|\bt2\b|_team2\b|team_2\b|template_team2\b|\b2\b", full_cmd):
+                team_num = 2
+            elif re.search(r"team\s*0?3|\bt3\b|_team3\b|team_3\b|template_team3\b|\b3\b", full_cmd):
+                team_num = 3
+            elif re.search(r"team\s*0?4|\bt4\b|_team4\b|team_4\b|template_team4\b|\b4\b", full_cmd):
+                team_num = 4
+            reply = get_attendance_template_text(team_num, header_only=header_only)
+            tg_send(chat_id, reply)
+            return
+
+        if first_word in ("leave", "takeleave", "xinnghi", "nghiphep") or (first_word == "template" and any(k in rest.lower() for k in ("leave", "nghi", "phep"))):
+            l_type = "half" if "half" in rest.lower() else ("full" if "full" in rest.lower() else None)
+            reply = get_leave_template_text(l_type)
+            tg_send(chat_id, reply)
+            return
+
         if first_word == "reload":
             load_all_sheets()
             tg_send(chat_id, "✅ Data reloaded")
             return
 
         clean_text = f"{first_word} {rest}".strip()
+
+    # ── 0. ATTENDANCE & LEAVE REPORT SUBMIT (PRIORITY #0: Process attendance/leave reports & split per person) ──
+    if is_attendance_report(clean_text) or is_attendance_report(text):
+        msg_id = msg.get("message_id")
+        if msg_id and msg_id in _processed_attendance_msg_ids:
+            logger.info(f"Skipping duplicate Attendance webhook msg_id={msg_id}")
+            return
+        if msg_id:
+            _processed_attendance_msg_ids.add(msg_id)
+            if len(_processed_attendance_msg_ids) > 500:
+                _processed_attendance_msg_ids.clear()
+
+        att_items = parse_attendance_report(text, default_tg_id=str(user_id or ""))
+        if att_items:
+            res = store_attendance_to_sheet(att_items)
+            count = len(att_items)
+            msg_date = msg.get("date")
+            now_mm = datetime.fromtimestamp(msg_date, TZ_MM) if msg_date else datetime.now(TZ_MM)
+            time_str = now_mm.strftime('%H:%M')
+            tg_send(chat_id, f"✅ <b>Attendance saved ({time_str})</b> — Recorded {count} staff to Sheet.")
+            return
 
     # ── 1. DAILY PLAN SUBMIT (PRIORITY #1: Process plan BEFORE SSOT classify to prevent TNI code hijacking) ──
     if is_daily_plan(clean_text) or is_daily_plan(text):
@@ -1727,19 +2028,22 @@ class handler(BaseHTTPRequestHandler):
         
         action = query.get("action", [None])[0]
         
-        # Lock webhook safely (KHÔNG BAO GIỜ GỌI deleteWebhook làm mất kết nối)
-        if action == "reset" or action == "set_webhook":
+        # Reset webhook: xóa pending updates bị kẹt, set lại webhook
+        if action == "reset":
             try:
                 expected = "https://tni-bot.vercel.app/api/search_bot"
+                r1 = requests.post(f"{TG_API}/deleteWebhook",
+                    json={"drop_pending_updates": False}, timeout=10).json()
                 r2 = requests.post(f"{TG_API}/setWebhook",
                     json={
                         "url": expected,
                         "allowed_updates": ["message", "edited_message", "channel_post"],
                         "drop_pending_updates": False
-                    }, timeout=8).json()
-                r3 = requests.get(f"{TG_API}/getWebhookInfo", timeout=8).json()
+                    }, timeout=10).json()
+                r3 = requests.get(f"{TG_API}/getWebhookInfo", timeout=10).json()
                 setup_bot_menu_commands()
                 result = {
+                    "delete": r1,
                     "set": r2, 
                     "menu": "updated",
                     "info": r3.get("result", {}),
