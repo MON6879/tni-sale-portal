@@ -1063,16 +1063,11 @@ def is_daily_plan(text: str) -> bool:
     if "https://t.me/+atexsvtj13gyyji1" in text_l or "vi. note: /find /tnixxxx" in text_l or "3. tni personal find task" in text_l:
         return False
 
-    # Standard Team Leader Plan structure check
-    has_daily_plan_hdr = bool(re.search(r'daily\s*plan|plan\s*for|kế\s*hoạch', text_l))
-    has_hot_task       = "i. hot task" in text_l or "hot task" in text_l
-    has_team           = bool(re.search(r'\bteam\s*0?[1-5]\b|\bt[1-5]\b', text_l))
-    has_date           = bool(re.search(r'\b\d{1,2}[\/\.-]\d{1,2}(?:[\/\.-]\d{2,4})?\b', text))
+    # BẮT BUỘC: Phải có Tiêu đề 'Daily Plan: DD/MM/YYYY' (hoặc 'Plan for DD/MM/YYYY') VÀ có 'Team'
+    has_header = bool(re.search(r'(?:daily\s*plan|plan\s*for)[:\s]+\d{1,2}[\/\.-]\d{1,2}(?:[\/\.-]\d{2,4})?', text, re.IGNORECASE))
+    has_team = bool(re.search(r'\bteam\s*0?[1-5]\b|\bt[1-5]\b', text, re.IGNORECASE))
 
-    if (has_daily_plan_hdr and (has_date or has_team or has_hot_task)) or (has_hot_task and (has_team or "list name ft" in text_l)):
-        return True
-
-    return False
+    return has_header and has_team
 
 
 def parse_plan_fields(text: str, chat_id: int | None = None, chat_title: str | None = None) -> tuple:
@@ -1684,7 +1679,7 @@ def handle(update: dict) -> None:
             now_mm = datetime.fromtimestamp(msg_date, TZ_MM) if msg_date else datetime.now(TZ_MM)
             time_str = now_mm.strftime('%H:%M')
 
-            tg_send(chat_id, f"✅ <b>Plan saved ({time_str})</b> — REF:<b>{ref_show}</b> | {date_str}")
+            tg_send(chat_id, f"📋 <b>Daily Plan</b> ✅ #<b>{ref_show}</b> | 📍 <b>{team_str}</b> | 🗓️ <b>{date_str} {time_str}</b>")
             return
 
     # ── 2. DAILY REPORT SUBMIT (PRIORITY #2: Process daily report BEFORE SSOT classify) ──
