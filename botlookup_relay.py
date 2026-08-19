@@ -96,7 +96,7 @@ BOT_USERNAME   = "auto_nocpro_bot"
 WAIT_REPLY_SEC = 35
 
 ACTIVE_START   = (3, 30)
-ACTIVE_END     = (22, 15)
+ACTIVE_END     = (22, 10)
 
 MIN_DELAY_SEC  = 0
 MAX_DELAY_SEC  = 0
@@ -115,9 +115,9 @@ def in_active_window() -> bool:
 def wait_until_target_minute(force: bool = False) -> bool:
     """
     Chờ đến đúng phút :06:00 hoặc :36:00 MMT (Asia/Yangon UTC+6:30).
-    - Nếu runner khởi động sớm (:00-:05 hoặc :25-:35 MMT): sleep chính xác số giây còn lại để phát đúng :06:00 hoặc :36:00 MMT.
-    - Nếu runner khởi động trễ do GitHub Actions delay (:06-:20 hoặc :36-:50 MMT): CHẠY NGAY LẬP TỨC (0s delay), KHÔNG HỦY BỎ.
-    - Chế độ FORCE/MANUAL: Chạy ngay lập tức.
+    - Khung nhịp 1 (:00-:06 MMT): Nếu đến sớm, sleep số giây còn lại để chạm đúng :06:00. Nếu đã qua :06 (từ :06 đến :20), CHẠY NGAY LẬP TỨC!
+    - Khung nhịp 2 (:30-:36 MMT): Nếu đến sớm, sleep số giây còn lại để chạm đúng :36:00. Nếu đã qua :36 (từ :36 đến :50), CHẠY NGAY LẬP TỨC!
+    - Tuyệt đối KHÔNG bao giờ sleep quá 5 phút để tránh bị GitHub Actions timeout hủy runner.
     """
     tz = timezone(timedelta(hours=6, minutes=30))
     now = datetime.now(tz)
@@ -130,7 +130,7 @@ def wait_until_target_minute(force: bool = False) -> bool:
 
     print(f"[{myanmar_now()}] ⏱️ Runner khởi động lúc: {now.strftime('%H:%M:%S')} MMT (phút {m}:{s:02d})")
 
-    # 1. Khung nhịp :06 MMT (Cửa sổ chặt: chỉ chấp nhận :00-:10)
+    # 1. Nhịp :06 MMT
     if 0 <= m < 6:
         target_sec = (6 - m) * 60 - s
         print(f"[{myanmar_now()}] ⏳ Khởi động sớm trước mốc :06 MMT — Sleep {target_sec}s...")
@@ -138,38 +138,20 @@ def wait_until_target_minute(force: bool = False) -> bool:
         time.sleep(target_sec)
         print(f"[{myanmar_now()}] 🔔 Đã chạm mốc :06:00 MMT. Bắt đầu gửi lệnh!")
         return True
-    elif 6 <= m <= 10:
-        print(f"[{myanmar_now()}] 🎯 Trong cửa sổ nhịp :06 MMT (phút {m}). Chạy ngay lập tức!")
+    elif 6 <= m < 25:
+        print(f"[{myanmar_now()}] 🎯 Trong khung nhịp :06 MMT (phút {m}). Chạy ngay lập tức!")
         return True
 
-    # 2. Phút :11-:20 → Trễ quá nhịp :06, sleep đến :36
-    elif 11 <= m < 21:
-        target_sec = (36 - m) * 60 - s
-        print(f"[{myanmar_now()}] ⏳ Trễ nhịp :06 — Chuyển hướng sleep {target_sec}s đến :36 MMT...")
-        import time
-        time.sleep(target_sec)
-        print(f"[{myanmar_now()}] 🔔 Đã chạm mốc :36:00 MMT. Bắt đầu gửi lệnh!")
-        return True
-
-    # 3. Khung nhịp :36 MMT (Cửa sổ chặt: chỉ chấp nhận :21-:40)
-    elif 21 <= m < 36:
+    # 2. Nhịp :36 MMT
+    elif 25 <= m < 36:
         target_sec = (36 - m) * 60 - s
         print(f"[{myanmar_now()}] ⏳ Khởi động sớm trước mốc :36 MMT — Sleep {target_sec}s...")
         import time
         time.sleep(target_sec)
         print(f"[{myanmar_now()}] 🔔 Đã chạm mốc :36:00 MMT. Bắt đầu gửi lệnh!")
         return True
-    elif 36 <= m <= 40:
-        print(f"[{myanmar_now()}] 🎯 Trong cửa sổ nhịp :36 MMT (phút {m}). Chạy ngay lập tức!")
-        return True
-
-    # 4. Phút :41-:59 → Trễ quá nhịp :36, sleep đến :06 giờ kế tiếp
-    else:
-        target_sec = (60 - m + 6) * 60 - s
-        print(f"[{myanmar_now()}] ⏳ Trễ nhịp :36 — Sleep {target_sec}s đến :06 MMT giờ kế tiếp...")
-        import time
-        time.sleep(target_sec)
-        print(f"[{myanmar_now()}] 🔔 Đã chạm mốc :06:00 MMT. Bắt đầu gửi lệnh!")
+    else:  # 36 <= m <= 59
+        print(f"[{myanmar_now()}] 🎯 Trong khung nhịp :36 MMT (phút {m}). Chạy ngay lập tức!")
         return True
 
 
@@ -296,9 +278,9 @@ async def main():
         gas_url = os.environ.get("SD_APPS_SCRIPT_URL") or os.environ.get("APPS_SCRIPT_URL") or ""
 
         if not bot_messages:
-            err = f"[{myanmar_now()}] @{BOT_USERNAME} khong phan hoi trong 35s (Stage 1 + 2)"
+            err = f"[{myanmar_now()}] @{BOT_USERNAME} did not respond within 35s (Stage 1 + 2)"
             print(err)
-            await client.send_message(TARGET_CHAT_ID, err)
+            # 🛑 Không gửi tin báo lỗi nội bộ vào nhóm tác chiến để tránh spam nhóm
 
         raw_text = "\n".join(bot_messages) if bot_messages else ""
 
@@ -307,13 +289,18 @@ async def main():
         if bot_messages:
             tni_messages = [m for m in bot_messages if "tanintharyi" in m.lower()]
             if tni_messages:
-                raw_text = "\n".join(tni_messages)
-                print(f"[{myanmar_now()}] 🎯 Lọc Tanintharyi: {len(tni_messages)}/{len(bot_messages)} tin")
+                raw_text = tni_messages[-1]  # ✅ Chỉ lấy ĐÚNG 1 BẢN TIN Tanintharyi MỚI NHẤT, không ghép trùng lặp
+                print(f"[{myanmar_now()}] 🎯 Lọc lấy 1 bản tin Tanintharyi mới nhất: {len(raw_text)} ký tự")
             else:
                 print(f"[{myanmar_now()}] ⚠️ Không tìm thấy tin Tanintharyi trong {len(bot_messages)} tin bot — bỏ qua!")
                 raw_text = ""
         else:
             raw_text = ""
+
+        PRIMARY_GAS_URL = "https://script.google.com/macros/s/AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-/exec"
+        gas_url = os.environ.get("SD_APPS_SCRIPT_URL") or os.environ.get("APPS_SCRIPT_URL") or PRIMARY_GAS_URL
+        if "AKfycbyCibIj4QN7oG5BZc" not in gas_url:
+            gas_url = PRIMARY_GAS_URL
 
         # ── 9. Gọi GAS webhook → ghi Cột A → checkAndSend() gửi tổng hợp ──
         sent_tin1 = True
