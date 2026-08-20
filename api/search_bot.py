@@ -1520,8 +1520,12 @@ def handle(update: dict) -> None:
         tg_send(chat_id, reply)
         return
 
-    # Plain text command for Attendance Template
-    if any(text_l.startswith(p) for p in ("template attendance", "attendance template", "template attend", "template diemdanh", "template att", "template team", "template t1", "template t2", "template t3", "template t4", "template_team")) and len(text_l.split()) <= 4:
+    # Plain text command for Attendance Template (Strict Exact/Prefix Matching, Max 3 words)
+    is_att_tpl = (
+        text_l in ("template attendance", "attendance template", "template attend", "template diemdanh", "template att", "/attendance", "/att", "/diemdanh")
+        or (text_l.startswith("template team") or text_l.startswith("template t") or text_l.startswith("/template_team"))
+    ) and len(text_l.split()) <= 3
+    if is_att_tpl:
         header_only = any(kw in text_l for kw in ("header", "title", "tieude", "short"))
         team_num = None
         if re.search(r"team\s*0?1|\bt1\b|_team1\b|team_1\b|template_team1\b|\b1\b", text_l):
@@ -1536,8 +1540,12 @@ def handle(update: dict) -> None:
         tg_send(chat_id, reply)
         return
 
-    # Plain text command for Leave Template (Xin nghỉ phép: Cột A & B)
-    if any(text_l.startswith(p) for p in ("template leave", "leave template", "template take leave", "take leave", "leave half day", "leave full day", "xin nghi", "xin phep", "leave")) and len(text_l.split()) <= 4:
+    # Plain text command for Leave Template (Xin nghỉ phép: Cột A & B — Strict Matching)
+    is_leave_tpl = (
+        text_l in ("template leave", "leave template", "template take leave", "take leave", "/leave", "leave half day", "leave full day", "xin nghi", "xin phep")
+        or (text_l.startswith("template leave") or text_l.startswith("leave template"))
+    ) and len(text_l.split()) <= 3
+    if is_leave_tpl:
         l_type = "half" if "half" in text_l else ("full" if "full" in text_l else None)
         reply = get_leave_template_text(l_type)
         tg_send(chat_id, reply)
