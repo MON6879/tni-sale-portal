@@ -1468,7 +1468,7 @@ def submit_photo(chat_id: int, user_id: int, file_id: str) -> None:
 
 
 
-_processed_updates = set()
+_processed_updates = {}
 
 # ── Update handler ────────────────────────────────────────────────────────────
 def handle(update: dict) -> None:
@@ -1506,17 +1506,6 @@ def handle(update: dict) -> None:
     if not text:
         return
 
-    # ── SITE DOWN V2 RELAY (Bypass for Daily Plan to prevent 15s HTTP timeout) ──
-    text_l = text.lower()
-    if not is_daily_plan(text) and any(kw in text_l for kw in ("site down", "cell down", "dg abnormal", "dg run>16h", "down_tni")):
-        sd_url = "https://script.google.com/macros/s/AKfycbxVi0BGDW7B_KBxcSEdw3yuHB9Rs2BemQEYeKDwsybJQdmQv-_0HqyGHjpZI6jupxll/exec"
-        logger.info(f"[SD Relay] Forwarding Site Down report update to Apps Script...")
-        try:
-            requests.post(sd_url, json=update, timeout=3)
-        except Exception as e:
-            logger.error(f"[SD Relay] Forward error: {e}")
-
-    # Map reply keyboard button labels to actual commands
     text_l = text.lower().strip()
     if any(kw in text_l for kw in ("request enter site", "request site enter", "site access format", "site access", "site enter")):
         parts = text.split(maxsplit=1)
