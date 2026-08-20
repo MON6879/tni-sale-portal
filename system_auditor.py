@@ -507,6 +507,23 @@ async def audit_telegram_messages_telethon():
                                     "detail": f"Nhóm {gkey}: Báo cáo 6 chỉ có {cnt} nhân viên (Quân số chuẩn phải >= 5)!"
                                 })
 
+            # 3. Chống Lặp Tin Nhắn Mẫu / Bot Template Loop Check
+            for gkey, msgs in group_messages.items():
+                template_msgs = [m for m in msgs if m.get("text") and ("Plan:" in m["text"] or "Delivery:" in m["text"] or "Upgraded:" in m["text"] or "/Note:" in m["text"])]
+                if len(template_msgs) >= 3:
+                    for i in range(len(template_msgs) - 2):
+                        m1 = template_msgs[i]
+                        m3 = template_msgs[i+2]
+                        if abs((m3["date"] - m1["date"]).total_seconds()) <= 120:
+                            quality_results.append({
+                                "report": "Bot Template Response",
+                                "group": gkey,
+                                "status": "FAIL",
+                                "label": "🔴 BOT TEMPLATE LOOP DETECTED",
+                                "detail": f"Nhóm {gkey}: Phát hiện Bot gửi lặp tin mẫu 3+ lần trong vòng 2 phút!"
+                            })
+                            break
+
         return {
             "available": True,
             "schedule_results": schedule_results,
