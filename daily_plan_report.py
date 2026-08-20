@@ -278,32 +278,81 @@ def is_employee_in_cell(emp: dict, cell_value: str) -> bool:
 
 
 
-# Mỗi category một màu vuông cố định — trùng tên category = trùng màu
-CATEGORY_SQUARES = {
-    "admin":        "🟦",   # xanh dương
-    "asset":        "🟧",   # cam
-    "m&e":          "🟩",   # xanh lá
-    "pm":           "🟨",   # vàng
-    "cm":           "🟥",   # đỏ
-    "construction": "🟣",   # tím
-    "noc":          "⬛",   # đen
-    "technical":    "🟦",   # xanh dương
-    "site":         "🟩",   # xanh lá
+# ── Department Color Dot Rule (Chấm tròn màu cố định theo phòng ban) ──
+DEPT_COLOR_MAP = {
+    # 1. Asset / Kho / Vật tư -> 🟣 Tím (Purple)
+    "asset":        "🟣",
+    "kho":          "🟣",
+    "material":     "🟣",
+    "inventory":    "🟣",
+
+    # 2. CM (Corrective Maintenance) / Bảo dưỡng / Sự cố -> 🟢 Xanh lá (Green)
+    "cm":           "🟢",
+    "maintenance":  "🟢",
+    "repair":       "🟢",
+
+    # 3. Admin / Hành chính / Văn phòng -> 🔵 Xanh dương (Blue)
+    "admin":        "🔵",
+    "administration": "🔵",
+    "office":       "🔵",
+
+    # 4. Transmission / Cáp / Truyền dẫn / FBB -> 🟠 Cam (Orange)
+    "transmission": "🟠",
+    "cable":        "🟠",
+    "fiber":        "🟠",
+    "fbb":          "🟠",
+
+    # 5. Technical / M&E / Power / Máy nổ / Nhiên liệu -> 🟡 Vàng (Yellow)
+    "technical":    "🟡",
+    "m&e":          "🟡",
+    "power":        "🟡",
+    "genset":       "🟡",
+    "fuel":         "🟡",
+    "refuel":       "🟡",
+    "site":         "🟡",
+
+    # 6. BOD / Ban Giám Đốc / PM / Manager / NOC / Control -> 🔴 Đỏ (Red)
+    "bod":          "🔴",
+    "director":     "🔴",
+    "pm":           "🔴",
+    "manager":      "🔴",
+    "management":   "🔴",
+    "noc":          "🔴",
+    "control":      "🔴",
+
+    # 7. Finance / Kế toán / Thu chi -> 🟤 Nâu (Brown)
+    "finance":      "🟤",
+    "accounting":   "🟤",
+
+    # 8. HR / Nhân sự / Tuyển dụng / Điểm danh -> ⚪ Trắng (White)
+    "hr":           "⚪",
+    "attendance":   "⚪",
+    "personnel":    "⚪",
+
+    # 9. Construction / Dự án -> 🟣 Tím
+    "construction": "🟣",
+    "project":      "🟣",
 }
+
+# 8 Bảng màu chấm tròn chuẩn lặp lại tuần hoàn khi vượt số lượng
+COLOR_PALETTE = ["🟣", "🟢", "🔵", "🟠", "🟡", "🔴", "🟤", "⚪"]
 
 
 def colorize_bullets(text: str) -> str:
-    """Thay dau bullet bang vuong mau theo category."""
+    """Thay dấu bullet bằng chấm tròn màu theo phòng ban, tự động lặp lại tuần hoàn nếu vượt quá số màu."""
     if not text:
         return text
 
     def replace_bullet(m):
         cat_raw = m.group(1).strip()
         cat_lo  = cat_raw.lower()
-        for key, sq in CATEGORY_SQUARES.items():
+        for key, dot in DEPT_COLOR_MAP.items():
             if key in cat_lo:
-                return f"{sq} [{cat_raw}]"
-        return f"▪️ [{cat_raw}]"  # fallback vuông nhỏ
+                return f"{dot} [{cat_raw}]"
+        # Fallback lặp lại tuần hoàn 8 màu
+        h = sum(ord(c) for c in cat_raw.upper())
+        dot = COLOR_PALETTE[h % len(COLOR_PALETTE)]
+        return f"{dot} [{cat_raw}]"
 
     return re.sub(r'•\s*\[([^\]]+)\]', replace_bullet, text)
 

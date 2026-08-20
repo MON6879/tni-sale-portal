@@ -88,6 +88,80 @@ def to_float(val):
         return 0.0
 
 
+# ── Department Color Dot Rule (Quy luật chấm tròn màu phòng ban) ──
+DEPT_COLOR_MAP = {
+    # 1. Asset / Kho / Vật tư -> 🟣 Tím (Purple)
+    "ASSET": "🟣",
+    "KHO": "🟣",
+    "MATERIAL": "🟣",
+    "INVENTORY": "🟣",
+
+    # 2. CM (Corrective Maintenance) / Bảo dưỡng / Sự cố -> 🟢 Xanh lá (Green)
+    "CM": "🟢",
+    "MAINTENANCE": "🟢",
+    "REPAIR": "🟢",
+
+    # 3. Admin / Hành chính / Văn phòng -> 🔵 Xanh dương (Blue)
+    "ADMIN": "🔵",
+    "ADMINISTRATION": "🔵",
+    "OFFICE": "🔵",
+
+    # 4. Transmission / Cáp / Truyền dẫn / FBB -> 🟠 Cam (Orange)
+    "TRANSMISSION": "🟠",
+    "CABLE": "🟠",
+    "FIBER": "🟠",
+    "FBB": "🟠",
+
+    # 5. Technical / M&E / Power / Máy nổ / Nhiên liệu -> 🟡 Vàng (Yellow)
+    "TECHNICAL": "🟡",
+    "M&E": "🟡",
+    "POWER": "🟡",
+    "GENSET": "🟡",
+    "FUEL": "🟡",
+    "REFUEL": "🟡",
+
+    # 6. BOD / Ban Giám Đốc / PM / Manager / NOC / Control -> 🔴 Đỏ (Red)
+    "BOD": "🔴",
+    "DIRECTOR": "🔴",
+    "PM": "🔴",
+    "MANAGER": "🔴",
+    "MANAGEMENT": "🔴",
+    "NOC": "🔴",
+    "CONTROL": "🔴",
+
+    # 7. Finance / Kế toán / Thu chi -> 🟤 Nâu (Brown)
+    "FINANCE": "🟤",
+    "ACCOUNTING": "🟤",
+
+    # 8. HR / Nhân sự / Tuyển dụng / Điểm danh -> ⚪ Trắng (White)
+    "HR": "⚪",
+    "ATTENDANCE": "⚪",
+    "PERSONNEL": "⚪",
+
+    # 9. Construction / Dự án -> 🟣 Tím
+    "CONSTRUCTION": "🟣",
+    "PROJECT": "🟣",
+}
+
+# 8 Bảng màu chấm tròn chuẩn lặp lại tuần hoàn khi vượt số lượng
+COLOR_PALETTE = ["🟣", "🟢", "🔵", "🟠", "🟡", "🔴", "🟤", "⚪"]
+
+def get_dept_color_dot(cat_str: str) -> str:
+    """
+    Trả về emoji chấm tròn màu chuẩn cho từng phòng ban.
+    Nếu phòng ban mới/chưa định nghĩa, sẽ tự động lặp lại (cycle) tuần hoàn 8 màu theo mã băm.
+    """
+    if not cat_str:
+        return "•"
+    clean_cat = str(cat_str).strip().upper()
+    for key, dot in DEPT_COLOR_MAP.items():
+        if key == clean_cat or key in clean_cat:
+            return dot
+    # Fallback tuần hoàn 8 màu nếu nhiều hơn số màu quy định
+    h = sum(ord(c) for c in clean_cat)
+    return COLOR_PALETTE[h % len(COLOR_PALETTE)]
+
+
 async def send_msg(bot, cid, text, label=""):
     """Gửi tin nhắn, xử lý giới hạn 4096 ký tự của Telegram."""
     MAX = 4000
@@ -253,19 +327,28 @@ async def main():
         cat = row.iloc[10] if len(row) > 10 else ""
         desc = row.iloc[11] if len(row) > 11 else ""
         if is_valid(cat) or is_valid(desc):
-            label2 = f"[{str(cat).strip()}] {str(desc).strip()}"
+            cat_str = str(cat).strip() if is_valid(cat) else ""
+            desc_str = str(desc).strip() if is_valid(desc) else ""
+            dot = get_dept_color_dot(cat_str)
+            if cat_str and desc_str:
+                label2 = f"{dot} [{cat_str}] {desc_str}"
+            elif cat_str:
+                label2 = f"{dot} [{cat_str}]"
+            else:
+                label2 = f"• {desc_str}"
+
             # T1 (M)
             val2_t1 = row.iloc[12] if len(row) > 12 else ""
-            if is_valid(val2_t1): team_msg2[1].append(f"• {label2}:\n  {val2_t1}")
+            if is_valid(val2_t1): team_msg2[1].append(f"{label2}:\n  {val2_t1}")
             # T2 (N)
             val2_t2 = row.iloc[13] if len(row) > 13 else ""
-            if is_valid(val2_t2): team_msg2[2].append(f"• {label2}:\n  {val2_t2}")
+            if is_valid(val2_t2): team_msg2[2].append(f"{label2}:\n  {val2_t2}")
             # T3 (O)
             val2_t3 = row.iloc[14] if len(row) > 14 else ""
-            if is_valid(val2_t3): team_msg2[3].append(f"• {label2}:\n  {val2_t3}")
+            if is_valid(val2_t3): team_msg2[3].append(f"{label2}:\n  {val2_t3}")
             # T4 (P)
             val2_t4 = row.iloc[15] if len(row) > 15 else ""
-            if is_valid(val2_t4): team_msg2[4].append(f"• {label2}:\n  {val2_t4}")
+            if is_valid(val2_t4): team_msg2[4].append(f"{label2}:\n  {val2_t4}")
 
         # --- Xử lý Báo cáo 3 (DG Material) ---
         subteam = get_subteam_for_row(row)
