@@ -148,7 +148,7 @@ COLOR_PALETTE = ["🟣", "🟢", "🔵", "🟠", "🟡", "🔴", "🟤", "⚪"]
 
 def get_dept_color_dot(cat_str: str) -> str:
     """
-    Trả về emoji chấm tròn màu chuẩn cho từng phòng ban.
+    Trả về emoji chấm tròn màu chuẩn cho từng phòng ban (Bản tin 1: Daily Backlog).
     Nếu phòng ban mới/chưa định nghĩa, sẽ tự động lặp lại (cycle) tuần hoàn 8 màu theo mã băm.
     """
     if not cat_str:
@@ -160,6 +160,61 @@ def get_dept_color_dot(cat_str: str) -> str:
     # Fallback tuần hoàn 8 màu nếu nhiều hơn số màu quy định
     h = sum(ord(c) for c in clean_cat)
     return COLOR_PALETTE[h % len(COLOR_PALETTE)]
+
+
+# ── DailyWO Task Square Color Rule (Quy luật chấm màu vuông cho nhãn DailyWO) ──
+LABEL_SQUARE_MAP = {
+    # 1. Cable / Fiber / Patrol / FTTH / DWDM -> 🟧 Cam (Orange)
+    "CABLE": "🟧",
+    "PATROL": "🟧",
+    "FTTH": "🟧",
+    "DWDM": "🟧",
+    "IP": "🟧",
+
+    # 2. Mytel Station -> 🟩 Xanh lá (Green)
+    "MYTEL": "🟩",
+    "MAINTENANCE_MYTEL": "🟩",
+
+    # 3. Towerco Station -> 🟪 Tím (Purple)
+    "TOWERCO": "🟪",
+    "MAINTENANCE_TOWERCO": "🟪",
+
+    # 4. Generator / Engine Oil / Battery / Smart CB -> 🟨 Vàng (Yellow)
+    "GENERATOR": "🟨",
+    "RADIATOR": "🟨",
+    "ENGINE OIL": "🟨",
+    "BATTERY": "🟨",
+    "SMART CB": "🟨",
+
+    # 5. Main Station / Core / Failure -> 🟥 Đỏ (Red)
+    "MAIN_STATION": "🟥",
+    "MAIN STATION": "🟥",
+    "FAILURE": "🟥",
+
+    # 6. Solar Power System -> 🟦 Xanh dương (Blue)
+    "SOLAR": "🟦",
+
+    # 7. 5S / Cleaning / Office -> 🟫 Nâu (Brown)
+    "5S": "🟫",
+}
+
+# Bảng 9 màu vuông chuẩn lặp lại tuần hoàn khi có nhãn mới
+SQUARE_PALETTE = ["🟧", "🟩", "🟪", "🟨", "🟥", "🟦", "🟫", "⬛", "⬜"]
+
+def get_label_square_dot(label_str: str) -> str:
+    """
+    Trả về emoji chấm vuông màu chuẩn cho từng nhãn công việc DailyWO (Bản tin 2: DailyWO).
+    Nếu nhãn mới hoặc vượt quá số lượng, sẽ tự động lặp lại (cycle) tuần hoàn 9 màu theo mã băm.
+    """
+    if not label_str:
+        return "•"
+    clean_label = str(label_str).strip().upper()
+    for key, sq in LABEL_SQUARE_MAP.items():
+        if key in clean_label:
+            return sq
+    # Fallback tuần hoàn bảng màu vuông
+    h = sum(ord(c) for c in clean_label)
+    return SQUARE_PALETTE[h % len(SQUARE_PALETTE)]
 
 
 async def send_msg(bot, cid, text, label=""):
@@ -307,21 +362,22 @@ async def main():
         label1 = row.iloc[2] if len(row) > 2 else ""
         if is_valid(label1):
             label1 = str(label1).strip()
+            sq = get_label_square_dot(label1)
             # T1 (D)
             val1_t1 = row.iloc[3] if len(row) > 3 else ""
-            if is_valid(val1_t1): team_msg1[1].append(f"• {label1}: {val1_t1}")
+            if is_valid(val1_t1): team_msg1[1].append(f"{sq} {label1}: {val1_t1}")
             # T2 (E)
             val1_t2 = row.iloc[4] if len(row) > 4 else ""
-            if is_valid(val1_t2): team_msg1[2].append(f"• {label1}: {val1_t2}")
+            if is_valid(val1_t2): team_msg1[2].append(f"{sq} {label1}: {val1_t2}")
             # T3 (F)
             val1_t3 = row.iloc[5] if len(row) > 5 else ""
-            if is_valid(val1_t3): team_msg1[3].append(f"• {label1}: {val1_t3}")
+            if is_valid(val1_t3): team_msg1[3].append(f"{sq} {label1}: {val1_t3}")
             # T4 (G)
             val1_t4 = row.iloc[6] if len(row) > 6 else ""
-            if is_valid(val1_t4): team_msg1[4].append(f"• {label1}: {val1_t4}")
+            if is_valid(val1_t4): team_msg1[4].append(f"{sq} {label1}: {val1_t4}")
             # T5 (H)
             val1_t5 = row.iloc[7] if len(row) > 7 else ""
-            if is_valid(val1_t5): team_msg1[5].append(f"• {label1}: {val1_t5}")
+            if is_valid(val1_t5): team_msg1[5].append(f"{sq} {label1}: {val1_t5}")
 
         # Báo cáo 2 (K:L và M:P)
         cat = row.iloc[10] if len(row) > 10 else ""
