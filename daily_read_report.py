@@ -593,7 +593,10 @@ async def main():
             tl.append(divider)
 
             chat_id = GROUPS[gk]
-            await delete_old_messages_telethon(client, chat_id, GAS_URL, f"READREPORT_{gk}")
+            try:
+                await delete_old_messages_telethon(client, chat_id, GAS_URL, f"READREPORT_{gk}")
+            except Exception as del_e:
+                print(f"⚠️ Delete old report error {gk}: {del_e}")
             try:
                 async for old_m in client.iter_messages(chat_id, limit=30):
                     if old_m.text and ("6. Report — Daily Note Read Report" in old_m.text or "Daily Note Read Report" in old_m.text):
@@ -655,7 +658,10 @@ async def main():
 
         report = "\n".join(lines)
         control_id = GROUPS["CONTROL"]
-        await delete_old_messages_telethon(client, control_id, GAS_URL, "READREPORT_CONTROL")
+        try:
+            await delete_old_messages_telethon(client, control_id, GAS_URL, "READREPORT_CONTROL")
+        except Exception as del_ctrl_e:
+            print(f"⚠️ Delete old report CONTROL error: {del_ctrl_e}")
         try:
             async for old_m in client.iter_messages(control_id, limit=30):
                 if old_m.text and ("6. Report — Daily Note Read Report" in old_m.text or "Daily Note Read Report" in old_m.text):

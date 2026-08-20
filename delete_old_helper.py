@@ -95,50 +95,58 @@ def delete_telegram_msg(bot_token: str, chat_id, message_id: int) -> bool:
 
 
 def delete_old_messages_bot(bot_token: str, chat_id, gas_url: str, key: str) -> int:
-    """Xóa tất cả tin cũ của key. Dùng Bot API. Returns số tin đã xóa."""
-    old_ids = get_old_msgids(gas_url, key)
-    if not old_ids:
+    """Xóa tất cả tin cũ của key. Dùng Bot API. Returns số tin đã xóa. Không bao giờ throw error làm dừng gửi tin."""
+    try:
+        old_ids = get_old_msgids(gas_url, key)
+        if not old_ids:
+            return 0
+        count = 0
+        remaining_ids = []
+        for mid in old_ids:
+            if delete_telegram_msg(bot_token, chat_id, mid):
+                count += 1
+            else:
+                remaining_ids.append(mid)
+        
+        # Cập nhật lại các ID chưa xóa được lên GAS
+        save_msgids(gas_url, key, remaining_ids)
+        print(f"[delete_old] 📊 {key}: xóa {count}/{len(old_ids)}")
+        return count
+    except Exception as ex:
+        print(f"[delete_old] ⚠️ Lỗi delete_old_messages_bot({key}): {ex}")
         return 0
-    count = 0
-    remaining_ids = []
-    for mid in old_ids:
-        if delete_telegram_msg(bot_token, chat_id, mid):
-            count += 1
-        else:
-            remaining_ids.append(mid)
-    
-    # Cập nhật lại các ID chưa xóa được lên GAS
-    save_msgids(gas_url, key, remaining_ids)
-    print(f"[delete_old] 📊 {key}: xóa {count}/{len(old_ids)}")
-    return count
 
 
 # ── Telethon delete ─────────────────────────────────────────────
 
 async def delete_old_messages_telethon(client, chat_id, gas_url: str, key: str) -> int:
-    """Xóa tất cả tin cũ của key. Dùng Telethon client với revoke=True (xóa hẳn cho mọi người)."""
-    old_ids = get_old_msgids(gas_url, key)
-    if not old_ids:
-        return 0
-    count = 0
-    remaining_ids = []
-    for mid in old_ids:
-        try:
-            await client.delete_messages(chat_id, [mid], revoke=True)
-            count += 1
-            print(f"[delete_old] 🗑️ msg_id={mid} → {chat_id} (revoke=True)")
-        except Exception as ex:
-            err_str = str(ex).lower()
-            if "not found" in err_str or "invalid" in err_str:
+    """Xóa tất cả tin cũ của key. Dùng Telethon client với revoke=True (xóa hẳn cho mọi người). Không bao giờ throw error."""
+    try:
+        old_ids = get_old_msgids(gas_url, key)
+        if not old_ids:
+            return 0
+        count = 0
+        remaining_ids = []
+        for mid in old_ids:
+            try:
+                await client.delete_messages(chat_id, [mid], revoke=True)
                 count += 1
-                print(f"[delete_old] 🗑️ msg_id={mid} đã được xóa trước đó")
-            else:
-                remaining_ids.append(mid)
-                print(f"[delete_old] ⚠️ msg_id={mid}: {ex}")
+                print(f"[delete_old] 🗑️ msg_id={mid} → {chat_id} (revoke=True)")
+            except Exception as ex:
+                err_str = str(ex).lower()
+                if "not found" in err_str or "invalid" in err_str:
+                    count += 1
+                    print(f"[delete_old] 🗑️ msg_id={mid} đã được xóa trước đó")
+                else:
+                    remaining_ids.append(mid)
+                    print(f"[delete_old] ⚠️ msg_id={mid}: {ex}")
 
-    save_msgids(gas_url, key, remaining_ids)
-    print(f"[delete_old] 📊 {key}: xóa {count}/{len(old_ids)}")
-    return count
+        save_msgids(gas_url, key, remaining_ids)
+        print(f"[delete_old] 📊 {key}: xóa {count}/{len(old_ids)}")
+        return count
+    except Exception as ex:
+        print(f"[delete_old] ⚠️ Lỗi delete_old_messages_telethon({key}): {ex}")
+        return 0
 
 
 def _get_bot_user_id(bot_token: str) -> int:

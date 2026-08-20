@@ -1623,7 +1623,10 @@ async def run_eod_or_update(mode: str):
 
             msg = "\n".join(lines)
             delete_key = f"{delete_prefix}_{group_key}"
-            delete_old_messages_bot(SEND_BOT_TOKEN, chat_id, APPS_SCRIPT_URL, delete_key)
+            try:
+                delete_old_messages_bot(SEND_BOT_TOKEN, chat_id, APPS_SCRIPT_URL, delete_key)
+            except Exception as del_err:
+                logger.warning(f"Delete old msg error {group_key}: {del_err}")
             try:
                 tg_delete_by_title(str(chat_id), f"📋 5.1 Report — Plan", bot_token=SEND_BOT_TOKEN)
                 tg_delete_by_title(str(chat_id), f"📋 5. Report — Daily Plan", bot_token=SEND_BOT_TOKEN)
@@ -1723,7 +1726,10 @@ async def run_eod_or_update(mode: str):
 
         ctrl_msg = "\n".join(ctrl_lines)
         ctrl_delete_key = f"{delete_prefix}_CONTROL"
-        delete_old_messages_bot(SEND_BOT_TOKEN, CONTROL_CHAT_ID, APPS_SCRIPT_URL, ctrl_delete_key)
+        try:
+            delete_old_messages_bot(SEND_BOT_TOKEN, CONTROL_CHAT_ID, APPS_SCRIPT_URL, ctrl_delete_key)
+        except Exception as del_err:
+            logger.warning(f"Delete old msg error CONTROL: {del_err}")
         try:
             tg_delete_by_title(str(CONTROL_CHAT_ID), f"📋 5.1 Report — Plan", bot_token=SEND_BOT_TOKEN)
             tg_delete_by_title(str(CONTROL_CHAT_ID), f"📋 5. Report — Daily Plan", bot_token=SEND_BOT_TOKEN)
@@ -1878,7 +1884,10 @@ async def run_morning():
 
             msg = "\n".join(lines)
             delete_key = f"{delete_prefix}_{group_key}"
-            delete_old_messages_bot(SEND_BOT_TOKEN, chat_id, APPS_SCRIPT_URL, delete_key)
+            try:
+                delete_old_messages_bot(SEND_BOT_TOKEN, chat_id, APPS_SCRIPT_URL, delete_key)
+            except Exception as del_err:
+                logger.warning(f"Delete old msg error {group_key}: {del_err}")
             try:
                 tg_delete_by_title(str(chat_id), f"📋 5.1 Report — Plan", bot_token=SEND_BOT_TOKEN)
                 tg_delete_by_title(str(chat_id), f"5.1 Report — Plan", bot_token=SEND_BOT_TOKEN)
@@ -1951,7 +1960,10 @@ async def run_morning():
 
         ctrl_msg = "\n".join(ctrl_lines)
         ctrl_delete_key = f"{delete_prefix}_CONTROL"
-        delete_old_messages_bot(SEND_BOT_TOKEN, CONTROL_CHAT_ID, APPS_SCRIPT_URL, ctrl_delete_key)
+        try:
+            delete_old_messages_bot(SEND_BOT_TOKEN, CONTROL_CHAT_ID, APPS_SCRIPT_URL, ctrl_delete_key)
+        except Exception as del_err:
+            logger.warning(f"Delete old msg error CONTROL morning: {del_err}")
         try:
             tg_delete_by_title(str(CONTROL_CHAT_ID), f"📋 5.1 Report — Plan", bot_token=SEND_BOT_TOKEN)
             tg_delete_by_title(str(CONTROL_CHAT_ID), f"5.1 Report — Plan", bot_token=SEND_BOT_TOKEN)

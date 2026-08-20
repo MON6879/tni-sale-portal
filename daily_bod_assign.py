@@ -264,7 +264,10 @@ async def main():
         report_msg = "\n".join(lines)
 
         if APPS_SCRIPT_URL:
-            delete_old_messages_bot(SEND_BOT_TOKEN, CONTROL_CHAT_ID, APPS_SCRIPT_URL, "BOD_ASSIGN_CONTROL")
+            try:
+                delete_old_messages_bot(SEND_BOT_TOKEN, CONTROL_CHAT_ID, APPS_SCRIPT_URL, "BOD_ASSIGN_CONTROL")
+            except Exception as ex:
+                logger.warning(f"Delete old BOD error: {ex}")
 
         async with Bot(token=SEND_BOT_TOKEN) as bot:
             ok, msg_ids = await send_msg(bot, CONTROL_CHAT_ID, report_msg, "BOD_ASSIGN_CONTROL")
@@ -298,7 +301,10 @@ async def main():
         
         state_key = f"BOD_ASSIGN_{role_name.upper().replace(' ', '_')}_CONTROL"
         if APPS_SCRIPT_URL:
-            delete_old_messages_bot(SEND_BOT_TOKEN, CONTROL_CHAT_ID, APPS_SCRIPT_URL, state_key)
+            try:
+                delete_old_messages_bot(SEND_BOT_TOKEN, CONTROL_CHAT_ID, APPS_SCRIPT_URL, state_key)
+            except Exception as ex:
+                logger.warning(f"Delete old BOD task error: {ex}")
             
         async with Bot(token=SEND_BOT_TOKEN) as bot:
             keyboard = InlineKeyboardMarkup(buttons)
