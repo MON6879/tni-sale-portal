@@ -72,19 +72,19 @@ BOT_REGISTRY = {
     },
     "Construction Bot 10 (@8903841312)": {
         "token": "8903841312:AAHQ_LeI19gs2nrqBSInTsgzJXOuv6H8LmE",
-        "expected_url": "https://script.google.com/macros/s/AKfycbwi3J0VrrIE91mnPvIUuykPjwGvNc4y9JDxCNPvJTtOmVAvvalDXu5ZwYZmu5jW-fSo0w/exec",
-        "ping_url": "https://script.google.com/macros/s/AKfycbwi3J0VrrIE91mnPvIUuykPjwGvNc4y9JDxCNPvJTtOmVAvvalDXu5ZwYZmu5jW-fSo0w/exec?action=ping"
+        "expected_url": "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec",
+        "ping_url": "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec?action=get_general"
     }
 }
 
 GAS_SERVICES = {
-    "TNI Main GAS Backend (@302)": {
-        "url": "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec?action=ping"
+    "TNI Main GAS Backend (@357 SSOT)": {
+        "url": "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec?action=get_general"
     },
-    "Standalone Site Down GAS Backend": {
-        "url": "https://script.google.com/macros/s/AKfycbwi3J0VrrIE91mnPvIUuykPjwGvNc4y9JDxCNPvJTtOmVAvvalDXu5ZwYZmu5jW-fSo0w/exec?action=get_note_msgids"
+    "Standalone Site Down GAS Backend (@83 SSOT)": {
+        "url": "https://script.google.com/macros/s/AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-/exec?action=admin_audit_sitedown"
     },
-    "BI Portal Backend": {
+    "BI Portal Backend (Plan Dep)": {
         "url": "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec?action=get_plan_dep"
     }
 }
