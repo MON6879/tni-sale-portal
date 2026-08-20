@@ -750,8 +750,10 @@ def build_team_employee_summary_table(team_key: str, members: list, now_str: str
     team_staff = []
     for p, name, content, is_tl in members:
         if not content: continue
-        m_name = re.search(r'^(\*?[^=\n]+?)\s*=\s*Site:', content)
-        disp_name = m_name.group(1).strip().replace("*", "") if m_name else name
+        
+        disp_name = name
+        if is_tl and not disp_name.endswith("(TL)"):
+            disp_name = f"{disp_name} (TL)"
         
         m_rk = re.search(r'rank:\s*/?([\d]+)', content, re.IGNORECASE)
         rk_val = m_rk.group(1) if m_rk else "?"
@@ -775,7 +777,7 @@ def build_team_employee_summary_table(team_key: str, members: list, now_str: str
 
         team_staff.append({
             "color": color,
-            "name": disp_name[:15],
+            "name": disp_name,
             "rank": rk_val,
             "close": f"{close_val}%",
             "wo_3d": wo_3d,
@@ -790,14 +792,15 @@ def build_team_employee_summary_table(team_key: str, members: list, now_str: str
         f"📊 4c. Report — Employee Task & Rank Summary Table — {t_name}",
         f"📅 {now_str}",
         "<pre>",
-        f"{'NVKTV':<16} {'Rk':<4} {'Close%':<8} {'WO 3D':>7} {'Rem':>4} {'Task A/C':>8}",
-        "─" * 52
+        f"{'NVKTV':<18} {'Rk':<4} {'Close%':<8} {'WO 3D':>7} {'Rem':>4} {'Task A/C':>8}",
+        "─" * 55
     ]
     for s in team_staff:
+        name_display = s['name'][:17]
         lines.append(
-            f"{s['color']}{s['name']:<14} #{s['rank']:<3} {s['close']:>7} {s['wo_3d']:>7} {s['rem']:>4} {s['task_ac']:>8}"
+            f"{s['color']}{name_display:<16} #{s['rank']:<3} {s['close']:>7} {s['wo_3d']:>7} {s['rem']:>4} {s['task_ac']:>8}"
         )
-    lines.append("─" * 52)
+    lines.append("─" * 55)
     lines.append("</pre>")
     lines.append(f"👥 Total: {len(team_staff)} members")
     return "\n".join(lines)
@@ -1784,12 +1787,22 @@ async def main():
             target_gid = get_target_group(team_val)
             if target_gid:
                 if is_tl:
-                    # TL: dùng col_c (‘Team leader N’) — cần để xác định team
-                    name = col_c or col_b or f"TL row{sheet_row}"
+                    # TL: Tên thật của TL từ col_b (nếu có), hoặc trích xuất từ col_c
+                    tl_real_name = col_b.strip() if (col_b and col_b.strip() != '0') else col_c
+                    name = tl_real_name or f"TL row{sheet_row}"
                 else:
-                    # NV: mỗi dòng sheet = 1 người — dùng row_index làm key duy nhất
-                    # Không cần col_c, chỉ cần col_A + col_D có nội dung
-                    name = f"nv_{sheet_row}"
+                    # NV: Tên đầy đủ từ Cột B. Nếu Cột B là '0' hoặc trống thì lấy phần tên trước dấu '/' trong Cột D, hoặc Cột C
+                    full_name = col_b.strip() if (col_b and col_b.strip() != '0') else ""
+                    if not full_name and content:
+                        m_fn = re.match(r'^([^/=]+?)\s*/', content)
+                        if m_fn and m_fn.group(1).strip() not in ('0', ''):
+                            full_name = m_fn.group(1).strip()
+                    if not full_name:
+                        clean_c = col_c.replace("myt_", "").replace("myt.", "")
+                        clean_c = re.sub(r'\d+$', '', clean_c)
+                        clean_c = clean_c.replace(".", " ").replace("_", " ").title().strip()
+                        full_name = clean_c or f"nv_{sheet_row}"
+                    name = full_name
                 team_messages.setdefault(target_gid, []).append(
                     ("👑" if is_tl else "👤", name, content, is_tl)
                 )
