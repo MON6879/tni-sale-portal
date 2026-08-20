@@ -27,10 +27,15 @@ except ImportError:
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-BOT_VERSION = "v4.0"
+BOT_VERSION = "v4.1"
 
 # ── Config ────────────────────────────────────────────────────────────────────
-TOKEN = (os.environ.get("TELEGRAM_TOKEN") or os.environ.get("BOT_TOKEN") or os.environ.get("SEARCH_BOT_TOKEN") or "8606383435:AAEstcN4Om6_9ZAjs4OoFV2uVlRALgae2Ac").strip().strip("\ufeff")
+SEARCH_BOT_TOKEN_SSOT = "8606383435:AAEstcN4Om6_9ZAjs4OoFV2uVlRALgae2Ac"
+raw_tok = (os.environ.get("TELEGRAM_TOKEN") or os.environ.get("BOT_TOKEN") or os.environ.get("SEARCH_BOT_TOKEN") or "").strip().strip("\ufeff")
+if not raw_tok or not raw_tok.startswith("8606383435"):
+    TOKEN = SEARCH_BOT_TOKEN_SSOT
+else:
+    TOKEN = raw_tok
 PRIMARY_GAS_URL       = "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
 DAILY_APPS_SCRIPT_URL = os.environ.get("DAILY_APPS_SCRIPT_URL", "").strip().strip("\ufeff")
 APPS_SCRIPT_URL       = os.environ.get("APPS_SCRIPT_URL", "").strip().strip("\ufeff")
