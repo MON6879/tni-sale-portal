@@ -478,10 +478,40 @@ async def audit_telegram_messages_telethon():
                                     "detail": f"Nhân đôi trong nhóm {gkey}: {m1['time_str']} & {m2['time_str']} (Cách {int(diff_sec)}s | ID {m1['id']},{m2['id']})"
                                 })
 
+            # ── C. KIỂM TRA CHẤT LƯỢNG NỘI DUNG & QUÂN SỐ (Data Quality & Roster Audit) ──
+            quality_results = []
+            for gkey, msgs in group_messages.items():
+                for m in msgs:
+                    text = m.get("text", "")
+                    # 1. Báo cáo 4c Placeholder Name Check
+                    if "4c. Report — Employee Task & Rank" in text:
+                        if re.search(r'\bnv_\d+\b', text) or re.search(r'\bTeam leader \d+\b', text):
+                            quality_results.append({
+                                "report": "4c. Report — Employee Task & Rank",
+                                "group": gkey,
+                                "status": "FAIL",
+                                "label": "🔴 PLACEHOLDER NAME",
+                                "detail": f"Nhóm {gkey}: Báo cáo 4c chứa mã tạm (nv_ hoặc Team leader N) chưa chuyển sang tên thật!"
+                            })
+                    # 2. Báo cáo 6 Roster Deficit Check
+                    if gkey in ("T1", "T2", "T3", "T4") and ("6. Report — Daily Note Read Report" in text or "Daily Note Read Report" in text):
+                        m_cnt = re.search(r'Team Members:\s*(\d+)', text)
+                        if m_cnt:
+                            cnt = int(m_cnt.group(1))
+                            if cnt < 4:
+                                quality_results.append({
+                                    "report": "Report 6 (Read Status)",
+                                    "group": gkey,
+                                    "status": "FAIL",
+                                    "label": "🔴 ROSTER DEFICIT",
+                                    "detail": f"Nhóm {gkey}: Báo cáo 6 chỉ có {cnt} nhân viên (Quân số chuẩn phải >= 5)!"
+                                })
+
         return {
             "available": True,
             "schedule_results": schedule_results,
-            "duplicate_results": duplicate_results
+            "duplicate_results": duplicate_results,
+            "quality_results": quality_results
         }
     except Exception as te:
         logger.error(f"❌ Lỗi Telethon Message Audit: {te}")
@@ -489,7 +519,8 @@ async def audit_telegram_messages_telethon():
             "available": False,
             "error": str(te),
             "schedule_results": [],
-            "duplicate_results": []
+            "duplicate_results": [],
+            "quality_results": []
         }
 
 
@@ -517,6 +548,7 @@ def build_master_audit_report():
 
     schedule_res = telethon_data.get("schedule_results", [])
     duplicate_res = telethon_data.get("duplicate_results", [])
+    quality_res = telethon_data.get("quality_results", [])
 
     # 3. Tính toán sự cố (Chỉ tính status FAIL là lỗi thực sự)
     fail_checks = sum(1 for c in (webhook_res + gas_res + sheets_res) if c["status"] == "FAIL")
@@ -525,8 +557,9 @@ def build_master_audit_report():
     missed_count = sum(1 for s in schedule_res if s["status"] == "FAIL")
     delay_count = sum(1 for s in schedule_res if s["status"] == "WARN")
     dup_count = len(duplicate_res)
+    quality_count = len(quality_res)
 
-    total_incidents = fail_checks + missed_count + dup_count
+    total_incidents = fail_checks + missed_count + dup_count + quality_count
 
     # 🟢 TRƯỜNG HỢP 1: TẤT CẢ ĐỀU OK -> BÁO CÁO SIÊU NGẮN GỌN (1, 2, 3, 4 OK)
     if total_incidents == 0 and delay_count == 0 and warn_checks == 0:
@@ -536,14 +569,21 @@ def build_master_audit_report():
         ]
         return "\n".join(lines), 0
 
-    # 🔴 TRƯỜNG HỢP 2: CÓ LỖI / TRỄ / NHÂN ĐÔI -> CHỈ BÁO CHI TIẾT CÁC MỤC LỖI
+    # 🔴 TRƯỜNG HỢP 2: CÓ LỖI / TRỄ / NHÂN ĐÔI / SAI DỮ LIỆU -> CHỈ BÁO CHI TIẾT CÁC MỤC LỖI
     lines = []
     lines.append("🚨 <b>[SYSTEM ALERT — PHÁT HIỆN SỰ CỐ HỆ THỐNG]</b>")
     lines.append(f"⏰ <b>Thời gian:</b> {now_mmt} (MMT)")
     lines.append(f"❌ <b>Tổng sự cố:</b> {total_incidents} Lỗi" + (f" | ⚠️ {warn_checks + delay_count} Cảnh báo" if (warn_checks + delay_count) > 0 else ""))
     lines.append("──────────────────────────")
 
-    # 1. Báo cáo lỗi Đúng Giờ / Bỏ Sót
+    # 1. Báo cáo lỗi Chất Lượng Nội Dung & Quân Số
+    if quality_res:
+        lines.append(f"\n📋 <b>LỖI CHẤT LƯỢNG NỘI DUNG & QUÂN SỐ ({len(quality_res)} lỗi):</b>")
+        for q in quality_res:
+            lines.append(f"   {q['label']} <b>{q['report']}</b> ({q['group']})")
+            lines.append(f"      └ <i>{q['detail']}</i>")
+
+    # 2. Báo cáo lỗi Đúng Giờ / Bỏ Sót
     missed_items = [s for s in schedule_res if s["status"] in ("FAIL", "WARN")]
     if missed_items:
         lines.append("\n⏰ <b>LỖI TIẾN ĐỘ & TRỄ GIỜ:</b>")
@@ -551,7 +591,7 @@ def build_master_audit_report():
             lines.append(f"   {s['label']} <b>{s['report']}</b> ({s['target_time']} MMT)")
             lines.append(f"      └ <i>{s['detail']}</i>")
 
-    # 2. Báo cáo lỗi Nhân Đôi
+    # 3. Báo cáo lỗi Nhân Đôi
     if duplicate_res:
         lines.append(f"\n🛡️ <b>LỖI NHÂN ĐÔI TIN NHẮN ({len(duplicate_res)} trường hợp):</b>")
         for d in duplicate_res:
