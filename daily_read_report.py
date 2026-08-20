@@ -111,8 +111,8 @@ def is_note_msg(text: str) -> bool:
 
 def get_team_members_from_sheet() -> dict:
     """
-    Read sheet rows 4-59 (col A=team, B=name, C=role, E=chat_id).
-    Returns: { group_key: [ {"name": str, "chat_id": int}, ... ] }
+    Read sheet rows 4-59 (col A=team, B=name, C=username, E=chat_id).
+    Returns: { group_key: [ {"name": str, "telegram_id": int|None, "emp_id": str}, ... ] }
     """
     result = {}
     try:
@@ -122,7 +122,7 @@ def get_team_members_from_sheet() -> dict:
 
         for idx in range(HEADER_ROWS, len(df)):
             sheet_row = idx + 1
-            if sheet_row < 4 or sheet_row > 59:
+            if sheet_row < 4 or (32 < sheet_row < 52) or sheet_row > 55:
                 continue
 
             row = df.iloc[idx]
@@ -131,17 +131,14 @@ def get_team_members_from_sheet() -> dict:
             col_c = str(row.iloc[COL_C]).strip() if not pd.isna(row.iloc[COL_C]) else ""
             col_e = str(row.iloc[COL_E]).strip() if not pd.isna(row.iloc[COL_E]) else ""
 
-            if col_a.lower() in ("nan", "none", ""):
-                col_a = ""
-            if col_b.lower() in ("nan", "none", ""):
-                col_b = ""
-            if col_e.lower() in ("nan", "none", ""):
-                col_e = ""
+            if col_a.lower() in ("nan", "none", ""): col_a = ""
+            if col_b.lower() in ("nan", "none", ""): col_b = ""
+            if col_c.lower() in ("nan", "none", ""): col_c = ""
+            if col_e.lower() in ("nan", "none", ""): col_e = ""
 
-            # Determine team group
+            is_tl = 52 <= sheet_row <= 55
             team_str = col_a.upper()
-            # For TL rows (33-59), extract team from col_c "team leader X"
-            if 33 <= sheet_row <= 59 and col_c and "team leader" in col_c.lower():
+            if is_tl and col_c and "team leader" in col_c.lower():
                 m = re.search(r'team\s*leader\s*(\d+)', col_c, re.IGNORECASE)
                 if m:
                     tl_num = m.group(1)
@@ -153,21 +150,31 @@ def get_team_members_from_sheet() -> dict:
                     group_key = gk
                     break
 
-            if not group_key or not col_b or not col_e:
+            if not group_key:
                 continue
 
-            # Parse chat_id
+            full_name = col_b if (col_b and col_b != "0") else ""
+            if not full_name and col_c:
+                clean_c = col_c.replace("myt_", "").replace("myt.", "")
+                clean_c = re.sub(r'\d+$', '', clean_c)
+                clean_c = clean_c.replace(".", " ").replace("_", " ").title().strip()
+                full_name = clean_c
+
+            if not full_name:
+                continue
+
+            if is_tl:
+                full_name = f"{full_name} (TL)"
+
             cid = col_e.replace(".0", "") if col_e.endswith(".0") else col_e
-            if not cid.lstrip("-").isdigit():
-                continue
+            telegram_id = int(cid) if (cid.lstrip("-").isdigit() and int(cid) > 0) else None
 
-            name = col_b
-            chat_id = int(cid)
             result.setdefault(group_key, [])
-            if not any(m["chat_id"] == chat_id for m in result[group_key]):
+            if not any(m["name"] == full_name for m in result[group_key]):
                 result[group_key].append({
-                    "name": name,
-                    "chat_id": chat_id,
+                    "name": full_name,
+                    "telegram_id": telegram_id,
+                    "emp_id": col_c or full_name,
                 })
 
         print(f"  📋 Sheet: {sum(len(v) for v in result.values())} members across {len(result)} teams")
@@ -512,9 +519,9 @@ def get_cycle_range(now_mm: datetime) -> tuple[datetime, datetime]:
 async def main():
     print(f"[{myanmar_now()}] 🚀 Daily Note Read Report starting...")
 
-    # Read staff from Staff sheet (nguồn chính xác danh sách nhân viên)
-    print(f"[{myanmar_now()}] 📋 Reading staff list from Staff sheet...")
-    staff_by_team = get_staff_from_staff_sheet()
+    # Read staff from Task remain sheet (nguồn chính xác danh sách nhân viên 4 Team)
+    print(f"[{myanmar_now()}] 📋 Reading staff list from Task remain sheet...")
+    staff_by_team = get_team_members_from_sheet()
 
     client = TelegramClient(StringSession(SESSION_STRING), API_ID, API_HASH)
 
