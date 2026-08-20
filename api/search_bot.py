@@ -44,6 +44,7 @@ if not DAILY_APPS_SCRIPT_URL or "AKfycbz-NZlBk8q2" not in DAILY_APPS_SCRIPT_URL:
 if not APPS_SCRIPT_URL or "AKfycbz-NZlBk8q2" not in APPS_SCRIPT_URL:
     APPS_SCRIPT_URL = PRIMARY_GAS_URL
 SPREADSHEET_ID        = os.environ.get("SPREADSHEET_ID", "1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8").strip().strip("\ufeff")
+TELEGRAM_SECRET_TOKEN = os.environ.get("TELEGRAM_SECRET_TOKEN", "").strip()
 SD_SPREADSHEET_ID     = "1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow"
 BASE_URL              = (
     f"https://docs.google.com/spreadsheets/d/"
