@@ -1619,6 +1619,9 @@ async def main():
     now_str = now.strftime("%d/%m/%Y %H:%M")
     logger.info(f"🚀 Cron send start – {now_str}")
 
+    # Chat ID nhóm "5 TNI TECHNICA DEP CONTROL SITE"
+    CONTROL_CHAT_ID = "-5251698940"
+
     is_asset_only = ("--asset_only" in sys.argv or "--asset-only" in sys.argv)
     if is_asset_only:
         logger.info("🚀 Running Asset Progress 3.1 Report only...")
