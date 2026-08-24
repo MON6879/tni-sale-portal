@@ -1892,12 +1892,14 @@ async def main():
             total_parts = len(chunks)
             for idx, chk in enumerate(chunks, 1):
                 p_lines = []
-                # CHỈ PHẦN 1 MỚI CÓ TIÊU ĐỀ BÁO CÁO & NGÀY THÁNG
-                if idx == 1:
+                # MỖI PHẦN ĐỀU CÓ TIÊU ĐỀ BÁO CÁO ĐỂ TELETHON SCAN KHỚP VÀ XÓA SẠCH
+                if total_parts > 1:
+                    part_title = f"📋 4. Report — Daily EOD Task & Stats — {t_name} (Part {idx}/{total_parts})"
+                else:
                     part_title = f"📋 4. Report — Daily EOD Task & Stats — {t_name}"
-                    p_lines.append(part_title)
-                    p_lines.append(f"📅 {now_str}")
-                    p_lines.append("━━━━━━━━━━━━━━━━━━━━")
+                p_lines.append(part_title)
+                p_lines.append(f"📅 {now_str}")
+                p_lines.append("━━━━━━━━━━━━━━━━━━━━")
 
                 for mb in chk:
                     p_lines.append(mb)
@@ -2028,9 +2030,11 @@ async def main():
                 logger.info("🗑️ Delete old messages by batch (Telethon Fast Scan - Strict Report 4/3.1 only)...")
                 await delete_by_titles_batch_telethon(tg_client, SEND_BOT_TOKEN, chat_to_prefixes)
         except Exception as tg_err:
-            logger.warning(f"Telethon batch delete lỗi, fallback GAS: {tg_err}")
-            # Fallback: GAS msg_id delete (Chỉ xóa key của cron_send)
-            if APPS_SCRIPT_URL:
+            logger.warning(f"Telethon batch delete lỗi: {tg_err}")
+
+        # Tầng 2: Dual Clean qua GAS Properties msg_id Cache (Xóa triệt để các msg_id cũ đã lưu)
+        if APPS_SCRIPT_URL:
+            try:
                 for del_cid, del_key in CHATID_TO_KEY.items():
                     delete_old_messages_bot(SEND_BOT_TOKEN, del_cid, APPS_SCRIPT_URL, del_key)
                 for del_cid, del_key in CHATID_TO_KEY_FULL.items():
@@ -2038,6 +2042,8 @@ async def main():
                 delete_old_messages_bot(SEND_BOT_TOKEN, CONTROL_CHAT_ID, APPS_SCRIPT_URL, "CRON_TECHDEP_CONTROL")
                 delete_old_messages_bot(SEND_BOT_TOKEN, CONTROL_CHAT_ID, APPS_SCRIPT_URL, "CRON_TECHDEP_DETAIL")
                 delete_old_messages_bot(SEND_BOT_TOKEN, CONTROL_CHAT_ID, APPS_SCRIPT_URL, "CRON_EOD_CONTROL")
+            except Exception as gas_del_err:
+                logger.warning(f"GAS msg_id delete warning: {gas_del_err}")
     elif APPS_SCRIPT_URL and SEND_BOT_TOKEN:
         # Fallback nếu không có Telethon session
         for del_cid, del_key in CHATID_TO_KEY.items():

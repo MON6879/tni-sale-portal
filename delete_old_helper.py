@@ -202,11 +202,23 @@ async def delete_by_titles_batch_telethon(
 
                 matched = False
                 for pfx in clean_prefixes:
-                    if first_line_clean.startswith(pfx):
+                    if first_line_clean.startswith(pfx) or pfx in first_line_clean:
                         matched = True
                         break
 
-                if matched:
+                # Nhận diện các đoạn cắt (split chunks) của Report 4 / EOD / Search / Asset do Bot gửi
+                is_report4_split_chunk = (
+                    "Search TNIxxxx click here @SEARCHTNITASKWOBOT" in msg.text or
+                    "Part 1 — Search Stats" in msg.text or
+                    "Part 3 — No ID Telegram" in msg.text or
+                    ("Day /30 of the month=" in msg.text and "WO Remain Detai:" in msg.text) or
+                    "Report — Daily EOD Task" in msg.text or
+                    "Full Report — FT Task Details" in msg.text or
+                    "Report — Employee Task & Rank" in msg.text or
+                    "Asset progress for material" in msg.text
+                )
+
+                if matched or is_report4_split_chunk:
                     try:
                         resp = requests.post(
                             f"https://api.telegram.org/bot{bot_token}/deleteMessage",
