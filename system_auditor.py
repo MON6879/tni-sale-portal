@@ -104,71 +104,71 @@ SCHEDULE_RULES = [
     {
         "report_name": "Reports 1, 2, 3, 4 + BOD (Sáng)",
         "group_key": "CONTROL",
-        "target_times": ["05:48"],
+        "target_times": ["05:46", "05:48", "05:51"],
         "title_patterns": [
             r"1\.\s*BOD", r"BOD\s*Assign", r"4c\.\s*Asset", r"3\.1\s*Asset", r"Task\s*remain",
             r"Team\s*1\s*Dawei", r"Technical\s*Dept", r"TL\s*Comparison", r"Daily\s*EOD"
         ],
-        "max_delay_min": 4
+        "max_delay_min": 5
     },
     {
         "report_name": "Reports 1, 2, 3, 4 + BOD (Chiều)",
         "group_key": "CONTROL",
-        "target_times": ["15:48"],
+        "target_times": ["15:46", "15:48", "15:51"],
         "title_patterns": [
             r"1\.\s*BOD", r"BOD\s*Assign", r"4c\.\s*Asset", r"3\.1\s*Asset", r"Task\s*remain",
             r"Team\s*1\s*Dawei", r"Technical\s*Dept", r"TL\s*Comparison", r"Daily\s*EOD"
         ],
-        "max_delay_min": 4
+        "max_delay_min": 5
     },
     {
         "report_name": "Report 5A (Plan EOD)",
         "group_key": "CONTROL",
         "target_times": ["18:41"],
         "title_patterns": [r"5\.\s*Report.*Plan", r"Plan\s*EOD"],
-        "max_delay_min": 4
+        "max_delay_min": 5
     },
     {
         "report_name": "Report 5B (Plan Update)",
         "group_key": "CONTROL",
         "target_times": ["19:11"],
         "title_patterns": [r"5\.\s*Report.*Plan", r"Plan\s*Update"],
-        "max_delay_min": 4
+        "max_delay_min": 5
     },
     {
         "report_name": "Report 5C (Plan Sáng/Chiều)",
         "group_key": "CONTROL",
         "target_times": ["06:06", "08:28", "09:56", "15:26", "22:06"],
         "title_patterns": [r"5\.\s*Report.*Plan", r"Daily\s*Plan"],
-        "max_delay_min": 4
+        "max_delay_min": 5
     },
     {
         "report_name": "Report 6 (Read Status)",
         "group_key": "CONTROL",
         "target_times": ["08:48", "14:58", "17:18", "19:41"],
         "title_patterns": [r"6\.\s*Daily\s*Note\s*Read", r"Read\s*Report"],
-        "max_delay_min": 4
+        "max_delay_min": 5
     },
     {
         "report_name": "Report 6.1 (Site Clear Today)",
         "group_key": "CONTROL",
         "target_times": ["07:18", "10:18", "14:18", "17:18"],
         "title_patterns": [r"6\.1\s*Site\s*Clear", r"Site\s*Clear\s*Today"],
-        "max_delay_min": 4
+        "max_delay_min": 5
     },
     {
         "report_name": "Cable Daily Report",
         "group_key": "CONTROL",
         "target_times": ["05:56", "15:56"],
         "title_patterns": [r"Cable", r"Cáp"],
-        "max_delay_min": 4
+        "max_delay_min": 5
     },
     {
         "report_name": "Refuel Request Report",
         "group_key": "REFUEL",
-        "target_times": ["05:48", "05:56", "07:06", "13:06", "15:56"],
+        "target_times": ["05:46", "05:48", "07:06", "13:06", "15:46"],
         "title_patterns": [r"Refuel", r"Yêu\s*cầu.*dầu", r"Request\s*Refuel"],
-        "max_delay_min": 4
+        "max_delay_min": 5
     }
 ]
 
