@@ -76,8 +76,8 @@ BOT_REGISTRY = {
     },
     "Construction Bot 10 (@8903841312)": {
         "token": "8903841312:AAHQ_LeI19gs2nrqBSInTsgzJXOuv6H8LmE",
-        "expected_url": "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec",
-        "ping_url": "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec?action=get_general"
+        "expected_url": "https://tni-bot.vercel.app/api/construction",
+        "ping_url": "https://tni-bot.vercel.app/api/construction"
     }
 }
 
@@ -214,6 +214,14 @@ def audit_telegram_webhooks():
                         "latency": f"{dur:.2f}s",
                         "pending": pending
                     })
+                elif "script.google.com" in curr_url.lower():
+                    results.append({
+                        "name": name,
+                        "status": "FAIL",
+                        "reason": f"Trỏ trực tiếp GAS (lỗi 302)! Phải qua Vercel Proxy.",
+                        "latency": f"{dur:.2f}s",
+                        "pending": pending
+                    })
                 elif curr_url.lower() != expected_url.lower():
                     results.append({
                         "name": name,
@@ -222,12 +230,19 @@ def audit_telegram_webhooks():
                         "latency": f"{dur:.2f}s",
                         "pending": pending
                     })
-                elif last_err and "timeout" in last_err.lower():
-                    # Chỉ cảnh báo nếu là lỗi tạm thời
+                elif pending >= 5:
                     results.append({
                         "name": name,
-                        "status": "WARN",
-                        "reason": f"Cảnh báo: {last_err[:25]}",
+                        "status": "FAIL",
+                        "reason": f"Kẹt hàng đợi: {pending} tin chưa xử lý (Bot bị đứng)!",
+                        "latency": f"{dur:.2f}s",
+                        "pending": pending
+                    })
+                elif last_err:
+                    results.append({
+                        "name": name,
+                        "status": "FAIL" if ("302" in last_err or "wrong" in last_err.lower()) else "WARN",
+                        "reason": f"Lỗi Webhook: {last_err[:35]}",
                         "latency": f"{dur:.2f}s",
                         "pending": pending
                     })
