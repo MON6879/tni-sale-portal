@@ -453,7 +453,10 @@ async def audit_telegram_messages_telethon():
                 # Phân nhóm tin nhắn theo dòng đầu tiên (tiêu đề) đã chuẩn hóa
                 title_map = {}
                 for m in msgs:
-                    clean_title = re.sub(r"[\*\_`#\[\]\(\)\d\/\:\s\-]", "", m["first_line"][:40]).lower()
+                    # Nhận diện phần multipart (ví dụ: Part 1/3, Part 2/3, Part 3/3) để không gom chung
+                    part_match = re.search(r'\(Part\s*(\d+)\s*/\s*(\d+)\)', m["first_line"], re.IGNORECASE)
+                    part_suffix = f"_part_{part_match.group(1)}" if part_match else ""
+                    clean_title = re.sub(r"[\*\_`#\[\]\(\)\d\/\:\s\-]", "", m["first_line"][:40]).lower() + part_suffix
                     if len(clean_title) < 5:
                         continue
                     if clean_title not in title_map:
@@ -469,8 +472,13 @@ async def audit_telegram_messages_telethon():
                             m2 = item_list[i+1]
                             diff_sec = abs((m2["date"] - m1["date"]).total_seconds())
 
-                            # Nếu 2 tin cùng loại gửi cách nhau < 180s (3 phút) -> NHÂN ĐÔI
-                            if diff_sec <= 180:
+                            # Kiểm tra nội dung: Chỉ báo lỗi nhân đôi nếu cùng nội dung giống nhau (hoặc cùng gửi trong < 60s với nội dung trùng)
+                            t1_clean = re.sub(r"\s+", " ", m1["text"][:120]).strip().lower()
+                            t2_clean = re.sub(r"\s+", " ", m2["text"][:120]).strip().lower()
+                            is_same_content = (t1_clean == t2_clean) or (diff_sec <= 30 and t1_clean[:60] == t2_clean[:60])
+
+                            # Nếu 2 tin cùng loại và cùng nội dung gửi cách nhau < 180s -> NHÂN ĐÔI THỰC SỰ
+                            if diff_sec <= 180 and is_same_content:
                                 duplicate_results.append({
                                     "group": gkey,
                                     "title": m1["first_line"][:35],

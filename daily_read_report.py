@@ -122,7 +122,7 @@ def get_team_members_from_sheet() -> dict:
 
         for idx in range(HEADER_ROWS, len(df)):
             sheet_row = idx + 1
-            if sheet_row < 4 or (32 < sheet_row < 52) or sheet_row > 55:
+            if sheet_row < 4 or (37 < sheet_row < 52) or sheet_row > 55:
                 continue
 
             row = df.iloc[idx]
@@ -132,9 +132,9 @@ def get_team_members_from_sheet() -> dict:
             col_e = str(row.iloc[COL_E]).strip() if not pd.isna(row.iloc[COL_E]) else ""
 
             if col_a.lower() in ("nan", "none", ""): col_a = ""
-            if col_b.lower() in ("nan", "none", ""): col_b = ""
+            if col_b.lower() in ("nan", "none", "", "0"): continue
             if col_c.lower() in ("nan", "none", ""): col_c = ""
-            if col_e.lower() in ("nan", "none", ""): col_e = ""
+            if col_e.lower() in ("nan", "none", "", "0"): col_e = ""
 
             is_tl = 52 <= sheet_row <= 55
             team_str = col_a.upper()
