@@ -237,19 +237,24 @@ def audit_telegram_webhooks():
                 pending = data.get("pending_update_count", 0)
                 last_err = data.get("last_error_message")
                 
-                # Auto-recovery nếu rớt webhook
-                if not curr_url and expected_url:
-                    logger.warning(f"⚠️ {name} mất Webhook -> Đang tự động kết nối lại...")
+                # Auto-recovery: Nếu mất Webhook hoặc kẹt hàng đợi >= 5 tin -> Tự động Flush & Re-Hook
+                if (not curr_url or pending >= 5) and expected_url:
+                    action_name = "Khôi phục Webhook" if not curr_url else f"Auto-Flush hàng đợi ({pending} tin)"
+                    logger.warning(f"🚨 {name}: {action_name}...")
                     try:
+                        if pending >= 5:
+                            requests.post(f"https://api.telegram.org/bot{token}/deleteWebhook", json={"drop_pending_updates": True}, timeout=8)
+                            time.sleep(1.5)
                         set_resp = requests.post(f"https://api.telegram.org/bot{token}/setWebhook", json={
                             "url": expected_url,
                             "allowed_updates": ["message", "edited_message", "channel_post"]
                         }, timeout=8)
                         if set_resp.status_code == 200 and set_resp.json().get("ok"):
                             curr_url = expected_url
-                            logger.info(f"✅ Đã tự động khôi phục Webhook cho {name} thành công!")
-                    except Exception as set_err:
-                        logger.error(f"❌ Khôi phục Webhook thất bại: {set_err}")
+                            pending = 0
+                            logger.info(f"✅ Đã {action_name} thành công cho {name}!")
+                    except Exception as rec_err:
+                        logger.error(f"❌ {action_name} thất bại: {rec_err}")
 
                 if not curr_url:
                     results.append({
