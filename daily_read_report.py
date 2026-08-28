@@ -132,9 +132,12 @@ def get_team_members_from_sheet() -> dict:
             col_e = str(row.iloc[COL_E]).strip() if not pd.isna(row.iloc[COL_E]) else ""
 
             if col_a.lower() in ("nan", "none", ""): col_a = ""
-            if col_b.lower() in ("nan", "none", "", "0"): continue
+            if col_b.lower() in ("nan", "none", ""): col_b = ""
             if col_c.lower() in ("nan", "none", ""): col_c = ""
             if col_e.lower() in ("nan", "none", "", "0"): col_e = ""
+
+            if not col_a and not col_b and not col_c:
+                continue
 
             is_tl = 52 <= sheet_row <= 55
             team_str = col_a.upper()
@@ -218,6 +221,7 @@ def get_staff_from_staff_sheet() -> dict:
             tid_raw = safe_col(S_COL_ID)   # Col A = Telegram ID strictly
             name    = safe_col(S_COL_NAME) # Col F = Full Name strictly
             team    = safe_col(S_COL_TEAM) # Col M = Team
+            pos     = safe_col(11)         # Col L = Position
 
             if not name or not team:
                 continue
@@ -238,16 +242,18 @@ def get_staff_from_staff_sheet() -> dict:
             if not group_key:
                 continue
 
+            display_name = f"{name} (TL)" if "TEAM LEADER" in pos.upper() else name
+
             # Parse Telegram User ID (col A)
             tid_clean = tid_raw.replace(".0", "") if tid_raw.endswith(".0") else tid_raw
             telegram_id = int(tid_clean) if tid_clean.lstrip("-").isdigit() else None
 
             result.setdefault(group_key, [])
-            # Dedup theo tên cột F
-            if not any(s["name"] == name for s in result[group_key]):
+            # Dedup theo tên hiển thị
+            if not any(s["name"] == display_name for s in result[group_key]):
                 result[group_key].append({
-                    "name":        name,       # Tên Cột F hiển thị chính thức
-                    "telegram_id": telegram_id, # ID Cột A
+                    "name":        display_name, # Tên hiển thị chính thức
+                    "telegram_id": telegram_id,  # ID Cột A
                     "emp_id":      emp_id,
                 })
 
@@ -519,9 +525,9 @@ def get_cycle_range(now_mm: datetime) -> tuple[datetime, datetime]:
 async def main():
     print(f"[{myanmar_now()}] 🚀 Daily Note Read Report starting...")
 
-    # Read staff from Task remain sheet (nguồn chính xác danh sách nhân viên 4 Team)
-    print(f"[{myanmar_now()}] 📋 Reading staff list from Task remain sheet...")
-    staff_by_team = get_team_members_from_sheet()
+    # Read staff from Staff sheet (nguồn chính xác danh sách nhân viên 4 Team, đã lọc bỏ 100% Resign)
+    print(f"[{myanmar_now()}] 📋 Reading staff list from Staff sheet (SSOT)...")
+    staff_by_team = get_staff_from_staff_sheet()
 
     client = TelegramClient(StringSession(SESSION_STRING), API_ID, API_HASH)
 
