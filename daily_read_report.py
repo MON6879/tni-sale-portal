@@ -122,7 +122,7 @@ def get_team_members_from_sheet() -> dict:
 
         for idx in range(HEADER_ROWS, len(df)):
             sheet_row = idx + 1
-            if sheet_row < 4 or (37 < sheet_row < 52) or sheet_row > 55:
+            if sheet_row < 4 or (38 < sheet_row < 52) or sheet_row > 55:
                 continue
 
             row = df.iloc[idx]
