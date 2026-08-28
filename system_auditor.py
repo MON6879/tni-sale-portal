@@ -94,9 +94,54 @@ GAS_SERVICES = {
 }
 
 SHEET_CONNECTORS = {
-    "Sheet 10_TNI_SITE_DOWN (GID=0)": "https://docs.google.com/spreadsheets/d/1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow/gviz/tq?tqx=out:csv&gid=0",
-    "Sheet Task remain (GID=133591305)": "https://docs.google.com/spreadsheets/d/1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8/gviz/tq?tqx=out:csv&gid=133591305",
-    "Sheet Auto Copy Config (GID=0)": "https://docs.google.com/spreadsheets/d/19RBlwehMC6BLoueaTEzsJHMx4puB0CTE5i5x79-uI6c/gviz/tq?tqx=out:csv&gid=0"
+    "Sheet Task Remain (GID=133591305)": {
+        "url": "https://docs.google.com/spreadsheets/d/1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8/gviz/tq?tqx=out:csv&gid=133591305",
+        "min_rows": 5
+    },
+    "Sheet Progress WO & DG Need (GID=159298579)": {
+        "url": "https://docs.google.com/spreadsheets/d/1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8/gviz/tq?tqx=out:csv&gid=159298579",
+        "min_rows": 4
+    },
+    "Sheet Staff List (GID=1684930643)": {
+        "url": "https://docs.google.com/spreadsheets/d/1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8/gviz/tq?tqx=out:csv&gid=1684930643",
+        "min_rows": 5
+    },
+    "Sheet Read Group Logs (GID=870080250)": {
+        "url": "https://docs.google.com/spreadsheets/d/1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8/gviz/tq?tqx=out:csv&gid=870080250",
+        "min_rows": 2
+    },
+    "Sheet 10_TNI_SITE_DOWN (GID=0)": {
+        "url": "https://docs.google.com/spreadsheets/d/1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow/gviz/tq?tqx=out:csv&gid=0",
+        "min_rows": 2
+    },
+    "Sheet Site Down Clear Morning (GID=582589665)": {
+        "url": "https://docs.google.com/spreadsheets/d/1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow/gviz/tq?tqx=out:csv&gid=582589665",
+        "min_rows": 1
+    },
+    "Sheet Daily Report & Business": {
+        "url": "https://docs.google.com/spreadsheets/d/1C8hU8SXpOdq-v6z7iLGoqwDJmO9DYudZ3rhflb7LC8Y/gviz/tq?tqx=out:csv&sheet=Daily+report+and+Bussiness",
+        "min_rows": 5
+    },
+    "Sheet Team Leader Plan (GID=853981745)": {
+        "url": "https://docs.google.com/spreadsheets/d/1C8hU8SXpOdq-v6z7iLGoqwDJmO9DYudZ3rhflb7LC8Y/gviz/tq?tqx=out:csv&gid=853981745",
+        "min_rows": 2
+    },
+    "Sheet Auto Copy Config (GID=0)": {
+        "url": "https://docs.google.com/spreadsheets/d/19RBlwehMC6BLoueaTEzsJHMx4puB0CTE5i5x79-uI6c/gviz/tq?tqx=out:csv&gid=0",
+        "min_rows": 2
+    },
+    "Sheet Team 1 Data Solution (GID=860367942)": {
+        "url": "https://docs.google.com/spreadsheets/d/1s53UHIDF-T9P4EuNB8XoE9yTpoNmDyrQaEe_VJP6f9o/gviz/tq?tqx=out:csv&gid=860367942",
+        "min_rows": 5
+    },
+    "Sheet Team 1 See Analysis (GID=447145169)": {
+        "url": "https://docs.google.com/spreadsheets/d/1s53UHIDF-T9P4EuNB8XoE9yTpoNmDyrQaEe_VJP6f9o/gviz/tq?tqx=out:csv&gid=447145169",
+        "min_rows": 2
+    },
+    "Sheet Team 1 Update Assign (GID=1950247373)": {
+        "url": "https://docs.google.com/spreadsheets/d/1s53UHIDF-T9P4EuNB8XoE9yTpoNmDyrQaEe_VJP6f9o/gviz/tq?tqx=out:csv&gid=1950247373",
+        "min_rows": 2
+    }
 }
 
 # ── 2. MA TRẬN LỊCH TRÌNH BÁO CÁO CHUẨN (MASTER SCHEDULE MATRIX) ───────────
@@ -139,7 +184,7 @@ SCHEDULE_RULES = [
         "report_name": "Report 5C (Plan Sáng/Chiều)",
         "group_key": "CONTROL",
         "target_times": ["06:06", "08:28", "09:56", "15:26", "22:06"],
-        "title_patterns": [r"5\.\s*Report.*Plan", r"Daily\s*Plan"],
+        "title_patterns": [r"5(?:\.1|\.)?\s*Report.*Plan", r"5\.\d*\s*Report.*Plan", r"Daily\s*Plan", r"Plan.*Summary"],
         "max_delay_min": 5
     },
     {
@@ -153,7 +198,7 @@ SCHEDULE_RULES = [
         "report_name": "Report 6.1 (Site Clear Today)",
         "group_key": "CONTROL",
         "target_times": ["07:18", "10:18", "14:18", "17:18"],
-        "title_patterns": [r"6\.1\s*Site\s*Clear", r"Site\s*Clear\s*Today"],
+        "title_patterns": [r"6\.1\s*Site\s*Clear", r"Site\s*Clear\s*Today", r"Site\s*Clear"],
         "max_delay_min": 5
     },
     {
@@ -305,36 +350,221 @@ def audit_gas_backends():
 
 
 def audit_sheets_connectors():
-    """Kiểm tra kết nối và độ trễ đọc Google Sheets qua GVIZ CSV."""
+    """
+    Kiểm tra kết nối và độ toàn vẹn của Google Sheets qua GVIZ CSV:
+    1. Kiểm tra lỗi rỗng dữ liệu (0 dòng hoặc dưới ngưỡng tối thiểu)
+    2. Kiểm tra lỗi công thức hỏng (#REF!, #VALUE!, #DIV/0!, #NAME?, #CIRC!)
+    3. Kiểm tra lỗi mất kết nối / Timeout
+    """
     results = []
     headers = {"User-Agent": "Mozilla/5.0"}
-    for name, url in SHEET_CONNECTORS.items():
-        try:
-            t0 = time.time()
-            resp = requests.get(url, headers=headers, timeout=10)
-            dur = time.time() - t0
-            if resp.status_code == 200 and len(resp.text) > 50:
-                lines = resp.text.split("\n")
+    for name, cfg in SHEET_CONNECTORS.items():
+        url = cfg["url"] if isinstance(cfg, dict) else cfg
+        min_rows = cfg.get("min_rows", 1) if isinstance(cfg, dict) else 1
+        resp = None
+        dur = 0.0
+        for attempt in range(2):
+            try:
+                t0 = time.time()
+                resp = requests.get(url, headers=headers, timeout=12)
+                dur = time.time() - t0
+                break
+            except Exception:
+                if attempt == 0:
+                    time.sleep(1)
+
+        if resp is not None and resp.status_code == 200:
+            lines = [l for l in resp.text.split("\n") if l.strip()]
+            data_rows = max(0, len(lines) - 1)
+
+            # Quét lỗi công thức nghiêm trọng
+            ref_errs = resp.text.count("#REF!")
+            val_errs = resp.text.count("#VALUE!")
+            div_errs = resp.text.count("#DIV/0!")
+            name_errs = resp.text.count("#NAME?")
+            circ_errs = resp.text.count("#CIRC!")
+            critical_formula_errs = ref_errs + val_errs + div_errs + name_errs + circ_errs
+
+            if critical_formula_errs > 0:
+                err_items = []
+                if ref_errs: err_items.append(f"{ref_errs} #REF!")
+                if val_errs: err_items.append(f"{val_errs} #VALUE!")
+                if div_errs: err_items.append(f"{div_errs} #DIV/0!")
+                if name_errs: err_items.append(f"{name_errs} #NAME?")
+                if circ_errs: err_items.append(f"{circ_errs} #CIRC!")
                 results.append({
                     "name": name,
-                    "status": "PASS",
-                    "reason": f"Kết nối tốt ({len(lines)} dòng | {dur:.2f}s)",
+                    "status": "FAIL",
+                    "reason": f"Lỗi công thức ({', '.join(err_items)}) | {data_rows} dòng",
+                    "latency": f"{dur:.2f}s"
+                })
+            elif data_rows == 0:
+                results.append({
+                    "name": name,
+                    "status": "FAIL",
+                    "reason": "Rỗng dữ liệu hoàn toàn (0 dòng)",
+                    "latency": f"{dur:.2f}s"
+                })
+            elif data_rows < min_rows:
+                results.append({
+                    "name": name,
+                    "status": "FAIL",
+                    "reason": f"Thiếu dữ liệu ({data_rows}/{min_rows} dòng chuẩn)",
                     "latency": f"{dur:.2f}s"
                 })
             else:
                 results.append({
                     "name": name,
-                    "status": "FAIL",
-                    "reason": f"HTTP {resp.status_code} / Rỗng",
+                    "status": "PASS",
+                    "reason": f"Dữ liệu tốt ({data_rows} dòng | {dur:.2f}s)",
                     "latency": f"{dur:.2f}s"
                 })
-        except Exception as e:
+        else:
+            err_code = resp.status_code if resp else "Timeout"
             results.append({
                 "name": name,
                 "status": "FAIL",
-                "reason": f"Lỗi kết nối Sheet: {str(e)[:25]}",
-                "latency": "N/A"
+                "reason": f"Mất kết nối (HTTP {err_code})",
+                "latency": f"{dur:.2f}s" if dur > 0 else "N/A"
             })
+    return results
+
+
+# ── 3.1. KIỂM TOÁN DANH SÁCH NHÂN SỰ (SSOT STAFF ROSTER) & READ GROUP FRESHNESS ─
+def audit_staff_roster_and_freshness():
+    """
+    Kiểm toán toàn diện danh sách nhân sự (SSOT Staff Roster) & độ tươi mới của Sheet Read Group:
+    1. Kiểm tra quân số Active và trạng thái Resign trên Sheet Staff (GID 1684930643).
+    2. Kiểm tra độ tươi mới của Sheet Read Group (GID 870080250) xem có bị đứng/dừng ghi nhận không.
+    3. Đối soát bất đồng bộ giữa Staff và Task remain (GID 133591305).
+    """
+    results = []
+    headers = {"User-Agent": "Mozilla/5.0"}
+    import io
+    import pandas as pd
+
+    # --- 1. Kiểm tra Sheet Staff (GID 1684930643) ---
+    url_staff = "https://docs.google.com/spreadsheets/d/1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8/gviz/tq?tqx=out:csv&gid=1684930643"
+    try:
+        r_staff = requests.get(url_staff, headers=headers, timeout=12)
+        if r_staff.status_code == 200:
+            df_staff = pd.read_csv(io.StringIO(r_staff.text), header=None, dtype=str, on_bad_lines="skip")
+            
+            active_counts = {"T1": 0, "T2": 0, "T3": 0, "T4": 0}
+            resigned_counts = {"T1": 0, "T2": 0, "T3": 0, "T4": 0}
+            
+            for idx in range(1, len(df_staff)):
+                row = df_staff.iloc[idx]
+                name = str(row.iloc[5]).strip() if len(row) > 5 and not pd.isna(row.iloc[5]) else ""
+                team = str(row.iloc[12]).strip() if len(row) > 12 and not pd.isna(row.iloc[12]) else ""
+                exit_s = str(row.iloc[13]).strip() if len(row) > 13 and not pd.isna(row.iloc[13]) else ""
+                
+                if not name or name.lower() == "nan" or not team or team.lower() == "nan":
+                    continue
+                
+                gk = None
+                if "1" in team: gk = "T1"
+                elif "2" in team or "5" in team: gk = "T2"
+                elif "3" in team: gk = "T3"
+                elif "4" in team: gk = "T4"
+                
+                if not gk:
+                    continue
+                
+                if exit_s and exit_s.lower() != "nan":
+                    resigned_counts[gk] += 1
+                else:
+                    active_counts[gk] += 1
+            
+            # Ngưỡng chuẩn: T1>=8, T2>=8, T3>=4, T4>=5
+            min_targets = {"T1": 8, "T2": 8, "T3": 4, "T4": 5}
+            for gk, cnt in active_counts.items():
+                min_t = min_targets.get(gk, 4)
+                if cnt < min_t:
+                    results.append({
+                        "name": f"Staff Roster {gk}",
+                        "status": "FAIL",
+                        "reason": f"Thiếu quân số Active ({cnt}/{min_t} người chuẩn)",
+                        "detail": f"{gk}: Chỉ có {cnt} nhân viên Active (Yêu cầu >= {min_t})"
+                    })
+                else:
+                    results.append({
+                        "name": f"Staff Roster {gk}",
+                        "status": "PASS",
+                        "reason": f"Quân số chuẩn ({cnt} Active | {resigned_counts[gk]} Resigned)",
+                        "detail": f"{gk}: {cnt} Active, {resigned_counts[gk]} Resigned"
+                    })
+        else:
+            results.append({
+                "name": "Sheet Staff List",
+                "status": "FAIL",
+                "reason": f"Không thể đọc Sheet Staff (HTTP {r_staff.status_code})",
+                "detail": f"HTTP {r_staff.status_code}"
+            })
+    except Exception as e:
+        results.append({
+            "name": "Sheet Staff List",
+            "status": "FAIL",
+            "reason": f"Lỗi đọc Staff: {str(e)[:30]}",
+            "detail": str(e)
+        })
+
+    # --- 2. Kiểm tra độ tươi mới của Sheet Read Group (GID 870080250) ---
+    url_read = "https://docs.google.com/spreadsheets/d/1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8/gviz/tq?tqx=out:csv&gid=870080250"
+    try:
+        r_read = requests.get(url_read, headers=headers, timeout=12)
+        if r_read.status_code == 200:
+            df_read = pd.read_csv(io.StringIO(r_read.text), header=None, dtype=str, on_bad_lines="skip")
+            if len(df_read) > 0:
+                first_row = df_read.iloc[0]
+                latest_date_str = str(first_row.iloc[0]).strip() if len(first_row) > 0 else ""
+                latest_time_str = str(first_row.iloc[1]).strip() if len(first_row) > 1 else ""
+                
+                # Check date freshness
+                now_mmt = datetime.now(TZ_MM)
+                today_d = now_mmt.strftime("%d/%m/%Y")
+                yesterday_d = (now_mmt - timedelta(days=1)).strftime("%d/%m/%Y")
+                
+                # Trích xuất ngày từ chuỗi (DD/MM/YYYY)
+                m_date = re.search(r'(\d{1,2}/\d{1,2}/\d{4})', latest_date_str) or re.search(r'(\d{1,2}/\d{1,2}/\d{4})', latest_time_str)
+                rec_date = m_date.group(1) if m_date else latest_date_str
+                
+                if rec_date in (today_d, yesterday_d):
+                    results.append({
+                        "name": "Sheet Read Group Freshness",
+                        "status": "PASS",
+                        "reason": f"Dữ liệu tươi mới (Ghi nhận gần nhất: {rec_date})",
+                        "detail": f"Latest record: {latest_time_str}"
+                    })
+                else:
+                    results.append({
+                        "name": "Sheet Read Group Freshness",
+                        "status": "FAIL",
+                        "reason": f"Dữ liệu bị ĐỨNG! Bản ghi gần nhất ngày {rec_date} (Hôm nay: {today_d})",
+                        "detail": f"Bảng Read Group không cập nhật kể từ ngày {rec_date}"
+                    })
+            else:
+                results.append({
+                    "name": "Sheet Read Group Freshness",
+                    "status": "FAIL",
+                    "reason": "Bảng Read Group rỗng hoàn toàn (0 dòng)!",
+                    "detail": "Empty Read Group tab"
+                })
+        else:
+            results.append({
+                "name": "Sheet Read Group Freshness",
+                "status": "FAIL",
+                "reason": f"HTTP {r_read.status_code}",
+                "detail": f"HTTP {r_read.status_code}"
+            })
+    except Exception as e:
+        results.append({
+            "name": "Sheet Read Group Freshness",
+            "status": "FAIL",
+            "reason": f"Lỗi kiểm tra Read Group: {str(e)[:30]}",
+            "detail": str(e)
+        })
+
     return results
 
 
@@ -582,6 +812,7 @@ def build_master_audit_report():
     webhook_res = audit_telegram_webhooks()
     gas_res = audit_gas_backends()
     sheets_res = audit_sheets_connectors()
+    roster_res = audit_staff_roster_and_freshness()
 
     # 2. Chạy kiểm tra Telethon (Đúng giờ & Nhân đôi)
     try:
@@ -595,8 +826,8 @@ def build_master_audit_report():
     quality_res = telethon_data.get("quality_results", [])
 
     # 3. Tính toán sự cố (Chỉ tính status FAIL là lỗi thực sự)
-    fail_checks = sum(1 for c in (webhook_res + gas_res + sheets_res) if c["status"] == "FAIL")
-    warn_checks = sum(1 for c in (webhook_res + gas_res + sheets_res) if c["status"] == "WARN")
+    fail_checks = sum(1 for c in (webhook_res + gas_res + sheets_res + roster_res) if c["status"] == "FAIL")
+    warn_checks = sum(1 for c in (webhook_res + gas_res + sheets_res + roster_res) if c["status"] == "WARN")
 
     missed_count = sum(1 for s in schedule_res if s["status"] == "FAIL")
     delay_count = sum(1 for s in schedule_res if s["status"] == "WARN")
@@ -627,7 +858,14 @@ def build_master_audit_report():
             lines.append(f"   {q['label']} <b>{q['report']}</b> ({q['group']})")
             lines.append(f"      └ <i>{q['detail']}</i>")
 
-    # 2. Báo cáo lỗi Đúng Giờ / Bỏ Sót
+    # 2. Báo cáo lỗi Nhân Sự & Read Group
+    roster_fails = [r for r in roster_res if r["status"] != "PASS"]
+    if roster_fails:
+        lines.append(f"\n👥 <b>LỖI NHÂN SỰ & READ GROUP ({len(roster_fails)} lỗi):</b>")
+        for r in roster_fails:
+            lines.append(f"   ❌ <b>{r['name']}</b>: <i>{r['reason']}</i>")
+
+    # 3. Báo cáo lỗi Đúng Giờ / Bỏ Sót
     missed_items = [s for s in schedule_res if s["status"] in ("FAIL", "WARN")]
     if missed_items:
         lines.append("\n⏰ <b>LỖI TIẾN ĐỘ & TRỄ GIỜ:</b>")
@@ -635,28 +873,28 @@ def build_master_audit_report():
             lines.append(f"   {s['label']} <b>{s['report']}</b> ({s['target_time']} MMT)")
             lines.append(f"      └ <i>{s['detail']}</i>")
 
-    # 3. Báo cáo lỗi Nhân Đôi
+    # 4. Báo cáo lỗi Nhân Đôi
     if duplicate_res:
         lines.append(f"\n🛡️ <b>LỖI NHÂN ĐÔI TIN NHẮN ({len(duplicate_res)} trường hợp):</b>")
         for d in duplicate_res:
             lines.append(f"   ❌ <b>[{d['group']}]</b> <i>{d['title']}</i>")
             lines.append(f"      └ Gửi 2 tin lúc: <b>{d['time1']}</b> & <b>{d['time2']}</b> (Cách {d['diff_sec']}s | ID: {d['id1']}, {d['id2']})")
 
-    # 3. Báo cáo lỗi Webhooks Bot
+    # 5. Báo cáo lỗi Webhooks Bot
     webhook_fails = [r for r in webhook_res if r["status"] != "PASS"]
     if webhook_fails:
         lines.append("\n🤖 <b>LỖI KẾT NỐI WEBHOOK:</b>")
         for r in webhook_fails:
             lines.append(f"   ❌ <b>{r['name']}</b>: <i>{r['reason']}</i>")
 
-    # 4. Báo cáo lỗi GAS
+    # 6. Báo cáo lỗi GAS
     gas_fails = [r for r in gas_res if r["status"] != "PASS"]
     if gas_fails:
         lines.append("\n☁️ <b>LỖI GOOGLE APPS SCRIPT:</b>")
         for r in gas_fails:
             lines.append(f"   ❌ <b>{r['name']}</b>: <i>{r['reason']}</i>")
 
-    # 5. Báo cáo lỗi Sheets
+    # 7. Báo cáo lỗi Sheets
     sheet_fails = [r for r in sheets_res if r["status"] != "PASS"]
     if sheet_fails:
         lines.append("\n📊 <b>LỖI GOOGLE SHEETS:</b>")
