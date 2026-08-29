@@ -154,8 +154,8 @@ jobs:
           # ═══════ 🌤️ AFTERNOON BLOCK (13:00-16:30) ═══════
           #  13:06 → Refuel Request (🤖 Bot API)
           check_time 13 06 && REFUEL_REQ=true && NEED_PYTHON=true && echo "🚃 Toa 8: Refuel Request (13:06 MMT)"
-          #  13:11 → Refuel Plan (Report 2 Cấp Dầu - Ca 1) (📱 Telethon)
-          check_time 13 11 && REFUEL_P1=true && REFUEL_P2=true && REFUEL_P21=true && NEED_PYTHON=true && echo "🚃 Refuel Plan (13:11 MMT)"
+          #  13:11 → Refuel Plan (Combined Report) (📱 Telethon)
+          check_time 13 11 && REFUEL_P1=true && NEED_PYTHON=true && echo "🚃 Toa 9: Refuel Plan Combined (13:11 MMT)"
           #  14:16 / 14:18 → Report 6.1 Site Clear Today (🤖 Bot API)
           (check_time 14 18 || check_time 14 16) && R61=true && NEED_PYTHON=true && echo "🚃 Toa 6.1: Report 6.1 Site Clear Today (14:18 MMT)"
           #  14:56 / 14:58 → Report 6 Read Report (Ca 2) (📱 Telethon)
@@ -174,16 +174,16 @@ jobs:
           # ═══════ 🌙 EVENING BLOCK (17:00-22:30) ═══════
           #  17:16 / 17:18 → Report 6 & Report 6.1
           (check_time 17 18 || check_time 17 16) && R6=true && R61=true && NEED_PYTHON=true && echo "🚃 Toa 6+6.1: Report 6 + Report 6.1 Site Clear Today (17:18 MMT)"
-          #  18:06 → Refuel Plan 2
-          check_time 18 06 && REFUEL_P2=true && REFUEL_P21=true && NEED_PYTHON=true && echo "🚃 Toa 10: Refuel Plan 2 (18:06 MMT)"
+          #  18:06 → Refuel Plan (Combined Report)
+          check_time 18 06 && REFUEL_P1=true && NEED_PYTHON=true && echo "🚃 Toa 9: Refuel Plan Combined (18:06 MMT)"
           #  18:41 → Report 5 (Daily Plan - Ca Chiều / EOD Plan vs Actual) (📱 Telethon)
           check_time 18 41 && P5A=true && NEED_PYTHON=true && echo "🚃 Toa 3: Report 5 Daily Plan EOD (18:41 MMT)"
           #  19:11 → Report 5 (Daily Plan - Ca Tối / Plan Update) (📱 Telethon)
           check_time 19 11 && P5B=true && NEED_PYTHON=true && echo "🚃 Toa 4: Report 5 Daily Plan Update (19:11 MMT)"
           #  19:41 → Report 6 Read Report (Ca 3) (📱 Telethon)
           check_time 19 41 && R6=true && NEED_PYTHON=true && echo "🚃 Toa 6: Report 6 Read (19:41 MMT)"
-          #  21:36 → Refuel Plan All Reports (Reports 1, 2, 2.1, 4, 5) (📱 Telethon)
-          check_time 21 36 && REFUEL_P1=true && REFUEL_P2=true && REFUEL_P21=true && REFUEL_P4=true && NEED_PYTHON=true && echo "🚃 Refuel Plan All Reports (21:36 MMT)"
+          #  21:36 → Refuel Plan (Combined Report + Members Not Joined) (📱 Telethon)
+          check_time 21 36 && REFUEL_P1=true && REFUEL_P4=true && NEED_PYTHON=true && echo "🚃 Toa 9+11: Refuel Plan Combined + Members (21:36 MMT)"
           #  22:06 → Plan 5C Evening
           check_time 22 06 && P5C=true && NEED_PYTHON=true && echo "🚃 Toa 5: Plan 5C Evening (22:06 MMT)"
 

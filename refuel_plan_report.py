@@ -390,7 +390,14 @@ class RefuelData:
 # ── Reports implementation ──────────────────────────────────────────────────
 
 def report_1(data: RefuelData):
-    print("🔄 Generating Report 1 — PLAN vs TEAM REQUEST (with Letter Progress)...")
+    """
+    Báo cáo tổng hợp kết hợp:
+    1. Letter Progress + FT follow monitor
+    2. Bảng đối soát 5 cột phân theo Team kèm tổng số Sites: 🏷️ Team X (N Sites)
+    3. Thống kê trạm lệch (Diff sites summary)
+    4. Thống kê trạm Team Request chưa có Plan hoặc chưa Refuel (Pending requests)
+    """
+    print("🔄 Generating Combined Refuel Plan & Progress Daily Report...")
     now = datetime.now(TZ_MM)
     today_str = now.strftime("%d/%m/%Y")
 
@@ -420,96 +427,10 @@ def report_1(data: RefuelData):
     ft_names_today = sorted(list(set(ft_today)))
     ft_str = ", ".join(ft_names_today) if ft_names_today else "None"
 
-    # ── PLAN vs REQUEST data ──
-    plan    = {}
-    request = {}
-    site_team_map = {}
-
-    for r in data.records:
-        if r["date"] != today_str or not r["site"]:
-            continue
-        if r.get("team"):
-            site_team_map[r["site"]] = r["team"]
-        if r["cat"] == "PLAN":
-            plan[r["site"]]    = plan.get(r["site"], 0)    + r["qty"]
-        elif r["cat"] == "REQUEST":
-            request[r["site"]] = request.get(r["site"], 0) + r["qty"]
-
-    all_sites = sorted(set(list(plan.keys()) + list(request.keys())))
-
-    header_lines = [
-        f"🔄 <b>[Report 1] PLAN vs TEAM REQUEST — {today_str}</b>",
-        f"⏰ {now.strftime('%H:%M')} Myanmar",
-        "",
-        "📝 <b>Letter Progress:</b>",
-        submit_line,
-        approved_line,
-        f"  👥 FT follow monitor: <b>{ft_str}</b>",
-        "",
-    ]
-
-    if not all_sites:
-        header_lines.append("📭 No records today.")
-        header_lines.append("\n🤖 <i>Auto report — Refuel Plan System</i>")
-        tg_send("\n".join(header_lines), "report1")
-        print("✅ Report 1 sent (no records).")
-        return
-
-    green_count = yellow_count = gray_count = purple_count = 0
-
-    rows = []
-    for i, site in enumerate(all_sites, 1):
-        p = plan.get(site, 0)
-        q = request.get(site, 0)
-        diff = p - q
-
-        if p > 0 and q > 0 and diff == 0:
-            icon = "🟢"; green_count  += 1   # Trùng tên + trùng số lít
-        elif p > 0 and q > 0 and diff != 0:
-            icon = "🟡"; yellow_count += 1   # Trùng tên + khác số lít
-        elif q > 0 and p == 0:
-            icon = "🟣"; purple_count += 1   # Request có, Plan không có
-        else:
-            icon = "🔵"; gray_count   += 1   # Plan có, Request không có
-
-        team_raw = site_team_map.get(site, "Team 1")
-        if "team 2" in team_raw.lower(): team_short = "Team 2"
-        elif "team 3" in team_raw.lower(): team_short = "Team 3"
-        elif "team 4" in team_raw.lower(): team_short = "Team 4"
-        else: team_short = "Team 1"
-
-        diff_str = "=" if diff == 0 else f"{diff:+d}L"
-        rows.append(f"{icon} {fmt_row_compare_5(team_short, site, f'{q}L', f'{p}L', diff_str)}")
-
-    header_bar = "<code>" + "───────┼───────────┼───────┼───────┼──────" + "</code>"
-    footer_bar = "<code>" + "───────┴───────────┴───────┴───────┴──────" + "</code>"
-
-    lines = header_lines + [
-        "🟢 Match  🟡 Diff qty  🟣 Req only  🔵 Plan only",
-        fmt_row_compare_5("Team", "Site ID", "Request", "Plan", "Diff"),
-        header_bar,
-    ] + rows + [
-        footer_bar,
-        f"\n🟢 <b>{green_count}</b>  🟡 <b>{yellow_count}</b>  🟣 <b>{purple_count}</b>  🔵 <b>{gray_count}</b>",
-        "\n🤖 <i>Auto report — Refuel Plan System</i>"
-    ]
-    tg_send("\n".join(lines), "report1")
-    print("✅ Report 1 sent.")
-
-
-
-
-
-def report_2(data: RefuelData):
-    print("📊 Generating Report 2 — PLAN vs REFUELED (by Team)...")
-    now = datetime.now(TZ_MM)
-    today_str = now.strftime("%d/%m/%Y")
-
     # ── Gather data for today by Team ──
     teams_list = ["Team 1", "Team 2", "Team 3", "Team 4"]
     team_map: dict[str, dict[str, dict[str, int]]] = {t: {} for t in teams_list}
 
-    # Normalize team name helper
     def get_team_key(raw_team: str) -> str:
         s = raw_team.lower()
         if "team 1" in s or "team1" in s: return "Team 1"
@@ -533,46 +454,53 @@ def report_2(data: RefuelData):
         elif r["cat"] == "REQUEST":
             team_map[team][site]["req"] += r["qty"]
 
-    # Build Header
+    # Header
     lines = [
-        f"📊 <b>[Report 2] PLAN vs REFUELED — {today_str}</b>",
+        f"🔄 <b>[Report 1] PLAN & PROGRESS DAILY REPORT — {today_str}</b>",
         f"⏰ {now.strftime('%H:%M')} Myanmar",
         "",
-        "🟩 Match  🟨 Diff qty  🟥 Not filled  🟦 Extra filled",
+        "📝 <b>Letter Progress:</b>",
+        submit_line,
+        approved_line,
+        f"  👥 FT follow monitor: <b>{ft_str}</b>",
+        "",
+        "🟩 Match  🟨 Diff qty  🟥 Not filled  🟦 Extra filled  🟣 Req only",
         fmt_row_compare_5("Team", "Site ID", "Plan", "Refueled", "Diff"),
         "<code>" + "───────┼───────────┼───────┼───────┼──────" + "</code>",
     ]
 
-    green_total = yellow_total = red_total = blue_total = 0
+    green_total = yellow_total = red_total = blue_total = purple_total = 0
     diff_by_team: dict[str, list[str]] = {t: [] for t in teams_list}
+    req_only_by_team: dict[str, list[str]] = {t: [] for t in teams_list}
+    total_sites_count = 0
 
     for team in teams_list:
         sites_data = team_map[team]
         if not sites_data:
             continue
 
-        lines.append(f"\n🏷 <b>{team}</b>")
+        total_sites_count += len(sites_data)
+        lines.append(f"\n🏷 <b>{team} ({len(sites_data)} Sites)</b>")
         for site in sorted(sites_data.keys()):
             p = sites_data[site]["plan"]
             fill = sites_data[site]["refueled"]
+            q = sites_data[site]["req"]
             diff = p - fill
 
-            # Square icons logic
             if p > 0 and fill > 0 and diff == 0:
-                icon = "🟩"
-                green_total += 1
+                icon = "🟩"; green_total += 1
             elif p > 0 and fill > 0 and diff != 0:
-                icon = "🟨"
-                yellow_total += 1
+                icon = "🟨"; yellow_total += 1
                 diff_by_team[team].append(f"{site} ({p}L vs {fill}L)")
             elif p > 0 and fill == 0:
-                icon = "🟥"
-                red_total += 1
+                icon = "🟥"; red_total += 1
                 diff_by_team[team].append(f"{site} (Unfilled {p}L)")
             elif p == 0 and fill > 0:
-                icon = "🟦"
-                blue_total += 1
+                icon = "🟦"; blue_total += 1
                 diff_by_team[team].append(f"{site} (Unplanned {fill}L)")
+            elif p == 0 and fill == 0 and q > 0:
+                icon = "🟣"; purple_total += 1
+                req_only_by_team[team].append(f"{site} ({q}L)")
             else:
                 icon = "⬜"
 
@@ -581,11 +509,9 @@ def report_2(data: RefuelData):
 
     lines.append("<code>" + "───────┴───────────┴───────┴───────┴──────" + "</code>")
 
-    # Conclusion / Summary of Diff sites per Team at bottom
+    # Conclusion / Summary of Diff sites per Team
     lines.append("\n📌 <b>DIFF SITES SUMMARY BY TEAM:</b>")
     has_diff = False
-    total_sites_count = green_total + yellow_total + red_total + blue_total
-
     for team in teams_list:
         diff_list = diff_by_team[team]
         sites_data = team_map[team]
@@ -599,16 +525,28 @@ def report_2(data: RefuelData):
         else:
             lines.append(f"  • <b>{team}</b>: 100% Matched ✅")
 
-    if total_sites_count == 0:
-        lines.append("  ⚠️ No plan or refuel data today! (0% Matched)")
-    elif not has_diff:
-        lines.append("  🎉 All sites today are 100% matched!")
+    # Pending / Unfulfilled Team Requests section
+    has_req_pending = any(len(v) > 0 for v in req_only_by_team.values())
+    lines.append("\n⚠️ <b>PENDING TEAM REQUESTS (Chưa có Plan / Chưa Refuel):</b>")
+    if has_req_pending:
+        for team, req_list in req_only_by_team.items():
+            if req_list:
+                lines.append(f"  • <b>{team}</b> ({len(req_list)} sites): " + ", ".join(req_list[:5]))
+                if len(req_list) > 5:
+                    lines.append(f"    ... +{len(req_list)-5} more sites")
+    else:
+        lines.append("  🎉 100% Team requests have been planned / refueled.")
 
-    lines.append(f"\n🟩 <b>{green_total}</b>  🟨 <b>{yellow_total}</b>  🟥 <b>{red_total}</b>  🟦 <b>{blue_total}</b>")
+    lines.append(f"\n🟩 <b>{green_total}</b>  🟨 <b>{yellow_total}</b>  🟥 <b>{red_total}</b>  🟦 <b>{blue_total}</b>  🟣 <b>{purple_total}</b>")
     lines.append("\n🤖 <i>Auto report — Refuel Plan System</i>")
 
-    tg_send("\n".join(lines), "report2")
-    print("✅ Report 2 sent.")
+    tg_send("\n".join(lines), "report1")
+    print("✅ Combined Report 1 sent.")
+
+
+def report_2(data: RefuelData):
+    """Gộp chung vào Report 1."""
+    report_1(data)
 
 
 
