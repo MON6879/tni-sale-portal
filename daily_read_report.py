@@ -83,6 +83,10 @@ NOTE_KEYWORDS = [
     "daily eod task", "task & stats", "eod task",
     "4. report", "daily backlog", "daily task",   # broader match for Report 4
     "eod report", "end of day",
+    # Refuel Group 9 Note keywords (sent by @Phongha79)
+    "@raja ho", "refuel team sent plan", "who go to monitor refuel",
+    "team leader assign follow template who go to monitor refuel",
+    "team leader assign follow template",
 ]
 
 # Exclude self-generated reports from being mistaken as the Note/EOD message
@@ -251,11 +255,16 @@ def get_staff_from_staff_sheet() -> dict:
             result.setdefault(group_key, [])
             # Dedup theo tên hiển thị
             if not any(s["name"] == display_name for s in result[group_key]):
-                result[group_key].append({
+                item = {
                     "name":        display_name, # Tên hiển thị chính thức
                     "telegram_id": telegram_id,  # ID Cột A
                     "emp_id":      emp_id,
-                })
+                }
+                result[group_key].append(item)
+                # Tất cả nhân sự Technical Team đều thuộc danh sách theo dõi của REFUEL Group 9
+                result.setdefault("REFUEL", [])
+                if not any(s["name"] == display_name for s in result["REFUEL"]):
+                    result["REFUEL"].append(item)
 
         total = sum(len(v) for v in result.values())
         print(f"  📋 Staff sheet: {total} active staff across {len(result)} teams")
@@ -555,16 +564,16 @@ async def main():
         now_str  = myanmar_now()
         divider  = "━" * 30
 
-        # Helper: build per-member lines with ❓ for members not joined/mapped yet
+        # Helper: build per-member lines with icons (Green=Read, Yellow=Unread, Red=Not Joined)
         def member_lines(per_member):
             lines = []
             for p in per_member:
                 if p["d0"]:
-                    icon = "✅"
+                    icon = "🟩"
                 elif not p.get("id"):
-                    icon = "❓"  # Chưa tham gia / Chưa khớp ID Telegram
+                    icon = "🟥"  # Chưa tham gia / Chưa khớp ID Telegram
                 else:
-                    icon = "❌"  # Đã vào nhóm nhưng chưa đọc bài
+                    icon = "🟨"  # Đã vào nhóm nhưng chưa đọc bài
                 lines.append(
                     f"  {icon} {p['name']}: "
                     f"3Day:{p['d0']}/{p['d1']}/{p['d2']}  "
@@ -686,14 +695,15 @@ async def main():
 
 
 def log_read_group_to_gas(all_results: dict, date_str: str, now_str: str):
-    """POST collected read statistics to GAS to record into 'Read Group' sheet tab."""
+    """POST collected read statistics to GAS to record into 'Read Group' and 'Read Group Refuel' sheet tabs."""
     if not GAS_URL:
         return
-    records = []
+    records_main = []
+    records_refuel = []
     for gk, r in all_results.items():
         note_msg = r.get("note_preview", "")
         for p in r.get("per_member", []):
-            records.append({
+            rec = {
                 "date": date_str,
                 "time": now_str,
                 "team": gk,
@@ -704,17 +714,33 @@ def log_read_group_to_gas(all_results: dict, date_str: str, now_str: str):
                 "count_7day": p["d7"],
                 "count_month": p["month"],
                 "note_msg": note_msg,
-            })
-    if not records:
-        return
-    try:
-        resp = requests.post(GAS_URL, json={
-            "action": "log_read_group",
-            "records": records
-        }, timeout=30)
-        print(f"  💾 Logged {len(records)} records to 'Read Group' tab on Google Sheets")
-    except Exception as e:
-        print(f"  ⚠️  Failed to log to Read Group tab: {e}")
+            }
+            if gk == "REFUEL":
+                records_refuel.append(rec)
+            else:
+                records_main.append(rec)
+
+    # 1. Ghi log các đội vận hành chính vào tab 'Read Group'
+    if records_main:
+        try:
+            requests.post(GAS_URL, json={
+                "action": "log_read_group",
+                "records": records_main
+            }, timeout=30)
+            print(f"  💾 Logged {len(records_main)} records to 'Read Group' tab")
+        except Exception as e:
+            print(f"  ⚠️ Failed to log to Read Group tab: {e}")
+
+    # 2. Ghi log phân hệ Refuel vào tab 'Read Group Refuel'
+    if records_refuel:
+        try:
+            requests.post(GAS_URL, json={
+                "action": "log_read_group_refuel",
+                "records": records_refuel
+            }, timeout=30)
+            print(f"  💾 Logged {len(records_refuel)} records to 'Read Group Refuel' tab")
+        except Exception as e:
+            print(f"  ⚠️ Failed to log to Read Group Refuel tab: {e}")
 
 
 if __name__ == "__main__":
