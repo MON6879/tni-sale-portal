@@ -9,7 +9,24 @@
 >    - Deployment ID: `AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-` (Version `@89`).
 >    - Luồng Relay: `botlookup_relay.py` (chạy nhịp :06 và :36 MMT).
 >    - Bảng Tính: `1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow` (GID 0).
-> 5. **Nguyên Tắc Trọng Tâm**: Chỉ can thiệp vào Site Down khi và chỉ khi có **MẬT KHẨU ĐÚNG** từ Người Dùng. Mọi phiên AI bình thường phải coi Site Down là phân hệ Black Box bất khả xâm phạm!
+---
+
+# 🔒 STRICT REPO ISOLATION RULE: REPOSITORY NÀO PHỤC VỤ PHÂN HỆ ĐÓ — TUYỆT ĐỐI CẤM TIỆN TAY COPY / ĐẨY FILE CHÉO (STRICT DEDICATED REPOSITORY & ZERO CROSS-POLLUTION POLICY)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (REPOSITORY ISOLATION POLICY)**:
+> 1. **Repo `MON6879/tni-sitedown-relay` (`tni-sitedown`)**: CHỈ PHỤC VỤ DUY NHẤT phân hệ **Site Down** (`botlookup_relay.py`, `apps_script_sitedown`). **TUYỆT ĐỐI CẤM** copy, sync, commit hoặc push bất kỳ file nào của phân hệ khác (Refuel, Cable, MDG, Attendance, TC, v.v.) vào repository này!
+> 2. **Repo `phonghdpxd-cmd/tni-bot` (`Task and WO`)**: Chuyên phục vụ các tác vụ vận hành Train, Refuel, Cable, Daily Report, Attendance, Auditor.
+> 3. **Repo `MON6879/TNI-DONE` (`tni-search`)**: Chuyên phục vụ Web UI & Hub tìm kiếm thông tin vận hành.
+> 4. **CẤM TUYỆT ĐỐI "Tiện Tay Sync Chéo"**: Khi sửa code của phân hệ A, CHỈ ĐƯỢC PHÉP đồng bộ và push vào đúng repo quản lý phân hệ A đó. CẤM copy tràn lan sang repo khác!
+
+---
+
+# ❓ STRICT RULE: NẾU CÓ BẤT KỲ ĐIỂM NÀO CHƯA RÕ THÌ BẮT BUỘC PHẢI HỎI NGƯỜI DÙNG TRƯỚC — TUYỆT ĐỐI CẤM TỰ Ý ĐOÁN MÒ (STRICT ASK-FIRST & ZERO-ASSUMPTION POLICY)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (ASK-FIRST POLICY)**:
+> 1. **Thấy Chưa Rõ Là Phải Hỏi Ngay (Ask Before Action)**: Khi Người Dùng đưa ra yêu cầu mà phạm vi, logic, phân hệ hay repo chưa rõ ràng 100%, AI **BẮT BUỘC PHẢI DỪNG LẠI VÀ HỎI NGAY** Người Dùng để làm rõ: *"Tôi muốn làm rõ điểm này: [...] Anh muốn xử lý theo phương án nào?"*.
+> 2. **CẤM Tuyệt Đối Tự Đoán Mò (Zero Hallucinated Assumptions)**: Tuyệt đối KHÔNG ĐƯỢC tự ý suy diễn ý định của Người Dùng rồi sửa tiện tay, sửa lan man sang các file hay phân hệ không liên quan!
+> 3. **GAS Nào Sửa GAS Nấy — Đúng Dự Án Chuyên Biệt**: Mọi thay đổi logic trên GAS bắt buộc phải xác định đúng Script ID độc lập trước khi mở file hay deploy!
 
 ---
 
@@ -154,6 +171,28 @@
 # 🎯 STRICT RULE: PHẢI XÁC ĐỊNH ĐÚNG DỰ ÁN GAS TRƯỚC KHI SỬA — TUYỆT ĐỐI KHÔNG TIỆN TAY UPDATE TẦM BẬY VÀO CHỖ KHÁC (EXACT DEDICATED GAS TARGETING POLICY)
 
 > ⚠️ **QUY TẮC BẮT BUỘC (EXACT GAS PROJECT TARGETING)**: TRƯỚC KHI SỬA HOẶC THÊM BẤT KỲ TÍNH NĂNG NÀO TRÊN GOOGLE APPS SCRIPT (GAS), BẮT BUỘC PHẢI TRA CỨU ĐỐI CHIẾU ĐÚNG DỰ ÁN GAS CHUYÊN BIỆT THEO BẢN ĐỒ ĐỊNH DANH 4 DỰ ÁN GAS. TUYỆT ĐỐI KHÔNG ĐƯỢC TIỆN TAY SỬA NHẦM, UPDATE TẦM BẬY HOẶC NHỒI NHÉT CODE CỦA DỰ ÁN NÀY SANG DỰ ÁN KHÁC!
+
+---
+
+# 👥 STRICT SSOT RULE: QUY TẮC NGUỒN NHÂN SỰ DUY NHẤT & LỌC ĐỘNG RESIGN (SSOT STAFF ROSTER & DYNAMIC ACTIVE STAFF FILTER POLICY)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (SSOT STAFF ROSTER & ZERO-HARDCODED-RANGE POLICY)**:
+> 1. **Nguồn Dữ Liệu Nhân Sự Duy Nhất (Single Source of Truth - SSOT)**: MỌI script báo cáo, thống kê, kiểm toán (Report 4, Report 5, Report 6, Refuel, Attendance, v.v.) BẮT BUỘC phải lấy danh sách nhân sự từ tab **`Staff`** (GID `1684930643`) trong Spreadsheet `1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8`.
+> 2. **Tự Động Lọc Bỏ 100% Nhân Viên Đã Nghỉ Việc (Resign Filter)**: BẮT BUỘC kiểm tra Cột N (`Exit / Status`). Nếu Cột N có nội dung (chứa `Resign` hoặc ngày nghỉ việc) $\rightarrow$ LOẠI BỎ 100%, TUYỆT ĐỐI KHÔNG đưa vào danh sách làm việc (Active)!
+> 3. **CẤM TUYỆT ĐỐI Hardcode Dải Hàng Tĩnh (Zero Hardcoded Row Ranges)**: CẤM TUYỆT ĐỐI việc dùng `range(3, 59)`, `rows 4-38`, `rows 52-55`... BẮT BUỘC phải quét toàn bộ bảng động dựa trên Cột M (Team: `Team 01`..`Team 05`) và Cột N (Active/Resign).
+> 4. **Định Danh Bằng Telegram User ID Dạng Số (Cột A)**: Ưu tiên tuyệt đối định danh bằng Telegram User ID dạng số bất biến ở Cột A. Fallback so khớp chuỗi tên (Cột F) đã được chuẩn hóa (lowercase, bỏ khoảng trắng) khi chưa có ID.
+> 5. **CẤM Lấy Bảng Chia Việc Vận Hành Làm Nguồn Nhân Sự**: Tab `Task remain` (GID `133591305`) chỉ là bảng chia việc theo đợt / theo dõi WO, TUYỆT ĐỐI KHÔNG được dùng làm nguồn danh sách nhân sự!
+
+---
+
+# 🛑 STRICT ANTI-LOOP & CIRCUIT-BREAKER RULE: THẤY LẶP LÀ DỪNG NGAY — CẤM TỰ Ý SPAM TIN RÁC VÀO GROUP & CHỈ BÁO VỀ GHẾ LỖI ADMIN (STRICT ANTI-LOOP & ZERO-SPAM POLICY)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (ANTI-SPAM & CIRCUIT-BREAKER POLICY)**:
+> 1. **Thấy Lặp Dừng Ngay (Instant Circuit-Breaker on Loop Detection)**: Khi phát hiện bất kỳ dấu hiệu lặp tin nhắn mẫu, bảng cũ, hoặc lỗi dữ liệu nguồn $\rightarrow$ BẮT BUỘC NGỪNG GỬI VÀO GROUP NGAY LẬP TỨC. Tuyệt đối CẤM việc tự ý retry liên tục gửi lại tin rác / bảng cũ vào các nhóm Telegram làm việc!
+> 2. **Tin Lỗi Chỉ Báo Về Ghế Giám Sát (DM Admin `6859790680`)**: Mọi cảnh báo kỹ thuật, lỗi công thức, lỗi nhân sự, lỗi bảng đứng CHỈ ĐƯỢC PHÉP báo cáo riêng về DM Admin `6859790680`, TUYỆT ĐỐI CẤM gửi tin cảnh báo lỗi nội bộ vào các nhóm Team / Control!
+> 3. **Cấm Gửi Bảng Dữ Liệu Cũ (Anti-Stale Dispatch Guard)**: Mọi bản tin báo cáo trước khi phát BẮT BUỘC phải kiểm tra tính tươi mới của ngày tháng. Nếu dữ liệu bị đứng/chưa cập nhật $\rightarrow$ Báo động về DM Admin, TUYỆT ĐỐI KHÔNG gửi bảng cũ hôm trước gây nhiễu loạn thông tin!
+> 4. **Phòng Thủ Công Thức Sheet (Formula-Shield & Safe Parsing)**: Mọi hàm đọc Google Sheets BẮT BUỘC phải cô lập các ô lỗi công thức (`#REF!`, `#VALUE!`, `#DIV/0!`, `#NAME?`, `#CIRC!`) thành giá trị rỗng an toàn, TUYỆT ĐỐI KHÔNG để script bị crash khi bảng tính bị người dùng sửa công thức.
+> 5. **Khóa Chặt Trí Nhớ Chống Tái Diễn Lỗi (Zero-Recurrence Core Law)**: Sau mỗi lần sửa bất kỳ lỗi nào, AI BẮT BUỘC phải ghi nhận chi tiết nguyên nhân gốc và phương án xử lý vào `AGENTS.md` và `history/backup_context_...md` để triệt tiêu 100% nguy cơ tái diễn!
 
 ---
 
