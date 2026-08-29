@@ -510,20 +510,20 @@ def report_1(data: RefuelData):
     lines.append("<code>" + "───────┴───────────┴───────┴───────┴──────" + "</code>")
 
     # Conclusion / Summary of Diff sites per Team
-    lines.append("\n📌 <b>DIFF SITES SUMMARY BY TEAM:</b>")
-    has_diff = False
+    diff_summary_lines = []
     for team in teams_list:
         diff_list = diff_by_team[team]
         sites_data = team_map[team]
         if diff_list:
-            has_diff = True
-            lines.append(f"  • <b>{team}</b> ({len(diff_list)} sites): " + ", ".join(diff_list[:5]))
+            diff_summary_lines.append(f"  • <b>{team}</b> ({len(diff_list)} sites): " + ", ".join(diff_list[:5]))
             if len(diff_list) > 5:
-                lines.append(f"    ... +{len(diff_list)-5} more sites")
-        elif not sites_data:
-            lines.append(f"  • <b>{team}</b>: 0% (No data today) ⚠️")
-        else:
-            lines.append(f"  • <b>{team}</b>: 100% Matched ✅")
+                diff_summary_lines.append(f"    ... +{len(diff_list)-5} more sites")
+        elif sites_data:
+            diff_summary_lines.append(f"  • <b>{team}</b>: 100% Matched ✅")
+
+    if diff_summary_lines:
+        lines.append("\n📌 <b>DIFF SITES SUMMARY BY TEAM:</b>")
+        lines.extend(diff_summary_lines)
 
     # Pending / Unfulfilled Team Requests section
     has_req_pending = any(len(v) > 0 for v in req_only_by_team.values())
