@@ -52,20 +52,23 @@ REPORT_TITLE_PREFIX = {
 }
 
 def tg_send(text: str, report_key: str = "") -> bool:
-    """Gửi tin nhắn báo cáo lên Telegram group (KHÔNG xóa tin nhắn cũ của Report 1, Report 2)."""
-    url = f"https://api.telegram.org/bot{REFUEL_BOT_TOKEN}/sendMessage"
+    """Gửi tin nhắn báo cáo lên Telegram group và tự động xóa tin nhắn cũ cùng tiêu đề."""
+    prefix = REPORT_TITLE_PREFIX.get(report_key, "")
+    state_key = f"refuel_plan_{report_key}_{REFUEL_CHAT_ID}"
     try:
-        resp = requests.post(
-            url,
-            json={"chat_id": REFUEL_CHAT_ID, "text": text, "parse_mode": "HTML"},
-            timeout=60,
+        new_id = tg_send_fresh(
+            chat_id=REFUEL_CHAT_ID,
+            text=text,
+            state_key=state_key,
+            parse_mode="HTML",
+            title_prefix=prefix,
+            bot_token=REFUEL_BOT_TOKEN
         )
-        res_json = resp.json()
-        if res_json.get("ok"):
-            print(f"✅ Report {report_key} sent to {REFUEL_CHAT_ID}")
+        if new_id:
+            print(f"✅ Report {report_key} sent fresh (msg_id={new_id}) to {REFUEL_CHAT_ID}")
             return True
         else:
-            print(f"❌ Telegram send failed: {resp.text[:200]}", file=sys.stderr)
+            print(f"❌ Failed to send Report {report_key} fresh", file=sys.stderr)
             return False
     except Exception as e:
         print(f"❌ Telegram send exception: {e}", file=sys.stderr)
@@ -494,9 +497,7 @@ def report_1(data: RefuelData):
     print("✅ Report 1 sent.")
 
 
-def report_3(data: RefuelData):
-    """Alias cho report_1 để tương thích với các script cũ."""
-    report_1(data)
+
 
 
 def report_2(data: RefuelData):
@@ -610,6 +611,8 @@ def report_2(data: RefuelData):
     print("✅ Report 2 sent.")
 
 
+
+
 def report_4(data: RefuelData):
     """Alias cho report_2 để tương thích với các script cũ."""
     report_2(data)
@@ -666,7 +669,7 @@ def main():
     sys.argv = new_argv
 
     parser = argparse.ArgumentParser(description="TNI Refuel Plan Reports")
-    parser.add_argument("--report", type=int, choices=[1, 2, 3, 4, 5, 21], nargs="+",
+    parser.add_argument("--report", type=int, choices=[1, 2, 4, 5, 21], nargs="+",
                         help="Report numbers (1, 2, 3, 4, 5). Omit to run default.")
     args = parser.parse_args()
 
@@ -682,10 +685,11 @@ def main():
         else:
             reports_to_run.append(r)
 
-    if 1 in reports_to_run or 3 in reports_to_run:
+    if 1 in reports_to_run:
         report_1(data)
     if 2 in reports_to_run or 4 in reports_to_run:
         report_2(data)
+
     if 5 in reports_to_run:
         report_5(data)
 

@@ -596,6 +596,7 @@ async def audit_telegram_messages_telethon():
 
     now_mmt = datetime.now(TZ_MM)
     today_start = now_mmt.replace(hour=0, minute=0, second=0, microsecond=0)
+    scan_start_24h = now_mmt - timedelta(hours=24)
     current_time_str = now_mmt.strftime("%H:%M")
     current_total_min = now_mmt.hour * 60 + now_mmt.minute
 
@@ -603,27 +604,28 @@ async def audit_telegram_messages_telethon():
         async with TelegramClient(StringSession(TELEGRAM_SESSION), TELEGRAM_API_ID, TELEGRAM_API_HASH) as client:
             logger.info("📡 Đã kết nối Telethon Client để quét kiểm toán tin nhắn...")
 
-            # Lưu cache tin nhắn từng nhóm
+            # Lưu cache tin nhắn từng nhóm trong 24 giờ qua
             group_messages = {}
             for gkey, gid in ALL_MONITORED_GROUPS.items():
                 try:
                     msgs = []
-                    async for msg in client.iter_messages(gid, limit=80):
+                    async for msg in client.iter_messages(gid, limit=100):
                         if not msg.text:
                             continue
                         msg_date_mmt = msg.date.astimezone(TZ_MM)
-                        if msg_date_mmt >= today_start:
+                        if msg_date_mmt >= scan_start_24h:
                             msgs.append({
                                 "id": msg.id,
                                 "date": msg_date_mmt,
                                 "time_str": msg_date_mmt.strftime("%H:%M"),
+                                "date_str": msg_date_mmt.strftime("%d/%m/%Y"),
                                 "total_min": msg_date_mmt.hour * 60 + msg_date_mmt.minute,
                                 "sender_id": msg.sender_id,
                                 "text": msg.text,
                                 "first_line": msg.text.split("\n")[0].strip()
                             })
                     group_messages[gkey] = msgs
-                    logger.info(f"   📥 Quét nhóm {gkey} ({gid}): lấy {len(msgs)} tin nhắn hôm nay.")
+                    logger.info(f"   📥 Quét nhóm {gkey} ({gid}): lấy {len(msgs)} tin nhắn trong 24h qua.")
                 except Exception as ge:
                     logger.warning(f"   ⚠️ Lỗi quét nhóm {gkey} ({gid}): {ge}")
                     group_messages[gkey] = []
