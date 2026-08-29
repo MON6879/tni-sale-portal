@@ -490,20 +490,19 @@ def report_1(data: RefuelData):
         approved_line,
         f"  👥 FT follow monitor: <b>{ft_str}</b>",
         "",
-        "🟩 Match/Refueled  🟨 Planned (Unfilled)  🟥 No Plan (Need Refuel)",
+        "🟩 Refueled  🟨 No Plan (In Request)  🟥 Unlisted (Plan/Refuel without Req)",
         fmt_row_compare_5("Team", "Site ID", "Plan", "Refueled", "Diff"),
         "<code>" + "───────┼───────────┼───────┼───────┼──────" + "</code>",
     ]
 
-    green_total = yellow_total = red_total = 0
-    diff_by_team: dict[str, list[str]] = {t: [] for t in teams_list}
+    green_total = yellow_total = red_total = blue_total = 0
 
     for team in teams_list:
         sites_data = team_map[team]
         if not sites_data:
             continue
 
-        # Split into 2 groups: Group 1 (Planned/Refueled) and Group 2 (No Plan - Red)
+        # Split into 2 groups: Group 1 (Planned/Refueled/Unlisted) and Group 2 (No Plan - Yellow)
         group_planned = []
         group_no_plan = []
 
@@ -514,43 +513,43 @@ def report_1(data: RefuelData):
             diff = p - fill
 
             # NEW COLOR RULES:
-            # 1. 🟩 XANH LÁ: Có Plan và ĐÃ REFUEL (không cần so sánh số lượng) hoặc Đổ ngoài Plan
-            if (p > 0 and fill > 0) or (p == 0 and fill > 0):
+            # 1. 🟥 ĐỎ: Không có trong danh sách Request mà lại có Plan hoặc Refuel (Unlisted)
+            if q == 0 and (p > 0 or fill > 0):
+                icon = "🟥"
+                red_total += 1
+                diff_str = "=" if diff == 0 else f"{diff:+d}L"
+                group_planned.append(f"{icon} {fmt_row_compare_5(team, site, f'{p}L', f'{fill}L', diff_str)}")
+            # 2. 🟩 XANH LÁ: Có trong Request, có Plan và ĐÃ REFUEL
+            elif fill > 0:
                 icon = "🟩"
                 green_total += 1
                 diff_str = "=" if diff == 0 else f"{diff:+d}L"
                 group_planned.append(f"{icon} {fmt_row_compare_5(team, site, f'{p}L', f'{fill}L', diff_str)}")
-                if p > 0 and fill > 0 and diff != 0:
-                    diff_by_team[team].append(f"{site} ({p}L vs {fill}L)")
-                elif p == 0 and fill > 0:
-                    diff_by_team[team].append(f"{site} (Unplanned {fill}L)")
-            # 2. 🟨 VÀNG: Có trong Plan nhưng CHƯA REFUEL
+            # 3. 🟦 XANH DƯƠNG: Có trong Request, có Plan nhưng CHƯA REFUEL
             elif p > 0 and fill == 0:
-                icon = "🟨"
-                yellow_total += 1
+                icon = "🟦"
+                blue_total += 1
                 diff_str = f"+{p}L"
                 group_planned.append(f"{icon} {fmt_row_compare_5(team, site, f'{p}L', f'{fill}L', diff_str)}")
-                diff_by_team[team].append(f"{site} (Unfilled {p}L)")
-            # 3. 🟥 ĐỎ: Có Request nhưng CHƯA CÓ PLAN
-            elif p == 0 and fill == 0 and q > 0:
-                icon = "🟥"
-                red_total += 1
+            # 4. 🟨 VÀNG: Có trong Request nhưng CHƯA CÓ PLAN (No Plan)
+            elif q > 0 and p == 0 and fill == 0:
+                icon = "🟨"
+                yellow_total += 1
                 diff_str = f"-{q}L"
                 group_no_plan.append(f"{icon} {fmt_row_compare_5(team, site, f'{p}L', f'{fill}L', diff_str)}")
-                diff_by_team[team].append(f"{site} (No Plan - Req {q}L)")
 
         if group_planned or group_no_plan:
             total_sites = len(group_planned) + len(group_no_plan)
             lines.append(f"\n🏷 <b>{team} ({total_sites} Sites)</b>")
-            # In các trạm có Plan / Đã đổ trước
+            # In các trạm có Plan / Đã đổ / Ngoài danh sách trước
             for row in group_planned:
                 lines.append(row)
-            # In các trạm chưa có Plan (Đỏ) ở phía dưới
+            # In các trạm có Request nhưng chưa có Plan (Vàng) ở phía dưới
             for row in group_no_plan:
                 lines.append(row)
 
     lines.append("<code>" + "───────┴───────────┴───────┴───────┴──────" + "</code>")
-    lines.append(f"\n🟩 <b>{green_total}</b> (Refueled)  🟨 <b>{yellow_total}</b> (Unfilled)  🟥 <b>{red_total}</b> (No Plan)")
+    lines.append(f"\n🟩 <b>{green_total}</b> (Refueled)  🟨 <b>{yellow_total}</b> (No Plan)  🟥 <b>{red_total}</b> (Unlisted)")
     lines.append("\n🤖 <i>Auto report — Refuel Plan System</i>")
 
     tg_send("\n".join(lines), "report1")
