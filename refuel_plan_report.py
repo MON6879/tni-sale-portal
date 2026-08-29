@@ -676,11 +676,12 @@ def report_5(data: RefuelData):
         "🤖 <i>Auto report — Ghế Giám Sát Refuel Read System</i>"
     ]
 
-    # Gửi tới Ghế Giám Sát / Admin DM (6859790680)
+    # Gửi qua Bot 2 (2. TNI Auto Report Daily) về DM Admin (6859790680)
+    BOT_2_TOKEN = os.getenv("SEND_BOT_TOKEN", "8647102342:AAGwI95-xeyFfJZusOOrIPVBER-z6taZHZI")
     ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID", "6859790680")
     report_text = "\n".join(lines)
 
-    url = f"https://api.telegram.org/bot{REFUEL_BOT_TOKEN}/sendMessage"
+    url = f"https://api.telegram.org/bot{BOT_2_TOKEN}/sendMessage"
     try:
         resp = requests.post(url, json={
             "chat_id": ADMIN_CHAT_ID,
