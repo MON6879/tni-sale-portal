@@ -201,14 +201,14 @@ class RefuelData:
             ws = wb["Telegram ID"]
             for r in range(2, ws.max_row + 1):
                 tg_id = ws.cell(row=r, column=1).value   # Cột A: Telegram ID
+                val_f = ws.cell(row=r, column=6).value   # Cột F: Tên nhân sự
+                pos   = ws.cell(row=r, column=12).value  # Cột L: Chức vụ
+                team  = ws.cell(row=r, column=13).value  # Cột M: Team
 
-                # Lấy tên từ cột F (cột 6), tránh lấy số điện thoại ở cột B (cột 2)
                 name = None
-                val_f = ws.cell(row=r, column=6).value
                 if val_f and str(val_f).strip() and str(val_f).strip().lower() not in ("none", "0"):
                     name = str(val_f).strip()
                 else:
-                    # Fallback sang các cột khác trừ cột B (2)
                     for col in (3, 4, 5):
                         val = ws.cell(row=r, column=col).value
                         if val and str(val).strip() and str(val).strip().lower() not in ("none", "0"):
@@ -218,11 +218,26 @@ class RefuelData:
                 if not name and not tg_id:
                     continue  # Dòng trống hoàn toàn → bỏ qua
 
+                name_str = name or "Unknown"
+                if pos and "team leader" in str(pos).lower():
+                    if "(TL)" not in name_str:
+                        name_str = f"{name_str} (TL)"
+
+                team_str = str(team).strip() if team else "Team 1"
                 tg_id_str = str(tg_id).strip() if tg_id is not None else ""
-                if not tg_id_str or tg_id_str == "None" or tg_id_str == "0" or not tg_id_str.isdigit():
-                    self.not_joined.append(name or "Unknown")
+                has_id = bool(tg_id_str and tg_id_str.isdigit() and int(tg_id_str) > 0)
+
+                member_obj = {
+                    "id": tg_id_str if has_id else "",
+                    "name": name_str,
+                    "team": team_str,
+                    "has_id": has_id
+                }
+
+                if has_id:
+                    self.members.append(member_obj)
                 else:
-                    self.members.append({"id": tg_id_str, "name": name or "Unknown"})
+                    self.not_joined.append(member_obj)
 
     def _parse_targets(self, wb):
         if "Template" in wb.sheetnames:
@@ -578,57 +593,45 @@ def report_5(data: RefuelData):
     date_str = now.strftime("%d/%m/%Y")
     time_str = now.strftime("%H:%M")
 
-    not_joined = [n for n in data.not_joined if "nyi nyi" not in n.lower()]   # loại bỏ nhân viên không có Team
-    joined     = [m for m in data.members if "nyi nyi" not in m.get("name", "").lower()]      # list of {id, name} (đã có ID)
-    total_members = len(joined) + len(not_joined)
+    all_members = data.members + data.not_joined
+    total_all = len(all_members)
+    total_read = sum(1 for m in all_members if m.get("has_id"))
+    total_not_joined = sum(1 for m in all_members if not m.get("has_id"))
 
-    # Phân loại Partners vs Teams
-    partners = [
-        {"name": "Raja HO", "has_id": True},
-        {"name": "Sunil", "has_id": True},
-        {"name": "Sunil Fuel", "has_id": True},
-        {"name": "Aung Naing Refuel", "has_id": True},
-    ]
-
-    staff_by_team = {"Team 1": [], "Team 2": [], "Team 3": [], "Team 4": []}
-    
-    # Đọc danh sách nhân sự từ tab Telegram ID / Staff
-    for m in joined:
-        m_name = m.get("name", "Unknown")
-        # Tìm team
-        t_key = "Team 1"
-        for tk in ["Team 2", "Team 3", "Team 4"]:
-            if tk.lower() in m_name.lower():
-                t_key = tk
-        staff_by_team[t_key].append({"name": m_name, "has_id": True})
-
-    for name in not_joined:
-        t_key = "Team 4" if ("Kyaw" in name or "Htun" in name or "Myo" in name) else ("Team 2" if "Si Thu" in name else "Team 1")
-        staff_by_team[t_key].append({"name": name, "has_id": False})
-
-    total_all = len(partners) + len(joined) + len(not_joined)
-    total_read = len(partners) + len(joined)
-    total_not_joined = len(not_joined)
+    # Phân nhóm động 100% từ Cột M (Team) của Google Sheet
+    teams_dict = {}
+    for m in all_members:
+        t_raw = m.get("team", "Team 1")
+        t_norm = "Team 1"
+        if any(k in t_raw.lower() for k in ["partner", "mgmt", "management"]):
+            t_norm = "Partner / Management"
+        elif "2" in t_raw or "5" in t_raw:
+            t_norm = "Team 2"
+        elif "3" in t_raw:
+            t_norm = "Team 3"
+        elif "4" in t_raw:
+            t_norm = "Team 4"
+        elif "1" in t_raw:
+            t_norm = "Team 1"
+        else:
+            t_norm = t_raw
+        teams_dict.setdefault(t_norm, []).append(m)
 
     # 1. Ghi nhận log vào tab 'Read Group Refuel' qua GAS API
     gas_records = []
-    for p in partners:
+    for m in all_members:
+        has_id = m.get("has_id", False)
         gas_records.append({
-            "date": date_str, "time": time_str, "team": "Partner",
-            "name": p["name"], "telegram_id": "PARTNER", "status": "Read",
-            "trend_3day": "'1/1/1", "count_7day": 7, "count_month": 30, "note_msg": "Partner / Management"
-        })
-    for m in joined:
-        gas_records.append({
-            "date": date_str, "time": time_str, "team": "Group 9 Refuel",
-            "name": m.get("name", "Unknown"), "telegram_id": str(m.get("id", "")), "status": "Read",
-            "trend_3day": "'1/1/1", "count_7day": 7, "count_month": 30, "note_msg": "Technical Team Active"
-        })
-    for name in not_joined:
-        gas_records.append({
-            "date": date_str, "time": time_str, "team": "Group 9 Refuel",
-            "name": name, "telegram_id": "", "status": "Not Joined",
-            "trend_3day": "'0/0/0", "count_7day": 0, "count_month": 0, "note_msg": "Not yet joined Telegram Group 9"
+            "date": date_str,
+            "time": time_str,
+            "team": m.get("team", "Group 9 Refuel"),
+            "name": m.get("name", "Unknown"),
+            "telegram_id": str(m.get("id", "")),
+            "status": "Read" if has_id else "Not Joined",
+            "trend_3day": "'1/1/1" if has_id else "'0/0/0",
+            "count_7day": 7 if has_id else 0,
+            "count_month": 30 if has_id else 0,
+            "note_msg": "Group 9 Refuel Dynamic Sheet"
         })
 
     gas_url = (
@@ -645,7 +648,7 @@ def report_5(data: RefuelData):
         except Exception as ex_gas:
             print(f"  ⚠️ Error logging to Read Group Refuel: {ex_gas}")
 
-    # 2. Xây dựng tin nhắn báo cáo chuẩn phân tầng Partner -> Team 1..4
+    # 2. Xây dựng tin nhắn báo cáo chuẩn phân tầng động từ Sheet
     divider = "━━━━━━━━━━━━━━━━━━━━━"
     lines = [
         f"📋 <b>6. Report — Refuel Note Read Report — Group 9</b>",
@@ -655,21 +658,24 @@ def report_5(data: RefuelData):
         divider,
         f"👥 Total: <b>{total_all}</b>  |  🟩 Read: <b>{total_read}</b>  |  🟨 Unread: <b>0</b>  |  🟥 Not Joined: <b>{total_not_joined}</b>",
         divider,
-        "\n🏷️ <b>Partner / Management</b>"
     ]
 
-    for p in partners:
-        lines.append(f"  🟩 <b>{p['name']}</b>: 3Day:1/1/1  7Day:7  Month:30")
+    # Hiển thị Partner / Management đầu tiên nếu có trong Sheet
+    if "Partner / Management" in teams_dict:
+        lines.append("\n🏷️ <b>Partner / Management</b>")
+        for s in sorted(teams_dict["Partner / Management"], key=lambda x: (not x.get("has_id"), x.get("name", ""))):
+            icon = "🟩" if s.get("has_id") else "🟥"
+            trend = "3Day:1/1/1  7Day:7  Month:30" if s.get("has_id") else "3Day:0/0/0  7Day:0  Month:0"
+            lines.append(f"  {icon} <b>{s.get('name', 'Unknown')}</b>: {trend}")
 
+    # Tiếp theo lần lượt Team 1, Team 2, Team 3, Team 4 từ Sheet
     for tk in ["Team 1", "Team 2", "Team 3", "Team 4"]:
-        members_t = staff_by_team[tk]
-        if not members_t:
-            continue
-        lines.append(f"\n🏷️ <b>{tk}</b>")
-        for s in sorted(members_t, key=lambda x: (not x["has_id"], x["name"])):
-            icon = "🟩" if s["has_id"] else "🟥"
-            trend = "3Day:1/1/1  7Day:7  Month:30" if s["has_id"] else "3Day:0/0/0  7Day:0  Month:0"
-            lines.append(f"  {icon} <b>{s['name']}</b>: {trend}")
+        if tk in teams_dict:
+            lines.append(f"\n🏷️ <b>{tk}</b>")
+            for s in sorted(teams_dict[tk], key=lambda x: (not x.get("has_id"), x.get("name", ""))):
+                icon = "🟩" if s.get("has_id") else "🟥"
+                trend = "3Day:1/1/1  7Day:7  Month:30" if s.get("has_id") else "3Day:0/0/0  7Day:0  Month:0"
+                lines.append(f"  {icon} <b>{s.get('name', 'Unknown')}</b>: {trend}")
 
     lines += [
         divider,
