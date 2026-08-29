@@ -52,23 +52,20 @@ REPORT_TITLE_PREFIX = {
 }
 
 def tg_send(text: str, report_key: str = "") -> bool:
-    """Gửi tin nhắn báo cáo lên Telegram group và tự động xóa tin nhắn cũ cùng tiêu đề."""
-    prefix = REPORT_TITLE_PREFIX.get(report_key, "")
-    state_key = f"refuel_plan_{report_key}_{REFUEL_CHAT_ID}"
+    """Gửi tin nhắn báo cáo lên Telegram group (KHÔNG xóa tin nhắn cũ)."""
+    url = f"https://api.telegram.org/bot{REFUEL_BOT_TOKEN}/sendMessage"
     try:
-        new_id = tg_send_fresh(
-            chat_id=REFUEL_CHAT_ID,
-            text=text,
-            state_key=state_key,
-            parse_mode="HTML",
-            title_prefix=prefix,
-            bot_token=REFUEL_BOT_TOKEN
+        resp = requests.post(
+            url,
+            json={"chat_id": REFUEL_CHAT_ID, "text": text, "parse_mode": "HTML"},
+            timeout=60,
         )
-        if new_id:
-            print(f"✅ Report {report_key} sent fresh (msg_id={new_id}) to {REFUEL_CHAT_ID}")
+        res_json = resp.json()
+        if res_json.get("ok"):
+            print(f"✅ Report {report_key} sent to {REFUEL_CHAT_ID}")
             return True
         else:
-            print(f"❌ Failed to send Report {report_key} fresh", file=sys.stderr)
+            print(f"❌ Telegram send failed: {resp.text[:200]}", file=sys.stderr)
             return False
     except Exception as e:
         print(f"❌ Telegram send exception: {e}", file=sys.stderr)
