@@ -633,15 +633,15 @@ def report_5(data: RefuelData):
         f"⏰ Read Window: 04:00 - 23:59 Myanmar",
         f"📌 Shows who read the Refuel Note message during active window.",
         divider,
-        f"👥 Team Members: <b>{total_members}</b>  |  ✅ Read: <b>{len(joined)}</b>  |  ❌ Unread: <b>0</b>  |  ❓ Not Joined: <b>{len(not_joined)}</b>",
+        f"👥 Team Members: <b>{total_members}</b>  |  🟩 Read: <b>{len(joined)}</b>  |  🟨 Unread: <b>0</b>  |  🟥 Not Joined: <b>{len(not_joined)}</b>",
         divider,
     ]
 
     for m in sorted(joined, key=lambda x: x.get("name", "")):
-        lines.append(f"  ✅ <b>{m.get('name', 'Unknown')}</b>: 3Day:1/1/1  7Day:7  Month:30")
+        lines.append(f"  🟩 <b>{m.get('name', 'Unknown')}</b>: 3Day:1/1/1  7Day:7  Month:30")
 
     for name in sorted(not_joined):
-        lines.append(f"  ❓ <b>{name}</b>: 3Day:0/0/0  7Day:0  Month:0")
+        lines.append(f"  🟥 <b>{name}</b>: 3Day:0/0/0  7Day:0  Month:0")
 
     lines += [
         divider,
