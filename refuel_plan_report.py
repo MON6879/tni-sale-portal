@@ -17,7 +17,7 @@ Cách chạy:
   python refuel_plan_report.py --report 5
   python refuel_plan_report.py            # Chạy toàn bộ 5 báo cáo
 """
-import os, sys, argparse, requests
+import os, sys, argparse, requests, re
 import openpyxl
 from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
@@ -550,23 +550,6 @@ def report_1(data: RefuelData):
                 lines.append(row)
 
     lines.append("<code>" + "───────┴───────────┴───────┴───────┴──────" + "</code>")
-
-    # Conclusion / Summary of Diff sites per Team
-    diff_summary_lines = []
-    for team in teams_list:
-        diff_list = diff_by_team[team]
-        sites_data = team_map[team]
-        if diff_list:
-            diff_summary_lines.append(f"  • <b>{team}</b> ({len(diff_list)} sites): " + ", ".join(diff_list[:5]))
-            if len(diff_list) > 5:
-                diff_summary_lines.append(f"    ... +{len(diff_list)-5} more sites")
-        elif sites_data:
-            diff_summary_lines.append(f"  • <b>{team}</b>: 100% Matched ✅")
-
-    if diff_summary_lines:
-        lines.append("\n📌 <b>DIFF SITES SUMMARY BY TEAM:</b>")
-        lines.extend(diff_summary_lines)
-
     lines.append(f"\n🟩 <b>{green_total}</b> (Refueled)  🟨 <b>{yellow_total}</b> (Unfilled)  🟥 <b>{red_total}</b> (No Plan)")
     lines.append("\n🤖 <i>Auto report — Refuel Plan System</i>")
 
