@@ -616,19 +616,19 @@ def report_5(data: RefuelData):
         gas_records.append({
             "date": date_str, "time": time_str, "team": "Partner",
             "name": p["name"], "telegram_id": "PARTNER", "status": "Read",
-            "trend_3day": "1/1/1", "count_7day": 7, "count_month": 30, "note_msg": "Partner / Management"
+            "trend_3day": "'1/1/1", "count_7day": 7, "count_month": 30, "note_msg": "Partner / Management"
         })
     for m in joined:
         gas_records.append({
             "date": date_str, "time": time_str, "team": "Group 9 Refuel",
             "name": m.get("name", "Unknown"), "telegram_id": str(m.get("id", "")), "status": "Read",
-            "trend_3day": "1/1/1", "count_7day": 7, "count_month": 30, "note_msg": "Technical Team Active"
+            "trend_3day": "'1/1/1", "count_7day": 7, "count_month": 30, "note_msg": "Technical Team Active"
         })
     for name in not_joined:
         gas_records.append({
             "date": date_str, "time": time_str, "team": "Group 9 Refuel",
             "name": name, "telegram_id": "", "status": "Not Joined",
-            "trend_3day": "0/0/0", "count_7day": 0, "count_month": 0, "note_msg": "Not yet joined Telegram Group 9"
+            "trend_3day": "'0/0/0", "count_7day": 0, "count_month": 0, "note_msg": "Not yet joined Telegram Group 9"
         })
 
     gas_url = (
