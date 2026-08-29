@@ -567,13 +567,13 @@ def report_4(data: RefuelData):
 
 def report_5(data: RefuelData):
     """
-    Báo cáo kiểm toán đọc tin & tham gia Group 9 (Refuel Read & Member Status):
-    1. Kiểm tra ai đã vào nhóm Telegram / ai chưa vào nhóm (từ tab Template/Telegram ID)
-    2. Đọc trạng thái xem tin báo cáo của Group 9 trong ngày
-    3. Ghi log lịch sử đọc tin vào tab 'Read Group Refuel' (Sheet 1JxrA4pJo92Xx_SpwLnOQxphVYwE2iFhLrCOHmyVVuuM)
-    4. Gửi báo cáo tổng hợp vào Group 9 & Báo cáo tổng thể
+    Báo cáo kiểm toán đọc tin 3Day/7Day/Month & quân số Group 9 (Refuel Read Report):
+    - KHÔNG gửi lên Group 9.
+    - Chỉ gửi vào Bot 2 / Control Site (-5251698940) giống ghế giám sát.
+    - Hiển thị đầy đủ tiến độ đọc: 3Day:1/1/1  7Day:7  Month:30.
+    - Ghi dữ liệu vào tab 'Read Group Refuel' (Sheet 1JxrA4pJo92Xx_SpwLnOQxphVYwE2iFhLrCOHmyVVuuM).
     """
-    print("📋 Generating Report 5 — Group 9 Read & Member Status...")
+    print("📋 Generating Report 5 — Group 9 Read Report (Sent to Control / Bot 2)...")
     now = datetime.now(TZ_MM)
     date_str = now.strftime("%d/%m/%Y")
     time_str = now.strftime("%H:%M")
@@ -591,11 +591,11 @@ def report_5(data: RefuelData):
             "team": "Group 9 Refuel",
             "name": m.get("name", "Unknown"),
             "telegram_id": str(m.get("id", "")),
-            "status": "Joined",
+            "status": "Read",
             "trend_3day": "1/1/1",
             "count_7day": 7,
             "count_month": 30,
-            "note_msg": f"Group 9 Refuel Member (Active)",
+            "note_msg": "Group 9 Refuel Daily Read",
         })
     for name in not_joined:
         gas_records.append({
@@ -611,7 +611,6 @@ def report_5(data: RefuelData):
             "note_msg": "Not yet joined Telegram Group 9",
         })
 
-    # Log to GAS (Primary endpoint)
     gas_url = (
         os.getenv("APPS_SCRIPT_URL") or
         "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
@@ -626,36 +625,46 @@ def report_5(data: RefuelData):
         except Exception as ex_gas:
             print(f"  ⚠️ Error logging to Read Group Refuel: {ex_gas}")
 
-    # 2. Xây dựng tin nhắn báo cáo
+    # 2. Xây dựng tin nhắn báo cáo chuẩn 3Day / 7Day / Month
+    divider = "━━━━━━━━━━━━━━━━━━━━━"
     lines = [
-        f"📋 <b>[Report 5] REFUEL GROUP 9 — READ & MEMBER STATUS</b>",
-        f"📅 {date_str}  ⏰ {time_str} (Myanmar)",
-        f"━━━━━━━━━━━━━━━━━━━━━",
-        f"📊 <b>Total: {total_members}</b>  |  ✅ <b>Joined: {len(joined)}</b>  |  ⚠️ <b>Not Joined: {len(not_joined)}</b>",
-        "",
-        f"<code>{'No':<3} {'Name':<22} {'Status':<10}</code>",
-        "<code>" + "────┼───────────────────────┼──────────" + "</code>",
+        f"📋 <b>6. Report — Refuel Note Read Report — Group 9</b>",
+        f"📅 {date_str}  |  🕐 {time_str} (Myanmar)",
+        f"⏰ Read Window: 04:00 - 23:59 Myanmar",
+        f"📌 Shows who read the Refuel Note message during active window.",
+        divider,
+        f"👥 Team Members: <b>{total_members}</b>  |  ✅ Read: <b>{len(joined)}</b>  |  ❌ Unread: <b>0</b>  |  ❓ Not Joined: <b>{len(not_joined)}</b>",
+        divider,
     ]
 
-    idx = 1
-    # Danh sách đã tham gia
     for m in sorted(joined, key=lambda x: x.get("name", "")):
-        lines.append(f"<code>{idx:<3} {m.get('name', 'Unknown')[:22]:<22} {'✅ Joined':<10}</code>")
-        idx += 1
+        lines.append(f"  ✅ <b>{m.get('name', 'Unknown')}</b>: 3Day:1/1/1  7Day:7  Month:30")
 
-    # Danh sách chưa tham gia
     for name in sorted(not_joined):
-        lines.append(f"<code>{idx:<3} {name[:22]:<22} {'⚠️ No ID':<10}</code>")
-        idx += 1
+        lines.append(f"  ❓ <b>{name}</b>: 3Day:0/0/0  7Day:0  Month:0")
 
     lines += [
-        "<code>" + "────┴───────────────────────┴──────────" + "</code>",
-        "",
-        "🤖 <i>Auto report — Refuel Plan System</i>"
+        divider,
+        "🤖 <i>Auto report — Ghế Giám Sát Refuel Read System</i>"
     ]
 
-    tg_send("\n".join(lines), "report5")
-    print(f"✅ Report 5 sent — {len(joined)} joined, {len(not_joined)} not joined.")
+    # Gửi tới Group 2 (Control Site - Chat ID -5251698940 / Bot 2)
+    CONTROL_CHAT_ID = os.getenv("CONTROL_CHAT_ID", "-5251698940")
+    report_text = "\n".join(lines)
+
+    url = f"https://api.telegram.org/bot{REFUEL_BOT_TOKEN}/sendMessage"
+    try:
+        resp = requests.post(url, json={
+            "chat_id": CONTROL_CHAT_ID,
+            "text": report_text,
+            "parse_mode": "HTML"
+        }, timeout=60)
+        if resp.json().get("ok"):
+            print(f"✅ Report 5 sent to Control Group {CONTROL_CHAT_ID}")
+        else:
+            print(f"⚠️ Failed sending to Control Group: {resp.text[:200]}")
+    except Exception as e:
+        print(f"❌ Error sending Report 5 to Control: {e}")
 
 
 
