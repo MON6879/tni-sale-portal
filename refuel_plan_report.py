@@ -578,8 +578,8 @@ def report_5(data: RefuelData):
     date_str = now.strftime("%d/%m/%Y")
     time_str = now.strftime("%H:%M")
 
-    not_joined = data.not_joined   # list of str (tên, chưa có Telegram ID)
-    joined     = data.members      # list of {id, name} (đã có ID)
+    not_joined = [n for n in data.not_joined if "nyi nyi" not in n.lower()]   # loại bỏ nhân viên không có Team
+    joined     = [m for m in data.members if "nyi nyi" not in m.get("name", "").lower()]      # list of {id, name} (đã có ID)
     total_members = len(joined) + len(not_joined)
 
     # Phân loại Partners vs Teams
