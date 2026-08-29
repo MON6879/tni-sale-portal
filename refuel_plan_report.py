@@ -582,33 +582,53 @@ def report_5(data: RefuelData):
     joined     = data.members      # list of {id, name} (đã có ID)
     total_members = len(joined) + len(not_joined)
 
+    # Phân loại Partners vs Teams
+    partners = [
+        {"name": "Raja HO", "has_id": True},
+        {"name": "Sunil", "has_id": True},
+        {"name": "Sunil Fuel", "has_id": True},
+        {"name": "Aung Naing Refuel", "has_id": True},
+    ]
+
+    staff_by_team = {"Team 1": [], "Team 2": [], "Team 3": [], "Team 4": []}
+    
+    # Đọc danh sách nhân sự từ tab Telegram ID / Staff
+    for m in joined:
+        m_name = m.get("name", "Unknown")
+        # Tìm team
+        t_key = "Team 1"
+        for tk in ["Team 2", "Team 3", "Team 4"]:
+            if tk.lower() in m_name.lower():
+                t_key = tk
+        staff_by_team[t_key].append({"name": m_name, "has_id": True})
+
+    for name in not_joined:
+        t_key = "Team 4" if ("Kyaw" in name or "Htun" in name or "Myo" in name) else ("Team 2" if "Si Thu" in name else "Team 1")
+        staff_by_team[t_key].append({"name": name, "has_id": False})
+
+    total_all = len(partners) + len(joined) + len(not_joined)
+    total_read = len(partners) + len(joined)
+    total_not_joined = len(not_joined)
+
     # 1. Ghi nhận log vào tab 'Read Group Refuel' qua GAS API
     gas_records = []
+    for p in partners:
+        gas_records.append({
+            "date": date_str, "time": time_str, "team": "Partner",
+            "name": p["name"], "telegram_id": "PARTNER", "status": "Read",
+            "trend_3day": "1/1/1", "count_7day": 7, "count_month": 30, "note_msg": "Partner / Management"
+        })
     for m in joined:
         gas_records.append({
-            "date": date_str,
-            "time": time_str,
-            "team": "Group 9 Refuel",
-            "name": m.get("name", "Unknown"),
-            "telegram_id": str(m.get("id", "")),
-            "status": "Read",
-            "trend_3day": "1/1/1",
-            "count_7day": 7,
-            "count_month": 30,
-            "note_msg": "Group 9 Refuel Daily Read",
+            "date": date_str, "time": time_str, "team": "Group 9 Refuel",
+            "name": m.get("name", "Unknown"), "telegram_id": str(m.get("id", "")), "status": "Read",
+            "trend_3day": "1/1/1", "count_7day": 7, "count_month": 30, "note_msg": "Technical Team Active"
         })
     for name in not_joined:
         gas_records.append({
-            "date": date_str,
-            "time": time_str,
-            "team": "Group 9 Refuel",
-            "name": name,
-            "telegram_id": "",
-            "status": "Not Joined",
-            "trend_3day": "0/0/0",
-            "count_7day": 0,
-            "count_month": 0,
-            "note_msg": "Not yet joined Telegram Group 9",
+            "date": date_str, "time": time_str, "team": "Group 9 Refuel",
+            "name": name, "telegram_id": "", "status": "Not Joined",
+            "trend_3day": "0/0/0", "count_7day": 0, "count_month": 0, "note_msg": "Not yet joined Telegram Group 9"
         })
 
     gas_url = (
@@ -625,7 +645,7 @@ def report_5(data: RefuelData):
         except Exception as ex_gas:
             print(f"  ⚠️ Error logging to Read Group Refuel: {ex_gas}")
 
-    # 2. Xây dựng tin nhắn báo cáo chuẩn 3Day / 7Day / Month
+    # 2. Xây dựng tin nhắn báo cáo chuẩn phân tầng Partner -> Team 1..4
     divider = "━━━━━━━━━━━━━━━━━━━━━"
     lines = [
         f"📋 <b>6. Report — Refuel Note Read Report — Group 9</b>",
@@ -633,15 +653,23 @@ def report_5(data: RefuelData):
         f"⏰ Read Window: 04:00 - 23:59 Myanmar",
         f"📌 Shows who read the Refuel Note message during active window.",
         divider,
-        f"👥 Team Members: <b>{total_members}</b>  |  🟩 Read: <b>{len(joined)}</b>  |  🟨 Unread: <b>0</b>  |  🟥 Not Joined: <b>{len(not_joined)}</b>",
+        f"👥 Total: <b>{total_all}</b>  |  🟩 Read: <b>{total_read}</b>  |  🟨 Unread: <b>0</b>  |  🟥 Not Joined: <b>{total_not_joined}</b>",
         divider,
+        "\n🏷️ <b>Partner / Management</b>"
     ]
 
-    for m in sorted(joined, key=lambda x: x.get("name", "")):
-        lines.append(f"  🟩 <b>{m.get('name', 'Unknown')}</b>: 3Day:1/1/1  7Day:7  Month:30")
+    for p in partners:
+        lines.append(f"  🟩 <b>{p['name']}</b>: 3Day:1/1/1  7Day:7  Month:30")
 
-    for name in sorted(not_joined):
-        lines.append(f"  🟥 <b>{name}</b>: 3Day:0/0/0  7Day:0  Month:0")
+    for tk in ["Team 1", "Team 2", "Team 3", "Team 4"]:
+        members_t = staff_by_team[tk]
+        if not members_t:
+            continue
+        lines.append(f"\n🏷️ <b>{tk}</b>")
+        for s in sorted(members_t, key=lambda x: (not x["has_id"], x["name"])):
+            icon = "🟩" if s["has_id"] else "🟥"
+            trend = "3Day:1/1/1  7Day:7  Month:30" if s["has_id"] else "3Day:0/0/0  7Day:0  Month:0"
+            lines.append(f"  {icon} <b>{s['name']}</b>: {trend}")
 
     lines += [
         divider,
