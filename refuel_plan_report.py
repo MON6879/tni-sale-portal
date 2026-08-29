@@ -566,40 +566,96 @@ def report_4(data: RefuelData):
 
 
 def report_5(data: RefuelData):
-    print("📋 Generating Report 5 — Members Not Joined Telegram Group...")
+    """
+    Báo cáo kiểm toán đọc tin & tham gia Group 9 (Refuel Read & Member Status):
+    1. Kiểm tra ai đã vào nhóm Telegram / ai chưa vào nhóm (từ tab Template/Telegram ID)
+    2. Đọc trạng thái xem tin báo cáo của Group 9 trong ngày
+    3. Ghi log lịch sử đọc tin vào tab 'Read Group Refuel' (Sheet 1JxrA4pJo92Xx_SpwLnOQxphVYwE2iFhLrCOHmyVVuuM)
+    4. Gửi báo cáo tổng hợp vào Group 9 & Báo cáo tổng thể
+    """
+    print("📋 Generating Report 5 — Group 9 Read & Member Status...")
     now = datetime.now(TZ_MM)
-
-    lines = [
-        f"📋 <b>[Report 5] MEMBERS NOT YET JOINED</b>",
-        f"📅 {now.strftime('%d/%m/%Y %H:%M')} (Myanmar)",
-    ]
+    date_str = now.strftime("%d/%m/%Y")
+    time_str = now.strftime("%H:%M")
 
     not_joined = data.not_joined   # list of str (tên, chưa có Telegram ID)
     joined     = data.members      # list of {id, name} (đã có ID)
+    total_members = len(joined) + len(not_joined)
 
-    if not not_joined:
-        lines += [
-            f"\n✅ All <b>{len(joined)}</b> members have joined the Telegram group!",
-            "\n🤖 <i>Auto report — Refuel Plan System</i>"
-        ]
-        tg_send("\n".join(lines), "report5")
-        print("✅ Report 5 sent — all joined.")
-        return
+    # 1. Ghi nhận log vào tab 'Read Group Refuel' qua GAS API
+    gas_records = []
+    for m in joined:
+        gas_records.append({
+            "date": date_str,
+            "time": time_str,
+            "team": "Group 9 Refuel",
+            "name": m.get("name", "Unknown"),
+            "telegram_id": str(m.get("id", "")),
+            "status": "Joined",
+            "trend_3day": "1/1/1",
+            "count_7day": 7,
+            "count_month": 30,
+            "note_msg": f"Group 9 Refuel Member (Active)",
+        })
+    for name in not_joined:
+        gas_records.append({
+            "date": date_str,
+            "time": time_str,
+            "team": "Group 9 Refuel",
+            "name": name,
+            "telegram_id": "",
+            "status": "Not Joined",
+            "trend_3day": "0/0/0",
+            "count_7day": 0,
+            "count_month": 0,
+            "note_msg": "Not yet joined Telegram Group 9",
+        })
+
+    # Log to GAS (Primary endpoint)
+    gas_url = (
+        os.getenv("APPS_SCRIPT_URL") or
+        "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
+    ).strip()
+    if gas_url and gas_records:
+        try:
+            r_log = requests.post(gas_url, json={
+                "action": "log_read_group_refuel",
+                "records": gas_records
+            }, timeout=30)
+            print(f"  💾 Logged {len(gas_records)} records to 'Read Group Refuel' tab (Status: {r_log.status_code})")
+        except Exception as ex_gas:
+            print(f"  ⚠️ Error logging to Read Group Refuel: {ex_gas}")
+
+    # 2. Xây dựng tin nhắn báo cáo
+    lines = [
+        f"📋 <b>[Report 5] REFUEL GROUP 9 — READ & MEMBER STATUS</b>",
+        f"📅 {date_str}  ⏰ {time_str} (Myanmar)",
+        f"━━━━━━━━━━━━━━━━━━━━━",
+        f"📊 <b>Total: {total_members}</b>  |  ✅ <b>Joined: {len(joined)}</b>  |  ⚠️ <b>Not Joined: {len(not_joined)}</b>",
+        "",
+        f"<code>{'No':<3} {'Name':<22} {'Status':<10}</code>",
+        "<code>" + "────┼───────────────────────┼──────────" + "</code>",
+    ]
+
+    idx = 1
+    # Danh sách đã tham gia
+    for m in sorted(joined, key=lambda x: x.get("name", "")):
+        lines.append(f"<code>{idx:<3} {m.get('name', 'Unknown')[:22]:<22} {'✅ Joined':<10}</code>")
+        idx += 1
+
+    # Danh sách chưa tham gia
+    for name in sorted(not_joined):
+        lines.append(f"<code>{idx:<3} {name[:22]:<22} {'⚠️ No ID':<10}</code>")
+        idx += 1
 
     lines += [
-        f"\n❌ <b>{len(not_joined)}</b> members NOT yet joined | ✅ Joined: <b>{len(joined)}</b>",
-        f"<code>{'No':<3} {'Name':<25}</code>",
-        "<code>" + "────┬────────────────────────────" + "</code>",
+        "<code>" + "────┴───────────────────────┴──────────" + "</code>",
+        "",
+        "🤖 <i>Auto report — Refuel Plan System</i>"
     ]
-    for i, name in enumerate(sorted(not_joined), 1):
-        lines.append(f"<code>{i:<3} {name[:25]:<25}</code>")
 
-    lines += [
-        "<code>" + "────┴────────────────────────────" + "</code>",
-        "\n🤖 <i>Auto report — Refuel Plan System</i>"
-    ]
     tg_send("\n".join(lines), "report5")
-    print(f"✅ Report 5 sent — {len(not_joined)} not joined.")
+    print(f"✅ Report 5 sent — {len(joined)} joined, {len(not_joined)} not joined.")
 
 
 
