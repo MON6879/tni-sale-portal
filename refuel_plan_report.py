@@ -648,23 +648,23 @@ def report_5(data: RefuelData):
         "🤖 <i>Auto report — Ghế Giám Sát Refuel Read System</i>"
     ]
 
-    # Gửi tới Group 2 (Control Site - Chat ID -5251698940 / Bot 2)
-    CONTROL_CHAT_ID = os.getenv("CONTROL_CHAT_ID", "-5251698940")
+    # Gửi tới Ghế Giám Sát / Admin DM (6859790680)
+    ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID", "6859790680")
     report_text = "\n".join(lines)
 
     url = f"https://api.telegram.org/bot{REFUEL_BOT_TOKEN}/sendMessage"
     try:
         resp = requests.post(url, json={
-            "chat_id": CONTROL_CHAT_ID,
+            "chat_id": ADMIN_CHAT_ID,
             "text": report_text,
             "parse_mode": "HTML"
         }, timeout=60)
         if resp.json().get("ok"):
-            print(f"✅ Report 5 sent to Control Group {CONTROL_CHAT_ID}")
+            print(f"✅ Report 5 sent to Supervisor Seat {ADMIN_CHAT_ID}")
         else:
-            print(f"⚠️ Failed sending to Control Group: {resp.text[:200]}")
+            print(f"⚠️ Failed sending to Supervisor Seat: {resp.text[:200]}")
     except Exception as e:
-        print(f"❌ Error sending Report 5 to Control: {e}")
+        print(f"❌ Error sending Report 5: {e}")
 
 
 
