@@ -21,6 +21,16 @@
 
 ---
 
+# 📊 STRICT RULE: CẤM QUÉT GROUP KHI ĐÃ CÓ SHEET THU THẬP — ĐỌC TRỰC TIẾP 100% DỮ LIỆU SỐNG TỪ GOOGLE SHEET & CẤM CACHE CŨ TRÊN MÂY (STRICT SHEET SSOT & ZERO REDUNDANT GROUP SCANNING & ZERO STALE CACHE POLICY)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (SHEET SSOT & LIVE READ ONLY POLICY)**:
+> 1. **Đã Có Sheet Thu Thập Là BẮT BUỘC Quét Sheet — TUYỆT ĐỐI CẤM Quét Telegram Group Lại**: Mọi phân hệ báo cáo (Report 1, 2, 3, 4, Report 5 Daily Plan, BOD Assign, Cable, Refuel, Attendance, v.v.) khi đã có Sheet thu thập dữ liệu (do Bot Webhook / Form / Collector ghi vào) BẮT BUỘC phải đọc dữ liệu trực tiếp 100% từ Google Sheet. TUYỆT ĐỐI CẤM dùng Telethon hay Bot API crawl/scan lại lịch sử Telegram Group làm việc 2 lần, gây nghẽn, timeout và sai lệch dữ liệu!
+> 2. **Đọc Trực Tiếp 100% Dữ Liệu Sống (Live Fresh Read)**: Mỗi lần script chạy, BẮT BUỘC phải gọi fetch live dữ liệu mới nhất từ Google Sheets / GAS API.
+> 3. **TUYỆT ĐỐI CẤM Lưu Tạm / Cache Cứng Trên Mây**: Tuyệt đối KHÔNG lưu cache cố định, không dùng dữ liệu snapshot lưu tạm lâu ngày trên mây rồi tái sử dụng, vì dữ liệu vận hành thực tế luôn biến đổi liên tục từng phút.
+> 4. **Phạm Vi Ngoại Lệ Duy Nhất Của Telethon**: CHỈ cho phép dùng Telethon (tài khoản cá nhân) cho các tác vụ đặc thù mà Telegram Bot API và Google Sheets KHÔNG THỂ có dữ liệu (ví dụ: Report 6 quét lượt đọc tin Note của thành viên nhóm, Site Down cào botlookup). Toàn bộ các tác vụ còn lại BẮT BUỘC chạy bằng Bot API + Google Sheets!
+
+---
+
 # ❓ STRICT RULE: NẾU CÓ BẤT KỲ ĐIỂM NÀO CHƯA RÕ THÌ BẮT BUỘC PHẢI HỎI NGƯỜI DÙNG TRƯỚC — TUYỆT ĐỐI CẤM TỰ Ý ĐOÁN MÒ (STRICT ASK-FIRST & ZERO-ASSUMPTION POLICY)
 
 > ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (ASK-FIRST POLICY)**:

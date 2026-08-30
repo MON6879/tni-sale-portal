@@ -32,9 +32,6 @@ from datetime import datetime, timezone, timedelta
 
 import requests
 import pandas as pd
-from telethon import TelegramClient
-from telethon.sessions import StringSession
-from telethon.tl.functions.messages import GetHistoryRequest
 from telegram import Bot
 from dotenv import load_dotenv
 from delete_old_helper import delete_old_messages_bot, save_msgids
@@ -942,44 +939,6 @@ def build_comparison(plan_content: str, report_texts: list) -> dict:
     }
 
 
-# ── Telegram message scanning ──────────────────────────────────
-
-async def scan_group_for_plans(client, chat_id: int, since_utc: datetime, leader_id: str = None) -> list:
-    """Scan a Telegram group for 'Daily Plan' messages since given UTC time."""
-    plans = []
-    try:
-        history = await client(GetHistoryRequest(
-            peer=chat_id, limit=200,
-            offset_date=None, offset_id=0,
-            max_id=0, min_id=0, add_offset=0, hash=0,
-        ))
-        for msg in history.messages:
-            if msg.date < since_utc:
-                break
-            # 🛑 BỎ QUA TIN NHẮN TỪ BOT HOẶC GỬI TỰ ĐỘNG
-            if getattr(msg, 'via_bot_id', None) or getattr(msg, 'out', False):
-                continue
-            if hasattr(msg, 'from_id') and msg.from_id:
-                try:
-                    sender = await client.get_entity(msg.from_id)
-                    if sender and getattr(sender, 'bot', False):
-                        continue
-                except Exception:
-                    pass
-            # Collect any daily plan in group (not restricted to specific leader IDs)
-            if msg.message and is_daily_plan_msg(msg.message):
-                parsed = parse_daily_plan(msg.message)
-                if parsed:
-                    dt_mm = msg.date.astimezone(MYANMAR_TZ) if msg.date.tzinfo else \
-                        msg.date.replace(tzinfo=timezone.utc).astimezone(MYANMAR_TZ)
-                    parsed["msg_date"] = dt_mm
-                    parsed["msg_id"] = msg.id
-                    plans.append(parsed)
-    except Exception as e:
-        logger.error(f"Scan group {chat_id} error: {e}")
-    return plans
-
-
 def fmt_sent_at(val) -> str:
     if not val:
         return ""
@@ -1122,59 +1081,6 @@ def find_plans_for_date(plans: list, target_date_str: str, team_filter: str = No
     return results
 
 
-async def scan_plan_tomorrow(client, group_key: str, chat_id: int,
-                              target_date_str: str, leader_id: str,
-                              since_utc: datetime) -> dict:
-    """
-    Scan a Telegram group for Plan Tomorrow messages from the Team Leader.
-    Returns: {
-        "found": bool,
-        "sent_time": str (HH:MM),
-        "content": str,
-        "plan": dict or None
-    }
-    """
-    fallback_result = None
-    try:
-        history = await client(GetHistoryRequest(
-            peer=chat_id, limit=200,
-            offset_date=None, offset_id=0,
-            max_id=0, min_id=0, add_offset=0, hash=0,
-        ))
-        for msg in history.messages:
-            if msg.date < since_utc:
-                break
-            # 🛑 BỎ QUA TIN NHẮN TỪ BOT HOẶC GỬI TỰ ĐỘNG
-            if getattr(msg, 'via_bot_id', None) or getattr(msg, 'out', False):
-                continue
-            if hasattr(msg, 'from_id') and msg.from_id:
-                try:
-                    sender = await client.get_entity(msg.from_id)
-                    if sender and getattr(sender, 'bot', False):
-                        continue
-                except Exception:
-                    pass
-            if msg.message and is_daily_plan_msg(msg.message):
-                parsed = parse_daily_plan(msg.message)
-                if parsed:
-                    dt_mm = msg.date.astimezone(MYANMAR_TZ) if msg.date.tzinfo else \
-                        msg.date.replace(tzinfo=timezone.utc).astimezone(MYANMAR_TZ)
-                    candidate = {
-                        "found": True,
-                        "sent_time": dt_mm.strftime("%d/%m/%Y %H:%M"),
-                        "content": clean_plan_content(parsed.get("content", msg.message)),
-                        "plan": parsed,
-                    }
-                    dt = parse_plan_date(parsed.get("date", ""))
-                    if dt and dt.strftime("%d/%m/%Y") == target_date_str:
-                        return candidate  # Match chính xác ngày mục tiêu
-                    # Fallback: Chỉ chấp nhận tin nhắn được gửi BẰNG CHÍNH NGÀY HÔM NAY và sau 14:00 MMT
-                    today_date = myanmar_now().date()
-                    if fallback_result is None and dt_mm.date() == today_date and dt_mm.hour >= 14:
-                        fallback_result = candidate
-    except Exception as e:
-        logger.error(f"scan_plan_tomorrow {group_key} error: {e}")
-    return fallback_result if fallback_result else result
 
 
 def calc_3day_completion_rate(all_plans: list, team_comparisons: dict,
@@ -1321,141 +1227,67 @@ async def run_eod_or_update(mode: str):
 
     logger.info(f"🚀 Daily Plan Report ({mode_label}) start – {now_str}")
 
-    # ── Step 1: Scan Telegram groups for Daily Plan messages ──
-    since_utc = (now - timedelta(days=2)).replace(
-        hour=0, minute=0, second=0, microsecond=0
-    ).astimezone(timezone.utc)
+    # ── Step 1: Live Read all plans directly from Google Sheet SSOT ──
+    logger.info("📖 Reading plan history directly from Sheet SSOT...")
+    all_plans = get_daily_plans()
+    logger.info(f"  📊 Total plans in sheet: {len(all_plans)}")
 
-    logger.info("📡 Scanning Telegram groups for Daily Plan messages...")
-
-    # Fetch team leaders to filter plan senders
-    leaders = get_team_leaders()
-    logger.info(f"  📋 Team leaders loaded for filtering: {leaders}")
-
-    client = TelegramClient(StringSession(SESSION_STRING), API_ID, API_HASH)
-    all_today_plans = {}  # group_key -> list of parsed plans
-    plan_tomorrow_status = {}  # group_key -> {found, sent_time, content, plan}
-
-    async with client:
-        me = await client.get_me()
-        logger.info(f"🔑 Logged in: @{me.username} ({me.first_name})")
-
-        for group_key, chat_id in GROUPS.items():
-            logger.info(f"  📡 Scanning {group_key} ({chat_id})...")
-            leader_id = leaders.get(group_key)
-            plans = await scan_group_for_plans(client, chat_id, since_utc, leader_id=leader_id)
-            logger.info(f"     Found {len(plans)} Daily Plan messages")
-
-            today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-            today_plans = []
-            for p in plans:
-                dt = parse_plan_date(p.get("date", ""))
-                if dt and dt.replace(hour=0, minute=0, second=0, microsecond=0) >= today_start:
-                    today_plans.append(p)
-
-            # ── Deduplicate before storing to Sheet (prevent duplicate rows) ──
-            today_plans = deduplicate_plans_by_date(today_plans)
-
-            if today_plans:
-                all_today_plans[group_key] = today_plans
-
-            # ── Scan Plan Tomorrow (plan for tomorrow's date) ──
-            pt = await scan_plan_tomorrow(
-                client, group_key, chat_id,
-                target_date_str=tomorrow_str,
-                leader_id=leader_id,
-                since_utc=since_utc,
-            )
-            plan_tomorrow_status[group_key] = pt
-            logger.info(f"     Plan Tomorrow ({tomorrow_str}): {'✅ Found' if pt['found'] else '❌ Not found'}")
-
-            await asyncio.sleep(0.5)
-
-    # ── Step 2: Get Daily Reports from Sheet for comparison ──
-    logger.info("📖 Reading Daily Reports from sheet for comparison...")
+    # ── Step 2: Live Read Daily Reports from Sheet for comparison ──
+    logger.info("📖 Reading Daily Reports directly from sheet for comparison...")
     team_reports, df_report_raw = get_daily_reports_from_sheet(date_str)
     for gk, reps in team_reports.items():
         logger.info(f"  {gk}: {len(reps)} report entries today")
 
-    # ── Step 3: Build comparison + store in Sheet ──
-    logger.info("📝 Storing plans with comparison in Sheet...")
+    # ── Step 3: Build comparison + store updated comparison in Sheet ──
+    logger.info("📝 Processing plans with comparison directly from Sheet...")
     team_comparisons = {}  # group_key -> comparison dict
-    stored_count = 0
+    all_today_plans = {}   # group_key -> list of plans
+    plan_tomorrow_status = {}  # group_key -> {found, sent_time, content, plan, from_sheet}
 
-    for group_key, plans in all_today_plans.items():
-        for p in plans:
-            # Build daily report text for col E
+    for group_key in GROUPS.keys():
+        # Lấy plan hôm nay từ Sheet
+        sheet_plans_today = find_plans_for_date(all_plans, date_str, team_filter=group_key)
+        if sheet_plans_today:
+            sp = sheet_plans_today[0]
+            all_today_plans[group_key] = [sp]
             reports = team_reports.get(group_key, [])
             daily_report_text = "\n\n".join(reports) if reports else ""
-
-            # Build comparison for col F
-            comp = build_comparison(p["content"], reports)
-            team_comparisons[group_key] = comp
-
-            result = store_daily_plan(
-                p["date"], p["team"], p["content"],
-                daily_report=daily_report_text,
-                comparison=comp["comparison_text"],
-            )
-            if result.get("status") == "ok":
-                dup = result.get("duplicate", False)
-                logger.info(f"  {'⏭️ Updated' if dup else '✅ Stored'}: {p['date']} {p['team']} (REF: {result.get('ref', '?')})")
-                if not dup:
-                    stored_count += 1
-            else:
-                logger.warning(f"  ❌ Store failed: {result.get('message', 'unknown')}")
-
-    logger.info(f"  📊 Stored {stored_count} new plans")
-
-    # ── Step 4: Read all plans from Sheet for 3Day/7Day/Month stats ──
-    logger.info("📖 Reading plan history from Sheet...")
-    all_plans = get_daily_plans()
-    logger.info(f"  📊 Total plans in sheet: {len(all_plans)}")
-
-    # ── Step 4a: Fallback — nếu Telegram scan không tìm thấy plan của team nào,
-    #            lấy từ sheet (all_plans) để đảm bảo team_comparisons luôn có data ──
-    for group_key in ("T1", "T2", "T3", "T4"):
-        if group_key in team_comparisons:
-            continue  # Đã có từ Telegram scan
-        # Tìm plan hôm nay trong sheet
-        sheet_plans_today = find_plans_for_date(all_plans, date_str, team_filter=group_key)
-        if not sheet_plans_today:
-            logger.info(f"  ⚠️ {group_key}: No plan found in sheet for {date_str} either")
-            continue
-        # Dùng plan mới nhất từ sheet
-        sp = sheet_plans_today[0]
-        comp_text = sp.get("comparison", "")
-        if comp_text:
-            # Parse comparison text để lấy plan_count/done_count/remain_count
-            plan_m  = re.search(r'Plan:\s*(\d+)', comp_text)
-            done_m  = re.search(r'Done:\s*(\d+)', comp_text)
-            remain_m = re.search(r'Remaining:\s*(\d+)', comp_text)
-            plan_cnt   = int(plan_m.group(1))   if plan_m   else 0
-            done_cnt   = int(done_m.group(1))   if done_m   else 0
-            remain_cnt = int(remain_m.group(1)) if remain_m else max(0, plan_cnt - done_cnt)
-            pct = round(done_cnt / plan_cnt * 100) if plan_cnt > 0 else 0
-            team_comparisons[group_key] = {
-                "plan_count":    plan_cnt,
-                "done_count":    done_cnt,
-                "remain_count":  remain_cnt,
-                "pct":           pct,
-                "comparison_text": comp_text,
-                "from_sheet":    True,  # đánh dấu nguồn
-            }
-            # Inject plan vào all_today_plans để stats["today_plans"] có dữ liệu
-            all_today_plans.setdefault(group_key, [])
-            if not all_today_plans[group_key]:
-                all_today_plans[group_key].append(sp)
-            logger.info(f"  📋 {group_key}: Loaded plan from sheet (REF: {sp.get('ref', '?')}, comp_text present)")
-        else:
-            # Không có comparison text, nhưng vẫn inject plan content
-            reports = team_reports.get(group_key, [])
             comp = build_comparison(sp.get("content", ""), reports)
             team_comparisons[group_key] = comp
-            all_today_plans.setdefault(group_key, [])
-            if not all_today_plans[group_key]:
-                all_today_plans[group_key].append(sp)
-            logger.info(f"  📋 {group_key}: Loaded plan from sheet (REF: {sp.get('ref', '?')}), rebuilt comparison")
+
+            # Cập nhật kết quả comparison vào Sheet
+            store_daily_plan(
+                sp.get("date", date_str),
+                sp.get("team", group_key),
+                sp.get("content", ""),
+                daily_report=daily_report_text,
+                comparison=comp.get("comparison_text", ""),
+            )
+            logger.info(f"  ✅ {group_key}: Plan processed from Sheet (REF: {sp.get('ref', '?')})")
+        else:
+            logger.info(f"  ⚠️ {group_key}: No plan recorded in Sheet for {date_str}")
+
+        # Lấy plan ngày mai từ Sheet
+        sheet_plans_tomorrow = find_plans_for_date(all_plans, tomorrow_str, team_filter=group_key)
+        if sheet_plans_tomorrow:
+            spt = sheet_plans_tomorrow[0]
+            plan_tomorrow_status[group_key] = {
+                "found": True,
+                "sent_time": fmt_sent_at(spt.get("date", "")),
+                "content": spt.get("content", ""),
+                "plan": spt,
+                "from_sheet": True,
+            }
+            logger.info(f"  ✅ {group_key}: Plan Tomorrow found in Sheet (REF: {spt.get('ref', '?')})")
+        else:
+            plan_tomorrow_status[group_key] = {
+                "found": False,
+                "sent_time": "",
+                "content": "",
+                "plan": None,
+                "from_sheet": True,
+            }
+            logger.info(f"  ❌ {group_key}: Plan Tomorrow not recorded in Sheet ({tomorrow_str})")
 
 
     # ── Step 4b: Get employee stats từ Apps Script ──
@@ -1755,57 +1587,33 @@ async def run_morning():
 
     logger.info(f"🚀 Daily Plan Report (Morning) start – {now_str}")
 
-    # Scan for today's plan (sent yesterday or early morning with date = today)
-    since_utc = (now - timedelta(days=2)).replace(
-        hour=0, minute=0, second=0, microsecond=0
-    ).astimezone(timezone.utc)
-
-    leaders = get_team_leaders()
-    logger.info(f"  📋 Team leaders loaded: {leaders}")
-
-    client = TelegramClient(StringSession(SESSION_STRING), API_ID, API_HASH)
-    plan_today_status = {}  # group_key -> {found, sent_time, content, plan}
-
-    async with client:
-        me = await client.get_me()
-        logger.info(f"🔑 Logged in: @{me.username} ({me.first_name})")
-
-        for group_key, chat_id in GROUPS.items():
-            logger.info(f"  📡 Scanning {group_key} for today's plan ({date_str})...")
-            leader_id = leaders.get(group_key)
-
-            pt = await scan_plan_tomorrow(
-                client, group_key, chat_id,
-                target_date_str=date_str,  # Today's date
-                leader_id=leader_id,
-                since_utc=since_utc,
-            )
-            plan_today_status[group_key] = pt
-            logger.info(f"     Plan today ({date_str}): {'✅ Found' if pt['found'] else '❌ Not found'}")
-            await asyncio.sleep(0.5)
-
-    # Read plan history from Sheet for stats
-    logger.info("📖 Reading plan history from Sheet...")
+    # 100% Live Read directly from Google Sheet SSOT (Tab: Team leader assign Plan)
+    logger.info("📖 Reading plan history directly from Sheet SSOT...")
     all_plans = get_daily_plans()
-    logger.info(f"  📊 Total plans in sheet: {len(all_plans)}")
+    logger.info(f"  📊 Total plans loaded from sheet: {len(all_plans)}")
 
-    # ── Fallback: nếu Telegram scan không tìm thấy plan hôm nay,
-    #              thử lấy từ sheet (all_plans) ──
-    for group_key in list(GROUPS.keys()):
-        pt = plan_today_status.get(group_key, {"found": False})
-        if pt["found"]:
-            continue
+    plan_today_status = {}  # group_key -> {found, sent_time, content, plan, from_sheet}
+    for group_key in GROUPS.keys():
         sheet_plans_today = find_plans_for_date(all_plans, date_str, team_filter=group_key)
         if sheet_plans_today:
             sp = sheet_plans_today[0]
             plan_today_status[group_key] = {
                 "found": True,
-                "sent_time": fmt_sent_at(sp.get("msg_date", "")),  # có thể trống nếu chỉ có từ sheet
+                "sent_time": fmt_sent_at(sp.get("date", "")),
                 "content": sp.get("content", ""),
                 "plan": sp,
                 "from_sheet": True,
             }
-            logger.info(f"  📋 {group_key}: Plan found in sheet (REF: {sp.get('ref', '?')}) — using as fallback")
+            logger.info(f"  ✅ {group_key}: Plan found in Sheet (REF: {sp.get('ref', '?')})")
+        else:
+            plan_today_status[group_key] = {
+                "found": False,
+                "sent_time": "",
+                "content": "",
+                "plan": None,
+                "from_sheet": True,
+            }
+            logger.info(f"  ❌ {group_key}: No plan recorded in Sheet for {date_str}")
 
     # Build 3-day completion rate
     logger.info("📊 Calculating 3-day completion rate...")
