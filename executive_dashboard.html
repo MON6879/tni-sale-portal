@@ -552,6 +552,9 @@
       <button class="nav-tab" onclick="showTab('plan-week-panel', this)">
         <i class="fa-solid fa-calendar-week"></i> Plan Week
       </button>
+      <button class="nav-tab" onclick="showTab('system-guide-panel', this)">
+        <i class="fa-solid fa-book"></i> System Guide
+      </button>
       <button class="nav-tab" onclick="showTab('access-control-panel', this)">
         <i class="fa-solid fa-lock"></i> Gmail Access List
       </button>
@@ -6568,6 +6571,229 @@ Team04>> 2Box</td>
           </button>
         </div>
       </div>
+    </div>
+
+    <!-- 7. SYSTEM GUIDE PANEL — Comprehensive Usage Guide for All Teams -->
+    <div id="system-guide-panel" class="tab-panel">
+      <div class="section-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+        <div>
+          <span><i class="fa-solid fa-book"></i> TNI System Usage Guide — Hướng Dẫn Sử Dụng Toàn Diện</span>
+          <div style="font-size:0.78rem; color:#38BDF8; font-weight:700; margin-top:0.2rem;">📌 Living Document — Update this guide whenever new features are added | Last Updated: 31/08/2026</div>
+        </div>
+      </div>
+
+      <!-- Section 1: Group Usage Map -->
+      <div style="margin-top:1.2rem;">
+        <h3 style="color:#F59E0B; font-weight:800; font-size:1.1rem; margin-bottom:0.8rem;"><i class="fa-solid fa-users"></i> WHO USES WHAT — Usage Map by Group</h3>
+
+        <!-- Team T1-T4 -->
+        <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(99,102,241,0.3); border-radius:14px; padding:1rem; margin-bottom:1rem;">
+          <h4 style="color:#818CF8; font-weight:700; margin-bottom:0.6rem;">🟦 Teams T1 / T2 / T3 / T4 — Field Engineers</h4>
+          <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+            <thead><tr style="background:rgba(99,102,241,0.2);"><th style="padding:0.5rem; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Task</th><th style="padding:0.5rem; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Bot</th><th style="padding:0.5rem; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Command / Action</th><th style="padding:0.5rem; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Example</th></tr></thead>
+            <tbody>
+              <tr><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">🔍 Search Site</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">@SEARCHTNITASKWOBOT</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">Type TNIxxxx</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05); color:#38BDF8;">TNI0394</td></tr>
+              <tr><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">ℹ️ Full Site Info</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">@SEARCHTNITASKWOBOT</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">Info: TNIxxxx</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05); color:#38BDF8;">Info: TNI0394</td></tr>
+              <tr><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">📦 Order / Revoke / Export</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">@TNIASSETorderREQUEST_BOT</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">Keyword at start of line</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05); color:#38BDF8;">Order SC/path cord 10m</td></tr>
+              <tr><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">📸 Attach Photo</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">@TNIASSETorderREQUEST_BOT</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">Reply photo to ✅ message</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05); color:#38BDF8;">Reply photo</td></tr>
+              <tr><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">📋 Submit Solution</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">@TNICLEARSITEBOT</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">TNIxxxx Solution: [desc]</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05); color:#38BDF8;">TNI0417 Solution: fuse replaced</td></tr>
+              <tr><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">📝 View Solution Template</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">@TNICLEARSITEBOT</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">/sol_staff_name</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05); color:#38BDF8;">/sol_aung_la_pyae_oo</td></tr>
+              <tr><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">📅 Submit Daily Plan</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">@SEARCHTNITASKWOBOT</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">/plan</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05); color:#38BDF8;">/plan</td></tr>
+              <tr><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">👤 Attendance</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">Attendance Bot</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">/attendance or selfie photo</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05); color:#38BDF8;">/attendance</td></tr>
+              <tr><td style="padding:0.45rem;">🏗️ Construction Progress</td><td style="padding:0.45rem;">Construction Bot</td><td style="padding:0.45rem;">Pro TNIxxxx + photo</td><td style="padding:0.45rem; color:#38BDF8;">Pro TNI0394</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- CONTROL -->
+        <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(239,68,68,0.3); border-radius:14px; padding:1rem; margin-bottom:1rem;">
+          <h4 style="color:#F87171; font-weight:700; margin-bottom:0.6rem;">🔴 CONTROL — Operations Management</h4>
+          <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+            <thead><tr style="background:rgba(239,68,68,0.2);"><th style="padding:0.5rem; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Task</th><th style="padding:0.5rem; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Bot</th><th style="padding:0.5rem; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Command</th><th style="padding:0.5rem; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Description</th></tr></thead>
+            <tbody>
+              <tr><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">📊 View All Team Reports</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">Auto</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">—</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">Receives Reports 1-6 combined</td></tr>
+              <tr><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">🔍 Search Site</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">@SEARCHTNITASKWOBOT</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">TNIxxxx or Info: TNIxxxx</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">Full site details</td></tr>
+              <tr><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">📋 WO Not Closed</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">@SEARCHTNITASKWOBOT</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">/t1notclose ... /t4notclose</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">List unclosed WOs per team</td></tr>
+              <tr><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">⏳ WO Wait Close Date</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">@SEARCHTNITASKWOBOT</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">/t1waitcd ... /t4waitcd</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">List WOs awaiting close date</td></tr>
+              <tr><td style="padding:0.45rem;">🔄 Refresh Site Clear</td><td style="padding:0.45rem;">@TNICLEARSITEBOT</td><td style="padding:0.45rem;">/refresh</td><td style="padding:0.45rem;">Force update clear list</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Other Groups -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:1rem; margin-bottom:1rem;">
+          <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(245,158,11,0.3); border-radius:14px; padding:1rem;">
+            <h4 style="color:#FBBF24; font-weight:700; margin-bottom:0.5rem;">⛽ Refuel Group 9</h4>
+            <div style="font-size:0.82rem; line-height:1.7;">
+              <div>• Send refuel plan: <span style="color:#38BDF8;">Team 2: TNI0385=220L</span></div>
+              <div>• Auto receives: Refuel Reports 1, 2, 4</div>
+            </div>
+          </div>
+          <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(16,185,129,0.3); border-radius:14px; padding:1rem;">
+            <h4 style="color:#34D399; font-weight:700; margin-bottom:0.5rem;">🔌 Cable Group</h4>
+            <div style="font-size:0.82rem; line-height:1.7;">
+              <div>• Auto receives: Cable Daily Report</div>
+              <div>• Schedule: 05:56 & 15:56 MMT</div>
+            </div>
+          </div>
+          <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(168,85,247,0.3); border-radius:14px; padding:1rem;">
+            <h4 style="color:#C084FC; font-weight:700; margin-bottom:0.5rem;">🏗️ Construction T1-T4</h4>
+            <div style="font-size:0.82rem; line-height:1.7;">
+              <div>• Report progress: <span style="color:#38BDF8;">Pro TNIxxxx</span></div>
+              <div>• Confirm material: <span style="color:#38BDF8;">/team_received_material</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: All Bots & Commands -->
+      <div style="margin-top:1.5rem;">
+        <h3 style="color:#F59E0B; font-weight:800; font-size:1.1rem; margin-bottom:0.8rem;"><i class="fa-solid fa-robot"></i> ALL BOTS & COMMANDS</h3>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:1rem;">
+
+          <!-- Search Bot -->
+          <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(56,189,248,0.3); border-radius:14px; padding:1rem;">
+            <h4 style="color:#38BDF8; font-weight:700; margin-bottom:0.5rem;">🔍 @SEARCHTNITASKWOBOT</h4>
+            <div style="font-size:0.8rem; line-height:1.8;">
+              <div><code style="background:rgba(56,189,248,0.15); padding:2px 6px; border-radius:4px;">TNIxxxx</code> — Quick search Task & WO</div>
+              <div><code style="background:rgba(56,189,248,0.15); padding:2px 6px; border-radius:4px;">Info: TNIxxxx</code> — Full site information</div>
+              <div><code style="background:rgba(56,189,248,0.15); padding:2px 6px; border-radius:4px;">/t1notclose</code> — WOs not closed (T1-T4)</div>
+              <div><code style="background:rgba(56,189,248,0.15); padding:2px 6px; border-radius:4px;">/t1waitcd</code> — WOs waiting close date</div>
+              <div><code style="background:rgba(56,189,248,0.15); padding:2px 6px; border-radius:4px;">/plan</code> — Submit daily plan</div>
+              <div><code style="background:rgba(56,189,248,0.15); padding:2px 6px; border-radius:4px;">/mydata</code> — View your own data</div>
+              <div><code style="background:rgba(56,189,248,0.15); padding:2px 6px; border-radius:4px;">/help</code> — Show help</div>
+            </div>
+          </div>
+
+          <!-- Asset Bot -->
+          <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(251,146,60,0.3); border-radius:14px; padding:1rem;">
+            <h4 style="color:#FB923C; font-weight:700; margin-bottom:0.5rem;">📦 @TNIASSETorderREQUEST_BOT</h4>
+            <div style="font-size:0.8rem; line-height:1.8;">
+              <div><code style="background:rgba(251,146,60,0.15); padding:2px 6px; border-radius:4px;">Order</code> — Request material</div>
+              <div><code style="background:rgba(251,146,60,0.15); padding:2px 6px; border-radius:4px;">Revoke</code> — Return material</div>
+              <div><code style="background:rgba(251,146,60,0.15); padding:2px 6px; border-radius:4px;">Export</code> — Export equipment</div>
+              <div><code style="background:rgba(251,146,60,0.15); padding:2px 6px; border-radius:4px;">Move</code> — Move equipment</div>
+              <div><code style="background:rgba(251,146,60,0.15); padding:2px 6px; border-radius:4px;">Destroys</code> — Destroy equipment</div>
+              <div><code style="background:rgba(251,146,60,0.15); padding:2px 6px; border-radius:4px;">Loss fuel</code> — Report fuel loss</div>
+              <div><code style="background:rgba(251,146,60,0.15); padding:2px 6px; border-radius:4px;">Inventory oil</code> — Oil inventory</div>
+              <div><code style="background:rgba(251,146,60,0.15); padding:2px 6px; border-radius:4px;">Inventory water coolant</code> — Coolant check</div>
+              <div><code style="background:rgba(251,146,60,0.15); padding:2px 6px; border-radius:4px;">Vcm order to Mytel</code> — VCM order</div>
+              <div style="color:#FBBF24; margin-top:0.3rem;">📸 Reply photo to ✅ message to attach</div>
+            </div>
+          </div>
+
+          <!-- Solution Bot -->
+          <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(16,185,129,0.3); border-radius:14px; padding:1rem;">
+            <h4 style="color:#34D399; font-weight:700; margin-bottom:0.5rem;">📋 @TNICLEARSITEBOT</h4>
+            <div style="font-size:0.8rem; line-height:1.8;">
+              <div><code style="background:rgba(16,185,129,0.15); padding:2px 6px; border-radius:4px;">/sol_staff_name</code> — Get solution template</div>
+              <div><code style="background:rgba(16,185,129,0.15); padding:2px 6px; border-radius:4px;">TNIxxxx Solution: desc</code> — Submit solution</div>
+              <div><code style="background:rgba(16,185,129,0.15); padding:2px 6px; border-radius:4px;">TNIxxxx: desc</code> — Submit (old format)</div>
+              <div><code style="background:rgba(16,185,129,0.15); padding:2px 6px; border-radius:4px;">/refresh</code> — Refresh clear list</div>
+              <div><code style="background:rgba(16,185,129,0.15); padding:2px 6px; border-radius:4px;">/menu</code> — Sync team menu</div>
+            </div>
+          </div>
+
+          <!-- Site Down Bot -->
+          <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(239,68,68,0.3); border-radius:14px; padding:1rem;">
+            <h4 style="color:#F87171; font-weight:700; margin-bottom:0.5rem;">📡 @tni_site_down_bot</h4>
+            <div style="font-size:0.8rem; line-height:1.8;">
+              <div>🔄 <b>Auto every 30 min</b> (:06 & :36 MMT)</div>
+              <div>Tin 1 — Site detail per team</div>
+              <div>Tin 2 — Summary matrix AW7</div>
+              <div style="color:#FBBF24; margin-top:0.3rem;">⏱️ Skips data older than 30 minutes</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Auto Report Schedule -->
+      <div style="margin-top:1.5rem;">
+        <h3 style="color:#F59E0B; font-weight:800; font-size:1.1rem; margin-bottom:0.8rem;"><i class="fa-solid fa-clock"></i> DAILY AUTO REPORT SCHEDULE (Myanmar Time)</h3>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:1rem;">
+
+          <!-- Morning -->
+          <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(251,191,36,0.3); border-radius:14px; padding:1rem;">
+            <h4 style="color:#FBBF24; font-weight:700; margin-bottom:0.5rem;">☀️ Morning (05:00 - 10:00)</h4>
+            <div style="font-size:0.78rem; line-height:1.9;">
+              <div><b style="color:#38BDF8;">05:46</b> — Reports 1,2,3 + BOD (T1-T4, CTRL)</div>
+              <div><b style="color:#38BDF8;">05:51</b> — Report 4 EOD Stats</div>
+              <div><b style="color:#38BDF8;">05:56</b> — Cable Daily Report</div>
+              <div><b style="color:#38BDF8;">06:06</b> — Plan Morning (5C)</div>
+              <div><b style="color:#38BDF8;">07:18</b> — Site Clear Today (6.1)</div>
+              <div><b style="color:#38BDF8;">08:28</b> — Plan Update (5C)</div>
+              <div><b style="color:#38BDF8;">08:48</b> — Note Read Report (6)</div>
+            </div>
+          </div>
+
+          <!-- Afternoon -->
+          <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(99,102,241,0.3); border-radius:14px; padding:1rem;">
+            <h4 style="color:#818CF8; font-weight:700; margin-bottom:0.5rem;">🌤️ Afternoon (13:00 - 16:30)</h4>
+            <div style="font-size:0.78rem; line-height:1.9;">
+              <div><b style="color:#38BDF8;">13:06</b> — Refuel Request</div>
+              <div><b style="color:#38BDF8;">14:18</b> — Site Clear Today (6.1)</div>
+              <div><b style="color:#38BDF8;">14:58</b> — Note Read Report (6)</div>
+              <div><b style="color:#38BDF8;">15:26</b> — Plan Evening (5C)</div>
+              <div><b style="color:#38BDF8;">15:46</b> — Reports 1,2,3 + BOD</div>
+              <div><b style="color:#38BDF8;">15:56</b> — Cable Daily Report</div>
+            </div>
+          </div>
+
+          <!-- Evening -->
+          <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(168,85,247,0.3); border-radius:14px; padding:1rem;">
+            <h4 style="color:#C084FC; font-weight:700; margin-bottom:0.5rem;">🌙 Evening (17:00 - 22:30)</h4>
+            <div style="font-size:0.78rem; line-height:1.9;">
+              <div><b style="color:#38BDF8;">17:18</b> — Read + Site Clear</div>
+              <div><b style="color:#38BDF8;">18:41</b> — Plan EOD (5A)</div>
+              <div><b style="color:#38BDF8;">19:11</b> — Plan Update (5B)</div>
+              <div><b style="color:#38BDF8;">19:41</b> — Note Read Report (6)</div>
+              <div><b style="color:#38BDF8;">22:06</b> — Plan Evening (5C)</div>
+              <div style="color:#FBBF24; margin-top:0.3rem;">🔄 Site Down: every 30min 03:30-22:10</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4: New User Onboarding -->
+      <div style="margin-top:1.5rem;">
+        <h3 style="color:#F59E0B; font-weight:800; font-size:1.1rem; margin-bottom:0.8rem;"><i class="fa-solid fa-user-plus"></i> NEW USER ONBOARDING — 4 Steps to Get Started</h3>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:1rem;">
+          <div style="background:linear-gradient(135deg, rgba(99,102,241,0.15), rgba(99,102,241,0.05)); border:1px solid rgba(99,102,241,0.3); border-radius:14px; padding:1rem; text-align:center;">
+            <div style="font-size:2rem; margin-bottom:0.5rem;">1️⃣</div>
+            <h4 style="color:#818CF8; font-weight:700; margin-bottom:0.3rem;">Join Your Group</h4>
+            <div style="font-size:0.8rem; color:#94A3B8;">Join your team Telegram group (T1/T2/T3/T4)</div>
+          </div>
+          <div style="background:linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05)); border:1px solid rgba(16,185,129,0.3); border-radius:14px; padding:1rem; text-align:center;">
+            <div style="font-size:2rem; margin-bottom:0.5rem;">2️⃣</div>
+            <h4 style="color:#34D399; font-weight:700; margin-bottom:0.3rem;">Start Bots</h4>
+            <div style="font-size:0.8rem; color:#94A3B8;">Send /start to each bot in the group</div>
+          </div>
+          <div style="background:linear-gradient(135deg, rgba(251,146,60,0.15), rgba(251,146,60,0.05)); border:1px solid rgba(251,146,60,0.3); border-radius:14px; padding:1rem; text-align:center;">
+            <div style="font-size:2rem; margin-bottom:0.5rem;">3️⃣</div>
+            <h4 style="color:#FB923C; font-weight:700; margin-bottom:0.3rem;">Try Search</h4>
+            <div style="font-size:0.8rem; color:#94A3B8;">Type TNI0001 to test Search Bot</div>
+          </div>
+          <div style="background:linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.05)); border:1px solid rgba(239,68,68,0.3); border-radius:14px; padding:1rem; text-align:center;">
+            <div style="font-size:2rem; margin-bottom:0.5rem;">4️⃣</div>
+            <h4 style="color:#F87171; font-weight:700; margin-bottom:0.3rem;">Read Daily Notes</h4>
+            <div style="font-size:0.8rem; color:#94A3B8;">Read EOD Notes daily — Bot tracks who read</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 5: Update Rule -->
+      <div style="margin-top:1.5rem; background:linear-gradient(135deg, rgba(239,68,68,0.1), rgba(239,68,68,0.03)); border:2px solid rgba(239,68,68,0.4); border-radius:14px; padding:1.2rem;">
+        <h3 style="color:#F87171; font-weight:800; font-size:1rem; margin-bottom:0.6rem;"><i class="fa-solid fa-triangle-exclamation"></i> MANDATORY UPDATE RULE — When Adding New Features</h3>
+        <div style="font-size:0.82rem; line-height:1.8;">
+          <div>✅ <b>Step 1:</b> Add new row to <b>WHO USES WHAT</b> table (Section 1)</div>
+          <div>✅ <b>Step 2:</b> Add commands to <b>ALL BOTS & COMMANDS</b> cards (Section 2)</div>
+          <div>✅ <b>Step 3:</b> Add schedule to <b>AUTO REPORT SCHEDULE</b> if auto report (Section 3)</div>
+          <div>✅ <b>Step 4:</b> Update <b>system_map.md</b> — Train Manifest table</div>
+          <div>✅ <b>Step 5:</b> Update <b>AGENTS.md</b> — Webhook table if new Bot/Endpoint</div>
+          <div>✅ <b>Step 6:</b> Update <b>Last Updated</b> date at the top of this guide</div>
+        </div>
+      </div>
+
     </div>
 
     <!-- TEAM 1 COMPLETE MODAL -->
