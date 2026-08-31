@@ -6,7 +6,7 @@
 > 3. **CẤM Tự Tiện Vào Xem / Sửa (Zero Arbitrary Access/Modification)**: Tuyệt đối KHÔNG ĐƯỢC tự ý mở file, đọc code, sửa đổi, gộp file, xóa bỏ hay tái cấu trúc (refactor) bất kỳ thành phần nào của phân hệ Site Down khi CHƯA CÓ MẬT KHẨU!
 > 4. **Phạm Vi Đóng Băng Bất Biến**:
 >    - File GAS: `apps_script_sitedown/site_down_v2.gs` (1 file độc lập duy nhất).
->    - Deployment ID: `AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-` (Version `@89`).
+>    - Deployment ID: `AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-` (Version `@92`).
 >    - Luồng Relay: `botlookup_relay.py` (chạy nhịp :06 và :36 MMT).
 >    - Bảng Tính: `1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow` (GID 0).
 ---

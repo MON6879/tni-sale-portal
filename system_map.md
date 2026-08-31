@@ -49,7 +49,7 @@
    | # | Tên Dự Án GAS | Ghế Nội Bộ | Ghế Ngoại Giao | Ghế Giám Sát | Chức Năng | File Code Quản Trị |
    |---|---|---|---|---|---|---|
    | 1 | 🌟 **TNI** (`QLTC_GAS`) | `GAS-OPS-1` | `EXT-OPS-HUB` | `AUDITOR-9.1` | Vận hành chung, thi công, daily report, cáp, dầu, ICT | 17 files .gs |
-   | 2 | 📡 **TNI Site Down Bot** | `GAS-SITEDOWN-2` | `EXT-SITEDOWN-RELAY` | `AUDITOR-9.1` | Site Down Relay ĐỘC LẬP (Khóa Thép @89) | `site_down_v2.gs` |
+   | 2 | 📡 **TNI Site Down Bot** | `GAS-SITEDOWN-2` | `EXT-SITEDOWN-RELAY` | `AUDITOR-9.1` | Site Down Relay ĐỘC LẬP (Khóa Thép @92) | `site_down_v2.gs` |
    | 3 | 👤 **TNI Attendance Bot** | `GAS-ATTENDANCE-4` | `EXT-ATTENDANCE-BOT` | `AUDITOR-9.1` | Điểm danh nhân sự | `attendance.gs` |
    | 4 | 💰 **TC** | `GAS-CONSTRUCTION-3` | `EXT-TC-CONSTRUCTION` | `AUDITOR-9.1` | Quản Lý Tài Chính & Tiến độ | `QLTC.gs` |
    | 5 | 🏛️ **TNI BI Portal** | `GAS-BI-5` | `EXT-BI-PORTAL` | `AUDITOR-9.1` | Backend BI Portal | `bi_backend.gs` |
