@@ -41,19 +41,19 @@
 5. **Kênh Kép Song Hành (GAS Direct First, GitHub Actions Second)**:
    - Mọi bản tin có thể gửi bằng Google Apps Script (`UrlFetchApp.fetch()`) bắt buộc ưu tiên gửi trực tiếp từ GAS Cloud.
 
-6. **Cô Lập Biến Toàn Cục GAS (GAS Global Scope Isolation)** *(MỚI v598)*:
+6. **Cô Lập Biến Toàn Cục GAS & Phân Ghế 6 Dự Án Chuẩn (GAS Global Scope & Seat Isolation)**:
    - Trong Google Apps Script, **tất cả file `.gs` trong cùng 1 dự án dùng chung Global Scope**.
    - TUYỆT ĐỐI KHÔNG được khai báo trùng tên biến toàn cục (`var GH_REPO`, `const CONFIG_SS_ID`...) giữa các file trong cùng 1 dự án.
-   - Mỗi dự án GAS chỉ chứa các file LIÊN QUAN TRỰC TIẾP với nhau. Tách riêng chức năng vào đúng dự án theo bảng phân bổ bên dưới.
-   - **5 DỰ ÁN GAS CHUẨN (KHÔNG THÊM, KHÔNG BỚT)**:
+   - **BẢNG KHÓA 6 DỰ ÁN GAS CHUẨN ĐỘC LẬP & PHÂN GHẾ BẤT BIẾN**:
 
-   | # | Tên Dự Án GAS | Script ID | Chức Năng | Các File `.gs` Bên Trong |
-   |---|---|---|---|---|
-   | 1 | 🌟 **TNI** | `1rvgWwrAMDbqtmqw...` | Bot 10 Thi công + Dispatch GitHub + Auto Copy + Dashboard + Collector + Daily Report + Cable + MDG + Refuel + Cross Check + ICT | `13_TNI_CONSTRUCTION.gs`, `14_GITHUB_DISPATCH.gs`, `auto_copy_processor.gs`, `apps_script_collector.gs`, `apps_script_cable.gs`, `apps_script_mdg.gs`, `apps_script_refuel.gs`, `apps_script_refuel_plan.gs`, `10_DASHBOARD_REPORT.gs`, `cross_check_wo.gs`, `daily_bod_assign_notify.gs`, `daily_report_collector.gs`, `daily_report_scheduler.gs`, `daily_report_trigger.gs`, `input_ict_tinh_tien.gs`, `template_collector.gs`, `Code.gs` (17 files total) |
-   | 2 | 📡 **TNI Site Down Bot** | `1fgIR_frjlOHBt4o...` | Site Down Relay ĐỘC LẬP (Khóa Thép @89) | `site_down_v2.gs`, `apps_script_refuel.gs` |
-   | 3 | 👤 **TNI Attendance Bot** | `166XawHNCvkXmo...` | Điểm danh nhân viên | `attendance.gs` |
-   | 4 | 💰 **TC** | `1QsNLLXKtxo3wK...` | Quản Lý Tài Chính (QLTC) | `QLTC.gs` |
-   | 5 | 🏛️ **TNI BI Portal Backend** | `1G790B-ZHinJUQKHr-u0F2NDiaxNDjfYYSo84QysD2c3b9VGZCeevUKCU` | Backend độc lập cho BI Portal (Plan - Result Dep, Permit BI, History) | `bi_backend.gs` |
+   | # | Tên Dự Án GAS | Ghế Nội Bộ | Ghế Ngoại Giao | Ghế Giám Sát | Chức Năng | File Code Quản Trị |
+   |---|---|---|---|---|---|---|
+   | 1 | 🌟 **TNI** (`QLTC_GAS`) | `GAS-OPS-1` | `EXT-OPS-HUB` | `AUDITOR-9.1` | Vận hành chung, thi công, daily report, cáp, dầu, ICT | 17 files .gs |
+   | 2 | 📡 **TNI Site Down Bot** | `GAS-SITEDOWN-2` | `EXT-SITEDOWN-RELAY` | `AUDITOR-9.1` | Site Down Relay ĐỘC LẬP (Khóa Thép @89) | `site_down_v2.gs` |
+   | 3 | 👤 **TNI Attendance Bot** | `GAS-ATTENDANCE-4` | `EXT-ATTENDANCE-BOT` | `AUDITOR-9.1` | Điểm danh nhân sự | `attendance.gs` |
+   | 4 | 💰 **TC** | `GAS-CONSTRUCTION-3` | `EXT-TC-CONSTRUCTION` | `AUDITOR-9.1` | Quản Lý Tài Chính & Tiến độ | `QLTC.gs` |
+   | 5 | 🏛️ **TNI BI Portal** | `GAS-BI-5` | `EXT-BI-PORTAL` | `AUDITOR-9.1` | Backend BI Portal | `bi_backend.gs` |
+   | 6 | 📋 **TNI Solution Clear** | `GAS-SOLUTION-CLEAR-6` | `EXT-SOLUTION-CLEAR` | `AUDITOR-9.1` | Gửi danh sách sự cố rỗng Cột I & thu thập Solution | `site_down_clear_solution.gs` |
 
 7. **Xử Lý Gia Tăng Chống Timeout (Incremental Processing)** *(MỚI v599)*:
    - GAS có giới hạn **tối đa 6 phút** mỗi lần thực thi. TUYỆT ĐỐI KHÔNG viết script xử lý toàn bộ dữ liệu mỗi lần chạy.
