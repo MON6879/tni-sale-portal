@@ -400,7 +400,7 @@ async def main():
                 cx_have = str(row.iloc[101]).strip() if len(row) > 101 and is_valid(row.iloc[101]) else "0"
                 cy_diff = str(row.iloc[102]).strip() if len(row) > 102 and is_valid(row.iloc[102]) else "0"
 
-                if at_oil_filter or bi_fuel_filter or bx_air_filter or ci_oil or cv_cool:
+                if (team_am not in subteams_dg) and (at_oil_filter or bi_fuel_filter or bx_air_filter or ci_oil or cv_cool):
                     subteams_dg[team_am] = {
                         "oil_filter": at_oil_filter,
                         "fuel_filter": bi_fuel_filter,
@@ -418,7 +418,7 @@ async def main():
     # ── 4. Xóa sạch tin cũ Report 1, 2, 3 và Gửi báo cáo mới qua Bot API + GAS Cache ──
     def format_blue_dots(val_str):
         if not val_str:
-            return "  ."
+            return "  •"
         parts = val_str.split("<+>")
         res = []
         for p in parts:
@@ -435,7 +435,7 @@ async def main():
                     res.append(f"{k}: {v}")
             elif p:
                 res.append(p)
-        return "  " + " <+> ".join(res) if res else "  ."
+        return "  " + " <+> ".join(res) if res else "  •"
 
     async with Bot(token=SEND_BOT_TOKEN) as bot:
         for t_num, chat_id in TEAM_GROUPS.items():

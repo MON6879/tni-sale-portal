@@ -92,6 +92,10 @@ jobs:
           echo "6️⃣ Construction Bot 10 (GAS) — getWebhookInfo..."
           curl -s -f "https://api.telegram.org/bot8903841312:AAHQ_LeI19gs2nrqBSInTsgzJXOuv6H8LmE/getWebhookInfo" || true
 
+          echo "7️⃣ Cable Bot 15 (Vercel)..."
+          curl -s -f "https://api.telegram.org/bot8758104446:AAH3o7lMCxBXn70ThAXweH1DddmRkJrgwWo/getWebhookInfo" || true
+          curl -s -f "https://tni-bot.vercel.app/api/cable_bot" || true
+
           echo "✅ Keepalive done"
 
       # ═══════════════════════════════════════════════
@@ -114,15 +118,15 @@ jobs:
           REFUEL_P1=false; REFUEL_P2=false; REFUEL_P21=false; REFUEL_P4=false
           AUDITOR91=false
 
-          # check_time <hour> <target_minute> — dung sai ±2 phút (chu kỳ 5 phút đảm bảo khớp ĐÚNG 1 LẦN DUY NHẤT)
+          # check_time <hour> <target_minute> — dung sai ±4 phút (nới rộng do GitHub Actions delay thường xuyên 3-5p)
           check_time() {
             local TH=$1 TM=$2
             local CURR_MIN=$(( 10#$H * 60 + 10#$M ))
             local TARG_MIN=$(( 10#$TH * 60 + 10#$TM ))
             local DIFF=$(( CURR_MIN - TARG_MIN ))
             [ $DIFF -lt 0 ] && DIFF=$(( -DIFF ))
-            # Tolerance: ±2 phút (mỗi mục tiêu chỉ khớp đúng 1 nhịp chạy duy nhất trong chu kỳ 5 phút)
-            [ $DIFF -le 2 ] && return 0
+            # Tolerance: ±4 phút (mỗi mục tiêu vẫn chỉ khớp đúng 1 nhịp chạy duy nhất trong chu kỳ 5 phút)
+            [ $DIFF -le 4 ] && return 0
             return 1
           }
 
@@ -148,7 +152,8 @@ jobs:
           check_time 09 00 && AUDITOR91=true && NEED_PYTHON=true && echo "🚃 Toa Auditor: Ghế AUDITOR-9.1 (09:00 MMT)"
           #  09:56 → Plan 5C Morning
           check_time 09 56 && P5C=true && NEED_PYTHON=true && echo "🚃 Toa 5: Plan 5C Morning (09:56 MMT)"
-          #  10:16 / 10:18 → Report 6.1 Site Clear Today (🤖 Bot API)
+          #  10:16 / 10:18 → Report 6.1 Site Clear Today & Refuel Group 9 Read Report (10:16 MMT)
+          check_time 10 16 && REFUEL_READ=true && NEED_PYTHON=true && echo "🚃 Toa Refuel Read: Refuel Group 9 Read Report (10:16 MMT)"
           (check_time 10 18 || check_time 10 16) && R61=true && NEED_PYTHON=true && echo "🚃 Toa 6.1: Report 6.1 Site Clear Today (10:18 MMT)"
 
           # ═══════ 🌤️ AFTERNOON BLOCK (13:00-16:30) ═══════
@@ -182,6 +187,8 @@ jobs:
           check_time 19 11 && P5B=true && NEED_PYTHON=true && echo "🚃 Toa 4: Report 5 Daily Plan Update (19:11 MMT)"
           #  19:41 → Report 6 Read Report (Ca 3) (📱 Telethon)
           check_time 19 41 && R6=true && NEED_PYTHON=true && echo "🚃 Toa 6: Report 6 Read (19:41 MMT)"
+          #  20:26 → Refuel Group 9 Read Report (Sent to Bot 2)
+          check_time 20 26 && REFUEL_READ=true && NEED_PYTHON=true && echo "🚃 Toa Refuel Read: Refuel Group 9 Read Report (20:26 MMT)"
           #  21:36 → Refuel Plan (Combined Report + Members Not Joined) (📱 Telethon)
           check_time 21 36 && REFUEL_P1=true && REFUEL_P4=true && NEED_PYTHON=true && echo "🚃 Toa 9+11: Refuel Plan Combined + Members (21:36 MMT)"
           #  22:06 → Plan 5C Evening
@@ -203,6 +210,7 @@ jobs:
           echo "refuel_p2=$REFUEL_P2" >> $GITHUB_OUTPUT
           echo "refuel_p21=$REFUEL_P21" >> $GITHUB_OUTPUT
           echo "refuel_p4=$REFUEL_P4" >> $GITHUB_OUTPUT
+          echo "refuel_read=$REFUEL_READ" >> $GITHUB_OUTPUT
           echo "auditor91=$AUDITOR91" >> $GITHUB_OUTPUT
 
           if [ "$NEED_PYTHON" = "false" ]; then
@@ -329,7 +337,7 @@ jobs:
 
       # ═══════════════════════════════════════════════
       # 📋 TOA 5: Report 5C — Plan Morning/Evening
-      # 📱 Engine: Telethon + Bot API
+      # 🤖 Engine: Google Sheet SSOT + Bot API (Zero Telethon)
       # ⏰ Schedule: 05:28, 08:28, 09:53, 15:23, 19:03, 22:03 Myanmar
       # ═══════════════════════════════════════════════
       - name: "📋 Toa 5 — Report 5C Plan Morning/Evening"
@@ -398,6 +406,7 @@ jobs:
           steps.sched.outputs.cable == 'true' ||
           (github.event_name == 'workflow_dispatch' && inputs.report_type == 'Task - Cable Daily Report')
         env:
+          CABLE_BOT_TOKEN: ${{ secrets.CABLE_BOT_TOKEN }}
           COLLECTOR_BOT_TOKEN: ${{ secrets.COLLECTOR_BOT_TOKEN }}
           CABLE_APPS_SCRIPT_URL: ${{ secrets.CABLE_APPS_SCRIPT_URL }}
           CABLE_CHAT_ID: ${{ secrets.CABLE_CHAT_ID }}
@@ -491,6 +500,25 @@ jobs:
           TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
           TELEGRAM_SESSION: ${{ secrets.TELEGRAM_SESSION }}
         run: python refuel_plan_report.py --report 4 || true
+
+      # ═══════════════════════════════════════════════
+      # 📖 TOA REFUEL READ: Group 9 Read Report (Sent to Bot 2)
+      # ⏰ Schedule: 10:16 MMT & 20:26 MMT
+      # ═══════════════════════════════════════════════
+      - name: "📖 Toa Refuel Read — Group 9 Read Report"
+        continue-on-error: true
+        if: |
+          steps.sched.outputs.refuel_read == 'true' ||
+          (github.event_name == 'workflow_dispatch' && (
+            inputs.report_type == 'Task - Refuel Group 9 Read Report (10:16 & 20:26)' ||
+            inputs.report_type == 'Task - All Refuel Reports'
+          ))
+        env:
+          REFUEL_BOT_TOKEN: ${{ secrets.REFUEL_BOT_TOKEN }}
+          SEND_BOT_TOKEN: ${{ secrets.SEND_BOT_TOKEN }}
+          ADMIN_CHAT_ID: ${{ secrets.ADMIN_CHAT_ID }}
+          APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
+        run: python refuel_plan_report.py --report 5 || true
 
       # ═══════════════════════════════════════════════
       # 🔍 CHECK READ STATUS (Manual only)
