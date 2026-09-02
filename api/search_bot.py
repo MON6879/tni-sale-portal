@@ -27,7 +27,7 @@ except ImportError:
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-BOT_VERSION = "v4.1"
+BOT_VERSION = "v4.2"
 
 # ── Config ────────────────────────────────────────────────────────────────────
 SEARCH_BOT_TOKEN_SSOT = "8606383435:AAEstcN4Om6_9ZAjs4OoFV2uVlRALgae2Ac"
@@ -428,6 +428,14 @@ def setup_bot_menu_commands():
         {"command": "t2waitcd",     "description": "Team 2 Wait CD WOs"},
         {"command": "t3waitcd",     "description": "Team 3 Wait CD WOs"},
         {"command": "t4waitcd",     "description": "Team 4 Wait CD WOs"},
+        {"command": "eta",          "description": "ETA Site Down - All Teams"},
+        {"command": "eta_t1",       "description": "ETA Site Down - Team 1"},
+        {"command": "eta_t1_s1",    "description": "ETA Site Down - Team 1 S1"},
+        {"command": "eta_t2",       "description": "ETA Site Down - Team 2"},
+        {"command": "eta_t2_s1",    "description": "ETA Site Down - Team 2 S1"},
+        {"command": "eta_t3",       "description": "ETA Site Down - Team 3"},
+        {"command": "eta_t3_s1",    "description": "ETA Site Down - Team 3 S1"},
+        {"command": "eta_t4",       "description": "ETA Site Down - Team 4"},
         {"command": "request_enter_site", "description": "Request enter Site towerco format"},
         {"command": "mysite",       "description": "All Site you control"},
         {"command": "mycable",      "description": "All your cable route"},
@@ -437,16 +445,136 @@ def setup_bot_menu_commands():
         {"command": "mydata",       "description": "All your personal stats"},
         {"command": "daily",        "description": "Daily Result template"},
         {"command": "daily_result", "description": "Daily Result template"},
-        {"command": "plan",         "description": "Daily plan template"},
         {"command": "help",         "description": "Show help menu"},
     ]
+    # Menu riêng từng Team group — team nào nhìn team đó
+    team_groups = {
+        "-1004215695747": [  # TNI TEAM 1 PLAN - ALARM
+            {"command": "eta_t1",     "description": "ETA Site Down - Team 1"},
+            {"command": "eta_t1_s1",  "description": "ETA Site Down - Team 1 S1"},
+            {"command": "plan_t1",    "description": "Plan Template - Team 1"},
+            {"command": "plan_t1_s1", "description": "Plan Template - Team 1 S1"},
+        ],
+        "-1004480845549": [  # TNI TEAM 2 PLAN - ALARM
+            {"command": "eta_t2",     "description": "ETA Site Down - Team 2"},
+            {"command": "eta_t2_s1",  "description": "ETA Site Down - Team 2 S1"},
+            {"command": "plan_t2",    "description": "Plan Template - Team 2"},
+            {"command": "plan_t2_s1", "description": "Plan Template - Team 2 S1"},
+        ],
+        "-1004369170658": [  # TNI TEAM 3 PLAN - ALARM
+            {"command": "eta_t3",     "description": "ETA Site Down - Team 3"},
+            {"command": "eta_t3_s1",  "description": "ETA Site Down - Team 3 S1"},
+            {"command": "plan_t3",    "description": "Plan Template - Team 3"},
+            {"command": "plan_t3_s1", "description": "Plan Template - Team 3 S1"},
+        ],
+        "-1004293741999": [  # TNI TEAM 4 PLAN - ALARM
+            {"command": "eta_t4",     "description": "ETA Site Down - Team 4"},
+            {"command": "plan_t4",    "description": "Plan Template - Team 4"},
+        ],
+    }
+    common_group = [
+        {"command": "daily", "description": "Daily Result template"},
+    ]
     try:
-        requests.post(
-            f"https://api.telegram.org/bot{TOKEN}/setMyCommands",
-            json={"commands": commands}, timeout=10
-        )
+        base_url = f"https://api.telegram.org/bot{TOKEN}/setMyCommands"
+        del_url = f"https://api.telegram.org/bot{TOKEN}/deleteMyCommands"
+
+        # Delete any conflicting global admin scope
+        try:
+            requests.post(del_url, json={"scope": {"type": "all_chat_administrators"}}, timeout=10)
+        except Exception:
+            pass
+
+        # Default scope — full commands (không có /plan cũ)
+        requests.post(base_url, json={"commands": commands}, timeout=10)
+        # All group chats — chỉ daily (plan riêng từng team)
+        requests.post(base_url, json={"commands": common_group, "scope": {"type": "all_group_chats"}}, timeout=10)
+        # All private chats — full commands
+        requests.post(base_url, json={"commands": commands, "scope": {"type": "all_private_chats"}}, timeout=10)
+        # Per-team group — ETA + Plan riêng + daily cho cả thành viên và admin
+        for chat_id, eta_cmds in team_groups.items():
+            team_menu = eta_cmds + common_group
+            cid_int = int(chat_id)
+            # Scope 1: chat (toàn bộ thành viên)
+            requests.post(base_url, json={
+                "commands": team_menu,
+                "scope": {"type": "chat", "chat_id": cid_int}
+            }, timeout=10)
+            # Scope 2: chat_administrators (cho quản trị viên)
+            requests.post(base_url, json={
+                "commands": team_menu,
+                "scope": {"type": "chat_administrators", "chat_id": cid_int}
+            }, timeout=10)
     except Exception as ex:
         logger.error(f"setup_bot_menu_commands: {ex}")
+
+
+# ── ETA Site Down ──────────────────────────────────────────────────────────────
+SD_SHEET_ID = "1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow"
+SD_GID = "0"
+
+def get_eta_site_down(team_filter="ALL"):
+    """Đọc ETA từ Site Down sheet. Col E = nội dung, Col G = team."""
+    try:
+        csv_url = f"https://docs.google.com/spreadsheets/d/{SD_SHEET_ID}/export?format=csv&gid={SD_GID}"
+        resp = requests.get(csv_url, timeout=15)
+        resp.raise_for_status()
+        import csv, io
+        reader = csv.reader(io.StringIO(resp.text))
+        rows = list(reader)
+        if len(rows) < 6:
+            return "Không có dữ liệu."
+
+        # Row 5 (index 4) = header, Col E (index 4) = timestamp
+        update_ts = rows[4][4] if len(rows[4]) > 4 else ""
+
+        team_order = ["T1", "T1 S1", "T2", "T2 S1", "T3", "T3 S1", "T4"]
+        sites = {t: [] for t in team_order}
+
+        for i in range(5, len(rows)):
+            row = rows[i]
+            if len(row) < 7:
+                continue
+            content = (row[4] or "").strip()  # Col E — nội dung đã format sẵn
+            team = (row[6] or "").strip().upper()  # Col G — team
+
+            if not content:
+                continue
+            if not re.match(r"^T\d", team):
+                continue
+
+            matched_team = None
+            for t in team_order:
+                if team == t.upper():
+                    matched_team = t
+                    break
+            if not matched_team:
+                continue
+
+            if team_filter != "ALL" and matched_team.upper() != team_filter.upper():
+                continue
+
+            sites[matched_team].append(content)
+
+        has_data = any(len(v) > 0 for v in sites.values())
+        if not has_data:
+            return f"{update_ts}\nKhông có site down."
+
+        lines = []
+        display_order = team_order if team_filter == "ALL" else [team_filter]
+        for t_name in display_order:
+            if t_name not in sites or not sites[t_name]:
+                continue
+            lines.append("")
+            lines.append(f"{t_name} {update_ts}")
+            for content in sites[t_name]:
+                lines.append(content)
+
+        return "\n".join(lines).strip()
+    except Exception as ex:
+        logger.error(f"get_eta_site_down error: {ex}")
+        return f"Lỗi đọc ETA: {ex}"
+
 
 # ── ULTRA-FAST HIGH-PERFORMANCE SEARCH ENGINE (Parallel + SWR + O(1) Hash Indexing) ──
 from concurrent.futures import ThreadPoolExecutor
@@ -817,31 +945,77 @@ def get_team_staff_names(team_num: int) -> list[str]:
         logger.error(f"get_team_staff_names error: {e}")
     return []
 
-def get_plan_template_text(team_num: int) -> str:
-    try:
-        matched_staff = get_team_staff_names(team_num)
-        now_mm = datetime.now(TZ_MM)
-        date_str = now_mm.strftime("%d/%m/%Y")
-        
-        lines = [
-            f"Daily Plan: {date_str}",
-            f"Team {team_num}",
-            "I. Hot task rescue Site down/ link Down >24 :",
-            "II. Hot task Rescue Cell down: ",
-            "III. Hot task Repair DG abnomal: ",
-            "IV. Hot task Repair DG run>16H:",
-            "V. Hot task other: ",
-            "VI.  Note: /Find /TNIxxxx Yesterday check which /Tool, /material need /bring for do on Site. All material using new or move or order all people can sent folow menu: https://t.me/+atexSvtj13gyYjI1",
-            "VII. List name FT : Name Site ( WO + Task)"
-        ]
-        
-        for i, name in enumerate(matched_staff, 1):
-            lines.append(f"{i}. {name}: ")
-            
-        return "\n".join(lines)
-    except Exception as e:
-        logger.error(f"get_plan_template_text error: {e}")
-        return f"Error: {str(e)}"
+_plan_cache = {"time": 0, "data": None}
+
+def get_plan_template_text(team_filter: str) -> str:
+    """Đọc mẫu Plan từ Sheet 18zQB4i0Fu4QfKKkkUZUd6SKWIEbdWDiwdpgNSaL9v54 (gid=1366655674).
+    Col R = template chung, Col S-Z = FT list theo team.
+    team_filter: "T1", "T1 S1", "T2", "T2 S1", "T3", "T3 S1", "T4"."""
+    global _plan_cache
+    now_ts = time.time()
+    df = None
+
+    if _plan_cache["data"] is not None and now_ts - _plan_cache["time"] < 60:
+        df = _plan_cache["data"]
+    else:
+        try:
+            url = "https://docs.google.com/spreadsheets/d/18zQB4i0Fu4QfKKkkUZUd6SKWIEbdWDiwdpgNSaL9v54/gviz/tq?tqx=out:csv&gid=1366655674"
+            resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
+            if resp.status_code == 200:
+                df = pd.read_csv(io.StringIO(resp.text), header=None)
+                _plan_cache = {"time": now_ts, "data": df}
+        except Exception as e:
+            logger.error(f"Error fetching plan template: {e}")
+            if _plan_cache["data"] is not None:
+                df = _plan_cache["data"]
+
+    if df is None:
+        return "⚠️ Could not load plan template from Google Sheets."
+
+    # Tự động tìm cột theo header row 0 — không hardcode index
+    template_col = None
+    plan_col_map = {}
+    for c in range(df.shape[1]):
+        h = str(df.iloc[0, c]).strip() if pd.notna(df.iloc[0, c]) else ""
+        h_upper = h.upper()
+        if h_upper.startswith("DAILY PLAN"):
+            template_col = c
+        elif h_upper in ("T1", "T1 S1", "T2", "T2 S1", "T3", "T3 S1", "T4", "T4 S1"):
+            plan_col_map[h_upper] = c
+
+    if template_col is None:
+        return "⚠️ Không tìm thấy cột 'Daily Plan' trong header."
+
+    tf = team_filter.upper().strip()
+
+    # Đọc template chung từ cột Daily Plan
+    lines = []
+    for r in range(df.shape[0]):
+        v = df.iloc[r, template_col]
+        if pd.notna(v) and str(v).strip():
+            cell = str(v).strip()
+            # R2 = "Team" → thay bằng team_filter (VD: "Team 3" hoặc "Team 3 S1")
+            if cell.lower() == "team":
+                display_team = tf.replace("T", "Team ", 1)
+                cell = display_team
+            lines.append(cell)
+
+    # Đọc FT list từ cột team tương ứng — BỎ QUA ROW 0 (header "T3", "T3 S1"...)
+    team_col = plan_col_map.get(tf)
+    ft_lines = []
+    if team_col is not None and team_col < df.shape[1]:
+        for r in range(1, df.shape[0]):  # Bắt đầu từ row 1 (skip row 0 = header)
+            v = df.iloc[r, team_col]
+            if pd.notna(v) and str(v).strip():
+                ft_lines.append(str(v).strip())
+
+    if ft_lines:
+        lines.extend(ft_lines)
+
+    if not lines:
+        return f"⚠️ No plan template found for {tf}."
+
+    return "\n".join(lines)
 
 _attendance_cache = {"time": 0, "data": None}
 
@@ -868,12 +1042,25 @@ def get_attendance_template_text(team_num: int = None, header_only: bool = False
     if df is None:
         return "⚠️ Could not load attendance template from Google Sheets."
 
-    team_col_map = {1: 5, 2: 6, 3: 7, 4: 8}
+    # Tự động tìm cột attendance theo header row 0 — không hardcode index
+    # Header format: "T1 Attendane report: DD/MM/YY", "T1 S1 ... Attendane report: ..."
+    att_col_map = {}  # {"T1": col_idx, "T1 S1": col_idx, ...}
+    for c in range(df.shape[1]):
+        h = str(df.iloc[0, c]).strip() if pd.notna(df.iloc[0, c]) else ""
+        h_upper = h.upper()
+        if "ATTENDANE REPORT" in h_upper or "ATTENDANCE REPORT" in h_upper:
+            # Trích team từ header: "T1 Attendane report" → "T1", "T1 S1 Team 01 Attendane report" → "T1 S1"
+            import re as _re
+            tm = _re.match(r'^(T\d(?:\s*S\d)?)', h_upper)
+            if tm:
+                team_key = tm.group(1).strip()
+                att_col_map[team_key] = c
+
     now_mm = datetime.now(TZ_MM)
     date_short = now_mm.strftime("%d/%m/%y")
 
-    def extract_team_lines(t):
-        col_idx = team_col_map.get(t)
+    def extract_team_lines(team_key):
+        col_idx = att_col_map.get(team_key)
         if col_idx is None or col_idx >= df.shape[1]:
             return []
         lines = []
@@ -884,21 +1071,26 @@ def get_attendance_template_text(team_num: int = None, header_only: bool = False
                 if v_str.lower().startswith("total:"):
                     continue
                 if r == 0 and "report:" in v_str.lower():
-                    v_str = f"Team 0{t} Attendane report: {date_short}"
+                    v_str = f"{team_key} Attendane report: {date_short}"
                 lines.append(v_str)
                 if header_only and len(lines) >= 1:
                     break
         return lines
 
-    if team_num in team_col_map:
-        lines = extract_team_lines(team_num)
+    # team_num → team_key mapping
+    team_num_to_key = {1: "T1", 2: "T2", 3: "T3", 4: "T4"}
+    if team_num and team_num in team_num_to_key:
+        tk = team_num_to_key[team_num]
+        lines = extract_team_lines(tk)
         if not lines:
-            return f"⚠️ No template found for Team {team_num}."
+            return f"⚠️ No template found for {tk}."
         return "\n".join(lines)
     else:
         all_blocks = []
-        for t in (1, 2, 3, 4):
-            lines = extract_team_lines(t)
+        # Lấy tất cả team đã phát hiện, sắp xếp theo thứ tự
+        sorted_keys = sorted(att_col_map.keys(), key=lambda k: att_col_map[k])
+        for tk in sorted_keys:
+            lines = extract_team_lines(tk)
             if lines:
                 all_blocks.append("\n".join(lines))
         if header_only:
@@ -1046,7 +1238,7 @@ def store_attendance_to_sheet(items: list) -> dict:
 def is_daily_plan(text: str) -> bool:
     """
     Detect Daily Plan message submitted by Team Leaders.
-    Structure: Starts with/Contains 'Daily Plan: DD/MM/YYYY', 'Team X', 'I. Hot task'.
+    Structure: Starts with/Contains 'Daily Plan: DD/MM/YYYY' or 'Daily Plan', 'Team X' (or Team X S1), 'I. Hot task'.
     """
     if not text:
         return False
@@ -1064,16 +1256,16 @@ def is_daily_plan(text: str) -> bool:
         "shows detailed site assignments", "tasks grouped by department", "recent plans",
         "plan updated", "plan saved", "ref:dp-", "đã lưu",
         "tni personal find task", "ft result daily", "personal find task", "find task + wo",
-        "submitted ✓", "submitted v", "not yet submitted", "3. tni personal",
-        "sent folow menu", "follow menu", "all material using new or move"
+        "submitted ✓", "submitted v", "not yet submitted", "3. tni personal"
     )):
         return False
 
-    # BẮT BUỘC: Phải có Tiêu đề 'Daily Plan: DD/MM/YYYY' (hoặc 'Plan for DD/MM/YYYY') VÀ có 'Team'
-    has_header = bool(re.search(r'(?:daily\s*plan|plan\s*for)[:\s]+\d{1,2}[\/\.-]\d{1,2}(?:[\/\.-]\d{2,4})?', text, re.IGNORECASE))
-    has_team = bool(re.search(r'\bteam\s*0?[1-5]\b|\bt[1-5]\b', text, re.IGNORECASE))
+    # BẮT BUỘC: Phải có Tiêu đề 'Daily Plan' (hoặc 'Plan for') VÀ có 'Team' hoặc 'Hot task'
+    has_header = bool(re.search(r'(?:daily\s*plan|plan\s*for|daily\s*report\s*plan)', text, re.IGNORECASE))
+    has_team = bool(re.search(r'\bteam\s*0?[1-5](?:\s*(?:s|sub)\s*[1-2])?\b|\bt[1-5](?:\s*(?:s|sub)\s*[1-2])?\b', text, re.IGNORECASE))
+    has_hot_task = any(kw in text_l for kw in ("hot task", "rescue site", "repair dg", "dep assign", "list name ft"))
 
-    return has_header and has_team
+    return has_header and (has_team or has_hot_task)
 
 
 def parse_plan_fields(text: str, chat_id: int | None = None, chat_title: str | None = None) -> tuple:
@@ -1100,19 +1292,27 @@ def parse_plan_fields(text: str, chat_id: int | None = None, chat_title: str | N
         date_str = now_mm.strftime("%d/%m/%Y")
 
     team_str = ""
-    team_m = re.search(r'\bTeam\s*0?([1-5])\b', text, re.IGNORECASE)
+    team_m = re.search(r'\bTeam\s*0?([1-5])(?:\s*(S[1-2]|Sub\s*[1-2]))?\b', text, re.IGNORECASE)
     if not team_m:
-        team_m = re.search(r'\bT([1-5])\b', text, re.IGNORECASE)
+        team_m = re.search(r'\bT([1-5])(?:\s*(S[1-2]|Sub\s*[1-2]))?\b', text, re.IGNORECASE)
     if team_m:
-        team_str = f"Team {team_m.group(1)}"
+        sub = ""
+        if team_m.group(2):
+            sub_clean = re.sub(r'sub\s*', 'S', team_m.group(2), flags=re.IGNORECASE).upper()
+            sub = f" {sub_clean}"
+        team_str = f"Team {team_m.group(1)}{sub}"
 
     # Fallback to chat_title or chat_id if team is not explicitly written in text
     if not team_str and chat_title:
-        title_m = re.search(r'TEAM\s*0?([1-5])', chat_title, re.IGNORECASE)
+        title_m = re.search(r'TEAM\s*0?([1-5])(?:\s*(S[1-2]|Sub\s*[1-2]))?', chat_title, re.IGNORECASE)
         if not title_m:
             title_m = re.search(r'T([1-5])\b', chat_title, re.IGNORECASE)
         if title_m:
-            team_str = f"Team {title_m.group(1)}"
+            sub = ""
+            if title_m.lastindex and title_m.lastindex >= 2 and title_m.group(2):
+                sub_clean = re.sub(r'sub\s*', 'S', title_m.group(2), flags=re.IGNORECASE).upper()
+                sub = f" {sub_clean}"
+            team_str = f"Team {title_m.group(1)}{sub}"
     if not team_str and chat_id:
         def norm_id(cid): return str(cid).replace("-100", "").replace("-", "")
         for tk, gid in TELEGRAM_GROUPS.items():
@@ -1121,11 +1321,11 @@ def parse_plan_fields(text: str, chat_id: int | None = None, chat_title: str | N
                 team_str = f"Team {team_num}"
                 break
     if not team_str:
-        team_str = "Team 1"  # Fallback safety default
+        team_str = ""  # Không fallback — bỏ qua nếu không xác định được team
 
     team_line_idx = 0
     for i, line in enumerate(lines[1:], 1):
-        if re.match(r'^\s*Team\s*0?[1-5]\s*$', line.strip(), re.IGNORECASE):
+        if re.match(r'^\s*Team\s*0?[1-5](?:\s*(?:S|Sub)\s*[1-2])?\s*$', line.strip(), re.IGNORECASE):
             team_line_idx = i
             break
     start_idx = max(1, team_line_idx + 1 if team_line_idx > 0 else 1)
@@ -1141,7 +1341,7 @@ def parse_plan_fields(text: str, chat_id: int | None = None, chat_title: str | N
 
 _processed_plan_msg_ids = set()
 
-def store_daily_plan_to_sheet(date_str: str, team_str: str, content: str, msg_id: int = None) -> dict:
+def store_daily_plan_to_sheet(date_str: str, team_str: str, content: str, msg_id: int = None, submitted_at: str = "") -> dict:
     url = DAILY_APPS_SCRIPT_URL or APPS_SCRIPT_URL or "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
     payload = {
         "action": "store_daily_plan",
@@ -1150,18 +1350,15 @@ def store_daily_plan_to_sheet(date_str: str, team_str: str, content: str, msg_id
         "content": content,
         "daily_report": "",
         "comparison": "",
-        "msg_id": str(msg_id) if msg_id else ""
+        "msg_id": str(msg_id) if msg_id else "",
+        "submitted_at": submitted_at,
     }
-    for attempt in range(3):
-        try:
-            r = requests.post(url, json=payload, timeout=35)
-            if r.status_code == 200:
-                data = r.json()
-                if data.get("ref"):
-                    return data
-        except Exception as e:
-            logger.warning(f"store_daily_plan_to_sheet attempt {attempt+1} error: {e}")
-            time.sleep(1)
+    try:
+        r = requests.post(url, json=payload, timeout=35)
+        if r.status_code == 200:
+            return r.json()
+    except Exception as e:
+        logger.warning(f"store_daily_plan_to_sheet error: {e}")
     return {}
 
 
@@ -1189,15 +1386,15 @@ def fetch_max_plan_ref() -> str:
 _recent_plan_sends = {}
 _recent_plan_msg_hashes = {}
 
-def send_daily_plan_template(chat_id: int, team_num: int) -> None:
+def send_daily_plan_template(chat_id: int, team_filter: str) -> None:
     now_ts = time.time()
-    key = f"{chat_id}:{team_num}"
+    key = f"{chat_id}:{team_filter}"
     if (now_ts - _recent_plan_sends.get(key, 0)) < 6.0:
         logger.info(f"Skipping duplicate send_daily_plan_template for chat {chat_id}")
         return
     _recent_plan_sends[key] = now_ts
 
-    template = get_plan_template_text(team_num)
+    template = get_plan_template_text(team_filter)
     tg_send(chat_id, template)
 
 _recent_help_sends = {}
@@ -1427,7 +1624,8 @@ def submit_daily(chat_id: int, user_id: int, first_name: str, text: str, msg_dat
                              json={"action": "daily_add",
                                    "telegram_id": str(user_id),
                                    "user_name": name,
-                                   "fields": parsed},
+                                   "fields": parsed,
+                                   "submitted_at": now_mm.strftime('%d/%m/%Y %H:%M')},
                              timeout=35)
         if resp.status_code == 200:
             try:
@@ -1553,6 +1751,17 @@ def handle(update: dict) -> None:
         first_word = parts[0][1:].lower().split("@")[0]  # e.g. "/t4notclose@bot" -> "t4notclose"
         rest = parts[1] if len(parts) > 1 else ""
 
+        if first_word.startswith("eta"):
+            eta_map = {
+                "eta": "ALL", "eta_t1": "T1", "eta_t1_s1": "T1 S1",
+                "eta_t2": "T2", "eta_t2_s1": "T2 S1",
+                "eta_t3": "T3", "eta_t3_s1": "T3 S1", "eta_t4": "T4"
+            }
+            team_f = eta_map.get(first_word, "ALL")
+            reply = get_eta_site_down(team_f)
+            tg_send(chat_id, reply)
+            return
+
         if first_word in ("request_enter_site", "request_site_enter", "site_access", "siteaccess", "site_enter", "request_site"):
             passed_site = rest.upper().strip() if rest else "TNI0401"
             reply = get_site_access_template(passed_site)
@@ -1569,29 +1778,33 @@ def handle(update: dict) -> None:
             send_daily_template(chat_id)
             return
 
-        if first_word in ("plan", "dailyplan"):
-            if is_duplicate_search(chat_id, user_id, f"PLAN:{text}"):
+        if first_word.startswith("plan"):
+            if is_duplicate_search(chat_id, user_id, f"PLAN:{first_word}"):
                 return
-            team_num = None
-            if rest:
-                team_arg = rest.upper().strip()
-                m = re.match(r"^(T(?:EAM)?\s*([1-4])|[1-4])$", team_arg, re.IGNORECASE)
-                if m:
-                    team_num = int(m.group(2) if m.group(2) else m.group(1))
-            if not team_num:
+            # /plan_t3 → "T3", /plan_t3_s1 → "T3 S1", /plan → auto-detect
+            plan_map = {
+                "plan_t1": "T1", "plan_t1_s1": "T1 S1",
+                "plan_t2": "T2", "plan_t2_s1": "T2 S1",
+                "plan_t3": "T3", "plan_t3_s1": "T3 S1",
+                "plan_t4": "T4",
+            }
+            team_filter = plan_map.get(first_word)
+            if not team_filter:
+                # /plan hoặc /dailyplan → auto-detect theo chat_id/title
                 chat_title = (msg.get("chat", {}).get("title") or "").lower()
                 cid_str = str(chat_id)
                 if "4215695747" in cid_str or "team 1" in chat_title or "dawei" in chat_title:
-                    team_num = 1
+                    team_filter = "T1"
                 elif "4480845549" in cid_str or "team 2" in chat_title or "myeik" in chat_title:
-                    team_num = 2
+                    team_filter = "T2"
                 elif "4369170658" in cid_str or "team 3" in chat_title or "bokpyin" in chat_title:
-                    team_num = 3
+                    team_filter = "T3"
                 elif "4293741999" in cid_str or "team 4" in chat_title or "kawthoung" in chat_title:
-                    team_num = 4
+                    team_filter = "T4"
                 else:
-                    team_num = get_user_team_number(user_id) or 1
-            send_daily_plan_template(chat_id, team_num)
+                    tn = get_user_team_number(user_id) or 1
+                    team_filter = f"T{tn}"
+            send_daily_plan_template(chat_id, team_filter)
             return
 
         if first_word in ("id", "myid"):
@@ -1652,6 +1865,11 @@ def handle(update: dict) -> None:
 
     # ── 1. DAILY PLAN SUBMIT (PRIORITY #1: Process plan BEFORE SSOT classify to prevent TNI code hijacking) ──
     if is_daily_plan(clean_text) or is_daily_plan(text):
+        # 🛑 Bỏ qua edited_message — chỉ thu thập lần đầu, không lặp khi TL sửa bài
+        if update.get("edited_message"):
+            logger.info("Skipping edited_message for Daily Plan — no re-collection")
+            return
+
         msg_id = msg.get("message_id")
         if msg_id and msg_id in _processed_plan_msg_ids:
             logger.info(f"Skipping duplicate Daily Plan webhook msg_id={msg_id}")
@@ -1664,25 +1882,22 @@ def handle(update: dict) -> None:
         chat_title = msg.get("chat", {}).get("title", "")
         date_str, team_str, content = parse_plan_fields(text, chat_id, chat_title)
         if date_str and team_str:
-            res = store_daily_plan_to_sheet(date_str, team_str, text, msg_id=msg_id)
+            msg_date = msg.get("date")
+            now_mm = datetime.fromtimestamp(msg_date, TZ_MM) if msg_date else datetime.now(TZ_MM)
+            submitted_at = now_mm.strftime('%d/%m/%Y %H:%M:%S')
+            res = store_daily_plan_to_sheet(date_str, team_str, text, msg_id=msg_id, submitted_at=submitted_at)
             ref = res.get("ref")
             dup = res.get("duplicate", False)
-
-            # 🛑 Nếu GAS xác nhận đây là bản trùng (đã lưu bởi instance Vercel khác) → bỏ qua, không gửi confirmation
-            if dup:
-                logger.info(f"GAS returned duplicate=true for msg_id={msg_id}, skipping confirmation")
-                return
 
             if not ref or ref == "?" or "OK" in str(ref):
                 ref_show = fetch_max_plan_ref()
             else:
                 ref_show = ref
 
-            msg_date = msg.get("date")
-            now_mm = datetime.fromtimestamp(msg_date, TZ_MM) if msg_date else datetime.now(TZ_MM)
-            time_str = now_mm.strftime('%H:%M')
+            time_str = now_mm.strftime('%H:%M:%S')
 
-            tg_send(chat_id, f"📋 <b>Daily Plan</b> ✅ #<b>{ref_show}</b> | 📍 <b>{team_str}</b> | 🗓️ <b>{date_str} {time_str}</b>")
+            action_label = "Daily Plan (Updated)" if dup else "Daily Plan"
+            tg_send(chat_id, f"📋 <b>{action_label}</b> ✅ #<b>{ref_show}</b> | 📍 <b>{team_str}</b> | 🗓️ <b>{date_str} {time_str}</b>")
             return
 
     # ── 2. DAILY REPORT SUBMIT (PRIORITY #2: Process daily report BEFORE SSOT classify) ──
@@ -2044,7 +2259,7 @@ class handler(BaseHTTPRequestHandler):
                     team_num = int(team_arg)
                 except ValueError:
                     team_num = 1
-                template_text = get_plan_template_text(team_num)
+                template_text = get_plan_template_text(f"T{team_num}")
                 
             self.send_response(200)
             self.send_header("Content-Type", "application/json")

@@ -649,3 +649,15 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 >    - **Tầng 2 (Payload Status)**: `resp.json().get("status") == "ok"` hoặc `resp.json().get("ok") == True`.
 >    - **TUYỆT ĐỐI CẤM "Báo Cáo Thành Công Ảo" (Zero Hallucinated Success Log)**: CẤM TUYỆT ĐỐI việc in log "Logged N records successfully" khi chưa kiểm tra `status == "ok"` từ JSON phản hồi của máy chủ! Nếu server trả về lỗi (như `Unknown action`), BẮT BUỘC phải in Warning/Alert và ghi log thất bại.
 > 4. **Bài Học Thực Tế Report 6 (02/09/2026)**: `daily_read_report.py` chạy trên repo `MON6879/tni-sitedown-relay`, lấy `APPS_SCRIPT_URL` của Site Down GAS $\rightarrow$ Gửi `log_read_group` sang Site Down GAS $\rightarrow$ Site Down GAS trả về `{"ok":false,"msg":"Unknown action: log_read_group"}` $\rightarrow$ Code cũ không kiểm tra phản hồi JSON, vẫn in log ảo đã ghi thành công $\rightarrow$ Bảng tính `Read Group` (GID `870080250`) bị đứng suốt từ 30/08 đến 02/09 dù Telegram vẫn tự gửi tin đều đặn! Đã sửa triệt để bằng Whitelist `AKfycbz-NZlBk8q2` + Kiểm tra 2 tầng HTTP & JSON.
+
+---
+
+# 🕒 STRICT FULL TIMESTAMP RULE: THU THẬP NGÀY BẮT BUỘC PHẢI KÈM GIỜ:PHÚT:GIÂY (DD/MM/YYYY HH:MM:SS) — ZERO DATE-ONLY STAMP POLICY
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (FULL DATETIME COLLECTION POLICY)**:
+> 1. **Thu Thập Ngày Bắt Buộc Kèm Giờ:Phút:Giây (Full Timestamp Mandatory)**: Mọi dữ liệu thu thập tự động từ Telegram Bot (Daily Plan, Daily Report, Cable, MDG, Inventory Fuel, Change Oil, Asset Order, Refuel, Attendance, Solution...) khi ghi nhận cột **Date / Timestamp / Submitted At** vào Google Sheets hoặc Database BẮT BUỘC phải lưu đầy đủ cả Ngày và Giờ:Phút:Giây theo định dạng:
+>    $$\text{DD/MM/YYYY HH:mm:ss}$$
+>    (Ví dụ: `02/09/2026 13:36:51`).
+> 2. **TUYỆT ĐỐI CẤM Chỉ Lưu Ngày Cụt Lủn (Zero Date-Only Timestamp)**: CẤM TUYỆT ĐỐI việc chỉ ghi `02/09/2026` hoặc `31/08/2026 00:00:00` mà thiếu thời gian thực tế gửi tin! Ghi thiếu giờ sẽ làm mất hoàn toàn khả năng truy vết thứ tự và thời điểm nộp báo cáo thực tế của nhân viên/đội trong ngày.
+> 3. **Tự Động Ghép Giờ Nếu Form Chỉ Có Ngày (Auto-Combine Date with Submit Time)**: Nếu tin nhắn/form của người dùng chỉ ghi tiêu đề ngày (ví dụ `Daily Plan: 2/9/2026`), Bot và GAS Backend BẮT BUỘC phải tự động lấy giờ phút giây lúc nhận tin nhắn (`msg.date` hoặc `now_mm`) để ghép thành chuỗi hoàn chỉnh `02/09/2026 HH:mm:ss` trước khi chèn vào bảng tính.
+> 4. **Tin Nhắn Phản Hồi Bot Luôn Có Giờ (Bot Response Must Show Full Time)**: Tin nhắn Bot phản hồi thu thập (`📋 Daily Plan ✅ #DP-xxx | 📍 Team X | 🗓️ DD/MM/YYYY HH:mm:ss`) BẮT BUỘC phải hiển thị đầy đủ thời gian thu thập.
