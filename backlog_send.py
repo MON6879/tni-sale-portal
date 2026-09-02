@@ -38,7 +38,7 @@ TEAM_GROUPS = {
 
 MAIN_GAS_FALLBACK = "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
 APPS_SCRIPT_URL = os.getenv("APPS_SCRIPT_URL", "").strip()
-if not APPS_SCRIPT_URL or "AKfycbzGFdnE" in APPS_SCRIPT_URL:
+if not APPS_SCRIPT_URL or "AKfycbz-NZlBk8q2" not in APPS_SCRIPT_URL:
     APPS_SCRIPT_URL = MAIN_GAS_FALLBACK
 
 CHATID_TO_KEY = {
@@ -276,10 +276,10 @@ def get_team_for_row(row):
 
 
 def get_subteam_for_row(row):
-    """Xác định sub-team (ví dụ: T3 S1 hoặc T3) từ các cột team."""
-    for col_idx in [18, 33, 48, 63, 76]:  # S, AH, AW, BL, BY
-        val = str(row.iloc[col_idx]).strip() if col_idx < len(row) else ""
-        if val and val.lower() not in ("nan", "none", "-"):
+    """Xác định mã sub-team (T1, T1 S1, T2, T2 S1, T3, T3 S1, T4) từ Cột S (Col 18)."""
+    if len(row) > 18:
+        val = str(row.iloc[18]).strip()
+        if val.startswith(("T1", "T2", "T3", "T4", "T5")):
             return val.upper()
     return None
 
@@ -327,28 +327,6 @@ async def main():
     # Báo cáo 2
     # T1: M(12), T2: N(13), T3: O(14), T4: P(15)
     # Báo cáo 3
-    # KVA columns definition
-    kva_cols = {
-        "oil_filter": [("8KVA", "AA"), ("12KVA", "AB"), ("30KVA", "AC"), ("12DKVA", "AD"), ("8.TIP", "AE")],
-        "fuel_filter": [("8KVA", "AP"), ("12KVA", "AQ"), ("30KVA", "AR"), ("12DKVA", "AS"), ("8.TIP", "AT")],
-        "air_filter": [("8KVA", "BE"), ("12KVA", "BF"), ("30KVA", "BG"), ("12DKVA", "BH"), ("8.TIP", "BI")],
-        "oil_plan": [("8KVA", "BS"), ("12KVA", "BT"), ("30KVA", "BU"), ("12DKVA", "BV"), ("8.TIP", "BW")],
-        "coolant_plan": [("8KVA", "CF"), ("12KVA", "CG"), ("30KVA", "CH"), ("12DKVA", "CI"), ("8.TIP", "CJ")]
-    }
-
-    # Filter kva_cols to only keep columns that have a valid header in row 4 (index 3) of df
-    filtered_kva_cols = {}
-    for key, cols in kva_cols.items():
-        filtered_cols = []
-        for kva_name, col_let in cols:
-            c_idx = col_letter_to_index(col_let)
-            if c_idx < len(df.columns):
-                # Row 4 of the sheet corresponds to index 3 in df (since index 0 is row 1)
-                header_val = df.iloc[3, c_idx] if len(df) > 3 else None
-                if is_valid(header_val):
-                    filtered_cols.append((kva_name, col_let))
-        filtered_kva_cols[key] = filtered_cols
-
     team_msg1 = {1: [], 2: [], 3: [], 4: [], 5: []}
     team_msg2 = {1: [], 2: [], 3: [], 4: []}
     subteams_dg = {}
@@ -406,34 +384,59 @@ async def main():
             val2_t4 = row.iloc[15] if len(row) > 15 else ""
             if is_valid(val2_t4): team_msg2[4].append(f"{label2}:\n  {val2_t4}")
 
-        # --- Xử lý Báo cáo 3 (DG Material) ---
-        subteam = get_subteam_for_row(row)
-        if subteam:
-            if subteam not in subteams_dg:
-                subteams_dg[subteam] = {
-                    "oil_filter": {}, "fuel_filter": {}, "air_filter": {}, "oil_plan": {}, "coolant_plan": {},
-                    "oil_sum_need": 0.0, "oil_have": 0.0, "oil_diff": 0.0,
-                    "coolant_sum_need": 0.0, "coolant_have": 0.0, "coolant_diff": 0.0
-                }
-            sd = subteams_dg[subteam]
-            
-            # KVA sums
-            for key, cols in filtered_kva_cols.items():
-                for kva_name, col_let in cols:
-                    c_idx = col_letter_to_index(col_let)
-                    val = to_float(row.iloc[c_idx]) if c_idx < len(row) else 0.0
-                    sd[key][kva_name] = sd[key].get(kva_name, 0.0) + val
-                    
-            # Volumes
-            sd["oil_sum_need"] += to_float(row.iloc[67]) if len(row) > 67 else 0.0
-            sd["oil_have"] += to_float(row.iloc[68]) if len(row) > 68 else 0.0
-            sd["oil_diff"] += to_float(row.iloc[69]) if len(row) > 69 else 0.0
-            
-            sd["coolant_sum_need"] += to_float(row.iloc[80]) if len(row) > 80 else 0.0
-            sd["coolant_have"] += to_float(row.iloc[81]) if len(row) > 81 else 0.0
-            sd["coolant_diff"] += to_float(row.iloc[82]) if len(row) > 82 else 0.0
+        # --- Xử lý Báo cáo 3 (DG Material Need - Cột AM, AT, BI, BX, CI, CV) ---
+        if len(row) > 38:
+            team_am = str(row.iloc[38]).strip() if is_valid(row.iloc[38]) else ""
+            if team_am.startswith(("T1", "T2", "T3", "T4", "T5")):
+                at_oil_filter = str(row.iloc[45]).strip() if len(row) > 45 and is_valid(row.iloc[45]) else ""
+                bi_fuel_filter = str(row.iloc[60]).strip() if len(row) > 60 and is_valid(row.iloc[60]) else ""
+                bx_air_filter = str(row.iloc[75]).strip() if len(row) > 75 and is_valid(row.iloc[75]) else ""
+                ci_oil = str(row.iloc[86]).strip() if len(row) > 86 and is_valid(row.iloc[86]) else ""
+                cj_need = str(row.iloc[87]).strip() if len(row) > 87 and is_valid(row.iloc[87]) else "0"
+                ck_have = str(row.iloc[88]).strip() if len(row) > 88 and is_valid(row.iloc[88]) else "0"
+                cl_diff = str(row.iloc[89]).strip() if len(row) > 89 and is_valid(row.iloc[89]) else "0"
+                cv_cool = str(row.iloc[99]).strip() if len(row) > 99 and is_valid(row.iloc[99]) else ""
+                cw_need = str(row.iloc[100]).strip() if len(row) > 100 and is_valid(row.iloc[100]) else "0"
+                cx_have = str(row.iloc[101]).strip() if len(row) > 101 and is_valid(row.iloc[101]) else "0"
+                cy_diff = str(row.iloc[102]).strip() if len(row) > 102 and is_valid(row.iloc[102]) else "0"
+
+                if at_oil_filter or bi_fuel_filter or bx_air_filter or ci_oil or cv_cool:
+                    subteams_dg[team_am] = {
+                        "oil_filter": at_oil_filter,
+                        "fuel_filter": bi_fuel_filter,
+                        "air_filter": bx_air_filter,
+                        "oil": ci_oil,
+                        "oil_need": cj_need,
+                        "oil_have": ck_have,
+                        "oil_diff": cl_diff,
+                        "coolant": cv_cool,
+                        "coolant_need": cw_need,
+                        "coolant_have": cx_have,
+                        "coolant_diff": cy_diff,
+                    }
 
     # ── 4. Xóa sạch tin cũ Report 1, 2, 3 và Gửi báo cáo mới qua Bot API + GAS Cache ──
+    def format_blue_dots(val_str):
+        if not val_str:
+            return "  ."
+        parts = val_str.split("<+>")
+        res = []
+        for p in parts:
+            p = p.strip()
+            if ":" in p:
+                k, v = p.split(":", 1)
+                k, v = k.strip(), v.strip()
+                try:
+                    if float(v) > 0:
+                        res.append(f"🔵 {k}: {v}")
+                    else:
+                        res.append(f"{k}: {v}")
+                except ValueError:
+                    res.append(f"{k}: {v}")
+            elif p:
+                res.append(p)
+        return "  " + " <+> ".join(res) if res else "  ."
+
     async with Bot(token=SEND_BOT_TOKEN) as bot:
         for t_num, chat_id in TEAM_GROUPS.items():
             t_name = TEAM_NAMES[t_num]
@@ -497,24 +500,6 @@ async def main():
             matched_subteams = sorted([s for s in subteams_dg.keys() if s.startswith(prefixes)])
 
             if matched_subteams:
-                def fmt_f(val):
-                    if val > 0:
-                        val_str = str(int(val)) if val.is_integer() else f"{val:.1f}"
-                        return f"🔵 {val_str}"
-                    val_str = str(int(val)) if val.is_integer() else f"{val:.1f}"
-                    return val_str
-
-                def fmt_kva(cat_key, kva_dict):
-                    parts = []
-                    cols = filtered_kva_cols.get(cat_key, [])
-                    for kva, _ in cols:
-                        val = int(kva_dict.get(kva, 0.0))
-                        if val > 0:
-                            parts.append(f"🔵 {kva}: {val}")
-                        else:
-                            parts.append(f"{kva}: {val}")
-                    return " <+> ".join(parts)
-
                 lines3 = [
                     f"📋 3. Report — Main DG Material Need — {t_name}",
                     f"📅 {now_str}",
@@ -524,14 +509,14 @@ async def main():
 
                 for subteam in matched_subteams:
                     sd = subteams_dg[subteam]
-                    lines3.append(f"\n📍 SUB-TEAM: {subteam}")
-                    lines3.append(f"⚙️ Sum DG KVA Need change Oil Filter:\n   • {fmt_kva('oil_filter', sd['oil_filter'])}")
-                    lines3.append(f"⚙️ Sum DG KVA Need change Fuel Filter:\n   • {fmt_kva('fuel_filter', sd['fuel_filter'])}")
-                    lines3.append(f"⚙️ Sum DG KVA Need change Air Filter:\n   • {fmt_kva('air_filter', sd['air_filter'])}")
-                    lines3.append(f"🛢️ Sum DG KVA Need change Oil:\n   • {fmt_kva('oil_plan', sd['oil_plan'])}")
-                    lines3.append(f"   👉 Sum Need: {fmt_f(sd['oil_sum_need'])} L | Have at Team: {fmt_f(sd['oil_have'])} L | Diff: {fmt_f(sd['oil_diff'])} L")
-                    lines3.append(f"❄️ Sum DG KVA Need change water Coolant:\n   • {fmt_kva('coolant_plan', sd['coolant_plan'])}")
-                    lines3.append(f"   👉 Sum Need: {fmt_f(sd['coolant_sum_need'])} L | Have at Team: {fmt_f(sd['coolant_have'])} L | Diff: {fmt_f(sd['coolant_diff'])} L")
+                    lines3.append(f"\n📍 TEAM: {subteam}")
+                    lines3.append("⚙️ Sum DG KVA Need change Oil Filter:\n" + format_blue_dots(sd["oil_filter"]))
+                    lines3.append("⚙️ Sum DG KVA Need change Fuel Filter:\n" + format_blue_dots(sd["fuel_filter"]))
+                    lines3.append("⚙️ Sum DG KVA Need change Air Filter:\n" + format_blue_dots(sd["air_filter"]))
+                    lines3.append("🛢️ Sum DG KVA Need change Oil:\n" + format_blue_dots(sd["oil"]))
+                    lines3.append(f"  👉 Sum Need: {sd['oil_need']} L | Have at Team: {sd['oil_have']} L | Diff: {sd['oil_diff']} L")
+                    lines3.append("❄️ Sum DG KVA Need change water Coolant:\n" + format_blue_dots(sd["coolant"]))
+                    lines3.append(f"  👉 Sum Need: {sd['coolant_need']} L | Have at Team: {sd['coolant_have']} L | Diff: {sd['coolant_diff']} L")
 
                 msg3_text = "\n".join(lines3)
                 ok, m_ids = await send_msg(bot, chat_id, msg3_text, f"{t_name} DG Msg 3")

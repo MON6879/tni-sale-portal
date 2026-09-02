@@ -272,6 +272,20 @@
 >
 > ---
 >
+> # 🔁 STRICT RULE: LƯU HASH / FINGERPRINT THÌ BẮT BUỘC PHẢI ĐỌC LẠI VÀ SO SÁNH TRƯỚC KHI HÀNH ĐỘNG — TUYỆT ĐỐI CẤM "GHI RỒI BỎ ĐÓ" (STRICT WRITE-THEN-READ-BACK & ZERO DEAD-CHECK POLICY)
+>
+> > ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (ANTI DEAD-CHECK & MANDATORY READ-BACK POLICY)**:
+> > 1. **Lưu Hash / State Thì BẮT BUỘC Phải Đọc Lại Và So Sánh (Mandatory Read-Back Comparison)**: Mọi giá trị kiểm tra (MD5 hash, fingerprint, timestamp, trạng thái cờ) khi đã được **GHI** vào `ScriptProperties`, `CacheService`, database hoặc biến toàn cục, thì ở chu kỳ tiếp theo BẮT BUỘC phải có dòng code **ĐỌC LẠI** giá trị cũ đã lưu, **SO SÁNH** với giá trị mới, và **QUYẾT ĐỊNH** hành động (gửi / bỏ qua / cập nhật) dựa trên kết quả so sánh!
+> > 2. **TUYỆT ĐỐI CẤM "Ghi Rồi Bỏ Đó" (Zero Write-Only / Dead-Check Code)**: CẤM TUYỆT ĐỐI việc `computeMd5_()` rồi `setProperty("HASH_...", hash)` mà KHÔNG CÓ dòng `getProperty("HASH_...")` ở đầu chu kỳ để so sánh trước khi quyết định gửi. Đây là **anti-pattern "Dead Check"** — viết code kiểm tra nửa vời, có tính mà không có so, dẫn đến gửi tin trùng lặp spam liên tục!
+> > 3. **Quy Tắc 3 Bước Bắt Buộc Cho Mọi Cơ Chế Chống Trùng (Mandatory 3-Step Dedup Lifecycle)**:
+> >    - **Bước 1 — ĐỌC (Read Old)**: `const oldHash = props.getProperty("HASH_KEY") || "";`
+> >    - **Bước 2 — SO (Compare)**: `if (newHash === oldHash) { skip; }`
+> >    - **Bước 3 — GHI (Write New)**: `props.setProperty("HASH_KEY", newHash);` (CHỈ ghi sau khi đã gửi thành công)
+> >    - Nếu chỉ có Bước 3 mà thiếu Bước 1 + 2 → **LỖI NGHIÊM TRỌNG**, phải sửa ngay!
+> > 4. **Kiểm Tra Trước Khi Deploy (Pre-Deploy Dead-Check Audit)**: Trước mỗi lần `clasp push` / deploy, BẮT BUỘC phải grep tìm tất cả các lệnh `setProperty("HASH_` hoặc `computeMd5_` trong code. Với mỗi lệnh tìm được, PHẢI xác nhận có dòng `getProperty("HASH_` tương ứng **TRƯỚC** vòng lặp gửi tin. Nếu không tìm thấy → CHẶN deploy, sửa ngay!
+> > 5. **Bài Học Thực Tế (Postmortem v26 — GAS-SOLUTION-CLEAR-6)**: Phiên bản cũ đã tính `computeMd5_(messageText)` và lưu `HASH_CLEAR_T1..T4` + `HASH_CLEAR_CONTROL` sau mỗi lần gửi, nhưng KHÔNG BAO GIỜ đọc lại hash cũ để so sánh trước khi gửi → Bot gửi tin trùng lặp mỗi khi ô E2 thay đổi dù danh sách trạm giống hệt lần trước. Đã sửa tại v26 bằng cách thêm Bước 1 (Read) + Bước 2 (Compare) đúng chuẩn.
+
+---
 > # 🎯 STRICT RULE: GAS NÀO SỬA GAS NẤY — TUYỆT ĐỐI CẤM TIỆN TAY GỘP CHUNG / SỬA CHÉO DỰ ÁN (STRICT DEDICATED GAS SCOPE ISOLATION)
 >
 > > ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (GAS SCOPE ISOLATION)**:
@@ -622,3 +636,16 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 > 4. **Bài Học Report 6 (25-30/08/2026)**: Session cũ bị `AuthKeyDuplicatedError` → `cron_send.py` step 9 im lặng skip gửi Note → `daily_read_report.py` không tìm thấy Note hợp lệ (tin của Bot không đếm được) → Report 6 gửi toàn Read=0 suốt 5 ngày → Sheet đóng băng → không ai biết cho đến khi Người Dùng phát hiện thủ công!
 > 5. **CẤM Gửi Báo Cáo "Toàn Số 0" Mà Không Cảnh Báo (Zero Silent All-Zero Report)**: Nếu Report 6 phát hiện TOÀN BỘ teams đều `Read = 0` (tức là `sum(cnt_d0) == 0` cho tất cả T1-T4) → BẮT BUỘC phải gửi cảnh báo `⚠️ ALERT: Read API returned 0 for ALL teams — possible session/API failure` cho Admin (`6859790680`) thay vì gửi báo cáo vô nghĩa!
 > 6. **Auditor Phải Kiểm Tra Nội Dung, Không Chỉ Ngày (Content Freshness, Not Just Date Freshness)**: Ghế AUDITOR-9.1 BẮT BUỘC phải kiểm tra THÊM: nếu dữ liệu Sheet Read Group có ngày hôm nay nhưng toàn bộ status = "Unread" với trend 0/0/0 → **FAIL** (dữ liệu giả, không phải dữ liệu thật).
+
+---
+
+# 🎯 STRICT RULE: BẮT BUỘC WHITELIST ĐÚNG DEPLOYMENT ID & KIỂM TRA PHẢN HỒI HTTP 200 + JSON STATUS OK (STRICT ENDPOINT WHITELISTING & 2-TIER API VERIFICATION POLICY)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (ENDPOINT WHITELIST & API VERIFICATION POLICY)**:
+> 1. **Bắt Buộc Dùng Cơ Chế Whitelist (Mandatory Deployment ID Whitelisting)**: Khi bất kỳ script Python nào cần gửi dữ liệu hoặc gọi API tới Google Apps Script (GAS), BẮT BUỘC phải dùng cơ chế **Whitelist** — tức là CHỈ chấp nhận biến môi trường URL nếu nó chứa đúng đoạn mã Deployment ID chuẩn của phân hệ đó (ví dụ: `AKfycbz-NZlBk8q2` cho `QLTC_GAS`, `AKfycbyCibIj` cho `apps_script_sitedown`, `AKfycbw-QYNe` cho `apps_script_solution_clear`). Nếu không khớp $\rightarrow$ ÉP BUỘC dùng `PRIMARY_GAS_URL` chuẩn của phân hệ đó!
+> 2. **TUYỆT ĐỐI CẤM Cơ Chế Blacklist Nửa Vời (Zero Weak Blacklisting Anti-Pattern)**: CẤM TUYỆT ĐỐI việc viết `if not URL or "BLACKLIST_ID" in URL: URL = FALLBACK` — vì khi chạy đa repo (ví dụ chạy trên repo `tni-sitedown-relay` với GitHub Secrets của Site Down), blacklist sẽ bỏ lọt và gửi nhầm dữ liệu sang endpoint của phân hệ khác, gây tê liệt bảng tính!
+> 3. **Bắt Buộc Kiểm Tra Phản Hồi 2 Tầng (Mandatory 2-Tier Response Verification)**: Mọi lệnh `requests.post()` hoặc `requests.get()` gửi dữ liệu vào GAS BẮT BUỘC phải kiểm tra cả 2 tầng:
+>    - **Tầng 1 (HTTP Status)**: `resp.status_code == 200`.
+>    - **Tầng 2 (Payload Status)**: `resp.json().get("status") == "ok"` hoặc `resp.json().get("ok") == True`.
+>    - **TUYỆT ĐỐI CẤM "Báo Cáo Thành Công Ảo" (Zero Hallucinated Success Log)**: CẤM TUYỆT ĐỐI việc in log "Logged N records successfully" khi chưa kiểm tra `status == "ok"` từ JSON phản hồi của máy chủ! Nếu server trả về lỗi (như `Unknown action`), BẮT BUỘC phải in Warning/Alert và ghi log thất bại.
+> 4. **Bài Học Thực Tế Report 6 (02/09/2026)**: `daily_read_report.py` chạy trên repo `MON6879/tni-sitedown-relay`, lấy `APPS_SCRIPT_URL` của Site Down GAS $\rightarrow$ Gửi `log_read_group` sang Site Down GAS $\rightarrow$ Site Down GAS trả về `{"ok":false,"msg":"Unknown action: log_read_group"}` $\rightarrow$ Code cũ không kiểm tra phản hồi JSON, vẫn in log ảo đã ghi thành công $\rightarrow$ Bảng tính `Read Group` (GID `870080250`) bị đứng suốt từ 30/08 đến 02/09 dù Telegram vẫn tự gửi tin đều đặn! Đã sửa triệt để bằng Whitelist `AKfycbz-NZlBk8q2` + Kiểm tra 2 tầng HTTP & JSON.

@@ -49,7 +49,7 @@ SEND_BOT_TOKEN = os.environ.get("SEND_BOT_TOKEN", "")
 # Dùng APPS_SCRIPT_URL chung — doPost route "daily_*" → doPostDaily_
 MAIN_GAS_FALLBACK = "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
 APPS_SCRIPT_URL = os.environ.get("APPS_SCRIPT_URL", "").strip()
-if not APPS_SCRIPT_URL or "AKfycbzGFdnE" in APPS_SCRIPT_URL:
+if not APPS_SCRIPT_URL or "AKfycbz-NZlBk8q2" not in APPS_SCRIPT_URL:
     APPS_SCRIPT_URL = MAIN_GAS_FALLBACK
 
 MYANMAR_TZ = timezone(timedelta(hours=6, minutes=30))
@@ -940,11 +940,17 @@ def build_comparison(plan_content: str, report_texts: list) -> dict:
 
 
 def fmt_sent_at(val) -> str:
+    """Extract HH:MM time from various datetime/string formats."""
     if not val:
         return ""
     if isinstance(val, datetime):
-        return val.strftime("%d/%m/%Y %H:%M")
-    return str(val)
+        return val.strftime("%H:%M")
+    s = str(val).strip()
+    # "DD/MM/YYYY HH:MM" → extract HH:MM
+    m = re.search(r'(\d{1,2}:\d{2})(?::\d{2})?$', s)
+    if m:
+        return m.group(1)
+    return s
 
 
 # ── Stats building ─────────────────────────────────────────────
@@ -1118,7 +1124,7 @@ def calc_3day_completion_rate(all_plans: list, team_comparisons: dict,
 
             sent_at_str = ""
             for p in day_plans:
-                m_at = p.get("msg_date") or p.get("sent_time") or p.get("sent_at")
+                m_at = p.get("submitted_at") or p.get("msg_date") or p.get("sent_time") or p.get("sent_at")
                 if m_at:
                     sent_at_str = fmt_sent_at(m_at)
                     if sent_at_str:
@@ -1647,7 +1653,8 @@ async def run_morning():
             # Plan today status
             lines.append(f"📝 Plan for {date_str}:")
             if pt["found"]:
-                sent_at = fmt_sent_at(pt.get("sent_time", ""))
+                plan_data = pt.get("plan", {}) or {}
+                sent_at = fmt_sent_at(plan_data.get("submitted_at") or pt.get("sent_time", ""))
                 if sent_at:
                     lines.append(f"✅ Team Leader: Submitted ✓ (sent at {sent_at})")
                 else:
@@ -1672,10 +1679,10 @@ async def run_morning():
             lines.append("")
             lines.append("📈 3-Day Completion Rate:")
             for day_info in cr["days"]:
-                sent_info = f" (sent at {day_info['sent_at']})" if day_info.get("sent_at") else ""
+                sent_info = f" - {day_info['sent_at']}" if day_info.get("sent_at") else ""
                 if day_info["plan_count"] > 0:
                     lines.append(
-                        f"   {day_info['date']}: Plan {day_info['plan_count']}{sent_info} "
+                        f"   {day_info['date']}{sent_info}: Plan ✅ ({day_info['plan_count']} sites) "
                         f"→ Done {day_info['done_count']} ({day_info['pct']}%)"
                     )
                 else:

@@ -32,7 +32,7 @@ REPORT_TASK_BOT_TOKEN   = os.getenv("REPORT_TASK_BOT_TOKEN", "")
 TECHNICAL_DEP_BOT_TOKEN = os.getenv("TECHNICAL_DEP_BOT_TOKEN", "")
 MAIN_GAS_FALLBACK   = "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
 APPS_SCRIPT_URL   = os.getenv("APPS_SCRIPT_URL", "").strip()
-if not APPS_SCRIPT_URL or "AKfycbzGFdnE" in APPS_SCRIPT_URL or APPS_SCRIPT_URL == MAIN_GAS_FALLBACK:
+if not APPS_SCRIPT_URL or "AKfycbz-NZlBk8q2" not in APPS_SCRIPT_URL:
     APPS_SCRIPT_URL = MAIN_GAS_FALLBACK
 TELEGRAM_API_ID         = int(os.getenv("TELEGRAM_API_ID", "0"))
 TELEGRAM_API_HASH       = os.getenv("TELEGRAM_API_HASH", "")
@@ -601,9 +601,10 @@ def build_asset_msg(now_str, asset_data):
             f" | {s.get('d0',0)} /{s.get('done_d0',0)}"
             f"  7Day: {s.get('d6',0)} /{s.get('done_d6',0)}"
             f"  Month: {s.get('d15',0)} /{s.get('done_d15',0)}"
+            f"  All: {s.get('total',0)} /{s.get('done',0)}"
         )
 
-    PERIOD_KEYS = ["d0","d1","d2","d6","d15","done_d0","done_d1","done_d2","done_d6","done_d15"]
+    PERIOD_KEYS = ["d0","d1","d2","d6","d15","done_d0","done_d1","done_d2","done_d6","done_d15","total","done"]
 
     lines = [f"📦 4d. Asset progress for material – {now_str}", "━━━━━━━━━━━━━━━━━━━━"]
 
@@ -621,8 +622,8 @@ def build_asset_msg(now_str, asset_data):
                 team_total[k] += s.get(k, 0)
         lines.append(f"   📅 {fmt_period(team_total)}")
 
-    # Grand total
-    lines.append(f"📊 Total:")
+    # Grand total - Tổng hợp tất cả TNI
+    lines.append(f"🏷️ 🌐 Total TNI:")
     for at in action_types:
         sq = get_action_square(at)
         val = fmt(grand.get(at,{}))
@@ -634,7 +635,7 @@ def build_asset_msg(now_str, asset_data):
         g = grand.get(at, {})
         for k in PERIOD_KEYS:
             g_period[k] += g.get(k, 0)
-    lines.append(f"📅 Total  {fmt_period(g_period)}")
+    lines.append(f"   📅 {fmt_period(g_period)}")
 
     return "\n".join(lines)
 
@@ -646,7 +647,7 @@ def build_team_asset_section(team_key: str, asset_data: dict) -> str:
 
     action_types = asset_data.get("actionTypes", [])
     stats = asset_data.get("stats", {})
-    PERIOD_KEYS = ["d0","d1","d2","d6","d15","done_d0","done_d1","done_d2","done_d6","done_d15"]
+    PERIOD_KEYS = ["d0","d1","d2","d6","d15","done_d0","done_d1","done_d2","done_d6","done_d15","total","done"]
 
     key_lines = []
     has_data = False
@@ -674,6 +675,7 @@ def build_team_asset_section(team_key: str, asset_data: dict) -> str:
         f"3Day: {team_total.get('d2',0)}/{team_total.get('d1',0)}/{team_total.get('d0',0)}"
         f"  7Day: {team_total.get('d6',0)}"
         f"  Month: {team_total.get('d15',0)} ({cycle_str})"
+        f"  All: {team_total.get('total',0)}/{team_total.get('done',0)}"
     )
 
     return (
@@ -710,9 +712,10 @@ def build_team_asset_msg(team_key, now_str, asset_data):
             f" | {s.get('d0',0)} /{s.get('done_d0',0)}"
             f"  7Day: {s.get('d6',0)} /{s.get('done_d6',0)}"
             f"  Month: {s.get('d15',0)} /{s.get('done_d15',0)}"
+            f"  All: {s.get('total',0)} /{s.get('done',0)}"
         )
 
-    PERIOD_KEYS = ["d0","d1","d2","d6","d15","done_d0","done_d1","done_d2","done_d6","done_d15"]
+    PERIOD_KEYS = ["d0","d1","d2","d6","d15","done_d0","done_d1","done_d2","done_d6","done_d15","total","done"]
 
     key_lines = []
     for at in action_types:
