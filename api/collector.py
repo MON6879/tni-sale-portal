@@ -80,18 +80,19 @@ def fetch_config_templates(force: bool = False) -> dict:
         keywords = []
         for row in rows[1:]:  # Skip Header 'Field Name'
             val = (row[0] if row else "").strip()
-            if val:
-                lines.append(val)
-                if ":" in val:
-                    kw = val.split(":")[0].strip().lower()
-                    mapping[kw] = val
-                    if kw not in keywords:
-                        keywords.append(kw)
-                else:
-                    first_word = val.split()[0].strip().lower()
-                    mapping[first_word] = val
-                    if first_word not in keywords:
-                        keywords.append(first_word)
+            if not val or val.lower() == "field name":
+                continue
+            lines.append(val)
+            if ":" in val:
+                kw = val.split(":")[0].strip().lower()
+                mapping[kw] = val
+                if kw not in keywords:
+                    keywords.append(kw)
+            else:
+                first_word = val.split()[0].strip().lower()
+                mapping[first_word] = val
+                if first_word not in keywords:
+                    keywords.append(first_word)
         if lines:
             _config_templates_cache = {"all": lines, "map": mapping}
             _config_templates_ts = now
@@ -158,14 +159,13 @@ def sync_telegram_menu_commands(force: bool = False) -> bool:
         first_part = l.split(":")[0].strip() if ":" in l else l.split()[0].strip()
         cmd = first_part.lower().replace(" ", "_").replace("-", "_")
         cmd = "".join(c for c in cmd if c.isalnum() or c == "_")[:32]
-        if cmd and cmd not in seen:
+        if cmd and cmd not in seen and cmd != "field_name":
             seen.add(cmd)
             desc = f"Get {first_part} template"
             commands.append({"command": cmd, "description": desc[:256]})
 
     for def_cmd, def_desc in [
         ("done", "Get Done template"),
-        ("find", "Search tasks, WOs, or site details"),
         ("inventory", "Inventory fuel report template"),
         ("change_oil", "Change oil MDG template")
     ]:
@@ -1154,8 +1154,7 @@ async def handle(data: dict):
                         "• /revoke - Revoke template\n"
                         "• /move - Move template\n"
                         "• /export - Export template\n"
-                        "• /done - Done template\n"
-                        "• /find - Search tasks, WOs, or site details\n\n"
+                        "• /done - Done template\n\n"
                         "<i>Tap any command to receive the template, then copy and fill out.</i>",
                         parse_mode="HTML"
                     )
@@ -1168,14 +1167,6 @@ async def handle(data: dict):
                 tpl_txt = get_template_text(cmd)
                 if tpl_txt:
                     await bot.send_message(chat_id, tpl_txt, parse_mode="HTML")
-                    return
-                elif cmd == "/find" and chat_id != MDG_CHAT_ID:
-                    await bot.send_message(
-                        chat_id,
-                        "🔍 <b>How to Search:</b>\n\n"
-                        "Just send the site code (e.g. <code>TNI0001</code>) or staff name directly to the bot to search for tasks, WOs, or site details.",
-                        parse_mode="HTML"
-                    )
                     return
 
         # ── Done ──────────────────────────────────────────────────────────
