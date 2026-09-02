@@ -184,7 +184,13 @@ async def delete_by_titles_batch_telethon(
                     continue
 
                 # Xóa các tin Note chỉ đạo gửi từ user (Telethon revoke=True)
-                if "Note: Above are the end-of-day work results" in msg.text or "Note: 📋 1. Report" in msg.text:
+                if any(k in msg.text for k in [
+                    "Note: Above are the end-of-day work results",
+                    "Note: 📋 1. Report",
+                    "@Raja HO",
+                    "Refuel Team Sent Plan",
+                    "Aung MinPaing_VCM"
+                ]):
                     try:
                         await client.delete_messages(cid, [msg.id], revoke=True)
                         total_deleted += 1
@@ -197,12 +203,12 @@ async def delete_by_titles_batch_telethon(
                 if bot_id and msg.sender_id != bot_id:
                     continue
 
-                first_line = msg.text.split("\n")[0].strip()
-                first_line_clean = first_line.replace("**", "").replace("__", "").replace("📦", "").strip()
+                # Lấy 6 dòng đầu (hoặc toàn bộ phần header) để so sánh tiêu đề
+                header_clean = "\n".join(msg.text.split("\n")[:6]).replace("**", "").replace("__", "").replace("📦", "").strip()
 
                 matched = False
                 for pfx in clean_prefixes:
-                    if first_line_clean.startswith(pfx) or pfx in first_line_clean:
+                    if pfx.lower() in header_clean.lower():
                         matched = True
                         break
 

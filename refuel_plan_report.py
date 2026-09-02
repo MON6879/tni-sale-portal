@@ -52,24 +52,21 @@ REPORT_TITLE_PREFIX = {
 }
 
 def tg_send(text: str, report_key: str = "") -> bool:
-    """Gửi tin nhắn báo cáo lên Telegram group (KHÔNG xóa tin nhắn cũ)."""
-    url = f"https://api.telegram.org/bot{REFUEL_BOT_TOKEN}/sendMessage"
-    try:
-        resp = requests.post(
-            url,
-            json={"chat_id": REFUEL_CHAT_ID, "text": text, "parse_mode": "HTML"},
-            timeout=60,
-        )
-        res_json = resp.json()
-        if res_json.get("ok"):
-            print(f"✅ Report {report_key} sent to {REFUEL_CHAT_ID}")
-            return True
-        else:
-            print(f"❌ Telegram send failed: {resp.text[:200]}", file=sys.stderr)
-            return False
-    except Exception as e:
-        print(f"❌ Telegram send exception: {e}", file=sys.stderr)
-        return False
+    """Gửi tin nhắn báo cáo lên Telegram group và TỰ ĐỘNG XÓA TIN NHẮN CŨ."""
+    title_pfx = REPORT_TITLE_PREFIX.get(report_key, "[Report 1]")
+    state_k = f"refuel_{report_key}" if report_key else "refuel_report1"
+    msg_id = tg_send_fresh(
+        chat_id=REFUEL_CHAT_ID,
+        text=text,
+        state_key=state_k,
+        parse_mode="HTML",
+        title_prefix=title_pfx,
+        bot_token=REFUEL_BOT_TOKEN
+    )
+    if msg_id:
+        print(f"✅ Report {report_key} (msg_id={msg_id}) sent to {REFUEL_CHAT_ID} (old messages cleaned)")
+        return True
+    return False
 
 
 def fmt_row_compare_5(col_team: str, col_site: str, col_b: str, col_c: str, col_d: str) -> str:
