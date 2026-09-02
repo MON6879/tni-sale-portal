@@ -34,10 +34,12 @@ from telethon.tl.functions.messages import (
 API_ID         = int(os.environ.get("TELEGRAM_API_ID", "0"))
 API_HASH       = os.environ.get("TELEGRAM_API_HASH", "")
 SESSION_STRING = os.environ.get("TELEGRAM_SESSION", "")
-MAIN_GAS_FALLBACK = "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
-GAS_URL = os.environ.get("APPS_SCRIPT_URL", "").strip()
-if not GAS_URL or "AKfycbzGFdnE" in GAS_URL:
-    GAS_URL = MAIN_GAS_FALLBACK
+PRIMARY_GAS_URL = "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
+raw_gas_url    = os.environ.get("APPS_SCRIPT_URL", "").strip()
+if "AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA" in raw_gas_url:
+    GAS_URL = raw_gas_url
+else:
+    GAS_URL = PRIMARY_GAS_URL
 
 MYANMAR_TZ = timezone(timedelta(hours=6, minutes=30))
 
@@ -383,7 +385,7 @@ async def process_group(client, group_key: str, chat_id: int,
         for p in group_participants:
             uid = p["id"]
             member_ids.add(uid)
-            per_person[uid] = {"name": p["name"], "id": uid, "d0": 0, "d1": 0, "d2": 0, "d7": 0, "month": 0}
+            per_person[uid] = {"name": p["name"], "id": uid, "d0": 0, "d1": 0, "d2": 0, "d7": 0, "month": 0, "read_time": None}
     else:
         for s in staff_list:
             name = s["name"]
@@ -408,7 +410,8 @@ async def process_group(client, group_key: str, chat_id: int,
             per_person[key] = {
                 "name": name,
                 "id": matched_id,
-                "d0": 0, "d1": 0, "d2": 0, "d7": 0, "month": 0
+                "d0": 0, "d1": 0, "d2": 0, "d7": 0, "month": 0,
+                "read_time": None
             }
 
     member_count = len(per_person)
@@ -469,6 +472,12 @@ async def process_group(client, group_key: str, chat_id: int,
                 pp["d1"] = 1
             elif dt_mm >= today_start:
                 pp["d0"] = 1
+                # 🕐 Lưu giờ đọc THỰC TẾ từng người (từ Telegram API)
+                if read_dt is not None:
+                    rdt = read_dt
+                    if rdt.tzinfo is None:
+                        rdt = rdt.replace(tzinfo=timezone.utc)
+                    pp["read_time"] = rdt.astimezone(MYANMAR_TZ).strftime("%H:%M")
 
         if dt_mm >= today_start and today_note_msg is None:
             today_note_msg = msg
@@ -568,14 +577,18 @@ async def main():
         def member_lines(per_member):
             lines = []
             for p in per_member:
+                rt = p.get("read_time") or "—"
                 if p["d0"]:
                     icon = "🟩"
+                    time_str = f"🕐{rt}"
                 elif not p.get("id"):
                     icon = "🟥"  # Chưa tham gia / Chưa khớp ID Telegram
+                    time_str = "N/A"
                 else:
                     icon = "🟨"  # Đã vào nhóm nhưng chưa đọc bài
+                    time_str = "—"
                 lines.append(
-                    f"  {icon} {p['name']}: "
+                    f"  {icon} {p['name']}: {time_str}  "
                     f"3Day:{p['d0']}/{p['d1']}/{p['d2']}  "
                     f"7Day:{p['d7']}  Month:{p['month']}"
                 )
@@ -624,13 +637,16 @@ async def main():
             print(f"📤 Report sent to {gk}")
             await asyncio.sleep(1)
 
-        # ── 2. Send consolidated report to CONTROL ──
+        # ── 2. Ghi dữ liệu lượt đọc vào Google Sheet tab 'Read Group' TRƯỚC khi gửi CONTROL ──
+        # (Tránh crash MessageTooLong làm mất dữ liệu Sheet)
+        log_read_group_to_gas(all_results, date_str, now_str)
+
+        # ── 3. Send consolidated report to CONTROL ──
         lines = [
             f"📋 6. Report — Daily Note Read Report — Summary",
             f"📅 {date_str}  |  🕐 {now_str}",
             f"⏰ Read Window: 04:00 - 23:59 Myanmar",
             f"📅 Cycle: {cycle_str}",
-            f"📌 Shows who read the Note message during the active window (04:00 - 23:59) today.",
             divider,
         ]
 
@@ -684,12 +700,16 @@ async def main():
                         await client.delete_messages(control_id, [old_m.id], revoke=True)
                     except Exception: pass
         except Exception: pass
-        sent = await client.send_message(control_id, report)
-        save_msgids(GAS_URL, "READREPORT_CONTROL", [sent.id])
-        print(f"📤 Consolidated report sent to CONTROL SITE")
 
-        # ── 3. Ghi dữ liệu lượt đọc vào Google Sheet tab 'Read Group' ──
-        log_read_group_to_gas(all_results, date_str, now_str)
+        # 🛡️ Cắt report nếu quá 4096 ký tự (Telegram limit)
+        try:
+            if len(report) > 4096:
+                report = report[:4090] + "\n[...]"
+            sent = await client.send_message(control_id, report)
+            save_msgids(GAS_URL, "READREPORT_CONTROL", [sent.id])
+            print(f"📤 Consolidated report sent to CONTROL SITE")
+        except Exception as ctrl_err:
+            print(f"⚠️ CONTROL report send error: {ctrl_err}")
 
     print(f"\n[{myanmar_now()}] 🎉 Complete!")
 
@@ -703,9 +723,11 @@ def log_read_group_to_gas(all_results: dict, date_str: str, now_str: str):
     for gk, r in all_results.items():
         note_msg = r.get("note_preview", "")
         for p in r.get("per_member", []):
+            # 🕐 Giờ đọc thực tế từng người (từ Telegram API), không phải giờ chạy report
+            individual_time = p.get("read_time") or "—"
             rec = {
                 "date": date_str,
-                "time": now_str,
+                "time": individual_time,
                 "team": gk,
                 "name": p["name"],
                 "telegram_id": str(p.get("id", "")),
@@ -723,22 +745,30 @@ def log_read_group_to_gas(all_results: dict, date_str: str, now_str: str):
     # 1. Ghi log các đội vận hành chính vào tab 'Read Group'
     if records_main:
         try:
-            requests.post(GAS_URL, json={
+            resp = requests.post(GAS_URL, json={
                 "action": "log_read_group",
                 "records": records_main
             }, timeout=30)
-            print(f"  💾 Logged {len(records_main)} records to 'Read Group' tab")
+            res_json = resp.json() if resp.status_code == 200 else {}
+            if resp.status_code == 200 and res_json.get("status") == "ok":
+                print(f"  💾 Logged {len(records_main)} records to 'Read Group' tab successfully ✅")
+            else:
+                print(f"  ⚠️ Failed to log to Read Group tab: HTTP {resp.status_code} - {resp.text}")
         except Exception as e:
             print(f"  ⚠️ Failed to log to Read Group tab: {e}")
 
     # 2. Ghi log phân hệ Refuel vào tab 'Read Group Refuel'
     if records_refuel:
         try:
-            requests.post(GAS_URL, json={
+            resp = requests.post(GAS_URL, json={
                 "action": "log_read_group_refuel",
                 "records": records_refuel
             }, timeout=30)
-            print(f"  💾 Logged {len(records_refuel)} records to 'Read Group Refuel' tab")
+            res_json = resp.json() if resp.status_code == 200 else {}
+            if resp.status_code == 200 and res_json.get("status") == "ok":
+                print(f"  💾 Logged {len(records_refuel)} records to 'Read Group Refuel' tab successfully ✅")
+            else:
+                print(f"  ⚠️ Failed to log to Read Group Refuel tab: HTTP {resp.status_code} - {resp.text}")
         except Exception as e:
             print(f"  ⚠️ Failed to log to Read Group Refuel tab: {e}")
 
