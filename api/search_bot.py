@@ -305,11 +305,12 @@ def lookup_team(team_code: str) -> list:
     return [split_messages(r)[0] for r in results]
 
 def lookup_notclose(team_code: str) -> list:
-    """Tra cứu WO Not Close (CD Not Yet Close A) cho Team T1..T4 từ Sheet TL_WaitCD."""
+    """Tra cứu WO Not Close (CD Not Yet Close) cho Team T1..T4 từ BẢNG 1 (Cột A-I, Index 0-8) Sheet TL_WaitCD."""
     df = fetch_single_csv(GID_TL_WAITCD)
     e = html.escape
     t_clean = team_code.upper().replace("TEAM", "T").strip()
     t_num = "".join(filter(str.isdigit, t_clean)) or "1"
+    target_tag = f"T{t_num}NOTCLOSE"
     
     if df is None or df.empty:
         return [f"❌ No data for <b>T{e(t_num)}</b> not close"]
@@ -317,22 +318,18 @@ def lookup_notclose(team_code: str) -> list:
     results = []
     for _, row in df.iterrows():
         col_b = safe(row, 1).strip()
-        if not col_b or col_b.lower() == "nan":
+        if not col_b or col_b.lower() == "nan" or "export time" in col_b.lower():
             continue
         col_c = safe(row, 2).strip()
-        col_d = safe(row, 3).strip().lower()
-        col_h = safe(row, 7).strip().lower()
+        col_d = safe(row, 3).strip()
+        col_h = safe(row, 7).strip().upper()
 
         matched = False
-        if f"team0{t_num}" in col_d or f"team {t_num}" in col_d or f"t{t_num}" in col_h:
+        if target_tag in col_h or col_h == target_tag:
             matched = True
-        elif t_num == "1" and ("dawei" in col_d or "t1" in col_h):
+        elif f"T{t_num}" in col_h and "NOTCLOSE" in col_h:
             matched = True
-        elif t_num == "2" and ("myeik" in col_d or "t2" in col_h):
-            matched = True
-        elif t_num == "3" and ("kawthaung" in col_d or "t3" in col_h):
-            matched = True
-        elif t_num == "4" and ("tanintharyi" in col_d or "kawthoung" in col_d or "t4" in col_h):
+        elif not col_h and (f"team0{t_num}" in col_d.lower() or f"team {t_num}" in col_d.lower()):
             matched = True
 
         if matched:
@@ -351,41 +348,48 @@ def lookup_notclose(team_code: str) -> list:
 
 
 def lookup_waitcd(team_code: str) -> list:
-    """Tra cứu WO Wait CD (Col A có Reason Code) cho Team T1..T4 từ Sheet TL_WaitCD."""
+    """Tra cứu WO Wait CD cho Team T1..T4 từ BẢNG 2 (Cột AF-AN, Index 31-39) Sheet TL_WaitCD."""
     df = fetch_single_csv(GID_TL_WAITCD)
     e = html.escape
     t_clean = team_code.upper().replace("TEAM", "T").strip()
     t_num = "".join(filter(str.isdigit, t_clean)) or "1"
+    target_tags = [f"T{t_num}WAITCD"]
+    if t_num == "2":
+        target_tags.append("T5WAITCD")  # Team 2 bao gồm cả Team 5 Palaw
     
-    if df is None or df.empty:
+    if df is None or df.empty or len(df.columns) <= 38:
         return [f"⏳ No data for <b>T{e(t_num)}</b> wait CD"]
 
     results = []
     for _, row in df.iterrows():
-        col_a = safe(row, 0).strip()
-        if not col_a or col_a.lower() == "nan":
+        if len(row) <= 38:
             continue
-        col_b = safe(row, 1).strip()
-        if not col_b or col_b.lower() == "nan":
+        col_ag = safe(row, 32).strip() # Mã WO
+        if not col_ag or col_ag.lower() == "nan" or "export time" in col_ag.lower():
             continue
-        col_c = safe(row, 2).strip()
-        col_d = safe(row, 3).strip().lower()
-        col_h = safe(row, 7).strip().lower()
+        col_ah = safe(row, 33).strip() # Nội dung / Trạm
+        col_ai = safe(row, 34).strip() # Tên Đội
+        col_am = safe(row, 38).strip().upper() # Tag Cột AM
 
         matched = False
-        if f"team0{t_num}" in col_d or f"team {t_num}" in col_d or f"t{t_num}" in col_h:
+        if any(tt in col_am for tt in target_tags):
             matched = True
-        elif t_num == "1" and ("dawei" in col_d or "t1" in col_h):
-            matched = True
-        elif t_num == "2" and ("myeik" in col_d or "t2" in col_h):
-            matched = True
-        elif t_num == "3" and ("kawthaung" in col_d or "t3" in col_h):
-            matched = True
-        elif t_num == "4" and ("tanintharyi" in col_d or "kawthoung" in col_d or "t4" in col_h):
-            matched = True
+        elif not col_am:
+            if f"team0{t_num}" in col_ai.lower() or f"team {t_num}" in col_ai.lower():
+                matched = True
+            elif t_num == "1" and "dawei" in col_ai.lower():
+                matched = True
+            elif t_num == "2" and ("myeik" in col_ai.lower() or "palaw" in col_ai.lower() or "team05" in col_ai.lower()):
+                matched = True
+            elif t_num == "3" and "bokpyin" in col_ai.lower():
+                matched = True
+            elif t_num == "4" and "kawthoung" in col_ai.lower():
+                matched = True
 
         if matched:
-            item_str = f"{e(col_b)} | {e(col_c)} | (Reason Code: {e(col_a)})"
+            col_af = safe(row, 31).strip() # Reason Code
+            reason_str = f" | (Reason Code: {e(col_af)})" if col_af and col_af.lower() != "nan" else ""
+            item_str = f"{e(col_ag)} | {e(col_ah)}{reason_str}"
             results.append(item_str)
 
     if not results:
