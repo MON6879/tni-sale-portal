@@ -661,3 +661,23 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 > 2. **TUYỆT ĐỐI CẤM Chỉ Lưu Ngày Cụt Lủn (Zero Date-Only Timestamp)**: CẤM TUYỆT ĐỐI việc chỉ ghi `02/09/2026` hoặc `31/08/2026 00:00:00` mà thiếu thời gian thực tế gửi tin! Ghi thiếu giờ sẽ làm mất hoàn toàn khả năng truy vết thứ tự và thời điểm nộp báo cáo thực tế của nhân viên/đội trong ngày.
 > 3. **Tự Động Ghép Giờ Nếu Form Chỉ Có Ngày (Auto-Combine Date with Submit Time)**: Nếu tin nhắn/form của người dùng chỉ ghi tiêu đề ngày (ví dụ `Daily Plan: 2/9/2026`), Bot và GAS Backend BẮT BUỘC phải tự động lấy giờ phút giây lúc nhận tin nhắn (`msg.date` hoặc `now_mm`) để ghép thành chuỗi hoàn chỉnh `02/09/2026 HH:mm:ss` trước khi chèn vào bảng tính.
 > 4. **Tin Nhắn Phản Hồi Bot Luôn Có Giờ (Bot Response Must Show Full Time)**: Tin nhắn Bot phản hồi thu thập (`📋 Daily Plan ✅ #DP-xxx | 📍 Team X | 🗓️ DD/MM/YYYY HH:mm:ss`) BẮT BUỘC phải hiển thị đầy đủ thời gian thu thập.
+
+---
+
+# 🧹 STRICT MULTI-LINE HEADER MATCHING & FULL-SCOPE PURGE RULE: QUÉT ĐA DÒNG TIÊU ĐỀ & XÓA TRIỆT ĐỂ CẢ TIN NOTE USER (STRICT MULTI-LINE HEADER SCANNING & USER-NOTE PURGE POLICY)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (MULTI-LINE HEADER & FULL PURGE POLICY)**:
+> 1. **Bắt Buộc Quét Toàn Bộ Khối Tiêu Đề (Tối Thiểu 6 Dòng Đầu / 400 Ký Tự)**: Mọi hàm xóa tin nhắn cũ (`tg_delete_by_title`, `delete_old_messages_bot`, `delete_by_titles_batch_telethon`) BẮT BUỘC phải đọc và chuẩn hóa tối thiểu **6 dòng đầu tiên** (hoặc 400 ký tự đầu) của tin nhắn để so khớp tiêu đề/từ khóa định danh báo cáo (`title_prefix.lower() in header_clean.lower()`).
+> 2. **TUYỆT ĐỐI CẤM Chỉ Đọc `first_line` (`split('\n')[0]`)**: CẤM TUYỆT ĐỐI việc chỉ lấy dòng 0 để so sánh! Trong thực tế vận hành, tin nhắn Bot thường bắt đầu bằng tag nhóm (ví dụ `@TNI_FUEL`, `@SEARCHTNITASKWOBOT`), icon hoặc banner trạng thái ở dòng 1 khiến tiêu đề báo cáo thực tế bị đẩy xuống dòng 2 hoặc dòng 3. Nếu chỉ đọc dòng 0 $\rightarrow$ **Trượt so khớp 100%**, tin cũ không bị xóa, gây tích tụ và nhân đôi tin nhắn nghiêm trọng!
+> 3. **Bắt Buộc Xóa Sạch Tin Note Cũ Của User (`@Phongha79`) Bằng `revoke=True`**: Khi gửi báo cáo mới (đặc biệt là các báo cáo có gửi kèm tin Note chỉ đạo giao việc từ tài khoản `@Phongha79` như Refuel, Daily Plan, Cable, EOD), script dọn tin BẮT BUỘC phải tìm và xóa triệt để cả tin Note cũ của User trong nhóm bằng Telethon (`await client.delete_messages(chat_id, [msg.id], revoke=True)`), không được chỉ xóa tin của Bot mà để sót tin nhắn của User làm rác group!
+> 4. **Mọi Hàm Gửi Báo Cáo Phải Kích Hoạt `tg_send_fresh()`**: Mọi script phát tin báo cáo định kỳ (`refuel_send.py`, `refuel_plan_report.py`, `cron_send.py`, `daily_read_report.py`, `daily_plan_report.py`, `daily_bod_assign.py`) BẮT BUỘC phải gọi cơ chế gửi tươi `tg_send_fresh()` hoặc hàm dọn tin trước khi phát tin mới. TUYỆT ĐỐI CẤM dùng `requests.post(sendMessage)` thô mà không có bước dọn tin cũ!
+
+---
+
+# 🛡️ STRICT AUDITOR SSOT PARITY & ZERO FALSE-ALARM RULE: ĐỒNG BỘ 100% CẤU HÌNH LỊCH, LỌC ĐÚNG NGÀY & QUÉT CỘT DỮ LIỆU THẬT (STRICT AUDITOR SSOT PARITY & ZERO FALSE-POSITIVE POLICY)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (AUDITOR SSOT PARITY POLICY)**:
+> 1. **Đồng Bộ 100% Ma Trận Lịch Trình Với Workflow Thực Tế (Schedule Matrix Parity)**: Mảng `SCHEDULE_RULES` của Ghế Giám Sát (`system_auditor.py`) BẮT BUỘC phải lấy nguồn SSOT trực tiếp và đồng bộ 100% với các mốc giờ chạy thực tế trong file `.github/workflows/train_5min.yml`. Tuyệt đối CẤM lưu mốc giờ cũ/bỏ hoang (như `06:06` Plan 5C), gây báo động giả `MISSED` ảo!
+> 2. **Bắt Buộc Lọc Đúng Ngày Hôm Nay Trước Khi Tính Độ Trễ (Strict Date-Match Before Delay Calculation)**: Khi kiểm tra đúng giờ (Schedule Adherence), Ghế Giám Sát BẮT BUỘC phải lọc chặt `msg.date_str == today_d` TRƯỚC KHI tính khoảng cách phút (`diff = abs(msg_total_min - target_total_min)`). TUYỆT ĐỐI CẤM lấy tin nhắn của ngày hôm qua (ví dụ tin 14:15 hôm qua) đem so với mốc giờ sáng hôm nay (07:18), tạo ra độ trễ ảo hàng trăm phút ("Lệch 417p")!
+> 3. **Đồng Bộ GID Tab Sheet Chuẩn, Cấm Dùng GID Đã Bị Xóa (Live Tab GID Whitelisting)**: Danh mục `SHEET_CONNECTORS` của Auditor BẮT BUỘC phải trỏ đúng GID tab dữ liệu thật đang hoạt động (ví dụ: `Search Site Clear` GID `610944071`, `Read Group` GID `870080250`). TUYỆT ĐỐI CẤM giữ GID cũ đã bị xóa/đổi tên (như GID `582589665`), khiến Google Sheets trả về trang Dashboard lỗi dẫn đến báo động `#REF!` giả!
+> 4. **Chỉ Quét Lỗi Công Thức Trong Vùng Dữ Liệu Hoạt Động ($\le 30$ Cột)**: Khi kiểm tra lỗi công thức (`#REF!`, `#VALUE!`, `#DIV/0!`), Auditor BẮT BUỘC phải phân tích CSV và CHỈ quét trong phạm vi các cột dữ liệu hoạt động thực tế ($\le 30$ cột đầu). TUYỆT ĐỐI CẤM quét toàn văn chuỗi CSV dính vào các ô nháp bỏ hoang tận cột 116..138 ở góc xa của bảng tính!
