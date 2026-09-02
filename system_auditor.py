@@ -118,6 +118,10 @@ SHEET_CONNECTORS = {
         "url": "https://docs.google.com/spreadsheets/d/1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow/gviz/tq?tqx=out:csv&gid=610944071",
         "min_rows": 1
     },
+    "Sheet Team leader Wait CD + Not Close (GID=1110926116)": {
+        "url": "https://docs.google.com/spreadsheets/d/1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8/gviz/tq?tqx=out:csv&gid=1110926116",
+        "min_rows": 1
+    },
     "Sheet Daily Report & Business": {
         "url": "https://docs.google.com/spreadsheets/d/1C8hU8SXpOdq-v6z7iLGoqwDJmO9DYudZ3rhflb7LC8Y/gviz/tq?tqx=out:csv&sheet=Daily+report+and+Bussiness",
         "min_rows": 5
