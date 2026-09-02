@@ -211,10 +211,10 @@ grep -c 'continue-on-error: true' train_5min.yml                # Phải = tổn
 ### ⏰ 2. Ma trận phụ thuộc Lịch gửi Báo cáo tự động (Cron Schedule Matrix):
 > 🛡️ **Cơ chế chống trôi tin (v581)**: Hàm `check_time()` trong `train_5min.yml` thiết lập dung sai **`DIFF <= 4` (±4 phút)** so với giờ đích để đảm bảo 100% bắt được đúng giờ kể cả khi GitHub Actions bị trễ hàng đợi 3–4 phút.
 
-| Tên báo cáo | Giờ gửi MMT (Asia/Yangon UTC+6:30) | Cấu hình `train_5min.yml` (`cron: '1/5 * * * *'`) | Check Time (Hàm `check_time`) | Script Python thực thi | Nhóm Telegram nhận tin |
-|---|---|---|---|---|---|
-| **Báo cáo Sáng (Reports 1, 2, 3, 4)** | **05:48 AM MMT** | Toa 1, 2, 3, 4 (Teams 1 to 4) | 05:48 MMT | `cron_send.py` | Teams 1..4, CONTROL, TECHDEP |
-| **Báo cáo Chiều (Reports 1, 2, 3, 4)** | **15:48 PM MMT** | Toa 1, 2, 3, 4 (Teams 1 to 4) | 15:48 MMT | `cron_send.py` | Teams 1..4, CONTROL, TECHDEP |
+| **Báo cáo Sáng Reports 1, 2, 3 (Backlog & DG Material)** | **05:46 AM MMT** | Toa 1+8+11 (Teams 1 to 4) | 05:46 MMT | `backlog_send.py` | Teams 1..4 |
+| **Báo cáo Chiều Reports 1, 2, 3 (Backlog & DG Material)** | **15:46 PM MMT** | Toa 1+8+11 (Teams 1 to 4) | 15:46 MMT | `backlog_send.py` | Teams 1..4 |
+| **Báo cáo Sáng Report 4 (Daily EOD Task & Stats)** | **05:51 AM MMT** | Toa 12 (Daily EOD Task) | 05:51 MMT | `cron_send.py` | Teams 1..4, CONTROL, TECHDEP |
+| **Báo cáo Chiều Report 4 (Daily EOD Task & Stats)** | **15:51 PM MMT** | Toa 12 (Daily EOD Task) | 15:51 MMT | `cron_send.py` | Teams 1..4, CONTROL, TECHDEP |
 | **Báo cáo Kế hoạch EOD (Report 5A)** | **18:41 PM MMT** | Toa Report 5A EOD | 18:41 MMT | `daily_plan_report.py` | Teams 1..4, CONTROL |
 | **Báo cáo Kế hoạch Update (Report 5B)** | **19:11 PM MMT** | Toa Report 5B Update | 19:11 MMT | `daily_plan_report.py` | Teams 1..4, CONTROL |
 | **Báo cáo Kế hoạch Sáng (Report 5C)** | **06:06, 08:28, 09:56, 15:26, 22:06 MMT** | Toa Report 5C Morning | `06:06`, `08:28`, `09:56`, `15:26`, `22:06` MMT | `daily_plan_report.py` | Teams 1..4, CONTROL |
@@ -528,6 +528,7 @@ Trong `apps_script_collector.js`:
 | Sheet | GID | Mục đích |
 |---|---|---|
 | **Task remain** | `133591305` | Dữ liệu WO + chat_id nhân viên/quản lý |
+| **Progress Team Task and WO+Oil** | `159298579` | **SSOT Báo cáo 1, 2, 3 (Daily Backlog & Main DG Material Need)**, Dept Assign, WO Detail |
 | **Config** | `1236389870` | Keywords (col A), Chat ID authorized (col D), Asset recipients (col C) |
 | **Data** | DATA_TAB | Collector bot lưu tin nhắn Order/Revoke/Export... |
 | **Input task** | `1755404595` | Nội dung task cho E75:E87. Col B=Dep, Col D=content, Col J=Done date |
@@ -575,10 +576,39 @@ Trong `apps_script_collector.js`:
 > ```
 > CM 06/06/2026
 > 📊 Tổng: Total:61 | 3day:0/0/0 | 7day:0 | Month:0  ← tự động
-> Team 01
-> Request Export material : total : 28  Progress 3 day: 0/0/0, 7 day: 0, Month: 0
-> ...
-> ```
+---
+
+### 📊 Progress Team Task and WO+Oil (GID: `159298579`) — Nguồn Dữ Liệu Báo Cáo 1, 2, 3
+
+> ⚠️ **QUY TẮC BẮT BUỘC**: Tab này là **Single Source of Truth (SSOT)** cho 3 bản tin Backlog gửi tự động lúc **05:46 và 15:46 MMT** qua `backlog_send.py`:
+
+#### 1. Báo cáo 1: `📋 1. Report — Daily Backlog (Category/Description)`
+- **Cột K (Col 10)**: Category phòng ban (Asset, CM, Finance, v.v.).
+- **Cột L (Col 11)**: Description công việc tồn đọng.
+- **Cột M:P (Col 12-15)**: Nội dung chi tiết cho từng Team (M=T1, N=T2, O=T3, P=T4).
+
+#### 2. Báo cáo 2: `📋 2. Report — DailyWO`
+- **Cột C (Col 2)**: Nhãn WO / Nhiệm vụ tồn đọng.
+- **Cột D:H (Col 3-7)**: Danh sách WO/Site cho từng Team (D=T1, E=T2, F=T3, G=T4, H=T5).
+
+#### 3. Báo cáo 3: `📋 3. Report — Main DG Material Need`
+- **Duyệt từ Row 17 đến Row 37** (mỗi Sub-team có 1 dòng tổng hợp master đầu tiên):
+  - **Cột AM (Col 38)**: Mã Sub-team (`T1`, `T1 S1`, `T2`, `T2 S1`, `T3`, `T3 S1`, `T4`).
+  - **Cột AT (Col 45)**: `Sum DG KVA Need change Oil Filter` (chuỗi công thức live: `8KVA: 9 <+> 12KVA: 3 <+> 30KVA: 0 <+> 12DKVA: 2`).
+  - **Cột BI (Col 60)**: `Sum DG KVA Need change Fuel Filter` (chuỗi live: `8KVA: 9 <+> 12KVA: 3 <+> 30KVA: 1 <+> 12DKVA: 2`).
+  - **Cột BX (Col 75)**: `Sum DG KVA Need change Air Filter` (chuỗi live: `8KVA: 4 <+> 12KVA: 2 <+> 30KVA: 1 <+> 12DKVA: 1`).
+  - **Cột CI (Col 86)**: `Sum DG KVA Need change Oil` (chuỗi live: `8KVA: 12 <+> 12KVA: 2 <+> 30KVA: 0 <+> 12DKVA: 2`).
+    - **Cột CJ (Col 87)**: Lít nhớt cần (`Sum Need: X L`).
+    - **Cột CK (Col 88)**: Lít nhớt hiện có (`Have at Team: Y L`).
+    - **Cột CL (Col 89)**: Lít nhớt chênh lệch (`Diff: Z L`).
+  - **Cột CV (Col 99)**: `Sum DG KVA Need change water Coolant` (chuỗi live: `8KVA: 1 <+> 12KVA: 1 <+> 30KVA: 0 <+> 12DKVA: 0`).
+    - **Cột CW (Col 100)**: Lít nước làm mát cần (`Sum Need: X L`).
+    - **Cột CX (Col 101)**: Lít nước làm mát hiện có (`Have at Team: Y L`).
+    - **Cột CY (Col 102)**: Lít nước làm mát chênh lệch (`Diff: Z L`).
+
+> 🚫 **CẢNH BÁO CHỐNG LỖI CŨ (ANTI-STALE-MAPPING)**:
+> - **TUYỆT ĐỐI CẤM** đọc vào các Cột AA, AB, AC, AD, AE! Các cột này là bảng phụ ghi nhận số lít nhớt dùng/tồn (Liters) và số trạm dùng nước làm mát (Sites), **KHÔNG PHẢI** số lượng máy phát 8KVA, 12KVA, 30KVA. Code cũ từng nhầm cột AB (114 L nhớt dùng) và AC (86 L nhớt tồn) thành `12KVA: 114 <+> 30KVA: 86`!
+> - BẮT BUỘC chỉ đọc từ Cột AM, AT, BI, BX, CI, CV như bảng trên.
 
 ---
 
@@ -601,7 +631,8 @@ Trong `apps_script_collector.js`:
 |---|---|---|
 | [search_bot.py](file:///d:/6.%20AI/1.%20QLTC/Task%20and%20WO/api/search_bot.py) | **Vercel webhook** | Bot tra cứu TNI + Daily Report — 24/7 miễn phí |
 | [collector.py](file:///d:/6.%20AI/1.%20QLTC/Task%20and%20WO/api/collector.py) | **Vercel webhook** | Bot thu thập — lưu Order/Revoke... vào Sheet |
-| [cron_send.py](file:///d:/6.%20AI/1.%20QLTC/Task%20and%20WO/cron_send.py) | **GitHub Actions** | Gửi task remain hàng ngày **17:00** — dùng SEND_BOT cho tất cả. ĐK: cột A có team VÀ cột D có nội dung |
+| [cron_send.py](file:///d:/6.%20AI/1.%20QLTC/Task%20and%20WO/cron_send.py) | **GitHub Actions** | Gửi Report 4 (Daily EOD Task & Stats) và Report 3.1 (Asset) lúc 05:51 & 15:51 MMT |
+| [backlog_send.py](file:///d:/6.%20AI/1.%20QLTC/Task%20and%20WO/backlog_send.py) | **GitHub Actions** | Gửi Reports 1, 2, 3 (Daily Backlog Category/Desc, DailyWO, Main DG Material Need) lúc 05:46 & 15:46 MMT |
 | [daily_plan_report.py](file:///d:/6.%20AI/1.%20QLTC/Task%20and%20WO/daily_plan_report.py) | **GitHub Actions** | Thu thập Daily Plan từ TL → Sheet + gửi report 3Day/7Day/Month |
 | [telegram_bot.py](file:///d:/6.%20AI/1.%20QLTC/Task%20and%20WO/telegram_bot.py) | ~~GitHub Actions~~ | ⚠️ ĐÃ THAY THẾ bởi `api/search_bot.py` (Vercel webhook) |
 | [apps_script_collector.js](file:///d:/6.%20AI/1.%20QLTC/Task%20and%20WO/apps_script_collector.js) | **Apps Script** | Backend xử lý dữ liệu Sheet |
@@ -1351,6 +1382,8 @@ KHÔNG ĐỤNG:
 | **`Ghế EXT-TC-CONSTRUCTION`**| Cổng Ngoại Giao Construction | Webhook Bot `@8903841312` (`10 TNI_SITE`) | Báo Bot câm / mất phản hồi về DM Admin |
 | **`Ghế GAS-ATTENDANCE-4`** | Quản Trị GAS Điểm Danh | Logic điểm danh trên `apps_script_attendance` | Báo lỗi Sheet điểm danh về DM Admin |
 | **`Ghế EXT-ATTENDANCE-BOT`** | Cổng Ngoại Giao Điểm Danh | Webhook Bot Điểm Danh `@8628370628` | Báo trễ nhận diện ảnh về DM Admin |
+| **`Ghế BOT-CABLE-15`** | Bot 15 TNI CABLE Thu Thập Cáp | Webhook `/api/cable_bot`, `@TNI_CABLE_BOT` (8758104446), Nhóm `8 TNI CABLE BROKEN SOS` (-5531350787) | Phản hồi sự cố cáp & lưu ảnh Drive folder theo REF |
+| **`Ghế GAS-CABLE-15`** | Quản Trị GAS Cable | `apps_script_cable.gs` (@387), ghi Sheet `Detail cable`, trả link Drive Folder tải tất cả ảnh | Báo lỗi Drive / Sheet Cable về DM Admin |
 | **`Ghế GAS-VERIFY-0`** | Xác Nhận Đủ File GAS | `QLTC_GAS` = 17 files, `apps_script_sitedown` = 1 file | DỪNG NGAY nếu thiếu file, KHÔNG push! |
 | **`Ghế GAS-PUSH-1`** | Đẩy Code Lên GAS Cloud | `npx clasp push` (theo đúng thư mục chuyên biệt) | Báo lỗi push / xung đột về DM Admin |
 | **`Ghế GAS-DEPLOY-2`** | Deploy Đè Đúng Deployment | `npx clasp deploy -i [DEPLOYMENT_ID_CHUẨN] -d "..."` | DỪNG nếu dùng sai Deployment ID! |
