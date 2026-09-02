@@ -114,8 +114,8 @@ SHEET_CONNECTORS = {
         "url": "https://docs.google.com/spreadsheets/d/1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow/gviz/tq?tqx=out:csv&gid=0",
         "min_rows": 2
     },
-    "Sheet Site Down Clear Morning (GID=582589665)": {
-        "url": "https://docs.google.com/spreadsheets/d/1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow/gviz/tq?tqx=out:csv&gid=582589665",
+    "Sheet Search Site Clear (GID=610944071)": {
+        "url": "https://docs.google.com/spreadsheets/d/1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow/gviz/tq?tqx=out:csv&gid=610944071",
         "min_rows": 1
     },
     "Sheet Daily Report & Business": {
@@ -183,7 +183,7 @@ SCHEDULE_RULES = [
     {
         "report_name": "Report 5C (Plan Sáng/Chiều)",
         "group_key": "CONTROL",
-        "target_times": ["06:06", "08:28", "09:56", "15:26", "22:06"],
+        "target_times": ["08:28", "09:56", "15:26", "22:06"],
         "title_patterns": [r"5(?:\.1|\.)?\s*Report.*Plan", r"5\.\d*\s*Report.*Plan", r"Daily\s*Plan", r"Plan.*Summary"],
         "max_delay_min": 5
     },
@@ -198,7 +198,7 @@ SCHEDULE_RULES = [
         "report_name": "Report 6.1 (Site Clear Today)",
         "group_key": "CONTROL",
         "target_times": ["07:18", "10:18", "14:18", "17:18"],
-        "title_patterns": [r"6\.1\s*Site\s*Clear", r"Site\s*Clear\s*Today", r"Site\s*Clear"],
+        "title_patterns": [r"6\.1\s*Report", r"6\.1\s*Site\s*Clear", r"Site\s*Clear\s*Today", r"Site\s*Clear"],
         "max_delay_min": 5
     },
     {
@@ -382,13 +382,28 @@ def audit_sheets_connectors():
             lines = [l for l in resp.text.split("\n") if l.strip()]
             data_rows = max(0, len(lines) - 1)
 
-            # Quét lỗi công thức nghiêm trọng
-            ref_errs = resp.text.count("#REF!")
-            val_errs = resp.text.count("#VALUE!")
-            div_errs = resp.text.count("#DIV/0!")
-            name_errs = resp.text.count("#NAME?")
-            circ_errs = resp.text.count("#CIRC!")
-            critical_formula_errs = ref_errs + val_errs + div_errs + name_errs + circ_errs
+            # Quét lỗi công thức nghiêm trọng trong các cột dữ liệu hoạt động (active columns <= 30)
+            active_formula_errs = {"#REF!": 0, "#VALUE!": 0, "#DIV/0!": 0, "#NAME?": 0, "#CIRC!": 0}
+            import csv, io
+            try:
+                reader = csv.reader(io.StringIO(resp.text))
+                for row_idx, row in enumerate(reader):
+                    # Chỉ kiểm tra tối đa 30 cột đầu (vùng dữ liệu hoạt động thực tế)
+                    check_cols = row[:30] if len(row) > 30 else row
+                    for cell in check_cols:
+                        for err_k in active_formula_errs:
+                            if err_k in cell:
+                                active_formula_errs[err_k] += 1
+            except Exception:
+                for err_k in active_formula_errs:
+                    active_formula_errs[err_k] = resp.text.count(err_k)
+
+            ref_errs = active_formula_errs["#REF!"]
+            val_errs = active_formula_errs["#VALUE!"]
+            div_errs = active_formula_errs["#DIV/0!"]
+            name_errs = active_formula_errs["#NAME?"]
+            circ_errs = active_formula_errs["#CIRC!"]
+            critical_formula_errs = sum(active_formula_errs.values())
 
             if critical_formula_errs > 0:
                 err_items = []
@@ -645,9 +660,12 @@ async def audit_telegram_messages_telethon():
                     if target_total_min > current_total_min + 2:
                         continue # Mốc giờ tương lai -> bỏ qua
 
-                    # Tìm tin nhắn khớp với tiêu đề
+                    # Tìm tin nhắn khớp với tiêu đề trong ngày hôm nay
                     matched_msgs = []
                     for m in msgs:
+                        # Chỉ so khớp tin nhắn gửi trong ngày hôm nay để tránh lệch giờ so với hôm qua
+                        if m.get("date_str") != today_start.strftime("%d/%m/%Y"):
+                            continue
                         is_match = any(p.search(m["text"]) for p in patterns)
                         if is_match:
                             diff = abs(m["total_min"] - target_total_min)
@@ -942,6 +960,87 @@ def main():
 
     send_report_telegram(report_text)
     logger.info(f"🏁 Hoàn tất kiểm toán Ghế AUDITOR-9.1 (Phát hiện {incident_count} sự cố).")
+    
+    audit_capacity()
+
+
+def audit_capacity():
+    """
+    ══════════════════════════════════════════════════════════════
+    🚨 GHẾ AUDITOR-9.2 (Capacity Sentinel)
+    Gọi GAS audit_capacity → đếm dòng từng tab → cảnh báo Telegram
+    Ngưỡng: > 40K dòng = 🔴 CRITICAL, > 20K = 🟡 WARNING
+    ══════════════════════════════════════════════════════════════
+    """
+    logger.info("🚀 [AUDITOR-9.2] Bắt đầu kiểm tra dung lượng Sheet...")
+    gas_url = os.getenv('APPS_SCRIPT_URL', '')
+    if not gas_url:
+        logger.error("[AUDITOR-9.2] Thiếu APPS_SCRIPT_URL env var")
+        return
+
+    url = gas_url + '?action=audit_capacity'
+    try:
+        resp = requests.get(url, timeout=60, allow_redirects=True)
+        data = resp.json()
+    except Exception as e:
+        logger.error(f"[AUDITOR-9.2] Lỗi gọi audit_capacity: {e}")
+        return
+
+    if data.get("status") == "error":
+        logger.error(f"[AUDITOR-9.2] GAS trả lỗi: {data.get('message')}")
+        return
+
+    # Parse structured response: {status, timestamp, tabs: [{spreadsheet, tab, label, rows, cols}], warnings, criticals}
+    tabs = data.get("tabs", [])
+    gas_status = data.get("status", "OK")
+    gas_ts = data.get("timestamp", "N/A")
+    gas_warnings = data.get("warnings", [])
+    gas_criticals = data.get("criticals", [])
+
+    # Build message
+    lines = []
+    if gas_status == "CRITICAL":
+        lines.append("🔴 <b>[AUDITOR-9.2] CRITICAL CAPACITY ALERT</b>")
+        lines.append("━━━━━━━━━━━━━━━━━━━━")
+    elif gas_status == "WARNING":
+        lines.append("🟡 <b>[AUDITOR-9.2] CAPACITY WARNING</b>")
+        lines.append("━━━━━━━━━━━━━━━━━━━━")
+    else:
+        lines.append(f"🟢 <b>[AUDITOR-9.2]</b> Capacity OK")
+
+    # Detail per tab
+    for t in tabs:
+        rows = t.get("rows", 0)
+        name = f"{t.get('spreadsheet', '?')}/{t.get('tab', '?')}"
+        if rows < 0:
+            lines.append(f"❌ {name}: ERROR ({t.get('label', '')})")
+        elif rows > 40000:
+            lines.append(f"🔴 {name}: <b>{rows:,}</b> rows (> 40K — SẮP TIMEOUT!)")
+        elif rows > 20000:
+            lines.append(f"🟡 {name}: <b>{rows:,}</b> rows (> 20K)")
+        else:
+            lines.append(f"🟢 {name}: {rows:,} rows")
+
+    if gas_status == "OK":
+        lines.append(f"📊 Tổng: {len(tabs)} tabs đều < 20K rows")
+
+    lines.append(f"🕐 {gas_ts}")
+
+    msg = "\n".join(lines)
+    logger.info(f"[AUDITOR-9.2] Kết quả: {gas_status} ({len(tabs)} tabs)")
+
+    # Send to Admin DM
+    tg_url = f"https://api.telegram.org/bot{SEND_BOT_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": ADMIN_CHAT_ID,
+        "text": msg,
+        "parse_mode": "HTML"
+    }
+    try:
+        r = requests.post(tg_url, json=payload, timeout=15)
+        logger.info(f"[AUDITOR-9.2] Đã gửi Telegram: {r.status_code}")
+    except Exception as e:
+        logger.error(f"[AUDITOR-9.2] Lỗi gửi telegram: {e}")
 
 
 if __name__ == "__main__":
