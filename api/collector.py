@@ -145,7 +145,7 @@ def fetch_change_oil_template(force: bool = False) -> str:
     return f"Change Oil MDG: {date_today}\nSite MDG: \nType oil: \nHour for MDG 8KVA: \nKW for MDG 8KVA: \nNote: "
 
 def sync_telegram_menu_commands(force: bool = False) -> bool:
-    """Sync Telegram Bot Menu Commands from Google Sheet Config Tab Column A every 5 minutes."""
+    """Sync Telegram Bot Menu Commands directly from Google Sheet Config Tab Column A in EXACT order."""
     if not COLLECTOR_BOT_TOKEN:
         return False
     data = fetch_config_templates(force=force)
@@ -164,22 +164,13 @@ def sync_telegram_menu_commands(force: bool = False) -> bool:
             desc = f"Get {first_part} template"
             commands.append({"command": cmd, "description": desc[:256]})
 
-    for def_cmd, def_desc in [
-        ("done", "Get Done template"),
-        ("inventory", "Inventory fuel report template"),
-        ("change_oil", "Change oil MDG template")
-    ]:
-        if def_cmd not in seen:
-            seen.add(def_cmd)
-            commands.append({"command": def_cmd, "description": def_desc})
-
     try:
         r = requests.post(
             f"https://api.telegram.org/bot{COLLECTOR_BOT_TOKEN}/setMyCommands",
             json={"commands": commands},
             timeout=10
         )
-        logger.info(f"Telegram setMyCommands sync ({len(commands)} commands): {r.json()}")
+        logger.info(f"Telegram setMyCommands sync ({len(commands)} commands in exact sheet order): {r.json()}")
         return True
     except Exception as ex:
         logger.error(f"Telegram setMyCommands error: {ex}")
@@ -1146,22 +1137,22 @@ async def handle(data: dict):
                         parse_mode="HTML"
                     )
                 else:
+                    cmd_list_lines = []
+                    for l in fetch_config_templates().get("all", []):
+                        fp = l.split(":")[0].strip() if ":" in l else l.split()[0].strip()
+                        c_name = fp.lower().replace(" ", "_").replace("-", "_")
+                        c_name = "".join(c for c in c_name if c.isalnum() or c == "_")[:32]
+                        if c_name and c_name != "field_name":
+                            cmd_list_lines.append(f"• /{c_name} — {fp} template")
+                    cmd_text = "\n".join(cmd_list_lines)
                     await bot.send_message(
                         chat_id,
-                        "👋 <b>TNI Asset & Cable Bot</b>\n\n"
-                        "Available template commands:\n"
-                        "• /order - Order template\n"
-                        "• /revoke - Revoke template\n"
-                        "• /move - Move template\n"
-                        "• /export - Export template\n"
-                        "• /done - Done template\n\n"
-                        "<i>Tap any command to receive the template, then copy and fill out.</i>",
+                        f"👋 <b>TNI Asset & Cable Bot</b>\n\n"
+                        f"Available template commands:\n"
+                        f"{cmd_text}\n\n"
+                        f"<i>Tap any command to receive the template, then copy and fill out.</i>",
                         parse_mode="HTML"
                     )
-                return
-            elif cmd in ("/change_oil", "/oil", "/change_oil_mdg", "/oil_mdg"):
-                tpl = fetch_change_oil_template()
-                await bot.send_message(chat_id, tpl, parse_mode="HTML")
                 return
             else:
                 tpl_txt = get_template_text(cmd)
