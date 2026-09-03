@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-CABLE_BOT_TOKEN      = os.getenv("COLLECTOR_BOT_TOKEN", "")   # same bot as Asset
+CABLE_BOT_TOKEN      = os.getenv("CABLE_BOT_TOKEN") or "8758104446:AAH3o7lMCxBXn70ThAXweH1DddmRkJrgwWo"
 CABLE_CHAT_ID        = os.getenv("CABLE_CHAT_ID", "-5531350787")
 CABLE_APPS_SCRIPT_URL = os.getenv("CABLE_APPS_SCRIPT_URL", "")
 TZ_MM = timezone(timedelta(hours=6, minutes=30))               # Myanmar UTC+6:30
@@ -87,7 +87,7 @@ def format_report(stats: dict) -> str:
 
     lines.append("")
     lines.append("━━━━━━━━━━━━━━━━━━━━━")
-    lines.append("🤖 <i>Auto report by TNI Cable Bot</i>")
+    lines.append("🤖 <i>Auto report by 15 TNI CABLE</i>")
     return "\n".join(lines)
 
 
@@ -111,42 +111,9 @@ def send_telegram(chat_id: str, text: str) -> tuple[bool, int | None]:
 
 
 def main():
-    print(f"🔌 Cable Report — {datetime.now(TZ_MM).strftime('%d/%m/%Y %H:%M')} Myanmar")
-
-    if not CABLE_BOT_TOKEN:
-        print("❌ COLLECTOR_BOT_TOKEN not set", file=sys.stderr)
-        sys.exit(1)
-
-    # 🗑️ Xóa triệt để toàn bộ tin Cable cũ theo tiêu đề qua Telethon
-    try:
-        from tg_utils import tg_delete_by_title
-        tg_delete_by_title(CABLE_CHAT_ID, "TNI CABLE ROUTE", bot_token=CABLE_BOT_TOKEN)
-    except Exception as e:
-        print(f"⚠️ tg_delete_by_title error: {e}", file=sys.stderr)
-
-    gas_url = os.getenv("APPS_SCRIPT_URL", "") or CABLE_APPS_SCRIPT_URL
-    if gas_url:
-        try:
-            from delete_old_helper import delete_old_messages_bot
-            delete_old_messages_bot(CABLE_BOT_TOKEN, CABLE_CHAT_ID, gas_url, "CABLE_DAILY_REPORT")
-        except Exception as e:
-            print(f"⚠️ Error deleting old cable report: {e}", file=sys.stderr)
-
-    stats = get_stats()
-    if stats is None:
-        print("⚠️ No stats available, sending fallback message")
-        stats = {"today": 0, "day3": 0, "day7": 0, "month": 0,
-                 "total": 0, "confirmed": 0, "pending": 0, "by_type": {}}
-
-    msg = format_report(stats)
-    print("📨 Report:\n" + msg)
-    ok, msg_id = send_telegram(CABLE_CHAT_ID, msg)
-    if ok and gas_url and msg_id:
-        try:
-            from delete_old_helper import save_msgids
-            save_msgids(gas_url, "CABLE_DAILY_REPORT", [msg_id])
-        except Exception as e:
-            print(f"⚠️ Error saving cable report msgid: {e}", file=sys.stderr)
+    print(f"🛑 Cable Daily Report — permanently disabled per user request ({datetime.now(TZ_MM).strftime('%d/%m/%Y %H:%M')} Myanmar)")
+    print("✅ Cable report execution halted: no report will be sent.")
+    return
 
 
 if __name__ == "__main__":

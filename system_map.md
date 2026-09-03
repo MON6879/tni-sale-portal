@@ -73,7 +73,7 @@
 | 🔵 **GITHUB ACTIONS** | **Report 5A, 5B, 5C (Plan)** | `daily_plan_report.py` | GitHub (`MON6879` — theo lịch 7 mốc) | Báo cáo Kế hoạch Ngày/EOD/Update đọc 100% từ Google Sheet SSOT qua Bot API (Zero Telethon) |
 | 🔵 **GITHUB ACTIONS** | **Report 6 (Read Status)** | `daily_read_report.py` | GitHub (`MON6879` — 08:48, 14:58, 17:18, 19:41) | Báo cáo xác nhận đọc Note qua Telethon (Dung sai ±3p) |
 | 🔵 **GITHUB ACTIONS** | **Report 6.1 (Site Clear Today)** | `site_clear_report.py` | GitHub (`MON6879` — 07:18, 10:18, 14:18, 17:18 MMT) | Báo cáo sự cố Clear trong ngày theo Team từ tab Site down Clear Morning |
-| 🔵 **GITHUB ACTIONS** | **Cable & Refuel Reports** | `cable_report.py`, `refuel_plan_report.py` | GitHub (`MON6879` — theo lịch) | Báo cáo Cáp đứt và Kế hoạch cấp dầu máy phát |
+| 🔵 **GITHUB ACTIONS** | **Refuel Reports** | `refuel_plan_report.py` (~~`cable_report.py` đã hủy~~) | GitHub (`MON6879` — theo lịch) | Kế hoạch cấp dầu máy phát |
 | 🔵 **GITHUB ACTIONS** | **Site Down Relay (Toa SD ƯU TIÊN 1)** | `train_5min.yml` / `botlookup_relay.py` | GitHub (`MON6879` — Toa SD chạy ĐẦU TIÊN mỗi nhịp :06/:36 MMT trong train) | Cào dữ liệu trạm sập NOC Pro bằng Telethon, chạy tuần tự TRƯỚC mọi report khác |
 
 ---
@@ -220,7 +220,7 @@ grep -c 'continue-on-error: true' train_5min.yml                # Phải = tổn
 | **Báo cáo Kế hoạch Sáng (Report 5C)** | **06:06, 08:28, 09:56, 15:26, 22:06 MMT** | Toa Report 5C Morning | `06:06`, `08:28`, `09:56`, `15:26`, `22:06` MMT | `daily_plan_report.py` | Teams 1..4, CONTROL |
 | **Báo cáo Lượt đọc (Report 6)** | **08:48, 14:58, 17:18, 19:41 MMT** | Toa Report 6 Read | `08:48`, `14:58`, `17:18`, `19:41` MMT | `daily_read_report.py` | Teams 1..4, CONTROL |
 | **Báo cáo 6.1 Site Clear Today** | **07:18, 10:18, 14:18, 17:18 MMT** | Toa 6.1 Site Clear | `07:18`, `10:18`, `14:18`, `17:18` MMT | `site_clear_report.py` | Teams 1..4, CONTROL |
-| **Cable Report** | **05:56, 15:56 MMT** | Toa Cable | 05:56, 15:56 MMT | `cable_report.py` | CABLE Group |
+| ~~**Cable Report**~~ | ~~**05:56, 15:56 MMT**~~ | ~~Toa Cable~~ | **ĐÃ HỦY THEO YÊU CẦU NGƯỜI DÙNG** | ~~`cable_report.py`~~ | ~~CABLE Group~~ |
 | **Site Down Detail (Ghế SD-DETAIL-1)** | **Mỗi giờ (:06 & :36 MMT)** | Độc lập `botlookup_relay.yml` (cron: `3,33 * * * *` UTC) | Chạy độc lập ~:03/:33 UTC | `botlookup_relay.py` | CONTROL, T1, T2, T3, T4 |
 | **Incident Summary AW7 (Ghế SD-SUMMARY-2)** | **Khi ô AW7 đổi giờ** | Apps Script Polling / Manual Trigger | Độc lập 100% — Chỉ gửi khi ô AW7 có giờ mới | `site_down_v2.gs` | CONTROL, T1, T2, T3, T4 |
 

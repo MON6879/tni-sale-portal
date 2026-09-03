@@ -136,8 +136,7 @@ jobs:
           check_time 05 46 && R1234=true && BOD=true && REFUEL_REQ=true && NEED_PYTHON=true && echo "🚃 Toa 1+8+11: Reports 1-3 + BOD + Refuel Req (05:46 MMT)"
           #  05:51 → Report 4 (Daily EOD Task & Stats) — TOA 12 RIÊNG (+5 phút)
           check_time 05 51 && R4=true && NEED_PYTHON=true && echo "🚃 Toa 12: Report 4 EOD Task (05:51 MMT)"
-          #  05:56 → Cable Daily Report (🤖 Bot API)
-          check_time 05 56 && CABLE=true && NEED_PYTHON=true && echo "🚃 Toa 7: Cable Daily Report (05:56 MMT)"
+          #  05:56 → Cable Daily Report [ĐÃ HỦY THEO YÊU CẦU NGƯỜI DÙNG]
           #  06:06 → Report 5 (Daily Plan - Ca Sáng) (📱 Telethon)
           check_time 06 06 && P5C=true && NEED_PYTHON=true && echo "🚃 Toa 5: Report 5 Daily Plan Morning (06:06 MMT)"
           #  07:06 → Refuel Request Catch-up (🤖 Bot API)
@@ -171,8 +170,7 @@ jobs:
           check_time 15 46 && R1234=true && BOD=true && REFUEL_REQ=true && NEED_PYTHON=true && echo "🚃 Toa 1+8+11: Reports 1-3 + BOD + Refuel Req (15:46 MMT)"
           #  15:51 → Report 4 (Daily EOD Task & Stats) — TOA 12 RIÊNG (+5 phút)
           check_time 15 51 && R4=true && NEED_PYTHON=true && echo "🚃 Toa 12: Report 4 EOD Task (15:51 MMT)"
-          #  15:56 → Cable Daily Report (🤖 Bot API)
-          check_time 15 56 && CABLE=true && NEED_PYTHON=true && echo "🚃 Toa 7: Cable Daily Report (15:56 MMT)"
+          #  15:56 → Cable Daily Report [ĐÃ HỦY THEO YÊU CẦU NGƯỜI DÙNG]
 
           # 🚨 Site Down Relay: ĐÃ TÁCH HẲN sang botlookup_relay.yml (cron 6,36 UTC = :36,:06 MMT)
 
@@ -396,22 +394,11 @@ jobs:
         run: python site_clear_report.py || true
 
       # ═══════════════════════════════════════════════
-      # 🔌 TOA 7: Cable Daily Report
-      # 🤖 Engine: Bot API (COLLECTOR_BOT)
-      # ⏰ Schedule: 05:53, 15:53 Myanmar
+      # 🔌 TOA 7: Cable Daily Report [ĐÃ HỦY THEO YÊU CẦU NGƯỜI DÙNG]
       # ═══════════════════════════════════════════════
-      - name: "🔌 Toa 7 — Cable Daily Report"
-        continue-on-error: true
-        if: |
-          steps.sched.outputs.cable == 'true' ||
-          (github.event_name == 'workflow_dispatch' && inputs.report_type == 'Task - Cable Daily Report')
-        env:
-          CABLE_BOT_TOKEN: ${{ secrets.CABLE_BOT_TOKEN }}
-          COLLECTOR_BOT_TOKEN: ${{ secrets.COLLECTOR_BOT_TOKEN }}
-          CABLE_APPS_SCRIPT_URL: ${{ secrets.CABLE_APPS_SCRIPT_URL }}
-          CABLE_CHAT_ID: ${{ secrets.CABLE_CHAT_ID }}
-          APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
-        run: python cable_report.py || true
+      - name: "🔌 Toa 7 — Cable Daily Report (DISABLED)"
+        if: false
+        run: echo "Cable Daily Report is permanently disabled per user request."
 
       # ═══════════════════════════════════════════════
       # ⛽ TOA 8: Refuel Request Report
