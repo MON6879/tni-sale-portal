@@ -514,11 +514,11 @@ async def main():
                     sd = subteams_dg[subteam]
                     lines3.append(f"\n📍 TEAM: {subteam}")
                     lines3.append("⚙️ Sum DG KVA Need change Oil Filter:\n" + format_blue_dots(sd["oil_filter"], "🔵"))
-                    lines3.append("⚙️ Sum DG KVA Need change Fuel Filter:\n" + format_blue_dots(sd["fuel_filter"], "🔵"))
-                    lines3.append("⚙️ Sum DG KVA Need change Air Filter:\n" + format_blue_dots(sd["air_filter"], "🔵"))
+                    lines3.append("⚙️ Sum DG KVA Need change Fuel Filter:\n" + format_blue_dots(sd["fuel_filter"], "🟡"))
+                    lines3.append("⚙️ Sum DG KVA Need change Air Filter:\n" + format_blue_dots(sd["air_filter"], "🟢"))
                     lines3.append("🛢️ Sum DG KVA Need change Oil:\n" + format_blue_dots(sd["oil"], "🟠"))
                     lines3.append(f"  👉 Sum Need: {sd['oil_need']} L | Have at Team: {sd['oil_have']} L | Diff: {sd['oil_diff']} L")
-                    lines3.append("❄️ Sum DG KVA Need change water Coolant:\n" + format_blue_dots(sd["coolant"], "🟠"))
+                    lines3.append("❄️ Sum DG KVA Need change water Coolant:\n" + format_blue_dots(sd["coolant"], "🟣"))
                     lines3.append(f"  👉 Sum Need: {sd['coolant_need']} L | Have at Team: {sd['coolant_have']} L | Diff: {sd['coolant_diff']} L")
 
                 msg3_text = "\n".join(lines3)
