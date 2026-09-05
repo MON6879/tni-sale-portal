@@ -78,6 +78,11 @@ BOT_REGISTRY = {
         "token": "8903841312:AAHQ_LeI19gs2nrqBSInTsgzJXOuv6H8LmE",
         "expected_url": "https://tni-bot.vercel.app/api/construction",
         "ping_url": "https://tni-bot.vercel.app/api/construction"
+    },
+    "Cable Bot 15 (@TNI_CABLE_BOT)": {
+        "token": "8758104446:AAH3o7lMCxBXn70ThAXweH1DddmRkJrgwWo",
+        "expected_url": "https://tni-bot.vercel.app/api/cable_bot",
+        "ping_url": "https://tni-bot.vercel.app/api/cable_bot"
     }
 }
 
@@ -203,21 +208,14 @@ SCHEDULE_RULES = [
         "group_key": "CONTROL",
         "target_times": ["07:18", "10:18", "14:18", "17:18"],
         "title_patterns": [r"6\.1\s*Report", r"6\.1\s*Site\s*Clear", r"Site\s*Clear\s*Today", r"Site\s*Clear"],
-        "max_delay_min": 5
-    },
-    {
-        "report_name": "Cable Daily Report",
-        "group_key": "CONTROL",
-        "target_times": ["05:56", "15:56"],
-        "title_patterns": [r"Cable", r"Cáp"],
-        "max_delay_min": 5
+        "max_delay_min": 15
     },
     {
         "report_name": "Refuel Request Report",
         "group_key": "REFUEL",
-        "target_times": ["05:46", "05:48", "07:06", "13:06", "15:46"],
+        "target_times": ["05:46", "07:06", "13:06", "15:46"],
         "title_patterns": [r"Refuel", r"Yêu\s*cầu.*dầu", r"Request\s*Refuel"],
-        "max_delay_min": 5
+        "max_delay_min": 15
     }
 ]
 
@@ -708,6 +706,17 @@ async def audit_telegram_messages_telethon():
                                 "status": "WARN",
                                 "label": "🟡 DELAYED",
                                 "detail": f"Gửi lúc {best_msg['time_str']} (Trễ {best_diff}p | ID: {best_msg['id']})"
+                            })
+                        elif r_name == "Refuel Request Report" and target_t == "05:46" and any(abs(m["total_min"] - (7 * 60 + 6)) <= 15 for _, m in matched_msgs):
+                            # Nếu mốc 05:46 chưa kịp gửi nhưng Toa Catch-up 07:06 đã gửi bù thành công
+                            catchup_msg = [m for _, m in matched_msgs if abs(m["total_min"] - (7 * 60 + 6)) <= 15][0]
+                            schedule_results.append({
+                                "report": r_name,
+                                "target_time": target_t,
+                                "group": gkey,
+                                "status": "WARN",
+                                "label": "🟡 CAUGHT-UP",
+                                "detail": f"Toa bù lúc {catchup_msg['time_str']} đã gửi thành công (Toa 07:06 Catch-up | ID: {catchup_msg['id']})"
                             })
                         else:
                             schedule_results.append({
