@@ -75,6 +75,11 @@
 > 1. **Tự Động Lưu Đi Ngay Khi Sửa Xong (Auto Full Save After Every Fix)**: Sau mỗi lần sửa xong bất kỳ code, cấu hình, bảng tính hay endpoint nào, AI BẮT BUỘC phải TỰ ĐỘNG thực thi trọn vẹn quy trình **6 Bước "Lưu Đi"** trong `system_map.md` (backup context, đồng bộ repos, commit & push, dọn cache, cross-sync logic, live verification), TUYỆT ĐỐI KHÔNG ĐƯỢC CHỜ Người Dùng phải nhắc "lưu đi chưa"!
 > 2. **Bắt Buộc Trả Lời Khẳng Định "ĐÃ LƯU ĐI ✅"**: Sau khi hoàn thành lưu và deploy, câu trả lời gửi cho Người Dùng BẮT BUỘC phải có thông báo rõ ràng: **"ĐÃ LƯU ĐI ✅"** kèm theo chi tiết commit, version deployment và file backup context!
 > 3. **BẮT BUỘC Báo Số Ghế và Từng Bước Chi Tiết (Mandatory Seat and Step Report)**: Sau khi lưu đi, AI BẮT BUỘC phải báo cáo dưới dạng BẢNG gồm: Tên Ghế (GAS-OPS-1, GAS-ATTENDANCE-4, GAS-SITEDOWN-2, GAS-CONSTRUCTION-3, EXT-OPS-HUB, AUDITOR-9.1...), Version mới (@71, v4.2...), Thay đổi chính, Trạng thái. Kèm danh sách Git commits (hash + message) và kết quả clasp deploy / Vercel reset. TUYỆT ĐỐI KHÔNG ĐƯỢC nói đã lưu mà thiếu số ghế và version!
+> 4. **🧬 BẮT BUỘC Phân Tích Lỗi Gốc → Đúc Thành Rule Phòng Ngừa Sau Mỗi Lần Sửa (Mandatory Post-Mortem → Rule Injection Policy)**: Sau MỖI LẦN sửa lỗi (bug fix, logic error, data corruption, side-effect), AI BẮT BUỘC phải thực hiện **3 Bước Post-Mortem** trước khi báo "Đã Lưu Đi ✅":
+>    - **Bước PM-1 — Xác Định Root Cause Chính Xác**: Trả lời câu hỏi: *"Lỗi này xảy ra do nguyên nhân kỹ thuật CỤ THỂ nào?"* (Ví dụ: hardcode data trong migration function, regex không handle blank value, trigger cũ không bị xóa...) — TUYỆT ĐỐI CẤM viết root cause chung chung như "do lỗi code"!
+>    - **Bước PM-2 — Đúc Thành Rule Phòng Ngừa**: Từ root cause, AI BẮT BUỘC phải viết ít nhất **1 rule cụ thể** dưới dạng: *"Khi làm [hành động X], BẮT BUỘC phải [biện pháp Y], TUYỆT ĐỐI CẤM [anti-pattern Z]"*, đủ rõ để AI session sau đọc là hiểu ngay và không lặp lại!
+>    - **Bước PM-3 — Ghi Rule Vào AGENTS.md Ngay Lập Tức**: Rule phòng ngừa mới BẮT BUỘC phải được chèn vào đúng section liên quan trong `AGENTS.md` (và đồng bộ sang 3 file AGENTS.md còn lại) trong cùng commit "lưu đi". TUYỆT ĐỐI KHÔNG ĐƯỢC để rule chỉ nằm trong backup context mà không vào AGENTS.md — vì AI session sau không đọc backup context, chỉ đọc AGENTS.md!
+>    - **Ví Dụ Post-Mortem Mẫu**: Lỗi "hardcode test rows vào migration function → corrupt sheet data" → Rule: *"Khi viết hàm migration/reorder cột trong GAS, TUYỆT ĐỐI KHÔNG hardcode giá trị dữ liệu cụ thể vào trong thân hàm. Hàm migration CHỈ ĐƯỢC PHÉP thay đổi format, header và cấu trúc cột — KHÔNG BAO GIỜ ghi đè dữ liệu thực của người dùng."*
 
 ---
 
@@ -148,6 +153,15 @@
 >    - **Tab 6: System Guide** ➔ Bản đồ hướng dẫn toàn hệ thống Bot & Lịch báo cáo Burmese Time.
 >    - **Tab 7: Gmail Access List** ➔ Phân quyền truy cập đa tài khoản theo vai trò (Role-Based Access Control).
 > 4. **Đồng Bộ Song Song Cả 2 HTML & Cả 2 Repositories (Dual HTML & Dual Repo Parity)**: Mọi thay đổi trên BI Portal BẮT BUỘC phải đồng bộ 100% giữa `index.html` và `executive_dashboard.html`, và commit đẩy lên cả 2 repo `phonghdpxd-cmd/tni-bot` (`Task and WO`) và `MON6879/TNI-DONE` (`tni-search`).
+
+---
+
+# 🔬 STRICT RULE: HÀM MIGRATION / REORDER CỘT GAS — TUYỆT ĐỐI CẤM HARDCODE DỮ LIỆU NGƯỜI DÙNG (GAS MIGRATION FUNCTION DATA PROTECTION POLICY)
+
+> ⚠️ **QUY TẮC BẮT BUỘC — Đúc từ Post-Mortem v786 (hardcode rows → corrupt sheet data)**:
+> 1. **Hàm Migration CHỈ ĐƯỢC Đụng Vào Cấu Trúc, KHÔNG BAO GIỜ Đụng Vào Dữ Liệu (Structure-Only Migration)**: Mọi hàm `reorder`, `migrate`, `restructure` cột trong GAS BẮT BUỘC phải **CHỈ** thực hiện: (a) `setNumberFormat()` — định dạng ô, (b) `setValues([headers])` trên dòng 1 header, (c) di chuyển/sắp xếp lại cột theo mapping. TUYỆT ĐỐI CẤM gọi `setValues([hardcoded_data])` trên bất kỳ dòng dữ liệu nào (row ≥ 2)!
+> 2. **Cấm Nhúng Test Data Vào Hàm Production (Zero Test Contamination)**: Khi test migration, BẮT BUỘC phải viết function riêng `test_reorderXxx_()` hoặc dùng sheet test riêng biệt. TUYỆT ĐỐI KHÔNG hardcode giá trị test (`r2 = [2, "07/09/2026", ...]`) vào trong hàm production — vì hàm production có thể được gọi lại nhiều lần và sẽ ghi đè dữ liệu thật!
+> 3. **Nguyên Tắc Idempotent Migration (Safe-to-Replay)**: Mọi hàm migration BẮT BUỘC phải an toàn khi gọi nhiều lần (idempotent) — gọi lần 2 không được làm hỏng kết quả lần 1. Nếu hàm không đảm bảo idempotent, BẮT BUỘC phải thêm guard check và comment rõ: `// CALL ONCE ONLY`.
 
 ---
 
