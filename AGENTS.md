@@ -708,3 +708,24 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 > 2. **Tách Rõ Ràng Hoặc Định Dạng Chuẩn Trên Sheet (Dedicated Columns)**: BẮT BUỘC tách thành 2 cột riêng biệt (`Telegram Date` và `Telegram Time`) hoặc ghi rõ chuỗi đầy đủ `dd/MM/yyyy HH:mm:ss` ở các cột đầu tiên của bảng tính để người quản lý dễ dàng lọc, sắp xếp, đối chiếu và thống kê dữ liệu.
 > 3. **Phản Hồi Telegram Bắt Buộc Kèm REF và Thời Gian**: Tin nhắn phản hồi tự động cho người gửi (tối đa 2 dòng chuẩn) BẮT BUỘC phải hiển thị rõ mã `#[Mã REF]` và thời điểm gửi `🗓️ [DD/MM/YYYY HH:MM]` để nhân viên có căn cứ đối chiếu ngay trong nhóm chat.
 
+---
+
+# 🛡️ POST-MORTEM RULES — 07/09/2026: GAS SHEET DATE/TIME OBJECT + UPSERT ROW OFFSET (BẮT BUỘC ÁP DỤNG MỌI PHIÊN AI SAU)
+
+> ⚠️ **3 QUY TẮC PHÒNG NGỪA BẮT BUỘC — ĐÚC TỪ BUG THỰC TẾ (REPORT 6 — READ GROUP SHEET)**:
+>
+> ### 🔴 RULE PM-1: GAS `getValues()` TRẢ VỀ DATE OBJECT — TUYỆT ĐỐI CẤM DÙNG `.toString()` TRỰC TIẾP
+> - **Lỗi gốc (07/09/2026)**: `handleLogReadGroup()` và `handleGetReadGroupToday()` dùng `(row[0] || "").toString().trim()` để đọc cột ngày từ Sheet. GAS `getValues()` trả về **JavaScript `Date` object**, không phải string. Kết quả: `row[0].toString()` ra `"Mon Sep 07 2026 00:00:00 GMT+0630..."` → không bao giờ khớp `"07/09/2026"` → UPSERT map luôn miss (INSERT trùng lặp mỗi lần chạy), GET filter bỏ qua tất cả rows → Report 6 báo **Read: 0** dù sheet đầy dữ liệu.
+> - **Fix bắt buộc**: Dùng helper `fmtDate_(val)` — kiểm tra `instanceof Date` trước, sau đó mới `Utilities.formatDate(val, TZ, "dd/MM/yyyy")`. TUYỆT ĐỐI CẤM `.toString()` trực tiếp trên giá trị từ `getValues()` khi cột đó có thể chứa Date.
+> - **Áp dụng cho**: Mọi cột ngày (`dd/MM/yyyy`) trong tất cả GAS functions đọc sheet: `handleLogReadGroup`, `handleGetReadGroupToday`, bất kỳ hàm mới nào đọc cột date từ sheet.
+>
+> ### 🟡 RULE PM-2: GOOGLE SHEETS AUTO-CONVERT STRING TIME → TIME OBJECT — BẮT BUỘC `'` PREFIX KHI GHI, `instanceof Date` KHI ĐỌC
+> - **Lỗi gốc (07/09/2026)**: GAS ghi `"16:36"` (string) vào cột thời gian. Sheets tự nhận diện chuỗi giống giờ và convert thành Time object nội bộ. Khi GAS đọc lại, nhận về Date epoch 1899: `"Sat Dec 30 1899 16:36:00 GMT+0624"` → Telegram nhận chuỗi lỗi này nguyên vẹn.
+> - **Fix WRITE bắt buộc**: Thêm tiền tố `'` khi ghi vào sheet để force plain-text: `"'" + timeString`. TUYỆT ĐỐI CẤM ghi chuỗi `"HH:mm"` thuần vào cột time vì Sheets sẽ auto-convert.
+> - **Fix READ bắt buộc**: Kiểm tra `instanceof Date` → `Utilities.formatDate(rawTime, TZ, "HH:mm")`. Nếu là string → `.replace(/^'/, "")` để strip prefix.
+> - **Áp dụng cho**: Mọi cột time (`HH:mm`, `HH:mm:ss`), cột trend (`1/0/0`), bất kỳ cột nào có dạng số/giờ cần giữ nguyên string trong tất cả GAS collector functions.
+>
+> ### 🔴 RULE PM-3: GAS UPSERT — `insertRowsBefore` ĐẨY ROW INDEX — BẮT BUỘC INSERT TRƯỚC, UPDATE SAU VỚI OFFSET
+> - **Lỗi gốc (07/09/2026)**: Code cũ UPDATE existing rows TRƯỚC rồi INSERT new rows. Sau `insertRowsBefore(2, N)`, existing rows bị đẩy xuống N dòng nhưng map `keyToSheetRow` vẫn trỏ row số cũ → UPDATE ghi đè sai dòng, corrupt dữ liệu.
+> - **Fix bắt buộc**: Tách 2 danh sách `insertRows[]` và `updateOps[]`. **INSERT trước toàn bộ**, **UPDATE sau với `correctedRow = sheetRow + insertRows.length`**. TUYỆT ĐỐI CẤM UPDATE row index cũ sau khi đã gọi `insertRowsBefore`.
+> - **Áp dụng cho**: Mọi hàm GAS UPSERT dùng `insertRowsBefore()` để chèn dữ liệu mới lên đầu sheet (Read Group, Cable, Refuel, MDG, Attendance v.v.).
