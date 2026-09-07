@@ -83,6 +83,11 @@ BOT_REGISTRY = {
         "token": "8758104446:AAH3o7lMCxBXn70ThAXweH1DddmRkJrgwWo",
         "expected_url": "https://tni-bot.vercel.app/api/cable_bot",
         "ping_url": "https://tni-bot.vercel.app/api/cable_bot"
+    },
+    "Attendance Bot (@TNI_DAILY_ADDTENDANCE_BOT)": {
+        "token": "8628370628:AAE43wwogCzuFDKc0izu5DEuqlkud7ID7Sw",
+        "expected_url": "https://tni-bot.vercel.app/api/attendance",
+        "ping_url": "https://tni-bot.vercel.app/api/attendance"
     }
 }
 
@@ -95,6 +100,9 @@ GAS_SERVICES = {
     },
     "BI Portal Backend (Plan Dep)": {
         "url": "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec?action=get_plan_dep"
+    },
+    "Attendance GAS Backend (@72 SSOT)": {
+        "url": "https://script.google.com/macros/s/AKfycbyFIDGDS5k7wy-hNp2p1PNvte0CQ6cSiNYLyBmNc00Yi1b6IueOob9bKmu4zoQ1A6Cs/exec?action=get_headers"
     }
 }
 
@@ -149,6 +157,10 @@ SHEET_CONNECTORS = {
     },
     "Sheet Team 1 Update Assign (GID=1950247373)": {
         "url": "https://docs.google.com/spreadsheets/d/1s53UHIDF-T9P4EuNB8XoE9yTpoNmDyrQaEe_VJP6f9o/gviz/tq?tqx=out:csv&gid=1950247373",
+        "min_rows": 2
+    },
+    "Sheet Template Attendance (GID=1366655674)": {
+        "url": "https://docs.google.com/spreadsheets/d/18zQB4i0Fu4QfKKkkUZUd6SKWIEbdWDiwdpgNSaL9v54/gviz/tq?tqx=out:csv&gid=1366655674",
         "min_rows": 2
     }
 }
@@ -449,6 +461,109 @@ def audit_sheets_connectors():
                 "reason": f"Mất kết nối (HTTP {err_code})",
                 "latency": f"{dur:.2f}s" if dur > 0 else "N/A"
             })
+    return results
+
+
+def audit_attendance_template_semantic():
+    """
+    Kiểm tra nghiệp vụ cấu trúc tab Template Attendance (GID=1366655674):
+    1. Đảm bảo đủ 8 phân đội: Office, T1, T1 S1, T2, T2 S1, T3, T3 S1, T4.
+    2. Mỗi phân đội phải có ít nhất 1 nhân viên trong danh sách mẫu.
+    3. Phát hiện sớm lỗi lệch cột / mất header khiến bot trả lời nhầm Team.
+    """
+    results = []
+    url = "https://docs.google.com/spreadsheets/d/18zQB4i0Fu4QfKKkkUZUd6SKWIEbdWDiwdpgNSaL9v54/gviz/tq?tqx=out:csv&gid=1366655674"
+    try:
+        t0 = time.time()
+        resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=12)
+        dur = time.time() - t0
+        if resp.status_code != 200:
+            return [{
+                "name": "Semantic Audit Template Attendance",
+                "status": "FAIL",
+                "reason": f"HTTP {resp.status_code} ({dur:.2f}s)",
+                "latency": f"{dur:.2f}s"
+            }]
+        
+        import csv, io
+        reader = list(csv.reader(io.StringIO(resp.text)))
+        if not reader:
+            return [{
+                "name": "Semantic Audit Template Attendance",
+                "status": "FAIL",
+                "reason": "Bảng mẫu điểm danh rỗng!",
+                "latency": f"{dur:.2f}s"
+            }]
+        
+        headers = reader[0]
+        team_cols = {
+            "OFFICE": [],
+            "T1 Main": [],
+            "T1 S1": [],
+            "T2 Main": [],
+            "T2 S1": [],
+            "T3 Main": [],
+            "T3 S1": [],
+            "T4 Main": []
+        }
+        for c, h in enumerate(headers):
+            h_up = h.strip().upper()
+            if "REPORT" not in h_up and "ATTENDAN" not in h_up:
+                continue
+            if "OFFICE" in h_up or "VAN PHONG" in h_up:
+                team_cols["OFFICE"].append(c)
+            elif re.search(r'T1\s*S1|TEAM\s*0?1\s*S1', h_up):
+                team_cols["T1 S1"].append(c)
+            elif re.search(r'T1\b|TEAM\s*0?1', h_up):
+                team_cols["T1 Main"].append(c)
+            elif re.search(r'T2\s*S1|TEAM\s*0?2\s*S1', h_up):
+                team_cols["T2 S1"].append(c)
+            elif re.search(r'T2\b|TEAM\s*0?2', h_up):
+                team_cols["T2 Main"].append(c)
+            elif re.search(r'T3\s*S1|TEAM\s*0?3\s*S1', h_up):
+                team_cols["T3 S1"].append(c)
+            elif re.search(r'T3\b|TEAM\s*0?3', h_up):
+                team_cols["T3 Main"].append(c)
+            elif re.search(r'T4\b|TEAM\s*0?4', h_up):
+                team_cols["T4 Main"].append(c)
+
+        missing_teams = [t for t, cols in team_cols.items() if not cols]
+        if missing_teams:
+            results.append({
+                "name": "Semantic Audit Template Attendance",
+                "status": "FAIL",
+                "reason": f"Thiếu header mẫu của: {', '.join(missing_teams)}!",
+                "latency": f"{dur:.2f}s"
+            })
+        else:
+            zero_staff_teams = []
+            for t, cols in team_cols.items():
+                c_idx = cols[0]
+                staff_count = sum(1 for r in reader[1:30] if len(r) > c_idx and r[c_idx].strip() and not r[c_idx].strip().lower().startswith("total:"))
+                if staff_count == 0:
+                    zero_staff_teams.append(t)
+
+            if zero_staff_teams:
+                results.append({
+                    "name": "Semantic Audit Template Attendance",
+                    "status": "FAIL",
+                    "reason": f"Không có nhân viên trong mẫu: {', '.join(zero_staff_teams)}!",
+                    "latency": f"{dur:.2f}s"
+                })
+            else:
+                results.append({
+                    "name": "Semantic Audit Template Attendance",
+                    "status": "PASS",
+                    "reason": f"Đủ 8 phân đội chuẩn ({dur:.2f}s)",
+                    "latency": f"{dur:.2f}s"
+                })
+    except Exception as e:
+        results.append({
+            "name": "Semantic Audit Template Attendance",
+            "status": "FAIL",
+            "reason": f"Lỗi kiểm toán mẫu: {str(e)[:30]}",
+            "latency": "N/A"
+        })
     return results
 
 
@@ -851,6 +966,7 @@ def build_master_audit_report():
     gas_res = audit_gas_backends()
     sheets_res = audit_sheets_connectors()
     roster_res = audit_staff_roster_and_freshness()
+    template_res = audit_attendance_template_semantic()
 
     # 2. Chạy kiểm tra Telethon (Đúng giờ & Nhân đôi)
     try:
@@ -864,8 +980,9 @@ def build_master_audit_report():
     quality_res = telethon_data.get("quality_results", [])
 
     # 3. Tính toán sự cố (Chỉ tính status FAIL là lỗi thực sự)
-    fail_checks = sum(1 for c in (webhook_res + gas_res + sheets_res + roster_res) if c["status"] == "FAIL")
-    warn_checks = sum(1 for c in (webhook_res + gas_res + sheets_res + roster_res) if c["status"] == "WARN")
+    all_static_checks = webhook_res + gas_res + sheets_res + roster_res + template_res
+    fail_checks = sum(1 for c in all_static_checks if c["status"] == "FAIL")
+    warn_checks = sum(1 for c in all_static_checks if c["status"] == "WARN")
 
     missed_count = sum(1 for s in schedule_res if s["status"] == "FAIL")
     delay_count = sum(1 for s in schedule_res if s["status"] == "WARN")
@@ -937,6 +1054,13 @@ def build_master_audit_report():
     if sheet_fails:
         lines.append("\n📊 <b>LỖI GOOGLE SHEETS:</b>")
         for r in sheet_fails:
+            lines.append(f"   ❌ <b>{r['name']}</b>: <i>{r['reason']}</i>")
+
+    # 8. Báo cáo lỗi Mẫu Điểm Danh (Template Attendance Semantic)
+    template_fails = [r for r in template_res if r["status"] != "PASS"]
+    if template_fails:
+        lines.append("\n📋 <b>LỖI MẪU ĐIỂM DANH (TEMPLATE ATTENDANCE):</b>")
+        for r in template_fails:
             lines.append(f"   ❌ <b>{r['name']}</b>: <i>{r['reason']}</i>")
 
     lines.append("\n──────────────────────────")

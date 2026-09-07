@@ -986,7 +986,7 @@ def get_plan_template_text(team_filter: str) -> str:
 
 _attendance_cache = {"time": 0, "data": None}
 
-def get_attendance_template_text(team_num: int = None, header_only: bool = False) -> str:
+def get_attendance_template_text(team_target = None, header_only: bool = False) -> str:
     """Tải động mẫu điểm danh từ tab Template Attendance của Spreadsheet 18zQB4i0Fu4QfKKkkUZUd6SKWIEbdWDiwdpgNSaL9v54 (gid=1366655674)."""
     global _attendance_cache
     now_ts = time.time()
@@ -1010,18 +1010,20 @@ def get_attendance_template_text(team_num: int = None, header_only: bool = False
         return "⚠️ Could not load attendance template from Google Sheets."
 
     # Tự động tìm cột attendance theo header row 0 — không hardcode index
-    # Header format: "T1 Attendane report: DD/MM/YY", "T1 S1 ... Attendane report: ..."
-    att_col_map = {}  # {"T1": col_idx, "T1 S1": col_idx, ...}
+    # Header format: "Office Attendane report: ...", "T1 Attendane report: ...", "T1 S1 ... Attendane report: ..."
+    att_col_map = {}  # {"OFFICE": col_idx, "T1": col_idx, "T1 S1": col_idx, ...}
     for c in range(df.shape[1]):
         h = str(df.iloc[0, c]).strip() if pd.notna(df.iloc[0, c]) else ""
         h_upper = h.upper()
         if "ATTENDANE REPORT" in h_upper or "ATTENDANCE REPORT" in h_upper:
-            # Trích team từ header: "T1 Attendane report" → "T1", "T1 S1 Team 01 Attendane report" → "T1 S1"
-            import re as _re
-            tm = _re.match(r'^(T\d(?:\s*S\d)?)', h_upper)
-            if tm:
-                team_key = tm.group(1).strip()
-                att_col_map[team_key] = c
+            if "OFFICE" in h_upper or "VAN PHONG" in h_upper:
+                att_col_map["OFFICE"] = c
+            else:
+                import re as _re
+                tm = _re.search(r'(T\d(?:\s*S\d)?)', h_upper)
+                if tm:
+                    team_key = tm.group(1).strip()
+                    att_col_map[team_key] = c
 
     now_mm = datetime.now(TZ_MM)
     date_short = now_mm.strftime("%d/%m/%y")
@@ -1044,13 +1046,17 @@ def get_attendance_template_text(team_num: int = None, header_only: bool = False
                     break
         return lines
 
-    # team_num → team_key mapping
-    team_num_to_key = {1: "T1", 2: "T2", 3: "T3", 4: "T4"}
-    if team_num and team_num in team_num_to_key:
-        tk = team_num_to_key[team_num]
-        lines = extract_team_lines(tk)
+    # Resolve target key
+    resolved_key = None
+    if isinstance(team_target, int):
+        resolved_key = {1: "T1", 2: "T2", 3: "T3", 4: "T4"}.get(team_target)
+    elif team_target:
+        resolved_key = str(team_target).upper().strip()
+
+    if resolved_key:
+        lines = extract_team_lines(resolved_key)
         if not lines:
-            return f"⚠️ No template found for {tk}."
+            return f"⚠️ No template found for {resolved_key}."
         return "\n".join(lines)
     else:
         all_blocks = []
@@ -1780,24 +1786,32 @@ def handle(update: dict) -> None:
             tg_send(chat_id, f"👤 <b>{html.escape(first_name)}</b>\n🔑 ID: <code>{user_id}</code>\n💬 Chat: <code>{chat_id}</code>\n📍 Type: {chat_type}")
             return
 
-        if first_word in ("attendance", "attend", "diemdanh", "att") or first_word.startswith("template_team") or first_word.startswith("template_t") or (first_word == "template" and ("attend" in rest.lower() or "diemdanh" in rest.lower() or "att" in rest.lower())):
+        if first_word in ("attendance", "attend", "diemdanh", "att") or first_word.startswith("template_") or (first_word == "template" and ("attend" in rest.lower() or "diemdanh" in rest.lower() or "att" in rest.lower() or any(x in rest.lower() for x in ("t1", "t2", "t3", "t4", "office")))):
             full_cmd = f"{first_word} {rest}".lower()
             header_only = any(kw in full_cmd for kw in ("header", "title", "tieude", "short"))
-            team_num = None
-            if re.search(r"team\s*0?1|\bt1\b|_team1\b|team_1\b|template_team1\b|\b1\b", full_cmd):
-                team_num = 1
-            elif re.search(r"team\s*0?2|\bt2\b|_team2\b|team_2\b|template_team2\b|\b2\b", full_cmd):
-                team_num = 2
-            elif re.search(r"team\s*0?3|\bt3\b|_team3\b|team_3\b|template_team3\b|\b3\b", full_cmd):
-                team_num = 3
-            elif re.search(r"team\s*0?4|\bt4\b|_team4\b|team_4\b|template_team4\b|\b4\b", full_cmd):
-                team_num = 4
-            reply = get_attendance_template_text(team_num, header_only=header_only)
+            target = None
+            if "office" in full_cmd or "vanphong" in full_cmd:
+                target = "OFFICE"
+            elif "t1_s1" in full_cmd or "t1s1" in full_cmd or "t1 s1" in full_cmd:
+                target = "T1 S1"
+            elif "t2_s1" in full_cmd or "t2s1" in full_cmd or "t2 s1" in full_cmd:
+                target = "T2 S1"
+            elif "t3_s1" in full_cmd or "t3s1" in full_cmd or "t3 s1" in full_cmd:
+                target = "T3 S1"
+            elif re.search(r"team\s*0?1|\bt1\b|_team1\b|team_1\b|template_t1\b|\b1\b", full_cmd):
+                target = "T1"
+            elif re.search(r"team\s*0?2|\bt2\b|_team2\b|team_2\b|template_t2\b|\b2\b", full_cmd):
+                target = "T2"
+            elif re.search(r"team\s*0?3|\bt3\b|_team3\b|team_3\b|template_t3\b|\b3\b", full_cmd):
+                target = "T3"
+            elif re.search(r"team\s*0?4|\bt4\b|_team4\b|team_4\b|template_t4\b|\b4\b", full_cmd):
+                target = "T4"
+            reply = get_attendance_template_text(target, header_only=header_only)
             tg_send(chat_id, reply)
             return
 
-        if first_word in ("leave", "takeleave", "xinnghi", "nghiphep") or (first_word == "template" and any(k in rest.lower() for k in ("leave", "nghi", "phep"))):
-            l_type = "half" if "half" in rest.lower() else ("full" if "full" in rest.lower() else None)
+        if first_word in ("leave", "takeleave", "xinnghi", "nghiphep", "template_leave", "template_leave_half") or (first_word == "template" and any(k in rest.lower() for k in ("leave", "nghi", "phep"))):
+            l_type = "half" if ("half" in rest.lower() or "half" in first_word) else ("full" if "full" in rest.lower() else None)
             reply = get_leave_template_text(l_type)
             tg_send(chat_id, reply)
             return
