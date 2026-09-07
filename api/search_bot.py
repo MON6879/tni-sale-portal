@@ -1210,12 +1210,18 @@ def store_attendance_to_sheet(items: list) -> dict:
 
 def is_daily_plan(text: str) -> bool:
     """
-    Detect Daily Plan message submitted by Team Leaders.
+    Detect Daily Plan message submitted by Team Leaders, Subteams or Staff.
     Structure: Starts with/Contains 'Daily Plan: DD/MM/YYYY' or 'Daily Plan', 'Team X' (or Team X S1), 'I. Hot task'.
+    Không cần map với Team Leader ID — cứ đúng cú pháp Daily Plan + Team là thu thập 100%.
     """
     if not text:
         return False
-    text_l = text.lower().strip()
+    # Loại bỏ dòng tiêu đề Bot mẫu nếu người dùng copy cả header của bot (ví dụ: '3. TNI PERSONAL FIND TASK...')
+    clean_text = text.strip()
+    while clean_text and re.match(r'^(?:3\.\s*)?TNI\s*PERSONAL\s*FIND\s*TASK[^\n]*\n?', clean_text, re.IGNORECASE):
+        clean_text = re.sub(r'^(?:3\.\s*)?TNI\s*PERSONAL\s*FIND\s*TASK[^\n]*\n?', '', clean_text, flags=re.IGNORECASE).strip()
+
+    text_l = clean_text.lower().strip()
 
     # 🛑 BỎ QUA 100% CÁC CÚ PHÁP TRA CỨU (TNI, Info, Clear, Cons, NotClose, WaitCD) — KHÔNG THỂ THÀNH DAILY PLAN
     if text_l.startswith("tni") or text_l.startswith("/tni") or text_l.startswith("info") or text_l.startswith("/info") or text_l.startswith("clear") or text_l.startswith("/clear") or text_l.startswith("cons") or text_l.startswith("/cons") or "notclose" in text_l or "waitcd" in text_l:
@@ -1228,14 +1234,13 @@ def is_daily_plan(text: str) -> bool:
         "crosscheck", "plan tomorrow status", "plan vs actual", "eod summary",
         "shows detailed site assignments", "tasks grouped by department", "recent plans",
         "plan updated", "plan saved", "ref:dp-", "đã lưu",
-        "tni personal find task", "ft result daily", "personal find task", "find task + wo",
-        "submitted ✓", "submitted v", "not yet submitted", "3. tni personal"
+        "submitted ✓", "submitted v", "not yet submitted"
     )):
         return False
 
     # BẮT BUỘC: Phải có Tiêu đề 'Daily Plan' (hoặc 'Plan for') VÀ có 'Team' hoặc 'Hot task'
-    has_header = bool(re.search(r'(?:daily\s*plan|plan\s*for|daily\s*report\s*plan)', text, re.IGNORECASE))
-    has_team = bool(re.search(r'\bteam\s*0?[1-5](?:\s*(?:s|sub)\s*[1-2])?\b|\bt[1-5](?:\s*(?:s|sub)\s*[1-2])?\b', text, re.IGNORECASE))
+    has_header = bool(re.search(r'(?:daily\s*plan|plan\s*for|daily\s*report\s*plan)', clean_text, re.IGNORECASE))
+    has_team = bool(re.search(r'\bteam\s*0?[1-5](?:\s*(?:s|sub)\s*[1-2])?\b|\bt[1-5](?:\s*(?:s|sub)\s*[1-2])?\b', clean_text, re.IGNORECASE))
     has_hot_task = any(kw in text_l for kw in ("hot task", "rescue site", "repair dg", "dep assign", "list name ft"))
 
     return has_header and (has_team or has_hot_task)
@@ -1243,11 +1248,15 @@ def is_daily_plan(text: str) -> bool:
 
 def parse_plan_fields(text: str, chat_id: int | None = None, chat_title: str | None = None) -> tuple:
     """Extract (date, team, content) from plan message, with fallback to chat ID/title for team inference."""
-    lines = text.strip().split("\n")
+    clean_text = text.strip()
+    while clean_text and re.match(r'^(?:3\.\s*)?TNI\s*PERSONAL\s*FIND\s*TASK[^\n]*\n?', clean_text, re.IGNORECASE):
+        clean_text = re.sub(r'^(?:3\.\s*)?TNI\s*PERSONAL\s*FIND\s*TASK[^\n]*\n?', '', clean_text, flags=re.IGNORECASE).strip()
+
+    lines = clean_text.strip().split("\n")
     date_str = ""
-    date_m = re.search(r'(?:daily\s*plan|plan\s*for)[:\s]+(\d{1,2}[\/\.-]\d{1,2}(?:[\/\.-]\d{2,4})?)', text, re.IGNORECASE)
+    date_m = re.search(r'(?:daily\s*plan|plan\s*for)[:\s]+(\d{1,2}[\/\.-]\d{1,2}(?:[\/\.-]\d{2,4})?)', clean_text, re.IGNORECASE)
     if not date_m:
-        date_m = re.search(r'(\d{1,2}[\/\.-]\d{1,2}(?:[\/\.-]\d{2,4})?)', text)
+        date_m = re.search(r'(\d{1,2}[\/\.-]\d{1,2}(?:[\/\.-]\d{2,4})?)', clean_text)
     if date_m:
         raw_d = date_m.group(1)
         parts = re.split(r'[\/\.-]', raw_d)
@@ -1265,9 +1274,9 @@ def parse_plan_fields(text: str, chat_id: int | None = None, chat_title: str | N
         date_str = now_mm.strftime("%d/%m/%Y")
 
     team_str = ""
-    team_m = re.search(r'\bTeam\s*0?([1-5])(?:\s*(S[1-2]|Sub\s*[1-2]))?\b', text, re.IGNORECASE)
+    team_m = re.search(r'\bTeam\s*0?([1-5])(?:\s*(S[1-2]|Sub\s*[1-2]))?\b', clean_text, re.IGNORECASE)
     if not team_m:
-        team_m = re.search(r'\bT([1-5])(?:\s*(S[1-2]|Sub\s*[1-2]))?\b', text, re.IGNORECASE)
+        team_m = re.search(r'\bT([1-5])(?:\s*(S[1-2]|Sub\s*[1-2]))?\b', clean_text, re.IGNORECASE)
     if team_m:
         sub = ""
         if team_m.group(2):
@@ -1865,8 +1874,10 @@ def handle(update: dict) -> None:
         if date_str and team_str:
             msg_date = msg.get("date")
             now_mm = datetime.fromtimestamp(msg_date, TZ_MM) if msg_date else datetime.now(TZ_MM)
-            submitted_at = now_mm.strftime('%d/%m/%Y %H:%M:%S')
-            res = store_daily_plan_to_sheet(date_str, team_str, text, msg_id=msg_id, submitted_at=submitted_at)
+            clean_plan_text = text.strip()
+            while clean_plan_text and re.match(r'^(?:3\.\s*)?TNI\s*PERSONAL\s*FIND\s*TASK[^\n]*\n?', clean_plan_text, re.IGNORECASE):
+                clean_plan_text = re.sub(r'^(?:3\.\s*)?TNI\s*PERSONAL\s*FIND\s*TASK[^\n]*\n?', '', clean_plan_text, flags=re.IGNORECASE).strip()
+            res = store_daily_plan_to_sheet(date_str, team_str, clean_plan_text, msg_id=msg_id, submitted_at=submitted_at)
             ref = res.get("ref")
             dup = res.get("duplicate", False)
 

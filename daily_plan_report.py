@@ -228,6 +228,45 @@ def parse_daily_plan(text: str) -> dict | None:
     }
 
 
+# ── Team & Subteam canonical mapping ──────────────────────────────
+GROUP_SUBTEAMS = {
+    "T1": ["Team 1", "Team 1 S1"],
+    "T2": ["Team 2", "Team 2 S1"],
+    "T3": ["Team 3", "Team 3 S1"],
+    "T4": ["Team 4"],
+}
+ALL_CANONICAL_TEAMS = ["Team 1", "Team 1 S1", "Team 2", "Team 2 S1", "Team 3", "Team 3 S1", "Team 4"]
+
+def normalize_plan_team(raw: str) -> str:
+    """Normalize raw team string to one of the 7 canonical teams:
+    'Team 1', 'Team 1 S1', 'Team 2', 'Team 2 S1', 'Team 3', 'Team 3 S1', 'Team 4'
+    """
+    s = str(raw or "").strip().upper()
+    if re.search(r"\b(TEAM\s*1\s*S1|T1\s*S1)\b", s) or s in ("T1 S1", "T1S1", "TEAM 1 S1", "TEAM 1S1"):
+        return "Team 1 S1"
+    if re.search(r"\b(TEAM\s*2\s*S1|T2\s*S1)\b", s) or s in ("T2 S1", "T2S1", "TEAM 2 S1", "TEAM 2S1"):
+        return "Team 2 S1"
+    if re.search(r"\b(TEAM\s*3\s*S1|T3\s*S1)\b", s) or s in ("T3 S1", "T3S1", "TEAM 3 S1", "TEAM 3S1"):
+        return "Team 3 S1"
+    if re.search(r"\b(TEAM\s*1|T1)\b", s) or s in ("T1", "TEAM 1", "TEAM1"):
+        return "Team 1"
+    if re.search(r"\b(TEAM\s*2|T2|TEAM\s*5|T5)\b", s) or s in ("T2", "TEAM 2", "TEAM2", "T5", "TEAM 5"):
+        return "Team 2"
+    if re.search(r"\b(TEAM\s*3|T3)\b", s) or s in ("T3", "TEAM 3", "TEAM3"):
+        return "Team 3"
+    if re.search(r"\b(TEAM\s*4|T4)\b", s) or s in ("T4", "TEAM 4", "TEAM4"):
+        return "Team 4"
+    return str(raw or "").strip()
+
+def team_to_group_key(canonical_team: str) -> str:
+    """Map canonical team name to Telegram group key ('T1', 'T2', 'T3', 'T4')."""
+    t = canonical_team.upper()
+    if "TEAM 1" in t or "T1" in t: return "T1"
+    if "TEAM 2" in t or "T2" in t or "TEAM 5" in t or "T5" in t: return "T2"
+    if "TEAM 3" in t or "T3" in t: return "T3"
+    if "TEAM 4" in t or "T4" in t: return "T4"
+    return ""
+
 def normalize_team(team_str: str) -> str:
     """Normalize team string to group key (T1, T2, T3, T4)."""
     t = team_str.upper().replace(" ", "")
@@ -383,10 +422,41 @@ def store_daily_plan(date, team, content, daily_report="", comparison="") -> dic
 
 
 def get_daily_plans() -> list:
-    """Get all daily plan entries from Google Sheet."""
+    """Get all daily plan entries directly from Google Sheet SSOT CSV (with Apps Script fallback)."""
+    try:
+        csv_url = f"https://docs.google.com/spreadsheets/d/{DAILY_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Team+leader+assign+Plan"
+        resp = requests.get(csv_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
+        if resp.status_code == 200:
+            df = pd.read_csv(io.StringIO(resp.text))
+            plans = []
+            for _, r in df.iterrows():
+                ref = str(r.get("REF", "")).strip() if pd.notna(r.get("REF")) else ""
+                date_raw = str(r.get("Date", "")).strip() if pd.notna(r.get("Date")) else ""
+                team_raw = str(r.get("Team", "")).strip() if pd.notna(r.get("Team")) else ""
+                content = str(r.get("Daily Plan", "")).strip() if pd.notna(r.get("Daily Plan")) else ""
+                report = str(r.get("Daily Report", "")).strip() if pd.notna(r.get("Daily Report")) else ""
+                comp = str(r.get("Comparison", "")).strip() if pd.notna(r.get("Comparison")) else ""
+                sub_at = str(r.get("Submitted At", "")).strip() if ("Submitted At" in df.columns and pd.notna(r.get("Submitted At"))) else ""
+                if ref and team_raw and content and ref != "nan":
+                    d_part = date_raw.split()[0] if " " in date_raw else date_raw
+                    plans.append({
+                        "ref": ref,
+                        "date": d_part,
+                        "team": team_raw,
+                        "content": content,
+                        "daily_report": report,
+                        "comparison": comp,
+                        "submitted_at": sub_at or date_raw
+                    })
+            if plans:
+                logger.info(f"✅ Loaded {len(plans)} plans directly from Google Sheet SSOT CSV")
+                return plans
+    except Exception as csv_err:
+        logger.warning(f"Direct CSV read of Team leader assign Plan failed ({csv_err}), trying Apps Script fallback...")
+
     data = call_apps_script({"action": "get_daily_plans"}, timeout=60)
     if data.get("status") != "ok":
-        logger.warning(f"get_daily_plans failed: {data.get('message', 'unknown')}")
+        logger.warning(f"get_daily_plans fallback failed: {data.get('message', 'unknown')}")
         return []
     return data.get("plans", [])
 
@@ -1001,22 +1071,22 @@ def parse_plan_date(date_str: str) -> datetime | None:
 
 def deduplicate_plans_by_date(plans: list) -> list:
     """
-    Tự động khử trùng các bản tin Plan có cùng ngày kế hoạch (plan_date) và cùng team.
-    Chỉ giữ lại duy nhất bản tin gửi mới nhất (latest row / latest timestamp),
-    nhằm tránh việc Team Leader gửi cập nhật kế hoạch bị nhân đôi tin nhắn hoặc sai số liệu thống kê.
+    Tự động khử trùng các bản tin Plan có cùng ngày kế hoạch (plan_date) và cùng phân đội.
+    Phân tách rõ từng canonical team (Team 1, Team 1 S1, Team 2, Team 2 S1, Team 3, Team 3 S1, Team 4).
+    Chỉ giữ lại duy nhất bản tin gửi mới nhất (latest row / latest timestamp).
     """
     if not plans:
         return []
     
     latest_map = {}
     for p in plans:
-        team = normalize_team(p.get("team", ""))
+        team = normalize_plan_team(p.get("team", ""))
         dt = parse_plan_date(p.get("date", ""))
         if not dt:
             continue
         date_str = dt.strftime("%Y-%m-%d")
         key = (team, date_str)
-        # Telegram messages come in DESCENDING order (newest first).
+        # Sheet rows come in DESCENDING order (newest first).
         # Keep the FIRST occurrence (= newest) and skip later (= older) duplicates.
         if key not in latest_map:
             latest_map[key] = p
@@ -1038,10 +1108,14 @@ def build_plan_stats(plans: list, team_filter: str = None) -> dict:
     deduped_plans = deduplicate_plans_by_date(plans)
 
     for p in deduped_plans:
+        canonical_team = normalize_plan_team(p.get("team", ""))
         if team_filter:
-            plan_team = normalize_team(p.get("team", ""))
-            if plan_team != team_filter:
-                continue
+            if team_filter in ("T1", "T2", "T3", "T4"):
+                if team_to_group_key(canonical_team) != team_filter:
+                    continue
+            else:
+                if canonical_team.upper() != normalize_plan_team(team_filter).upper():
+                    continue
 
         dt = parse_plan_date(p.get("date", ""))
         if not dt:
@@ -1069,15 +1143,20 @@ def build_plan_stats(plans: list, team_filter: str = None) -> dict:
 def find_plans_for_date(plans: list, target_date_str: str, team_filter: str = None) -> list:
     """
     Find all plans whose embedded date matches target_date_str (DD/MM/YYYY).
-    Optionally filter by team. Automatically deduplicated to return the latest plan.
+    Optionally filter by team (group key 'T1'..'T4' or specific canonical team 'Team 3 S1').
+    Automatically deduplicated to return the latest plan per team.
     """
     results = []
     deduped_plans = deduplicate_plans_by_date(plans)
     for p in deduped_plans:
+        canonical_team = normalize_plan_team(p.get("team", ""))
         if team_filter:
-            plan_team = normalize_team(p.get("team", ""))
-            if plan_team != team_filter:
-                continue
+            if team_filter in ("T1", "T2", "T3", "T4"):
+                if team_to_group_key(canonical_team) != team_filter:
+                    continue
+            else:
+                if canonical_team.upper() != normalize_plan_team(team_filter).upper():
+                    continue
         dt = parse_plan_date(p.get("date", ""))
         if not dt:
             continue
@@ -1248,52 +1327,54 @@ async def run_eod_or_update(mode: str):
     logger.info("📝 Processing plans with comparison directly from Sheet...")
     team_comparisons = {}  # group_key -> comparison dict
     all_today_plans = {}   # group_key -> list of plans
-    plan_tomorrow_status = {}  # group_key -> {found, sent_time, content, plan, from_sheet}
 
     for group_key in GROUPS.keys():
         # Lấy plan hôm nay từ Sheet
         sheet_plans_today = find_plans_for_date(all_plans, date_str, team_filter=group_key)
         if sheet_plans_today:
-            sp = sheet_plans_today[0]
-            all_today_plans[group_key] = [sp]
+            all_today_plans[group_key] = sheet_plans_today
             reports = team_reports.get(group_key, [])
             daily_report_text = "\n\n".join(reports) if reports else ""
-            comp = build_comparison(sp.get("content", ""), reports)
+            combined_content = "\n\n".join(sp.get("content", "") for sp in sheet_plans_today)
+            comp = build_comparison(combined_content, reports)
             team_comparisons[group_key] = comp
 
             # Cập nhật kết quả comparison vào Sheet
-            store_daily_plan(
-                sp.get("date", date_str),
-                sp.get("team", group_key),
-                sp.get("content", ""),
-                daily_report=daily_report_text,
-                comparison=comp.get("comparison_text", ""),
-            )
-            logger.info(f"  ✅ {group_key}: Plan processed from Sheet (REF: {sp.get('ref', '?')})")
+            for sp in sheet_plans_today:
+                store_daily_plan(
+                    sp.get("date", date_str),
+                    sp.get("team", group_key),
+                    sp.get("content", ""),
+                    daily_report=daily_report_text,
+                    comparison=comp.get("comparison_text", ""),
+                )
+            logger.info(f"  ✅ {group_key}: {len(sheet_plans_today)} plan(s) processed from Sheet")
         else:
             logger.info(f"  ⚠️ {group_key}: No plan recorded in Sheet for {date_str}")
 
-        # Lấy plan ngày mai từ Sheet
-        sheet_plans_tomorrow = find_plans_for_date(all_plans, tomorrow_str, team_filter=group_key)
+    # Lấy plan ngày mai từ Sheet cho tất cả canonical subteams
+    plan_tomorrow_status = {}  # subteam -> {found, sent_time, content, plan, from_sheet}
+    for tm in ALL_CANONICAL_TEAMS:
+        sheet_plans_tomorrow = find_plans_for_date(all_plans, tomorrow_str, team_filter=tm)
         if sheet_plans_tomorrow:
             spt = sheet_plans_tomorrow[0]
-            plan_tomorrow_status[group_key] = {
+            plan_tomorrow_status[tm] = {
                 "found": True,
                 "sent_time": fmt_sent_at(spt.get("date", "")),
                 "content": spt.get("content", ""),
                 "plan": spt,
                 "from_sheet": True,
             }
-            logger.info(f"  ✅ {group_key}: Plan Tomorrow found in Sheet (REF: {spt.get('ref', '?')})")
+            logger.info(f"  ✅ {tm}: Plan Tomorrow found in Sheet (REF: {spt.get('ref', '?')})")
         else:
-            plan_tomorrow_status[group_key] = {
+            plan_tomorrow_status[tm] = {
                 "found": False,
                 "sent_time": "",
                 "content": "",
                 "plan": None,
                 "from_sheet": True,
             }
-            logger.info(f"  ❌ {group_key}: Plan Tomorrow not recorded in Sheet ({tomorrow_str})")
+            logger.info(f"  ❌ {tm}: Plan Tomorrow not recorded in Sheet ({tomorrow_str})")
 
 
     # ── Step 4b: Get employee stats từ Apps Script ──
@@ -1447,16 +1528,18 @@ async def run_eod_or_update(mode: str):
 
             # ── Plan Tomorrow section ──
             lines.append(divider)
-            pt = plan_tomorrow_status.get(group_key, {"found": False})
             lines.append(f"📝 Plan Tomorrow ({tomorrow_str}):")
-            if pt["found"]:
-                sent_str = fmt_sent_at(pt.get("sent_time"))
-                if sent_str:
-                    lines.append(f"✅ Team Leader: Submitted ✓ (sent at {sent_str})")
+            subteams = GROUP_SUBTEAMS.get(group_key, [team_name])
+            for st in subteams:
+                pt = plan_tomorrow_status.get(st, {"found": False})
+                if pt["found"]:
+                    sent_str = fmt_sent_at(pt.get("sent_time"))
+                    if sent_str:
+                        lines.append(f"🏷️ {st}: ✅ Plan Submitted ✓ (sent at {sent_str})")
+                    else:
+                        lines.append(f"🏷️ {st}: ✅ Plan Submitted ✓")
                 else:
-                    lines.append(f"✅ Team Leader: Submitted ✓")
-            else:
-                lines.append("❌ Team Leader: Not yet submitted")
+                    lines.append(f"🏷️ {st}: ⚠️ Not yet submitted")
             lines.append(divider)
 
             msg = "\n".join(lines)
@@ -1520,7 +1603,8 @@ async def run_eod_or_update(mode: str):
             # Collect today's content
             if stats["today_plans"]:
                 for tp in stats["today_plans"]:
-                    team_today_contents.append((team_name, tp.get("content", "")))
+                    tp_team = normalize_plan_team(tp.get("team", team_name))
+                    team_today_contents.append((tp_team, tp.get("content", "")))
 
         ctrl_lines.append(divider)
 
@@ -1548,17 +1632,16 @@ async def run_eod_or_update(mode: str):
         # ── Plan Tomorrow summary for CONTROL ──
         ctrl_lines.append(divider)
         ctrl_lines.append(f"📝 Plan Tomorrow ({tomorrow_str}):")
-        for group_key in ("T1", "T2", "T3", "T4"):
-            team_name = GROUP_NAMES.get(group_key, group_key)
-            pt = plan_tomorrow_status.get(group_key, {"found": False})
+        for tm in ALL_CANONICAL_TEAMS:
+            pt = plan_tomorrow_status.get(tm, {"found": False})
             if pt["found"]:
                 sent_str = fmt_sent_at(pt.get("sent_time"))
                 if sent_str:
-                    ctrl_lines.append(f"   ✅ {team_name}: Submitted ✓ (sent at {sent_str})")
+                    ctrl_lines.append(f"   ✅ {tm}: Submitted ✓ (sent at {sent_str})")
                 else:
-                    ctrl_lines.append(f"   ✅ {team_name}: Submitted ✓")
+                    ctrl_lines.append(f"   ✅ {tm}: Submitted ✓")
             else:
-                ctrl_lines.append(f"   ❌ {team_name}: Not yet submitted")
+                ctrl_lines.append(f"   ❌ {tm}: Not yet submitted")
 
         ctrl_lines.append(divider)
 
@@ -1598,28 +1681,28 @@ async def run_morning():
     all_plans = get_daily_plans()
     logger.info(f"  📊 Total plans loaded from sheet: {len(all_plans)}")
 
-    plan_today_status = {}  # group_key -> {found, sent_time, content, plan, from_sheet}
-    for group_key in GROUPS.keys():
-        sheet_plans_today = find_plans_for_date(all_plans, date_str, team_filter=group_key)
-        if sheet_plans_today:
-            sp = sheet_plans_today[0]
-            plan_today_status[group_key] = {
+    plan_today_status = {}  # canonical_team -> {found, sent_time, content, plan, from_sheet}
+    for tm in ALL_CANONICAL_TEAMS:
+        tm_plans = find_plans_for_date(all_plans, date_str, team_filter=tm)
+        if tm_plans:
+            sp = tm_plans[0]
+            plan_today_status[tm] = {
                 "found": True,
-                "sent_time": fmt_sent_at(sp.get("date", "")),
+                "sent_time": fmt_sent_at(sp.get("submitted_at") or sp.get("date", "")),
                 "content": sp.get("content", ""),
                 "plan": sp,
                 "from_sheet": True,
             }
-            logger.info(f"  ✅ {group_key}: Plan found in Sheet (REF: {sp.get('ref', '?')})")
+            logger.info(f"  ✅ {tm}: Plan found in Sheet (REF: {sp.get('ref', '?')})")
         else:
-            plan_today_status[group_key] = {
+            plan_today_status[tm] = {
                 "found": False,
                 "sent_time": "",
                 "content": "",
                 "plan": None,
                 "from_sheet": True,
             }
-            logger.info(f"  ❌ {group_key}: No plan recorded in Sheet for {date_str}")
+            logger.info(f"  ❌ {tm}: No plan recorded in Sheet for {date_str}")
 
     # Build 3-day completion rate
     logger.info("📊 Calculating 3-day completion rate...")
@@ -1635,10 +1718,12 @@ async def run_morning():
         # ── Per-team morning reports ──
         for group_key, chat_id in GROUPS.items():
             team_name = GROUP_NAMES.get(group_key, group_key)
+            subteams = GROUP_SUBTEAMS.get(group_key, [team_name])
             stats = build_plan_stats(all_plans, team_filter=group_key)
-            pt = plan_today_status.get(group_key, {"found": False})
-            # Adjust stats if today's plan is found but not yet stored in sheet
-            if pt["found"] and stats["d0"] == 0:
+            
+            # Adjust stats if today's plan is found for any subteam in this group
+            any_found_today = any(plan_today_status.get(st, {}).get("found", False) for st in subteams)
+            if any_found_today and stats["d0"] == 0:
                 stats["d0"] = 1
                 stats["d7"] += 1
                 stats["month"] += 1
@@ -1650,23 +1735,23 @@ async def run_morning():
                 divider,
             ]
 
-            # Plan today status
+            # Plan today status per subteam
             lines.append(f"📝 Plan for {date_str}:")
-            if pt["found"]:
-                plan_data = pt.get("plan", {}) or {}
-                sent_at = fmt_sent_at(plan_data.get("submitted_at") or pt.get("sent_time", ""))
-                if sent_at:
-                    lines.append(f"✅ Team Leader: Submitted ✓ (sent at {sent_at})")
+            for st in subteams:
+                pt = plan_today_status.get(st, {"found": False})
+                if pt["found"]:
+                    sent_at = pt.get("sent_time", "")
+                    sent_text = f" (sent at {sent_at})" if sent_at else " (recorded in sheet)"
+                    lines.append(f"🏷️ <b>{st}:</b> ✅ Plan Submitted ✓{sent_text}")
+                    lines.append("")
+                    lines.append(f"📋 <b>Plan Content ({st}):</b>")
+                    plan_content = clean_plan_content(pt["content"])
+                    if len(plan_content) > 1500:
+                        plan_content = plan_content[:1500].rsplit("\n", 1)[0] + "\n... [see full plan in group]"
+                    lines.append(colorize_bullets(plan_content))
+                    lines.append("")
                 else:
-                    lines.append(f"✅ Team Leader: Submitted ✓ (recorded in sheet)")
-                lines.append("")
-                lines.append("📋 Plan Content:")
-                plan_content = clean_plan_content(pt["content"])
-                if len(plan_content) > 1500:
-                    plan_content = plan_content[:1500].rsplit("\n", 1)[0] + "\n... [see full plan in group]"
-                lines.append(colorize_bullets(plan_content))
-            else:
-                lines.append("⚠️ Team Leader: NOT SUBMITTED (Deadline: before 07:00)")
+                    lines.append(f"🏷️ <b>{st}:</b> ⚠️ Not yet submitted (Deadline: before 07:00)")
 
             # Submission history
             lines.append(divider)
@@ -1719,34 +1804,20 @@ async def run_morning():
             divider,
         ]
 
-        for group_key in ("T1", "T2", "T3", "T4"):
-            team_name = GROUP_NAMES.get(group_key, group_key)
-            pt = plan_today_status.get(group_key, {"found": False})
-            stats = build_plan_stats(all_plans, team_filter=group_key)
-            # Adjust stats if today's plan is found but not yet stored in sheet
-            if pt["found"] and stats["d0"] == 0:
-                stats["d0"] = 1
-                stats["d7"] += 1
-                stats["month"] += 1
-            cr = completion_rate.get(group_key, {"days": [], "total_plan": 0, "total_done": 0, "pct": 0})
-
-            ctrl_lines.append(f"🏷️ {team_name}:")
+        for tm in ALL_CANONICAL_TEAMS:
+            pt = plan_today_status.get(tm, {"found": False})
+            tm_stats = build_plan_stats(all_plans, team_filter=tm)
+            ctrl_lines.append(f"🏷️ {tm}:")
             if pt["found"]:
-                sent_at = fmt_sent_at(pt.get("sent_time", ""))
-                if sent_at:
-                    ctrl_lines.append(f"   ✅ Plan Submitted ✓ (sent at {sent_at})")
-                else:
-                    ctrl_lines.append("   ✅ Plan Submitted ✓ (recorded in sheet)")
+                sent_at = pt.get("sent_time", "")
+                sent_text = f" (sent at {sent_at})" if sent_at else " (recorded in sheet)"
+                ctrl_lines.append(f"   ✅ Plan Submitted ✓{sent_text}")
             else:
                 ctrl_lines.append("   ⚠️ NOT SUBMITTED (Deadline: before 07:00)")
             ctrl_lines.append(
-                f"   3Day: {stats['d2']}/{stats['d1']}/{stats['d0']} "
-                f"| 7Day: {stats['d7']} | Month: {stats['month']}"
+                f"   3Day: {tm_stats['d2']}/{tm_stats['d1']}/{tm_stats['d0']} "
+                f"| 7Day: {tm_stats['d7']} | Month: {tm_stats['month']}"
             )
-            if cr["total_plan"] > 0:
-                ctrl_lines.append(
-                    f"   📈 Completion: {cr['total_done']}/{cr['total_plan']} = {cr['pct']}%"
-                )
 
         ctrl_lines.append(divider)
 
@@ -1758,17 +1829,16 @@ async def run_morning():
                 f"{overall_cr['total_done']}/{overall_cr['total_plan']} = {overall_cr['pct']}%"
             )
 
-        # Today's plan contents
-        has_any_plan = any(plan_today_status.get(gk, {}).get("found", False) for gk in ("T1", "T2", "T3", "T4"))
+        # Today's plan contents for all submitted teams
+        has_any_plan = any(plan_today_status.get(tm, {}).get("found", False) for tm in ALL_CANONICAL_TEAMS)
         if has_any_plan:
             ctrl_lines.append("")
             ctrl_lines.append(f"📝 Plans for {date_str}:")
-            for group_key in ("T1", "T2", "T3", "T4"):
-                pt = plan_today_status.get(group_key, {"found": False})
+            for tm in ALL_CANONICAL_TEAMS:
+                pt = plan_today_status.get(tm, {"found": False})
                 if pt["found"]:
-                    team_name = GROUP_NAMES.get(group_key, group_key)
                     ctrl_lines.append("──────────")
-                    ctrl_lines.append(f"🏷️ {team_name}:")
+                    ctrl_lines.append(f"🏷️ {tm}:")
                     ctrl_lines.append(colorize_bullets(clean_plan_content(pt["content"])))
 
         ctrl_lines.append(divider)
