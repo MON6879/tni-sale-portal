@@ -1795,7 +1795,8 @@ def handle(update: dict) -> None:
             tg_send(chat_id, f"👤 <b>{html.escape(first_name)}</b>\n🔑 ID: <code>{user_id}</code>\n💬 Chat: <code>{chat_id}</code>\n📍 Type: {chat_type}")
             return
 
-        if first_word in ("attendance", "attend", "diemdanh", "att") or first_word.startswith("template_") or (first_word == "template" and ("attend" in rest.lower() or "diemdanh" in rest.lower() or "att" in rest.lower() or any(x in rest.lower() for x in ("t1", "t2", "t3", "t4", "office")))):
+        _ATT_TPL_CMDS = {"template_office","template_t1","template_t1_s1","template_t2","template_t2_s1","template_t3","template_t3_s1","template_t4","template_header"}
+        if first_word in ("attendance", "attend", "diemdanh", "att") or first_word in _ATT_TPL_CMDS or (first_word == "template" and ("attend" in rest.lower() or "diemdanh" in rest.lower() or "att" in rest.lower() or any(x in rest.lower() for x in ("t1", "t2", "t3", "t4", "office")))):
             full_cmd = f"{first_word} {rest}".lower()
             header_only = any(kw in full_cmd for kw in ("header", "title", "tieude", "short"))
             target = None
