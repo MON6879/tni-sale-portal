@@ -681,3 +681,16 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 > 2. **Bắt Buộc Lọc Đúng Ngày Hôm Nay Trước Khi Tính Độ Trễ (Strict Date-Match Before Delay Calculation)**: Khi kiểm tra đúng giờ (Schedule Adherence), Ghế Giám Sát BẮT BUỘC phải lọc chặt `msg.date_str == today_d` TRƯỚC KHI tính khoảng cách phút (`diff = abs(msg_total_min - target_total_min)`). TUYỆT ĐỐI CẤM lấy tin nhắn của ngày hôm qua (ví dụ tin 14:15 hôm qua) đem so với mốc giờ sáng hôm nay (07:18), tạo ra độ trễ ảo hàng trăm phút ("Lệch 417p")!
 > 3. **Đồng Bộ GID Tab Sheet Chuẩn, Cấm Dùng GID Đã Bị Xóa (Live Tab GID Whitelisting)**: Danh mục `SHEET_CONNECTORS` của Auditor BẮT BUỘC phải trỏ đúng GID tab dữ liệu thật đang hoạt động (ví dụ: `Search Site Clear` GID `610944071`, `Read Group` GID `870080250`). TUYỆT ĐỐI CẤM giữ GID cũ đã bị xóa/đổi tên (như GID `582589665`), khiến Google Sheets trả về trang Dashboard lỗi dẫn đến báo động `#REF!` giả!
 > 4. **Chỉ Quét Lỗi Công Thức Trong Vùng Dữ Liệu Hoạt Động ($\le 30$ Cột)**: Khi kiểm tra lỗi công thức (`#REF!`, `#VALUE!`, `#DIV/0!`), Auditor BẮT BUỘC phải phân tích CSV và CHỈ quét trong phạm vi các cột dữ liệu hoạt động thực tế ($\le 30$ cột đầu). TUYỆT ĐỐI CẤM quét toàn văn chuỗi CSV dính vào các ô nháp bỏ hoang tận cột 116..138 ở góc xa của bảng tính!
+
+---
+
+# 🏷️ STRICT COLLECTOR AUDIT TRAIL RULE: BẮT BUỘC LUÔN CÓ MÃ REF, NGÀY (DATE) VÀ GIỜ (TIME) GỬI LÊN TELEGRAM (MANDATORY REF, DATE & TIME AUDIT TRAIL POLICY)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG CHO MỌI PHÂN HỆ THU THẬP (COLLECTOR)**:
+> 1. **Bắt Buộc Đủ 3 Trường Nhận Diện (Mandatory 3 Audit Fields)**: Mọi bảng tính thu thập dữ liệu tự động từ Telegram (Refuel, Cable, Solution Clear, Rescue Site Down Long Time, Inventory, Attendance, Survey, v.v.) BẮT BUỘC phải luôn ghi nhận đầy đủ 3 trường tối thiểu:
+>    - **Mã REF Duy Nhất (REF Code)**: Mã định danh bản ghi (ví dụ: `#RSC_yyMMdd_xxxx`, `#REF_xxxx`, `#SOL_xxxx`) để phân biệt độc nhất, truy vết và đính kèm hình ảnh/ghi chú tiếp theo.
+>    - **Ngày Gửi Lên Telegram (Telegram Date)**: Định dạng chuẩn `DD/MM/YYYY` lấy trực tiếp từ `message.date` của Telegram (quy đổi sang Myanmar Time UTC+6:30).
+>    - **Giờ Gửi Lên Telegram (Telegram Time)**: Định dạng chuẩn `HH:mm:ss` (hoặc `HH:mm`) lấy trực tiếp từ `message.date` của Telegram.
+> 2. **Tách Rõ Ràng Hoặc Định Dạng Chuẩn Trên Sheet (Dedicated Columns)**: BẮT BUỘC tách thành 2 cột riêng biệt (`Telegram Date` và `Telegram Time`) hoặc ghi rõ chuỗi đầy đủ `dd/MM/yyyy HH:mm:ss` ở các cột đầu tiên của bảng tính để người quản lý dễ dàng lọc, sắp xếp, đối chiếu và thống kê dữ liệu.
+> 3. **Phản Hồi Telegram Bắt Buộc Kèm REF và Thời Gian**: Tin nhắn phản hồi tự động cho người gửi (tối đa 2 dòng chuẩn) BẮT BUỘC phải hiển thị rõ mã `#[Mã REF]` và thời điểm gửi `🗓️ [DD/MM/YYYY HH:MM]` để nhân viên có căn cứ đối chiếu ngay trong nhóm chat.
+
