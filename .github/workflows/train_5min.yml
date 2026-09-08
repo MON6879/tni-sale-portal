@@ -203,17 +203,17 @@ jobs:
           #  22:06 → Plan 5C Evening
           check_time 22 06 && P5C=true && NEED_PYTHON=true && echo "🚃 Toa 5: Plan 5C Evening (22:06 MMT)"
 
-          # 📋 Share ETA Reminder: Khởi hành tại nhịp :06 và :36 MMT (bước chạy sẽ sleep 120s → gửi đúng :08 và :38 MMT)
+          # 📋 Share ETA Reminder: Khởi hành tại nhịp :11 và :41 MMT (đúng 1 phút sau khi GAS gửi Site Down xong lúc :09/:10)
           # Giờ hoạt động: 04:00 - 23:00 MMT (kiểm tra thêm bên trong script)
           CURR_M=$(( 10#$M ))
-          DIFF_06=$(( CURR_M - 6 ))
-          [ $DIFF_06 -lt 0 ] && DIFF_06=$(( -DIFF_06 ))
-          DIFF_36=$(( CURR_M - 36 ))
-          [ $DIFF_36 -lt 0 ] && DIFF_36=$(( -DIFF_36 ))
-          if [ $DIFF_06 -le 2 ] || [ $DIFF_36 -le 2 ]; then
+          DIFF_11=$(( CURR_M - 11 ))
+          [ $DIFF_11 -lt 0 ] && DIFF_11=$(( -DIFF_11 ))
+          DIFF_41=$(( CURR_M - 41 ))
+          [ $DIFF_41 -lt 0 ] && DIFF_41=$(( -DIFF_41 ))
+          if [ $DIFF_11 -le 2 ] || [ $DIFF_41 -le 2 ]; then
             SHARE_ETA=true
             NEED_PYTHON=true
-            echo "🚃 Toa ETA: Share ETA Reminder (nhịp :06/:36 MMT -> sleep 120s -> :08/:38 MMT)"
+            echo "🚃 Toa ETA: Share ETA Reminder (nhịp :11/:41 MMT — sau Site Down GAS :09/:10 + 1 phút)"
           fi
 
           # Output all flags
@@ -567,10 +567,10 @@ jobs:
       # ═══════════════════════════════════════════════
       # 📋 TOA ETA: Share ETA Reminder
       # 🤖 Engine: Bot API (SEARCH_BOT_TOKEN)
-      # ⏰ Schedule: :08 và :38 MMT — 2 phút sau Site Down relay (:06/:36)
+      # ⏰ Schedule: :11 và :41 MMT — đúng 1 phút sau khi GAS gửi Site Down (:09/:10)
       # Giới hạn: 04:00-23:00 MMT (kiểm tra bên trong script)
       # ═══════════════════════════════════════════════
-      - name: "📋 Toa ETA — Share ETA Reminder (:08 / :38 MMT)"
+      - name: "📋 Toa ETA — Share ETA Reminder (:11 / :41 MMT)"
         continue-on-error: true
         if: |
           steps.sched.outputs.share_eta == 'true' ||
@@ -583,9 +583,6 @@ jobs:
           IS_FORCE="False"
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             IS_FORCE="True"
-          else
-            echo "⏳ Chờ 120 giây (2 phút sau Site Down relay :06/:36) trước khi gửi..."
-            sleep 120
           fi
           python -c "
           import sys
