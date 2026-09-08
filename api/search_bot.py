@@ -454,18 +454,14 @@ def setup_bot_menu_commands():
         base_url = f"https://api.telegram.org/bot{TOKEN}/setMyCommands"
         del_url = f"https://api.telegram.org/bot{TOKEN}/deleteMyCommands"
 
-        # Delete any conflicting global admin scope
-        try:
-            requests.post(del_url, json={"scope": {"type": "all_chat_administrators"}}, timeout=10)
-        except Exception:
-            pass
+        # 1. Xóa sạch mọi scope toàn cục có thể rò rỉ sang group chat (default, all_group_chats, all_chat_administrators)
+        for sc in [{"type": "default"}, {"type": "all_group_chats"}, {"type": "all_chat_administrators"}]:
+            try:
+                requests.post(del_url, json={"scope": sc}, timeout=10)
+            except Exception:
+                pass
 
-        # Default scope — full commands (dành cho chat riêng / direct message)
-        requests.post(base_url, json={"commands": commands}, timeout=10)
-        # All private chats — full commands
-        requests.post(base_url, json={"commands": commands, "scope": {"type": "all_private_chats"}}, timeout=10)
-        
-        # ❌ Nhóm chat Team: XÓA lệnh của Bot 3D trong các nhóm Team để Bot 1C quản lý độc quyền menu 1..6
+        # 2. XÓA TRIỆT ĐỂ lệnh của Bot 3D trong tất cả các nhóm Team để Bot 1C quản lý độc quyền menu 1..6
         for chat_id in team_groups.keys():
             cid_int = int(chat_id)
             try:
@@ -473,10 +469,10 @@ def setup_bot_menu_commands():
                 requests.post(del_url, json={"scope": {"type": "chat_administrators", "chat_id": cid_int}}, timeout=10)
             except Exception:
                 pass
-        try:
-            requests.post(del_url, json={"scope": {"type": "all_group_chats"}}, timeout=10)
-        except Exception:
-            pass
+
+        # 3. CHỈ ĐĂNG KÝ LỆNH CHO CHAT RIÊNG (Private Chats / DM) VỚI BOT 3D — TUYỆT ĐỐI KHÔNG HIỆN TRONG GROUP
+        requests.post(base_url, json={"commands": commands, "scope": {"type": "all_private_chats"}}, timeout=10)
+        logger.info(f"Bot 3D commands registered exclusively to all_private_chats ({len(commands)} commands)")
     except Exception as ex:
         logger.error(f"setup_bot_menu_commands: {ex}")
 
@@ -1876,10 +1872,10 @@ def submit_daily(chat_id: int, user_id: int, first_name: str, text: str, msg_dat
         ref_str = fetch_max_result_ref()
 
     logger.info(f"submit_daily ok: {name} (ref={ref_str})")
-    tg_send(chat_id, f"✅ <b>Result saved ({time_str})</b> — REF:<b>{ref_str}</b> | {date_str}")
+    tg_send(chat_id, f"✅ <b>Result saved ({time_str})</b> — REF:<b>{ref_str}</b> | {date_str}\n📸 Reply photos within 10 mins to attach")
 
 def submit_photo(chat_id: int, user_id: int, file_id: str) -> None:
-    """Gửi ảnh lên GAS để lưu Drive — GAS tự attach vào dòng gần nhất."""
+    """Gửi ảnh lên GAS để lưu Drive — gom vào 1 thư mục riêng và gắn link Cột S."""
     if not DAILY_APPS_SCRIPT_URL:
         return
     file_path = tg_get_file(file_id)
@@ -1892,9 +1888,17 @@ def submit_photo(chat_id: int, user_id: int, file_id: str) -> None:
                                json={"action": "daily_photo",
                                      "telegram_id": str(user_id),
                                      "tg_url": tg_url},
-                               timeout=10)
+                               timeout=25)
         result = resp.json()
-        tg_send(chat_id, "📷 ✅" if result.get("status") == "ok" else "📷 ❌")
+        status = result.get("status")
+        if status == "ok":
+            tg_send(chat_id, "📷 ✅")
+        elif status == "expired":
+            tg_send(chat_id, "📷 ❌ Photo window expired (>10 mins after text)")
+        elif status == "no_window":
+            tg_send(chat_id, "📷 ❌ Please send Daily Result text first")
+        else:
+            tg_send(chat_id, "📷 ❌")
     except Exception as ex:
         logger.error(f"submit_photo: {ex}")
         tg_send(chat_id, "📷 ❌")

@@ -35,7 +35,6 @@ on:
           - 'Report 5C - Plan Morning'
           - 'Report 6 - Daily Note Read Report'
           - 'Report 6.1 - Site Clear Today'
-          - 'Task - Cable Daily Report'
           - 'Task - Refuel Request Report'
           - 'Task - Refuel Plan Report 1'
           - 'Task - Refuel Plan Report 2'
@@ -44,6 +43,7 @@ on:
           - 'Task - All Refuel Reports'
           - 'Task - Check Read Status'
           - 'Ghế AUDITOR-9.1 - Master System Audit'
+          - 'Toa ETA - Share ETA Reminder'
       skip_delay:
         description: 'Skip random delay (1=yes, 0=no)'
         required: false
@@ -97,11 +97,6 @@ jobs:
           curl -s -f "https://api.telegram.org/bot8758104446:AAH3o7lMCxBXn70ThAXweH1DddmRkJrgwWo/getWebhookInfo" || true
           curl -s -f "https://tni-bot.vercel.app/api/cable_bot" || true
 
-          echo "8️⃣ Solution Clear Bot 1C (Vercel & GAS Keepalive)..."
-          curl -s -f "https://api.telegram.org/bot8992199719:AAFVEOjFP39mcZXa8btqLK0TyqU79NJMcvM/getWebhookInfo" || true
-          curl -s -f "https://tni-bot.vercel.app/api/solution_clear" || true
-          curl -s -L "https://script.google.com/macros/s/AKfycbyatJQAAHIG4jKHbc4zy-AoTiMHpXSzBm_3SpL8eap5duYCHqNSSKBKyOAmT82XTzgYog/exec?action=ping" || true
-
           echo "✅ Keepalive done"
 
       # ═══════════════════════════════════════════════
@@ -122,7 +117,7 @@ jobs:
           R1234=false; R4=false; BOD=false; P5A=false; P5B=false; P5C=false
           R6=false; R61=false; CABLE=false; REFUEL_REQ=false
           REFUEL_P1=false; REFUEL_P2=false; REFUEL_P21=false; REFUEL_P4=false
-          AUDITOR91=false
+          AUDITOR91=false; SHARE_ETA=false
 
           # check_time <hour> <target_minute> — dung sai ±4 phút (nới rộng do GitHub Actions delay thường xuyên 3-5p)
           check_time() {
@@ -208,6 +203,19 @@ jobs:
           #  22:06 → Plan 5C Evening
           check_time 22 06 && P5C=true && NEED_PYTHON=true && echo "🚃 Toa 5: Plan 5C Evening (22:06 MMT)"
 
+          # 📋 Share ETA Reminder: Khởi hành tại nhịp :06 và :36 MMT (bước chạy sẽ sleep 120s → gửi đúng :08 và :38 MMT)
+          # Giờ hoạt động: 04:00 - 23:00 MMT (kiểm tra thêm bên trong script)
+          CURR_M=$(( 10#$M ))
+          DIFF_06=$(( CURR_M - 6 ))
+          [ $DIFF_06 -lt 0 ] && DIFF_06=$(( -DIFF_06 ))
+          DIFF_36=$(( CURR_M - 36 ))
+          [ $DIFF_36 -lt 0 ] && DIFF_36=$(( -DIFF_36 ))
+          if [ $DIFF_06 -le 2 ] || [ $DIFF_36 -le 2 ]; then
+            SHARE_ETA=true
+            NEED_PYTHON=true
+            echo "🚃 Toa ETA: Share ETA Reminder (nhịp :06/:36 MMT -> sleep 120s -> :08/:38 MMT)"
+          fi
+
           # Output all flags
           echo "need_python=$NEED_PYTHON" >> $GITHUB_OUTPUT
           echo "r1234=$R1234" >> $GITHUB_OUTPUT
@@ -226,6 +234,7 @@ jobs:
           echo "refuel_p4=$REFUEL_P4" >> $GITHUB_OUTPUT
           echo "refuel_read=$REFUEL_READ" >> $GITHUB_OUTPUT
           echo "auditor91=$AUDITOR91" >> $GITHUB_OUTPUT
+          echo "share_eta=$SHARE_ETA" >> $GITHUB_OUTPUT
 
           if [ "$NEED_PYTHON" = "false" ]; then
             echo "🏥 Keepalive-only tick, no reports to send."
@@ -554,6 +563,34 @@ jobs:
           TELEGRAM_SESSION: ${{ secrets.TELEGRAM_SESSION }}
           APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
         run: python system_auditor.py || true
+
+      # ═══════════════════════════════════════════════
+      # 📋 TOA ETA: Share ETA Reminder
+      # 🤖 Engine: Bot API (SEARCH_BOT_TOKEN)
+      # ⏰ Schedule: :08 và :38 MMT — 2 phút sau Site Down relay (:06/:36)
+      # Giới hạn: 04:00-23:00 MMT (kiểm tra bên trong script)
+      # ═══════════════════════════════════════════════
+      - name: "📋 Toa ETA — Share ETA Reminder (:08 / :38 MMT)"
+        continue-on-error: true
+        if: |
+          steps.sched.outputs.share_eta == 'true' ||
+          (github.event_name == 'workflow_dispatch' && inputs.report_type == 'Toa ETA - Share ETA Reminder')
+        env:
+          SEARCH_BOT_TOKEN: ${{ secrets.SEARCH_BOT_TOKEN }}
+          SEND_BOT_TOKEN: ${{ secrets.SEND_BOT_TOKEN }}
+          APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
+        run: |
+          if [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            echo "⏳ Chờ 120 giây (2 phút sau Site Down relay :06/:36) trước khi gửi..."
+            sleep 120
+          fi
+          python -c "
+          import sys
+          sys.path.insert(0, 'api/')
+          from cron_send import send_share_eta_reminders
+          send_share_eta_reminders()
+          " || true
+
 
 
 
