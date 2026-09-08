@@ -2182,12 +2182,13 @@ if __name__ == "__main__":
 # Chạy ngay sau site down relay (2 phút sau :06/:36 → tức :08/:38)
 # ─────────────────────────────────────────────────────────────────────────────
 
-def send_share_eta_reminders():
+def send_share_eta_reminders(force: bool = False):
     """Gửi ETA reminder thông minh đến các nhóm Team.
     - Đọc sheet GID 1509154642 lấy các site đã có ETA hôm nay
     - Build message: ✅ cho site đã xong, • cho site còn pending
     - XÓA tin cũ trước khi gửi tin mới (key: 'eta_reminder_{team}')
     - Chỉ chạy trong khoảng 04:00 - 23:00 MMT
+    - Chốt chặn: Nếu Site Down đang đứng (timestamp không đổi) -> Dừng gửi lặp lại (trừ khi force=True)
     """
     import sys, os
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), "api"))
@@ -2210,6 +2211,27 @@ def send_share_eta_reminders():
     except ImportError:
         has_tg_utils = False
         logger.warning("send_share_eta_reminders: tg_utils not available, no delete-old support")
+
+    # ── Chốt chặn: Kiểm tra timestamp Site Down (nếu Site Down đang đứng -> Dừng lại) ──
+    if not force:
+        try:
+            SD_SHEET_ID = "1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow"
+            sd_resp = requests.get(
+                f"https://docs.google.com/spreadsheets/d/{SD_SHEET_ID}/export?format=csv&gid=0",
+                timeout=10
+            )
+            if sd_resp.status_code == 200:
+                first_line = sd_resp.text.split("\n")[0]
+                m_sd_ts = re.search(r'(\d{2}/\d{2}/\d{4}\s+\d{2}:\d{2})', first_line)
+                current_sd_ts = m_sd_ts.group(1) if m_sd_ts else ""
+                if current_sd_ts and has_tg_utils:
+                    last_sent_sd_ts = get_msg_id("last_eta_sd_timestamp")
+                    if last_sent_sd_ts == current_sd_ts:
+                        logger.info(f"⏸️ Site Down timestamp ({current_sd_ts}) chưa đổi mới — Site Down đang đứng, dừng gửi tin ETA nhắc nhở lặp lại.")
+                        return
+                    set_msg_id("last_eta_sd_timestamp", current_sd_ts)
+        except Exception as sd_chk_err:
+            logger.warning(f"Không kiểm tra được Site Down timestamp: {sd_chk_err}")
 
     logger.info("📢 send_share_eta_reminders: Bắt đầu gửi ETA reminder...")
 

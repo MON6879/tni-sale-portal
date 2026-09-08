@@ -580,7 +580,10 @@ jobs:
           SEND_BOT_TOKEN: ${{ secrets.SEND_BOT_TOKEN }}
           APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
         run: |
-          if [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+          IS_FORCE="False"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            IS_FORCE="True"
+          else
             echo "⏳ Chờ 120 giây (2 phút sau Site Down relay :06/:36) trước khi gửi..."
             sleep 120
           fi
@@ -588,7 +591,7 @@ jobs:
           import sys
           sys.path.insert(0, 'api/')
           from cron_send import send_share_eta_reminders
-          send_share_eta_reminders()
+          send_share_eta_reminders(force=($IS_FORCE))
           " || true
 
 

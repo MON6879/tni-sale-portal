@@ -549,7 +549,11 @@ def get_eta_share_templates(team_filter="ALL"):
         if len(rows) < 6:
             return []
 
-        update_ts = rows[4][4].strip() if len(rows[4]) > 4 else ""
+        update_ts = ""
+        if len(rows) > 0 and len(rows[0]) > 0:
+            m_ts = re.search(r'(\d{2}/\d{2}/\d{4}\s+\d{2}:\d{2})', rows[0][0])
+            if m_ts:
+                update_ts = m_ts.group(1)
         if not update_ts:
             update_ts = datetime.now(TZ_MM).strftime("%d/%m/%Y %H:%M")
 
@@ -561,8 +565,13 @@ def get_eta_share_templates(team_filter="ALL"):
             ("1.3", "❌", "DG Run >16H",              r'DG Run\s*>?\s*16H?:\s*(?:[*/]\d+.*?[=:])\s*(.*?)(?:\|\s*Link|\s*$)'),
         ]
 
-        # Parse 1.4 Site Down per team from rows 5+ (Col E & Col G)
-        sd_by_team = {"T1": [], "T2": [], "T3": [], "T4": []}
+        # Parse 1.4 Site Down per team & subteam from rows 5+ (Col E & Col G)
+        sd_by_team = {
+            "T1": [], "T1 S1": [],
+            "T2": [], "T2 S1": [],
+            "T3": [], "T3 S1": [],
+            "T4": []
+        }
         for i in range(5, len(rows)):
             row = rows[i]
             if len(row) > 6:
@@ -570,48 +579,63 @@ def get_eta_share_templates(team_filter="ALL"):
                 tni_m = re.search(r"(TNI\d+)", row[4]) or re.search(r"(TNI\d+)", row[5] if len(row) > 5 else "")
                 if tni_m:
                     tni = tni_m.group(1).upper()
-                    for t_key in ["T1", "T2", "T3", "T4"]:
-                        if team_val.startswith(t_key):
-                            if tni not in sd_by_team[t_key]:
-                                sd_by_team[t_key].append(tni)
+                    if team_val in sd_by_team:
+                        if tni not in sd_by_team[team_val]:
+                            sd_by_team[team_val].append(tni)
+                    else:
+                        for k in ["T1", "T2", "T3", "T4"]:
+                            if team_val == k or team_val.startswith(k + " "):
+                                if tni not in sd_by_team[k]:
+                                    sd_by_team[k].append(tni)
 
-        # Determine which teams to build for
-        all_teams = ["T1", "T2", "T3", "T4"]
+        # Determine which teams/subteams to build for
         if team_filter == "ALL":
-            target_teams = all_teams
+            target_teams = ["T1", "T1 S1", "T2", "T2 S1", "T3", "T3 S1", "T4"]
         else:
-            # Map e.g. "T1 S1" -> "T1"
-            matched_prefix = team_filter[:2].upper()
-            target_teams = [matched_prefix] if matched_prefix in all_teams else all_teams
+            tf = team_filter.upper()
+            if tf in ("T1", "T2", "T3", "T4"):
+                target_teams = [tf]
+                sub_key = f"{tf} S1"
+                if sub_key in sd_by_team and sd_by_team[sub_key]:
+                    target_teams.append(sub_key)
+            else:
+                target_teams = [tf]
 
         results = []
         for t_name in target_teams:
-            r_idx = team_rows.get(t_name)
-            c_text = rows[r_idx][2] if r_idx is not None and r_idx < len(rows) and len(rows[r_idx]) > 2 else ""
+            is_subteam = (" S" in t_name)
+            sd_items = sd_by_team.get(t_name, [])
+
+            # Subteam chỉ tạo tin khi thực sự có trạm site down
+            if is_subteam and not sd_items:
+                continue
 
             lines = [f"📋 {t_name} — ETA Update {update_ts}"]
 
-            # 1.1 to 1.3 from Col C
-            for num, icon, label, pat in alarm_patterns:
-                m = re.search(pat, c_text, re.IGNORECASE)
-                items = []
-                if m:
-                    tnis = re.findall(r'(TNI\d+)', m.group(1))
-                    seen = set()
-                    items = [x.upper() for x in tnis if not (x.upper() in seen or seen.add(x.upper()))]
-                if items:
-                    lines.append(f"{num} {icon} {label}: {len(items)} site")
-                    lines.extend([f"• {c} + FT + ETA:" for c in items])
-                else:
-                    lines.append(f"{num} {icon} {label}:")
-                    lines.append("• (none)")
+            # Đối với team chính (T1, T2, T3, T4): lấy 1.1 đến 1.3 từ Col C
+            if not is_subteam:
+                r_idx = team_rows.get(t_name)
+                c_text = rows[r_idx][2] if r_idx is not None and r_idx < len(rows) and len(rows[r_idx]) > 2 else ""
+
+                for num, icon, label, pat in alarm_patterns:
+                    m = re.search(pat, c_text, re.IGNORECASE)
+                    items = []
+                    if m:
+                        tnis = re.findall(r'(TNI\d+)', m.group(1))
+                        seen = set()
+                        items = [x.upper() for x in tnis if not (x.upper() in seen or seen.add(x.upper()))]
+                    if items:
+                        lines.append(f"{num} {icon} {label}: {len(items)} site")
+                        lines.extend([f"• {c} + FT + ETA:" for c in items])
+                    else:
+                        lines.append(f"{num} {icon} {label}:")
+                        lines.append("• (none)")
 
             # 1.4 Site Down from Col E/G
-            sd_items = sd_by_team.get(t_name, [])
             if sd_items:
                 lines.append(f"1.4 📡 Site Down: {len(sd_items)} site")
                 lines.extend([f"• {c} + FT + ETA:" for c in sd_items])
-            else:
+            elif not is_subteam:
                 lines.append("1.4 📡 Site Down:")
                 lines.append("• (none)")
 
