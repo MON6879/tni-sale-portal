@@ -27,6 +27,7 @@ on:
           - 'Report 1, 2, 3 - Daily Backlog (DG & Task)'
           - 'Report 3 - Main DG Material Need'
           - 'Report 3.1 - Asset progress for material'
+          - 'Report 4d - Asset progress for material'
           - 'Report 2 (BOD) - BOD Assign'
           - 'Report 4 - Daily EOD Task & Stats'
           - 'Report 5A - Plan EOD'
@@ -280,6 +281,7 @@ jobs:
             inputs.report_type == 'Reports 1, 2, 3, 4 - Daily Task & Backlog' ||
             inputs.report_type == 'Report 4 - Daily EOD Task & Stats' ||
             inputs.report_type == 'Report 3.1 - Asset progress for material' ||
+            inputs.report_type == 'Report 4d - Asset progress for material' ||
             inputs.report_type == 'All Reports (1, 2, 3, 4, 5, 6 - Full Pipeline)'
           ))
         env:
@@ -291,7 +293,7 @@ jobs:
           TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
           TELEGRAM_SESSION: ${{ secrets.TELEGRAM_SESSION }}
         run: |
-          if [ "${{ inputs.report_type }}" = "Report 3.1 - Asset progress for material" ]; then
+          if [ "${{ inputs.report_type }}" = "Report 3.1 - Asset progress for material" ] || [ "${{ inputs.report_type }}" = "Report 4d - Asset progress for material" ]; then
             python cron_send.py --asset_only || true
           else
             python cron_send.py || true

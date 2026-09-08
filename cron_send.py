@@ -706,14 +706,14 @@ def build_team_asset_msg(team_key, now_str, asset_data):
         """Total /Done — space trước / để Telegram tự highlight xanh"""
         return f"{s.get('total',0)} /{s.get('done',0)}"
 
-    def fmt_period_short(s):
-        """3Day/7Day/Month - không có All: để tránh line quá dài"""
+    def fmt_period(s):
         return (
             f"3Day: {s.get('d2',0)} /{s.get('done_d2',0)}"
             f" | {s.get('d1',0)} /{s.get('done_d1',0)}"
             f" | {s.get('d0',0)} /{s.get('done_d0',0)}"
             f"  7Day: {s.get('d6',0)} /{s.get('done_d6',0)}"
             f"  Month: {s.get('d15',0)} /{s.get('done_d15',0)}"
+            f"  All: {s.get('total',0)} /{s.get('done',0)}"
         )
 
     PERIOD_KEYS = ["d0","d1","d2","d6","d15","done_d0","done_d1","done_d2","done_d6","done_d15","total","done"]
@@ -735,8 +735,7 @@ def build_team_asset_msg(team_key, now_str, asset_data):
         f"📦 4d. Asset progress for material – {t_name} – {now_str}",
         "━━━━━━━━━━━━━━━━━━━━"
     ] + key_lines + [
-        f"   📅 {fmt_period_short(team_total)}",
-        f"   📊 All: {team_total.get('total',0)} /{team_total.get('done',0)}"
+        f"   📅 {fmt_period(team_total)}"
     ]
     return "\n".join(lines)
 
