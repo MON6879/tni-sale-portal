@@ -6864,6 +6864,11 @@ Team04>> 2Box</td>
             <input type="checkbox" id="perm_auth" class="perm-checkbox" value="AUTH" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
             <span>🔒 <b>Gmail Access List</b> (Quản Lý Phân Quyền Hệ Thống)</span>
           </label>
+
+          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.88rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
+            <input type="checkbox" id="perm_guide" class="perm-checkbox" value="GUIDE" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
+            <span>📖 <b>System Guide</b> (Hướng Dẫn Sử Dụng Hệ Thống)</span>
+          </label>
         </div>
       </div>
 
@@ -7006,44 +7011,51 @@ Team04>> 2Box</td>
     }
 
     function applyPermissionPreset(preset) {
-      const cbExec = document.getElementById('perm_exec');
-      const cbDept = document.getElementById('perm_dept');
-      const cbWo   = document.getElementById('perm_wo');
-      const cbBod  = document.getElementById('perm_bod');
-      const cbPlan = document.getElementById('perm_plan');
-      const cbAuth = document.getElementById('perm_auth');
+      const cbExec  = document.getElementById('perm_exec');
+      const cbDept  = document.getElementById('perm_dept');
+      const cbWo    = document.getElementById('perm_wo');
+      const cbBod   = document.getElementById('perm_bod');
+      const cbPlan  = document.getElementById('perm_plan');
+      const cbAuth  = document.getElementById('perm_auth');
+      const cbGuide = document.getElementById('perm_guide');
 
       // Reset all first
       cbExec.checked = false;
       cbDept.checked = false;
       cbWo.checked   = false;
       cbBod.checked  = false;
-      if (cbPlan) cbPlan.checked = false;
+      if (cbPlan)  cbPlan.checked  = false;
       cbAuth.checked = false;
+      if (cbGuide) cbGuide.checked = false;
 
       if (preset === 'FULL') {
         cbExec.checked = true;
         cbDept.checked = true;
         cbWo.checked   = true;
         cbBod.checked  = true;
-        if (cbPlan) cbPlan.checked = true;
+        if (cbPlan)  cbPlan.checked  = true;
         cbAuth.checked = true;
+        if (cbGuide) cbGuide.checked = true;
       } else if (preset === 'BOD') {
         cbExec.checked = true;
         cbBod.checked  = true;
+        if (cbGuide) cbGuide.checked = true;
       } else if (preset === 'DEPT') {
         cbExec.checked = true;
         cbDept.checked = true;
         cbWo.checked   = true;
-        if (cbPlan) cbPlan.checked = true;
+        if (cbPlan)  cbPlan.checked  = true;
+        if (cbGuide) cbGuide.checked = true;
       } else if (preset === 'ENGINEER') {
         cbDept.checked = true;
         cbWo.checked   = true;
+        if (cbGuide) cbGuide.checked = true;
       } else if (preset === 'EXEC') {
         cbExec.checked = true;
+        if (cbGuide) cbGuide.checked = true;
       }
 
-      const allCheckedNow = cbExec.checked && cbDept.checked && cbWo.checked && cbBod.checked && cbAuth.checked;
+      const allCheckedNow = cbExec.checked && cbDept.checked && cbWo.checked && cbBod.checked && cbAuth.checked && (!cbGuide || cbGuide.checked);
       const btnText = document.getElementById('selectAllBtnText');
       if (btnText) btnText.textContent = allCheckedNow ? "Bỏ Chọn Tất Cả" : "Chọn Tất Cả";
     }
