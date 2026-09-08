@@ -67,6 +67,27 @@ TZ_MM    = timezone(timedelta(hours=6, minutes=30))   # Myanmar UTC+6:30
 MAX_LEN  = 4096
 TG_API   = f"https://api.telegram.org/bot{TOKEN if TOKEN else 'MISSING'}"
 
+# ── ETA Team Config — SSOT để thêm subteam/group mới chỉ cần sửa ở đây ──────
+# Format: { "TN": [subteam_suffixes] } — [] = chỉ có team chính, ["S1"] = có S1, ["S1","S2"] = có S1+S2
+ETA_TEAM_CONFIG = {
+    "T1": ["S1"],   # T1 + T1 S1 — thêm "S2" vào đây để tự động có /eta_t1_s2
+    "T2": ["S1"],   # T2 + T2 S1
+    "T3": ["S1"],   # T3 + T3 S1
+    "T4": [],       # T4 chỉ có team chính (không có subteam)
+}
+
+# ── ETA Group Config — SSOT mapping chat_id → team key + plan subteams ───────
+# Format: { "chat_id_str": {"team": "TN", "subteams": [...], "label": "..."} }
+# Để thêm nhóm mới (ví dụ T1 Site down share ETA), chỉ cần thêm entry vào đây
+ETA_GROUP_CONFIG = {
+    "-1004215695747": {"team": "T1", "subteams": ["S1"], "label": "TNI TEAM 1 PLAN - ALARM"},
+    "-1004480845549": {"team": "T2", "subteams": ["S1"], "label": "TNI TEAM 2 PLAN - ALARM"},
+    "-1004369170658": {"team": "T3", "subteams": ["S1"], "label": "TNI TEAM 3 PLAN - ALARM"},
+    "-1004293741999": {"team": "T4", "subteams": [],     "label": "TNI TEAM 4 PLAN - ALARM"},
+    # ↓ Thêm nhóm mới tại đây — ví dụ:
+    # "-100XXXXXXXXXX": {"team": "T1", "subteams": ["S1"], "label": "T1 Site down share ETA"},
+}
+
 # ── Daily fields cache ─────────────────────────────────────────────────────────
 DAILY_FIELDS_DEFAULT = [
     "Daily result",
@@ -395,14 +416,6 @@ def setup_bot_menu_commands():
         {"command": "t2waitcd",     "description": "Team 2 Wait CD WOs"},
         {"command": "t3waitcd",     "description": "Team 3 Wait CD WOs"},
         {"command": "t4waitcd",     "description": "Team 4 Wait CD WOs"},
-        {"command": "eta",          "description": "ETA Site Down - All Teams"},
-        {"command": "eta_t1",       "description": "ETA Site Down - Team 1"},
-        {"command": "eta_t1_s1",    "description": "ETA Site Down - Team 1 S1"},
-        {"command": "eta_t2",       "description": "ETA Site Down - Team 2"},
-        {"command": "eta_t2_s1",    "description": "ETA Site Down - Team 2 S1"},
-        {"command": "eta_t3",       "description": "ETA Site Down - Team 3"},
-        {"command": "eta_t3_s1",    "description": "ETA Site Down - Team 3 S1"},
-        {"command": "eta_t4",       "description": "ETA Site Down - Team 4"},
         {"command": "request_enter_site", "description": "Request enter Site towerco format"},
         {"command": "mysite",       "description": "All Site you control"},
         {"command": "mycable",      "description": "All your cable route"},
@@ -414,31 +427,26 @@ def setup_bot_menu_commands():
         {"command": "daily_result", "description": "Daily Result template"},
         {"command": "help",         "description": "Show help menu"},
     ]
-    # Menu riêng từng Team group — team nào nhìn team đó
-    team_groups = {
-        "-1004215695747": [  # TNI TEAM 1 PLAN - ALARM
-            {"command": "eta_t1",     "description": "ETA Site Down - Team 1"},
-            {"command": "eta_t1_s1",  "description": "ETA Site Down - Team 1 S1"},
-            {"command": "plan_t1",    "description": "Plan Template - Team 1"},
-            {"command": "plan_t1_s1", "description": "Plan Template - Team 1 S1"},
-        ],
-        "-1004480845549": [  # TNI TEAM 2 PLAN - ALARM
-            {"command": "eta_t2",     "description": "ETA Site Down - Team 2"},
-            {"command": "eta_t2_s1",  "description": "ETA Site Down - Team 2 S1"},
-            {"command": "plan_t2",    "description": "Plan Template - Team 2"},
-            {"command": "plan_t2_s1", "description": "Plan Template - Team 2 S1"},
-        ],
-        "-1004369170658": [  # TNI TEAM 3 PLAN - ALARM
-            {"command": "eta_t3",     "description": "ETA Site Down - Team 3"},
-            {"command": "eta_t3_s1",  "description": "ETA Site Down - Team 3 S1"},
-            {"command": "plan_t3",    "description": "Plan Template - Team 3"},
-            {"command": "plan_t3_s1", "description": "Plan Template - Team 3 S1"},
-        ],
-        "-1004293741999": [  # TNI TEAM 4 PLAN - ALARM
-            {"command": "eta_t4",     "description": "ETA Site Down - Team 4"},
-            {"command": "plan_t4",    "description": "Plan Template - Team 4"},
-        ],
-    }
+
+    # ── Build per-group menu dynamically from ETA_GROUP_CONFIG ───────────────
+    # Chỉ giữ Plan Template theo từng team (ETA Site Down đã gửi tự động theo giờ, không đưa vào menu)
+    team_groups = {}
+    for chat_id_str, cfg in ETA_GROUP_CONFIG.items():
+        t_key   = cfg["team"]       # "T1"
+        t_num   = t_key[1:]         # "1"
+        subs    = cfg["subteams"]   # ["S1"] hoặc []
+        label   = cfg["label"]
+
+        grp_cmds = []
+        # Plan main team
+        grp_cmds.append({"command": f"plan_t{t_num}", "description": f"Plan Template - {t_key}"})
+        # Plan subteams
+        for s in subs:
+            s_num = s[1:]
+            grp_cmds.append({"command": f"plan_t{t_num}_s{s_num}", "description": f"Plan Template - {t_key} {s}"})
+
+        team_groups[chat_id_str] = grp_cmds
+
     common_group = [
         {"command": "daily", "description": "Daily Result template"},
     ]
@@ -452,26 +460,23 @@ def setup_bot_menu_commands():
         except Exception:
             pass
 
-        # Default scope — full commands (không có /plan cũ)
+        # Default scope — full commands (dành cho chat riêng / direct message)
         requests.post(base_url, json={"commands": commands}, timeout=10)
-        # All group chats — chỉ daily (plan riêng từng team)
-        requests.post(base_url, json={"commands": common_group, "scope": {"type": "all_group_chats"}}, timeout=10)
         # All private chats — full commands
         requests.post(base_url, json={"commands": commands, "scope": {"type": "all_private_chats"}}, timeout=10)
-        # Per-team group — ETA + Plan riêng + daily cho cả thành viên và admin
-        for chat_id, eta_cmds in team_groups.items():
-            team_menu = eta_cmds + common_group
+        
+        # ❌ Nhóm chat Team: XÓA lệnh của Bot 3D trong các nhóm Team để Bot 1C quản lý độc quyền menu 1..6
+        for chat_id in team_groups.keys():
             cid_int = int(chat_id)
-            # Scope 1: chat (toàn bộ thành viên)
-            requests.post(base_url, json={
-                "commands": team_menu,
-                "scope": {"type": "chat", "chat_id": cid_int}
-            }, timeout=10)
-            # Scope 2: chat_administrators (cho quản trị viên)
-            requests.post(base_url, json={
-                "commands": team_menu,
-                "scope": {"type": "chat_administrators", "chat_id": cid_int}
-            }, timeout=10)
+            try:
+                requests.post(del_url, json={"scope": {"type": "chat", "chat_id": cid_int}}, timeout=10)
+                requests.post(del_url, json={"scope": {"type": "chat_administrators", "chat_id": cid_int}}, timeout=10)
+            except Exception:
+                pass
+        try:
+            requests.post(del_url, json={"scope": {"type": "all_group_chats"}}, timeout=10)
+        except Exception:
+            pass
     except Exception as ex:
         logger.error(f"setup_bot_menu_commands: {ex}")
 
@@ -490,7 +495,7 @@ def get_eta_site_down(team_filter="ALL"):
         reader = csv.reader(io.StringIO(resp.text))
         rows = list(reader)
         if len(rows) < 6:
-            return "Không có dữ liệu."
+            return "No data available."
 
         # Row 5 (index 4) = header, Col E (index 4) = timestamp
         update_ts = rows[4][4] if len(rows[4]) > 4 else ""
@@ -502,7 +507,7 @@ def get_eta_site_down(team_filter="ALL"):
             row = rows[i]
             if len(row) < 7:
                 continue
-            content = (row[4] or "").strip()  # Col E — nội dung đã format sẵn
+            content = (row[4] or "").strip()  # Col E — formatted content
             team = (row[6] or "").strip().upper()  # Col G — team
 
             if not content:
@@ -525,7 +530,7 @@ def get_eta_site_down(team_filter="ALL"):
 
         has_data = any(len(v) > 0 for v in sites.values())
         if not has_data:
-            return f"{update_ts}\nKhông có site down."
+            return f"{update_ts}\nNo site down."
 
         lines = []
         display_order = team_order if team_filter == "ALL" else [team_filter]
@@ -540,7 +545,254 @@ def get_eta_site_down(team_filter="ALL"):
         return "\n".join(lines).strip()
     except Exception as ex:
         logger.error(f"get_eta_site_down error: {ex}")
-        return f"Lỗi đọc ETA: {ex}"
+        return f"Error reading ETA: {ex}"
+
+
+def get_eta_share_templates(team_filter="ALL"):
+    """Build pre-filled ETA update templates per team/subteam.
+    Sections (7):
+      1.1 🔴 Cell Down                 (Parsed from Col C alarm breakdown)
+      1.2 ⚙️ DG Abnormal              (Parsed from Col C alarm breakdown)
+      1.3 ❌ DG Run>16H               (Parsed from Col C alarm breakdown)
+      1.4 🔋 Battery Temperature High (Parsed from Col C alarm breakdown)
+      1.5 💨 Smoke                    (Parsed from Col C alarm breakdown)
+      1.6 🚪 DOOR                     (Parsed from Col C alarm breakdown)
+      1.7 📡 Site Down                (Parsed from Col E site down list)
+    Returns list of (team_name, template_text).
+    """
+    try:
+        csv_url = f"https://docs.google.com/spreadsheets/d/{SD_SHEET_ID}/export?format=csv&gid={SD_GID}"
+        resp = requests.get(csv_url, timeout=15)
+        resp.raise_for_status()
+        import csv as _csv, io as _io
+        reader = _csv.reader(_io.StringIO(resp.text))
+        rows = list(reader)
+        if len(rows) < 6:
+            return []
+
+        update_ts = rows[4][4].strip() if len(rows[4]) > 4 else ""
+        if not update_ts:
+            update_ts = datetime.now(TZ_MM).strftime("%d/%m/%Y %H:%M")
+
+        team_rows = {"T1": 3, "T2": 4, "T3": 5, "T4": 6}
+
+        alarm_patterns = [
+            ("1.1", "🔴", "Cell Down",                r'Cell down:\s*(?:[*/]\d+.*?[=:])\s*(.*?)(?:\|\s*DG|\s*$)'),
+            ("1.2", "⚙️", "DG Abnormal",             r'DG Abnormal:\s*(?:[*/]\d+.*?[=:])\s*(.*?)(?:\|\s*DG Run|\s*$)'),
+            ("1.3", "❌", "DG Run >16H",              r'DG Run\s*>?\s*16H?:\s*(?:[*/]\d+.*?[=:])\s*(.*?)(?:\|\s*Link|\s*$)'),
+            ("1.4", "🔋", "Battery Temperature High",   r'Battery Temperature High:\s*(?:[*/]\d+.*?[=:])\s*(.*?)(?:\|\s*Smoke|\s*$)'),
+            ("1.5", "💨", "Smoke",                    r'Smoke:\s*(?:[*/]\d+.*?[=:])\s*(.*?)(?:\|\s*DOOR|\s*$)'),
+            ("1.6", "🚪", "DOOR",                     r'DOOR:\s*(?:[*/]\d+.*?[=:])\s*(.*?)(?:\|\s*Duty|\s*$)'),
+        ]
+
+        # Parse 1.7 Site Down per team from rows 5+ (Col E & Col G)
+        sd_by_team = {"T1": [], "T2": [], "T3": [], "T4": []}
+        for i in range(5, len(rows)):
+            row = rows[i]
+            if len(row) > 6:
+                team_val = (row[6] or "").strip().upper()
+                tni_m = re.search(r"(TNI\d+)", row[4]) or re.search(r"(TNI\d+)", row[5] if len(row) > 5 else "")
+                if tni_m:
+                    tni = tni_m.group(1).upper()
+                    for t_key in ["T1", "T2", "T3", "T4"]:
+                        if team_val.startswith(t_key):
+                            if tni not in sd_by_team[t_key]:
+                                sd_by_team[t_key].append(tni)
+
+        # Determine which teams to build for
+        all_teams = ["T1", "T2", "T3", "T4"]
+        if team_filter == "ALL":
+            target_teams = all_teams
+        else:
+            # Map e.g. "T1 S1" -> "T1"
+            matched_prefix = team_filter[:2].upper()
+            target_teams = [matched_prefix] if matched_prefix in all_teams else all_teams
+
+        results = []
+        for t_name in target_teams:
+            r_idx = team_rows.get(t_name)
+            c_text = rows[r_idx][2] if r_idx is not None and r_idx < len(rows) and len(rows[r_idx]) > 2 else ""
+
+            lines = [f"📋 {t_name} — ETA Update {update_ts}"]
+
+            # 1.1 to 1.6 from Col C
+            for num, icon, label, pat in alarm_patterns:
+                m = re.search(pat, c_text, re.IGNORECASE)
+                items = []
+                if m:
+                    tnis = re.findall(r'(TNI\d+)', m.group(1))
+                    seen = set()
+                    items = [x.upper() for x in tnis if not (x.upper() in seen or seen.add(x.upper()))]
+                if items:
+                    lines.append(f"{num} {icon} {label}: {len(items)} site")
+                    lines.extend([f"• {c} + FT + ETA:" for c in items])
+                else:
+                    lines.append(f"{num} {icon} {label}:")
+                    lines.append("• (none)")
+
+            # 1.7 Site Down from Col E/G
+            sd_items = sd_by_team.get(t_name, [])
+            if sd_items:
+                lines.append(f"1.7 📡 Site Down: {len(sd_items)} site")
+                lines.extend([f"• {c} + FT + ETA:" for c in sd_items])
+            else:
+                lines.append("1.7 📡 Site Down:")
+                lines.append("• (none)")
+
+            results.append((t_name, "\n".join(lines)))
+
+        return results
+
+    except Exception as ex:
+        logger.error(f"get_eta_share_templates error: {ex}")
+        return []
+
+ETA_SHARE_GID = "1509154642"  # Tab "Team leader share ETA" in SD_SHEET_ID
+
+def get_today_eta_from_sheet():
+    """Đọc sheet GID 1509154642 (format FINAL v2: 1 hàng/TNI + title rows).
+    Column layout (10 cols):
+      A=REF, B=Date, C=Time, D=Team, E=Section,
+      F=TNI Code, G=FT+ETA (raw), H=ETA Date (dd/MM/yyyy), I=Sender, J=Photos
+    Title rows: col A bắt đầu bằng '📋' → bỏ qua.
+    Trả về dict {TNI_CODE: {ft_eta, eta_date, section, sender}}.
+    - eta_date: ngày thực hiện ETA (extracted); nếu không có date trong FT+ETA → dùng submission date
+    - Ưu tiên entry đã có ft_eta (đã điền) trong ngày
+    """
+    try:
+        today = datetime.now(TZ_MM).strftime("%d/%m/%Y")
+        url = (
+            f"https://docs.google.com/spreadsheets/d/{SD_SHEET_ID}"
+            f"/gviz/tq?tqx=out:csv&gid={ETA_SHARE_GID}"
+        )
+        resp = requests.get(url, timeout=15)
+        resp.raise_for_status()
+        import csv as _csv, io as _io
+        reader = _csv.reader(_io.StringIO(resp.text))
+        rows = list(reader)
+        if len(rows) < 2:
+            return {}
+
+        eta_map = {}  # {TNI: {ft_eta, eta_date, section, sender}}
+
+        for row in rows[1:]:
+            if len(row) < 6:
+                continue
+            ref_val = (row[0] or "").strip()
+            # Skip title rows
+            if ref_val.startswith("📋") or ref_val.startswith("\U0001f4cb"):
+                continue
+            date_val = (row[1] or "").strip()
+            if date_val != today:
+                continue
+
+            tni      = (row[5] or "").strip().upper()   # col F
+            ft_eta   = (row[6] or "").strip()            # col G — raw
+            eta_date = (row[7] or "").strip() if len(row) > 7 else date_val  # col H — ETA Date
+            sender   = (row[8] or "").strip() if len(row) > 8 else ""        # col I
+
+            if not tni:
+                continue
+            # Nếu ETA Date rỗng → fallback về submission date
+            if not eta_date:
+                eta_date = date_val
+
+            # Ưu tiên entry đã có ft_eta (đã điền)
+            if tni not in eta_map or (not eta_map[tni]["ft_eta"] and ft_eta):
+                eta_map[tni] = {
+                    "ft_eta":   ft_eta,
+                    "eta_date": eta_date,
+                    "section":  (row[4] or "").strip(),
+                    "sender":   sender,
+                }
+
+        return eta_map
+    except Exception as ex:
+        logger.error(f"get_today_eta_from_sheet error: {ex}")
+        return {}
+
+
+
+def build_smart_eta_reminder(team_filter="ALL"):
+    """Build reminder messages với ✅ cho sites đã có ETA Date >= hôm nay, • cho pending.
+    Returns list of (team_name, text, has_pending).
+
+    Logic ETA Date:
+    - ETA Date >= today → ✅ copy gởi (nhân viên không cần update lại)
+    - ETA Date < today  → • pending (ETA đã qua ngày, cần update mới)
+    - FT+ETA rỗng       → • pending (chưa điền)
+    """
+    eta_map = get_today_eta_from_sheet()
+    templates = get_eta_share_templates(team_filter)
+    if not templates:
+        return []
+
+    now_str  = datetime.now(TZ_MM).strftime("%d/%m/%Y %H:%M")
+    today_dt = datetime.now(TZ_MM).date()
+    results  = []
+
+    def _parse_date(date_str):
+        """Parse date string → date object. GAS normalizes to dd/MM/yyyy.
+        Fallback to dd/MM/yy, dd.MM.yyyy, dd.MM.yy just in case."""
+        if not date_str:
+            return None
+        for fmt in ("%d/%m/%Y", "%d/%m/%y", "%d.%m.%Y", "%d.%m.%y"):
+            try:
+                return datetime.strptime(date_str.strip(), fmt).date()
+            except ValueError:
+                continue
+        return None
+
+    for t_name, raw_text in templates:
+        lines_in  = raw_text.split("\n")
+        lines_out = []
+        has_pending = False
+
+        for line in lines_in:
+            stripped = line.strip()
+
+            # Header line: cập nhật timestamp
+            if stripped.startswith("📋"):
+                updated = re.sub(r'\d{2}/\d{2}/\d{4}\s+\d{2}:\d{2}', now_str, stripped)
+                lines_out.append(updated)
+                continue
+
+            # Section header (e.g. "1.1 🔴 Cell Down: 4 site"): giữ nguyên
+            if re.match(r'^1\.\d', stripped):
+                lines_out.append(stripped)
+                continue
+
+            # Site line: "• TNIxxxx + FT + ETA:"
+            m = re.match(r'^•\s*(TNI\d+)\s*\+\s*FT\s*\+\s*ETA:\s*$', stripped, re.IGNORECASE)
+            if m:
+                tni = m.group(1).upper()
+                entry = eta_map.get(tni, {})
+                ft_eta_raw = entry.get("ft_eta", "")
+                eta_date_str = entry.get("eta_date", "")
+
+                if ft_eta_raw:
+                    eta_dt = _parse_date(eta_date_str)
+                    if eta_dt and eta_dt >= today_dt:
+                        # ETA Date >= hôm nay → ✅ copy gởi
+                        date_label = f" [{eta_date_str}]" if eta_date_str != datetime.now(TZ_MM).strftime("%d/%m/%Y") else ""
+                        lines_out.append(f"✅ {tni} + FT+ETA: {ft_eta_raw}{date_label}")
+                    elif eta_dt and eta_dt < today_dt:
+                        # ETA Date đã qua → pending lại
+                        lines_out.append(stripped)
+                        has_pending = True
+                    else:
+                        # Không parse được date → show ✅
+                        lines_out.append(f"✅ {tni} + FT+ETA: {ft_eta_raw}")
+                else:
+                    lines_out.append(stripped)
+                    has_pending = True
+                continue
+
+            lines_out.append(stripped)
+
+        results.append((t_name, "\n".join(lines_out), has_pending))
+
+    return results
 
 
 # ── ULTRA-FAST HIGH-PERFORMANCE SEARCH ENGINE (Parallel + SWR + O(1) Hash Indexing) ──
@@ -1734,14 +1986,45 @@ def handle(update: dict) -> None:
         rest = parts[1] if len(parts) > 1 else ""
 
         if first_word.startswith("eta"):
-            eta_map = {
-                "eta": "ALL", "eta_t1": "T1", "eta_t1_s1": "T1 S1",
-                "eta_t2": "T2", "eta_t2_s1": "T2 S1",
-                "eta_t3": "T3", "eta_t3_s1": "T3 S1", "eta_t4": "T4"
-            }
-            team_f = eta_map.get(first_word, "ALL")
+            # Dynamic: /eta → ALL, /eta_t1 → "T1", /eta_t1_s1 → "T1 S1", /eta_t2_s2 → "T2 S2", etc.
+            # Supports any TN or TN_SM without hardcoding — just add new subteams in ETA data source
+            if first_word == "eta":
+                team_f = "ALL"
+            else:
+                m_sub = re.match(r'^eta_t(\d+)_s(\d+)$', first_word)
+                m_main = re.match(r'^eta_t(\d+)$', first_word)
+                if m_sub:
+                    team_f = f"T{m_sub.group(1)} S{m_sub.group(2)}"
+                elif m_main:
+                    team_f = f"T{m_main.group(1)}"
+                else:
+                    team_f = "ALL"
             reply = get_eta_site_down(team_f)
             tg_send(chat_id, reply)
+            return
+
+        if first_word.startswith("share_eta"):
+            # Dynamic: /share_eta_t1 → send T1 + T1 S1 templates (2 messages)
+            # /share_eta_t1_s1 → T1 S1 only, /share_eta → ALL teams
+            # Format: pre-filled TNI codes, employees fill FT + ETA
+            if first_word == "share_eta":
+                team_f = "ALL"
+            else:
+                m_sub  = re.match(r'^share_eta_t(\d+)_s(\d+)$', first_word)
+                m_main = re.match(r'^share_eta_t(\d+)$', first_word)
+                if m_sub:
+                    team_f = f"T{m_sub.group(1)} S{m_sub.group(2)}"
+                elif m_main:
+                    team_f = f"T{m_main.group(1)}"
+                else:
+                    team_f = "ALL"
+
+            templates = get_eta_share_templates(team_f)
+            if not templates:
+                tg_send(chat_id, "No site down data for this team.")
+            else:
+                for _t_name, tmpl_text in templates:
+                    tg_send(chat_id, tmpl_text)
             return
 
         if first_word in ("request_enter_site", "request_site_enter", "site_access", "siteaccess", "site_enter", "request_site"):
@@ -1754,39 +2037,9 @@ def handle(update: dict) -> None:
             send_help_menu(chat_id)
             return
 
-        if first_word in ("daily", "daily_result", "dailyresult"):
-            if is_duplicate_search(chat_id, user_id, "DAILY"):
-                return
-            send_daily_template(chat_id)
-            return
-
-        if first_word.startswith("plan"):
-            if is_duplicate_search(chat_id, user_id, f"PLAN:{first_word}"):
-                return
-            # /plan_t3 → "T3", /plan_t3_s1 → "T3 S1", /plan → auto-detect
-            plan_map = {
-                "plan_t1": "T1", "plan_t1_s1": "T1 S1",
-                "plan_t2": "T2", "plan_t2_s1": "T2 S1",
-                "plan_t3": "T3", "plan_t3_s1": "T3 S1",
-                "plan_t4": "T4",
-            }
-            team_filter = plan_map.get(first_word)
-            if not team_filter:
-                # /plan hoặc /dailyplan → auto-detect theo chat_id/title
-                chat_title = (msg.get("chat", {}).get("title") or "").lower()
-                cid_str = str(chat_id)
-                if "4215695747" in cid_str or "team 1" in chat_title or "dawei" in chat_title:
-                    team_filter = "T1"
-                elif "4480845549" in cid_str or "team 2" in chat_title or "myeik" in chat_title:
-                    team_filter = "T2"
-                elif "4369170658" in cid_str or "team 3" in chat_title or "bokpyin" in chat_title:
-                    team_filter = "T3"
-                elif "4293741999" in cid_str or "team 4" in chat_title or "kawthoung" in chat_title:
-                    team_filter = "T4"
-                else:
-                    tn = get_user_team_number(user_id) or 1
-                    team_filter = f"T{tn}"
-            send_daily_plan_template(chat_id, team_filter)
+        # ❌ Bot 3D BỎ trả lời lệnh Plan và Daily Result (theo yêu cầu: chuyển toàn bộ sang Bot 1C đảm nhiệm)
+        if first_word in ("daily", "daily_result", "dailyresult") or first_word.startswith("plan"):
+            logger.info(f"[3D] Skip responding to {first_word} — handed over to Bot 1C")
             return
 
         if first_word in ("id", "myid"):

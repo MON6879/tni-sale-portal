@@ -830,3 +830,16 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 > 2. **Deadline Luôn Theo Đúng Ngày Làm Việc**: Hạn nộp Plan cho ngày `date_str` là `before 07:00 on {date_str}`. **TUYỆT ĐỐI CẤM** cộng thêm 1 ngày (`next_day_str`) vào deadline của ngày làm việc đó.
 > 3. **Đồng Bộ Sang Runner Repo**: Bất kỳ sửa đổi nào trên `daily_plan_report.py` BẮT BUỘC phải đồng bộ cả sang `Task and WO` (tni-bot) và `tni-sitedown` (runner GHA) trước khi báo hoàn tất.
 
+---
+
+# 🤖 POST-MORTEM RULE — 08/09/2026: UNIFIED BOT MENU & RESPONSE ARCHITECTURE (GHẾ BOT-1C + SEARCH-3D)
+
+> ### Nguồn gốc: **Ghế Bot-1C (Solution Clear)** + **Ghế Search-3D (Task & WO)**
+> - **Yêu cầu (08/09/2026)**: Sắp xếp lại toàn bộ menu Telegram khi gõ `/` theo đúng thứ tự chuẩn 1..6: (1) `Plan T{x} Template`, (2) `Plan T{x} S1 Template`, (3) `Daily result template`, (4) `Solution [FT]`, (5) `List Long time T{x}`, (6) `Template Site down long time`. Xóa bỏ hoàn toàn lệnh `/refresh` (đã có Toa 6.1 Site Clear Today chạy tự động hàng ngày). Bot 3D bỏ trả lời Plan và Daily (nhường cho Bot 1C), sưởi ấm 1C bằng thời gian keepalive của 3D để phản hồi nhanh tức thì.
+>
+> ### 🔴 RULE PM-7: GỘP MENU TELEGRAM TẬP TRUNG & SƯỞI ẤM PHẢN HỒI TỨC THÌ (ZERO BOT CONFLICT)
+> 1. **Một Bot Duy Nhất Quản Lý Menu Nhóm Chat**: Để menu khi gõ `/` hiển thị đúng thứ tự 1..6, BẮT BUỘC toàn bộ 6 loại lệnh phải được đăng ký bởi Bot 1C (`TNICLEARSITEBOT`). Bot 3D (`SEARCHTNITASKWOBOT`) BẮT BUỘC phải xóa scope chat trong các nhóm team (`deleteMyCommands`) để không đè menu hay trả lời trùng lặp.
+> 2. **Bot 3D Bỏ Phản Hồi Template Plan/Daily nhưng Giữ Thu Thập**: Bot 3D bỏ hoàn toàn việc trả lời lệnh `/plan` và `/daily` (để Bot 1C gửi mẫu). Tuy nhiên, cơ chế lắng nghe thu thập dữ liệu (Collector) của Bot 3D (`store_daily_plan_to_sheet`, `submit_daily`) VẪN GIỮ NGUYÊN 100% để đồng bộ song song với Bot 1C.
+> 3. **Sưởi Ấm (Keepalive) Toa 0 Cho Cả 1C**: Để Bot 1C phản hồi nhanh như 3D (dưới 1 giây, tránh cold start của Apps Script và Vercel Serverless), BẮT BUỘC phải ping cả Vercel Proxy `api/solution_clear` và Web App GAS của 1C trong Toa 0 Keepalive (`train_5min.yml`) mỗi 5 phút một lần.
+
+

@@ -97,6 +97,11 @@ jobs:
           curl -s -f "https://api.telegram.org/bot8758104446:AAH3o7lMCxBXn70ThAXweH1DddmRkJrgwWo/getWebhookInfo" || true
           curl -s -f "https://tni-bot.vercel.app/api/cable_bot" || true
 
+          echo "8️⃣ Solution Clear Bot 1C (Vercel & GAS Keepalive)..."
+          curl -s -f "https://api.telegram.org/bot8992199719:AAFVEOjFP39mcZXa8btqLK0TyqU79NJMcvM/getWebhookInfo" || true
+          curl -s -f "https://tni-bot.vercel.app/api/solution_clear" || true
+          curl -s -L "https://script.google.com/macros/s/AKfycbyatJQAAHIG4jKHbc4zy-AoTiMHpXSzBm_3SpL8eap5duYCHqNSSKBKyOAmT82XTzgYog/exec?action=ping" || true
+
           echo "✅ Keepalive done"
 
       # ═══════════════════════════════════════════════
@@ -132,24 +137,36 @@ jobs:
           }
 
 
+          # check_time_exact <hour> <target_minute> — dung sai ±2 phút cho các mốc đơn lẻ duy nhất (kháng trùng lặp nhịp 5p)
+          check_time_exact() {
+            local TH=$1 TM=$2
+            local CURR_MIN=$(( 10#$H * 60 + 10#$M ))
+            local TARG_MIN=$(( 10#$TH * 60 + 10#$TM ))
+            local DIFF=$(( CURR_MIN - TARG_MIN ))
+            [ $DIFF -lt 0 ] && DIFF=$(( -DIFF ))
+            [ $DIFF -le 2 ] && return 0
+            return 1
+          }
+
+
           # ═══════ ☀️ MORNING BLOCK (05:00-10:00) ═══════
-          #  05:46 → Reports 1,2,3 + BOD + Refuel Request (🤖 Bot API)
-          check_time 05 46 && R1234=true && BOD=true && REFUEL_REQ=true && NEED_PYTHON=true && echo "🚃 Toa 1+8+11: Reports 1-3 + BOD + Refuel Req (05:46 MMT)"
+          #  05:46 → Reports 1,2,3 + BOD (🤖 Bot API)
+          check_time 05 46 && R1234=true && BOD=true && NEED_PYTHON=true && echo "🚃 Toa 1+11: Reports 1-3 + BOD (05:46 MMT)"
           #  05:51 → Report 4 (Daily EOD Task & Stats) — TOA 12 RIÊNG (+5 phút)
           check_time 05 51 && R4=true && NEED_PYTHON=true && echo "🚃 Toa 12: Report 4 EOD Task (05:51 MMT)"
           #  05:56 → Cable Daily Report [ĐÃ HỦY THEO YÊU CẦU NGƯỜI DÙNG]
           #  06:06 → Report 5 (Daily Plan - Ca Sáng) (📱 Telethon)
           check_time 06 06 && P5C=true && NEED_PYTHON=true && echo "🚃 Toa 5: Report 5 Daily Plan Morning (06:06 MMT)"
-          #  07:06 → Refuel Request Catch-up (🤖 Bot API)
-          check_time 07 06 && REFUEL_REQ=true && NEED_PYTHON=true && echo "🚃 Toa 8: Refuel Req Catch-up (07:06 MMT)"
+          #  10:06 → Refuel Merged Report (📱 Telethon)
+          check_time 10 06 && REFUEL_P1=true && NEED_PYTHON=true && echo "🚃 Toa 9: Refuel Merged Report (10:06 MMT)"
           #  07:16 / 07:18 → Report 6.1 Site Clear Today (🤖 Bot API)
           (check_time 07 18 || check_time 07 16) && R61=true && NEED_PYTHON=true && echo "🚃 Toa 6.1: Report 6.1 Site Clear Today (07:18 MMT)"
           #  08:26 / 08:28 → Plan 5C Morning
           (check_time 08 28 || check_time 08 26) && P5C=true && NEED_PYTHON=true && echo "🚃 Toa 5: Plan 5C Morning (08:28 MMT)"
           #  08:46 / 08:48 → Report 6 Read Report (Ca 1) (📱 Telethon)
           (check_time 08 48 || check_time 08 46) && R6=true && NEED_PYTHON=true && echo "🚃 Toa 6: Report 6 Read (08:48 MMT)"
-          #  09:00 → Ghế AUDITOR-9.1 (Master System Audit)
-          check_time 09 00 && AUDITOR91=true && NEED_PYTHON=true && echo "🚃 Toa Auditor: Ghế AUDITOR-9.1 (09:00 MMT)"
+          #  09:00 → Ghế AUDITOR-9.1 (Master System Audit — Chạy đúng 1 lần duy nhất)
+          check_time_exact 09 00 && AUDITOR91=true && NEED_PYTHON=true && echo "🚃 Toa Auditor: Ghế AUDITOR-9.1 (09:00 MMT)"
           #  09:56 → Plan 5C Morning
           check_time 09 56 && P5C=true && NEED_PYTHON=true && echo "🚃 Toa 5: Plan 5C Morning (09:56 MMT)"
           #  10:16 / 10:18 → Report 6.1 Site Clear Today & Refuel Group 9 Read Report (10:16 MMT)
@@ -157,10 +174,9 @@ jobs:
           (check_time 10 18 || check_time 10 16) && R61=true && NEED_PYTHON=true && echo "🚃 Toa 6.1: Report 6.1 Site Clear Today (10:18 MMT)"
 
           # ═══════ 🌤️ AFTERNOON BLOCK (13:00-16:30) ═══════
-          #  13:06 → Refuel Request (🤖 Bot API)
-          check_time 13 06 && REFUEL_REQ=true && NEED_PYTHON=true && echo "🚃 Toa 8: Refuel Request (13:06 MMT)"
-          #  13:11 → Refuel Plan (Combined Report) (📱 Telethon)
-          check_time 13 11 && REFUEL_P1=true && NEED_PYTHON=true && echo "🚃 Toa 9: Refuel Plan Combined (13:11 MMT)"
+          #  13:06 → [DISABLED] Refuel Request đã gộp vào Toa 9 Refuel Plan Combined
+          #  14:11 → Refuel Merged Report (📱 Telethon)
+          check_time 14 11 && REFUEL_P1=true && NEED_PYTHON=true && echo "🚃 Toa 9: Refuel Merged Report (14:11 MMT)"
           #  14:16 / 14:18 → Report 6.1 Site Clear Today (🤖 Bot API)
           (check_time 14 18 || check_time 14 16) && R61=true && NEED_PYTHON=true && echo "🚃 Toa 6.1: Report 6.1 Site Clear Today (14:18 MMT)"
           #  14:56 / 14:58 → Report 6 Read Report (Ca 2) (📱 Telethon)
@@ -168,7 +184,7 @@ jobs:
           #  15:26 → Plan 5C Evening (📱 Telethon)
           check_time 15 26 && P5C=true && NEED_PYTHON=true && echo "🚃 Toa 5: Plan 5C Evening (15:26 MMT)"
           #  15:46 → Reports 1,2,3 + BOD (🤖 Bot API)
-          check_time 15 46 && R1234=true && BOD=true && REFUEL_REQ=true && NEED_PYTHON=true && echo "🚃 Toa 1+8+11: Reports 1-3 + BOD + Refuel Req (15:46 MMT)"
+          check_time 15 46 && R1234=true && BOD=true && NEED_PYTHON=true && echo "🚃 Toa 1+11: Reports 1-3 + BOD (15:46 MMT)"
           #  15:51 → Report 4 (Daily EOD Task & Stats) — TOA 12 RIÊNG (+5 phút)
           check_time 15 51 && R4=true && NEED_PYTHON=true && echo "🚃 Toa 12: Report 4 EOD Task (15:51 MMT)"
           #  15:56 → Cable Daily Report [ĐÃ HỦY THEO YÊU CẦU NGƯỜI DÙNG]
@@ -178,8 +194,7 @@ jobs:
           # ═══════ 🌙 EVENING BLOCK (17:00-22:30) ═══════
           #  17:16 / 17:18 → Report 6 & Report 6.1
           (check_time 17 18 || check_time 17 16) && R6=true && R61=true && NEED_PYTHON=true && echo "🚃 Toa 6+6.1: Report 6 + Report 6.1 Site Clear Today (17:18 MMT)"
-          #  18:06 → Refuel Plan (Combined Report)
-          check_time 18 06 && REFUEL_P1=true && NEED_PYTHON=true && echo "🚃 Toa 9: Refuel Plan Combined (18:06 MMT)"
+          #  18:06 → [DISABLED] Refuel — chuyển sang 20:56
           #  18:41 → Report 5 (Daily Plan - Ca Chiều / EOD Plan vs Actual) (📱 Telethon)
           check_time 18 41 && P5A=true && NEED_PYTHON=true && echo "🚃 Toa 3: Report 5 Daily Plan EOD (18:41 MMT)"
           #  19:11 → Report 5 (Daily Plan - Ca Tối / Plan Update) (📱 Telethon)
@@ -188,8 +203,8 @@ jobs:
           check_time 19 41 && R6=true && NEED_PYTHON=true && echo "🚃 Toa 6: Report 6 Read (19:41 MMT)"
           #  20:26 → Refuel Group 9 Read Report (Sent to Bot 2)
           check_time 20 26 && REFUEL_READ=true && NEED_PYTHON=true && echo "🚃 Toa Refuel Read: Refuel Group 9 Read Report (20:26 MMT)"
-          #  21:36 → Refuel Plan (Combined Report + Members Not Joined) (📱 Telethon)
-          check_time 21 36 && REFUEL_P1=true && REFUEL_P4=true && NEED_PYTHON=true && echo "🚃 Toa 9+11: Refuel Plan Combined + Members (21:36 MMT)"
+          #  20:56 → Refuel Merged Report + Members Not Joined (📱 Telethon)
+          check_time 20 56 && REFUEL_P1=true && REFUEL_P4=true && NEED_PYTHON=true && echo "🚃 Toa 9+11: Refuel Merged + Members (20:56 MMT)"
           #  22:06 → Plan 5C Evening
           check_time 22 06 && P5C=true && NEED_PYTHON=true && echo "🚃 Toa 5: Plan 5C Evening (22:06 MMT)"
 

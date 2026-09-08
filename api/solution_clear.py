@@ -1,4 +1,4 @@
-﻿import requests
+import requests
 from http.server import BaseHTTPRequestHandler
 import json
 import logging
@@ -6,7 +6,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-GAS_SOLUTION_CLEAR_URL = "https://script.google.com/macros/s/AKfycbw-QYNefq1xX-kWS9zUzJCWUkiPh1fNbE2ANmw4p-LEx9QYbom5NHgLzr-Rk0BgZZMg4A/exec"
+GAS_SOLUTION_CLEAR_URL = "https://script.google.com/macros/s/AKfycbyatJQAAHIG4jKHbc4zy-AoTiMHpXSzBm_3SpL8eap5duYCHqNSSKBKyOAmT82XTzgYog/exec"
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
