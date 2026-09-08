@@ -1,5 +1,6 @@
 """
 cron_send.py — GitHub Actions Cron Job: gửi task remain + management report.
+# v20260907-All-field-fix: All:total/done added to fmt_period in build_asset_msg & build_team_asset_msg
 Dùng 3 bot theo dải row trong sheet Task remain (gid=133591305):
   Row 4-32:  @TNIREPORTTASK_BOT        (nhân viên)
   Row 33-59: SEND_BOT                  (team leaders)
@@ -705,14 +706,14 @@ def build_team_asset_msg(team_key, now_str, asset_data):
         """Total /Done — space trước / để Telegram tự highlight xanh"""
         return f"{s.get('total',0)} /{s.get('done',0)}"
 
-    def fmt_period(s):
+    def fmt_period_short(s):
+        """3Day/7Day/Month - không có All: để tránh line quá dài"""
         return (
             f"3Day: {s.get('d2',0)} /{s.get('done_d2',0)}"
             f" | {s.get('d1',0)} /{s.get('done_d1',0)}"
             f" | {s.get('d0',0)} /{s.get('done_d0',0)}"
             f"  7Day: {s.get('d6',0)} /{s.get('done_d6',0)}"
             f"  Month: {s.get('d15',0)} /{s.get('done_d15',0)}"
-            f"  All: {s.get('total',0)} /{s.get('done',0)}"
         )
 
     PERIOD_KEYS = ["d0","d1","d2","d6","d15","done_d0","done_d1","done_d2","done_d6","done_d15","total","done"]
@@ -722,7 +723,7 @@ def build_team_asset_msg(team_key, now_str, asset_data):
         sq = get_action_square(at)
         val = fmt(stats.get(at,{}).get(team_key,{}))
         key_lines.append(f"   {sq} {at}: {val}")
-    
+
     # Calculate period totals for this team
     team_total = {k: 0 for k in PERIOD_KEYS}
     for at in action_types:
@@ -734,7 +735,8 @@ def build_team_asset_msg(team_key, now_str, asset_data):
         f"📦 4d. Asset progress for material – {t_name} – {now_str}",
         "━━━━━━━━━━━━━━━━━━━━"
     ] + key_lines + [
-        f"   📅 {fmt_period(team_total)}"
+        f"   📅 {fmt_period_short(team_total)}",
+        f"   📊 All: {team_total.get('total',0)} /{team_total.get('done',0)}"
     ]
     return "\n".join(lines)
 
