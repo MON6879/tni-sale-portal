@@ -423,33 +423,19 @@ def setup_bot_menu_commands():
         {"command": "myolt",        "description": "All Site have OLT"},
         {"command": "mysn",         "description": "All SN you control"},
         {"command": "mydata",       "description": "All your personal stats"},
-        {"command": "daily",        "description": "Daily Result template"},
-        {"command": "daily_result", "description": "Daily Result template"},
         {"command": "help",         "description": "Show help menu"},
     ]
 
     # ── Build per-group menu dynamically from ETA_GROUP_CONFIG ───────────────
-    # Chỉ giữ Plan Template theo từng team (ETA Site Down đã gửi tự động theo giờ, không đưa vào menu)
     team_groups = {}
     for chat_id_str, cfg in ETA_GROUP_CONFIG.items():
-        t_key   = cfg["team"]       # "T1"
-        t_num   = t_key[1:]         # "1"
-        subs    = cfg["subteams"]   # ["S1"] hoặc []
+        t_key   = cfg["team"]
+        t_num   = t_key[1:]
+        subs    = cfg["subteams"]
         label   = cfg["label"]
 
         grp_cmds = []
-        # Plan main team
-        grp_cmds.append({"command": f"plan_t{t_num}", "description": f"Plan Template - {t_key}"})
-        # Plan subteams
-        for s in subs:
-            s_num = s[1:]
-            grp_cmds.append({"command": f"plan_t{t_num}_s{s_num}", "description": f"Plan Template - {t_key} {s}"})
-
         team_groups[chat_id_str] = grp_cmds
-
-    common_group = [
-        {"command": "daily", "description": "Daily Result template"},
-    ]
     try:
         base_url = f"https://api.telegram.org/bot{TOKEN}/setMyCommands"
         del_url = f"https://api.telegram.org/bot{TOKEN}/deleteMyCommands"
@@ -1933,10 +1919,9 @@ def handle(update: dict) -> None:
     if user.get("is_bot"):
         return
 
-    # ── PHOTO ──────────────────────────────────────────────────────────────
+    # ── PHOTO (Daily Result photo collection handed over exclusively to Bot 1C) ──
     if "photo" in msg:
-        file_id = msg["photo"][-1]["file_id"]
-        submit_photo(chat_id, user_id, file_id)
+        # Bot 3D ignores photo uploads — handled exclusively by Bot 1C (@TNICLEARSITEBOT)
         return
 
     text = (msg.get("text") or "").strip()
@@ -2111,49 +2096,14 @@ def handle(update: dict) -> None:
             tg_send(chat_id, f"✅ <b>Attendance saved ({time_str})</b> — Recorded {count} staff to Sheet.")
             return
 
-    # ── 1. DAILY PLAN SUBMIT (PRIORITY #1: Process plan BEFORE SSOT classify to prevent TNI code hijacking) ──
+    # ── 1. DAILY PLAN SUBMIT (Chuyển sang Bot 1C @TNICLEARSITEBOT đảm nhiệm duy nhất) ──
     if is_daily_plan(clean_text) or is_daily_plan(text):
-        # 🛑 Bỏ qua edited_message — chỉ thu thập lần đầu, không lặp khi TL sửa bài
-        if update.get("edited_message"):
-            logger.info("Skipping edited_message for Daily Plan — no re-collection")
-            return
+        logger.info("[3D] Skip collecting Daily Plan — handled exclusively by Bot 1C")
+        return
 
-        msg_id = msg.get("message_id")
-        if msg_id and msg_id in _processed_plan_msg_ids:
-            logger.info(f"Skipping duplicate Daily Plan webhook msg_id={msg_id}")
-            return
-        if msg_id:
-            _processed_plan_msg_ids.add(msg_id)
-            if len(_processed_plan_msg_ids) > 500:
-                _processed_plan_msg_ids.clear()
-
-        chat_title = msg.get("chat", {}).get("title", "")
-        date_str, team_str, content = parse_plan_fields(text, chat_id, chat_title)
-        if date_str and team_str:
-            msg_date = msg.get("date")
-            now_mm = datetime.fromtimestamp(msg_date, TZ_MM) if msg_date else datetime.now(TZ_MM)
-            clean_plan_text = text.strip()
-            while clean_plan_text and re.match(r'^(?:3\.\s*)?TNI\s*PERSONAL\s*FIND\s*TASK[^\n]*\n?', clean_plan_text, re.IGNORECASE):
-                clean_plan_text = re.sub(r'^(?:3\.\s*)?TNI\s*PERSONAL\s*FIND\s*TASK[^\n]*\n?', '', clean_plan_text, flags=re.IGNORECASE).strip()
-            res = store_daily_plan_to_sheet(date_str, team_str, clean_plan_text, msg_id=msg_id, submitted_at=submitted_at)
-            ref = res.get("ref")
-            dup = res.get("duplicate", False)
-
-            if not ref or ref == "?" or "OK" in str(ref):
-                ref_show = fetch_max_plan_ref()
-            else:
-                ref_show = ref
-
-            time_str = now_mm.strftime('%H:%M:%S')
-
-            action_label = "Daily Plan (Updated)" if dup else "Daily Plan"
-            tg_send(chat_id, f"📋 <b>{action_label}</b> ✅ #<b>{ref_show}</b> | 📍 <b>{team_str}</b> | 🗓️ <b>{date_str} {time_str}</b>")
-            return
-
-    # ── 2. DAILY REPORT SUBMIT (PRIORITY #2: Process daily report BEFORE SSOT classify) ──
+    # ── 2. DAILY REPORT SUBMIT (Chuyển sang Bot 1C @TNICLEARSITEBOT đảm nhiệm duy nhất) ──
     if is_daily(clean_text) or is_daily(text):
-        msg_date = msg.get("date")
-        submit_daily(chat_id, user_id, first_name, text, msg_date)
+        logger.info("[3D] Skip collecting Daily Result — handled exclusively by Bot 1C")
         return
 
     # ── CLASSIFY QUERY VIA SSOT ENGINE FIRST ──
@@ -2217,9 +2167,9 @@ def handle(update: dict) -> None:
         for chunk in split_messages(header + reply): tg_send(chat_id, chunk)
         return
 
-    # ── DAILY REPORT SUBMIT ──
+    # ── DAILY REPORT SUBMIT (Handed over to Bot 1C) ──
     if is_daily(clean_text):
-        submit_daily(chat_id, user_id, first_name, clean_text)
+        logger.info("[3D] Skip collecting Daily Result — handled exclusively by Bot 1C")
         return
 
     # ── STAFF PERSONAL LOOKUP (mysite / mycable / mydia / mydata / myolt) ──

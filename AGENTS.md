@@ -839,7 +839,39 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 >
 > ### 🔴 RULE PM-7: GỘP MENU TELEGRAM TẬP TRUNG & SƯỞI ẤM PHẢN HỒI TỨC THÌ (ZERO BOT CONFLICT)
 > 1. **Một Bot Duy Nhất Quản Lý Menu Nhóm Chat**: Để menu khi gõ `/` hiển thị đúng thứ tự 1..6, BẮT BUỘC toàn bộ 6 loại lệnh phải được đăng ký bởi Bot 1C (`TNICLEARSITEBOT`). Bot 3D (`SEARCHTNITASKWOBOT`) BẮT BUỘC phải xóa scope chat trong các nhóm team (`deleteMyCommands`) để không đè menu hay trả lời trùng lặp.
-> 2. **Bot 3D Bỏ Phản Hồi Template Plan/Daily nhưng Giữ Thu Thập**: Bot 3D bỏ hoàn toàn việc trả lời lệnh `/plan` và `/daily` (để Bot 1C gửi mẫu). Tuy nhiên, cơ chế lắng nghe thu thập dữ liệu (Collector) của Bot 3D (`store_daily_plan_to_sheet`, `submit_daily`) VẪN GIỮ NGUYÊN 100% để đồng bộ song song với Bot 1C.
+> 2. **Bot 3D Bỏ Hẳn Plan và Daily Result — Chuyển Giao Trọn Vẹn Sang Bot 1C**: Bot 3D bỏ hoàn toàn việc trả lời lệnh `/plan`, `/daily` VÀ bỏ hẳn cơ chế thu thập Plan / Daily Result trong group để tránh phản hồi trùng lặp. Bot 1C là bot duy nhất gửi template và thu thập đồng bộ.
 > 3. **Sưởi Ấm (Keepalive) Toa 0 Cho Cả 1C**: Để Bot 1C phản hồi nhanh như 3D (dưới 1 giây, tránh cold start của Apps Script và Vercel Serverless), BẮT BUỘC phải ping cả Vercel Proxy `api/solution_clear` và Web App GAS của 1C trong Toa 0 Keepalive (`train_5min.yml`) mỗi 5 phút một lần.
+
+---
+
+# 📸 POST-MORTEM RULE — 08/09/2026: DAILY RESULT 10-MIN PHOTO WINDOW & SINGLE FOLDER LINK POLICY (GHẾ DAILY-REPORT-COLLECTOR)
+
+> ### Nguồn gốc: **Ghế Daily Report Collector** (`daily_report_collector.gs` @407 / `search_bot.py`)
+> - **Vấn đề thực tế (08/09/2026)**: Khi nhân viên nộp Daily Result, hệ thống lưu ảnh bằng cách dàn trải link ảnh lẻ vào từng cột (Col S `Photo 1` -> Col X `Photo 6`) và không có giới hạn thời gian nhận ảnh (không có window expiry). Điều này dẫn tới 3 hạn chế nghiêm trọng: (1) Quản lý muốn tải ảnh về phải click từng link ảnh lẻ 6 lần rất mất thời gian; (2) Ảnh gửi sau nhiều giờ hoặc nhiều ngày vẫn vô tình bị gắn vào dòng cũ do không đóng phiên; (3) Khi nhân viên nộp lần 2 thì ảnh không phân định được thuộc lần 1 hay lần 2.
+> - **Nguyên nhân gốc (Root Cause)**: Hàm `handleDailyPhoto` tìm 50 dòng gần nhất khớp `tgId` rồi ghi link file Drive riêng lẻ vào cột ảnh trống đầu tiên, không có cơ chế timeout theo phiên gửi text, không gom vào thư mục con của lần submit.
+>
+> ### 🔴 RULE PM-8: THU THẬP HÌNH ẢNH DAILY RESULT VÀO 1 FOLDER DRIVE RIÊNG VÀ KHÓA CỬA SỔ 10 PHÚT THEO ID
+> 1. **Cửa Sổ Nhận Ảnh Khóa Cứng 10 Phút Theo ID**: Sau khi nhân viên (Telegram ID) gửi text Daily Result, hệ thống mở cửa sổ nhận ảnh đúng **10 phút** (`DAILY_WIN_EXPIRY_{tgId}`). Quá 10 phút BẮT BUỘC từ chối nhận ảnh cho ID đó (`📷 ❌ Photo window expired (>10 mins after text)`).
+> 2. **Gom Toàn Bộ Ảnh Vào 1 Thư Mục Drive Duy Nhất**: Tất cả ảnh gửi trong 10 phút được lưu vào 1 thư mục Google Drive riêng của lần báo cáo đó (`1 VCM BRANCH TNI / 2.5 Daily report and Businesstrip Telegram / [tgId] / [YYYYMMDD_HHmm]_REF[ref]`).
+> 3. **Ghi 1 Link Thư Mục Duy Nhất Vào Cột S**: Trên Google Sheet tab `Daily report and Bussiness`, Cột S (`Photo Folder`) CHỈ ghi 1 link duy nhất dẫn đến thư mục Drive để quản lý bấm "Download all" 1 lần. TUYỆT ĐỐI KHÔNG dàn trải link lẻ sang 6 cột Photo 1-6.
+> 4. **Hỗ Trợ Nộp Lần 2 (Reset Window & Thư Mục Mới)**: Nếu cùng 1 ID gửi text Daily Result lần 2, hệ thống tự động reset cửa sổ 10 phút mới cho lần 2 và tạo thư mục Drive riêng biệt mới cho REF lần 2.
+
+---
+
+# 🔒 POST-MORTEM RULE — 08/09/2026: ĐỘC QUYỀN BOT 1C CHO PLAN & DAILY RESULT (ZERO 3D DUPLICATION & STRICT ARITY INTEGRITY) (PM-9)
+
+> ### Nguồn gốc: **Ghế Bot-1C (Solution Clear @48)** + **Ghế Search-3D (Task & WO v4.3)**
+> - **Yêu cầu thực tế (08/09/2026)**: "Bỏ hẳn 3D Plan và Daily result đi không chỉ có 1C thôi và đồng bộ thu thập chưa?"
+> - **Nguyên nhân gốc (Root Cause)**: 
+>   1. Khi nhân viên nộp bài Plan hoặc Daily Result vào nhóm, Bot 3D (`search_bot.py`) vẫn chạy khối `is_daily_plan` và `is_daily`, gọi Main GAS và gửi thêm 1 tin nhắn xác nhận ra nhóm, dẫn đến 2 Bot (1C và 3D) cùng thu thập và spam 2 tin phản hồi trùng lặp.
+>   2. Hàm `syncDailyResultToMainGas_` trong Bot 1C khai báo 5 tham số (`text, senderId, senderName, chatId, msgDate`) nhưng tại `doPost` chỉ gọi với 4 đối số (`rawText, senderName, chatId, message.date`), làm lệch toàn bộ vị trí tham số (`chatId` nhận giá trị timestamp `message.date`), khiến Telegram API trả về lỗi 400 Bad Request và không gửi được tin xác nhận ra nhóm.
+>   3. Bot 1C có dòng `rawText.replace(/@\w+/g, "")` dẫn đến việc xử lý nhầm các lệnh có tag bot khác (ví dụ `/daily_result@SEARCHTNITASKWOBOT`).
+>
+> ### 🔴 RULE PM-9: PHÂN ĐỊNH ĐỘC QUYỀN BOT XỬ LÝ NHIỆM VỤ & KHÓA CHẶT THAM SỐ GỌI HÀM VÀ BOT TAG TARGETING
+> 1. **Độc Quyền 1 Bot Duy Nhất Đảm Nhiệm (Single Dedicated Bot Ownership)**: Kể từ 08/09/2026, **CHỈ CÓ DUY NHẤT Bot 1C (`TNICLEARSITEBOT`)** đảm nhiệm toàn bộ quy trình Plan và Daily Result (bao gồm: gửi template, thu thập dữ liệu vào Sheet SSOT, gửi xác nhận REF, và nhận ảnh trong cửa sổ 10 phút). Bot 3D (`SEARCHTNITASKWOBOT`) **BỎ HẲN 100%**: không đăng ký lệnh menu, không phản hồi lệnh template, không thu thập và không gửi bất kỳ tin nhắn nào liên quan đến Plan / Daily Result ra nhóm.
+> 2. **Khóa Chặt Số Lượng Tham Số Gọi Hàm (Strict Function Arity Integrity)**: Khi gọi hàm sync webhook nội bộ trong GAS (như `syncDailyResultToMainGas_`), BẮT BUỘC phải đối chiếu 100% thứ tự và số lượng tham số khai báo (`text, senderId, senderName, chatId, msgDate`). TUYỆT ĐỐI CẤM thiếu tham số (đặc biệt là `senderId`), tránh làm trôi biến khiến `chatId` nhận nhầm giá trị timestamp dẫn đến Telegram API trả về lỗi 400.
+> 3. **Bỏ Qua Lệnh Tag Hướng Tới Bot Khác (Strict Bot Tag Guard)**: Khi Bot nhận lệnh có định dạng `/<cmd>@<bot_username>`, nếu `<bot_username>` không khớp chính xác với username của Bot (ví dụ `@TNICLEARSITEBOT`), Bot BẮT BUỘC phải bỏ qua (ignore) ngay lập tức, TUYỆT ĐỐI KHÔNG strip bỏ `@...` rồi tự tiện xử lý câu lệnh của bot khác.
+
+
 
 
