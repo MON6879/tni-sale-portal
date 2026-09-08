@@ -1171,7 +1171,7 @@ def find_plans_for_date(plans: list, target_date_str: str, team_filter: str = No
 def calc_3day_completion_rate(all_plans: list, team_comparisons: dict,
                                team_reports_all: dict = None) -> dict:
     """
-    Tính tỉ lệ hoàn thành kế hoạch 3 ngày gần nhất (không tính hôm nay nếu chưa hết ngày).
+    Tính tỉ lệ hoàn thành kế hoạch 3 ngày (hôm nay + 2 ngày trước), hiển thị mới nhất ở trên cùng.
     Returns per-team + overall:
     {
       "T1": {"days": [{date, plan_count, done_count, pct}, ...], "total_plan", "total_done", "pct"},
@@ -1191,7 +1191,7 @@ def calc_3day_completion_rate(all_plans: list, team_comparisons: dict,
         team_plan_total = 0
         team_done_total = 0
 
-        for days_ago in range(3, 0, -1):  # d3, d2, d1 (3 ngày trước hôm nay)
+        for days_ago in range(0, 3):  # d0, d1, d2 — hôm nay trên cùng, cũ nhất dưới cùng
             target_dt = today_start - timedelta(days=days_ago)
             target_str = target_dt.strftime("%d/%m/%Y")
 
@@ -1409,7 +1409,7 @@ async def run_eod_or_update(mode: str):
             emps      = team_emp_map.get(group_key, [])  # danh sách nhân viên
 
             lines = [
-                f"📋 5. Report — Daily Plan & Results ({date_str}) — {team_name}",
+                f"📋 5. Report [{mode_label}] — Daily Plan & Results ({date_str}) — {team_name}",
                 f"📅 {date_str}  |  🕐 {now.strftime('%H:%M')}",
                 f"📌 Comparison of plan for {date_str} vs actual completed stations.",
                 divider,
@@ -1549,8 +1549,8 @@ async def run_eod_or_update(mode: str):
             except Exception as del_err:
                 logger.warning(f"Delete old msg error {group_key}: {del_err}")
             try:
-                tg_delete_by_title(str(chat_id), f"📋 5.1 Report — Plan", bot_token=SEND_BOT_TOKEN)
-                tg_delete_by_title(str(chat_id), f"📋 5. Report — Daily Plan", bot_token=SEND_BOT_TOKEN)
+                # Chỉ xóa đúng tin của mode này — KHÔNG xóa chéo sang 5.1 morning hay mode khác
+                tg_delete_by_title(str(chat_id), f"📋 5. Report [{mode_label}]", bot_token=SEND_BOT_TOKEN)
             except Exception: pass
             ok, msg_ids = await send_msg(bot, chat_id, msg, f"PLAN-{mode_label}-{group_key}")
             if ok and msg_ids:
@@ -1559,7 +1559,7 @@ async def run_eod_or_update(mode: str):
 
         # ── 5b. Send consolidated report to CONTROL ──
         ctrl_lines = [
-            f"📋 5. Report — Daily Plan & Results ({date_str}) — Summary",
+            f"📋 5. Report [{mode_label}] — Daily Plan & Results ({date_str}) — Summary",
             f"📅 {date_str}  |  🕐 {now.strftime('%H:%M')}",
             f"📌 Comparison of plan for {date_str} vs actual completed stations.",
             divider,
@@ -1652,8 +1652,8 @@ async def run_eod_or_update(mode: str):
         except Exception as del_err:
             logger.warning(f"Delete old msg error CONTROL: {del_err}")
         try:
-            tg_delete_by_title(str(CONTROL_CHAT_ID), f"📋 5.1 Report — Plan", bot_token=SEND_BOT_TOKEN)
-            tg_delete_by_title(str(CONTROL_CHAT_ID), f"📋 5. Report — Daily Plan", bot_token=SEND_BOT_TOKEN)
+            # Chỉ xóa đúng tin của mode này — KHÔNG xóa chéo sang 5.1 morning hay mode khác
+            tg_delete_by_title(str(CONTROL_CHAT_ID), f"📋 5. Report [{mode_label}]", bot_token=SEND_BOT_TOKEN)
         except Exception: pass
         ok, msg_ids = await send_msg(bot, CONTROL_CHAT_ID, ctrl_msg, f"PLAN-{mode_label}-CONTROL")
         if ok and msg_ids:
@@ -1666,11 +1666,8 @@ async def run_morning():
     """Run morning report mode."""
     now = myanmar_now()
     now_str = now.strftime("%d/%m/%Y %H:%M")
-    # Sau 14:00 MMT trong ngày → Tự động nhảy cộng +1 ngày để làm Plan cho ngày mai
-    if now.hour >= 14:
-        target_date = now + timedelta(days=1)
-    else:
-        target_date = now
+    # Report 5.1 luôn luôn là báo cáo Plan của ngày hôm nay (today)
+    target_date = now
     date_str = target_date.strftime("%d/%m/%Y")
     delete_prefix = "PLAN_MRN"
 
@@ -1681,22 +1678,24 @@ async def run_morning():
     all_plans = get_daily_plans()
     logger.info(f"  📊 Total plans loaded from sheet: {len(all_plans)}")
 
-    plan_today_status = {}  # canonical_team -> {found, sent_time, content, plan, from_sheet}
+    plan_today_status = {}  # canonical_team -> {found, plans, sent_time, content, plan, from_sheet}
     for tm in ALL_CANONICAL_TEAMS:
         tm_plans = find_plans_for_date(all_plans, date_str, team_filter=tm)
         if tm_plans:
             sp = tm_plans[0]
             plan_today_status[tm] = {
                 "found": True,
+                "plans": tm_plans,          # ALL plans (not just first)
                 "sent_time": fmt_sent_at(sp.get("submitted_at") or sp.get("date", "")),
                 "content": sp.get("content", ""),
                 "plan": sp,
                 "from_sheet": True,
             }
-            logger.info(f"  ✅ {tm}: Plan found in Sheet (REF: {sp.get('ref', '?')})")
+            logger.info(f"  ✅ {tm}: {len(tm_plans)} plan(s) found in Sheet (REF: {sp.get('ref', '?')})")
         else:
             plan_today_status[tm] = {
                 "found": False,
+                "plans": [],
                 "sent_time": "",
                 "content": "",
                 "plan": None,
@@ -1735,23 +1734,27 @@ async def run_morning():
                 divider,
             ]
 
-            # Plan today status per subteam
-            lines.append(f"📝 Plan for {date_str}:")
+            # ── Plans submitted today (ALL subteams, ALL plans from sheet) ──
+            lines.append(f"📝 Plans for {date_str}:")
             for st in subteams:
-                pt = plan_today_status.get(st, {"found": False})
+                pt = plan_today_status.get(st, {"found": False, "plans": []})
                 if pt["found"]:
-                    sent_at = pt.get("sent_time", "")
-                    sent_text = f" (sent at {sent_at})" if sent_at else " (recorded in sheet)"
-                    lines.append(f"🏷️ <b>{st}:</b> ✅ Plan Submitted ✓{sent_text}")
-                    lines.append("")
-                    lines.append(f"📋 <b>Plan Content ({st}):</b>")
-                    plan_content = clean_plan_content(pt["content"])
-                    if len(plan_content) > 1500:
-                        plan_content = plan_content[:1500].rsplit("\n", 1)[0] + "\n... [see full plan in group]"
-                    lines.append(colorize_bullets(plan_content))
-                    lines.append("")
+                    all_st_plans = pt.get("plans") or ([pt["plan"]] if pt.get("plan") else [])
+                    for plan_item in all_st_plans:
+                        sent_at = fmt_sent_at(
+                            plan_item.get("submitted_at") or plan_item.get("date", "")
+                        )
+                        sent_text = f" (sent at {sent_at})" if sent_at else " (recorded in sheet)"
+                        lines.append(f"🏷️ {st}: ✅ Submitted ✓{sent_text}")
+                        lines.append("")
+                        lines.append(f"📋 Plan Content ({st}):")
+                        plan_content = clean_plan_content(plan_item.get("content", ""))
+                        if len(plan_content) > 1500:
+                            plan_content = plan_content[:1500].rsplit("\n", 1)[0] + "\n... [see full plan in group]"
+                        lines.append(colorize_bullets(plan_content))
+                        lines.append("")
                 else:
-                    lines.append(f"🏷️ <b>{st}:</b> ⚠️ Not yet submitted (Deadline: before 07:00)")
+                    lines.append(f"🏷️ {st}: ⚠️ Not yet submitted (Deadline: before 07:00)")
 
             # Submission history
             lines.append(divider)
@@ -1782,6 +1785,21 @@ async def run_morning():
 
             lines.append(divider)
 
+            # ── Plan submission status for target date (deadline section) ──
+            lines.append(f"📅 Plan for {date_str} — Submission Status:")
+            for st in subteams:
+                pt = plan_today_status.get(st, {"found": False})
+                if pt["found"]:
+                    sent_at = pt.get("sent_time", "")
+                    ok_text = f" ✓ (sent at {sent_at})" if sent_at else " ✓"
+                    lines.append(f"   ✅ {st}: Submitted{ok_text}")
+                else:
+                    lines.append(
+                        f"   ⚠️ {st}: NOT SUBMITTED"
+                        f" — Deadline: before 07:00 on {date_str}"
+                    )
+            lines.append(divider)
+
             msg = "\n".join(lines)
             delete_key = f"{delete_prefix}_{group_key}"
             try:
@@ -1789,8 +1807,8 @@ async def run_morning():
             except Exception as del_err:
                 logger.warning(f"Delete old msg error {group_key}: {del_err}")
             try:
-                tg_delete_by_title(str(chat_id), f"📋 5.1 Report — Plan", bot_token=SEND_BOT_TOKEN)
-                tg_delete_by_title(str(chat_id), f"5.1 Report — Plan", bot_token=SEND_BOT_TOKEN)
+                # Chỉ xóa đúng tin morning 5.1 — KHÔNG xóa chéo EOD [EOD] hay [Updated]
+                tg_delete_by_title(str(chat_id), "📋 5.1 Report — Plan", bot_token=SEND_BOT_TOKEN)
             except Exception: pass
             ok, msg_ids = await send_msg(bot, chat_id, msg, f"PLAN-MRN-{group_key}")
             if ok and msg_ids:
@@ -1850,8 +1868,8 @@ async def run_morning():
         except Exception as del_err:
             logger.warning(f"Delete old msg error CONTROL morning: {del_err}")
         try:
-            tg_delete_by_title(str(CONTROL_CHAT_ID), f"📋 5.1 Report — Plan", bot_token=SEND_BOT_TOKEN)
-            tg_delete_by_title(str(CONTROL_CHAT_ID), f"5.1 Report — Plan", bot_token=SEND_BOT_TOKEN)
+            # Chỉ xóa đúng tin morning 5.1 — KHÔNG xóa chéo EOD [EOD] hay [Updated]
+            tg_delete_by_title(str(CONTROL_CHAT_ID), "📋 5.1 Report — Plan", bot_token=SEND_BOT_TOKEN)
         except Exception: pass
         ok, msg_ids = await send_msg(bot, CONTROL_CHAT_ID, ctrl_msg, "PLAN-MRN-CONTROL")
         if ok and msg_ids:
