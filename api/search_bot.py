@@ -532,14 +532,11 @@ def get_eta_site_down(team_filter="ALL"):
 
 def get_eta_share_templates(team_filter="ALL"):
     """Build pre-filled ETA update templates per team/subteam.
-    Sections (7):
+    Sections (4):
       1.1 🔴 Cell Down                 (Parsed from Col C alarm breakdown)
       1.2 ⚙️ DG Abnormal              (Parsed from Col C alarm breakdown)
-      1.3 ❌ DG Run>16H               (Parsed from Col C alarm breakdown)
-      1.4 🔋 Battery Temperature High (Parsed from Col C alarm breakdown)
-      1.5 💨 Smoke                    (Parsed from Col C alarm breakdown)
-      1.6 🚪 DOOR                     (Parsed from Col C alarm breakdown)
-      1.7 📡 Site Down                (Parsed from Col E site down list)
+      1.3 ❌ DG Run >16H               (Parsed from Col C alarm breakdown)
+      1.4 📡 Site Down                (Parsed from Col E site down list)
     Returns list of (team_name, template_text).
     """
     try:
@@ -562,12 +559,9 @@ def get_eta_share_templates(team_filter="ALL"):
             ("1.1", "🔴", "Cell Down",                r'Cell down:\s*(?:[*/]\d+.*?[=:])\s*(.*?)(?:\|\s*DG|\s*$)'),
             ("1.2", "⚙️", "DG Abnormal",             r'DG Abnormal:\s*(?:[*/]\d+.*?[=:])\s*(.*?)(?:\|\s*DG Run|\s*$)'),
             ("1.3", "❌", "DG Run >16H",              r'DG Run\s*>?\s*16H?:\s*(?:[*/]\d+.*?[=:])\s*(.*?)(?:\|\s*Link|\s*$)'),
-            ("1.4", "🔋", "Battery Temperature High",   r'Battery Temperature High:\s*(?:[*/]\d+.*?[=:])\s*(.*?)(?:\|\s*Smoke|\s*$)'),
-            ("1.5", "💨", "Smoke",                    r'Smoke:\s*(?:[*/]\d+.*?[=:])\s*(.*?)(?:\|\s*DOOR|\s*$)'),
-            ("1.6", "🚪", "DOOR",                     r'DOOR:\s*(?:[*/]\d+.*?[=:])\s*(.*?)(?:\|\s*Duty|\s*$)'),
         ]
 
-        # Parse 1.7 Site Down per team from rows 5+ (Col E & Col G)
+        # Parse 1.4 Site Down per team from rows 5+ (Col E & Col G)
         sd_by_team = {"T1": [], "T2": [], "T3": [], "T4": []}
         for i in range(5, len(rows)):
             row = rows[i]
@@ -597,7 +591,7 @@ def get_eta_share_templates(team_filter="ALL"):
 
             lines = [f"📋 {t_name} — ETA Update {update_ts}"]
 
-            # 1.1 to 1.6 from Col C
+            # 1.1 to 1.3 from Col C
             for num, icon, label, pat in alarm_patterns:
                 m = re.search(pat, c_text, re.IGNORECASE)
                 items = []
@@ -612,13 +606,13 @@ def get_eta_share_templates(team_filter="ALL"):
                     lines.append(f"{num} {icon} {label}:")
                     lines.append("• (none)")
 
-            # 1.7 Site Down from Col E/G
+            # 1.4 Site Down from Col E/G
             sd_items = sd_by_team.get(t_name, [])
             if sd_items:
-                lines.append(f"1.7 📡 Site Down: {len(sd_items)} site")
+                lines.append(f"1.4 📡 Site Down: {len(sd_items)} site")
                 lines.extend([f"• {c} + FT + ETA:" for c in sd_items])
             else:
-                lines.append("1.7 📡 Site Down:")
+                lines.append("1.4 📡 Site Down:")
                 lines.append("• (none)")
 
             results.append((t_name, "\n".join(lines)))
