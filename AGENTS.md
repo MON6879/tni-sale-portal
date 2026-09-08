@@ -729,3 +729,104 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 > - **Lỗi gốc (07/09/2026)**: Code cũ UPDATE existing rows TRƯỚC rồi INSERT new rows. Sau `insertRowsBefore(2, N)`, existing rows bị đẩy xuống N dòng nhưng map `keyToSheetRow` vẫn trỏ row số cũ → UPDATE ghi đè sai dòng, corrupt dữ liệu.
 > - **Fix bắt buộc**: Tách 2 danh sách `insertRows[]` và `updateOps[]`. **INSERT trước toàn bộ**, **UPDATE sau với `correctedRow = sheetRow + insertRows.length`**. TUYỆT ĐỐI CẤM UPDATE row index cũ sau khi đã gọi `insertRowsBefore`.
 > - **Áp dụng cho**: Mọi hàm GAS UPSERT dùng `insertRowsBefore()` để chèn dữ liệu mới lên đầu sheet (Read Group, Cable, Refuel, MDG, Attendance v.v.).
+
+---
+
+# POST-MORTEM RULES — 07/09/2026: TELEGRAM LINE-TOO-LONG → TIMESTAMP OVERLAP (TOA 12 / GHẾ ASSET-4D)
+
+> ### Nguồn gốc: **Toa 12 — Ghế Asset-4d** (`cron_send.py` → `build_team_asset_msg()`)
+> - **Toa 12** (`train_5min.yml`): Chạy **05:51 và 15:51 MMT**, gửi Report 4 (EOD Task & Stats + Asset 4d + Note). Lệnh: `python cron_send.py` hoặc `python cron_send.py --asset_only`.
+> - **Ghế Asset-4d**: Hàm `build_team_asset_msg()` trong `cron_send.py` — gửi báo cáo '4d. Asset progress for material – TeamX' tới từng nhóm team riêng (T1/T2/T3/T4 PLAN-ALARM groups).
+> - **Phát hiện**: 08/09/2026 — sau 3 giờ điều tra, 4 lần chạy workflow vẫn không thấy `All:` trên Telegram.
+
+> ### RULE PM-4: TELEGRAM DÒNG THỐNG KÊ — CẤM ĐỂ `All:/Total:` CUỐI DÒNG QUÁ DÀI (>45 KÝ TỰ), BẮT BUỘC XUỐNG DÒNG RIÊNG
+
+> - **Root Cause chính xác**: `build_team_asset_msg()` nối `All: X /Y` vào CUỐI chuỗi stats ~65 ký tự trên cùng 1 dòng. Telegram **wrap** dòng dài đó xuống dòng mới. Phần `All: 14/3` bị đẩy xuống dòng cuối bubble và **trùng vị trí với timestamp** (ví dụ `21:41` ở bottom-right) → người dùng không thấy `All:` dù code đã đúng 100%. Lỗi không phải code, không phải GHA cache, không phải GAS — mà là **Telegram UI line-wrap + timestamp overlap**.
+> - **Rule bắt buộc**: Khi viết hàm sinh báo cáo Telegram có dòng tóm tắt thống kê dài >45 ký tự, BẮT BUỘC tách các field quan trọng (`All:`, `Total:`, `Grand:`) ra **DÒNG RIÊNG** bằng `\n`. TUYỆT ĐỐI CẤM nối chúng vào cuối dòng stats dài.
+> - **Pattern chuẩn (dùng cho mọi toa/ghế)**:
+>   - SAI — `All:` bị timestamp che: `lines.append(f'   3Day: {d2}  7Day: {d6}  Month: {d15}  All: {total}/{done}')`
+>   - ĐÚNG — `All:` trên dòng riêng: `lines.append(f'   3Day:...Month:')` rồi `lines.append(f'   All: {total} /{done}')`
+> - **Đã fix**: **Toa 12 / Ghế Asset-4d** — `build_team_asset_msg()` trong `cron_send.py` — commit `b60e556` ✅
+> - **Cần kiểm tra các toa còn lại**:
+>   - **Toa 1+11 / Ghế Report-1,2,3**: `build_search_summary()`, `build_team_report()` trong `backlog_send.py`
+>   - **Toa 9 / Ghế Refuel**: `refuel_plan_report.py` — dòng tóm tắt tổng hợp
+>   - **Toa 5 / Ghế Plan-5C**: `daily_plan_report.py` — dòng summary cuối
+>   - **Toa 6.1 / Ghế Site-Clear**: `site_clear_report.py` — dòng count
+>   - **Toa 12 / Ghế Asset-4d CONTROL SITE**: `build_asset_msg()` — dòng grand total
+> - **Kiểm tra phòng ngừa bắt buộc**: Trước deploy bất kỳ hàm báo cáo nào, đếm ký tự dòng cuối. Nếu >45 ký tự → BẮT BUỘC tách ra dòng riêng.
+
+
+---
+
+# POST-MORTEM RULES — 07/09/2026: TELEGRAM LINE-TOO-LONG → TIMESTAMP OVERLAP (TOA 12 / GHẾ ASSET-4D)
+
+> ### Nguồn gốc: **Toa 12 — Ghế Asset-4d** (`cron_send.py` → `build_team_asset_msg()`)
+> - **Toa 12** (`train_5min.yml`): Chạy **05:51 và 15:51 MMT**, gửi Report 4 (EOD Task & Stats + Asset 4d + Note). Lệnh: `python cron_send.py` hoặc `python cron_send.py --asset_only`.
+> - **Ghế Asset-4d**: Hàm `build_team_asset_msg()` trong `cron_send.py` — gửi báo cáo '4d. Asset progress for material – TeamX' tới từng nhóm team riêng (T1/T2/T3/T4 PLAN-ALARM groups).
+> - **Phát hiện**: 08/09/2026 — sau 3 giờ điều tra, 4 lần chạy workflow vẫn không thấy `All:` trên Telegram.
+
+> ### RULE PM-4: TELEGRAM DÒNG THỐNG KÊ — CẤM ĐỂ `All:/Total:` CUỐI DÒNG QUÁ DÀI (>45 KÝ TỰ), BẮT BUỘC XUỐNG DÒNG RIÊNG
+
+> - **Root Cause chính xác**: `build_team_asset_msg()` nối `All: X /Y` vào CUỐI chuỗi stats ~65 ký tự trên cùng 1 dòng. Telegram **wrap** dòng dài đó xuống dòng mới. Phần `All: 14/3` bị đẩy xuống dòng cuối bubble và **trùng vị trí với timestamp** (ví dụ `21:41` ở bottom-right) → người dùng không thấy `All:` dù code đã đúng 100%. Lỗi không phải code, không phải GHA cache, không phải GAS — mà là **Telegram UI line-wrap + timestamp overlap**.
+> - **Rule bắt buộc**: Khi viết hàm sinh báo cáo Telegram có dòng tóm tắt thống kê dài >45 ký tự, BẮT BUỘC tách các field quan trọng (`All:`, `Total:`, `Grand:`) ra **DÒNG RIÊNG** bằng `\n`. TUYỆT ĐỐI CẤM nối chúng vào cuối dòng stats dài.
+> - **Pattern chuẩn (dùng cho mọi toa/ghế)**:
+>   - SAI — `All:` bị timestamp che: `lines.append(f'   3Day: {d2}  7Day: {d6}  Month: {d15}  All: {total}/{done}')`
+>   - ĐÚNG — `All:` trên dòng riêng: `lines.append(f'   3Day:...Month:')` rồi `lines.append(f'   All: {total} /{done}')`
+> - **Đã fix**: **Toa 12 / Ghế Asset-4d** — `build_team_asset_msg()` trong `cron_send.py` — commit `b60e556` ✅
+> - **Cần kiểm tra các toa còn lại**:
+>   - **Toa 1+11 / Ghế Report-1,2,3**: `build_search_summary()`, `build_team_report()` trong `backlog_send.py`
+>   - **Toa 9 / Ghế Refuel**: `refuel_plan_report.py` — dòng tóm tắt tổng hợp
+>   - **Toa 5 / Ghế Plan-5C**: `daily_plan_report.py` — dòng summary cuối
+>   - **Toa 6.1 / Ghế Site-Clear**: `site_clear_report.py` — dòng count
+>   - **Toa 12 / Ghế Asset-4d CONTROL SITE**: `build_asset_msg()` — dòng grand total
+> - **Kiểm tra phòng ngừa bắt buộc**: Trước deploy bất kỳ hàm báo cáo nào, đếm ký tự dòng cuối. Nếu >45 ký tự → BẮT BUỘC tách ra dòng riêng.
+
+
+---
+
+# POST-MORTEM RULES — 08/09/2026: THIEU DONG BO 2 REPO + SAI TEN WORKFLOW OPTION (PM-5)
+
+> ### Nguon goc: **Toa 12 / Ghe Asset-4d** — sua cron_send.py chi trong tni-bot, khong sync sang tni-search
+> - **Root Cause**: Fix `b60e556` chi push vao `phonghdpxd-cmd/tni-bot`. Nhung `MON6879/TNI-DONE` (tni-search) cung co `train_5min.yml` va `cron_send.py` rieng — GHA co the chay tu repo nao anh trigger. Do do tni-search chay code cu khong co `All:`.
+> - **Root Cause 2**: AI huong dan "chon Report 3.1 trong workflow" — nhung ten dung trong dropdown la **"Report 4d - Asset progress"** (da doi ten). Sai ten khien anh khong tim thay va chay nham option.
+
+> ### RULE PM-5: SAU MOI SUA CODE BAT CU FILE NAO — BAT BUOC DONG BO CA 2 REPO VA KIEM TRA DUNG TEN WORKFLOW
+
+> **A — BAT BUOC DONG BO CA 2 REPO TRUOC KHI BAO 'DA XONG' (MANDATORY DUAL-REPO SYNC)**
+> - Khi sua bat ky file nao trong `Task and WO/` (tni-bot), BAT BUOC phai:
+>   1. Push `tni-bot` (`phonghdpxd-cmd/tni-bot`) truoc
+>   2. Copy file da sua sang `tni-search/` (`MON6879/TNI-DONE`) ngay lap tuc
+>   3. Push `tni-search` ngay sau do
+>   4. CHI BAO "DA LUU DI" khi CA 2 commit deu thanh cong
+> - TUYET DOI CAM chi push 1 repo roi bao "da xong" — vi ca 2 repo deu co `train_5min.yml` va GHA co the chay tu repo nao.
+> - **Files phai dong bo ca 2 repo (bat buoc)**:
+>   - `cron_send.py` — Toa 12 / Ghe Report-4 + Asset-4d
+>   - `backlog_send.py` — Toa 1+11 / Ghe Report-1,2,3
+>   - `manual_send_ui.py` — Ghe Manual Send
+>   - `api/search_bot.py` — Ghe Search Bot
+>   - `api/solution_clear.py` — Ghe Site-Clear
+
+> **B — BAT BUOC KIEM TRA VA NOI DUNG TEN CHINH XAC TRONG WORKFLOW DROPDOWN (ZERO WRONG OPTION NAME)**
+> - Truoc khi huong dan anh "Run workflow", AI BAT BUOC phai doc file `.github/workflows/train_5min.yml` de lay chinh xac TEN OPTION trong `inputs.report_type` (vi ten co the thay doi qua cac phien).
+> - TUYET DOI CAM tu y doan ten option theo ky niem cu (vi du "Report 3.1") neu chua doc lai file yml.
+> - **Hien tai cac ten option dung** (doc tu train_5min.yml):
+>   - Asset report 4d: Doc lai trong yml truoc khi bao
+>   - Full pipeline: Doc lai trong yml truoc khi bao
+
+> **C — GHE GIAM SAT DONG BO (SYNC WATCHDOG SEAT)**
+> - Sau moi lan "Lu Di", AI BAT BUOC kiem tra: `git diff HEAD origin/main -- <file>` tren CA 2 repo.
+> - Neu diff != 0 o bat ky repo nao -> BAT BUOC push ngay, CẤM bao "da xong".
+
+---
+
+# 📅 POST-MORTEM RULE — 08/09/2026: REPORT 5.1 TARGET DATE ANCHOR POLICY (TOA 5 / GHẾ PLAN-5.1)
+
+> ### Nguồn gốc: **Toa 5 — Ghế Daily Plan 5.1** (`daily_plan_report.py` → `run_morning()`)
+> - **Lỗi thực tế (08/09/2026)**: Khi Report 5.1 chạy lúc 15:26 (ca chiều), đoạn code `if now.hour >= 14: target_date = now + timedelta(days=1)` tự động đẩy ngày báo cáo sang ngày mai (`09/09/2026`). Dẫn đến: Tiêu đề in `5.1 Report — Plan (09/09/2026)`, ngày gửi in `📅 09/09/2026 | 🕐 15:28` (dù thực tế đang là ngày 08/09), danh sách nộp plan báo toàn bộ các đội `Not yet submitted (Deadline: before 07:00 on 10/09/2026)`, và thống kê 3Day bị đảo lộn.
+> - **Nguyên nhân gốc (Root Cause)**: Code giả định sau 14:00 thì chuyển sang làm plan ngày mai, nhưng Report 5.1 thực tế là báo cáo giám sát tình hình nộp và thực thi Plan trong suốt ngày làm việc **hôm nay** (chạy các mốc 06:06, 08:28, 09:56, 15:26, 22:06).
+>
+> ### 🔴 RULE PM-6: REPORT 5.1 LUÔN NEO CHẶT VÀO NGÀY HÔM NAY (TODAY) — CẤM TỰ Ý NHẢY NGÀY
+> 1. **Target Date Luôn Là Ngày Hôm Nay**: Trong `run_morning()`, `target_date = now` và `date_str = now.strftime("%d/%m/%Y")`. **TUYỆT ĐỐI CẤM** dùng logic `now.hour >= 14: target_date = now + 1` làm trôi ngày của Report 5.1.
+> 2. **Deadline Luôn Theo Đúng Ngày Làm Việc**: Hạn nộp Plan cho ngày `date_str` là `before 07:00 on {date_str}`. **TUYỆT ĐỐI CẤM** cộng thêm 1 ngày (`next_day_str`) vào deadline của ngày làm việc đó.
+> 3. **Đồng Bộ Sang Runner Repo**: Bất kỳ sửa đổi nào trên `daily_plan_report.py` BẮT BUỘC phải đồng bộ cả sang `Task and WO` (tni-bot) và `tni-sitedown` (runner GHA) trước khi báo hoàn tất.
+
