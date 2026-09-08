@@ -872,6 +872,17 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 > 2. **Khóa Chặt Số Lượng Tham Số Gọi Hàm (Strict Function Arity Integrity)**: Khi gọi hàm sync webhook nội bộ trong GAS (như `syncDailyResultToMainGas_`), BẮT BUỘC phải đối chiếu 100% thứ tự và số lượng tham số khai báo (`text, senderId, senderName, chatId, msgDate`). TUYỆT ĐỐI CẤM thiếu tham số (đặc biệt là `senderId`), tránh làm trôi biến khiến `chatId` nhận nhầm giá trị timestamp dẫn đến Telegram API trả về lỗi 400.
 > 3. **Bỏ Qua Lệnh Tag Hướng Tới Bot Khác (Strict Bot Tag Guard)**: Khi Bot nhận lệnh có định dạng `/<cmd>@<bot_username>`, nếu `<bot_username>` không khớp chính xác với username của Bot (ví dụ `@TNICLEARSITEBOT`), Bot BẮT BUỘC phải bỏ qua (ignore) ngay lập tức, TUYỆT ĐỐI KHÔNG strip bỏ `@...` rồi tự tiện xử lý câu lệnh của bot khác.
 
+---
 
+# 🚨 POST-MORTEM RULE — 08/09/2026: CHỐNG XUNG ĐỘT PHIÊN TELETHON TRÊN GITHUB ACTIONS & BỌC THÉP SOLE RUNNER CHO SITE DOWN (RULE PM-10)
 
-
+> ### Nguồn gốc: **Phân hệ Site Down Relay** (otlookup_relay.py / otlookup_relay.yml / GitHub Secrets)
+> - **Vấn đề thực tế (08/09/2026)**: Phân hệ Site Down bị đứng từ mốc 19:38 MMT. Toàn bộ các lần chạy sau đó (19:49, 20:08, 20:38, 21:08 MMT) đều bị fail ở giây thứ 13-16 của bước Run Site Down Relay, khiến Google Sheet Site Down không cập nhật dữ liệu mới và tin báo cáo ETA phải dừng lại.
+> - **Nguyên nhân gốc (Root Cause)**: 
+>   1. Xung đột phiên Telethon MTProto RPC 406 (AuthKeyDuplicatedError): Hai runner GitHub Actions ở 2 repository khác nhau (MON6879/tni-sitedown-relay và MON6879/TNI-DONE) đều cấu hình chạy workflow otlookup_relay.yml với cùng một TELEGRAM_SESSION. Khi 2 runner ở 2 IP khác nhau của datacenter GitHub Actions kết nối vào Telegram, máy chủ Telegram lập tức kích hoạt cơ chế bảo mật khóa phiên vì phát hiện session key bị sử dụng đồng thời ở hai địa chỉ IP khác nhau.
+>   2. Secret TELEGRAM_SESSION trong GitHub Secrets bị lỗi thời sau đợt khóa session, không đồng bộ với session string hợp lệ trong môi trường local.
+>
+> ### 🔴 RULE PM-10: DUY NHẤT 1 RUNNER ĐỘC QUYỀN CHO TELETHON & ĐỒNG BỘ CHUẨN GITHUB SECRETS (STRICT SINGLE RUNNER TELETHON POLICY)
+> 1. **Một Runner Duy Nhất Cho Tác Vụ Telethon (Sole Runner Only)**: TUYỆT ĐỐI CẤM cấu hình hoặc kích hoạt cùng một workflow Telethon (otlookup_relay.yml, daily_read_report.py, v.v.) trên nhiều hơn một repository. Repo MON6879/tni-sitedown-relay là **RUNNER ĐỘC QUYỀN DUY NHẤT** chạy otlookup_relay.py. Toàn bộ các repo khác (MON6879/TNI-DONE, phonghdpxd-cmd/tni-bot) BẮT BUỘC phải disable hoặc xóa bỏ workflow này để ngăn ngừa triệt để lỗi AuthKeyDuplicatedError.
+> 2. **Kiểm Soát Concurrency & Giữ Khoảng Cách Nhịp An Toàn**: Workflow sử dụng Telethon BẮT BUỘC phải đặt concurrency: group: ... với cancel-in-progress: false và đảm bảo các nhịp chạy (cron schedule) cách nhau tối thiểu 20-30 phút, tuyệt đối không để runner sau khởi động khi runner trước chưa giải phóng kết nối Telegram.
+> 3. **Tự Động Cập Nhật Secrets Khi Đổi Session**: Khi cập nhật session Telethon mới (get_session.py), BẮT BUỘC phải cập nhật đồng bộ trọn bộ 3 biến (TELEGRAM_SESSION, TELEGRAM_API_ID, TELEGRAM_API_HASH) vào GitHub Secrets của repo runner và kiểm tra bằng một lệnh dispatch live ngay lập tức để xác nhận HTTP 200 / Status Success trước khi bàn giao.
