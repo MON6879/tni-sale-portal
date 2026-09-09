@@ -926,3 +926,35 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 > 1. **Đọc Đúng Bảng Phân Tách Từng Cột Riêng (Columns BP..BW)**: Mọi logic tạo template và reminder ETA BẮT BUỘC đọc từ bảng phân tách cột riêng cho từng Team và Subteam (`T1`, `T1 S1`, `T2`, `T2 S1`, `T3`, `T3 S1`, `T4` tại columns BP..BW, rows 5..9 trên Sheet GID 0). Tuyệt đối CẤM gộp chung subteam vào main team hoặc bỏ qua các mục 1.1..1.4 của subteam!
 > 2. **Ghi Nhận Phản Hồi Linh Hoạt & Đè Mới Nhất**: Hàm thu thập ETA trên GAS (`collectEtaShare_`) BẮT BUỘC chấp nhận mọi loại dấu gạch (`[-—–]`), mọi loại bullet (`(?:•|✅|\*|-)`), và map đúng mục 1.4 thành "1.4 Site Down". Trên Python, dữ liệu nộp sau trong ngày có FT+ETA BẮT BUỘC ghi đè dữ liệu cũ hơn.
 > 3. **Làm Mới Nhắc Nhở 30 Phút Bằng Bucket**: Chốt chặn chống trùng lặp nhắc nhở ETA trong `cron_send.py` BẮT BUỘC dùng bucket 30 phút (`HH_11` và `HH_41`) để đảm bảo mỗi nhịp :11 và :41 MMT đều gửi bản cập nhật sống mới nhất kèm xóa tin cũ, TUYỆT ĐỐI KHÔNG chặn gửi chỉ vì timestamp bảng nguồn botlookup chưa thay đổi.
+
+---
+
+# 🏗️ POST-MORTEM RULE — 09/09/2026: QUY CHUẨN 10 CỘT BẢNG INPUT CONSTRUCTION (COL H TEMPLATE, COL I CONTENT + PHOTOS, COL J PO ĐIỀN TAY) (RULE PM-13)
+
+> ### Nguồn gốc: **Phân Hệ TNI Construction (Bot 10 TNI_SITE)** (`13_TNI_CONSTRUCTION.gs` / QLTC_GAS @409)
+> - **Lỗi & Bất Cập Thực Tế (09/09/2026)**:
+>   1. Layout cũ dàn trải 20 cột (Delivery, Team received material, Plan, Upgraded, Revoked material, Degraded, Solared...) khiến mỗi dòng chỉ có 1 ô dữ liệu còn 11 ô khác bị trống, khó xem và quản lý.
+>   2. Khi ảnh đến mà phiên activeCols rỗng, bot fallback mù quáng về Cột 8 (`Delivery`), khiến ảnh của mọi công việc khác (như `Upgraded`, `Solared`...) bị nhét nhầm vào cột `Delivery`.
+>   3. Cột `PO` và `Name TNI` không có ranh giới rõ ràng, thiếu chỗ điền tay mã PO độc lập.
+> - **Yêu Cầu Chuẩn Hóa Của Người Dùng**:
+>   "Cột H này lấy tương ứng khi có người cập nhật theo template và cột H giống như tiêu đề còn cột I là nội dung tất cả của người gởi và cột J là là cột Po điền tay"
+>   "Tôi đã tạo sheet mới bạn sửa lại và thu thập lại từ đầu cho sheet này: Input Construction (GID 397336359)"
+> - **Nguyên Nhân Gốc (Root Cause)**:
+>   Kiến trúc đa cột (multi-column) cố định mỗi loại template vào 1 cột riêng không phù hợp với nhu cầu tổng hợp động và dễ gây lỗi fallback sai cột khi nhận ảnh.
+>
+> ### 🔴 RULE PM-13: CẤU TRÚC 10 CỘT CHUẨN CHO SHEET INPUT CONSTRUCTION VÀ GOM TOÀN BỘ TEXT + ẢNH VÀO CỘT I
+> 1. **Cấu Trúc 10 Cột Bất Biến Của Sheet `Input Construction`**:
+>    - `Col A (1)`: `REF` (STT tự tăng bắt đầu lại từ 1).
+>    - `Col B (2)`: `ID Telegram` (Telegram User ID).
+>    - `Col C (3)`: `Tên theo telegram in group` (Tên hiển thị Telegram).
+>    - `Col D (4)`: `Date time sent group` (Thời gian gửi tin: `dd/MM/yyyy HH:mm`).
+>    - `Col E (5)`: `Date Conten` (Ngày nội dung trích xuất từ tin nhắn: `dd/MM/yyyy`).
+>    - `Col F (6)`: `Team` (Team trích xuất: `TEAM 1`, `TEAM 2`, `TEAM 3`, `TEAM 4`).
+>    - `Col G (7)`: `Name TNI` (Mã trạm TNI tự trích xuất, hỗ trợ điền tay đè nếu cần).
+>    - `Col H (8)`: `Template` (Tiêu đề loại báo cáo lấy tương ứng theo Cột A của tab `Template Cons`, vd: `Delivery`, `Upgraded`, `Plan`, `Team received material`, `Solared`...).
+>    - `Col I (9)`: `Content` (Toàn bộ nội dung văn bản của người gửi + link ảnh `📥 DOWNLOAD ALL (N Photos)` nối ở cuối ô).
+>    - `Col J (10)`: `PO` (Dành riêng cho người quản lý tự điền tay mã PO — Bot TUYỆT ĐỐI KHÔNG BAO GIỜ ghi đè lên Cột J).
+> 2. **Ảnh Chỉ Gom Vào Cột I — Tuyệt Đối Cấm Rơi Sang Cột Khác**:
+>    Mọi link Drive `📥 DOWNLOAD ALL (N Photos): [URL]` của ảnh gửi trong cửa sổ 10 phút BẮT BUỘC chỉ được nối vào cuối ô Cột I (`Content`) của dòng STT tương ứng. TUYỆT ĐỐI CẤM fallback về Cột H hoặc bất kỳ cột nào khác!
+> 3. **Tự Động Khởi Tạo Đúng 10 Cột Khi Tạo Mới**:
+>    Hàm `ensureConstructionSheetHeaders_` BẮT BUỘC thiết lập đúng 10 cột chuẩn trên tab `Input Construction` và xóa mọi cột thừa vượt quá 10 cột.
