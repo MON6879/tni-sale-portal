@@ -958,3 +958,24 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 >    Mọi link Drive `📥 DOWNLOAD ALL (N Photos): [URL]` của ảnh gửi trong cửa sổ 10 phút BẮT BUỘC chỉ được nối vào cuối ô Cột I (`Content`) của dòng STT tương ứng. TUYỆT ĐỐI CẤM fallback về Cột H hoặc bất kỳ cột nào khác!
 > 3. **Tự Động Khởi Tạo Đúng 10 Cột Khi Tạo Mới**:
 >    Hàm `ensureConstructionSheetHeaders_` BẮT BUỘC thiết lập đúng 10 cột chuẩn trên tab `Input Construction` và xóa mọi cột thừa vượt quá 10 cột.
+
+---
+
+# 📊 POST-MORTEM RULE — 09/09/2026: CÔNG THỨC MẢNG TỔNG HỢP TAB GENERAL (PO, TEMPLATE, SỐ LƯỢNG HOÀN THÀNH, TEXTJOIN CỘT G) & CHỐNG LỖI DÒNG MA KHI BẢNG RỖNG (RULE PM-14)
+
+> ### Nguồn gốc: **Bảng Tổng Hợp TNI Construction (Tab General, GID 983482833)** (`13_TNI_CONSTRUCTION.gs` / QLTC_GAS @415)
+> - **Lỗi & Bất Cập Thực Tế (09/09/2026)**:
+>   1. Khi bảng `Input Construction` trống (chỉ có dòng tiêu đề), công thức mảng động bọc ngoài bằng `IFERROR(LET(... HSTACK(uPairs, counts, sites)), "")` sinh ra 1 dòng "ma" chứa giá trị rỗng và số 0 (`['', '0', '', '']`).
+>   2. **Nguyên Nhân Gốc (Root Cause)**: Trong Google Sheets, khi bọc `IFERROR` ngoài cùng một mảng tạo bởi `HSTACK`, việc bọc lỗi diễn ra trên từng ô tử riêng biệt (element-wise). Do hàm `COUNTIFS(rawPO, p, rawTmpl, t)` trả về kết quả số `0` (không phải mã lỗi), ô này không bị `IFERROR` bắt, dẫn đến mảng không rỗng hoàn toàn mà bung ra 1 hàng `['', '0', '', '']`.
+> - **Yêu Cầu Chuẩn Hóa Của Người Dùng**:
+>   "tạo cho tôi 1 file tổng hợp 1 là PO trước đến unique Cột H và đến cột số lượng hoàn thành theo cột H và textjoin(" , " các cột G trong sheet https://docs.google.com/spreadsheets/d/1ViXXv5P8jSgx5heBqEP419ZkSR77C3OsflK0xpHMoi8/edit?gid=983482833#gid=983482833"
+>
+> ### 🔴 RULE PM-14: QUY CHUẨN BẢNG TỔNG HỢP TAB GENERAL VÀ TẦNG BẢO VỆ COUNTA TRƯỚC KHI GỌI FILTER/MAP
+> 1. **Cấu Trúc 4 Cột Bất Biến Của Tab `General`**:
+>    - `Col A (1)`: `PO` (Sắp xếp theo thứ tự bảng chữ cái của mã PO điền tay ở Col J của `Input Construction`).
+>    - `Col B (2)`: `Template` (Các loại template unique trích xuất từ Col H của `Input Construction` theo từng PO).
+>    - `Col C (3)`: `Số lượng hoàn thành` (Đếm số lượng báo cáo hoàn thành theo cặp `PO` + `Template` bằng `COUNTIFS`).
+>    - `Col D (4)`: `Danh sách trạm (Name TNI)` (Gộp các mã trạm TNI duy nhất hoàn thành bằng `TEXTJOIN(", ", TRUE, UNIQUE(FILTER(...)))`).
+> 2. **Chốt Chặn `COUNTA = 0` Bắt Buộc Trong Công Thức Mảng Động**:
+>    Mọi công thức mảng tổng hợp động (`LET`, `FILTER`, `HSTACK`, `MAP`) BẮT BUỘC phải kiểm tra `IF(COUNTA('Input Construction'!H2:H)=0, "", LET(...))` ngay từ đầu trước khi gọi `FILTER` và `MAP`. TUYỆT ĐỐI CẤM chỉ bọc `IFERROR(HSTACK(...))` ở ngoài cùng vì Google Sheets đánh giá lỗi theo từng phần tử (element-wise), khiến các hàm đếm như `COUNTIFS` trả về `0` (không phải error) và tạo ra dòng ma `['', '0', '', '']` khi bảng tính nguồn chưa có dữ liệu!
+
