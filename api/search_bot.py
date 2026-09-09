@@ -423,7 +423,6 @@ def setup_bot_menu_commands():
         {"command": "myolt",        "description": "All Site have OLT"},
         {"command": "mysn",         "description": "All SN you control"},
         {"command": "mydata",       "description": "All your personal stats"},
-        {"command": "daily",        "description": "Daily Result template"},
         {"command": "daily_result", "description": "Daily Result template"},
         {"command": "help",         "description": "Show help menu"},
     ]
@@ -447,7 +446,7 @@ def setup_bot_menu_commands():
         team_groups[chat_id_str] = grp_cmds
 
     common_group = [
-        {"command": "daily", "description": "Daily Result template"},
+        {"command": "daily_result", "description": "Daily Result template"},
     ]
     try:
         base_url = f"https://api.telegram.org/bot{TOKEN}/setMyCommands"
@@ -461,11 +460,11 @@ def setup_bot_menu_commands():
 
         # 1. Default scope — full commands
         requests.post(base_url, json={"commands": commands}, timeout=10)
-        # 2. All group chats — chỉ daily (plan riêng từng team)
+        # 2. All group chats — chỉ daily_result (plan riêng từng team)
         requests.post(base_url, json={"commands": common_group, "scope": {"type": "all_group_chats"}}, timeout=10)
         # 3. All private chats — full commands
         requests.post(base_url, json={"commands": commands, "scope": {"type": "all_private_chats"}}, timeout=10)
-        # 4. Per-team group — Plan riêng + daily cho cả thành viên và admin
+        # 4. Per-team group — Plan riêng + daily_result cho cả thành viên và admin
         for chat_id, p_cmds in team_groups.items():
             team_menu = p_cmds + common_group
             cid_int = int(chat_id)
