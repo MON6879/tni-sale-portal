@@ -1022,6 +1022,24 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 >    Khi bóc tách key-value từ tin nhắn chat, BẮT BUỘC dùng regex neo dòng `rf"(?i)(?:^|[\r\n])[^\w\r\n]*{word_pattern}[ \t]*:[ \t]*(.*?)(?=\r?\n|$)"` thay vì `\s*:\s*`. Khoảng trắng trước/sau dấu hai chấm `:` CHỈ được dùng `[ \t]*` để không bao giờ nuốt sang dòng kế tiếp khi trường hiện tại để trống.
 > 3. **Đồng Bộ Đồng Thời 2 Nhánh Lấy Mẫu Template**:
 >    Khi sửa template trả về từ lệnh `/...`, BẮT BUỘC sửa đồng thời ở cả nhánh xử lý chuyên biệt theo nhóm (`handle_mdg`) VÀ nhánh lệnh tổng (`handle`), đảm bảo người dùng gõ lệnh ở group làm việc hay gửi tin riêng (DM) với Bot đều nhận đúng mẫu chuẩn 100%.
+---
 
+# 📊 POST-MORTEM RULE — 09/09/2026: KHÓA CỨNG DẢI Ô BẰNG `INDIRECT` CHO CÁC BẢNG TỔNG HỢP LIÊN KẾT SHEET CÓ CHÈN DÒNG ĐẦU (RULE PM-17)
 
-
+> ### Nguồn gốc: **Bảng Tổng Hợp TNI Construction (Tab General, GID 983482833)** (`13_TNI_CONSTRUCTION.gs` / QLTC_GAS @423, Sheet `1ViXXv5P8jSgx5heBqEP419ZkSR77C3OsflK0xpHMoi8`)
+> - **Lỗi Thực Tế (09/09/2026)**:
+>   Khi bot thu thập dữ liệu chèn dòng mới vào dòng 2 của bảng nguồn (`sheet.insertRowsBefore(2, 1)`), Google Sheets tự động tịnh tiến (shift) mọi tham chiếu dải ô trong công thức của bảng tổng hợp từ `H2:H`, `J2:J`, `G2:G` thành `H3:H`, `H4:H`, `H5:H`... Điều này khiến bảng tổng hợp hoàn toàn bỏ qua các dòng mới nhất ở đầu bảng, dẫn đến `COUNTA = 0` và bảng tổng hợp bị trắng trơn!
+> - **Nguyên Nhân Gốc (Root Cause)**:
+>   Tham chiếu dải ô thông thường (kể cả dùng dấu `$` như `$H$2:$H`) vẫn bị Google Sheets tự động trượt chỉ số dòng khi có thao tác `insertRowsBefore(2)` xảy ra phía trên hoặc ngay tại dòng bắt đầu của dải ô.
+>
+> ### 🔴 RULE PM-17: BẮT BUỘC DÙNG `INDIRECT` CHO CÁC DẢI Ô TRONG CÔNG THỨC MẢNG TỔNG HỢP
+> 1. **Khóa Tuyệt Đối Dải Ô Bằng `INDIRECT` (Zero Row-Shift Guarantee)**:
+>    Khi viết công thức mảng tổng hợp (`LET`, `FILTER`, `UNIQUE`, `MAP`, `COUNTIFS`) đọc dữ liệu từ một sheet có cơ chế chèn dòng ở đầu (`insertRowsBefore(2)` hoặc `insertRowsBefore(3)`), BẮT BUỘC phải bọc tất cả các dải ô nguồn trong hàm `INDIRECT` dạng chuỗi văn bản cố định:
+>    - `INDIRECT("'Input Construction'!H2:H")`
+>    - `INDIRECT("'Input Construction'!J2:J")`
+>    - `INDIRECT("'Input Construction'!G2:G")`
+>    TUYỆT ĐỐI CẤM dùng tham chiếu dải ô trần (`'Input Construction'!H2:H`) vì sẽ bị tịnh tiến trượt dòng sau mỗi lần bot nộp báo cáo!
+> 2. **Xử Lý Điều Kiện Logic Boolean Trong `FILTER` Khi Tham Chiếu Trống**:
+>    Trong biểu thức điều kiện của `FILTER`, để so khớp chính xác cả trường hợp ô có giá trị và ô hoàn toàn rỗng/trống (`""`), BẮT BUỘC dùng biểu thức đại số boolean đồng nhất kích thước:
+>    `((p="")*((rawPO="")+(ISBLANK(rawPO))) + (p<>"")*(rawPO=p))*(rawTmpl=t)`
+>    TUYỆT ĐỐI CẤM dùng `IF(scalar, array, array)` bên trong `LAMBDA` vì sẽ làm co mảng về 1 phần tử scalar, gây lỗi lệch kích thước dải ô `#VALUE! (FILTER has mismatched range sizes)`.
