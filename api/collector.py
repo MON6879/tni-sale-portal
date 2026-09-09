@@ -2,8 +2,7 @@
 Vercel webhook handler for Collector Bot (TNIAsset_BO).
 
 Routing:
-  - TNI CABLE ROUTE group  (CABLE_CHAT_ID) → handle_cable()
-  - 6. TNI Run MDG + Invetory Fuel (MDG_CHAT_ID) → handle_mdg()
+  - 6. M&E - TNI Run MDG + Invetory Fuel (MDG_CHAT_ID) → handle_mdg()
   - All other chats                         → existing Asset handler
 
 Webhook URL: https://tni-bot.vercel.app/api/collector
@@ -18,16 +17,10 @@ logger = logging.getLogger(__name__)
 
 COLLECTOR_BOT_TOKEN   = os.environ.get("COLLECTOR_BOT_TOKEN", "").strip().strip("\ufeff")
 APPS_SCRIPT_URL        = os.environ.get("APPS_SCRIPT_URL", "").strip().strip("\ufeff")
-CABLE_APPS_SCRIPT_URL  = os.environ.get("CABLE_APPS_SCRIPT_URL", "").strip().lstrip('\ufeff')
 
 MAIN_GAS_FALLBACK = "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
 if not APPS_SCRIPT_URL or "AKfycbz-NZlBk8q2" not in APPS_SCRIPT_URL:
     APPS_SCRIPT_URL = MAIN_GAS_FALLBACK
-
-try:
-    CABLE_CHAT_ID = int(os.environ.get("CABLE_CHAT_ID", "-5531350787").strip())
-except ValueError:
-    CABLE_CHAT_ID = -5531350787
 
 MDG_APPS_SCRIPT_URL = os.environ.get("MDG_APPS_SCRIPT_URL", "").strip().lstrip('\ufeff')
 if not MDG_APPS_SCRIPT_URL or "AKfycbz-NZlBk8q2" not in MDG_APPS_SCRIPT_URL:
@@ -43,13 +36,6 @@ TZ_MM = timezone(timedelta(hours=6, minutes=30))   # Myanmar UTC+6:30
 
 KEYWORDS_DEFAULT = ["order", "revoke", "export", "move", "asset sent", "destroys"]
 
-# ── Cable constants ──────────────────────────────────────────────────────
-CABLE_TYPE_KEYWORDS = ["request change", "rescue", "maintenance", "deploy"]
-CABLE_FIELDS_LIST   = [
-    "incident name", "physical route", "total cable length",
-    "cable owner", "responsible branch", "rca",
-    "team name", "wo", "materials list",
-]
 _keywords_cache = None
 _config_templates_cache = None
 _config_templates_ts = 0
@@ -243,42 +229,7 @@ def post_sheet(payload: dict, timeout: int = 35):
 
 
 
-# ── Send data to Cable Google Sheet via Apps Script ───────────────────────
-def post_cable_sheet(payload: dict):
-    """POST JSON to Cable Apps Script Web App."""
-    if not CABLE_APPS_SCRIPT_URL:
-        logger.error("CABLE_APPS_SCRIPT_URL not set.")
-        return {"status": "error", "message": "CABLE_APPS_SCRIPT_URL not configured"}
-    try:
-        resp = requests.post(CABLE_APPS_SCRIPT_URL, json=payload, timeout=30)
-        resp.raise_for_status()
-        logger.info(f"Cable Apps Script response: {resp.text[:300]}")
-        return resp.json()
-    except Exception as e:
-        logger.error(f"Cable Apps Script POST error: {e}")
-        return {"status": "error", "message": str(e)}
-
-
 # ── Send data to MDG Google Sheet via Apps Script ─────────────────────────
-def post_cable_photo(payload: dict):
-    """Fire-and-forget: send cable photo data to GAS then return immediately.
-    GAS handles download+upload independently (up to 6 minutes).
-    """
-    if not CABLE_APPS_SCRIPT_URL:
-        return {"status": "error", "message": "CABLE_APPS_SCRIPT_URL not configured"}
-    try:
-        resp = requests.post(CABLE_APPS_SCRIPT_URL, json=payload, timeout=(10, 8))
-        resp.raise_for_status()
-        logger.info(f"Cable photo GAS response: {resp.text[:200]}")
-        return resp.json()
-    except requests.exceptions.ReadTimeout:
-        logger.info("GAS processing cable photo in background — OK")
-        return {"status": "processing"}
-    except Exception as e:
-        logger.error(f"Cable photo error: {e}")
-        return {"status": "error", "message": str(e)}
-
-
 def post_mdg_sheet(payload: dict):
     """POST JSON to MDG Apps Script Web App with automatic fallback."""
     url = MDG_APPS_SCRIPT_URL or MAIN_GAS_FALLBACK
@@ -351,23 +302,26 @@ def parse_mdg_fields(text: str) -> dict:
 # ── Inventory: field list ─────────────────────────────────────────────────
 INV_FIELDS_LIST = [
     "inventory fuel", "dg id", "fuel cm", "fuel %",
-    "fuel level", "kwh", "rh", "note"
+    "fuel level", "kwh in csu", "dg kwh", "kwh", "dg rh", "rh", "note"
 ]
 
 def parse_inv_fields(text: str) -> dict:
     """Extract Inventory Fuel field values.
     Numeric fields: chỉ lấy số, bỏ đơn vị (vd: '19cm'→'19', '15%'→'15').
     """
-    NUMERIC_FIELDS = {"fuel cm", "fuel %", "fuel level", "kwh", "rh"}
+    NUMERIC_FIELDS = {
+        "fuel cm", "fuel %", "fuel level",
+        "kwh in csu", "dg kwh", "kwh", "dg rh", "rh"
+    }
     result = {}
     for field in INV_FIELDS_LIST:
-        word_pattern = r"\s+".join(re.escape(w) for w in field.split())
-        pattern = rf"(?i){word_pattern}\s*:\s*(.+?)(?=\n|$)"
+        word_pattern = r"[ \t]+".join(re.escape(w) for w in field.split())
+        pattern = rf"(?i)(?:^|[\r\n])[^\w\r\n]*{word_pattern}[ \t]*:[ \t]*(.*?)(?=\r?\n|$)"
         m = re.search(pattern, text)
         if m:
             val = m.group(1).strip()
             val = re.sub(r"^[:\s]+", "", val).strip()
-            if field in NUMERIC_FIELDS:
+            if field in NUMERIC_FIELDS and val:
                 # Chỉ giữ lại số và dấu chấm thập phân, bỏ đơn vị
                 num = re.sub(r"[^\d.]", "", val)
                 val = num if num else val
@@ -399,28 +353,6 @@ def parse_oil_fields(text: str) -> dict:
             result[field] = val
     return result
 
-
-
-# ── Cable: detect type keyword ────────────────────────────────────────────
-def parse_cable_type(text: str) -> str:
-    """Return Rescue / Request Change / Maintenance / Deploy (or empty)."""
-    lower = text.lower()
-    for kw in CABLE_TYPE_KEYWORDS:
-        if kw in lower:
-            return kw.title()
-    return ""
-
-
-# ── Cable: parse 9 structured fields ─────────────────────────────────────
-def parse_cable_fields(text: str) -> dict:
-    """Extract field values from lines like 'Incident Name : ...'."""
-    result = {}
-    for field in CABLE_FIELDS_LIST:
-        pattern = rf"(?i){re.escape(field)}\s*:\s*(.+?)(?=\n|$)"
-        m = re.search(pattern, text)
-        if m:
-            result[field] = m.group(1).strip()
-    return result
 
 
 # ── Daily Plan detection ──────────────────────────────────────────────────
@@ -541,202 +473,10 @@ def is_collector_msg(text: str) -> bool:
 
 # ── Main async handler ────────────────────────────────────────────────────
 # ============================================================
-# CABLE GROUP HANDLER
-# ============================================================
-async def handle_cable(msg, bot, now, user, sender_name, sender_id):
-    """Handle all messages from the TNI CABLE ROUTE group."""
-    chat_id = msg.chat_id
-
-    # ── Photos ──────────────────────────────────────────────────────────
-    if msg.photo:
-        photos = msg.photo  # list of sizes, take largest
-        largest = photos[-1]
-        try:
-            file_info = await bot.get_file(largest.file_id)
-            tg_url = (
-                f"https://api.telegram.org/file/bot{COLLECTOR_BOT_TOKEN}/"
-                f"{file_info.file_path}"
-            )
-        except Exception as e:
-            logger.error(f"Cable get_file error: {e}")
-            tg_url = ""
-
-        # Try to find REF from caption or reply
-        ref_id = None
-        caption = msg.caption or ""
-        ref_m = re.search(r"REF[:\s#]*(\d+)", caption, re.IGNORECASE)
-        if ref_m:
-            ref_id = ref_m.group(1)
-        elif msg.reply_to_message:
-            reply_text = msg.reply_to_message.text or ""
-            ref_m = re.search(r"REF[:\s#]*(\d+)", reply_text, re.IGNORECASE)
-            if ref_m:
-                ref_id = ref_m.group(1)
-
-        result    = post_cable_photo({
-            "action":      "cable_add_photo",
-            "ref_id":      ref_id,
-            "tg_url":      tg_url,
-            "tg_file_id":  largest.file_id,
-            "sender_name": sender_name,
-            "sender_id":   sender_id,
-            "date":        now.strftime("%d/%m/%Y %H:%M"),
-        })
-        actual_ref = result.get("ref") or ref_id
-        ref_show   = str(actual_ref).zfill(5) if actual_ref else "?????"
-        status     = result.get("status", "error")
-
-        if status == "ok":
-            drive_link = result.get("link", "")
-            link_html  = f"\n🔗 <a href='{drive_link}'>View on Drive</a>" if drive_link else ""
-            await bot.send_message(
-                chat_id,
-                f"📷 <b>REF:{ref_show}</b> | Photo saved{link_html}",
-                parse_mode="HTML",
-                disable_web_page_preview=True,
-            )
-        elif status == "processing":
-            await bot.send_message(
-                chat_id,
-                f"📷 <b>REF:{ref_show}</b> | Photo submitted ⏳ (uploading to Drive...)",
-                parse_mode="HTML",
-            )
-        else:
-            err = html.escape(result.get("message", "Upload failed"))
-            await bot.send_message(
-                chat_id,
-                f"⚠️ Photo error (REF:{ref_show}): {err}",
-                parse_mode="HTML",
-            )
-        return
-
-    if not msg.text:
-        return
-
-    text = msg.text.strip()
-
-    # ── /start ──────────────────────────────────────────────────────────
-    if text.lower().startswith("/start"):
-        await bot.send_message(
-            chat_id,
-            "🔌 <b>TNI Cable Route Bot</b>\n"
-            "━━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 <b>Send incident in this format:</b>\n\n"
-            "<code>Rescue:\n"
-            "Incident Name : TNI0146-TNI0147 link down\n"
-            "Physical route : TNI0146-TNI0147\n"
-            "Total cable length : 16.5KM\n"
-            "Cable Owner : Mytel\n"
-            "Responsible Branch : TNI\n"
-            "RCA : people cut at 10.6KM from TNI0146\n"
-            "Team Name : TNI Team01\n"
-            "WO : Need\n"
-            "Materials List : 48 FO M100 and JB 2pcs</code>\n\n"
-            "🏷️ <b>Types:</b> Rescue | Request Change | Maintenance | Deploy\n"
-            "✅ <b>Confirm:</b> Reply bot message with <code>Confirm</code>\n"
-            "📷 <b>Photo:</b> Send photo (reply to bot msg with REF) — OCR enabled",
-            parse_mode="HTML",
-        )
-        return
-
-    # ── Confirm Complete ─────────────────────────────────────────────────
-    if re.match(r"^confirm\b", text, re.IGNORECASE):
-        ref_id = None
-        # Extract REF from reply-to message
-        if msg.reply_to_message:
-            reply_text = msg.reply_to_message.text or ""
-            ref_m = re.search(r"REF[:\s#]*(\d+)", reply_text, re.IGNORECASE)
-            if ref_m:
-                ref_id = ref_m.group(1)
-        # Also try from text itself: "Confirm REF:00001"
-        if not ref_id:
-            ref_m = re.search(r"REF[:\s#]*(\d+)", text, re.IGNORECASE)
-            if ref_m:
-                ref_id = ref_m.group(1)
-
-        if not ref_id:
-            await bot.send_message(
-                chat_id,
-                "⚠️ Please <b>reply</b> to the bot confirmation message to confirm.\n"
-                "Or use: <code>Confirm REF:00001</code>",
-                parse_mode="HTML",
-            )
-            return
-
-        confirm_detail = re.sub(r"^confirm\s*:?\s*(?:REF[:\s#]*\d+)?\s*", "",
-                                text, flags=re.IGNORECASE).strip()
-        result = post_cable_sheet({
-            "action":         "cable_confirm",
-            "ref_id":         ref_id,
-            "confirmed_by":   sender_name,
-            "sender_id":      sender_id,
-            "confirm_detail": confirm_detail,
-            "date":           now.strftime("%d/%m/%Y"),
-            "time":           now.strftime("%H:%M"),
-        })
-
-        if result.get("status") == "ok":
-            ref_pad = str(ref_id).zfill(5)
-            await bot.send_message(
-                chat_id,
-                f"✅ <b>REF #{ref_pad} — Confirmed</b>\n"
-                f"👤 {html.escape(sender_name)}\n"
-                f"📅 {now.strftime('%d/%m/%Y %H:%M')}" +
-                (f"\n📝 {html.escape(confirm_detail)}" if confirm_detail else ""),
-                parse_mode="HTML",
-            )
-        else:
-            err = html.escape(result.get("message", "unknown error"))
-            await bot.send_message(chat_id, f"⚠️ Confirm failed: {err}", parse_mode="HTML")
-        return
-
-    # ── Cable incident message ────────────────────────────────────────────
-    cable_type = parse_cable_type(text)
-    fields     = parse_cable_fields(text)
-
-    payload = {
-        "action":      "cable_add",
-        "date":        now.strftime("%d/%m/%Y"),
-        "time":        now.strftime("%H:%M"),
-        "type":        cable_type or "Unknown",
-        "sender_name": sender_name,
-        "sender_id":   sender_id,
-        "fields":      fields,
-        "raw":         text if not fields else "",
-    }
-
-    result = post_cable_sheet(payload)
-
-    if result.get("status") == "ok":
-        ref  = result.get("ref") or str(result.get("row", "???")).zfill(5)
-        flds = []
-        if fields.get("incident name"):   flds.append(f"📍 {fields['incident name']}")
-        if fields.get("team name"):        flds.append(f"👷 {fields['team name']}")
-        if fields.get("total cable length"): flds.append(f"📏 {fields['total cable length']}")
-        detail_lines = "\n".join(flds)
-
-        type_emoji = {"rescue": "🚨", "request change": "🔄",
-                      "maintenance": "🔧", "deploy": "🚀"}
-        t_emoji = type_emoji.get((cable_type or "").lower(), "🔌")
-        type_label = html.escape(cable_type or "Unknown")
-
-        await bot.send_message(
-            chat_id,
-            f"{t_emoji} <b>REF:{ref}</b> | {type_label} | {now.strftime('%d/%m/%Y %H:%M')}\n"
-            f"✅ Reply <code>Confirm</code> to close | 📷 Photo → reply this msg",
-            parse_mode="HTML",
-        )
-    else:
-        err = html.escape(result.get("message", "Apps Script error"))
-        await bot.send_message(chat_id, f"⚠️ Failed to record: {err}", parse_mode="HTML")
-
-
-
-# ============================================================
 # MDG GROUP HANDLER
 # ============================================================
 async def handle_mdg(msg, bot, now, user, sender_name, sender_id):
-    """Handle all messages from group `6. TNI Run MDG + Invetory Fuel`."""
+    """Handle all messages from group `6. M&E - TNI Run MDG + Invetory Fuel`."""
     chat_id = msg.chat_id
 
     # ── Photos ──────────────────────────────────────────────────────────
@@ -837,9 +577,9 @@ async def handle_mdg(msg, bot, now, user, sender_name, sender_id):
                 "DG ID: TNIXXXX\n"
                 "Fuel cm: \n"
                 "Fuel %: \n"
-                "Fuel level: \n"
-                "Kwh: \n"
-                "Rh: \n"
+                "KWH in CSU: \n"
+                "DG Kwh : \n"
+                "DG Rh: \n"
                 "Note: ",
                 parse_mode="HTML"
             )
@@ -913,8 +653,8 @@ async def handle_mdg(msg, bot, now, user, sender_name, sender_id):
             site_show = html.escape(site_mdg) if site_mdg else "—"
             await bot.send_message(
                 chat_id,
-                f"🛢️ <b>REF:{ref}</b> | 🪑 <b>Ghế 2C: Change Oil MDG</b> | {site_show} | {now.strftime('%d/%m/%Y %H:%M')}\n"
-                f"✅ Reply <code>Confirm</code> to close | 📸 Photo → reply this msg",
+                f"🛢️ <b>Change Oil MDG</b> ✅ #<b>{ref}</b> | 📍 <b>{site_show}</b> | 🗓️ <b>{now.strftime('%d/%m/%Y %H:%M')}</b>\n"
+                f"✅ Reply <code>Confirm</code> to close | 📸 Reply photo to attach",
                 parse_mode="HTML",
             )
         else:
@@ -957,8 +697,8 @@ async def handle_mdg(msg, bot, now, user, sender_name, sender_id):
             dg_show = html.escape(dg_id) if dg_id else "—"
             await bot.send_message(
                 chat_id,
-                f"⛽ <b>REF:{ref}</b> | 🪑 <b>Ghế 2B: Inventory Fuel</b> | {dg_show} | {now.strftime('%d/%m/%Y %H:%M')}\n"
-                f"✅ Reply <code>Confirm</code> to close | 📸 Photo → reply this msg",
+                f"⛽ <b>Inventory Fuel</b> ✅ #<b>{ref}</b> | 📍 <b>{dg_show}</b> | 🗓️ <b>{now.strftime('%d/%m/%Y %H:%M')}</b>\n"
+                f"✅ Reply <code>Confirm</code> to close | 📸 Reply photo to attach",
                 parse_mode="HTML",
             )
         else:
@@ -1002,8 +742,8 @@ async def handle_mdg(msg, bot, now, user, sender_name, sender_id):
             site_show = html.escape(site_id) if site_id else "—"
             await bot.send_message(
                 chat_id,
-                f"⚡ <b>REF:{ref}</b> | 🪑 <b>Ghế 2A: MDG Run Report</b> | {site_show} | {now.strftime('%d/%m/%Y %H:%M')}\n"
-                f"✅ Reply <code>Confirm</code> to close | 📷 Photo → reply this msg",
+                f"⚡ <b>MDG Run Report</b> ✅ #<b>{ref}</b> | 📍 <b>{site_show}</b> | 🗓️ <b>{now.strftime('%d/%m/%Y %H:%M')}</b>\n"
+                f"✅ Reply <code>Confirm</code> to close | 📸 Reply photo to attach",
                 parse_mode="HTML",
             )
         else:
@@ -1032,12 +772,6 @@ async def handle(data: dict):
         sender_name = (user.full_name if user else "") or ""
         sender_id   = str(user.id) if user else ""
         username    = (f"@{user.username}" if user and user.username else str(user.id)) if user else ""
-
-        # ── Route: Cable group ─────────────────────────────────────────
-        if chat_id == CABLE_CHAT_ID:
-            logger.info(f"[Cable] msg from {sender_name} ({sender_id})")
-            await handle_cable(msg, bot, now, user, sender_name, sender_id)
-            return
 
         # ── Route: MDG group ───────────────────────────────────────────
         if chat_id == MDG_CHAT_ID:
@@ -1153,6 +887,20 @@ async def handle(data: dict):
                         f"<i>Tap any command to receive the template, then copy and fill out.</i>",
                         parse_mode="HTML"
                     )
+                return
+            elif cmd in ("/inventory", "/inventory_fuel"):
+                await bot.send_message(
+                    chat_id,
+                    "Inventory fuel:\n"
+                    "DG ID: TNIXXXX\n"
+                    "Fuel cm: \n"
+                    "Fuel %: \n"
+                    "KWH in CSU: \n"
+                    "DG Kwh : \n"
+                    "DG Rh: \n"
+                    "Note: ",
+                    parse_mode="HTML"
+                )
                 return
             else:
                 tpl_txt = get_template_text(cmd)
