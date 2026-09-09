@@ -27,7 +27,7 @@ except ImportError:
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-BOT_VERSION = "v4.2"
+BOT_VERSION = "v4.3"
 
 # ── Config ────────────────────────────────────────────────────────────────────
 SEARCH_BOT_TOKEN_SSOT = "8606383435:AAEstcN4Om6_9ZAjs4OoFV2uVlRALgae2Ac"
@@ -423,42 +423,63 @@ def setup_bot_menu_commands():
         {"command": "myolt",        "description": "All Site have OLT"},
         {"command": "mysn",         "description": "All SN you control"},
         {"command": "mydata",       "description": "All your personal stats"},
+        {"command": "daily",        "description": "Daily Result template"},
+        {"command": "daily_result", "description": "Daily Result template"},
         {"command": "help",         "description": "Show help menu"},
     ]
 
     # ── Build per-group menu dynamically from ETA_GROUP_CONFIG ───────────────
     team_groups = {}
     for chat_id_str, cfg in ETA_GROUP_CONFIG.items():
-        t_key   = cfg["team"]
-        t_num   = t_key[1:]
-        subs    = cfg["subteams"]
+        t_key   = cfg["team"]       # "T1"
+        t_num   = t_key[1:]         # "1"
+        subs    = cfg["subteams"]   # ["S1"] hoặc []
         label   = cfg["label"]
 
         grp_cmds = []
+        # Plan main team
+        grp_cmds.append({"command": f"plan_t{t_num}", "description": f"Plan Template - {t_key}"})
+        # Plan subteams
+        for s in subs:
+            s_num = s[1:]
+            grp_cmds.append({"command": f"plan_t{t_num}_s{s_num}", "description": f"Plan Template - {t_key} {s}"})
+
         team_groups[chat_id_str] = grp_cmds
+
+    common_group = [
+        {"command": "daily", "description": "Daily Result template"},
+    ]
     try:
         base_url = f"https://api.telegram.org/bot{TOKEN}/setMyCommands"
         del_url = f"https://api.telegram.org/bot{TOKEN}/deleteMyCommands"
 
-        # 1. Xóa sạch mọi scope toàn cục có thể rò rỉ sang group chat (default, all_group_chats, all_chat_administrators)
-        for sc in [{"type": "default"}, {"type": "all_group_chats"}, {"type": "all_chat_administrators"}]:
-            try:
-                requests.post(del_url, json={"scope": sc}, timeout=10)
-            except Exception:
-                pass
+        # Delete any conflicting global admin scope
+        try:
+            requests.post(del_url, json={"scope": {"type": "all_chat_administrators"}}, timeout=10)
+        except Exception:
+            pass
 
-        # 2. XÓA TRIỆT ĐỂ lệnh của Bot 3D trong tất cả các nhóm Team để Bot 1C quản lý độc quyền menu 1..6
-        for chat_id in team_groups.keys():
-            cid_int = int(chat_id)
-            try:
-                requests.post(del_url, json={"scope": {"type": "chat", "chat_id": cid_int}}, timeout=10)
-                requests.post(del_url, json={"scope": {"type": "chat_administrators", "chat_id": cid_int}}, timeout=10)
-            except Exception:
-                pass
-
-        # 3. CHỈ ĐĂNG KÝ LỆNH CHO CHAT RIÊNG (Private Chats / DM) VỚI BOT 3D — TUYỆT ĐỐI KHÔNG HIỆN TRONG GROUP
+        # 1. Default scope — full commands
+        requests.post(base_url, json={"commands": commands}, timeout=10)
+        # 2. All group chats — chỉ daily (plan riêng từng team)
+        requests.post(base_url, json={"commands": common_group, "scope": {"type": "all_group_chats"}}, timeout=10)
+        # 3. All private chats — full commands
         requests.post(base_url, json={"commands": commands, "scope": {"type": "all_private_chats"}}, timeout=10)
-        logger.info(f"Bot 3D commands registered exclusively to all_private_chats ({len(commands)} commands)")
+        # 4. Per-team group — Plan riêng + daily cho cả thành viên và admin
+        for chat_id, p_cmds in team_groups.items():
+            team_menu = p_cmds + common_group
+            cid_int = int(chat_id)
+            # Scope 1: chat (toàn bộ thành viên trong nhóm)
+            requests.post(base_url, json={
+                "commands": team_menu,
+                "scope": {"type": "chat", "chat_id": cid_int}
+            }, timeout=10)
+            # Scope 2: chat_administrators (cho quản trị viên nhóm)
+            requests.post(base_url, json={
+                "commands": team_menu,
+                "scope": {"type": "chat_administrators", "chat_id": cid_int}
+            }, timeout=10)
+        logger.info(f"Bot 3D commands registered: private={len(commands)}, per-group={len(team_groups)} groups")
     except Exception as ex:
         logger.error(f"setup_bot_menu_commands: {ex}")
 
@@ -533,10 +554,11 @@ def get_eta_site_down(team_filter="ALL"):
 def get_eta_share_templates(team_filter="ALL"):
     """Build pre-filled ETA update templates per team/subteam.
     Sections (4):
-      1.1 🔴 Cell Down                 (Parsed from Col C alarm breakdown)
-      1.2 ⚙️ DG Abnormal              (Parsed from Col C alarm breakdown)
-      1.3 ❌ DG Run >16H               (Parsed from Col C alarm breakdown)
-      1.4 📡 Site Down                (Parsed from Col E site down list)
+      1.1 🔴 Cell Down                 (Row with label 'Cell down' in Sheet GID 0)
+      1.2 ⚙️ DG Abnormal              (Row with label 'DG Abnormal' in Sheet GID 0)
+      1.3 ❌ DG Run >16H               (Row with label 'DG Run>16H' in Sheet GID 0)
+      1.4 📡 Site Down                (Row with label 'Site down' in Sheet GID 0)
+    Reads separated columns BP..BW (rows 5..9) where each team and subteam has its own column.
     Returns list of (team_name, template_text).
     """
     try:
@@ -549,6 +571,7 @@ def get_eta_share_templates(team_filter="ALL"):
         if len(rows) < 6:
             return []
 
+        # 1. Update timestamp from Row 0 Col 0
         update_ts = ""
         if len(rows) > 0 and len(rows[0]) > 0:
             m_ts = re.search(r'(\d{2}/\d{2}/\d{4}\s+\d{2}:\d{2})', rows[0][0])
@@ -557,87 +580,95 @@ def get_eta_share_templates(team_filter="ALL"):
         if not update_ts:
             update_ts = datetime.now(TZ_MM).strftime("%d/%m/%Y %H:%M")
 
-        team_rows = {"T1": 3, "T2": 4, "T3": 5, "T4": 6}
+        # 2. Dynamically locate header row containing team names
+        header_row_idx = None
+        team_col_map = {}
+        for r_idx in range(min(15, len(rows))):
+            row = rows[r_idx]
+            found_teams = {}
+            for c_idx, val in enumerate(row):
+                v = (val or "").strip()
+                v_norm = re.sub(r'\s+', ' ', v).upper()
+                if v_norm in ('T1', 'T1 S1', 'T2', 'T2 S1', 'T3', 'T3 S1', 'T4'):
+                    found_teams[v_norm] = c_idx
+            if len(found_teams) >= 4:
+                header_row_idx = r_idx
+                team_col_map = found_teams
+                break
 
-        alarm_patterns = [
-            ("1.1", "🔴", "Cell Down",                r'Cell down:\s*(?:[*/]\d+.*?[=:])\s*(.*?)(?:\|\s*DG|\s*$)'),
-            ("1.2", "⚙️", "DG Abnormal",             r'DG Abnormal:\s*(?:[*/]\d+.*?[=:])\s*(.*?)(?:\|\s*DG Run|\s*$)'),
-            ("1.3", "❌", "DG Run >16H",              r'DG Run\s*>?\s*16H?:\s*(?:[*/]\d+.*?[=:])\s*(.*?)(?:\|\s*Link|\s*$)'),
+        if not header_row_idx:
+            header_row_idx = 4
+            team_col_map = {'T1': 68, 'T1 S1': 69, 'T2': 70, 'T2 S1': 71, 'T3': 72, 'T3 S1': 73, 'T4': 74}
+
+        label_col = min(team_col_map.values()) - 1
+
+        section_defs = [
+            ("1.1", "🔴", "Cell Down", [r'cell\s*down']),
+            ("1.2", "⚙️", "DG Abnormal", [r'dg\s*abnormal']),
+            ("1.3", "❌", "DG Run >16H", [r'dg\s*run']),
+            ("1.4", "📡", "Site Down", [r'site\s*down']),
         ]
 
-        # Parse 1.4 Site Down per team & subteam from rows 5+ (Col E & Col G)
-        sd_by_team = {
-            "T1": [], "T1 S1": [],
-            "T2": [], "T2 S1": [],
-            "T3": [], "T3 S1": [],
-            "T4": []
-        }
-        for i in range(5, len(rows)):
-            row = rows[i]
-            if len(row) > 6:
-                team_val = (row[6] or "").strip().upper()
-                tni_m = re.search(r"(TNI\d+)", row[4]) or re.search(r"(TNI\d+)", row[5] if len(row) > 5 else "")
-                if tni_m:
-                    tni = tni_m.group(1).upper()
-                    if team_val in sd_by_team:
-                        if tni not in sd_by_team[team_val]:
-                            sd_by_team[team_val].append(tni)
-                    else:
-                        for k in ["T1", "T2", "T3", "T4"]:
-                            if team_val == k or team_val.startswith(k + " "):
-                                if tni not in sd_by_team[k]:
-                                    sd_by_team[k].append(tni)
+        sec_rows = {}
+        for r_idx in range(header_row_idx + 1, min(header_row_idx + 8, len(rows))):
+            row = rows[r_idx]
+            lbl = (row[label_col] if label_col < len(row) else "").strip()
+            for sec_num, icon, title, patterns in section_defs:
+                if sec_num in sec_rows:
+                    continue
+                for pat in patterns:
+                    if re.search(pat, lbl, re.IGNORECASE):
+                        sec_rows[sec_num] = r_idx
+                        break
 
-        # Determine which teams/subteams to build for
+        # Fallback if section rows not found by label
+        default_sec_offsets = {"1.1": 1, "1.2": 2, "1.3": 3, "1.4": 4}
+        for sec_num, off in default_sec_offsets.items():
+            if sec_num not in sec_rows and (header_row_idx + off) < len(rows):
+                sec_rows[sec_num] = header_row_idx + off
+
+        # Determine target teams
+        teams_all = ["T1", "T1 S1", "T2", "T2 S1", "T3", "T3 S1", "T4"]
         if team_filter == "ALL":
-            target_teams = ["T1", "T1 S1", "T2", "T2 S1", "T3", "T3 S1", "T4"]
+            target_teams = teams_all
         else:
-            tf = team_filter.upper()
-            if tf in ("T1", "T2", "T3", "T4"):
+            tf = team_filter.upper().strip()
+            if tf in ("T1", "T2", "T3"):
+                target_teams = [tf, f"{tf} S1"]
+            elif tf in ("T4", "T1 S1", "T2 S1", "T3 S1"):
                 target_teams = [tf]
-                sub_key = f"{tf} S1"
-                if sub_key in sd_by_team and sd_by_team[sub_key]:
-                    target_teams.append(sub_key)
             else:
                 target_teams = [tf]
 
         results = []
         for t_name in target_teams:
-            is_subteam = (" S" in t_name)
-            sd_items = sd_by_team.get(t_name, [])
-
-            # Subteam chỉ tạo tin khi thực sự có trạm site down
-            if is_subteam and not sd_items:
+            c_idx = team_col_map.get(t_name)
+            if c_idx is None:
                 continue
 
             lines = [f"📋 {t_name} — ETA Update {update_ts}"]
+            total_sites = 0
 
-            # Đối với team chính (T1, T2, T3, T4): lấy 1.1 đến 1.3 từ Col C
-            if not is_subteam:
-                r_idx = team_rows.get(t_name)
-                c_text = rows[r_idx][2] if r_idx is not None and r_idx < len(rows) and len(rows[r_idx]) > 2 else ""
+            for sec_num, icon, title, _ in section_defs:
+                r_idx = sec_rows.get(sec_num)
+                items = []
+                if r_idx is not None and r_idx < len(rows) and c_idx < len(rows[r_idx]):
+                    cell_val = rows[r_idx][c_idx]
+                    tnis = re.findall(r'(TNI\d+)', cell_val, re.IGNORECASE)
+                    seen = set()
+                    items = [x.upper() for x in tnis if not (x.upper() in seen or seen.add(x.upper()))]
+                total_sites += len(items)
+                if items:
+                    lines.append(f"{sec_num} {icon} {title}: {len(items)} site")
+                    lines.extend([f"• {c} + FT + ETA:" for c in items])
+                else:
+                    lines.append(f"{sec_num} {icon} {title}:")
+                    lines.append("• (none)")
 
-                for num, icon, label, pat in alarm_patterns:
-                    m = re.search(pat, c_text, re.IGNORECASE)
-                    items = []
-                    if m:
-                        tnis = re.findall(r'(TNI\d+)', m.group(1))
-                        seen = set()
-                        items = [x.upper() for x in tnis if not (x.upper() in seen or seen.add(x.upper()))]
-                    if items:
-                        lines.append(f"{num} {icon} {label}: {len(items)} site")
-                        lines.extend([f"• {c} + FT + ETA:" for c in items])
-                    else:
-                        lines.append(f"{num} {icon} {label}:")
-                        lines.append("• (none)")
-
-            # 1.4 Site Down from Col E/G
-            if sd_items:
-                lines.append(f"1.4 📡 Site Down: {len(sd_items)} site")
-                lines.extend([f"• {c} + FT + ETA:" for c in sd_items])
-            elif not is_subteam:
-                lines.append("1.4 📡 Site Down:")
-                lines.append("• (none)")
+            # Skip subteam if 0 total sites in ALL mode to prevent spamming empty templates
+            is_subteam = (" S" in t_name)
+            if is_subteam and total_sites == 0 and team_filter == "ALL":
+                continue
 
             results.append((t_name, "\n".join(lines)))
 
@@ -646,6 +677,7 @@ def get_eta_share_templates(team_filter="ALL"):
     except Exception as ex:
         logger.error(f"get_eta_share_templates error: {ex}")
         return []
+
 
 ETA_SHARE_GID = "1509154642"  # Tab "Team leader share ETA" in SD_SHEET_ID
 
@@ -657,7 +689,7 @@ def get_today_eta_from_sheet():
     Title rows: col A bắt đầu bằng '📋' → bỏ qua.
     Trả về dict {TNI_CODE: {ft_eta, eta_date, section, sender}}.
     - eta_date: ngày thực hiện ETA (extracted); nếu không có date trong FT+ETA → dùng submission date
-    - Ưu tiên entry đã có ft_eta (đã điền) trong ngày
+    - Submission mới hơn trong ngày với ft_eta ghi đè submission cũ hơn
     """
     try:
         today = datetime.now(TZ_MM).strftime("%d/%m/%Y")
@@ -697,8 +729,16 @@ def get_today_eta_from_sheet():
             if not eta_date:
                 eta_date = date_val
 
-            # Ưu tiên entry đã có ft_eta (đã điền)
-            if tni not in eta_map or (not eta_map[tni]["ft_eta"] and ft_eta):
+            # Ghi nhận lần đầu hoặc cập nhật nếu submission sau có điền ft_eta
+            if tni not in eta_map:
+                eta_map[tni] = {
+                    "ft_eta":   ft_eta,
+                    "eta_date": eta_date,
+                    "section":  (row[4] or "").strip(),
+                    "sender":   sender,
+                }
+            elif ft_eta:
+                # Submission mới hơn có điền FT+ETA → ghi đè dữ liệu cũ hơn
                 eta_map[tni] = {
                     "ft_eta":   ft_eta,
                     "eta_date": eta_date,
@@ -762,8 +802,8 @@ def build_smart_eta_reminder(team_filter="ALL"):
                 lines_out.append(stripped)
                 continue
 
-            # Site line: "• TNIxxxx + FT + ETA:"
-            m = re.match(r'^•\s*(TNI\d+)\s*\+\s*FT\s*\+\s*ETA:\s*$', stripped, re.IGNORECASE)
+            # Site line: "• TNIxxxx + FT + ETA:" hoặc "✅ TNIxxxx + FT+ETA:"
+            m = re.match(r'^(?:•|✅)\s*(TNI\d+)\s*\+\s*FT\s*\+?\s*ETA:', stripped, re.IGNORECASE)
             if m:
                 tni = m.group(1).upper()
                 entry = eta_map.get(tni, {})
@@ -778,13 +818,13 @@ def build_smart_eta_reminder(team_filter="ALL"):
                         lines_out.append(f"✅ {tni} + FT+ETA: {ft_eta_raw}{date_label}")
                     elif eta_dt and eta_dt < today_dt:
                         # ETA Date đã qua → pending lại
-                        lines_out.append(stripped)
+                        lines_out.append(f"• {tni} + FT + ETA:")
                         has_pending = True
                     else:
                         # Không parse được date → show ✅
                         lines_out.append(f"✅ {tni} + FT+ETA: {ft_eta_raw}")
                 else:
-                    lines_out.append(stripped)
+                    lines_out.append(f"• {tni} + FT + ETA:")
                     has_pending = True
                 continue
 
@@ -1937,9 +1977,10 @@ def handle(update: dict) -> None:
     if user.get("is_bot"):
         return
 
-    # ── PHOTO (Daily Result photo collection handed over exclusively to Bot 1C) ──
+    # ── PHOTO ──────────────────────────────────────────────────────────────
     if "photo" in msg:
-        # Bot 3D ignores photo uploads — handled exclusively by Bot 1C (@TNICLEARSITEBOT)
+        file_id = msg["photo"][-1]["file_id"]
+        submit_photo(chat_id, user_id, file_id)
         return
 
     text = (msg.get("text") or "").strip()
@@ -2044,9 +2085,39 @@ def handle(update: dict) -> None:
             send_help_menu(chat_id)
             return
 
-        # ❌ Bot 3D BỎ trả lời lệnh Plan và Daily Result (theo yêu cầu: chuyển toàn bộ sang Bot 1C đảm nhiệm)
-        if first_word in ("daily", "daily_result", "dailyresult") or first_word.startswith("plan"):
-            logger.info(f"[3D] Skip responding to {first_word} — handed over to Bot 1C")
+        if first_word in ("daily", "daily_result", "dailyresult"):
+            if is_duplicate_search and is_duplicate_search(chat_id, user_id, "DAILY"):
+                return
+            send_daily_template(chat_id)
+            return
+
+        if first_word.startswith("plan"):
+            if is_duplicate_search and is_duplicate_search(chat_id, user_id, f"PLAN:{first_word}"):
+                return
+            # /plan_t3 → "T3", /plan_t3_s1 → "T3 S1", /plan → auto-detect
+            plan_map = {
+                "plan_t1": "T1", "plan_t1_s1": "T1 S1",
+                "plan_t2": "T2", "plan_t2_s1": "T2 S1",
+                "plan_t3": "T3", "plan_t3_s1": "T3 S1",
+                "plan_t4": "T4",
+            }
+            team_filter = plan_map.get(first_word)
+            if not team_filter:
+                # /plan hoặc /dailyplan → auto-detect theo chat_id/title
+                chat_title = (msg.get("chat", {}).get("title") or "").lower()
+                cid_str = str(chat_id)
+                if "4215695747" in cid_str or "team 1" in chat_title or "dawei" in chat_title:
+                    team_filter = "T1"
+                elif "4480845549" in cid_str or "team 2" in chat_title or "myeik" in chat_title:
+                    team_filter = "T2"
+                elif "4369170658" in cid_str or "team 3" in chat_title or "bokpyin" in chat_title:
+                    team_filter = "T3"
+                elif "4293741999" in cid_str or "team 4" in chat_title or "kawthoung" in chat_title:
+                    team_filter = "T4"
+                else:
+                    tn = get_user_team_number(user_id) or 1
+                    team_filter = f"T{tn}"
+            send_daily_plan_template(chat_id, team_filter)
             return
 
         if first_word in ("id", "myid"):
@@ -2114,14 +2185,50 @@ def handle(update: dict) -> None:
             tg_send(chat_id, f"✅ <b>Attendance saved ({time_str})</b> — Recorded {count} staff to Sheet.")
             return
 
-    # ── 1. DAILY PLAN SUBMIT (Chuyển sang Bot 1C @TNICLEARSITEBOT đảm nhiệm duy nhất) ──
+    # ── 1. DAILY PLAN SUBMIT (PRIORITY #1: Process plan BEFORE SSOT classify to prevent TNI code hijacking) ──
     if is_daily_plan(clean_text) or is_daily_plan(text):
-        logger.info("[3D] Skip collecting Daily Plan — handled exclusively by Bot 1C")
-        return
+        # 🛑 Bỏ qua edited_message — chỉ thu thập lần đầu, không lặp khi TL sửa bài
+        if update.get("edited_message"):
+            logger.info("Skipping edited_message for Daily Plan — no re-collection")
+            return
 
-    # ── 2. DAILY REPORT SUBMIT (Chuyển sang Bot 1C @TNICLEARSITEBOT đảm nhiệm duy nhất) ──
+        msg_id = msg.get("message_id")
+        if msg_id and msg_id in _processed_plan_msg_ids:
+            logger.info(f"Skipping duplicate Daily Plan webhook msg_id={msg_id}")
+            return
+        if msg_id:
+            _processed_plan_msg_ids.add(msg_id)
+            if len(_processed_plan_msg_ids) > 500:
+                _processed_plan_msg_ids.clear()
+
+        chat_title = msg.get("chat", {}).get("title", "")
+        date_str, team_str, content = parse_plan_fields(text, chat_id, chat_title)
+        if date_str and team_str:
+            msg_date = msg.get("date")
+            now_mm = datetime.fromtimestamp(msg_date, TZ_MM) if msg_date else datetime.now(TZ_MM)
+            clean_plan_text = text.strip()
+            while clean_plan_text and re.match(r'^(?:3\.\s*)?TNI\s*PERSONAL\s*FIND\s*TASK[^\n]*\n?', clean_plan_text, re.IGNORECASE):
+                clean_plan_text = re.sub(r'^(?:3\.\s*)?TNI\s*PERSONAL\s*FIND\s*TASK[^\n]*\n?', '', clean_plan_text, flags=re.IGNORECASE).strip()
+            submitted_at = now_mm.strftime('%d/%m/%Y %H:%M:%S')
+            res = store_daily_plan_to_sheet(date_str, team_str, clean_plan_text, msg_id=msg_id, submitted_at=submitted_at)
+            ref = res.get("ref")
+            dup = res.get("duplicate", False)
+
+            if not ref or ref == "?" or "OK" in str(ref):
+                ref_show = fetch_max_plan_ref()
+            else:
+                ref_show = ref
+
+            time_str = now_mm.strftime('%H:%M:%S')
+
+            action_label = "Daily Plan (Updated)" if dup else "Daily Plan"
+            tg_send(chat_id, f"📋 <b>{action_label}</b> ✅ #<b>{ref_show}</b> | 📍 <b>{team_str}</b> | 🗓️ <b>{date_str} {time_str}</b>")
+            return
+
+    # ── 2. DAILY REPORT SUBMIT (PRIORITY #2: Process daily report BEFORE SSOT classify) ──
     if is_daily(clean_text) or is_daily(text):
-        logger.info("[3D] Skip collecting Daily Result — handled exclusively by Bot 1C")
+        msg_date = msg.get("date")
+        submit_daily(chat_id, user_id, first_name, text, msg_date)
         return
 
     # ── CLASSIFY QUERY VIA SSOT ENGINE FIRST ──
@@ -2185,9 +2292,9 @@ def handle(update: dict) -> None:
         for chunk in split_messages(header + reply): tg_send(chat_id, chunk)
         return
 
-    # ── DAILY REPORT SUBMIT (Handed over to Bot 1C) ──
+    # ── DAILY REPORT SUBMIT ──
     if is_daily(clean_text):
-        logger.info("[3D] Skip collecting Daily Result — handled exclusively by Bot 1C")
+        submit_daily(chat_id, user_id, first_name, clean_text)
         return
 
     # ── STAFF PERSONAL LOOKUP (mysite / mycable / mydia / mydata / myolt) ──

@@ -886,3 +886,26 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 > 1. **Một Runner Duy Nhất Cho Tác Vụ Telethon (Sole Runner Only)**: TUYỆT ĐỐI CẤM cấu hình hoặc kích hoạt cùng một workflow Telethon (otlookup_relay.yml, daily_read_report.py, v.v.) trên nhiều hơn một repository. Repo MON6879/tni-sitedown-relay là **RUNNER ĐỘC QUYỀN DUY NHẤT** chạy otlookup_relay.py. Toàn bộ các repo khác (MON6879/TNI-DONE, phonghdpxd-cmd/tni-bot) BẮT BUỘC phải disable hoặc xóa bỏ workflow này để ngăn ngừa triệt để lỗi AuthKeyDuplicatedError.
 > 2. **Kiểm Soát Concurrency & Giữ Khoảng Cách Nhịp An Toàn**: Workflow sử dụng Telethon BẮT BUỘC phải đặt concurrency: group: ... với cancel-in-progress: false và đảm bảo các nhịp chạy (cron schedule) cách nhau tối thiểu 20-30 phút, tuyệt đối không để runner sau khởi động khi runner trước chưa giải phóng kết nối Telegram.
 > 3. **Tự Động Cập Nhật Secrets Khi Đổi Session**: Khi cập nhật session Telethon mới (get_session.py), BẮT BUỘC phải cập nhật đồng bộ trọn bộ 3 biến (TELEGRAM_SESSION, TELEGRAM_API_ID, TELEGRAM_API_HASH) vào GitHub Secrets của repo runner và kiểm tra bằng một lệnh dispatch live ngay lập tức để xác nhận HTTP 200 / Status Success trước khi bàn giao.
+
+---
+
+# 🤖 POST-MORTEM RULE — 09/09/2026: PHỤC HỒI ĐỘC QUYỀN BOT 3D CHO PLAN VÀ DAILY RESULT (ZERO BOT 1C LEAKAGE & STRICT 3D OWNERSHIP) (RULE PM-11)
+
+> ### Nguồn gốc: **Ghế Search-3D (Task & WO v4.3)** + **Ghế Bot-1C (Solution Clear @50)**
+> - **Yêu cầu thực tế (09/09/2026)**: "Đọc lại lịch sử hôm qua đã chuyển ra sao và sửa lại như cũ chỉ có 3D hiện Plan và daily report trong group Team"
+> - **Lịch sử & Bối cảnh**: 
+>   Hôm qua (08/09/2026), hệ thống đã thử chuyển Plan và Daily Result sang Bot 1C (TNICLEARSITEBOT) để gom chung menu 1..6 (RULE PM-7 & PM-9). Tuy nhiên, việc vận hành thực tế chứng minh Bot 3D (SEARCHTNITASKWOBOT) xử lý Plan và Daily ổn định hơn, nhanh hơn (Vercel Serverless + in-memory cache), và kết nối trực tiếp với Main Hub GAS (QLTC_GAS) để nộp ảnh vào thư mục Drive và lưu vào Sheet SSOT.
+> - **Nguyên tắc phân định mới (09/09/2026)**:
+>   1. **Bot 3D (SEARCHTNITASKWOBOT) Đảm Nhiệm Độc Quyền Plan & Daily**:
+>      - Menu trong các Group Team: Bot 3D hiển thị lệnh `plan_t{x}`, `plan_t{x}_s1`, `daily`.
+>      - Phản hồi mẫu (Template): Trả lời mẫu khi người dùng gọi `/daily`, `/daily_result`, `/plan*`.
+>      - Thu thập dữ liệu (Collector): Thu thập Daily Plan (`store_daily_plan_to_sheet`) và Daily Result (`submit_daily`).
+>      - Thu thập hình ảnh (Photo Collector): Nhận ảnh đính kèm Daily Result trong cửa sổ 10 phút (`submit_photo`).
+>   2. **Bot 1C (TNICLEARSITEBOT) Bỏ Hoàn Toàn Plan & Daily**:
+>      - Menu Telegram của Bot 1C trong các nhóm Team: BỎ 100% các lệnh Plan và Daily. CHỈ GIỮ LẠI: Solution FT (`sol_<ft_name>`), Long time list (`long_time_t{x}`), Template long time (`template_long_time`).
+>      - Bot 1C không phản hồi lệnh template Plan/Daily, không thu thập và không nhận ảnh Daily.
+>
+> ### 🔴 RULE PM-11: PHÂN ĐỊNH RÕ RÀNG BOT 3D QUẢN LÝ TOÀN BỘ VÒNG ĐỜI PLAN & DAILY REPORT
+> 1. **Bot 3D Sở Hữu Độc Quyền Toàn Bộ Vòng Đời Plan & Daily**: Mọi tính năng liên quan đến Plan (mẫu, gửi, sửa, ghi nhận REF) và Daily Result (mẫu, gửi kết quả, ghi nhận REF, nộp ảnh trong 10 phút) BẮT BUỘC do Bot 3D (SEARCHTNITASKWOBOT) quản lý 100%.
+> 2. **Làm Sạch Menu 1C Tận Gốc Cả Trên Telegram API**: Khi chuyển đổi quyền hạn giữa các bot, BẮT BUỘC phải gọi `setMyCommands` trên Telegram Bot API để xóa sạch lệnh cũ khỏi giao diện nhóm của nhân viên, không chỉ sửa code trên GAS mà để menu cũ trôi nổi trên Telegram.
+> 3. **Đồng Bộ Bộ 3 Repository**: Code của `search_bot.py` BẮT BUỘC phải đồng bộ 100% (cùng mã MD5) trên cả 3 repository: `Task and WO`, `tni-search`, và `tni-sitedown`.

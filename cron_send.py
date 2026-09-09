@@ -2212,7 +2212,7 @@ def send_share_eta_reminders(force: bool = False):
         has_tg_utils = False
         logger.warning("send_share_eta_reminders: tg_utils not available, no delete-old support")
 
-    # ── Chốt chặn: Kiểm tra timestamp Site Down (nếu Site Down đang đứng -> Dừng lại) ──
+    # ── Chốt chặn: Kiểm tra timestamp Site Down & Kháng trùng lặp trong cùng nhịp ──
     if not force:
         try:
             SD_SHEET_ID = "1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow"
@@ -2225,22 +2225,24 @@ def send_share_eta_reminders(force: bool = False):
                 m_sd_ts = re.search(r'(\d{2}/\d{2}/\d{4}\s+\d{2}:\d{2})', first_line)
                 current_sd_ts = m_sd_ts.group(1) if m_sd_ts else ""
                 if current_sd_ts:
-                    # 1. Kiểm tra độ tươi mới: nếu timestamp Site Down cách hiện tại > 45 phút -> Site Down đang đứng!
+                    # 1. Kiểm tra độ tươi mới: nếu timestamp Site Down cách hiện tại > 90 phút -> Site Down đang đứng!
                     try:
                         sd_dt = datetime.strptime(current_sd_ts, "%d/%m/%Y %H:%M").replace(tzinfo=TZ_MM)
                         age_minutes = (now - sd_dt).total_seconds() / 60
-                        if age_minutes > 45:
+                        if age_minutes > 90:
                             logger.info(f"⏸️ Site Down timestamp ({current_sd_ts}) đã quá cũ ({age_minutes:.0f} phút trước) — Site Down đang đứng, dừng gửi tin ETA.")
                             return
                     except Exception as parse_err:
                         logger.warning(f"Lỗi parse sd_dt: {parse_err}")
 
-                    # 2. Kiểm tra trùng lặp: nếu đã gửi mốc này rồi -> không gửi lại
+                    # 2. Kháng trùng lặp cùng nhịp (bucket 30 phút :11 và :41 MMT)
                     if has_tg_utils:
-                        last_sent_sd_ts = get_msg_id("last_eta_sd_timestamp")
-                        if last_sent_sd_ts == current_sd_ts:
-                            logger.info(f"⏸️ Site Down timestamp ({current_sd_ts}) chưa đổi mới — Site Down đang đứng, dừng gửi tin ETA nhắc nhở lặp lại.")
+                        bucket = f"{now.strftime('%Y%m%d_%H')}_{'11' if now.minute < 30 else '41'}"
+                        last_sent_bucket = get_msg_id("last_eta_sent_bucket")
+                        if last_sent_bucket == bucket:
+                            logger.info(f"⏸️ Nhịp {bucket} đã gửi rồi — bỏ qua để tránh gửi lặp trong cùng nhịp 30 phút.")
                             return
+                        set_msg_id("last_eta_sent_bucket", bucket)
                         set_msg_id("last_eta_sd_timestamp", current_sd_ts)
         except Exception as sd_chk_err:
             logger.warning(f"Không kiểm tra được Site Down timestamp: {sd_chk_err}")
