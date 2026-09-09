@@ -909,3 +909,20 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 > 1. **Bot 3D Sở Hữu Độc Quyền Toàn Bộ Vòng Đời Plan & Daily**: Mọi tính năng liên quan đến Plan (mẫu, gửi, sửa, ghi nhận REF) và Daily Result (mẫu, gửi kết quả, ghi nhận REF, nộp ảnh trong 10 phút) BẮT BUỘC do Bot 3D (SEARCHTNITASKWOBOT) quản lý 100%.
 > 2. **Làm Sạch Menu 1C Tận Gốc Cả Trên Telegram API**: Khi chuyển đổi quyền hạn giữa các bot, BẮT BUỘC phải gọi `setMyCommands` trên Telegram Bot API để xóa sạch lệnh cũ khỏi giao diện nhóm của nhân viên, không chỉ sửa code trên GAS mà để menu cũ trôi nổi trên Telegram.
 > 3. **Đồng Bộ Bộ 3 Repository**: Code của `search_bot.py` BẮT BUỘC phải đồng bộ 100% (cùng mã MD5) trên cả 3 repository: `Task and WO`, `tni-search`, và `tni-sitedown`.
+
+---
+
+# 📊 POST-MORTEM RULE — 09/09/2026: ĐỘC LẬP BẢNG ETA TỪNG ĐỘI & LÀM MỚI BẢNG TIN NHẮC NHỞ 30 PHÚT (RULE PM-12)
+
+> ### Nguồn gốc: **Toa ETA — Ghế Share-ETA** (`search_bot.py` / `cron_send.py` / `site_down_clear_solution.gs` @52)
+> - **Lỗi thực tế (09/09/2026)**: 
+>   1. Hình 2 cho thấy tin nhắc nhở ETA không tách chính xác T1 và T1 S1 (trạm của subteam bị lẫn vào team chính, trong khi tin nhắn subteam không có các mục 1.1, 1.2, 1.3).
+>   2. Hàm `isEtaShareResponse_` và `collectEtaShare_` trên GAS map nhầm mục 1.4 thành "Battery Temp High", regex chỉ chấp nhận gạch dài `—` (gõ gạch `-` bị UNKNOWN), và chỉ bắt bullet `^•` (bỏ qua bullet `✅`, `*`, `-`).
+>   3. Hàm `get_today_eta_from_sheet()` trên Python không ghi đè dữ liệu cũ khi nhân viên nộp cập nhật ETA mới hơn trong ngày.
+>   4. Hàm `send_share_eta_reminders()` trong `cron_send.py` chặn gửi lặp nếu timestamp Site Down chưa đổi, khiến tiến độ cập nhật ETA sống của nhân viên bị dừng không gửi cập nhật mỗi 30 phút.
+> - **Nguyên nhân gốc (Root Cause)**: Code cũ đọc từ Cột C vốn chỉ có alarm breakdown của main teams, và hardcode `if not is_subteam` bỏ qua 1.1..1.3 cho subteam. Dedup check dựa vào timestamp sheet nguồn thay vì bucket 30 phút.
+>
+> ### 🔴 RULE PM-12: ĐỌC ĐÚNG BẢNG PHÂN TÁCH ĐỘC LẬP BP..BW & LÀM MỚI NHẮC NHỞ 30 PHÚT THEO BUCKET
+> 1. **Đọc Đúng Bảng Phân Tách Từng Cột Riêng (Columns BP..BW)**: Mọi logic tạo template và reminder ETA BẮT BUỘC đọc từ bảng phân tách cột riêng cho từng Team và Subteam (`T1`, `T1 S1`, `T2`, `T2 S1`, `T3`, `T3 S1`, `T4` tại columns BP..BW, rows 5..9 trên Sheet GID 0). Tuyệt đối CẤM gộp chung subteam vào main team hoặc bỏ qua các mục 1.1..1.4 của subteam!
+> 2. **Ghi Nhận Phản Hồi Linh Hoạt & Đè Mới Nhất**: Hàm thu thập ETA trên GAS (`collectEtaShare_`) BẮT BUỘC chấp nhận mọi loại dấu gạch (`[-—–]`), mọi loại bullet (`(?:•|✅|\*|-)`), và map đúng mục 1.4 thành "1.4 Site Down". Trên Python, dữ liệu nộp sau trong ngày có FT+ETA BẮT BUỘC ghi đè dữ liệu cũ hơn.
+> 3. **Làm Mới Nhắc Nhở 30 Phút Bằng Bucket**: Chốt chặn chống trùng lặp nhắc nhở ETA trong `cron_send.py` BẮT BUỘC dùng bucket 30 phút (`HH_11` và `HH_41`) để đảm bảo mỗi nhịp :11 và :41 MMT đều gửi bản cập nhật sống mới nhất kèm xóa tin cũ, TUYỆT ĐỐI KHÔNG chặn gửi chỉ vì timestamp bảng nguồn botlookup chưa thay đổi.
