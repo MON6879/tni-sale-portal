@@ -995,4 +995,33 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 > 2. **Giữ Nguyên Cơ Chế Thu Thập Ảnh Như Sheet Cũ Vào Cột I**:
 >    Cơ chế thu thập ảnh được giữ nguyên vẹn 100% theo chuẩn của sheet cũ: Toàn bộ ảnh gửi trong vòng 10 phút được lưu vào Google Drive (`2.10 TNI PHOTO CONSTRUCTION/Report_STT_xxx`), và dòng link tải toàn bộ ảnh `📥 DOWNLOAD ALL (N Photos): [URL]` được nối vào cuối ô văn bản tại Cột I (`Content`).
 
+---
+
+# ⛽ POST-MORTEM RULE — 09/09/2026: QUY CHUẨN MẪU TEMPLATE INVENTORY FUEL, PARSER CHỐNG NHẢY DÒNG & BẢO TOÀN NGUYÊN VẸN CỘT SHEET (RULE PM-16)
+
+> ### Nguồn gốc: **Phân Hệ Thu Thập Inventory Fuel (Ghế 2B / Bot @TNIASSETorderREQUEST_BOT)** (`api/collector.py`, `apps_script_mdg.gs` / QLTC_GAS @421, Sheet `Inventory Main DG` tab GID 0 trên `1C8hU8SXpOdq-v6z7iLGoqwDJmO9DYudZ3rhflb7LC8Y`)
+> - **Lỗi & Yêu Cầu Của Người Dùng (09/09/2026)**:
+>   "Inventory fuel:
+>   DG ID: TNIXXXX
+>   Fuel cm: 
+>   Fuel %: 
+>   KWH in CSU: 
+>   DG Kwh : 
+>   DG Rh: 
+>   Note: sửa lại template"
+>   "cột thu thập thì giữ nguyên"
+> - **Nguyên Nhân Gốc (Root Cause)**:
+>   1. Template cũ dùng các trường `Fuel level:`, `Kwh:`, `Rh:`. Người dùng đổi sang `KWH in CSU:`, `DG Kwh :`, `DG Rh:`.
+>   2. Hàm `parse_inv_fields()` cũ dùng regex `\s*:\s*(.+?)(?=\n|$)`. Do `\s` trong Python khớp cả dấu xuống dòng `\n`, nên khi một trường để trống trên cùng dòng (ví dụ `Inventory fuel:`), regex sẽ nuốt tiếp dòng sau, dẫn đến `f["inventory fuel"]` bị gán nhầm thành `"DG ID: TNI0051"`.
+>   3. Người dùng yêu cầu nghiêm ngặt *"cột thu thập thì giữ nguyên"*, nên không được thêm/bớt/đổi tên 27 cột của Sheet `Inventory Main DG`. Cần ánh xạ vị trí tương ứng: `KWH in CSU` vào Col I (`Fuel Level`), `DG Kwh` vào Col J (`KWh`), `DG Rh` vào Col K (`RH`), trong khi toàn văn báo cáo vẫn bảo toàn 100% tại Col O (`Raw Content`).
+>
+> ### 🔴 RULE PM-16: BẢO TOÀN NGUYÊN VẸN CỘT THU THẬP & REGEX PARSER CHỐNG NHẢY DÒNG
+> 1. **Bảo Toàn 100% Cột Thu Thập (Zero Sheet Schema Mutation)**:
+>    Khi người dùng yêu cầu cập nhật template nhưng chỉ thị *"cột thu thập thì giữ nguyên"*, TUYỆT ĐỐI CẤM chèn thêm cột, xóa cột hay sửa header trên Google Sheet. Các trường mới phải được ánh xạ vào đúng cột sẵn có theo thứ tự logic hoặc lưu trữ an toàn, đảm bảo không phá vỡ liên kết của các cột downstream (Confirm, Photos, Raw Content).
+> 2. **Regex Parser Tuyệt Đối Cấm Nuốt Dòng Bằng `\s*`**:
+>    Khi bóc tách key-value từ tin nhắn chat, BẮT BUỘC dùng regex neo dòng `rf"(?i)(?:^|[\r\n])[^\w\r\n]*{word_pattern}[ \t]*:[ \t]*(.*?)(?=\r?\n|$)"` thay vì `\s*:\s*`. Khoảng trắng trước/sau dấu hai chấm `:` CHỈ được dùng `[ \t]*` để không bao giờ nuốt sang dòng kế tiếp khi trường hiện tại để trống.
+> 3. **Đồng Bộ Đồng Thời 2 Nhánh Lấy Mẫu Template**:
+>    Khi sửa template trả về từ lệnh `/...`, BẮT BUỘC sửa đồng thời ở cả nhánh xử lý chuyên biệt theo nhóm (`handle_mdg`) VÀ nhánh lệnh tổng (`handle`), đảm bảo người dùng gõ lệnh ở group làm việc hay gửi tin riêng (DM) với Bot đều nhận đúng mẫu chuẩn 100%.
+
+
 
