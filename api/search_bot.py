@@ -27,7 +27,7 @@ except ImportError:
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-BOT_VERSION = "v4.3"
+BOT_VERSION = "v4.4"
 
 # ── Config ────────────────────────────────────────────────────────────────────
 SEARCH_BOT_TOKEN_SSOT = "8606383435:AAEstcN4Om6_9ZAjs4OoFV2uVlRALgae2Ac"
