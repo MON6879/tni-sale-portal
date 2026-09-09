@@ -979,3 +979,20 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 > 2. **Chốt Chặn `COUNTA = 0` Bắt Buộc Trong Công Thức Mảng Động**:
 >    Mọi công thức mảng tổng hợp động (`LET`, `FILTER`, `HSTACK`, `MAP`) BẮT BUỘC phải kiểm tra `IF(COUNTA('Input Construction'!H2:H)=0, "", LET(...))` ngay từ đầu trước khi gọi `FILTER` và `MAP`. TUYỆT ĐỐI CẤM chỉ bọc `IFERROR(HSTACK(...))` ở ngoài cùng vì Google Sheets đánh giá lỗi theo từng phần tử (element-wise), khiến các hàm đếm như `COUNTIFS` trả về `0` (không phải error) và tạo ra dòng ma `['', '0', '', '']` khi bảng tính nguồn chưa có dữ liệu!
 
+---
+
+# 🛑 POST-MORTEM RULE — 09/09/2026: NGẮT TOÀN DIỆN TAB CŨ COLLECT DATA (GID 1235005577) & KHÓA DUY NHẤT VÀO INPUT CONSTRUCTION (GID 397336359) (RULE PM-15)
+
+> ### Nguồn gốc: **Phân Hệ TNI Construction (Bot 10 TNI_SITE)** (`13_TNI_CONSTRUCTION.gs` / QLTC_GAS @417)
+> - **Lỗi & Yêu Cầu Của Người Dùng (09/09/2026)**:
+>   "thu thập giống cơ chế sheet cũ và ngắt thu của link này luôn https://docs.google.com/spreadsheets/d/1ViXXv5P8jSgx5heBqEP419ZkSR77C3OsflK0xpHMoi8/edit?gid=1235005577#gid=1235005577"
+> - **Nguyên Nhân Gốc (Root Cause)**:
+>   Tab cũ `Collect Data` (GID `1235005577`) với cấu trúc 20 cột cũ cần được bọc thép ngắt hoàn toàn khỏi luồng thu thập. Trong code còn lưu biến `SHEET_COLLECT_LEGACY: 'Collect Data'` có nguy cơ gây nhầm lẫn hoặc ghi đè nếu dev sau gọi lại.
+>
+> ### 🔴 RULE PM-15: NGẮT THU THẬP TAB COLLECT DATA VÀ GIỮ CƠ CHẾ GOM LINK ẢNH VÀO CỘT I
+> 1. **Ngắt Hoàn Toàn Thu Thập Vào Tab `Collect Data` (GID `1235005577`)**:
+>    TUYỆT ĐỐI CẤM mọi hoạt động ghi, chèn dòng hoặc thu thập mới vào tab `Collect Data`. Toàn bộ dữ liệu báo cáo mới 100% BẮT BUỘC chỉ được ghi vào tab `Input Construction` (GID `397336359`). Xóa bỏ hoàn toàn mọi biến `SHEET_COLLECT_LEGACY` khỏi mã nguồn.
+> 2. **Giữ Nguyên Cơ Chế Thu Thập Ảnh Như Sheet Cũ Vào Cột I**:
+>    Cơ chế thu thập ảnh được giữ nguyên vẹn 100% theo chuẩn của sheet cũ: Toàn bộ ảnh gửi trong vòng 10 phút được lưu vào Google Drive (`2.10 TNI PHOTO CONSTRUCTION/Report_STT_xxx`), và dòng link tải toàn bộ ảnh `📥 DOWNLOAD ALL (N Photos): [URL]` được nối vào cuối ô văn bản tại Cột I (`Content`).
+
+
