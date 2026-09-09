@@ -101,10 +101,10 @@ DAILY_FIELDS_DEFAULT = [
     "Name and detail Site repair alarm",
     "Name Site follow partner refuel",
     "Other task",
-    "Name and detail Site go busines trip start go",
+    "Site + WO detial go busines trip start go",
     "Name and detail Site go busines trip end go",
-    "Km moto bike start",
-    "Km moto bike the end",
+    "Rent Boad",
+    "Rend moto in Island site",
 ]
 DAILY_FIELDS_TTL = 600
 _daily_fields: list = []
@@ -125,10 +125,10 @@ def send_daily_template(chat_id: int) -> None:
         f"Name and detail Site repair alarm:\n"
         f"Name Site follow partner refuel:\n"
         f"Other task:\n"
-        f"Name and detail Site go busines trip start go:\n"
+        f"Site + WO detial go busines trip start go:\n"
         f"Name and detail Site go busines trip end go:\n"
-        f"Km moto bike start:\n"
-        f"Km moto bike the end:"
+        f"Rent Boad:\n"
+        f"Rend moto in Island site:"
     )
     tg_send(chat_id, template)
 
@@ -1024,8 +1024,10 @@ def parse_daily_report(text: str, fields: list[str]) -> dict:
 
     KNOWN_KEY_ALIASES = [
         "daily result", "daily report", "full name", "name", "transportation used", "transportation",
-        "site rescue", "cell rescue", "rescue cable", "repair alarm", "partner refuel", "other task",
-        "detail wo", "detail task", "wo", "task", "busines trip", "km moto bike"
+        "site rescue", "cell rescue", "rescue cable", "resuce cable", "resuce", "cable", "repair alarm", "partner refuel", "other task",
+        "detail wo", "detail task", "wo", "task", "busines trip", "trip start", "trip end",
+        "rent boad", "rent boat", "boad", "boat", "rend moto", "rent moto", "island site",
+        "km moto bike"
     ]
 
     def flush():
