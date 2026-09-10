@@ -203,18 +203,10 @@ jobs:
           #  22:06 → Plan 5C Evening
           check_time 22 06 && P5C=true && NEED_PYTHON=true && echo "🚃 Toa 5: Plan 5C Evening (22:06 MMT)"
 
-          # 📋 Share ETA Reminder: Khởi hành tại nhịp :11 và :41 MMT (đúng 1 phút sau khi GAS gửi Site Down xong lúc :09/:10)
-          # Giờ hoạt động: 04:00 - 23:00 MMT (kiểm tra thêm bên trong script)
-          CURR_M=$(( 10#$M ))
-          DIFF_11=$(( CURR_M - 11 ))
-          [ $DIFF_11 -lt 0 ] && DIFF_11=$(( -DIFF_11 ))
-          DIFF_41=$(( CURR_M - 41 ))
-          [ $DIFF_41 -lt 0 ] && DIFF_41=$(( -DIFF_41 ))
-          if [ $DIFF_11 -le 2 ] || [ $DIFF_41 -le 2 ]; then
-            SHARE_ETA=true
-            NEED_PYTHON=true
-            echo "🚃 Toa ETA: Share ETA Reminder (nhịp :11/:41 MMT — sau Site Down GAS :09/:10 + 1 phút)"
-          fi
+          # 📋 Share ETA Reminder: ĐÃ ĐƯỢC LIÊN KẾT TRỰC TIẾP QUA GAS (30s sau Bot 5T)
+          # Tắt kích hoạt tự động theo cron :11/:41 trên train_5min để tránh bị trễ 5 phút và trùng lặp
+          # Vẫn cho phép kích hoạt thủ công qua workflow_dispatch
+          SHARE_ETA=false
 
           # Output all flags
           echo "need_python=$NEED_PYTHON" >> $GITHUB_OUTPUT

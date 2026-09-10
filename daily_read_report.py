@@ -94,7 +94,7 @@ NOTE_KEYWORDS = [
 # Exclude self-generated reports from being mistaken as the Note/EOD message
 EXCLUDE_KEYWORDS = [
     "6. report", "daily note read report", "read report",
-    "summary report", "5. report", "daily plan report",
+    "summary report", "5. report", "5.1 report", "5a. plan", "5b. plan", "daily plan report",
 ]
 # ──────────────────────────────────────────────────────────────────
 
@@ -594,30 +594,78 @@ async def main():
                 )
             return lines
 
-        # ── 1. Send per-team report to each Team group ──
+        # ── 1. Ghi readers mới lên sheet TRƯỚC khi build report ──
+        # (để report tổng hợp được cả người đọc từ các run trước trong ngày)
+        log_read_group_to_gas(all_results, date_str, now_str)
+
+        # ── 2. Đọc từ sheet danh sách tổng hợp cả ngày (tích lũy mọi run) ──
+        sheet_reads = get_today_reads_from_sheet(date_str)
+        # sheet_reads = {"T1": {"Tên": "HH:MM", ...}, "T2": {...}, ...}
+
+        # ── 3. Helper: build per-member lines — 100% dữ liệu từ sheet ──
+        def member_lines_from_sheet(per_member, team_key):
+            """Build report lines. Readers: tất cả stats từ sheet (giờ mới nhất + 3Day/7Day/Month).
+            Unread: dùng d1/d2/d7/month từ Telethon scan hiện tại (lịch sử)."""
+            team_sheet = sheet_reads.get(team_key, {})
+            lines = []
+            for p in per_member:
+                name = p["name"]
+                rec = team_sheet.get(name)   # None nếu chưa đọc hôm nay
+                if rec:
+                    # ── ĐÃ ĐỌC: lấy giờ và stats TỪ SHEET (tổng hợp cả ngày) ──
+                    icon = "🟩"
+                    time_str = f"🕐{rec['time']}"
+                    d0, d1, d2  = 1, rec["d1"], rec["d2"]
+                    d7, month   = rec["d7"], rec["month"]
+                elif not p.get("id"):
+                    # ── CHƯA VÀO NHÓM ──
+                    icon = "🟥"
+                    time_str = "N/A"
+                    d0, d1, d2  = 0, p["d1"], p["d2"]
+                    d7, month   = p["d7"], p["month"]
+                else:
+                    # ── CHƯA ĐỌC HÔM NAY ──
+                    icon = "🟨"
+                    time_str = "—"
+                    d0, d1, d2  = 0, p["d1"], p["d2"]
+                    d7, month   = p["d7"], p["month"]
+                lines.append(
+                    f"  {icon} {name}: {time_str}  "
+                    f"3Day:{d0}/{d1}/{d2}  "
+                    f"7Day:{d7}  Month:{month}"
+                )
+            return lines
+
+        def count_from_sheet(per_member, team_key):
+            """Đếm Read/Unread/NotJoined từ sheet (nguồn tổng hợp cả ngày)."""
+            team_sheet = sheet_reads.get(team_key, {})
+            cnt_read = sum(1 for p in per_member if p["name"] in team_sheet)
+            cnt_not_joined = sum(1 for p in per_member if not p.get("id"))
+            cnt_unread = len(per_member) - cnt_read - cnt_not_joined
+            return cnt_read, max(0, cnt_unread), cnt_not_joined
+
+
+        # ── 4. Gửi per-team report vào từng nhóm Team ──
         for gk in ("T1", "T2", "T3", "T4"):
             r = all_results.get(gk)
             if not r:
                 continue
 
-            cnt_unread = sum(1 for p in r["per_member"] if not p["d0"] and p.get("id"))
-            cnt_not_joined = sum(1 for p in r["per_member"] if not p.get("id"))
+            cnt_read, cnt_unread, cnt_not_joined = count_from_sheet(r["per_member"], gk)
 
-            note_line = f"📝 Note: {r['note_preview']}...\n" if r["note_preview"] else ""
             tl = [
                 f"📋 6. Report — Daily Note Read Report — {gk}",
                 f"📅 {date_str}  |  🕐 {now_str}",
                 f"⏰ Read Window: 04:00 - 23:59 Myanmar",
                 f"📅 Cycle: {cycle_str}",
-                f"📌 Shows who read the Note message during the active window (04:00 - 23:59) today.",
             ]
-            if note_line:
+            if r.get("note_preview"):
                 tl.append(f"📝 Note: {r['note_preview']}...")
             tl.append(divider)
             tl.append(f"👥 Team Members: {r['member_count']}  |  "
-                       f"✅ Read: {r['cnt_d0']}  |  ❌ Unread: {cnt_unread}  |  ❓ Not Joined: {cnt_not_joined}")
+                       f"✅ Read: {cnt_read}  |  ❌ Unread: {cnt_unread}  |  ❓ Not Joined: {cnt_not_joined}")
             tl.append(divider)
-            tl.extend(member_lines(r["per_member"]))
+            tl.extend(member_lines_from_sheet(r["per_member"], gk))
             tl.append(divider)
 
             chat_id = GROUPS[gk]
@@ -634,14 +682,10 @@ async def main():
             except Exception: pass
             sent = await client.send_message(chat_id, "\n".join(tl))
             save_msgids(GAS_URL, f"READREPORT_{gk}", [sent.id])
-            print(f"📤 Report sent to {gk}")
+            print(f"📤 Report sent to {gk} (sheet: {cnt_read} read)")
             await asyncio.sleep(1)
 
-        # ── 2. Ghi dữ liệu lượt đọc vào Google Sheet tab 'Read Group' TRƯỚC khi gửi CONTROL ──
-        # (Tránh crash MessageTooLong làm mất dữ liệu Sheet)
-        log_read_group_to_gas(all_results, date_str, now_str)
-
-        # ── 3. Send consolidated report to CONTROL ──
+        # ── 5. Gửi báo cáo tổng hợp vào CONTROL ──
         lines = [
             f"📋 6. Report — Daily Note Read Report — Summary",
             f"📅 {date_str}  |  🕐 {now_str}",
@@ -657,17 +701,16 @@ async def main():
                 lines.append("")
                 break
 
-        # Per-group with per-person details
+        # Per-group with per-person details (dùng sheet làm nguồn)
         for gk, r in all_results.items():
-            cnt_unread = sum(1 for p in r["per_member"] if not p["d0"] and p.get("id"))
-            cnt_not_joined = sum(1 for p in r["per_member"] if not p.get("id"))
+            cnt_read, cnt_unread, cnt_not_joined = count_from_sheet(r["per_member"], gk)
             lines.append(
                 f"🏷️ {gk}  |  👥 {r['member_count']}  |  "
-                f"✅ {r['cnt_d0']}  ❌ {cnt_unread}  ❓ {cnt_not_joined}"
+                f"✅ {cnt_read}  ❌ {cnt_unread}  ❓ {cnt_not_joined}"
             )
-            lines.extend(member_lines(r["per_member"]))
+            lines.extend(member_lines_from_sheet(r["per_member"], gk))
 
-            # Phần "Chưa có trong nhóm" cho CONTROL
+            # Phần "Chưa có trong nhóm"
             if r.get("not_in_group"):
                 lines.append(f"⚠️ Not in Group yet ({len(r['not_in_group'])} members):")
                 for name in r["not_in_group"]:
@@ -677,10 +720,10 @@ async def main():
 
         lines.append(divider)
 
-        # Grand totals
+        # Grand totals từ sheet (tổng hợp cả ngày)
         total_members = sum(r["member_count"] for r in all_results.values())
-        total_read = sum(r["cnt_d0"] for r in all_results.values())
-        total_unread = sum(len(r["today_unread"]) for r in all_results.values())
+        total_read    = sum(count_from_sheet(r["per_member"], gk)[0] for gk, r in all_results.items())
+        total_unread  = sum(count_from_sheet(r["per_member"], gk)[1] for gk, r in all_results.items())
         lines.append(
             f"📊 Total: {total_members} members  |  "
             f"✅ Read: {total_read}  |  ❌ Unread: {total_unread}"
@@ -715,7 +758,9 @@ async def main():
 
 
 def log_read_group_to_gas(all_results: dict, date_str: str, now_str: str):
-    """POST collected read statistics to GAS to record into 'Read Group' and 'Read Group Refuel' sheet tabs."""
+    """POST CHỈ những người ĐÃ ĐỌC hôm nay (d0==1) lên GAS → UPSERT vào tab 'Read Group'.
+    Sheet là nguồn tích lũy cả ngày — mỗi run chỉ thêm người mới đọc, không ghi đè toàn bộ.
+    """
     if not GAS_URL:
         return
     records_main = []
@@ -723,7 +768,9 @@ def log_read_group_to_gas(all_results: dict, date_str: str, now_str: str):
     for gk, r in all_results.items():
         note_msg = r.get("note_preview", "")
         for p in r.get("per_member", []):
-            # 🕐 Giờ đọc thực tế từng người (từ Telegram API), không phải giờ chạy report
+            # ── CHỈ GHI người ĐÃ ĐỌC HÔM NAY (d0 == 1) ──
+            if p.get("d0") != 1:
+                continue
             individual_time = p.get("read_time") or "—"
             rec = {
                 "date": date_str,
@@ -731,7 +778,7 @@ def log_read_group_to_gas(all_results: dict, date_str: str, now_str: str):
                 "team": gk,
                 "name": p["name"],
                 "telegram_id": str(p.get("id", "")),
-                "status": "Read" if p["d0"] == 1 else "Unread",
+                "status": "Read",
                 "trend_3day": f"{p['d0']}/{p['d1']}/{p['d2']}",
                 "count_7day": p["d7"],
                 "count_month": p["month"],
@@ -742,7 +789,7 @@ def log_read_group_to_gas(all_results: dict, date_str: str, now_str: str):
             else:
                 records_main.append(rec)
 
-    # 1. Ghi log các đội vận hành chính vào tab 'Read Group'
+    # 1. UPSERT readers chính vào tab 'Read Group'
     if records_main:
         try:
             resp = requests.post(GAS_URL, json={
@@ -751,13 +798,15 @@ def log_read_group_to_gas(all_results: dict, date_str: str, now_str: str):
             }, timeout=30)
             res_json = resp.json() if resp.status_code == 200 else {}
             if resp.status_code == 200 and res_json.get("status") == "ok":
-                print(f"  💾 Logged {len(records_main)} records to 'Read Group' tab successfully ✅")
+                ins = res_json.get("inserted", 0)
+                upd = res_json.get("updated", 0)
+                print(f"  💾 Read Group UPSERT: +{ins} new, ~{upd} updated ✅")
             else:
-                print(f"  ⚠️ Failed to log to Read Group tab: HTTP {resp.status_code} - {resp.text}")
+                print(f"  ⚠️ Failed to log to Read Group tab: HTTP {resp.status_code} - {resp.text[:200]}")
         except Exception as e:
             print(f"  ⚠️ Failed to log to Read Group tab: {e}")
 
-    # 2. Ghi log phân hệ Refuel vào tab 'Read Group Refuel'
+    # 2. UPSERT readers Refuel vào tab 'Read Group Refuel'
     if records_refuel:
         try:
             resp = requests.post(GAS_URL, json={
@@ -766,11 +815,63 @@ def log_read_group_to_gas(all_results: dict, date_str: str, now_str: str):
             }, timeout=30)
             res_json = resp.json() if resp.status_code == 200 else {}
             if resp.status_code == 200 and res_json.get("status") == "ok":
-                print(f"  💾 Logged {len(records_refuel)} records to 'Read Group Refuel' tab successfully ✅")
+                print(f"  💾 Read Group Refuel UPSERT: {len(records_refuel)} records ✅")
             else:
-                print(f"  ⚠️ Failed to log to Read Group Refuel tab: HTTP {resp.status_code} - {resp.text}")
+                print(f"  ⚠️ Failed to log to Read Group Refuel tab: HTTP {resp.status_code} - {resp.text[:200]}")
         except Exception as e:
             print(f"  ⚠️ Failed to log to Read Group Refuel tab: {e}")
+
+
+def get_today_reads_from_sheet(date_str: str) -> dict:
+    """Đọc từ Sheet 'Read Group' danh sách tất cả người đã đọc trong ngày date_str.
+    Returns:
+      { "T1": { "Tên": {"time":"09:04","d1":0,"d2":1,"d7":3,"month":5}, ... }, ... }
+    Nguồn tổng hợp cả ngày — tích lũy từ nhiều lần chạy (UPSERT giờ đọc mới nhất).
+    """
+    result = {"T1": {}, "T2": {}, "T3": {}, "T4": {}, "CONTROL": {}}
+    if not GAS_URL:
+        return result
+    try:
+        resp = requests.get(
+            GAS_URL,
+            params={"action": "get_read_group_today", "date": date_str},
+            timeout=20
+        )
+        if resp.status_code != 200:
+            print(f"  ⚠️ get_today_reads_from_sheet: HTTP {resp.status_code}")
+            return result
+        data = resp.json()
+        records = data.get("records", [])
+        print(f"  📊 Sheet 'Read Group' today ({date_str}): {len(records)} readers")
+        for rec in records:
+            team = rec.get("team", "")
+            name = rec.get("name", "")
+            if not (team in result and name):
+                continue
+            # Parse trend_3day "1/0/1" → d1, d2 — safe parse, không crash
+            trend = rec.get("trend_3day", "1/0/0")
+            parts = trend.replace("'", "").split("/")
+            try:
+                d1 = int(float(parts[1])) if len(parts) > 1 and parts[1].strip() else 0
+                d2 = int(float(parts[2])) if len(parts) > 2 and parts[2].strip() else 0
+            except (ValueError, TypeError):
+                d1, d2 = 0, 0
+            try:
+                d7    = int(float(rec.get("count_7day",  0) or 0))
+                month = int(float(rec.get("count_month", 0) or 0))
+            except (ValueError, TypeError):
+                d7, month = 0, 0
+            result[team][name] = {
+                "time":  rec.get("time", "—") or "—",
+                "d1":    d1,
+                "d2":    d2,
+                "d7":    d7,
+                "month": month,
+            }
+        return result
+    except Exception as e:
+        print(f"  ⚠️ get_today_reads_from_sheet error: {e}")
+        return result
 
 
 if __name__ == "__main__":

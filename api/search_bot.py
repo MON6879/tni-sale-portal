@@ -27,7 +27,7 @@ except ImportError:
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-BOT_VERSION = "v4.4"
+BOT_VERSION = "v4.5"
 
 # ── Config ────────────────────────────────────────────────────────────────────
 SEARCH_BOT_TOKEN_SSOT = "8606383435:AAEstcN4Om6_9ZAjs4OoFV2uVlRALgae2Ac"
@@ -1522,6 +1522,7 @@ def is_daily_plan(text: str) -> bool:
 
     # Blacklist of bot outputs/reports to avoid self-triggering
     if any(kw in text_l for kw in (
+        "5a. plan daily", "5a plan daily", "5b. plan today", "5b plan today",
         "5.1 report", "5. report", "4. report", "report 4", "refuel plan",
         "comparison of plan for", "auto report", "plan stats:", "report — daily plan",
         "crosscheck", "plan tomorrow status", "plan vs actual", "eod summary",
@@ -2512,10 +2513,7 @@ class handler(BaseHTTPRequestHandler):
                 try:
                     import traceback
                     tb = traceback.format_exc()
-                    msg_obj = data.get("message") or data.get("edited_message") or {}
-                    chat_id = msg_obj.get("chat", {}).get("id")
-                    if chat_id:
-                        tg_send(chat_id, f"⚠️ <b>Error:</b>\n<pre>{html.escape(tb[:2000])}</pre>")
+                    logger.error(f"handle() traceback:\n{tb}")
                 except Exception:
                     pass
 
@@ -2592,6 +2590,25 @@ class handler(BaseHTTPRequestHandler):
             self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
             self.wfile.write(json.dumps({"template": template_text}).encode("utf-8"))
+            return
+
+        if action == "send_eta_reminders":
+            try:
+                from cron_send import send_share_eta_reminders
+                send_share_eta_reminders(force=True)
+                result = {
+                    "ok": True,
+                    "action": "send_eta_reminders",
+                    "time": datetime.now(TZ_MM).strftime("%d/%m/%Y %H:%M:%S")
+                }
+            except Exception as ex:
+                logger.error(f"send_eta_reminders error: {ex}")
+                result = {"ok": False, "error": str(ex)}
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(json.dumps(result, indent=2).encode("utf-8"))
             return
 
         if TOKEN and not action:

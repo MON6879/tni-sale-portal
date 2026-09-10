@@ -2265,7 +2265,8 @@ def send_share_eta_reminders(force: bool = False):
         "T4":    str(TELEGRAM_GROUPS.get("T4", "")),
     }
 
-    token = os.getenv("SEARCH_BOT_TOKEN") or os.getenv("SEND_BOT_TOKEN", "")
+    # Bot 2D (2. TNI Auto Report Daily - SEND_BOT_TOKEN)
+    token = os.getenv("SEND_BOT_TOKEN") or "8897800070:AAHcG2eHlPsE0KpZAGjcFTe7ndn8gjpQi-A"
 
     sent_count = 0
     for t_name, msg_text, has_pending in results:
