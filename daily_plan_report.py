@@ -63,7 +63,7 @@ DAILY_REPORT_CSV = (
 
 # ── Telegram Groups ────────────────────────────────────────────
 from tni_config import TELEGRAM_GROUPS, GROUP_NAMES
-GROUPS = {k: v for k, v in TELEGRAM_GROUPS.items() if k != "CONTROL"}
+GROUPS = {k: v for k, v in TELEGRAM_GROUPS.items() if k in ("T1", "T2", "T3", "T4")}
 CONTROL_CHAT_ID = TELEGRAM_GROUPS["CONTROL"]
 
 # Team number → group key  (dùng để map nhân viên)

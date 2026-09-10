@@ -1043,3 +1043,25 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 >    Trong biểu thức điều kiện của `FILTER`, để so khớp chính xác cả trường hợp ô có giá trị và ô hoàn toàn rỗng/trống (`""`), BẮT BUỘC dùng biểu thức đại số boolean đồng nhất kích thước:
 >    `((p="")*((rawPO="")+(ISBLANK(rawPO))) + (p<>"")*(rawPO=p))*(rawTmpl=t)`
 >    TUYỆT ĐỐI CẤM dùng `IF(scalar, array, array)` bên trong `LAMBDA` vì sẽ làm co mảng về 1 phần tử scalar, gây lỗi lệch kích thước dải ô `#VALUE! (FILTER has mismatched range sizes)`.
+
+---
+
+# ⏱️ POST-MORTEM RULE — 10/09/2026: LIÊN KẾT TRỰC TIẾP BOT NỐI TIẾP QUA GAS WEBHOOK HANDOFF & KHÓA CHẶT CRON TRÙNG LẶP (RULE PM-18)
+
+> ### Nguồn gốc: **Phân Hệ Site Down (Bot 5T) & ETA Reminders (Bot 2D)** (`site_down_v2.gs` Version `@97`, `api/search_bot.py` v4.5, `train_5min.yml`)
+> - **Lỗi Thực Tế (10/09/2026)**:
+>   Bot 5T gửi tin danh sách trạm sập lúc 05:39. Nhân viên mong muốn đúng 30 giây sau Bot 2D gửi bản tin nhắc nhở ETA Update. Nhưng thực tế Bot 2D bị trễ tới 5 phút (đến tận 05:44 mới gửi).
+> - **Nguyên Nhân Gốc (Root Cause)**:
+>   Hai bot chạy trên 2 hệ thống lịch trình hoàn toàn tách rời: Bot 5T gửi theo sự kiện cào dữ liệu Site Down (:06 và :36 MMT), còn Bot 2D lại nằm trên lịch trình cron định kỳ `train_5min.yml` chờ đến nhịp :11 và :41 MMT mới kích hoạt cờ `share_eta`. Do GitHub Actions runner mất 3-4 phút để cấp phát và khởi động máy ảo, cron :41 bị trễ đến :44 mới chạy, tạo ra khoảng cách 5 phút bất hợp lý. Đồng thời, do Telegram API chặn bot đọc tin nhắn của bot khác trong nhóm chat, Bot 2D không thể "nghe" tin nhắn của Bot 5T trong group Telegram.
+>
+> ### 🔴 RULE PM-18: LIÊN KẾT TRỰC TIẾP BOT NỐI TIẾP QUA GAS WEBHOOK HANDOFF & XÓA CRON TRÙNG LẶP
+> 1. **Cơ Chế Handoff Trigger Chính Xác Thời Gian (Precision Delay Handoff)**:
+>    Khi Bot B là bản tin phụ thuộc/nối tiếp của Bot A (ví dụ Bot 2D gửi ETA Update nối tiếp sau Bot 5T Site Down):
+>    - BẮT BUỘC phải thực hiện liên kết trực tiếp ở tầng code: Ngay khi Bot A gửi xong (`processSiteDownColC` hoàn tất thành công) ➔ Đếm đúng thời gian chờ (`Utilities.sleep(30000)` = 30 giây) ➔ Gọi Webhook kích hoạt Bot B phát tin ngay lập tức qua Vercel Serverless (`api/search_bot?action=send_eta_reminders`).
+>    - TUYỆT ĐỐI CẤM để Bot B chạy theo lịch hẹn giờ độc lập (cron GitHub Actions) rồi hy vọng 2 tiến trình khớp giờ với nhau!
+> 2. **Dọn Dẹp Triệt Để Cron Cũ (Zero Duplicate / Ghost Triggers)**:
+>    Khi chuyển đổi một tác vụ từ cron định kỳ sang liên kết Handoff Trigger:
+>    - BẮT BUỘC phải vô hiệu hóa điều kiện kích hoạt tự động theo cron trên GitHub Actions (`train_5min.yml`: `SHARE_ETA=false`), chỉ giữ lại tùy chọn kích hoạt thủ công qua `workflow_dispatch`.
+>    - TUYỆT ĐỐI CẤM để cả 2 cơ chế (Handoff + Cron cũ) cùng chạy song song, vì sẽ gây hiện tượng gửi lặp lại 2 lần cách nhau vài phút!
+> 3. **Bảo Đảm Đúng Bot Token Nghiệp Vụ (Strict Bot Identity Ownership)**:
+>    Bản tin nhắc nhở ETA Update (`📋 TX — ETA Update`) BẮT BUỘC phải phát từ Bot 2D (`2. TNI Auto Report Daily`, `@TNIREPORTTASK_BOT`, Token ID `8897800070`). Trong code gửi tin, BẮT BUỘC ưu tiên `SEND_BOT_TOKEN`, TUYỆT ĐỐI KHÔNG để lọt sang token khác (`SEARCH_BOT_TOKEN`).
