@@ -848,9 +848,11 @@ async def audit_telegram_messages_telethon():
                 if len(msgs) < 2:
                     continue
                 
-                # Phân nhóm tin nhắn theo dòng đầu tiên (tiêu đề) đã chuẩn hóa
+                # Phân nhóm tin nhắn theo dòng đầu tiên (tiêu đề) đã chuẩn hóa (Chỉ kiểm tra tin nhắn trong ngày hôm nay)
                 title_map = {}
                 for m in msgs:
+                    if m.get("date_str") != today_start.strftime("%d/%m/%Y"):
+                        continue
                     # Nhận diện phần multipart (ví dụ: Part 1/3, Part 2/3, Part 3/3) để không gom chung
                     part_match = re.search(r'\(Part\s*(\d+)\s*/\s*(\d+)\)', m["first_line"], re.IGNORECASE)
                     part_suffix = f"_part_{part_match.group(1)}" if part_match else ""

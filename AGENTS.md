@@ -128,6 +128,15 @@
 
 ---
 
+# 🛡️ STRICT SYSTEM AUDITOR & SYNCHRONIZED TRAIN SCHEDULE RULE: KHÓA CHẶT ĐỒNG BỘ MỐC GIỜ, PHẠM VI NGÀY & TỐI ƯU TRA CỨU RAM (STRICT AUDITOR-TRAIN SYNC & IN-MEMORY BATCH POLICY)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (AUDITOR & TRAIN SYNC POLICY)**:
+> 1. **Khóa Chặt Mốc Giờ Giữa Đoàn Tàu & Kiểm Toán (Auditor-Train 100% Schedule Parity)**: Mọi mốc giờ báo cáo được khai báo trong `SCHEDULE_RULES` của Sentinel Auditor (`system_auditor.py`) BẮT BUỘC phải đồng bộ 100% với điều kiện kích hoạt trong đoàn tàu cron (`train_5min.yml`). TUYỆT ĐỐI CẤM để cờ kích hoạt bị `false` (như Toa 8 `REFUEL_REQ=false` hoặc thiếu mốc Catch-up 07:06, 13:06), gây tình trạng script không bao giờ được chạy tự động dẫn đến báo lỗi bỏ sót ảo (`MISSED`)!
+> 2. **Kiểm Tra Trùng Lặp Bắt Buộc Đúng Ngày Hiện Tại (Strict Active-Date Dedup Scope)**: Khi thực hiện kiểm toán nhân đôi tin nhắn (Deduplication Check), BẮT BUỘC phải lọc đúng phạm vi tin nhắn gửi trong ngày hôm nay (`m.get("date_str") == today_start`). TUYỆT ĐỐI KHÔNG ĐƯỢC quét tràn sang tin nhắn của ngày hôm trước khiến hệ thống liên tục cảnh báo lại các sự cố cũ đã được khắc phục triệt để!
+> 3. **Tối Ưu Tra Cứu Dữ Liệu Hàng Loạt Vào RAM (In-Memory Batch Lookup Only)**: Mọi hàm xử lý dữ liệu hàng loạt trên Google Sheets (như `handleBackfillDailyReportEmployeeNames`) BẮT BUỘC phải nạp toàn bộ danh mục tra cứu (ví dụ: tab `ID Telegram`) vào mảng RAM 1 lần duy nhất trước vòng lặp và tự động thay thế triệt để các mã lỗi công thức (`#REF!`, `#VALUE!`) bằng giá trị dữ liệu thực. TUYỆT ĐỐI CẤM gọi `getRange()` hay đọc Sheet lặp đi lặp lại bên trong từng vòng lặp gây timeout 30s của Google Apps Script!
+
+---
+
 # 🎯 STRICT RULE: SỬA CÁI NÀO TÌM ĐÚNG CÁI ĐÓ ĐỂ SỬA — TIN NÀO XÓA TIN NẤY (STRICT SCOPE ISOLATION & ZERO-COLLATERAL-DAMAGE)
 
 > ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (TARGETED SCOPE & ISOLATED CLEANUP POLICY)**:
