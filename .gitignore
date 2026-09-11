@@ -1,5 +1,9 @@
 .vercel
-__pycache__/
+tni_site_down_repo/
+new_telegram_session.txt
+*.session*
+generate_session.py
+CHAY_TAO_KEY_TELEGRAM.bat
 *.pyc
 .env
 *.log
