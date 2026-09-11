@@ -1067,3 +1067,25 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 >    - TUYỆT ĐỐI CẤM để cả 2 cơ chế (Handoff + Cron cũ) cùng chạy song song, vì sẽ gây hiện tượng gửi lặp lại 2 lần cách nhau vài phút!
 > 3. **Bảo Đảm Đúng Bot Token Nghiệp Vụ (Strict Bot Identity Ownership)**:
 >    Bản tin nhắc nhở ETA Update (`📋 TX — ETA Update`) BẮT BUỘC phải phát từ Bot 2D (`2. TNI Auto Report Daily`, `@TNIREPORTTASK_BOT`, Token ID `8897800070`). Trong code gửi tin, BẮT BUỘC ưu tiên `SEND_BOT_TOKEN`, TUYỆT ĐỐI KHÔNG để lọt sang token khác (`SEARCH_BOT_TOKEN`).
+
+# 🛡️ POST-MORTEM RULE — 11/09/2026: TÁCH BIỆT LUỒNG ETA CHỈ TRẢ LỜI CỘT C & KHÓA CHẶT AW7 KHÁNG TIN CŨ LỆCH THỜI GIAN VỚI CỘT A (RULE PM-19)
+
+> ### Nguồn gốc: **Phân Hệ Site Down (Bot 5T) & ETA Reminders (Bot 2D)** (site_down_v2.gs Deployment @100, Bảng tính 1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow GID 0)
+> - **Lỗi Thực Tế (11/09/2026)**:
+>   1. Sau khi Bot 5T gửi tin trạm sập (Cột C, ví dụ 15:30), bảng SUMMARY (AW7) bị gửi ra nhóm chat mang mốc giờ cũ (13:49) và nội dung cũ của đợt trước, gây lệch thời gian nghiêm trọng với Cột A.
+>   2. Bản tin ETA Update của Bot 2D xuất hiện ngay sau tin AW7, tạo cảm giác ETA đang trả lời cho AW7 thay vì trả lời theo Cột C.
+> - **Nguyên Nhân Gốc (Root Cause)**:
+>   1. Trong doPost() action store_site_down: Khi botlookup cào dữ liệu mới về Cột A, code đã tự động gọi luôn processSummaryAwAz(sheet, false) (Luồng 2 AW7). Trong khi đó, ô AW7 chưa cập nhật kịp và vẫn mang timestamp cũ (13:49/17:16). Do 	sKey !== lastTs, AW7 bị gửi ra nhóm chat cùng lúc với đợt cào Cột A!
+>   2. Hàm processSummaryAwAz() có nhận định sai lầm (// Logic đúng: tsKey mới ≠ lastTs → GỬI NGAY. Không cần freshness check), thiếu 2 tầng bảo vệ sống còn: (a) Không kiểm tra độ tươi mới isDataFresh_, (b) Không so sánh mốc giờ AW7 với Cột A (parseA1Timestamp), dẫn đến việc để lọt tin cũ cách hiện tại 1-4 tiếng!
+>
+> ### 🔴 RULE PM-19: TÁCH BIỆT TUYỆT ĐỐI LUỒNG CỘT C / ETA & 2 CHỐT CHẶN THÉP CHỐNG LỆCH THỜI GIAN CHO AW7
+> 1. **Cào Cột A CHỈ Chạy Duy Nhất Cột C (Dedicated Col C in store_site_down)**:
+>    - Khi Webhook nhận action store_site_down từ relay, BẮT BUỘC CHỈ ĐƯỢC chạy processSiteDownColC(sheet, true) để gửi Tin 1 và sau đó 30s kích hoạt Bot 2D ETA Reminders.
+>    - **TUYỆT ĐỐI CẤM** gọi processSummaryAwAz (Luồng 2 AW7) bên trong action store_site_down! Luồng AW7 là bảng tổng hợp độc lập, không được phép chen vào nhịp cào Cột A làm gián đoạn luồng Cột C ➔ ETA.
+> 2. **ETA Bot 2D CHỈ Phục Vụ Cột C (ETA Exclusively for Column C)**:
+>    - Bản tin nhắc nhở ETA Update (📋 TX — ETA Update) CHỈ ĐƯỢC PHÉP theo sau và phản hồi cho danh sách trạm của Cột C (Tin 1).
+>    - **TUYỆT ĐỐI CẤM** để luồng AW7 kích hoạt ETA, và không bao giờ gửi tin AW7 chen vào giữa Cột C và ETA!
+> 3. **2 Chốt Chặn Thép Chống Gửi Tin Cũ Cho AW7 (Double-Forensic Guard for AW7)**:
+>    Hàm processSummaryAwAz BẮT BUỘC phải vượt qua đầy đủ 2 chốt chặn trước khi được phép gửi bất kỳ tin nào ra nhóm:
+>    - *Chốt Chặn 1 (Freshness Guard)*: if (!isDirectPush && !isDataFresh_(tsKey, 45)) ➔ Nếu timestamp AW7 cách hiện tại > 45 phút ➔ **BỎ QUA 100% (RETURN FALSE)**!
+>    - *Chốt Chặn 2 (Anti-Mismatch with Column A Guard)*: Lấy 	sA1 = parseA1Timestamp(sheet). Nếu parseTsToMinutes_(tsKey) < parseTsToMinutes_(tsA1) ➔ Timestamp AW7 CŨ HƠN Cột A ➔ **BỎ QUA 100% (RETURN FALSE)**! Tuyệt đối không bao giờ gửi bảng AW7 khi Cột A đã có mốc giờ mới hơn!
