@@ -2278,12 +2278,27 @@ def send_share_eta_reminders(force: bool = False):
         # Key riêng cho mỗi team — "tin nào xóa tin nấy"
         state_key = f"eta_reminder_{t_name.replace(' ', '_')}"
 
-        # 1. Xóa tin cũ (nếu có)
+        # 1. Xóa tin cũ (nếu có) — hỗ trợ multi-IDs và retry chống nghẽn GAS
         if has_tg_utils:
-            old_msg_id = get_msg_id(state_key)
-            if old_msg_id:
-                tg_delete(chat_id, old_msg_id, bot_token=token)
-                logger.info(f"🗑️ Đã xóa tin cũ {state_key} msg_id={old_msg_id}")
+            old_raw = ""
+            for _ in range(2):
+                try:
+                    old_raw = get_msg_id(state_key)
+                    if old_raw:
+                        break
+                except Exception:
+                    pass
+                time.sleep(0.5)
+
+            if old_raw:
+                for mid in str(old_raw).replace(";", ",").split(","):
+                    mid = mid.strip()
+                    if mid:
+                        try:
+                            tg_delete(chat_id, mid, bot_token=token)
+                            logger.info(f"🗑️ Đã xóa tin cũ {state_key} msg_id={mid}")
+                        except Exception as del_err:
+                            logger.warning(f"Lỗi xóa tin {state_key} mid={mid}: {del_err}")
 
         # 2. Gửi tin mới
         try:
@@ -2298,7 +2313,7 @@ def send_share_eta_reminders(force: bool = False):
                 sent_count += 1
                 # 3. Lưu message_id mới để lần sau xóa
                 if has_tg_utils and new_msg_id:
-                    set_msg_id(state_key, new_msg_id)
+                    set_msg_id(state_key, str(new_msg_id))
             else:
                 logger.warning(f"share_eta reminder → {t_name}: HTTP {resp.status_code} {resp.text[:100]}")
         except Exception as e:
