@@ -115,6 +115,8 @@
 > 2. **Dedup Update ID Bắt Buộc (Mandatory Webhook Dedup)**: Mọi hàm `doPost()` nhận webhook từ Telegram BẮT BUỘC phải lưu `update_id` vào `CacheService` (5 phút). Nếu `update_id` đã tồn tại trong cache → trả `"OK"` ngay lập tức, KHÔNG xử lý lại. Mục đích: Telegram retry webhook 2-3 lần khi GAS phản hồi chậm, gây trùng lặp tin nhắn.
 > 3. **Giải Phóng Lock Trong Finally (Always Release in Finally)**: Mọi `tryLock()` BẮT BUỘC phải có `finally { lock.releaseLock(); }` để tránh deadlock.
 > 4. **Kiểm Tra Tham Số Trigger Bắt Buộc (Strict Trigger Boolean Check)**: Khi một hàm GAS được gọi bởi Time-driven Trigger, GAS luôn tự động truyền vào 1 đối tượng Event `e` (`{authMode: ...}`). Do đó, nếu hàm có tham số cờ (ví dụ `forceSend`), TUYỆT ĐỐI KHÔNG DÙNG `if (!forceSend)` vì `!{}` là `false` khiến Trigger hiểu nhầm là `forceSend=true` và gửi spam liên tục! BẮT BUỘC phải kiểm tra kiểu boolean chặt chẽ: `const isForce = (forceSend === true);`.
+> 5. **Vô Hiệu Hóa Ghost Cron Khi Chuyển Sang Luồng Liên Kết (Zero Ghost Cron Policy)**: Khi một luồng gửi tin được chuyển sang kích hoạt liên kết trực tiếp (như Bot 5T sau 30s gọi Bot 2D qua Webhook), BẮT BUỘC phải tắt hoàn toàn cron tự động tương ứng trên GitHub Actions (`SHARE_ETA=false`) để tránh chạy kép lệch nhịp làm sai lệch state và ghi đè tin nhắn.
+> 6. **Xóa Tin Cũ Đa ID & Chống Timeout GAS (Multi-ID Deletion & Retry Resilience)**: Mọi logic xóa tin cũ ("tin nào xóa tin nấy") BẮT BUỘC phải hỗ trợ phân tách và xóa toàn bộ danh sách Multi-IDs (chuỗi ngăn cách `,` hoặc `;`) và có retry tối thiểu 2 lần khi gọi `get_msg_id` qua GAS API. TUYỆT ĐỐI CẤM chỉ giả định đọc 1 ID rồi ghi đè ngay làm mất dấu tin mồ côi (orphaned messages).
 
 ---
 
