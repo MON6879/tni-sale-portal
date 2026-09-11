@@ -117,6 +117,14 @@
 > 4. **Kiểm Tra Tham Số Trigger Bắt Buộc (Strict Trigger Boolean Check)**: Khi một hàm GAS được gọi bởi Time-driven Trigger, GAS luôn tự động truyền vào 1 đối tượng Event `e` (`{authMode: ...}`). Do đó, nếu hàm có tham số cờ (ví dụ `forceSend`), TUYỆT ĐỐI KHÔNG DÙNG `if (!forceSend)` vì `!{}` là `false` khiến Trigger hiểu nhầm là `forceSend=true` và gửi spam liên tục! BẮT BUỘC phải kiểm tra kiểu boolean chặt chẽ: `const isForce = (forceSend === true);`.
 > 5. **Vô Hiệu Hóa Ghost Cron Khi Chuyển Sang Luồng Liên Kết (Zero Ghost Cron Policy)**: Khi một luồng gửi tin được chuyển sang kích hoạt liên kết trực tiếp (như Bot 5T sau 30s gọi Bot 2D qua Webhook), BẮT BUỘC phải tắt hoàn toàn cron tự động tương ứng trên GitHub Actions (`SHARE_ETA=false`) để tránh chạy kép lệch nhịp làm sai lệch state và ghi đè tin nhắn.
 > 6. **Xóa Tin Cũ Đa ID & Chống Timeout GAS (Multi-ID Deletion & Retry Resilience)**: Mọi logic xóa tin cũ ("tin nào xóa tin nấy") BẮT BUỘC phải hỗ trợ phân tách và xóa toàn bộ danh sách Multi-IDs (chuỗi ngăn cách `,` hoặc `;`) và có retry tối thiểu 2 lần khi gọi `get_msg_id` qua GAS API. TUYỆT ĐỐI CẤM chỉ giả định đọc 1 ID rồi ghi đè ngay làm mất dấu tin mồ côi (orphaned messages).
+---
+
+# ⚡ STRICT SERVERLESS TIMEOUT & FAST-PATH PIPELINE RULE: CẤM GỌI GAS ĐỒNG BỘ NẶNG TRƯỚC PHÂN LOẠI TIN NHẮN (STRICT SERVERLESS TIMEOUT & PRE-CLASSIFICATION NON-BLOCKING POLICY)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (SERVERLESS TIMEOUT & FAST PATH POLICY)**:
+> 1. **Phân Loại & Xử Lý Báo Cáo Trước Tiên (Classify & Fast-Path First)**: Mọi webhook nhận tin Telegram chạy trên Serverless (Vercel/Cloud Functions với giới hạn timeout 10s) BẮT BUỘC phải thực hiện kiểm tra lệnh (`/`) và phân loại nội dung (`classify(text)`) ĐẦU TIÊN. Tuyệt đối KHÔNG ĐƯỢC đặt bất kỳ cuộc gọi mạng đồng bộ nào (như ghi nhận ai đọc tin, `realtime_read`, sync sheet...) ở trước bước phân loại và thu thập chính!
+> 2. **Tác Vụ Phụ Trợ Bắt Buộc Non-Blocking / Background Thread**: Bất kỳ tác vụ ghi log phụ trợ nào (như ghi nhận ai đã đọc tin/chat thông thường) BẮT BUỘC phải chạy trong non-blocking background thread (`threading.Thread(target=..., daemon=True).start()`) hoặc chỉ chạy sau khi đã hoàn thành tác vụ chính, TUYỆT ĐỐI CẤM chặn (blocking) dòng luồng chính gây timeout 504 và làm rớt mất dữ liệu báo cáo của người dùng!
+> 3. **Cấm Gọi Trùng Lặp 2 Lần Vào GAS (Zero Duplicate GAS Calls)**: Nếu downstream GAS (`collectMessage`) đã tích hợp sẵn logic cập nhật sender/đọc tin (`syncSenderToTelegramIdAndReadSheet`), TUYỆT ĐỐI CẤM gọi thêm một hàm phụ cùng chức năng từ Webhook trước khi chuyển dữ liệu vào GAS.
 
 ---
 
