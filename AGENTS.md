@@ -44,13 +44,28 @@
 
 ---
 
-# ❓ STRICT RULE: NẾU CÓ BẤT KỲ ĐIỂM NÀO CHƯA RÕ THÌ BẮT BUỘC PHẢI HỎI NGƯỜI DÙNG TRƯỚC — TUYỆT ĐỐI CẤM TỰ Ý ĐOÁN MÒ (STRICT ASK-FIRST & ZERO-ASSUMPTION POLICY)
+# ⚡ STRICT ESCALATION & ZERO-FRICTION AUTONOMY RULE: 100% TỰ QUYẾT ĐỊNH CÁC TÁC VỤ CHUẨN — CHỈ HỎI KHI CHẠM 3 RANH GIỚI SINH TỬ (RULE PM-25 & ZERO-FRICTION AUTONOMY POLICY)
 
-> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (ASK-FIRST POLICY)**:
-> 1. **Thấy Chưa Rõ Là Phải Hỏi Ngay (Ask Before Action)**: Khi Người Dùng đưa ra yêu cầu mà phạm vi, logic, phân hệ hay repo chưa rõ ràng 100%, AI **BẮT BUỘC PHẢI DỪNG LẠI VÀ HỎI NGAY** Người Dùng để làm rõ: *"Tôi muốn làm rõ điểm này: [...] Anh muốn xử lý theo phương án nào?"*.
-> 2. **CẤM Tuyệt Đối Tự Đoán Mò (Zero Hallucinated Assumptions)**: Tuyệt đối KHÔNG ĐƯỢC tự ý suy diễn ý định của Người Dùng rồi sửa tiện tay, sửa lan man sang các file hay phân hệ không liên quan!
-> 3. **GAS Nào Sửa GAS Nấy — Đúng Dự Án Chuyên Biệt**: Mọi thay đổi logic trên GAS bắt buộc phải xác định đúng Script ID độc lập trước khi mở file hay deploy!
-
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (SMART DECISION MATRIX & MINIMAL ONE-KEY QUESTIONING)**:
+> 1. **CẤM Hỏi Xin Phép Đối Với Quy Trình Chuẩn (Zero-Prompt Auto-Exec)**: Tuyệt đối KHÔNG được hỏi xin phép (*"Anh có đồng ý không?"*, *"Tôi bắt đầu nhé?"*, *"Anh muốn làm luôn không?"*) đối với:
+>    - Toàn bộ quy trình 6 bước "Lưu Đi" (backup context, sync repos, commit, push, deploy, clear cache).
+>    - Khảo sát mã nguồn, đọc dữ liệu thật từ Google Sheets / Telegram API / Web DOM.
+>    - Sửa bug code, sửa lỗi cú pháp, bọc lỗi `try...except`, thêm `|| true` trong GitHub Actions.
+>    - Đồng bộ logic giữa các repository theo System Map.
+>    - AI BẮT BUỘC TỰ ĐỘNG THỰC THI 100% TỪ ĐẦU ĐẾN CUỐI!
+> 2. **Thực Thi Mặc Định Trước, Thông Báo Sau (Smart Default with Opt-Out)**: Khi có nhiều phương án kỹ thuật (chọn mốc giờ cron cho Toa mới, đặt tên biến, định tuyến background Serverless): AI TỰ ĐỘNG CHỌN phương án an toàn và tối ưu nhất theo `system_map.md` để làm luôn, sau đó ghi rõ trong báo cáo: *"Đã xử lý theo phương án tối ưu A; nếu muốn đổi sang B xin báo lại."* Tuyệt đối KHÔNG dừng lại hỏi mở!
+> 3. **CHỈ 3 KỊCH BẢN SINH TỬ DUY NHẤT ĐƯỢC PHÉP HỎI (The 3 Hard Stops)**: AI CHỈ ĐƯỢC PHÉP dừng lại hỏi Người Dùng khi rơi vào đúng 3 tình huống:
+>    - (a) Lệnh yêu cầu **XÓA file mã nguồn gốc** (`.gs`, `.yml`, `.py` — phòng ngừa sự cố v599).
+>    - (b) Viết hàm Reorder/Migration thay đổi **CẤU TRÚC cột** của Google Sheet đang chứa dữ liệu sống (phòng ngừa sự cố v786).
+>    - (c) Yêu cầu đụng vào **phân hệ Khóa Thép Site Down** khi chưa có mật khẩu `UNLOCK STEEL: Phucat@7979`.
+> 4. **Chuẩn Mẫu Hỏi 1-Phím — CẤM Yes/No Dài Dòng (One-Key Confirmation)**: Khi bắt buộc phải hỏi (thuộc 3 kịch bản trên), TUYỆT ĐỐI CẤM hỏi Yes/No hay mở modal phức tạp. BẮT BUỘC dùng form:
+>    > ⚠️ **[CẢNH BÁO RỦI RO SINH TỬ]**: Thao tác này sẽ [Xóa file X / Đổi cấu trúc cột Sheet Y].
+>    > - **Gõ `1`** (hoặc `ok`): Để tôi thực thi ngay.
+>    > - **Gõ `0`**: Để hủy bỏ.
+> 5. **Smart Fallback Cho Lệnh Ngắn Cộc Lốc (Terse Command Fallback)**: Khi Người Dùng gửi các lệnh cực ngắn (*"tiếp"*, *"sửa đi"*, *"làm đi"*, *"1"*, hoặc chỉ gửi ảnh chụp màn hình lỗi / đoạn log sự cố):
+>    - TUYỆT ĐỐI CẤM hỏi ngây ngô: *"Anh muốn sửa gì?"* hay *"Tôi làm gì với ảnh này?"*.
+>    - BẮT BUỘC tự phân tích OCR/log ➔ trích xuất lỗi/mã trạm/nhóm ➔ truy vết lịch sử bước trước ➔ tự sửa code dứt điểm ➔ tự động Lưu Đi ➔ báo cáo kết quả: **"ĐÃ LƯU ĐI ✅"**.
+> 6. **GAS Nào Sửa GAS Nấy — Đúng Dự Án Chuyên Biệt**: Mọi thay đổi logic trên GAS bắt buộc phải xác định đúng Script ID độc lập trước khi mở file hay deploy!
 ---
 
 # 🧠 STRICT MINDSET RULE: KỶ LUẬT TƯ DUY AI MẪN CÁN, TỈ MỈ & LOGIC CHẮC CHẮN (METICULOUS AI ENGINEERING POLICY)
