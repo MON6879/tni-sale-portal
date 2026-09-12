@@ -150,6 +150,15 @@
 
 ---
 
+# 🚫 STRICT MULTI-REPO GHOST CRON & TELEGRAM NOTE IDEMPOTENCY RULE: KHÓA CHẶT 1 REPO CHẠY CRON DUY NHẤT & CHỐNG GỬI TRÙNG LẶP NOTE QUA IDEMPOTENCY GUARD (STRICT ZERO-GHOST-CRON & NOTE IDEMPOTENCY POLICY) (RULE PM-22)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (ZERO-GHOST-CRON & NOTE IDEMPOTENCY POLICY)**:
+> 1. **Duy Nhất 1 Repository Chạy Cron Schedule (Sole Active Cron Engine)**: Toàn bộ hệ thống GitHub Actions chỉ được phép duy trì `schedule: cron: ...` trên **DUY NHẤT 1 REPOSITORY** là `phonghdpxd-cmd/tni-bot` (`Task and WO`). Mọi repository phụ khác (`MON6879/TNI-DONE`, `MON6879/tni-sitedown-relay`, v.v.) BẮT BUỘC phải bị vô hiệu hóa 100% phần `schedule: cron` trong tất cả workflow `.github/workflows/*.yml` (chỉ để `workflow_dispatch`). TUYỆT ĐỐI CẤM để lọt bất kỳ cron job nào trên repo phụ khiến 2-3 máy ảo cùng khởi hành và gửi nhân đôi/nhân ba tin nhắn!
+> 2. **Chốt Chặn Idempotency Guard Cho Tin Nhắn Note (Mandatory 15-Min Note Idempotency Guard)**: Khi gửi tin Note chỉ đạo (`control_note`) hoặc bất kỳ tin phản hồi tự động nào qua Telethon/Bot API, script BẮT BUỘC phải kiểm tra tối thiểu 5 tin nhắn gần nhất trong chat. Nếu tin Note có cùng nội dung đã được gửi trong vòng 15 phút (`age_secs < 900`), BẮT BUỘC phải **BỎ QUA (SKIP)** ngay lập tức, tuyệt đối không gửi lại!
+> 3. **Kiểm Tra & Thanh Lọc Lịch Sử Khi Phát Hiện Nhân Đôi (Auto Forensics & Clean Purge)**: Khi phát hiện sự cố nhân đôi tin nhắn, AI BẮT BUỘC phải dùng Telethon kiểm tra thực tế lịch sử tin nhắn trong các nhóm, xác định nguyên nhân gốc (so sánh timestamp, message ID, runner IP) và tự động xóa sạch các bản tin gửi trùng bằng `client.delete_messages(..., revoke=True)` trước khi báo hoàn thành!
+
+---
+
 # 🎯 STRICT RULE: SỬA CÁI NÀO TÌM ĐÚNG CÁI ĐÓ ĐỂ SỬA — TIN NÀO XÓA TIN NẤY (STRICT SCOPE ISOLATION & ZERO-COLLATERAL-DAMAGE)
 
 > ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (TARGETED SCOPE & ISOLATED CLEANUP POLICY)**:

@@ -11,9 +11,12 @@ name: "🚂 5-Min Train — Unified Keepalive + All Reports"
 # last-updated: 2026-08-13
 
 on:
-  schedule:
-    - cron: '1/5 * * * *'   # Every 5 min offset 1 (fires at :06, :11, :16, :21, :26, :31, :36, :41, :46, :51, :56, :01 MMT)
   workflow_dispatch:
+# schedule:
+#   # 🚫 VÔ HIỆU HÓA HOÀN TOÀN TRÊN REPO TNI-DONE (MON6879/TNI-DONE):
+#   # Toàn bộ Đoàn Tàu 5-Min Train DUY NHẤT chạy trên phonghdpxd-cmd/tni-bot (Task and WO).
+#   # TUYỆT ĐỐI CẤM kích hoạt cron trên repo này để tránh gửi tin nhắn nhân đôi và xung đột Telethon session!
+#   - cron: '1/5 * * * *'
     inputs:
       report_type:
         description: 'Select report to run manually (Auto = check_time decides)'

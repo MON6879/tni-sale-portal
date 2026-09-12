@@ -1,9 +1,6 @@
 name: "🚨 Botlookup Relay — Dedicated :06/:36 MMT (SOLE Runner)"
 
 on:
-  schedule:
-    # ⚠️ Cron 3,33 UTC = :03 and :33 MMT -> Python sleeps until exact :06 and :36 MMT
-    - cron: '3,33 * * * *'
   workflow_dispatch:
     inputs:
       skip_delay:

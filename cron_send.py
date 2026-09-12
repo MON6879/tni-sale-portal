@@ -2138,12 +2138,25 @@ async def main():
                 logger.info(f"📝 Gửi Note reply dưới tên user @phongha79 (Telethon) TRẢ LỜI CHO 4D → {len(target_reply_msgids)} nhóm...")
                 for cid_str, reply_to_id in target_reply_msgids.items():
                     try:
+                        # 🛡️ Idempotency check: kiểm tra 5 tin gần nhất trong chat
+                        # Nếu Note đã được gửi trong vòng 15 phút, bỏ qua để chống gửi lặp tuyệt đối!
+                        already_sent = False
+                        async for prev_m in tg_note_client.iter_messages(int(cid_str), limit=5):
+                            if prev_m.text and control_note.strip() in prev_m.text.strip():
+                                age_secs = (datetime.now(timezone.utc) - prev_m.date).total_seconds()
+                                if age_secs < 900:  # 15 phút
+                                    already_sent = True
+                                    logger.info(f"  ⏭️ Note đã gửi gần đây ({int(age_secs)}s trước) tới {cid_str} — bỏ qua gửi trùng!")
+                                    break
+                        if already_sent:
+                            continue
+
                         await tg_note_client.send_message(
                             entity=int(cid_str),
                             message=control_note,
                             reply_to=reply_to_id
                         )
-                        logger.info(f"  ✅ Note reply (@phongha79) → {cid_str} (reply_to 4d msg_id: {reply_to_id})")
+                        logger.info(f"  ✅ Note reply (@phongha79) → {cid_str} (reply_to msg_id: {reply_to_id})")
                         await asyncio.sleep(0.5)
                     except Exception as note_send_err:
                         logger.error(f"  ❌ Note reply (@phongha79) thất bại → {cid_str}: {note_send_err}")
