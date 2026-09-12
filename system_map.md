@@ -75,6 +75,7 @@
 | 🔵 **GITHUB ACTIONS** | **Report 6.1 (Site Clear Today)** | `site_clear_report.py` | GitHub (`MON6879` — 07:18, 10:18, 14:18, 17:18 MMT) | Báo cáo sự cố Clear trong ngày theo Team từ tab Site down Clear Morning |
 | 🔵 **GITHUB ACTIONS** | **Refuel Reports** | `refuel_plan_report.py` (~~`cable_report.py` đã hủy~~) | GitHub (`MON6879` — theo lịch) | Kế hoạch cấp dầu máy phát |
 | 🔵 **GITHUB ACTIONS** | **Site Down Relay (Toa SD ƯU TIÊN 1)** | `train_5min.yml` / `botlookup_relay.py` | GitHub (`MON6879` — Toa SD chạy ĐẦU TIÊN mỗi nhịp :06/:36 MMT trong train) | Cào dữ liệu trạm sập NOC Pro bằng Telethon, chạy tuần tự TRƯỚC mọi report khác |
+| 🔵 **GITHUB ACTIONS** | **Toa Cable Link Down (:16 / :46)** | `cable_link_down_report.py` | GitHub (`MON6879` — :16 & :46 MMT) | Báo cáo tiến độ Link Down tuyến cáp cột C tab Link down now gửi vào SOS (-5531350787) qua Bot 15, xóa tin cũ |
 
 ---
 
@@ -202,7 +203,7 @@ grep -c 'continue-on-error: true' train_5min.yml                # Phải = tổn
 |---|---|---|---|---|
 | **Main & Asset Collector Bot** (`@TNIASSETorderREQUEST_BOT`) | `https://tni-bot.vercel.app/api/collector` | `AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA` (Version `@302`) | `api/collector.py`, `daily_read_report.py`, `daily_plan_report.py`, `daily_bod_assign.py`, `cron_send.py`, `backlog_send.py`, `site_clear_report.py` | `system_map.md`, `SYSTEM_DOC.md`, `AGENTS.md` |
 | **Search Bot** (`@SEARCHTNITASKWOBOT`) | `https://tni-bot.vercel.app/api/search_bot` | `AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA` (Version `@302`) / Vercel `v4.5` | `api/search_bot.py` | `system_map.md`, `SYSTEM_DOC.md`, `AGENTS.md` |
-| **Refuel & Site Down GAS** | Apps Script Web App | `AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-` (Version `@97`) | `api/refuel_collector.py`, `site_down_v2.gs`, `botlookup_relay.py` | `system_map.md`, `SYSTEM_DOC.md` |
+| **Refuel & Site Down GAS** | Apps Script Web App | `AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-` (Version `@98`) | `api/refuel_collector.py`, `site_down_v2.gs`, `botlookup_relay.py` | `system_map.md`, `SYSTEM_DOC.md` |
 | **Site Down Bot (Relay)** (`@tni_site_down_bot`) | `https://tni-bot.vercel.app/api/site_down_relay` | `AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA` (Version `@349`) | `api/site_down_relay.py`, `botlookup_relay.py` | `system_map.md`, `SYSTEM_DOC.md` |
 | **Construction Bot** (`@8903841312`) | `https://tni-bot.vercel.app/api/construction` (Vercel Proxy) | `AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec` | `api/construction.py` | `system_map.md`, `SYSTEM_DOC.md` |
 
@@ -308,7 +309,7 @@ grep -c 'continue-on-error: true' train_5min.yml                # Phải = tổn
 | Script | Phiên bản Live | Deployment ID (Prefix) | Spreadsheet / Project | Fallback var trong Python |
 |---|---|---|---|---|
 | **Main GAS Collector** | `@302` | `AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA` | `Team All Find - Sum WO` (`1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8`) | `MAIN_GAS_FALLBACK` |
-| **Refuel & Site Down GAS** | `@97` | `AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-` | `TNI_Refuel` (`1JxrA4pJo92Xx_SpwLnOQxphVYwE2iFhLrCOHmyVVuuM`) | `REFUEL_PLAN_GAS_URL` / `SD_APPS_SCRIPT_URL` |
+| **Refuel & Site Down GAS** | `@98` | `AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-` | `TNI_Refuel` (`1JxrA4pJo92Xx_SpwLnOQxphVYwE2iFhLrCOHmyVVuuM`) | `REFUEL_PLAN_GAS_URL` / `SD_APPS_SCRIPT_URL` |
 | **Site Down GAS** | `@latest` | `AKfycbxVi0BGDW7B_KBxcSEdw3yuHB9Rs2BemQEYeKDwsybJQdmQv-_0HqyGHjpZI6jupxll` | `TNI SITE DOWN` (standalone) | `SD_APPS_SCRIPT_URL` (secret) |
 | **Construction Keepalive GAS** | `@302` (merged into Main GAS) | `AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA` | `13_TNI_CONSTRUCTION.gs` | `keepalive_construction.yml` |
 | **Attendance Bot GAS** | `@72` | `AKfycbyFIDGDS5k7wy-hNp2p1PNvte0CQ6cSiNYLyBmNc00Yi1b6IueOob9bKmu4zoQ1A6Cs` | `TNI attendance.js` | Direct deploy (Clasp) |

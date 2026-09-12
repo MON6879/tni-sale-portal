@@ -1127,4 +1127,30 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 > 3. **2 Chốt Chặn Thép Chống Gửi Tin Cũ Cho AW7 (Double-Forensic Guard for AW7)**:
 >    Hàm processSummaryAwAz BẮT BUỘC phải vượt qua đầy đủ 2 chốt chặn trước khi được phép gửi bất kỳ tin nào ra nhóm:
 >    - *Chốt Chặn 1 (Freshness Guard)*: if (!isDirectPush && !isDataFresh_(tsKey, 45)) ➔ Nếu timestamp AW7 cách hiện tại > 45 phút ➔ **BỎ QUA 100% (RETURN FALSE)**!
->    - *Chốt Chặn 2 (Anti-Mismatch with Column A Guard)*: Lấy 	sA1 = parseA1Timestamp(sheet). Nếu parseTsToMinutes_(tsKey) < parseTsToMinutes_(tsA1) ➔ Timestamp AW7 CŨ HƠN Cột A ➔ **BỎ QUA 100% (RETURN FALSE)**! Tuyệt đối không bao giờ gửi bảng AW7 khi Cột A đã có mốc giờ mới hơn!
+>    - *Chốt Chặn 2 (Anti-Mismatch with Column A Guard)*: Lấy tsA1 = parseA1Timestamp(sheet). Nếu parseTsToMinutes_(tsKey) < parseTsToMinutes_(tsA1) ➔ Timestamp AW7 CŨ HƠN Cột A ➔ **BỎ QUA 100% (RETURN FALSE)**! Tuyệt đối không bao giờ gửi bảng AW7 khi Cột A đã có mốc giờ mới hơn!
+
+# 🛡️ POST-MORTEM RULE — 12/09/2026: ĐỊNH TUYẾN BÁO CÁO CABLE LINK DOWN (BOT 15) CHU KỲ :16/:46, LÀM SẠCH NGẮT DÒNG CỘT C & XÓA TIN CŨ BỌC THÉP (RULE PM-20)
+
+> ### Nguồn gốc: **Phân Hệ Cable Link Down Report (Bot 15 TNI CABLE)** (`cable_link_down_report.py`, Sheet `1C8hU8SXpOdq-v6z7iLGoqwDJmO9DYudZ3rhflb7LC8Y` Tab `Link down now` GID `263097982`, Group `8 TNI CABLE BROKEN SOS` ID `-5531350787`)
+> - **Yêu Cầu Vận Hành Thực Tế (12/09/2026)**:
+>   1. Gửi báo cáo toàn bộ sự cố tuyến cáp đang đứt từ Cột C của tab `Link down now` vào nhóm `8 TNI CABLE BROKEN SOS` mỗi 30 phút một lần qua Bot 15 TNI CABLE (`8758104446:...`).
+>   2. Giờ gửi phải muộn hơn nhịp Site Down (:06/:36), sắp xếp thời gian hợp lý không để trùng giờ với các Toa khác trong Đoàn Tàu 5 phút.
+>   3. Phải tuân thủ Rule "tin nào xóa tin nấy" (xóa tin phiên trước trước khi gửi tin mới).
+>   4. 100% tiếng Anh, không dùng Telethon quét lại group chat (Sheet SSOT).
+>
+> ### 🔴 RULE PM-20: 4 CHỐT CHẶN BẢO VỆ CHO PHÂN HỆ CABLE LINK DOWN REPORT
+> 1. **Lịch Khởi Hành Chu Kỳ :16 & :46 MMT (Zero Collision with Site Down & ETA)**:
+>    - Toa Cable Link Down BẮT BUỘC phải khởi hành tại **phút :16 và :46 MMT** của mỗi giờ.
+>    - Thời điểm này đến sau Site Down (:06/:36) đúng 10 phút, và sau Toa ETA (:11/:41) đúng 5 phút, bảo đảm các Toa ưu tiên cao đã xử lý hoàn tất mà không bao giờ gây nghẽn hàng đợi trên máy ảo runner.
+> 2. **Chuẩn Hóa Ngắt Dòng Dữ Liệu Cột C (Clean Multi-line Formatting)**:
+>    - Dữ liệu trong ô Cột C của Sheet thường gom chung nhiều dòng (`link down: ...`, `Plz note ...`) thành một chuỗi dính liền khoảng trắng khi xuất qua CSV.
+>    - Code đọc Sheet BẮT BUỘC phải áp dụng regex chuẩn hóa ngắt dòng:
+>      - `re.sub(r'\s+(link down\s*:)', r'\n\1', val, flags=re.IGNORECASE)`
+>      - `re.sub(r'\s+(Plz\s+note\b)', r'\n\1', clean_val, flags=re.IGNORECASE)`
+>      trước khi hiển thị lên tin nhắn Telegram để nhân viên dễ đọc và nắm bắt vị trí đứt cáp.
+> 3. **Cơ Chế "Tin Nào Xóa Tin Nấy" Bằng Bot API & Lưu Message ID Qua GAS (Strict Bot Clean-Up)**:
+>    - BẮT BUỘC dùng `delete_old_messages_bot(token, cid, gas_url, key)` với key cố định `CABLE_LINK_DOWN_REPORT` trước khi gửi tin mới.
+>    - Bot 15 là Admin của nhóm `-5531350787` nên được phép xóa tin của chính nó. Sau khi gửi tin mới thành công, BẮT BUỘC lưu ngay Message ID mới vào GAS PropertiesService qua `save_msgids(gas_url, key, [new_mid])`.
+> 4. **Tích Hợp Tuần Tự Trong `train_5min.yml` & Đồng Bộ Secret (Single Train Integration)**:
+>    - Toa Cable Link Down BẮT BUỘC nằm trong `train_5min.yml` với cờ `steps.sched.outputs.cable_ld == 'true'`, bọc lệnh chạy `python cable_link_down_report.py || true`.
+>    - Secret `CABLE_BOT_TOKEN` BẮT BUỘC được cấu hình trên GitHub Repository quản lý runner (`MON6879/tni-sitedown-relay`).
