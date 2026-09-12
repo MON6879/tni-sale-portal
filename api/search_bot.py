@@ -2595,11 +2595,12 @@ class handler(BaseHTTPRequestHandler):
         if action == "send_eta_reminders":
             try:
                 from cron_send import send_share_eta_reminders
-                send_share_eta_reminders(force=True)
+                eta_res = send_share_eta_reminders(force=True)
                 result = {
                     "ok": True,
                     "action": "send_eta_reminders",
-                    "time": datetime.now(TZ_MM).strftime("%d/%m/%Y %H:%M:%S")
+                    "time": datetime.now(TZ_MM).strftime("%d/%m/%Y %H:%M:%S"),
+                    "details": eta_res
                 }
             except Exception as ex:
                 logger.error(f"send_eta_reminders error: {ex}")
