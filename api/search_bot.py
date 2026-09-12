@@ -2592,6 +2592,30 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"template": template_text}).encode("utf-8"))
             return
 
+        if action == "debug_get_batch":
+            import time
+            keys = ['eta_reminder_T1', 'eta_reminder_T1_S1', 'eta_reminder_T2', 'eta_reminder_T2_S1', 'eta_reminder_T3', 'eta_reminder_T3_S1', 'eta_reminder_T4']
+            gas_url = PRIMARY_GAS_URL
+            keys_param = ",".join(keys)
+            full_url = f"{gas_url}?action=get_msg_ids_batch&keys={keys_param}"
+            dbg = {"url": full_url}
+            t0 = time.time()
+            try:
+                r = requests.get(full_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=12)
+                dbg["status_code"] = r.status_code
+                dbg["elapsed"] = round(time.time() - t0, 2)
+                dbg["text"] = r.text[:300]
+                dbg["json"] = r.json()
+            except Exception as ex:
+                dbg["error"] = str(ex)
+                dbg["elapsed"] = round(time.time() - t0, 2)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(json.dumps(dbg, indent=2).encode("utf-8"))
+            return
+
         if action == "send_eta_reminders":
             try:
                 from cron_send import send_share_eta_reminders
