@@ -39,12 +39,16 @@ def _bot_token(bot_token: str = None):
 
 PRIMARY_GAS_URL = "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
 
+def _clean_url(url: str) -> str:
+    if not url: return ""
+    return str(url).strip().lstrip('\ufeff\u200b\u200c\u200d\u200e\u200f\xa0')
+
 def _gas_url():
-    raw = (
+    raw = _clean_url(
         os.environ.get("APPS_SCRIPT_URL") or
         os.environ.get("REFUEL_APPS_SCRIPT_URL") or
         ""
-    ).strip()
+    )
     if "AKfycbz-NZlBk8q2" in raw:
         return raw
     return PRIMARY_GAS_URL

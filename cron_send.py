@@ -2225,8 +2225,8 @@ def send_share_eta_reminders(force: bool = False):
     except Exception as e:
         import_err_str = str(e)
         logger.warning(f"send_share_eta_reminders: tg_utils import warning ({e}), using built-in self-contained helpers")
-        has_tg_utils = True
-        _gas_fallback = os.getenv("APPS_SCRIPT_URL") or "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
+        _raw_gas = os.getenv("APPS_SCRIPT_URL") or "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
+        _gas_fallback = str(_raw_gas).strip().lstrip('\ufeff\u200b\u200c\u200d\u200e\u200f\xa0')
         def tg_delete(chat_id, mid, bot_token=None):
             if not mid or not chat_id: return
             tok = bot_token or os.getenv("SEND_BOT_TOKEN") or "8897800070:AAHcG2eHlPsE0KpZAGjcFTe7ndn8gjpQi-A"
