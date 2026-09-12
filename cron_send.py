@@ -2348,13 +2348,17 @@ def send_share_eta_reminders(force: bool = False):
     deleted_count = 0
     new_states = {}
 
-    for t_name, msg_text, has_pending in results:
+    import concurrent.futures
+
+    def _process_team(item):
+        t_name, msg_text, has_pending = item
         chat_id = team_chat_map.get(t_name, "")
         if not chat_id:
             logger.warning(f"share_eta reminder: Không tìm thấy chat_id cho {t_name}")
-            continue
+            return None, "", 0
 
         state_key = f"eta_reminder_{t_name.replace(' ', '_')}"
+        t_del_count = 0
 
         # 2. Xóa tin cũ (nếu có) — tra cứu in-memory RAM siêu tốc
         old_raw = old_states.get(state_key, "")
@@ -2370,28 +2374,35 @@ def send_share_eta_reminders(force: bool = False):
                 if mid:
                     try:
                         tg_delete(chat_id, mid, bot_token=token)
-                        deleted_count += 1
+                        t_del_count += 1
                         logger.info(f"🗑️ Đã xóa tin cũ {state_key} msg_id={mid}")
                     except Exception as del_err:
                         logger.warning(f"Lỗi xóa tin {state_key} mid={mid}: {del_err}")
 
         # 3. Gửi tin mới qua Bot 2D
+        t_new_msg_id = ""
         try:
             resp = requests.post(
                 f"https://api.telegram.org/bot{token}/sendMessage",
                 json={"chat_id": chat_id, "text": msg_text, "parse_mode": ""},
-                timeout=15
+                timeout=10
             )
             if resp.status_code == 200:
-                new_msg_id = resp.json().get("result", {}).get("message_id", "")
-                logger.info(f"✅ share_eta reminder → {t_name} ({chat_id}): msg_id={new_msg_id}")
-                sent_count += 1
-                if new_msg_id:
-                    new_states[state_key] = str(new_msg_id)
+                t_new_msg_id = str(resp.json().get("result", {}).get("message_id", ""))
+                logger.info(f"✅ share_eta reminder → {t_name} ({chat_id}): msg_id={t_new_msg_id}")
             else:
                 logger.warning(f"share_eta reminder → {t_name}: HTTP {resp.status_code} {resp.text[:100]}")
         except Exception as e:
             logger.error(f"share_eta reminder → {t_name}: {e}")
+
+        return state_key, t_new_msg_id, t_del_count
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=7) as executor:
+        for sk, nid, d_cnt in executor.map(_process_team, results):
+            if sk and nid:
+                new_states[sk] = nid
+                sent_count += 1
+            deleted_count += d_cnt
 
     # 4. TỐC ĐỘ CAO: Lưu toàn bộ ID mới của tất cả các Team trong 1 request duy nhất (<300ms)
     if new_states:
