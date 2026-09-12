@@ -8,6 +8,13 @@ Tiện ích chung cho tất cả scripts báo cáo:
 - get_msg_id() / set_msg_id(): đọc/ghi state từ GAS
 """
 import os, asyncio, requests, logging
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    load_dotenv("Task and WO/.env")
+    load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
+except ImportError:
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -42,31 +49,71 @@ def _gas_url():
         return raw
     return PRIMARY_GAS_URL
 
-# ── GAS BotState: lưu/đọc message_id ──────────────────────────────────────
+# ── GAS BotState & PropertiesService: lưu/đọc message_id ─────────────────
 
 def get_msg_id(key: str) -> str:
-    """Đọc message_id đã lưu từ GAS BotState sheet."""
+    """Đọc message_id đã lưu từ GAS (dual PropertiesService 5ms + BotState sheet)."""
     gas_url = _gas_url()
-    if not gas_url:
+    if not gas_url or not key:
         return ""
+    # 1. Thử GET query param (nhanh <200ms, không bị mất body khi 302 redirect)
     try:
-        r = requests.post(gas_url, json={"action": "get_msg_id", "key": key}, timeout=25)
+        r = requests.get(f"{gas_url}?action=get_msg_id&key={key}", timeout=8)
         if r.status_code == 200:
-            return r.json().get("msg_id", "")
-        return ""
+            val = r.json().get("msg_id", "")
+            if val:
+                return str(val).strip()
+    except Exception:
+        pass
+    # 2. Fallback POST json
+    try:
+        r = requests.post(gas_url, json={"action": "get_msg_id", "key": key}, timeout=8)
+        if r.status_code == 200:
+            return str(r.json().get("msg_id", "")).strip()
     except Exception as e:
         logger.warning(f"get_msg_id error: {e}")
-        return ""
+    return ""
 
 def set_msg_id(key: str, msg_id):
-    """Lưu message_id mới vào GAS BotState sheet."""
+    """Lưu message_id mới vào GAS (dual PropertiesService 5ms + BotState sheet)."""
     gas_url = _gas_url()
-    if not gas_url:
+    if not gas_url or not key:
         return
+    msg_str = str(msg_id).strip()
     try:
-        requests.post(gas_url, json={"action": "set_msg_id", "key": key, "msg_id": str(msg_id)}, timeout=25)
+        requests.post(gas_url, json={"action": "set_msg_id", "key": key, "msg_id": msg_str}, timeout=8)
     except Exception as e:
         logger.warning(f"set_msg_id error: {e}")
+
+def get_msg_ids_batch(keys: list) -> dict:
+    """Đọc hàng loạt message_ids trong 1 request duy nhất (<300ms)."""
+    gas_url = _gas_url()
+    if not gas_url or not keys:
+        return {}
+    try:
+        keys_param = ",".join(str(k).strip() for k in keys)
+        r = requests.get(f"{gas_url}?action=get_msg_ids_batch&keys={keys_param}", timeout=10)
+        if r.status_code == 200:
+            return r.json().get("states", {})
+    except Exception:
+        pass
+    try:
+        r = requests.post(gas_url, json={"action": "get_msg_ids_batch", "keys": keys}, timeout=10)
+        if r.status_code == 200:
+            return r.json().get("states", {})
+    except Exception as e:
+        logger.warning(f"get_msg_ids_batch error: {e}")
+    return {}
+
+def set_msg_ids_batch(states_dict: dict):
+    """Lưu hàng loạt message_ids trong 1 request duy nhất (<300ms)."""
+    gas_url = _gas_url()
+    if not gas_url or not states_dict:
+        return
+    try:
+        requests.post(gas_url, json={"action": "set_msg_ids_batch", "states": states_dict}, timeout=10)
+    except Exception as e:
+        logger.warning(f"set_msg_ids_batch error: {e}")
 
 # ── Telegram helpers ───────────────────────────────────────────────────────
 

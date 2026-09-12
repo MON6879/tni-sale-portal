@@ -104,11 +104,13 @@
 
 ---
 
-# 💬 STRICT RULE: TEMPLATE PHẢN HỒI THU THẬP CHUẨN GỌN TỐI ĐA 2 DÒNG (MAX 2-LINE BOT ACKNOWLEDGMENT POLICY)
+# 💬 STRICT RULE: TEMPLATE PHẢN HỒI THU THẬP CHUẨN GỌN TỐI ĐA 2 DÒNG & ĐỊNH TUYẾN EMOJI BỌC THÉP (MAX 2-LINE BOT ACKNOWLEDGMENT & EMOJI-ROUTING POLICY)
 
-> ⚠️ **QUY TẮC BẮT BUỘC (2-LINE TEMPLATE STANDARD)**: MỌI TIN NHẮN PHẢN HỒI THU THẬP TỰ ĐỘNG CỦA BOT (INVENTORY, MDG, CABLE, ASSET, V.V.) BẮT BUỘC PHẢI NGẮN GỌN TỐI ĐA ĐÚNG 2 DÒNG, TUYỆT ĐỐI KHÔNG CHÈN TÊN/SỐ GHẾ, KHÔNG RƯỜM RÀ:
-> - **Dòng 1**: [Icon] [Tên Tác Vụ] ✅ #[Mã REF] | 📍 [Mã Trạm / Tuyến] | 🗓️ [DD/MM/YYYY HH:MM]
-> - **Dòng 2**: 📸 Reply photo to attach (hoặc hành động tiếp theo)
+> ⚠️ **QUY TẮC BẮT BUỘC (2-LINE TEMPLATE & EMOJI-ROUTING STANDARD)**: 
+> 1. **Chuẩn Mẫu 2 Dòng Ngắn Gọn (Max 2 Lines)**: MỌI TIN NHẮN PHẢN HỒI THU THẬP TỰ ĐỘNG CỦA BOT (INVENTORY, MDG, CABLE, ASSET, V.V.) BẮT BUỘC PHẢI NGẮN GỌN TỐI ĐA ĐÚNG 2 DÒNG, TUYỆT ĐỐI KHÔNG CHÈN TÊN/SỐ GHẾ, KHÔNG RƯỜM RÀ:
+>    - **Dòng 1**: [Icon] REF:[Mã REF] | [Mã Trạm / Thiết Bị] | [DD/MM/YYYY HH:MM]
+>    - **Dòng 2**: ✅ Reply Confirm to close | sent photo MDG after sent text report (hoặc hướng dẫn tương ứng)
+> 2. **Định Tuyến Hành Động Downstream Bắt Buộc Dùng Icon (Emoji-First Action Routing)**: Khi phân loại tin nhắn reply/callback dựa trên nội dung tin nhắn bot đã gửi trước đó (như reply ảnh hoặc gõ `Confirm`), BẮT BUỘC phải kiểm tra Icon định danh duy nhất ở đầu câu (`⛽` cho Inventory, `🛢️` cho Change Oil, `⚡` cho MDG Run) TRƯỚC TIÊN. TUYỆT ĐỐI CẤM dùng từ khóa chung (như "MDG", "Report", "Confirm") nằm trong dòng hướng dẫn thao tác (instruction line) để phân loại, vì dòng hướng dẫn có thể xuất hiện ở mọi loại báo cáo gây xung đột và định tuyến sai hành động downstream!
 
 ---
 
@@ -130,6 +132,11 @@
 > 4. **Kiểm Tra Tham Số Trigger Bắt Buộc (Strict Trigger Boolean Check)**: Khi một hàm GAS được gọi bởi Time-driven Trigger, GAS luôn tự động truyền vào 1 đối tượng Event `e` (`{authMode: ...}`). Do đó, nếu hàm có tham số cờ (ví dụ `forceSend`), TUYỆT ĐỐI KHÔNG DÙNG `if (!forceSend)` vì `!{}` là `false` khiến Trigger hiểu nhầm là `forceSend=true` và gửi spam liên tục! BẮT BUỘC phải kiểm tra kiểu boolean chặt chẽ: `const isForce = (forceSend === true);`.
 > 5. **Vô Hiệu Hóa Ghost Cron Khi Chuyển Sang Luồng Liên Kết (Zero Ghost Cron Policy)**: Khi một luồng gửi tin được chuyển sang kích hoạt liên kết trực tiếp (như Bot 5T sau 30s gọi Bot 2D qua Webhook), BẮT BUỘC phải tắt hoàn toàn cron tự động tương ứng trên GitHub Actions (`SHARE_ETA=false`) để tránh chạy kép lệch nhịp làm sai lệch state và ghi đè tin nhắn.
 > 6. **Xóa Tin Cũ Đa ID & Chống Timeout GAS (Multi-ID Deletion & Retry Resilience)**: Mọi logic xóa tin cũ ("tin nào xóa tin nấy") BẮT BUỘC phải hỗ trợ phân tách và xóa toàn bộ danh sách Multi-IDs (chuỗi ngăn cách `,` hoặc `;`) và có retry tối thiểu 2 lần khi gọi `get_msg_id` qua GAS API. TUYỆT ĐỐI CẤM chỉ giả định đọc 1 ID rồi ghi đè ngay làm mất dấu tin mồ côi (orphaned messages).
+> 7. **RULE PM-23 — Cơ Chế Kép Quản Lý State Tin Nhắn & Bắt Buộc Batch Pipeline Trên Serverless & Cấm Nuốt Lỗi Import (Strict Dual-Storage State Engine & Mandatory Batch Pipeline & Zero Silent Import-Drop Policy)**:
+>    - **Tuyệt Đối Cấm Nuốt Lỗi Import Tiện Ích Xóa Tin (Zero Silent Import-Drop)**: Trong các hàm gửi tin định kỳ (`cron_send.py`), TUYỆT ĐỐI CẤM dùng `except ImportError: has_tg_utils = False` rồi tắt luôn tính năng xóa tin cũ! BẮT BUỘC phải có built-in fallback xóa tin trực tiếp (`requests.post https://api.telegram.org/bot<token>/deleteMessage`) ngay trong thân hàm để đảm bảo dù import có lỗi thì lệnh xóa tin cũ vẫn 100% được thực thi. Đồng thời trong `tg_utils.py` phải bọc `import dotenv` trong `try...except ImportError` để không bị sập trên môi trường Vercel.
+>    - **Cơ Chế Kép Lưu Trữ State Siêu Tốc (Dual Storage Engine: 5ms PropertiesService + BotState Sheet)**: Trên GAS (`apps_script_collector.gs`), các hàm `handleGetMsgId` / `handleSetMsgId` BẮT BUỘC phải lưu và đọc đồng thời trên `PropertiesService` (truy xuất RAM 5ms) và đồng bộ nền vào Google Sheet tab `BotState` (GID `45472350`). Tuyệt đối không để mỗi lần đọc/ghi state đều phải mở bảng tính 36 tab gây nghẽn I/O.
+>    - **Bắt Buộc Gom Batch Pipeline Trên Serverless (Mandatory Serverless Batch Pipeline)**: Khi một endpoint Serverless (Vercel timeout 10s) cần gửi tin và dọn dẹp tin nhắn cho nhiều nhóm/nhiều team (ví dụ 7 teams trong `send_share_eta_reminders`): TUYỆT ĐỐI CẤM gọi tuần tự 14-21 HTTP requests đến GAS. BẮT BUỘC phải dùng `get_msg_ids_batch` lấy toàn bộ ID tin cũ trong 1 request (<300ms) trước vòng lặp, xóa tin và gửi mới trong RAM, sau đó gom toàn bộ ID tin mới gửi 1 request `set_msg_ids_batch` (<300ms) sau vòng lặp. Tổng thời gian toàn bộ tác vụ BẮT BUỘC phải dưới 3 giây.
+>    - **Kháng Suy Giảm Method Chuyển Tiếp (302 Redirect Method Downgrade Resilience)**: Toàn bộ các router state (`get_msg_id`, `set_msg_id`, `get_msg_ids_batch`, `set_msg_ids_batch`) trên GAS BẮT BUỘC phải hỗ trợ CẢ HAI phương thức `doGetCollector_` và `doPostCollector_` để chống mất body JSON khi bị chuyển tiếp 302.
 ---
 
 # ⚡ STRICT SERVERLESS TIMEOUT & FAST-PATH PIPELINE RULE: CẤM GỌI GAS ĐỒNG BỘ NẶNG TRƯỚC PHÂN LOẠI TIN NHẮN (STRICT SERVERLESS TIMEOUT & PRE-CLASSIFICATION NON-BLOCKING POLICY)

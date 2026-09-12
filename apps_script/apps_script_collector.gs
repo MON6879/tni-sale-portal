@@ -33,7 +33,7 @@ const REPORT_GID       = "133591305";
 // ENTRY POINTS
 // ============================================================
 
-function doPost(e) {
+function doPostCollector_(e) {
   try {
     const body  = JSON.parse(e.postData.contents);
 
@@ -60,24 +60,31 @@ function doPost(e) {
     if (body.action === "get_general")      return handleGetGeneral(ss);
     if (body.action === "get_report_data")   return handleGetReportData(ss);
     if (body.action === "get_asset_stats")   return handleGetAssetStats(ss);
-    if (body.action === "store_site_down")   return handleStoreSiteDownDirect(body);
+    // ⚠️ v684: ĐÃ XÓA routing "store_site_down" — Handler chính nằm tại doPost() trong site_down_v2.gs dòng 97.
+    // handleStoreSiteDownDirect() bên dưới (dòng ~1964) là dead code nguy hiểm có logic khác (clearContent + 10s sleep).
     if (body.action === "save_note_msgids")   return handleSaveNoteMsgIds(body);
     if (body.action === "save_msgids")          return handleSaveMsgIds(body);
     if (body.action === "get_msg_id")           return handleGetMsgId(body);
     if (body.action === "set_msg_id")           return handleSetMsgId(body);
+    if (body.action === "get_msg_ids_batch")    return handleGetMsgIdsBatch(body);
+    if (body.action === "set_msg_ids_batch")    return handleSetMsgIdsBatch(body);
     if (body.action === "clean_blank_rows")      return handleCleanBlankRows(sheet);
 
     // ── Daily Report Collector ─────────────────────────────────────────────
     if (body.action === "daily_add" ||
         body.action === "daily_photo" ||
         body.action === "sync_headers" ||
+        body.action === "backfill_daily_names" ||
         body.action === "store_daily_plan" ||
         body.action === "get_daily_plans" ||
         body.action === "get_daily_reports")  return doPostDaily_(e);
 
     // ── Cable Collector ───────────────────────────────────────────────────
     if (body.action === "cable_add" ||
+        body.action === "cable_add_template" ||
+        body.action === "cable_route_broken" ||
         body.action === "cable_confirm" ||
+        body.action === "cable_done" ||
         body.action === "cable_add_photo" ||
         body.action === "cable_get_stats")   return doPostCable_(e);
 
@@ -89,11 +96,30 @@ function doPost(e) {
         body.action === "inv_add" ||
         body.action === "inv_confirm" ||
         body.action === "inv_add_photo" ||
+        body.action === "oil_add" ||
+        body.action === "oil_confirm" ||
+        body.action === "oil_add_photo" ||
         body.action === "process_photo")     return doPostMdg_(e);
 
     // ── Refuel Plan Collector ──────────────────────────────────────────────
     if (body.action === "collect_message" ||
-        body.action === "collect_photo")     return doPostRefuelPlan_(e);
+        body.action === "collect_photo" ||
+        body.action === "sync_image3_requests" ||
+        body.action === "log_read_group_refuel" ||
+        body.action === "realtime_read" ||
+        body.action === "clean_test_rows") return doPostRefuelPlan_(e);
+
+    // ── Plan Dep Collector (BI Plan Week) ───────────────────────────────────
+    if (body.action === "plan_dep_add" ||
+        body.action === "plan_dep_update" ||
+        body.action === "plan_dep_delete")   return handlePlanDepPost_(body);
+
+    // ── Attendance Collector (Morning Attendance & Staff Leave) ─────────────
+    if (body.action === "attendance_add" ||
+        body.action === "collect_attendance") return handleAttendancePost_(body);
+
+    // ── Train Schedule Sync (auto-publish at 01:46 MMT daily) ──────────────
+    if (body.action === "sync_schedule")     return handleSyncSchedule_(body);
 
     return json({ status: "error", message: "Unknown action: " + body.action });
   } catch (err) {
@@ -101,9 +127,53 @@ function doPost(e) {
   }
 }
 
-function doGet(e) {
+function doGetCollector_(e) {
   try {
     const action = (e && e.parameter && e.parameter.action) || "";
+
+    // ── Construction Sheet Initialization Endpoint ──
+    if (action === "init_input_construction") {
+      if (typeof initInputConstructionSheet === "function") {
+        return ContentService.createTextOutput(JSON.stringify(initInputConstructionSheet()))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+      return ContentService.createTextOutput(JSON.stringify({ error: "initInputConstructionSheet not found" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    if (action === "setup_general_summary") {
+      if (typeof setupGeneralSummarySheet === "function") {
+        return ContentService.createTextOutput(JSON.stringify(setupGeneralSummarySheet()))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+      return ContentService.createTextOutput(JSON.stringify({ error: "setupGeneralSummarySheet not found" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    if (action === "debug_general_summary") {
+      var ssCons = SpreadsheetApp.openById("1ViXXv5P8jSgx5heBqEP419ZkSR77C3OsflK0xpHMoi8");
+      var sh = ssCons.getSheetByName("General");
+      var shInput = ssCons.getSheetByName("Input Construction");
+      var a2Formula = sh ? sh.getRange("A2").getFormula() : "";
+      var a2Val = sh ? sh.getRange("A2:D10").getValues() : [];
+      var inputRows = shInput ? shInput.getRange(1, 1, Math.max(shInput.getLastRow(), 1), 10).getValues() : [];
+      return ContentService.createTextOutput(JSON.stringify({
+        a2Formula: a2Formula,
+        a2Val: a2Val,
+        inputRows: inputRows
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (action === "inspect_spreadsheet_tabs") {
+      var targetId = (e && e.parameter && e.parameter.id) || "1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow";
+      var targetSs = SpreadsheetApp.openById(targetId);
+      var tabList = targetSs.getSheets().map(function(s) {
+        return { name: s.getName(), gid: s.getSheetId(), rows: s.getLastRow(), cols: s.getLastColumn() };
+      });
+      return ContentService.createTextOutput(JSON.stringify({ status: "ok", tabs: tabList }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    if (action === "backfill_daily_names") {
+      return handleBackfillDailyReportEmployeeNames();
+    }
 
     // ── Site Down data endpoint (cho Python Telethon sender) ──
     if (action === "get_site_down_data") return getSiteDownData();
@@ -128,7 +198,16 @@ function doGet(e) {
     if (action === "get_note_b2b5")       return getNoteB2B5();
     if (action === "get_note_msgids")     return handleGetNoteMsgIds();
     if (action === "get_msgids")          return handleGetMsgIds(e.parameter || {});
+    if (action === "get_msg_id")          return handleGetMsgId(e.parameter || {});
+    if (action === "set_msg_id")          return handleSetMsgId(e.parameter || {});
+    if (action === "get_msg_ids_batch")   return handleGetMsgIdsBatch(e.parameter || {});
+    if (action === "set_msg_ids_batch")   return handleSetMsgIdsBatch(e.parameter || {});
     if (action === "get_refuel_data")     return doGetRefuelData_(e);
+    if (action === "get_read_group_today") {
+      const ss2 = SpreadsheetApp.openById(SHEET_ID);
+      const dateParam = (e && e.parameter && e.parameter.date) || "";
+      return handleGetReadGroupToday(ss2, dateParam);
+    }
     if (action === "get_bod_formulas") {
       const ss = SpreadsheetApp.openById("1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8");
       const sh = ss.getSheetByName("BOD assign");
@@ -170,9 +249,21 @@ function doGet(e) {
       runAutoCopyProcessor(true);
       return json({ status: "ok", message: "Auto copy processor executed successfully" });
     }
+    if (action === "run_partner_auto_update") {
+      const res = (typeof runPartnerAutoRefuelUpdate === "function")
+        ? runPartnerAutoRefuelUpdate(true)
+        : { status: "error", message: "runPartnerAutoRefuelUpdate not found" };
+      return json({ status: "ok", result: res });
+    }
+    if (action === "update_team1_partner_auto") {
+      const res = (typeof updateTeam1PartnerAuto === "function")
+        ? updateTeam1PartnerAuto()
+        : { status: "error", message: "updateTeam1PartnerAuto not found" };
+      return json(res);
+    }
 
     // ── Cable / MDG GET endpoints ─────────────────────────────────────────
-    if (action === "cable_get_stats" || action === "cable_check_row") return doGetCable_(e);
+    if (action.indexOf("cable_") === 0) return doGetCable_(e);
     if (action === "mdg_get_stats"   || action === "mdg_check_row")   return doGetMdg_(e);
     if (action === "get_fields")                                       return doGetDaily_(e);
 
@@ -184,6 +275,14 @@ function doGet(e) {
     if (action === "get_team_wo_stats") return handleGetTeamWoStats_();
     if (action === "debug_sum_sheet")   return handleDebugSumSheet_();
 
+    // ── Plan Dep (BI Plan Week) ───────────────────────────────
+    if (action === "get_plan_dep")        return handleGetPlanDep_();
+    if (action === "get_plan_dep_permit") return handleGetPlanDepPermit_();
+    if (action === "plan_dep_archive")    return handlePlanDepArchive_();
+
+    if (action === "diagnose_site_clear") return handleDiagnoseSiteClear_();
+    if (action === "clear_site_clear_morning") return handleClearSiteClearMorning_();
+    if (action === "audit_capacity") return handleAuditCapacity_();
 
     // ── Default: status check ─────────────────────────────────
     const ss = SpreadsheetApp.openById(SHEET_ID);
@@ -287,12 +386,6 @@ function handleGetMsgIds(params) {
   }
 }
 
-/** GET ?action=get_msg_id&key=... (alias, backward compat) */
-function handleGetMsgId(params) { return handleGetMsgIds(params); }
-
-/** POST {action:"set_msg_id", key:..., msgids:[...]} (alias) */
-function handleSetMsgId(body) { return handleSaveMsgIds(body); }
-
 
 // ============================================================
 // ACTION: CLEAN_BLANK_ROWS — xóa hàng trắng trong data sheet
@@ -363,21 +456,17 @@ function handleAdd(sheet, body) {
   // Ghi REF vào cột A
   sheet.getRange(2, 1).setValue(seqId);
 
-  // Gắn ảnh pending (nếu user đã gửi ảnh trước khi gửi text)
+  // Gắn ảnh pending vào DUY NHẤT CỘT F
   const props   = PropertiesService.getScriptProperties();
   const pKey    = "PENDING_PHOTO_" + chatId;
   const pending = JSON.parse(props.getProperty(pKey) || "[]");
   if (pending.length > 0) {
-    pending.forEach(function(link, idx) {
-      if (idx < 12) {
-        sheet.getRange(2, 6 + idx).setValue(link); // F=6 ... Q=17
-      }
-    });
+    sheet.getRange(2, 6).setValue(pending.join("\n"));
     props.deleteProperty(pKey);
   }
 
   const bg = seqId % 2 === 0 ? "#EBF3FB" : "#FFFFFF";
-  sheet.getRange(2, 1, 1, 17).setBackground(bg); // A–Q
+  sheet.getRange(2, 1, 1, 6).setBackground(bg); // A–F
 
   // Lưu ACTIVE_REF + reset PHOTO_COUNT cho user này
   // Ảnh gửi sau sẽ tự gắn vào đây, dừng sau 12 ảnh
@@ -388,14 +477,19 @@ function handleAdd(sheet, body) {
 }
 
 // ============================================================
-// ACTION: ADD_PHOTO — ảnh Telegram → Google Drive → link vào cột F–Q
-// Payload: { action, user_id, tg_url, date }
-// Cột F=6, G=7, H=8, I=9, J=10, K=11, L=12, M=13, N=14, O=15, P=16, Q=17 (tối đa 12 ảnh)
+// ACTION: ADD_PHOTO — ảnh Telegram → Google Drive Subfolder → link vào DUY NHẤT CỘT F
 // ============================================================
+
 function handleAddPhoto(sheet, body) {
   const userId = String(body.user_id || "").trim();
   if (!userId) {
     return json({ status: "error", message: "Missing user_id" });
+  }
+
+  let refId  = body.ref_id ? parseInt(body.ref_id) : null;
+  if (!refId) {
+    const activeStr = PropertiesService.getScriptProperties().getProperty("ACTIVE_REF_" + userId);
+    if (activeStr) refId = parseInt(activeStr);
   }
 
   // 1. Tạo blob từ base64 (Python đã download sẵn) hoặc download từ URL (fallback cũ)
@@ -415,10 +509,6 @@ function handleAddPhoto(sheet, body) {
         return json({ status: "error", message: "Telegram fetch HTTP " + code });
       }
       blob = resp.getBlob();
-      const ct = blob.getContentType() || "";
-      if (ct.indexOf("image") === -1 && ct.indexOf("octet") === -1) {
-        return json({ status: "error", message: "Invalid content type: " + ct });
-      }
     } else {
       return json({ status: "error", message: "Missing photo_b64 or tg_url" });
     }
@@ -426,55 +516,57 @@ function handleAddPhoto(sheet, body) {
     return json({ status: "error", message: "Blob error: " + e.message });
   }
 
+  // 2. Tạo hoặc lấy subfolder riêng cho phiếu này trong thư mục '2.2 TNIASSET TELEGRAM'
+  const parentFolder = getOrCreatePhotoFolder_();
+  let targetFolder = parentFolder;
+  let folderLink = "https://drive.google.com/drive/folders/" + parentFolder.getId();
+  
+  if (refId) {
+    const subfolderName = "Asset_#" + Utilities.formatString("%05d", refId);
+    const existing = parentFolder.getFoldersByName(subfolderName);
+    if (existing.hasNext()) {
+      targetFolder = existing.next();
+    } else {
+      targetFolder = parentFolder.createFolder(subfolderName);
+      targetFolder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    }
+    folderLink = "https://drive.google.com/drive/folders/" + targetFolder.getId();
+  }
 
-  // 2. Upload lên Google Drive folder 'TNI_Asset_Photos'
-  const folder   = getOrCreatePhotoFolder_();
-  const file     = folder.createFile(blob);
+  const file = targetFolder.createFile(blob);
   file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
   const driveLink = "https://drive.google.com/file/d/" + file.getId() + "/view";
 
-  // 3. Gắn ảnh vào đúng row
-  let refId  = body.ref_id ? parseInt(body.ref_id) : null;
+  // 3. Gắn link folder tải all ảnh vào DUY NHẤT CỘT F của dòng tương ứng
   const WIN_MS = 30 * 60 * 1000;
   const nowMs  = new Date().getTime();
   let attached = false;
 
-  // Ưu tiên 1a: ref_id từ Reply/caption
-  // Ưu tiên 1b: ACTIVE_REF_{userId} — lệnh text gần nhất của user
-  if (!refId) {
-    const activeStr = PropertiesService.getScriptProperties().getProperty("ACTIVE_REF_" + userId);
-    if (activeStr) refId = parseInt(activeStr);
-  }
-
-  const props2    = PropertiesService.getScriptProperties();
-  const countKey  = "PHOTO_COUNT_" + userId;
-  const photoCount = parseInt(props2.getProperty(countKey) || "0");
-
-  // Dừng nếu đã đủ 12 ảnh
-  if (photoCount >= 12) {
-    return json({ status: "ok", attached: false, reason: "max_photos_reached" });
-  }
-
-  // Tính thẳng row: seqId = rowNum - 1 → rowNum = refId + 1
   if (refId) {
-    const targetRow = refId + 1;
-    const lastRow   = sheet.getLastRow();
-    if (targetRow >= 2 && targetRow <= lastRow) {
-      // Đọc cột F–Q (col 6–17) của row đó
-      const photoCols = sheet.getRange(targetRow, 6, 1, 12).getValues()[0];
-      for (let c = 0; c < 12; c++) {
-        if (!photoCols[c]) {
-          sheet.getRange(targetRow, 6 + c).setValue(driveLink);
-          attached = true;
-          // Tăng đếm ảnh
-          props2.setProperty(countKey, String(photoCount + 1));
+    let targetRow = null;
+    const lastRow = sheet.getLastRow();
+    if (lastRow >= 2) {
+      const colA = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+      for (let r = 0; r < colA.length; r++) {
+        if (parseInt(colA[r][0]) === refId) {
+          targetRow = r + 2;
           break;
         }
       }
     }
+
+    if (targetRow) {
+      const currentVal = sheet.getRange(targetRow, 6).getValue().toString().trim();
+      let updatedVal = folderLink;
+      if (currentVal && currentVal.indexOf(folderLink) === -1) {
+        updatedVal = folderLink + "\n" + currentVal;
+      }
+      sheet.getRange(targetRow, 6).setValue(updatedVal);
+      attached = true;
+    }
   }
 
-  // Ưu tiên 2 (fallback): tìm row gần nhất của user trong 30 phút
+  // Fallback: tìm row gần nhất của user trong 30 phút
   if (!attached) {
     const data = sheet.getDataRange().getValues();
     for (let i = data.length - 1; i >= 0; i--) {
@@ -482,14 +574,13 @@ function handleAddPhoto(sheet, body) {
       const rowTime = parseSheetDate_(String(data[i][1] || ""));
       if (!rowTime || (nowMs - rowTime.getTime()) > WIN_MS) break; // quá cũ
 
-      // Tìm cột ảnh trống (F=col5 → Q=col16, index 0-based)
-      for (let c = 5; c <= 16; c++) {
-        if (!data[i][c]) {
-          sheet.getRange(i + 1, c + 1).setValue(driveLink);
-          attached = true;
-          break;
-        }
+      const currentVal = (data[i][5] || "").toString().trim();
+      let updatedVal = folderLink;
+      if (currentVal && currentVal.indexOf(folderLink) === -1) {
+        updatedVal = folderLink + "\n" + currentVal;
       }
+      sheet.getRange(i + 1, 6).setValue(updatedVal);
+      attached = true;
       break;
     }
   }
@@ -500,7 +591,7 @@ function handleAddPhoto(sheet, body) {
     const key   = "PENDING_PHOTO_" + userId;
     const arr   = JSON.parse(props.getProperty(key) || "[]");
     if (arr.length < 12) {
-      arr.push(driveLink);
+      arr.push(folderLink);
       props.setProperty(key, JSON.stringify(arr));
     }
   }
@@ -806,6 +897,7 @@ function handleLogSearch(ss, body) {
 
 // ============================================================
 // ACTION: LOG_READ_GROUP — Ghi lịch sử đọc tin nhắn vào tab "Read Group"
+// v2: UPSERT theo key date+team+name, CHỈ GHI người ĐÃ ĐỌC (status=Read)
 // ============================================================
 function handleLogReadGroup(ss, body) {
   const records = body.records || [];
@@ -824,29 +916,145 @@ function handleLogReadGroup(ss, body) {
   }
 
   const TZ = "Asia/Rangoon";
-  const rows = [];
+  const today = Utilities.formatDate(new Date(), TZ, "dd/MM/yyyy");
+
+  // Helper: ép Date object → "dd/MM/yyyy" string (GAS sheet trả Date object, không phải string)
+  function fmtDate_(val) {
+    if (!val) return "";
+    if (val instanceof Date) return Utilities.formatDate(val, TZ, "dd/MM/yyyy");
+    return val.toString().trim();
+  }
+
+  // Đọc toàn bộ dữ liệu hiện tại để build UPSERT map
+  const lastRow = sheet.getLastRow();
+  let existingData = [];
+  if (lastRow > 1) {
+    existingData = sheet.getRange(2, 1, lastRow - 1, 10).getValues();
+  }
+
+  // Build map: "date|team|name" → sheet row number (1-based)
+  const keyToSheetRow = {};
+  for (let i = 0; i < existingData.length; i++) {
+    const d = fmtDate_(existingData[i][0]);          // ✅ safe: handles Date object
+    const t = (existingData[i][2] || "").toString().trim();
+    const n = (existingData[i][3] || "").toString().trim();
+    if (d && n) keyToSheetRow[d + "|" + t + "|" + n] = i + 2; // +2: 1 header + 0-based
+  }
+
+  const insertRows = [];
+  const updateOps  = [];   // { sheetRow, rowData }
+  let updatedCount = 0;
+  const seenKeys = {};
+
   records.forEach(r => {
-    rows.push([
-      r.date || Utilities.formatDate(new Date(), TZ, "dd/MM/yyyy"),
-      r.time || Utilities.formatDate(new Date(), TZ, "HH:mm"),
-      r.team || "",
-      r.name || "",
+    // CHỈ GHI người ĐÃ ĐỌC
+    if ((r.status || "") !== "Read") return;
+
+    const dateVal = r.date || today;
+    const team    = r.team || "";
+    const name    = r.name || "";
+    const key     = dateVal + "|" + team + "|" + name;
+
+    // Bỏ qua nếu đã xử lý trong batch này
+    if (seenKeys[key]) return;
+    seenKeys[key] = true;
+
+    const rowData = [
+      dateVal,
+      "'" + (r.time || Utilities.formatDate(new Date(), TZ, "HH:mm")),  // ' prefix → prevent Sheets time auto-convert
+      team,
+      name,
       r.telegram_id || "",
-      r.status || "Unread",
-      r.trend_3day || "0/0/0",
+      "Read",
+      "'" + (r.trend_3day || "1/0/0"),
       r.count_7day != null ? r.count_7day : 0,
       r.count_month != null ? r.count_month : 0,
       r.note_msg || ""
-    ]);
+    ];
+
+    if (keyToSheetRow[key] !== undefined) {
+      // Ghi nhớ UPDATE — CHƯA ghi ngay, tránh bị lệch sau insertRowsBefore
+      updateOps.push({ sheetRow: keyToSheetRow[key], rowData: rowData });
+    } else {
+      insertRows.push(rowData);
+      keyToSheetRow[key] = -1;
+    }
   });
 
-  if (rows.length > 0) {
-    // Chèn các dòng mới lên trên cùng (dưới row 1 header) để luôn xem dữ liệu mới nhất
-    sheet.insertRowsBefore(2, rows.length);
-    sheet.getRange(2, 1, rows.length, 10).setValues(rows);
+  // ── BƯỚC 1: INSERT trước (chèn lên đầu) ──
+  // Sau INSERT, các existing rows bị đẩy xuống insertRows.length dòng
+  if (insertRows.length > 0) {
+    sheet.insertRowsBefore(2, insertRows.length);
+    sheet.getRange(2, 1, insertRows.length, 10).setValues(insertRows);
+    updatedCount = 0;
   }
 
-  return json({ status: "ok", count: rows.length });
+  // ── BƯỚC 2: UPDATE sau — cộng offset để bù lệch do insertRowsBefore ──
+  const offset = insertRows.length; // mỗi INSERT đẩy existing row xuống 1
+  for (const op of updateOps) {
+    const correctedRow = op.sheetRow + offset;
+    sheet.getRange(correctedRow, 1, 1, 10).setValues([op.rowData]);
+    updatedCount++;
+  }
+
+  Logger.log("log_read_group: inserted=" + insertRows.length + " updated=" + updatedCount);
+  return json({ status: "ok", inserted: insertRows.length, updated: updatedCount });
+}
+
+
+// ============================================================
+// ACTION: GET_READ_GROUP_TODAY — Trả danh sách người ĐÃ ĐỌC trong ngày từ sheet
+// Dùng cho daily_read_report.py đọc dữ liệu tổng hợp cả ngày thay vì Telethon trực tiếp
+// ============================================================
+function handleGetReadGroupToday(ss, dateParam) {
+  const READ_GROUP_TAB = "Read Group";
+  const sheet = ss.getSheetByName(READ_GROUP_TAB);
+  if (!sheet || sheet.getLastRow() < 2) {
+    return json({ status: "ok", records: [], count: 0 });
+  }
+
+  const TZ = "Asia/Rangoon";
+  const today = dateParam || Utilities.formatDate(new Date(), TZ, "dd/MM/yyyy");
+  const lastRow = sheet.getLastRow();
+  const data = sheet.getRange(2, 1, lastRow - 1, 10).getValues();
+
+  // Helper: ép Date object → "dd/MM/yyyy" string (GAS sheet trả Date object, không phải string)
+  function fmtDateG_(val) {
+    if (!val) return "";
+    if (val instanceof Date) return Utilities.formatDate(val, TZ, "dd/MM/yyyy");
+    return val.toString().trim();
+  }
+
+  const records = [];
+  for (const row of data) {
+    const rowDate = fmtDateG_(row[0]);                // ✅ safe: handles Date object
+    if (rowDate !== today) continue;
+    if ((row[5] || "").toString().trim() !== "Read") continue;
+    // row[1] = time — Sheets may auto-convert "16:36" → Date object (Sat Dec 30 1899...)
+    // or stored as "'16:36" (with apostrophe prefix to prevent conversion)
+    const rawTime = row[1];
+    let timeStr;
+    if (rawTime instanceof Date) {
+      timeStr = Utilities.formatDate(rawTime, TZ, "HH:mm");
+    } else {
+      timeStr = (rawTime || "").toString().trim().replace(/^'/, ""); // strip leading '
+    }
+
+    records.push({
+      date:        rowDate,
+      time:        timeStr,
+      team:        (row[2] || "").toString().trim(),
+      name:        (row[3] || "").toString().trim(),
+      telegram_id: (row[4] || "").toString().trim(),
+      trend_3day:  (row[6] || "0/0/0").toString().replace(/^'/, ""),
+      count_7day:  Number(row[7]) || 0,
+      count_month: Number(row[8]) || 0,
+      note_msg:    (row[9] || "").toString().trim()
+    });
+  }
+
+  Logger.log("get_read_group_today: date=" + today + " found=" + records.length + " rows");
+  return json({ status: "ok", records: records, date: today, count: records.length });
 }
 
 
@@ -2015,228 +2223,6 @@ function handleStoreSiteDownDirect(body) {
   }
 }
 
-// ════════════════════════════════════════════════════════════
-    const GID_SUM = "1840482617";
-    const TEAM_ORDER = ["team1", "team2", "team3", "team4"];
-    const chartG = {};  // G col(6)  = Total FOT Close
-    const chartP = {};  // P col(15) = Remain WO (CD not yet Close)
-    const chartN = {};  // N col(13) = Overdue FOT not closed
-    const chartA = {};  // A col(0)  = CD Not Yet Close
-    const chartJ = {};  // J col(9)  = 3-day: closes on day-1 (11/08)
-    const chartK = {};  // K col(10) = 3-day: closes on day-2 (10/08)
-    const chartL = {};  // L col(11) = 3-day: closes on day-3 (09/08)
-    const chartM = {};  // M col(12) = Plan for next date (12/08)
-    let dynamicDateLabel = "";
-    let dynamicPlanLabel = "";
-
-    try {
-      const sumSh = ss.getSheets().find(function(s) {
-        return String(s.getSheetId()) === GID_SUM;
-      });
-      if (sumSh && sumSh.getLastRow() >= 56) {
-        // Read row 2 headers for J, K, L, M
-        const hdrRow2 = sumSh.getRange(2, 1, 1, 16).getValues()[0];
-        const rawHdrJ = fmtCell(hdrRow2[9]);   // Col J header e.g. "Close at: 11/08/26"
-        const rawHdrK = fmtCell(hdrRow2[10]);  // Col K header e.g. "Close at: 10/08/26"
-        const rawHdrL = fmtCell(hdrRow2[11]);  // Col L header e.g. "Close at: 09/08/26"
-        const rawHdrM = fmtCell(hdrRow2[12]);  // Col M header e.g. "Plan: 12/08/26"
-
-        // Format dynamic labels
-        const dJStr = (rawHdrJ.match(/(\d{2}\/\d{2})/)||[,"11/08"])[1];
-        const dKStr = (rawHdrK.match(/(\d{2}\/\d{2})/)||[,"10/08"])[1];
-        const dLStr = (rawHdrL.match(/(\d{2}\/\d{2})/)||[,"09/08"])[1];
-        const dMStr = (rawHdrM.match(/(\d{2}\/\d{2}(?:\/\d{2,4})?)/)||[,"12/08/2026"])[1];
-
-        const yrStr = Utilities.formatDate(new Date(), "Asia/Rangoon", "yyyy");
-        const fullMDate = dMStr.includes("/") && dMStr.split("/").length === 3 ? dMStr : dMStr + "/" + yrStr;
-        dynamicPlanLabel = "🎯 Plan " + fullMDate + " (M):";
-
-        const mJ = dJStr.split("/")[0];
-        const mK = dKStr.split("/")[0];
-        const mL = dLStr.split("/")[0];
-        const mMonth = (dJStr.split("/")[1] || "08");
-        dynamicDateLabel = mJ + "/" + mK + "/" + mL + "-" + mMonth + "-" + yrStr;
-
-        // Read rows 53-56, cols A(1) to P(16)
-        const sumRng = sumSh.getRange(53, 1, 4, 16).getValues();
-        for (let r = 0; r < 4; r++) {
-          const tk  = TEAM_ORDER[r];
-          const row = sumRng[r];
-          const gv = row[6];   // col G (index 6) = FOT Close
-          const pv = row[15];  // col P (index 15) = Remain WO
-          const nv = row[13];  // col N (index 13) = Overdue FOT
-          const av = row[0];   // col A (index 0)  = CD Not Yet Close
-          const jv = row[9];   // col J (index 9)  = day-1 closes (11/08)
-          const kv = row[10];  // col K (index 10) = day-2 closes (10/08)
-          const lv = row[11];  // col L (index 11) = day-3 closes (09/08)
-          const mv = row[12];  // col M (index 12) = Plan WOs (12/08)
-          if (typeof gv === "number") chartG[tk] = gv;
-          if (typeof pv === "number") chartP[tk] = pv;
-          if (typeof nv === "number") chartN[tk] = nv;
-          if (typeof av === "number") chartA[tk] = av;
-          if (typeof jv === "number") chartJ[tk] = jv;
-          if (typeof kv === "number") chartK[tk] = kv;
-          if (typeof lv === "number") chartL[tk] = lv;
-          if (typeof mv === "number") chartM[tk] = mv;
-        }
-      }
-    } catch(eSum) {
-      Logger.log("GID 1840482617 read error: " + eSum.message);
-    }
-
-
-    const TEAMS = {
-      "MYT_TNI_TEAM01_Dawei":     "team1",
-      "MYT_TNI_TEAM02_Myeik":     "team2",
-      "MYT_TNI_TEAM03_Bokpyin":   "team3",
-      "MYT_TNI_TEAM04_Kawthoung": "team4"
-    };
-    const TEAM_LABELS = {
-      team1: "Team 1 Dawei",   team2: "Team 2 Myeik",
-      team3: "Team 3 Bokpyin", team4: "Team 4 Kawthoung"
-    };
-    const TEAM_REGIONS = {
-      team1: "MYT_TNI_TEAM01_Dawei",   team2: "MYT_TNI_TEAM02_Myeik",
-      team3: "MYT_TNI_TEAM03_Bokpyin", team4: "MYT_TNI_TEAM04_Kawthoung"
-    };
-
-    const stats = {};
-    for (const k of Object.keys(TEAM_LABELS)) {
-      stats[k] = {
-        remain: 0, closeMonth: 0, fotClose: 0,
-        d0: 0, d1: 0, d2: 0, planM: 0,
-        engineers: 0, waitCD: 0, cdNotYet: 0, closeRate: 0,
-        rankFromText: 0
-      };
-    }
-
-    // Parse header row 0 for report date range (cells may be Date objects)
-    function fmtCell(v) {
-      if (v instanceof Date) return Utilities.formatDate(v, "Asia/Rangoon", "dd/MM/yyyy");
-      return String(v || "").replace(/\s+/g, " ").trim();
-    }
-    const hdr0 = fmtCell(raw[0][1]);  // period start e.g. "21/07/2026"
-    const hdr1 = fmtCell(raw[0][2]);  // period end   e.g. "20/08/2026"
-
-    for (let i = 3; i < raw.length; i++) {
-      const teamRaw  = String(raw[i][0] || "").trim();
-      const username = String(raw[i][2] || "").trim();
-      const woText   = String(raw[i][3] || "").trim();
-
-      if (!teamRaw || !woText || woText === "0" || woText === "") continue;
-
-      let teamKey = null;
-      for (const k of Object.keys(TEAMS)) {
-        if (teamRaw === k) { teamKey = TEAMS[k]; break; }
-      }
-      if (!teamKey) continue;
-
-      const s = stats[teamKey];
-      const isLeaderSummary = username.startsWith("Team leader");
-
-      function gi(pattern) {
-        const m = woText.match(pattern);
-        return m ? parseInt(m[1], 10) : 0;
-      }
-      function giAll(re) {
-        // Sum ALL occurrences (handles T2 "Sub" sub-section)
-        let total = 0, m;
-        const g = new RegExp(re.source, "g");
-        while ((m = g.exec(woText)) !== null) total += parseInt(m[1], 10);
-        return total;
-      }
-
-      if (isLeaderSummary) {
-        // Read ALL team metrics from this authoritative summary row
-        s.closeMonth = giAll(/\/(\d+) WO Close/);
-        s.remain     = giAll(/\/(\d+) WO Remain/);
-        s.fotClose   = gi(/\/WO \/Overdue \/FOT \/NOT \/Close: \/(\d+)/);
-        s.waitCD     = gi(/Wait CD : \/(\d+)/);
-        s.cdNotYet   = gi(/CD Not Yet Close : \/(\d+)/);
-        const rm = woText.match(/Close: \/(\d+(?:\.\d+)?)%/);
-        s.closeRate  = rm ? parseFloat(rm[1]) : 0;
-        s.rankFromText = gi(/Rank: \/(\d+)/);
-        // 3-day close: sum all "3Day: D2 /D1 /D0" occurrences (includes Sub sections)
-        const re3 = /3Day: (\d+) \/(\d+) \/(\d+)/g;
-        let m3;
-        while ((m3 = re3.exec(woText)) !== null) {
-          s.d2 += parseInt(m3[1], 10);
-          s.d1 += parseInt(m3[2], 10);
-          s.d0 += parseInt(m3[3], 10);
-        }
-      } else {
-        // Individual engineer row: count headcount only
-        s.engineers++;
-      }
-    }
-
-    // Date label — format: "JJ/KK/LL-MM-YYYY" where J=day-1, K=day-2, L=day-3
-    const now     = new Date();
-    function fmtDay(d)  { return Utilities.formatDate(d, DR_TZ2, "dd"); }
-    function fmtMY(d)   { return Utilities.formatDate(d, DR_TZ2, "MM/yyyy"); }
-    // e.g. "08/07/06-08-2026" (J-date/K-date/L-date then -month-year)
-    const dateLabel = fmtDay(d0Date) + "/" + fmtDay(d1Date) + "/" + fmtDay(d2Date)
-                    + "-" + Utilities.formatDate(now, DR_TZ2, "MM") + "-"
-                    + Utilities.formatDate(now, DR_TZ2, "yyyy");
-
-    // Build result
-    const result = {};
-    const ranks = [];
-    for (const k of Object.keys(TEAM_LABELS)) {
-      const s = stats[k];
-
-      // v299: Prefer formula cells from GID 893574714 rows 53-56 (same source as chart)
-      // Fall back to team leader text values if formula cells not available
-      const fotClose = chartG[k] !== undefined ? chartG[k] : s.closeMonth; // G
-      const remain   = chartP[k] !== undefined ? chartP[k] : s.remain;     // P
-      const overdueF = chartN[k] !== undefined ? chartN[k] : s.fotClose;   // N
-      const cdNotYet = chartA[k] !== undefined ? chartA[k] : s.cdNotYet;   // A
-      // 3-day closes from chart (J=day-1, K=day-2, L=day-3) or fall back to text
-      const dJ = chartJ[k] !== undefined ? chartJ[k] : s.d1;  // yesterday
-      const dK = chartK[k] !== undefined ? chartK[k] : s.d2;  // 2 days ago
-      const dL = chartL[k] !== undefined ? chartL[k] : s.d0;  // 3 days ago
-
-      const total = fotClose + remain;   // G + P = Total WO
-      const pct = s.closeRate > 0 ? Math.round(s.closeRate) : (total > 0 ? Math.round(fotClose / total * 100) : 0);
-      ranks.push({ k: k, pct: s.closeRate > 0 ? s.closeRate : pct, rankT: s.rankFromText });
-      result[k] = {
-        name:          TEAM_LABELS[k],
-        region:        TEAM_REGIONS[k],
-        engineers:     s.engineers,
-        totalAssigned: total,        // G + P
-        fotClose:      fotClose,     // G = Total FOT Close
-        remain:        remain,       // P = Remain WO
-        overdueF:      overdueF,     // N = Overdue FOT not closed
-        waitCD:        s.waitCD,     // Wait CD (from team leader text)
-        cdNotYet:      cdNotYet,     // A = CD Not Yet Close
-        d0: dL,  // L col = 3 days ago (Aug 6) — shown last  → 7
-        d1: dK,  // K col = 2 days ago (Aug 7) — shown middle → 0
-        d2: dJ,  // J col = yesterday  (Aug 8) — shown first  → 2
-        // HTML: d2/d1/d0 = 2/0/7 ✅
-        pct:           pct,
-        closeRate:     s.closeRate,
-        metTarget:     s.closeRate >= 50
-      };
-    }
-
-    // Rank by close rate (highest = rank 1); if closeRate from text available use it for accurate sort
-    ranks.sort(function(a,b){ return b.pct - a.pct; });
-    ranks.forEach(function(r, i) { result[r.k].rank = i + 1; });
-
-    const updatedAt = Utilities.formatDate(now, "Asia/Rangoon", "dd/MM/yyyy HH:mm");
-    return json({
-      status:     "ok",
-      updatedAt:  updatedAt,
-      period:     hdr0 + " – " + hdr1,
-      dateLabel:  dateLabel,
-      sheetFound: sheetDebug,
-      data:       result
-    });
-
-  } catch(e) {
-    return json({ status: "error", message: e.message, stack: e.stack });
-  }
-}
 // ─────────────────────────────────────────────────────────────────────
 // DEBUG: Read rows 53-56 of ALL sheets — find which sheet has G/P/N/A
 // GET ?action=debug_sum_sheet
@@ -2680,7 +2666,7 @@ function doGetRefuelData_(e) {
 }
 
 
-// ── BotState: lưu/đọc message_id để xóa tin cũ trước khi gửi mới ──────────
+// ── BotState & MsgId State Management (Dual: PropertiesService 5ms + Sheet BotState backup) ──
 
 function getBotStateSheet_() {
   const ss = SpreadsheetApp.openById(SHEET_ID);
@@ -2694,24 +2680,45 @@ function getBotStateSheet_() {
 
 function handleGetMsgId(body) {
   try {
-    const key  = String(body.key || "").trim();
+    const key = String((body && body.key) || "").trim();
+    if (!key) return json({ status: "error", message: "key required", msg_id: "" });
+
+    // 1. Fast read from PropertiesService (5ms)
+    const propKey = "MSGID_" + key;
+    let msgId = PropertiesService.getScriptProperties().getProperty(propKey);
+    if (msgId !== null && msgId !== undefined && msgId !== "") {
+      return json({ status: "ok", key: key, msg_id: String(msgId) });
+    }
+
+    // 2. Fallback to BotState sheet
     const sh   = getBotStateSheet_();
     const data = sh.getDataRange().getValues();
     for (let i = 1; i < data.length; i++) {
       if (String(data[i][0]).trim() === key) {
-        return json({ status: "ok", key: key, msg_id: String(data[i][1]) });
+        msgId = String(data[i][1]).trim();
+        if (msgId) {
+          PropertiesService.getScriptProperties().setProperty(propKey, msgId);
+        }
+        return json({ status: "ok", key: key, msg_id: msgId });
       }
     }
     return json({ status: "ok", key: key, msg_id: "" });
   } catch (err) {
-    return json({ status: "error", message: err.message });
+    return json({ status: "error", message: err.message, msg_id: "" });
   }
 }
 
 function handleSetMsgId(body) {
   try {
-    const key   = String(body.key    || "").trim();
-    const msgId = String(body.msg_id || "").trim();
+    const key   = String((body && body.key) || "").trim();
+    const msgId = String((body && (body.msg_id !== undefined ? body.msg_id : body.msgid)) || "").trim();
+    if (!key) return json({ status: "error", message: "key required" });
+
+    // 1. Instant save to PropertiesService (5ms)
+    const propKey = "MSGID_" + key;
+    PropertiesService.getScriptProperties().setProperty(propKey, msgId);
+
+    // 2. Persistent save to BotState sheet
     const sh    = getBotStateSheet_();
     const data  = sh.getDataRange().getValues();
     for (let i = 1; i < data.length; i++) {
@@ -2723,6 +2730,98 @@ function handleSetMsgId(body) {
     sh.appendRow([key, msgId]);
     return json({ status: "ok", key: key, msg_id: msgId });
   } catch (err) {
+    return json({ status: "error", message: err.message });
+  }
+}
+
+/** Batch get multiple msg_ids in 1 single HTTP call */
+function handleGetMsgIdsBatch(body) {
+  try {
+    let keys = (body && body.keys) || [];
+    if (typeof keys === "string") {
+      try { keys = JSON.parse(keys); } catch(e) { keys = keys.split(",").map(function(k){ return k.trim(); }); }
+    }
+    const props = PropertiesService.getScriptProperties().getProperties();
+    const result = {};
+    const missingKeys = [];
+
+    keys.forEach(function(k) {
+      const trimmed = String(k).trim();
+      const val = props["MSGID_" + trimmed];
+      if (val !== undefined && val !== null && val !== "") {
+        result[trimmed] = String(val);
+      } else {
+        missingKeys.push(trimmed);
+      }
+    });
+
+    // If any key was missing from PropertiesService, read BotState sheet once
+    if (missingKeys.length > 0) {
+      const sh = getBotStateSheet_();
+      const data = sh.getDataRange().getValues();
+      for (let i = 1; i < data.length; i++) {
+        const rowKey = String(data[i][0]).trim();
+        if (missingKeys.indexOf(rowKey) !== -1) {
+          const val = String(data[i][1]).trim();
+          result[rowKey] = val;
+          if (val) {
+            PropertiesService.getScriptProperties().setProperty("MSGID_" + rowKey, val);
+          }
+        }
+      }
+    }
+
+    keys.forEach(function(k) {
+      const trimmed = String(k).trim();
+      if (result[trimmed] === undefined) result[trimmed] = "";
+    });
+
+    return json({ status: "ok", states: result });
+  } catch(err) {
+    return json({ status: "error", message: err.message, states: {} });
+  }
+}
+
+/** Batch set multiple msg_ids in 1 single HTTP call */
+function handleSetMsgIdsBatch(body) {
+  try {
+    let states = (body && body.states) || {};
+    if (typeof states === "string") {
+      try { states = JSON.parse(states); } catch(e) { states = {}; }
+    }
+
+    // 1. Instant batch write to PropertiesService (5ms)
+    const propUpdates = {};
+    for (const k in states) {
+      propUpdates["MSGID_" + String(k).trim()] = String(states[k]).trim();
+    }
+    PropertiesService.getScriptProperties().setProperties(propUpdates);
+
+    // 2. Batch update to BotState sheet
+    const sh   = getBotStateSheet_();
+    const data = sh.getDataRange().getValues();
+    const keyRowMap = {};
+    for (let i = 1; i < data.length; i++) {
+      keyRowMap[String(data[i][0]).trim()] = i + 1;
+    }
+
+    const newRows = [];
+    for (const k in states) {
+      const trimmedKey = String(k).trim();
+      const val = String(states[k]).trim();
+      if (keyRowMap[trimmedKey]) {
+        sh.getRange(keyRowMap[trimmedKey], 2).setValue(val);
+      } else {
+        newRows.push([trimmedKey, val]);
+      }
+    }
+
+    if (newRows.length > 0) {
+      sh.getRange(sh.getLastRow() + 1, 1, newRows.length, 2).setValues(newRows);
+    }
+
+    return json({ status: "ok", count: Object.keys(states).length, states: states });
+  } catch(err) {
     return json({ status: "error", message: err.message });
   }
 }
@@ -2761,5 +2860,708 @@ function fixAllMismatchedConfigs() {
   }
 }
 
+// ============================================================
+// PLAN DEP — BI Plan Week Tab Backend
+// Sheet: 1grwuZpn4gIku2V66WC59-YccEN2yz1ItIuvgeuzO8W8
+// Tabs: Plan Dep (active), History Plan Dep (archive), Permit BI (auth)
+// ============================================================
+function handleGetPlanDep_() {
+  try {
+    const PDEP_SS_ID = "1grwuZpn4gIku2V66WC59-YccEN2yz1ItIuvgeuzO8W8";
+    const ss = SpreadsheetApp.openById(PDEP_SS_ID);
+    const planSheet = ss.getSheetByName("Plan Dep");
+    let planData = [];
+    if (planSheet && planSheet.getLastRow() > 2) {
+      const rows = planSheet.getRange(3, 1, planSheet.getLastRow() - 2, 6).getValues();
+      planData = rows.filter(r => r.some(c => String(c).trim() !== "")).map((r, i) => ({
+        row: i + 3,
+        col_a: String(r[0] || "").trim(),
+        dateAssign: r[1] instanceof Date ? Utilities.formatDate(r[1], "Asia/Yangon", "dd/MM/yyyy") : String(r[1] || "").trim(),
+        techManager: String(r[2] || "").trim(),
+        detailTask: String(r[3] || "").trim(),
+        progress: String(r[4] || "").trim(),
+        dateComplete: r[5] instanceof Date ? Utilities.formatDate(r[5], "Asia/Yangon", "dd/MM/yyyy") : String(r[5] || "").trim()
+      }));
+      
+      function parseDateTs_(dStr) {
+        if (!dStr) return 0;
+        const p = dStr.split("/");
+        if (p.length === 3) {
+          const d = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
+          return isNaN(d.getTime()) ? 0 : d.getTime();
+        }
+        return 0;
+      }
+      planData.sort((a, b) => {
+        const da = parseDateTs_(a.dateAssign);
+        const db = parseDateTs_(b.dateAssign);
+        if (db !== da) return db - da;
+        return (a.techManager || "").localeCompare(b.techManager || "");
+      });
+    }
+    
+    let historySheet = ss.getSheetByName("History Plan Dep");
+    let historyData = [];
+    if (historySheet && historySheet.getLastRow() > 2) {
+      const hRows = historySheet.getRange(3, 1, historySheet.getLastRow() - 2, 6).getValues();
+      historyData = hRows.filter(r => r.some(c => String(c).trim() !== "")).map((r, i) => ({
+        row: i + 3,
+        col_a: String(r[0] || "").trim(),
+        dateAssign: r[1] instanceof Date ? Utilities.formatDate(r[1], "Asia/Yangon", "dd/MM/yyyy") : String(r[1] || "").trim(),
+        techManager: String(r[2] || "").trim(),
+        detailTask: String(r[3] || "").trim(),
+        progress: String(r[4] || "").trim(),
+        dateComplete: r[5] instanceof Date ? Utilities.formatDate(r[5], "Asia/Yangon", "dd/MM/yyyy") : String(r[5] || "").trim()
+      }));
+    }
+    
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const dayOfYear = Math.ceil((now - startOfYear) / 86400000);
+    const weekNumber = Math.ceil(dayOfYear / 7);
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    const fmt = d => Utilities.formatDate(d, "Asia/Yangon", "dd/MM/yyyy");
+    
+    let backofficeList = [];
+    if (planSheet && planSheet.getLastRow() >= 2) {
+      const colJRows = planSheet.getRange(2, 10, Math.min(planSheet.getLastRow() - 1, 50), 1).getValues();
+      backofficeList = colJRows.map(r => String(r[0] || "").trim()).filter(v => v !== "");
+    }
+    if (!backofficeList.length) {
+      backofficeList = ["Admin", "Asset", "CM", "Finance", "HR", "M&E", "Manager", "PM", "Transmission"];
+    }
+
+    return json({
+      status: "ok",
+      version: "1.0",
+      timestamp: new Date().toISOString(),
+      data: planData,
+      history: historyData,
+      meta: {
+        totalPlan: planData.length,
+        totalHistory: historyData.length,
+        weekNumber: weekNumber,
+        weekRange: fmt(monday) + " — " + fmt(sunday),
+        sheetName: "Plan Dep",
+        backofficeList: backofficeList
+      },
+      error: null
+    });
+  } catch (err) {
+    return json({ status: "error", version: "1.0", timestamp: new Date().toISOString(), data: [], meta: {}, error: { code: "FETCH_FAIL", message: err.message } });
+  }
+}
+
+function handleGetPlanDepPermit_() {
+  try {
+    const PDEP_SS_ID = "1grwuZpn4gIku2V66WC59-YccEN2yz1ItIuvgeuzO8W8";
+    const ss = SpreadsheetApp.openById(PDEP_SS_ID);
+    let permitSheet = ss.getSheetByName("Permit BI");
+    if (!permitSheet) {
+      permitSheet = ss.insertSheet("Permit BI");
+      permitSheet.getRange(1, 1).setValue("list Gmail edit A:D");
+      permitSheet.getRange(2, 1).setValue("phonghdpxd@gmail.com");
+      permitSheet.getRange(3, 1).setValue("yelwin086683@gmail.com");
+    }
+    const lastRow = permitSheet.getLastRow();
+    let permits = [];
+    if (lastRow > 1) {
+      const rows = permitSheet.getRange(2, 1, lastRow - 1, 1).getValues();
+      permits = rows.filter(r => String(r[0]).trim() !== "").map(r => ({
+        email: String(r[0]).trim().toLowerCase(),
+        role: "ADMIN",
+        dateAdded: Utilities.formatDate(new Date(), "Asia/Yangon", "dd/MM/yyyy")
+      }));
+    }
+    return json({ status: "ok", version: "1.0", timestamp: new Date().toISOString(), data: permits, meta: { total: permits.length }, error: null });
+  } catch (err) {
+    return json({ status: "error", version: "1.0", timestamp: new Date().toISOString(), data: [], meta: {}, error: { code: "PERMIT_FAIL", message: err.message } });
+  }
+}
+
+function handlePlanDepPost_(body) {
+  try {
+    const PDEP_SS_ID = "1grwuZpn4gIku2V66WC59-YccEN2yz1ItIuvgeuzO8W8";
+    const ss = SpreadsheetApp.openById(PDEP_SS_ID);
+    const planSheet = ss.getSheetByName("Plan Dep");
+    if (!planSheet) return json({ status: "error", version: "1.0", timestamp: new Date().toISOString(), data: null, meta: {}, error: { code: "NO_SHEET", message: "Plan Dep sheet not found" } });
+    
+    // 🛡️ Quyền thao tác trực tiếp trên Portal
+    function checkPermit_(email, requiredRole) {
+      return true;
+    }
+    
+    if (body.action === "plan_dep_add") {
+      planSheet.insertRowBefore(3);
+      planSheet.getRange(3, 1, 1, 6).setValues([[
+        "",
+        String(body.dateAssign || "").trim(),
+        String(body.techManager || "").trim(),
+        String(body.detailTask || "").trim(),
+        "",
+        ""
+      ]]);
+      return json({ status: "ok", version: "1.0", timestamp: new Date().toISOString(), data: { action: "added" }, meta: {}, error: null });
+    }
+    
+    if (body.action === "plan_dep_update") {
+      const row = parseInt(body.row);
+      const col = parseInt(body.col);
+      const value = String(body.value || "").trim();
+      if (!row || !col || col < 1 || col > 6) {
+        return json({ status: "error", version: "1.0", timestamp: new Date().toISOString(), data: null, meta: {}, error: { code: "INVALID", message: "Invalid row or column" } });
+      }
+      planSheet.getRange(row, col).setValue(value);
+      return json({ status: "ok", version: "1.0", timestamp: new Date().toISOString(), data: { action: "updated", row: row, col: col }, meta: {}, error: null });
+    }
+    
+    if (body.action === "plan_dep_delete") {
+      const row = parseInt(body.row);
+      if (!row || row < 3) {
+        return json({ status: "error", version: "1.0", timestamp: new Date().toISOString(), data: null, meta: {}, error: { code: "INVALID", message: "Invalid row number" } });
+      }
+      planSheet.deleteRow(row);
+      return json({ status: "ok", version: "1.0", timestamp: new Date().toISOString(), data: { action: "deleted", row: row }, meta: {}, error: null });
+    }
+    
+    return json({ status: "error", version: "1.0", timestamp: new Date().toISOString(), data: null, meta: {}, error: { code: "UNKNOWN", message: "Unknown plan_dep action" } });
+  } catch (err) {
+    return json({ status: "error", version: "1.0", timestamp: new Date().toISOString(), data: null, meta: {}, error: { code: "SERVER_ERROR", message: err.message } });
+  }
+}
+
+function handlePlanDepArchive_() {
+  try {
+    const PDEP_SS_ID = "1grwuZpn4gIku2V66WC59-YccEN2yz1ItIuvgeuzO8W8";
+    const ss = SpreadsheetApp.openById(PDEP_SS_ID);
+    const planSheet = ss.getSheetByName("Plan Dep");
+    if (!planSheet || planSheet.getLastRow() < 3) {
+      return json({ status: "ok", version: "1.0", timestamp: new Date().toISOString(), data: { archived: 0 }, meta: {}, error: null });
+    }
+    let historySheet = ss.getSheetByName("History Plan Dep");
+    if (!historySheet) {
+      historySheet = ss.insertSheet("History Plan Dep");
+      const header = planSheet.getRange(1, 1, 2, 6).getValues();
+      historySheet.getRange(1, 1, 2, 6).setValues(header);
+    }
+    const now = new Date();
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
+    monday.setHours(0, 0, 0, 0);
+    
+    const lastRow = planSheet.getLastRow();
+    const allData = planSheet.getRange(3, 1, lastRow - 2, 6).getValues();
+    const rowsToArchive = [];
+    
+    for (let i = allData.length - 1; i >= 0; i--) {
+      const dateComplete = allData[i][5];
+      if (dateComplete && dateComplete instanceof Date && dateComplete < monday) {
+        rowsToArchive.push({ index: i + 3, data: allData[i] });
+      } else if (dateComplete && typeof dateComplete === "string" && dateComplete.trim() !== "") {
+        const parts = dateComplete.trim().split("/");
+        if (parts.length === 3) {
+          const parsed = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+          if (!isNaN(parsed.getTime()) && parsed < monday) {
+            rowsToArchive.push({ index: i + 3, data: allData[i] });
+          }
+        }
+      }
+    }
+    
+    let archivedCount = 0;
+    for (const item of rowsToArchive) {
+      historySheet.insertRowBefore(3);
+      historySheet.getRange(3, 1, 1, 6).setValues([item.data]);
+      archivedCount++;
+    }
+    
+    rowsToArchive.sort((a, b) => b.index - a.index);
+    for (const item of rowsToArchive) {
+      planSheet.deleteRow(item.index);
+    }
+    
+    return json({
+      status: "ok",
+      version: "1.0",
+      timestamp: new Date().toISOString(),
+      data: { archived: archivedCount },
+      meta: { message: archivedCount + " completed tasks archived to History Plan Dep" },
+      error: null
+    });
+  } catch (err) {
+    return json({ status: "error", version: "1.0", timestamp: new Date().toISOString(), data: null, meta: {}, error: { code: "ARCHIVE_FAIL", message: err.message } });
+  }
+}
+
+// ============================================================
+// ATTENDANCE COLLECTOR — Morning Attendance & Staff Leave Records
+// v2026-08-17 — Split Team Leader Attendance & Staff Leave into Sheet
+// Sheet ID: 18zQB4i0Fu4QfKKkkUZUd6SKWIEbdWDiwdpgNSaL9v54
+// Tabs: "Sum report morning attendance" (Records), "Staff attendance" (Mapping)
+// ============================================================
+
+function handleAttendancePost_(body) {
+  try {
+    const ATT_SS_ID = "18zQB4i0Fu4QfKKkkUZUd6SKWIEbdWDiwdpgNSaL9v54";
+    const ss = SpreadsheetApp.openById(ATT_SS_ID);
+    const sumSheet = ss.getSheetByName("Sum report morning attendance");
+    if (!sumSheet) {
+      return json({ status: "error", message: "Sheet 'Sum report morning attendance' not found" });
+    }
+
+    // 1. Build staff lookup map from 'Staff attendance' (Col A: Telegram ID, Col C: Name Telegram, Col F: Full Name, Col H: VMY Code)
+    const staffMap = {};
+    const staffSheet = ss.getSheetByName("Staff attendance");
+    if (staffSheet && staffSheet.getLastRow() > 1) {
+      const staffValues = staffSheet.getRange(2, 1, staffSheet.getLastRow() - 1, 8).getValues();
+      for (let i = 0; i < staffValues.length; i++) {
+        const tgId = String(staffValues[i][0] || "").trim();
+        const tgName = String(staffValues[i][2] || "").trim().toLowerCase();
+        const fullName = String(staffValues[i][5] || "").trim().toLowerCase();
+        const vmyCode = String(staffValues[i][7] || "").trim().toLowerCase();
+        if (tgId) {
+          if (fullName) staffMap[fullName] = tgId;
+          if (tgName) staffMap[tgName] = tgId;
+          if (vmyCode) staffMap[vmyCode] = tgId;
+        }
+      }
+    }
+
+    const items = body.items || [];
+    if (!Array.isArray(items) || items.length === 0) {
+      return json({ status: "error", message: "No attendance items provided" });
+    }
+
+    // 2. Determine base REF sequence
+    let nextRefSeq = 1;
+    if (sumSheet.getLastRow() > 1) {
+      const topRef = String(sumSheet.getRange(2, 1).getValue() || "").trim();
+      const m = topRef.match(/ATT-(\d+)/i);
+      if (m) {
+        nextRefSeq = parseInt(m[1], 10) + 1;
+      } else {
+        nextRefSeq = sumSheet.getLastRow();
+      }
+    }
+
+    // 3. Prepare rows to insert (Strict Top Insertion Rule: insert at Row 2)
+    const rowsToInsert = [];
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      const name = String(it.name || "").trim();
+      const normName = name.toLowerCase();
+      let tgId = String(it.telegramId || "").trim();
+      if (!tgId && staffMap[normName]) {
+        tgId = staffMap[normName];
+      }
+      
+      const refStr = "ATT-" + String(nextRefSeq + i).padStart(4, "0");
+      const dateStr = String(it.date || Utilities.formatDate(new Date(), "Asia/Yangon", "dd/MM/yyyy")).trim();
+      const workStr = String(it.work || "").trim();
+      const takeLeaveStr = String(it.takeLeave || "").trim();
+      const halfDayStr = String(it.halfDay || "").trim();
+      const reasonStr = String(it.reason || "").trim();
+
+      rowsToInsert.push([
+        refStr,
+        dateStr,
+        name,
+        workStr,
+        takeLeaveStr,
+        halfDayStr,
+        reasonStr,
+        tgId
+      ]);
+    }
+
+    if (rowsToInsert.length > 0) {
+      sumSheet.insertRowsBefore(2, rowsToInsert.length);
+      sumSheet.getRange(2, 1, rowsToInsert.length, 8).setValues(rowsToInsert);
+    }
+
+    return json({
+      status: "ok",
+      version: "1.0",
+      timestamp: new Date().toISOString(),
+      data: {
+        inserted: rowsToInsert.length,
+        items: rowsToInsert
+      },
+      error: null
+    });
+  } catch (err) {
+    return json({ status: "error", message: err.message, stack: err.stack });
+  }
+}
+
+function json(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 🚂 TRAIN SCHEDULE SYNC — Ghi lịch trình đoàn tàu vào Google Sheet
+// Tab: "Time Rain 5 min" (GID 2003037043) trên bảng Site Down
+// Trigger: 01:46 MMT hàng ngày từ train_5min.yml
+// ═══════════════════════════════════════════════════════════════
+function handleSyncSchedule_(body) {
+  try {
+    var SD_SHEET_ID = "1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow";
+    var ss = SpreadsheetApp.openById(SD_SHEET_ID);
+    var sheet = ss.getSheetByName("Time Rain 5 min");
+    if (!sheet) return json({ ok: false, msg: "Tab 'Time Rain 5 min' not found" });
+
+    var rows = body.rows; // Array of arrays: [[#, Time, Toa, Report, Engine, Notes], ...]
+    if (!rows || !rows.length) return json({ ok: false, msg: "No rows data" });
+
+    // Clear old data and write new
+    sheet.clearContents();
+    sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
+
+    // Format header row
+    var headerRange = sheet.getRange(1, 1, 1, rows[0].length);
+    headerRange.setFontWeight("bold");
+    headerRange.setBackground("#4a86c8");
+    headerRange.setFontColor("#ffffff");
+
+    // Auto-resize columns
+    for (var i = 1; i <= rows[0].length; i++) {
+      sheet.autoResizeColumn(i);
+    }
+
+    // Add timestamp
+    var tsRow = rows.length + 2;
+    sheet.getRange(tsRow, 1).setValue("Last updated: " + Utilities.formatDate(new Date(), "Asia/Yangon", "dd/MM/yyyy HH:mm:ss") + " MMT (auto-sync)");
+
+    return json({ ok: true, msg: "Schedule synced: " + (rows.length - 1) + " entries", ts: new Date().toISOString() });
+  } catch (err) {
+    return json({ ok: false, msg: err.message });
+  }
+}
+
+// ============================================================
+// AUDIT CAPACITY — Ghế AUDITOR-9.2 (Capacity Sentinel)
+// Đếm số dòng trong các tab thu thập dữ liệu để cảnh báo sớm
+// GET ?action=audit_capacity
+// ============================================================
+function handleAuditCapacity_() {
+  try {
+    var results = [];
+    
+    // ── 1. Team All Find (SHEET_ID) ──
+    var ss1 = SpreadsheetApp.openById("1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8");
+    var tabs1 = [
+      {name: "Data", label: "Asset Orders"},
+      {name: "Search Log", label: "Search Log"},
+      {name: "Asset Stats Log", label: "Asset Stats Log"},
+      {name: "Read Report Log", label: "Read Report Log"},
+      {name: "General", label: "General Stats"}
+    ];
+    for (var i = 0; i < tabs1.length; i++) {
+      var sh = ss1.getSheetByName(tabs1[i].name);
+      results.push({
+        spreadsheet: "Team All Find",
+        tab: tabs1[i].name,
+        label: tabs1[i].label,
+        rows: sh ? sh.getLastRow() : 0,
+        cols: sh ? sh.getLastColumn() : 0
+      });
+    }
+    
+    // ── 2. Attendance ──
+    try {
+      var ss2 = SpreadsheetApp.openById("18zQB4i0Fu4QfKKkkUZUd6SKWIEbdWDiwdpgNSaL9v54");
+      var tabs2 = [
+        {name: "List Attendance", label: "Attendance Records"},
+        {name: "Logs", label: "Attendance Logs"}
+      ];
+      for (var j = 0; j < tabs2.length; j++) {
+        var sh2 = ss2.getSheetByName(tabs2[j].name);
+        results.push({
+          spreadsheet: "Attendance",
+          tab: tabs2[j].name,
+          label: tabs2[j].label,
+          rows: sh2 ? sh2.getLastRow() : 0,
+          cols: sh2 ? sh2.getLastColumn() : 0
+        });
+      }
+    } catch(e2) {
+      results.push({spreadsheet: "Attendance", tab: "ERROR", label: e2.message, rows: -1, cols: 0});
+    }
+    
+    // ── 3. Construction ──
+    try {
+      var ss3 = SpreadsheetApp.openById("1ViXXv5P8jSgx5heBqEP419ZkSR77C3OsflK0xpHMoi8");
+      var sh3 = ss3.getSheetByName("Collect Data");
+      results.push({
+        spreadsheet: "Construction",
+        tab: "Collect Data",
+        label: "Construction Reports",
+        rows: sh3 ? sh3.getLastRow() : 0,
+        cols: sh3 ? sh3.getLastColumn() : 0
+      });
+    } catch(e3) {
+      results.push({spreadsheet: "Construction", tab: "ERROR", label: e3.message, rows: -1, cols: 0});
+    }
+    
+    // ── 4. Refuel ──
+    try {
+      var ss4 = SpreadsheetApp.openById("1JxrA4pJo92Xx_SpwLnOQxphVYwE2iFhLrCOHmyVVuuM");
+      var tabs4 = [
+        {name: "Plan refuel", label: "Refuel Plans"},
+        {name: "Refueled", label: "Refueled Records"}
+      ];
+      for (var k = 0; k < tabs4.length; k++) {
+        var sh4 = ss4.getSheetByName(tabs4[k].name);
+        results.push({
+          spreadsheet: "Refuel",
+          tab: tabs4[k].name,
+          label: tabs4[k].label,
+          rows: sh4 ? sh4.getLastRow() : 0,
+          cols: sh4 ? sh4.getLastColumn() : 0
+        });
+      }
+    } catch(e4) {
+      results.push({spreadsheet: "Refuel", tab: "ERROR", label: e4.message, rows: -1, cols: 0});
+    }
+    
+    // ── 5. Drive storage info (approximate from About) ──
+    var driveInfo = {used: -1, total: -1};
+    try {
+      // DriveApp doesn't expose quota, but we note total file count as proxy
+      driveInfo.note = "Drive quota requires Drive API v2 (not available via DriveApp). Use Google Admin console to check.";
+    } catch(ed) {}
+    
+    // ── Summary ──
+    var warnings = [];
+    var criticals = [];
+    for (var r = 0; r < results.length; r++) {
+      if (results[r].rows > 40000) {
+        criticals.push(results[r].spreadsheet + "/" + results[r].tab + ": " + results[r].rows + " rows");
+      } else if (results[r].rows > 20000) {
+        warnings.push(results[r].spreadsheet + "/" + results[r].tab + ": " + results[r].rows + " rows");
+      }
+    }
+    
+    var status = criticals.length > 0 ? "CRITICAL" : (warnings.length > 0 ? "WARNING" : "OK");
+    
+    return json({
+      status: status,
+      timestamp: Utilities.formatDate(new Date(), "Asia/Yangon", "dd/MM/yyyy HH:mm"),
+      tabs: results,
+      warnings: warnings,
+      criticals: criticals,
+      drive: driveInfo
+    });
+  } catch(err) {
+    return json({status: "error", message: err.message});
+  }
+}
+
+// ============================================================
+// DIAGNOSE SITE CLEAR — Đọc formulas + values từ Site Down Clear Morning
+// GET ?action=diagnose_site_clear
+// ============================================================
+function handleDiagnoseSiteClear_() {
+  try {
+    var ss = SpreadsheetApp.openById("1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow");
+    var sheets = ss.getSheets();
+    
+    // Lấy danh sách tất cả tabs
+    var sheetNames = [];
+    for (var s = 0; s < sheets.length; s++) {
+      sheetNames.push({name: sheets[s].getName(), gid: sheets[s].getSheetId()});
+    }
+    
+    // Tìm tab theo GID hoặc theo tên chứa "Clear Morning"
+    var sheet = null;
+    for (var i = 0; i < sheets.length; i++) {
+      if (sheets[i].getSheetId() === 582589665) { sheet = sheets[i]; break; }
+    }
+    if (!sheet) {
+      for (var j = 0; j < sheets.length; j++) {
+        var n = sheets[j].getName().toLowerCase();
+        if (n.indexOf("clear morning") !== -1 || n.indexOf("clear") !== -1) { sheet = sheets[j]; break; }
+      }
+    }
+    if (!sheet) return json({status: "not_found", message: "No tab matching GID 582589665 or name 'Clear Morning'", allSheets: sheetNames});
+
+    var lastRow = sheet.getLastRow();
+    var lastCol = sheet.getLastColumn();
+    if (lastRow < 1 || lastCol < 1) return json({status: "ok", message: "Sheet empty", rows: 0, sheetName: sheet.getName(), gid: sheet.getSheetId(), allSheets: sheetNames});
+
+    var values = sheet.getRange(1, 1, lastRow, lastCol).getValues();
+    var formulas = sheet.getRange(1, 1, lastRow, lastCol).getFormulas();
+    
+    var result = [];
+    var refErrors = 0;
+    for (var r = 0; r < lastRow; r++) {
+      var rowData = [];
+      for (var c = 0; c < lastCol; c++) {
+        var val = String(values[r][c]);
+        var formula = formulas[r][c] || "";
+        var hasRef = val.indexOf("#REF!") !== -1 || formula.indexOf("#REF!") !== -1;
+        if (hasRef) refErrors++;
+        rowData.push({
+          cell: String.fromCharCode(65 + c) + (r + 1),
+          value: val.substring(0, 200),
+          formula: formula,
+          hasRefError: hasRef
+        });
+      }
+      result.push(rowData);
+    }
+
+    return json({
+      status: "ok",
+      sheetName: sheet.getName(),
+      gid: sheet.getSheetId(),
+      lastRow: lastRow,
+      lastCol: lastCol,
+      refErrors: refErrors,
+      allSheets: sheetNames,
+      data: result
+    });
+  } catch(err) {
+    return json({status: "error", message: err.message});
+  }
+}
+
+// ============================================================
+// CLEAR SITE DOWN CLEAR MORNING — Xóa sạch nội dung tab GID 582589665
+// Tab này KHÔNG thuộc Steel Lock Site Down v2 (đã xác nhận bởi Admin)
+// GET ?action=clear_site_clear_morning
+// ============================================================
+function handleClearSiteClearMorning_() {
+  try {
+    var ss = SpreadsheetApp.openById("1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow");
+    var sheets = ss.getSheets();
+    var sheet = null;
+    
+    // Tìm theo GID
+    for (var i = 0; i < sheets.length; i++) {
+      if (sheets[i].getSheetId() === 582589665) { sheet = sheets[i]; break; }
+    }
+    // Fallback: tìm theo tên
+    if (!sheet) {
+      for (var j = 0; j < sheets.length; j++) {
+        var n = sheets[j].getName().toLowerCase();
+        if (n.indexOf("clear morning") !== -1 || (n.indexOf("site") !== -1 && n.indexOf("clear") !== -1)) { sheet = sheets[j]; break; }
+      }
+    }
+    if (!sheet) {
+      var names = [];
+      for (var k = 0; k < sheets.length; k++) names.push(sheets[k].getName() + " (gid:" + sheets[k].getSheetId() + ")");
+      return json({status: "error", message: "Tab not found. All tabs: " + names.join(", ")});
+    }
+
+    var lastRow = sheet.getLastRow();
+    var lastCol = sheet.getLastColumn();
+    if (lastRow < 2) return json({status: "ok", message: "Sheet already empty (only header)", rows: lastRow});
+
+    // Xóa toàn bộ nội dung từ row 2 trở đi (giữ row 1 header)
+    sheet.getRange(2, 1, lastRow - 1, lastCol).clearContent();
+
+    return json({
+      status: "ok",
+      message: "Đã xóa sạch " + (lastRow - 1) + " dòng dữ liệu (giữ header row 1)",
+      clearedRows: lastRow - 1,
+      timestamp: Utilities.formatDate(new Date(), "Asia/Yangon", "dd/MM/yyyy HH:mm")
+    });
+  } catch(err) {
+    return json({status: "error", message: err.message});
+  }
+}
 
 
+// ============================================================
+// 🧹 CLEANUP READ GROUP — Xóa dữ liệu cũ quá 45 ngày
+// Trigger: ngày 16 hàng tháng lúc ~01:00-02:00 Myanmar
+// ============================================================
+/**
+ * Dọn dẹp dữ liệu cũ quá 45 ngày trong tab "Read Group" và "Read Group Refule/Refuel".
+ * Dữ liệu được chèn mới nhất ở trên (row 2), cũ nhất ở dưới cùng.
+ * → Quét từ trên xuống, tìm dòng đầu tiên cũ hơn 45 ngày, xóa batch từ đó đến cuối.
+ */
+function cleanupReadGroupOldRows() {
+  var SS_ID = "1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8";
+  var TABS = ["Read Group", "Read Group Refule", "Read Group Refuel"];
+  var TZ = "Asia/Rangoon";
+  var MAX_AGE_DAYS = 45;
+
+  var now = new Date();
+  var cutoffMs = now.getTime() - MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
+  var cutoffDate = new Date(cutoffMs);
+  var cutoffStr = Utilities.formatDate(cutoffDate, TZ, "dd/MM/yyyy");
+
+  Logger.log("🧹 Cleanup Read Group — Xóa dữ liệu cũ hơn " + MAX_AGE_DAYS + " ngày (trước " + cutoffStr + ")");
+
+  var ss = SpreadsheetApp.openById(SS_ID);
+
+  for (var t = 0; t < TABS.length; t++) {
+    var tabName = TABS[t];
+    var sheet = ss.getSheetByName(tabName);
+    if (!sheet) continue;
+
+    var lastRow = sheet.getLastRow();
+    if (lastRow <= 1) {
+      Logger.log("  📋 " + tabName + ": Chỉ có header — bỏ qua");
+      continue;
+    }
+
+    var dates = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+
+    // Quét từ trên xuống (newest → oldest), tìm dòng đầu tiên cũ hơn cutoff
+    var firstOldIdx = -1;
+    for (var i = 0; i < dates.length; i++) {
+      var cellVal = (dates[i][0] || "").toString().trim();
+      if (!cellVal) continue;
+
+      var parts = cellVal.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+      if (!parts) continue;
+
+      var rowDate = new Date(parseInt(parts[3], 10), parseInt(parts[2], 10) - 1, parseInt(parts[1], 10));
+      if (rowDate.getTime() < cutoffMs) {
+        firstOldIdx = i;
+        break;
+      }
+    }
+
+    if (firstOldIdx >= 0) {
+      var firstOldRow = firstOldIdx + 2; // +2: 0-indexed → 1-indexed + header row
+      var deleteCount = lastRow - firstOldRow + 1;
+      sheet.deleteRows(firstOldRow, deleteCount);
+      Logger.log("  📋 " + tabName + ": Đã xóa " + deleteCount + " dòng cũ (row " + firstOldRow + "→" + lastRow + ") | Còn " + sheet.getLastRow() + " dòng");
+    } else {
+      Logger.log("  📋 " + tabName + ": Không có dữ liệu cũ (tất cả trong 45 ngày)");
+    }
+  }
+
+  Logger.log("✅ Cleanup hoàn tất — " + Utilities.formatDate(now, TZ, "dd/MM/yyyy HH:mm"));
+}
+
+/**
+ * Cài đặt trigger tự động dọn dẹp Read Group vào ngày 16 hàng tháng lúc ~01:00-02:00 Myanmar.
+ * Chạy 1 lần để cài, sau đó trigger tự chạy hàng tháng.
+ */
+function setupReadGroupCleanupTrigger() {
+  // Xóa trigger cũ nếu có
+  var triggers = ScriptApp.getProjectTriggers();
+  for (var i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === "cleanupReadGroupOldRows") {
+      ScriptApp.deleteTrigger(triggers[i]);
+    }
+  }
+
+  // Tạo trigger mới: ngày 16 hàng tháng, ~01:00-02:00 Myanmar
+  ScriptApp.newTrigger("cleanupReadGroupOldRows")
+    .timeBased()
+    .onMonthDay(16)
+    .atHour(1)
+    .create();
+
+  Logger.log("✅ Đã cài trigger dọn dẹp Read Group: ngày 16 hàng tháng lúc ~01:00-02:00 Myanmar");
+}

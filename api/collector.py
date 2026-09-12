@@ -505,10 +505,13 @@ async def handle_mdg(msg, bot, now, user, sender_name, sender_id):
 
         action_name = "process_photo"
         if msg.reply_to_message and msg.reply_to_message.text:
-            rt_upper = msg.reply_to_message.text.upper()
-            if "INVENTORY" in rt_upper:
+            rt_text = msg.reply_to_message.text
+            rt_upper = rt_text.upper()
+            if "⛽" in rt_text or "INVENTORY" in rt_upper:
                 action_name = "inv_add_photo"
-            elif "MDG" in rt_upper:
+            elif "🛢️" in rt_text or "CHANGE OIL" in rt_upper or "OIL" in rt_upper:
+                action_name = "oil_add_photo"
+            elif "⚡" in rt_text or "MDG" in rt_upper:
                 action_name = "mdg_add_photo"
 
         # ── Send file_id + tg_url to Apps Script (GAS downloads — no timeout) ──
@@ -592,14 +595,16 @@ async def handle_mdg(msg, bot, now, user, sender_name, sender_id):
     # ── Confirm reply ────────────────────────────────────────────────────
     if text.lower() == "confirm" and msg.reply_to_message:
         reply_text = msg.reply_to_message.text or ""
-        ref_m = re.search(r"REF:(\d+)", reply_text)
+        ref_m = re.search(r"REF[:\s#]*(\d+)", reply_text, re.IGNORECASE)
         if ref_m:
             ref_id = ref_m.group(1)
             action_name = "mdg_confirm"
-            if "INVENTORY" in reply_text.upper():
+            if "⛽" in reply_text or "INVENTORY" in reply_text.upper():
                 action_name = "inv_confirm"
-            elif "CHANGE OIL" in reply_text.upper() or "OIL" in reply_text.upper():
+            elif "🛢️" in reply_text or "CHANGE OIL" in reply_text.upper() or "OIL" in reply_text.upper():
                 action_name = "oil_confirm"
+            elif "⚡" in reply_text or "MDG" in reply_text.upper():
+                action_name = "mdg_confirm"
             
             result = post_mdg_sheet({
                 "action":       action_name,
@@ -649,12 +654,12 @@ async def handle_mdg(msg, bot, now, user, sender_name, sender_id):
         result = post_mdg_sheet(payload)
 
         if result.get("status") == "ok":
-            ref = result.get("ref") or str(result.get("row", "???")).zfill(5)
+            ref = str(result.get("ref") or result.get("row", "???")).zfill(5)
             site_show = html.escape(site_mdg) if site_mdg else "—"
             await bot.send_message(
                 chat_id,
-                f"🛢️ <b>Change Oil MDG</b> ✅ #<b>{ref}</b> | 📍 <b>{site_show}</b> | 🗓️ <b>{now.strftime('%d/%m/%Y %H:%M')}</b>\n"
-                f"✅ Reply <code>Confirm</code> to close | 📸 Reply photo to attach",
+                f"🛢️ <b>REF:{ref}</b> | {site_show} | {now.strftime('%d/%m/%Y %H:%M')}\n"
+                f"✅ Reply <code>Confirm</code> to close | sent photo MDG after sent text report",
                 parse_mode="HTML",
             )
         else:
@@ -693,12 +698,12 @@ async def handle_mdg(msg, bot, now, user, sender_name, sender_id):
         result = post_mdg_sheet(payload)
 
         if result.get("status") == "ok":
-            ref = result.get("ref") or str(result.get("row", "???")).zfill(5)
+            ref = str(result.get("ref") or result.get("row", "???")).zfill(5)
             dg_show = html.escape(dg_id) if dg_id else "—"
             await bot.send_message(
                 chat_id,
-                f"⛽ <b>Inventory Fuel</b> ✅ #<b>{ref}</b> | 📍 <b>{dg_show}</b> | 🗓️ <b>{now.strftime('%d/%m/%Y %H:%M')}</b>\n"
-                f"✅ Reply <code>Confirm</code> to close | 📸 Reply photo to attach",
+                f"⛽ <b>REF:{ref}</b> | {dg_show} | {now.strftime('%d/%m/%Y %H:%M')}\n"
+                f"✅ Reply <code>Confirm</code> to close | sent photo MDG after sent text report",
                 parse_mode="HTML",
             )
         else:
@@ -738,12 +743,12 @@ async def handle_mdg(msg, bot, now, user, sender_name, sender_id):
         result = post_mdg_sheet(payload)
 
         if result.get("status") == "ok":
-            ref = result.get("ref") or str(result.get("row", "???")).zfill(5)
+            ref = str(result.get("ref") or result.get("row", "???")).zfill(5)
             site_show = html.escape(site_id) if site_id else "—"
             await bot.send_message(
                 chat_id,
-                f"⚡ <b>MDG Run Report</b> ✅ #<b>{ref}</b> | 📍 <b>{site_show}</b> | 🗓️ <b>{now.strftime('%d/%m/%Y %H:%M')}</b>\n"
-                f"✅ Reply <code>Confirm</code> to close | 📸 Reply photo to attach",
+                f"⚡ <b>REF:{ref}</b> | {site_show} | {now.strftime('%d/%m/%Y %H:%M')}\n"
+                f"✅ Reply <code>Confirm</code> to close | sent photo MDG after sent text report",
                 parse_mode="HTML",
             )
         else:
