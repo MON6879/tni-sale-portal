@@ -10,9 +10,10 @@ name: "🚂 5-Min Train — Unified Keepalive + All Reports"
 # 📋 TRAIN MANIFEST — Xem TRAIN_MANIFEST.md để biết lịch trình đầy đủ
 # last-updated: 2026-08-13
 
+# on:
+#   schedule:
+#     - cron: '1/5 * * * *'   # Every 5 min offset 1 (Disabled ghost cron - single train on tni-sitedown-relay)
 on:
-  schedule:
-    - cron: '1/5 * * * *'   # Every 5 min offset 1 (fires at :06, :11, :16, :21, :26, :31, :36, :41, :46, :51, :56, :01 MMT)
   workflow_dispatch:
     inputs:
       report_type:
@@ -57,7 +58,7 @@ on:
         default: '1'
 
 concurrency:
-  group: ${{ github.event_name == 'workflow_dispatch' && 'train-manual' || 'train-auto' }}
+  group: train-5min-singleton
   cancel-in-progress: false    # Queue runs, don't cancel (prevent lost reports)
 
 jobs:
@@ -152,44 +153,42 @@ jobs:
 
 
           # ═══════ ☀️ MORNING BLOCK (05:00-10:00) ═══════
-          #  05:46 → Reports 1,2,3 + Refuel Request + BOD (🤖 Bot API)
-          check_time 05 46 && R1234=true && BOD=true && REFUEL_REQ=true && NEED_PYTHON=true && echo "🚃 Toa 1+8+11: Reports 1-3 + Refuel Request + BOD (05:46 MMT)"
+          #  05:46 → Reports 1,2,3 + BOD (🤖 Bot API)
+          check_time 05 46 && R1234=true && BOD=true && NEED_PYTHON=true && echo "🚃 Toa 1+11: Reports 1-3 + BOD (05:46 MMT)"
           #  05:51 → Report 4 (Daily EOD Task & Stats) — TOA 12 RIÊNG (+5 phút)
           check_time 05 51 && R4=true && NEED_PYTHON=true && echo "🚃 Toa 12: Report 4 EOD Task (05:51 MMT)"
           #  05:56 → Cable Daily Report [ĐÃ HỦY THEO YÊU CẦU NGƯỜI DÙNG]
           #  06:06 → Report 5 (Daily Plan - Ca Sáng) (📱 Telethon)
           check_time 06 06 && P5C=true && NEED_PYTHON=true && echo "🚃 Toa 5: Report 5 Daily Plan Morning (06:06 MMT)"
-          #  07:06 → Refuel Request Report (Toa Catch-up) (🤖 Bot API)
-          check_time 07 06 && REFUEL_REQ=true && NEED_PYTHON=true && echo "🚃 Toa 8: Refuel Request Report Catch-up (07:06 MMT)"
+          #  07:06 → Refuel Request Report [ĐÃ HỦY - GỘP VÀO TOA 9 LÚC 10:06 & 14:11]
           #  10:06 → Refuel Merged Report (📱 Telethon)
           check_time 10 06 && REFUEL_P1=true && NEED_PYTHON=true && echo "🚃 Toa 9: Refuel Merged Report (10:06 MMT)"
-          #  07:16 / 07:18 → Report 6.1 Site Clear Today (🤖 Bot API)
-          (check_time 07 18 || check_time 07 16) && R61=true && NEED_PYTHON=true && echo "🚃 Toa 6.1: Report 6.1 Site Clear Today (07:18 MMT)"
-          #  08:26 / 08:28 → Plan 5C Morning
-          (check_time 08 28 || check_time 08 26) && P5C=true && NEED_PYTHON=true && echo "🚃 Toa 5: Plan 5C Morning (08:28 MMT)"
-          #  08:46 / 08:48 → Report 6 Read Report (Ca 1) (📱 Telethon)
-          (check_time 08 48 || check_time 08 46) && R6=true && NEED_PYTHON=true && echo "🚃 Toa 6: Report 6 Read (08:48 MMT)"
+          #  07:18 → Report 6.1 Site Clear Today (🤖 Bot API)
+          check_time_exact 07 18 && R61=true && NEED_PYTHON=true && echo "🚃 Toa 6.1: Report 6.1 Site Clear Today (07:18 MMT)"
+          #  08:28 → Plan 5C Morning
+          check_time_exact 08 28 && P5C=true && NEED_PYTHON=true && echo "🚃 Toa 5: Plan 5C Morning (08:28 MMT)"
+          #  08:48 → Report 6 Read Report (Ca 1) (📱 Telethon)
+          check_time_exact 08 48 && R6=true && NEED_PYTHON=true && echo "🚃 Toa 6: Report 6 Read (08:48 MMT)"
           #  09:00 → Ghế AUDITOR-9.1 (Master System Audit — Chạy đúng 1 lần duy nhất)
           check_time_exact 09 00 && AUDITOR91=true && NEED_PYTHON=true && echo "🚃 Toa Auditor: Ghế AUDITOR-9.1 (09:00 MMT)"
           #  09:56 → Plan 5C Morning
           check_time 09 56 && P5C=true && NEED_PYTHON=true && echo "🚃 Toa 5: Plan 5C Morning (09:56 MMT)"
           #  10:16 / 10:18 → Report 6.1 Site Clear Today & Refuel Group 9 Read Report (10:16 MMT)
           check_time 10 16 && REFUEL_READ=true && NEED_PYTHON=true && echo "🚃 Toa Refuel Read: Refuel Group 9 Read Report (10:16 MMT)"
-          (check_time 10 18 || check_time 10 16) && R61=true && NEED_PYTHON=true && echo "🚃 Toa 6.1: Report 6.1 Site Clear Today (10:18 MMT)"
+          check_time_exact 10 18 && R61=true && NEED_PYTHON=true && echo "🚃 Toa 6.1: Report 6.1 Site Clear Today (10:18 MMT)"
 
           # ═══════ 🌤️ AFTERNOON BLOCK (13:00-16:30) ═══════
-          #  13:06 → Refuel Request Report (🤖 Bot API)
-          check_time 13 06 && REFUEL_REQ=true && NEED_PYTHON=true && echo "🚃 Toa 8: Refuel Request Report (13:06 MMT)"
+          #  13:06 → Refuel Request Report [ĐÃ HỦY - GỘP VÀO TOA 9 LÚC 10:06 & 14:11]
           #  14:11 → Refuel Merged Report (📱 Telethon)
           check_time 14 11 && REFUEL_P1=true && NEED_PYTHON=true && echo "🚃 Toa 9: Refuel Merged Report (14:11 MMT)"
-          #  14:16 / 14:18 → Report 6.1 Site Clear Today (🤖 Bot API)
-          (check_time 14 18 || check_time 14 16) && R61=true && NEED_PYTHON=true && echo "🚃 Toa 6.1: Report 6.1 Site Clear Today (14:18 MMT)"
-          #  14:56 / 14:58 → Report 6 Read Report (Ca 2) (📱 Telethon)
-          (check_time 14 58 || check_time 14 56) && R6=true && NEED_PYTHON=true && echo "🚃 Toa 6: Report 6 Read (14:58 MMT)"
+          #  14:18 → Report 6.1 Site Clear Today (🤖 Bot API)
+          check_time_exact 14 18 && R61=true && NEED_PYTHON=true && echo "🚃 Toa 6.1: Report 6.1 Site Clear Today (14:18 MMT)"
+          #  14:58 → Report 6 Read Report (Ca 2) (📱 Telethon)
+          check_time_exact 14 58 && R6=true && NEED_PYTHON=true && echo "🚃 Toa 6: Report 6 Read (14:58 MMT)"
           #  15:26 → Plan 5C Evening (📱 Telethon)
           check_time 15 26 && P5C=true && NEED_PYTHON=true && echo "🚃 Toa 5: Plan 5C Evening (15:26 MMT)"
-          #  15:46 → Reports 1,2,3 + Refuel Request + BOD (🤖 Bot API)
-          check_time 15 46 && R1234=true && BOD=true && REFUEL_REQ=true && NEED_PYTHON=true && echo "🚃 Toa 1+8+11: Reports 1-3 + Refuel Request + BOD (15:46 MMT)"
+          #  15:46 → Reports 1,2,3 + BOD (🤖 Bot API)
+          check_time 15 46 && R1234=true && BOD=true && NEED_PYTHON=true && echo "🚃 Toa 1+11: Reports 1-3 + BOD (15:46 MMT)"
           #  15:51 → Report 4 (Daily EOD Task & Stats) — TOA 12 RIÊNG (+5 phút)
           check_time 15 51 && R4=true && NEED_PYTHON=true && echo "🚃 Toa 12: Report 4 EOD Task (15:51 MMT)"
           #  15:56 → Cable Daily Report [ĐÃ HỦY THEO YÊU CẦU NGƯỜI DÙNG]
@@ -197,8 +196,8 @@ jobs:
           # 🚨 Site Down Relay: ĐÃ TÁCH HẲN sang botlookup_relay.yml (cron 6,36 UTC = :36,:06 MMT)
 
           # ═══════ 🌙 EVENING BLOCK (17:00-22:30) ═══════
-          #  17:16 / 17:18 → Report 6 & Report 6.1
-          (check_time 17 18 || check_time 17 16) && R6=true && R61=true && NEED_PYTHON=true && echo "🚃 Toa 6+6.1: Report 6 + Report 6.1 Site Clear Today (17:18 MMT)"
+          #  17:18 → Report 6 & Report 6.1
+          check_time_exact 17 18 && R6=true && R61=true && NEED_PYTHON=true && echo "🚃 Toa 6+6.1: Report 6 + Report 6.1 Site Clear Today (17:18 MMT)"
           #  18:06 → [DISABLED] Refuel — chuyển sang 20:56
           #  18:41 → Report 5 (Daily Plan - Ca Chiều / EOD Plan vs Actual) (📱 Telethon)
           check_time 18 41 && P5A=true && NEED_PYTHON=true && echo "🚃 Toa 3: Report 5 Daily Plan EOD (18:41 MMT)"
@@ -509,26 +508,11 @@ jobs:
         run: echo "Cable Daily Report is permanently disabled per user request."
 
       # ═══════════════════════════════════════════════
-      # ⛽ TOA 8: Refuel Request Report
-      # 🤖 Engine: Bot API (REFUEL_BOT)
-      # ⏰ Schedule: 05:53, 13:03, 15:53 Myanmar
+      # ⛽ TOA 8: Refuel Request Report [DISABLED - MERGED INTO TOA 9 REFUEL PLAN REPORT 1]
       # ═══════════════════════════════════════════════
-      - name: "⛽ Toa 8 — Refuel Request Report"
-        continue-on-error: true
-        if: |
-          steps.sched.outputs.refuel_req == 'true' ||
-          (github.event_name == 'workflow_dispatch' && (
-            inputs.report_type == 'Task - Refuel Request Report' ||
-            inputs.report_type == 'Task - All Refuel Reports'
-          ))
-        env:
-          TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
-          TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
-          TELEGRAM_SESSION: ${{ secrets.TELEGRAM_SESSION }}
-          REFUEL_BOT_TOKEN: ${{ secrets.REFUEL_BOT_TOKEN }}
-          REFUEL_APPS_SCRIPT_URL: ${{ secrets.REFUEL_APPS_SCRIPT_URL }}
-          APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
-        run: python refuel_send.py || true
+      - name: "⛽ Toa 8 — Refuel Request Report (DISABLED)"
+        if: false
+        run: echo "Refuel Request Report is merged into Toa 9 Refuel Plan Report 1."
 
       # ═══════════════════════════════════════════════
       # ⛽ TOA 9: Refuel Plan Report 1

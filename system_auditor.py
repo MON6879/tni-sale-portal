@@ -223,10 +223,10 @@ SCHEDULE_RULES = [
         "max_delay_min": 15
     },
     {
-        "report_name": "Refuel Request Report",
+        "report_name": "Refuel Merged Report",
         "group_key": "REFUEL",
-        "target_times": ["05:46", "07:06", "13:06", "15:46"],
-        "title_patterns": [r"Refuel", r"Yêu\s*cầu.*dầu", r"Request\s*Refuel"],
+        "target_times": ["10:06", "14:11"],
+        "title_patterns": [r"\[Report\s*1\]\s*TNI\s*REQUEST\s*REFUEL", r"TNI\s*REQUEST\s*REFUEL", r"Plan.*Refuel"],
         "max_delay_min": 15
     }
 ]
@@ -387,10 +387,17 @@ def audit_sheets_connectors():
                 t0 = time.time()
                 resp = requests.get(url, headers=headers, timeout=12)
                 dur = time.time() - t0
+                if resp.status_code == 200:
+                    text_sample = resp.text
+                    has_err = any(err in text_sample for err in ["#REF!", "#VALUE!", "#DIV/0!", "#NAME?", "#CIRC!"])
+                    non_empty = [l for l in text_sample.split("\n") if l.strip()]
+                    if attempt == 0 and (has_err or len(non_empty) <= 1):
+                        time.sleep(4)
+                        continue
                 break
             except Exception:
                 if attempt == 0:
-                    time.sleep(1)
+                    time.sleep(2)
 
         if resp is not None and resp.status_code == 200:
             lines = [l for l in resp.text.split("\n") if l.strip()]

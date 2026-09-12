@@ -47,11 +47,20 @@ if not APPS_SCRIPT_URL or "AKfycbzGFdnE" in APPS_SCRIPT_URL or "AKfycbz-" not in
     APPS_SCRIPT_URL = MAIN_GAS_FALLBACK
 
 
+# Các giá trị lỗi công thức Google Sheets — PHẢI loại bỏ 100%
+FORMULA_ERRORS = {"#REF!", "#VALUE!", "#N/A", "#NAME?", "#DIV/0!", "#NULL!", "#ERROR!", "#NUM!"}
+
+
 def is_valid_text(val):
     if not val:
         return False
     val_s = str(val).strip()
-    return val_s not in ("", "-", "nan", "None", "NaN", "0")
+    if val_s in ("", "-", "nan", "None", "NaN", "0"):
+        return False
+    # Loại bỏ dòng chứa lỗi công thức Google Sheets
+    if any(err in val_s for err in FORMULA_ERRORS):
+        return False
+    return True
 
 
 async def send_msg(bot: Bot, cid: int, text: str, label: str = ""):
@@ -118,7 +127,7 @@ async def main():
         col_b = str(row.iloc[1]).strip() if len(row) > 1 and not pd.isna(row.iloc[1]) else ""
         col_c = str(row.iloc[2]).strip() if len(row) > 2 and not pd.isna(row.iloc[2]) else ""
 
-        if not col_b or not is_valid_text(col_c):
+        if not col_b or not is_valid_text(col_b) or not is_valid_text(col_c):
             continue
 
         prefix = col_b[:2].upper()
@@ -180,19 +189,20 @@ async def main():
             control_blocks.append(f"【{t_name}】\n" + "\n".join([f"• {rec}" for rec in records]))
             await asyncio.sleep(0.5)
 
-        # Gửi bản tổng hợp cho CONTROL nếu có dữ liệu
-        if control_blocks and CONTROL_CHAT_ID:
+        # Gửi bản tổng hợp cho CONTROL
+        if CONTROL_CHAT_ID:
             if APPS_SCRIPT_URL:
                 try:
                     delete_old_messages_bot(SEND_BOT_TOKEN, CONTROL_CHAT_ID, APPS_SCRIPT_URL, "SITE_CLEAR_REPORT_CONTROL")
                 except Exception as ex:
                     logger.warning(f"Lỗi xóa tin cũ Control: {ex}")
 
+            content_section = "\n\n".join(control_blocks) if control_blocks else "✅ 0 site clear incidents recorded today."
             ctrl_lines = [
                 "📋 6.1 Report — Site Clear Today — ALL TEAMS",
                 f"📅 {now_str}",
                 "━━━━━━━━━━━━━━━━━━━━",
-                "\n\n".join(control_blocks),
+                content_section,
             ]
             ctrl_text = "\n".join(ctrl_lines)
             ok, ctrl_ids = await send_msg(bot, CONTROL_CHAT_ID, ctrl_text, "Control Report 6.1")
@@ -202,7 +212,7 @@ async def main():
                 except Exception as ex:
                     logger.warning(f"Lỗi lưu msgids Control: {ex}")
 
-        logger.info(f"🎉 Hoàn tất Report 6.1 (Đã gửi {total_sent} teams).")
+        logger.info(f"🎉 Hoàn tất Report 6.1 (Đã gửi {total_sent} teams + Control).")
 
 
 if __name__ == "__main__":

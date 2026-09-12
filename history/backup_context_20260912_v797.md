@@ -102,3 +102,21 @@
 | **SEARCH-HUB** (TNI-DONE) | `tni-search` (`cron_send.py`, `tg_utils.py`) | Git Commit ✅ | Đồng bộ Batch Prefetch/Save, Safe dotenv import |
 | **SENTINEL-AUDITOR** | `system_auditor.py` | Standby ✅ | Khóa chặt mốc kiểm toán và đồng bộ lịch đoàn tàu |
 | **RULE ENGINE** | `AGENTS.md` (x4 repos) | **RULE PM-23** ✅ | Cơ chế kép Dual Storage, Batch Pipeline, Zero Silent Import-Drop |
+
+---
+
+## 6. BỔ SUNG ĐẶC BIỆT — PHÂN TÍCH FORENSIC VỤ XÓA NHẦM REPORT 1, 2, 3, 4 & DỌN SẠCH 61 TIN MỒ CÔI ETA THỰC SỰ
+- **Hiện tượng người dùng phản hồi**:
+  - *"sao vẫn còn tin cũ mồ côi không xóa"*
+  - *"Bạn đang xóa nhầm với report 1234 không phải xóa đúng ETA"* (kèm ảnh chụp nhóm T1 lúc 11:33 MMT).
+- **Nguyên nhân gốc rễ (Root Cause)**:
+  1. Script quét cũ (`find_and_clean_eta.py`) quét mù theo ID từ Bot 2D (`8897800070`) mà không đọc nội dung tin nhắn. Do Bot 2D gửi cả Report 1, 2, 3, 4 (gửi lúc 05:08 - 05:11 UTC) và ETA Update, việc gọi `deleteMessage` theo dải ID đã xóa nhầm các tin Report 1, 2, 3, 4 buổi sáng.
+  2. Trong khi đó, 14 tin ETA thực sự gửi từ 08:09 đến 11:37 MMT vẫn nằm nguyên trong nhóm T1 vì GAS chỉ lưu ID cũ từ ngày 11/09 (`6269`, `6270`), hoàn toàn không có ID của các tin ETA ngày 12/09!
+  3. Tổng cộng trên cả 4 nhóm (T1, T2, T3, T4) dồn ứ đến **61 tin nhắn ETA mồ côi**.
+- **Biện pháp xử lý triệt để bọc thép (Executed)**:
+  1. Dùng Telethon đọc 100% nội dung sống của từng tin nhắn.
+  2. Phân loại bọc thép: Tin bắt đầu bằng `📋 1. Report`, `📋 2. Report`, `📋 3. Report`, `📋 4. Report`, `📊 4c. Report`, `📋 5.1 Report` được xếp vào diện **[SAFE] BẢO VỆ TUYỆT ĐỐI, CẤM CHẠM VÀO**.
+  3. Chỉ nhắm vào tin bắt đầu bằng `📋 T... — ETA Update`: Giữ lại duy nhất 1 tin mới nhất cho mỗi subteam, xóa sạch 100% toàn bộ **61 tin ETA mồ côi** trên cả 4 nhóm (T1, T2, T3, T4)!
+  4. Cập nhật ID mới nhất (`6397`, `6398`, `5808`, `5809`, `5459`, `5460`, `5043`) vào GAS `BotState` và `PropertiesService`.
+  5. Nâng cấp helper fallback trong `cron_send.py` tự thân gọi HTTP trực tiếp đến GAS và Telegram API (không để stub `pass`), chống hoàn toàn lỗi nuốt import trên Vercel.
+

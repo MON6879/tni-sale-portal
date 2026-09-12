@@ -19,7 +19,9 @@ def get_old_msgids(gas_url: str, key: str) -> list[int]:
     """Đọc message_ids cũ từ GAS PropertiesService.
     Returns list of message_id (int). Rỗng nếu lỗi hoặc chưa có.
     """
-    urls = [gas_url] if gas_url else []
+    if not gas_url or "AKfycbzGFdnE" in gas_url or "AKfycbz-" not in gas_url:
+        gas_url = MAIN_GAS_FALLBACK
+    urls = [gas_url]
     if MAIN_GAS_FALLBACK not in urls:
         urls.append(MAIN_GAS_FALLBACK)
     if not key:
@@ -29,13 +31,14 @@ def get_old_msgids(gas_url: str, key: str) -> list[int]:
             resp = requests.get(
                 u,
                 params={"action": "get_msgids", "key": key},
-                timeout=30,
+                timeout=15,
                 allow_redirects=True
             )
             if resp.status_code == 200:
                 data = resp.json()
                 raw = data.get("msgids", [])
-                return [int(x) for x in raw]
+                if raw:
+                    return [int(x) for x in raw]
         except Exception as ex:
             print(f"[delete_old] ⚠️ get_msgids({key}) lỗi: {ex}")
     return []
@@ -43,17 +46,19 @@ def get_old_msgids(gas_url: str, key: str) -> list[int]:
 
 def save_msgids(gas_url: str, key: str, msgids: list[int]):
     """Lưu message_ids mới vào GAS PropertiesService."""
-    urls = [gas_url] if gas_url else []
+    if not gas_url or "AKfycbzGFdnE" in gas_url or "AKfycbz-" not in gas_url:
+        gas_url = MAIN_GAS_FALLBACK
+    urls = [gas_url]
     if MAIN_GAS_FALLBACK not in urls:
         urls.append(MAIN_GAS_FALLBACK)
-    if not key or not msgids:
+    if not key or msgids is None:
         return
     for u in urls:
         try:
             resp = requests.post(
                 u,
                 json={"action": "save_msgids", "key": key, "msgids": msgids},
-                timeout=30,
+                timeout=15,
                 allow_redirects=True
             )
             if resp.status_code == 200:

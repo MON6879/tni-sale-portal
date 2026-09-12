@@ -21,8 +21,12 @@ load_dotenv()
 
 # ── Cấu hình ─────────────────────────────────────────────────────────────
 CABLE_BOT_TOKEN = os.getenv("CABLE_BOT_TOKEN") or "8758104446:AAH3o7lMCxBXn70ThAXweH1DddmRkJrgwWo"
-CABLE_CHAT_ID   = os.getenv("CABLE_CHAT_ID", "-5531350787")
-APPS_SCRIPT_URL = os.getenv("APPS_SCRIPT_URL", "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec")
+MAIN_GAS_FALLBACK = "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
+_raw_url = os.getenv("APPS_SCRIPT_URL", "").strip()
+if not _raw_url or "AKfycbzGFdnE" in _raw_url or "AKfycbz-" not in _raw_url:
+    APPS_SCRIPT_URL = MAIN_GAS_FALLBACK
+else:
+    APPS_SCRIPT_URL = _raw_url
 
 CABLE_SHEET_ID  = "1C8hU8SXpOdq-v6z7iLGoqwDJmO9DYudZ3rhflb7LC8Y"
 LINK_DOWN_GID   = "263097982"
