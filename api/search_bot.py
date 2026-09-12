@@ -27,7 +27,7 @@ except ImportError:
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-BOT_VERSION = "v4.6"
+BOT_VERSION = "v4.7"
 
 # ── Config ────────────────────────────────────────────────────────────────────
 SEARCH_BOT_TOKEN_SSOT = "8606383435:AAEstcN4Om6_9ZAjs4OoFV2uVlRALgae2Ac"
@@ -2595,20 +2595,21 @@ class handler(BaseHTTPRequestHandler):
         if action == "debug_get_batch":
             import time
             keys = ['eta_reminder_T1', 'eta_reminder_T1_S1', 'eta_reminder_T2', 'eta_reminder_T2_S1', 'eta_reminder_T3', 'eta_reminder_T3_S1', 'eta_reminder_T4']
-            gas_url = PRIMARY_GAS_URL
-            keys_param = ",".join(keys)
-            full_url = f"{gas_url}?action=get_msg_ids_batch&keys={keys_param}"
-            dbg = {"url": full_url}
-            t0 = time.time()
+            dbg = {
+                "bot_version": BOT_VERSION,
+                "env_apps_script_url": os.environ.get("APPS_SCRIPT_URL", ""),
+                "primary_gas_url": PRIMARY_GAS_URL,
+            }
             try:
-                r = requests.get(full_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=12)
-                dbg["status_code"] = r.status_code
-                dbg["elapsed"] = round(time.time() - t0, 2)
-                dbg["text"] = r.text[:300]
-                dbg["json"] = r.json()
-            except Exception as ex:
-                dbg["error"] = str(ex)
-                dbg["elapsed"] = round(time.time() - t0, 2)
+                from tg_utils import get_msg_ids_batch, _gas_url
+                dbg["tg_utils_gas_url"] = _gas_url()
+                t0 = time.time()
+                res = get_msg_ids_batch(keys)
+                dbg["tg_utils_batch_result"] = res
+                dbg["tg_utils_elapsed"] = round(time.time() - t0, 2)
+            except Exception as ex_tg:
+                dbg["tg_utils_error"] = str(ex_tg)
+
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Access-Control-Allow-Origin", "*")
