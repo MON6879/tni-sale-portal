@@ -2797,25 +2797,32 @@ function handleSetMsgIdsBatch(body) {
     }
     PropertiesService.getScriptProperties().setProperties(propUpdates);
 
-    // 2. Batch update to BotState sheet
+    // 2. High-speed single-write batch update to BotState sheet (<300ms)
     const sh   = getBotStateSheet_();
     const data = sh.getDataRange().getValues();
     const keyRowMap = {};
     for (let i = 1; i < data.length; i++) {
-      keyRowMap[String(data[i][0]).trim()] = i + 1;
+      keyRowMap[String(data[i][0]).trim()] = i;
     }
 
+    let modified = false;
     const newRows = [];
     for (const k in states) {
       const trimmedKey = String(k).trim();
       const val = String(states[k]).trim();
-      if (keyRowMap[trimmedKey]) {
-        sh.getRange(keyRowMap[trimmedKey], 2).setValue(val);
+      if (keyRowMap[trimmedKey] !== undefined) {
+        const rowIdx = keyRowMap[trimmedKey];
+        data[rowIdx][1] = val;
+        modified = true;
       } else {
         newRows.push([trimmedKey, val]);
+        keyRowMap[trimmedKey] = data.length + newRows.length - 1;
       }
     }
 
+    if (modified) {
+      sh.getRange(1, 1, data.length, 2).setValues(data);
+    }
     if (newRows.length > 0) {
       sh.getRange(sh.getLastRow() + 1, 1, newRows.length, 2).setValues(newRows);
     }

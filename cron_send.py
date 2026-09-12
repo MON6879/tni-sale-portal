@@ -2231,31 +2231,54 @@ def send_share_eta_reminders(force: bool = False):
             if not mid or not chat_id: return
             tok = bot_token or os.getenv("SEND_BOT_TOKEN") or "8897800070:AAHcG2eHlPsE0KpZAGjcFTe7ndn8gjpQi-A"
             try:
-                requests.post(f"https://api.telegram.org/bot{tok}/deleteMessage", json={"chat_id": chat_id, "message_id": int(mid)}, timeout=8)
+                requests.post(f"https://api.telegram.org/bot{tok}/deleteMessage", json={"chat_id": int(chat_id), "message_id": int(mid)}, timeout=8)
             except Exception: pass
         def get_msg_ids_batch(keys):
             if not keys: return {}
+            import urllib.request, json as _j
+            full_url = f"{_gas_fallback}?action=get_msg_ids_batch&keys=" + ",".join(str(k) for k in keys)
             try:
-                r = requests.get(f"{_gas_fallback}?action=get_msg_ids_batch&keys=" + ",".join(str(k) for k in keys), timeout=10)
+                req = urllib.request.Request(full_url, headers={"User-Agent": "Mozilla/5.0"})
+                with urllib.request.urlopen(req, timeout=8) as resp:
+                    data = _j.loads(resp.read().decode("utf-8"))
+                    if data.get("status") == "ok" and data.get("states"): return data.get("states", {})
+            except Exception: pass
+            try:
+                r = requests.get(full_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=8)
                 if r.status_code == 200: return r.json().get("states", {})
             except Exception: pass
             return {}
         def set_msg_ids_batch(st):
             if not st: return
+            import urllib.request, json as _j
             try:
-                requests.post(_gas_fallback, json={"action": "set_msg_ids_batch", "states": st}, timeout=10)
+                payload = _j.dumps({"action": "set_msg_ids_batch", "states": st}).encode("utf-8")
+                req = urllib.request.Request(_gas_fallback, data=payload, headers={"Content-Type": "application/json", "User-Agent": "Mozilla/5.0"})
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    return resp.read().decode("utf-8")
+            except Exception: pass
+            try:
+                requests.post(_gas_fallback, json={"action": "set_msg_ids_batch", "states": st}, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
             except Exception: pass
         def get_msg_id(k):
             if not k: return ""
+            import urllib.request, json as _j
+            full_url = f"{_gas_fallback}?action=get_msg_id&key={k}"
             try:
-                r = requests.get(f"{_gas_fallback}?action=get_msg_id&key={k}", timeout=8)
+                req = urllib.request.Request(full_url, headers={"User-Agent": "Mozilla/5.0"})
+                with urllib.request.urlopen(req, timeout=8) as resp:
+                    val = _j.loads(resp.read().decode("utf-8")).get("msg_id", "")
+                    if val: return str(val).strip()
+            except Exception: pass
+            try:
+                r = requests.get(full_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=8)
                 if r.status_code == 200: return str(r.json().get("msg_id", "")).strip()
             except Exception: pass
             return ""
         def set_msg_id(k, v):
             if not k: return
             try:
-                requests.post(_gas_fallback, json={"action": "set_msg_id", "key": k, "msg_id": str(v)}, timeout=8)
+                requests.post(_gas_fallback, json={"action": "set_msg_id", "key": k, "msg_id": str(v)}, headers={"User-Agent": "Mozilla/5.0"}, timeout=8)
             except Exception: pass
 
     # ── Chốt chặn: Kiểm tra timestamp Site Down & Kháng trùng lặp trong cùng nhịp ──

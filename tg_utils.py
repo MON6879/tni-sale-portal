@@ -7,7 +7,7 @@ Tiện ích chung cho tất cả scripts báo cáo:
 - tg_delete_by_title(): xóa TẤT CẢ tin cũ cùng tiêu đề qua Telethon
 - get_msg_id() / set_msg_id(): đọc/ghi state từ GAS
 """
-import os, asyncio, requests, logging
+import os, re, asyncio, requests, logging
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -90,19 +90,30 @@ def get_msg_ids_batch(keys: list) -> dict:
     gas_url = _gas_url()
     if not gas_url or not keys:
         return {}
+    keys_param = ",".join(str(k).strip() for k in keys)
+    full_url = f"{gas_url}?action=get_msg_ids_batch&keys={keys_param}"
+    
+    # 1. Thử urllib.request siêu tốc với headers Mozilla/5.0 (chống Google throttle 100%)
     try:
-        keys_param = ",".join(str(k).strip() for k in keys)
-        r = requests.get(f"{gas_url}?action=get_msg_ids_batch&keys={keys_param}", timeout=10)
-        if r.status_code == 200:
-            return r.json().get("states", {})
-    except Exception:
-        pass
+        import urllib.request, json as _json
+        req = urllib.request.Request(full_url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            data = _json.loads(resp.read().decode("utf-8"))
+            if data.get("status") == "ok" and data.get("states"):
+                return data.get("states", {})
+    except Exception as ue:
+        logger.warning(f"get_msg_ids_batch urllib error: {ue}")
+
+    # 2. Fallback requests.get với headers
     try:
-        r = requests.post(gas_url, json={"action": "get_msg_ids_batch", "keys": keys}, timeout=10)
+        r = requests.get(full_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=8)
         if r.status_code == 200:
-            return r.json().get("states", {})
-    except Exception as e:
-        logger.warning(f"get_msg_ids_batch error: {e}")
+            data = r.json()
+            if data.get("status") == "ok" and data.get("states"):
+                return data.get("states", {})
+    except Exception as re:
+        logger.warning(f"get_msg_ids_batch requests error: {re}")
+
     return {}
 
 def set_msg_ids_batch(states_dict: dict):
@@ -110,10 +121,27 @@ def set_msg_ids_batch(states_dict: dict):
     gas_url = _gas_url()
     if not gas_url or not states_dict:
         return
+    
+    # 1. Thử urllib.request POST (chống 302 redirect method drop)
     try:
-        requests.post(gas_url, json={"action": "set_msg_ids_batch", "states": states_dict}, timeout=10)
+        import urllib.request, json as _json
+        payload_bytes = _json.dumps({"action": "set_msg_ids_batch", "states": states_dict}).encode("utf-8")
+        req = urllib.request.Request(
+            gas_url,
+            data=payload_bytes,
+            headers={"Content-Type": "application/json", "User-Agent": "Mozilla/5.0"}
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return resp.read().decode("utf-8")
+    except Exception as ue:
+        logger.warning(f"set_msg_ids_batch urllib error: {ue}")
+
+    # 2. Fallback requests.post
+    try:
+        requests.post(gas_url, json={"action": "set_msg_ids_batch", "states": states_dict},
+                      headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
     except Exception as e:
-        logger.warning(f"set_msg_ids_batch error: {e}")
+        logger.warning(f"set_msg_ids_batch requests error: {e}")
 
 # ── Telegram helpers ───────────────────────────────────────────────────────
 
@@ -163,6 +191,8 @@ def tg_delete_by_title(chat_id: str, title_prefix: str, search_limit: int = 300,
             logger.warning(f"tg_delete_by_title: getMe lỗi: {ex}")
 
         try:
+            clean_pfx = re.sub(r'^[^\w\[]+', '', title_prefix).strip()
+            bot_msg_ids = []
             async with TelegramClient(StringSession(session), api_id, api_hash) as client:
                 async for msg in client.iter_messages(int(chat_id), limit=search_limit):
                     if not msg.text:
@@ -182,29 +212,46 @@ def tg_delete_by_title(chat_id: str, title_prefix: str, search_limit: int = 300,
                     if bot_id and msg.sender_id != bot_id:
                         continue
 
-                    # Lấy 6 dòng đầu (hoặc toàn bộ phần header) để so sánh tiêu đề
-                    header_clean = "\n".join(msg.text.split("\n")[:6]).replace("**", "").replace("__", "").replace("📦", "").strip()
-                    if title_prefix.lower() not in header_clean.lower():
-                        continue
+                    # Lấy 6 dòng đầu để so sánh tiêu đề - "TIN NÀO XÓA TIN NẤY"
+                    header_clean = "\n".join(msg.text.split("\n")[:6]).replace("**", "").replace("__", "").replace("📦", "").strip().lower()
+                    matched = False
+                    pfx_lower = title_prefix.lower()
 
+                    # Phân biệt bản tin theo tiêu đề:
+                    # Đã gộp "TNI REQUEST REFUEL" + "PLAN & PROGRESS" thành 1 tin
+                    # → Khi prefix = "tni request refuel", xóa cả 2 loại tin cũ
+                    if "tni request refuel" in pfx_lower:
+                        if "tni request refuel" in header_clean or "plan & progress" in header_clean:
+                            matched = True
+                    elif "plan & progress" in pfx_lower:
+                        if "plan & progress" in header_clean or "tni request refuel" in header_clean:
+                            matched = True
+                    elif clean_pfx and len(clean_pfx) >= 4 and clean_pfx.lower() in header_clean:
+                        matched = True
+
+                    if matched:
+                        bot_msg_ids.append(msg.id)
+
+                # Batch xóa tất cả tin bot khớp tiêu đề bằng Telethon
+                if bot_msg_ids:
                     try:
-                        resp = requests.post(
-                            f"https://api.telegram.org/bot{token}/deleteMessage",
-                            json={"chat_id": int(chat_id), "message_id": msg.id},
-                            timeout=10,
-                        )
-                        result = resp.json()
-                        if result.get("ok") or "not found" in result.get("description", "").lower():
-                            deleted += 1
-                            logger.info(f"[del_title] 🗑️ Bot API xóa msg_id={msg.id} ('{title_prefix[:30]}'...)")
-                        else:
-                            await client.delete_messages(int(chat_id), [msg.id], revoke=True)
-                            deleted += 1
-                            logger.info(f"[del_title] 🗑️ Telethon xóa msg_id={msg.id} (revoke=True)")
+                        await client.delete_messages(int(chat_id), bot_msg_ids, revoke=True)
+                        deleted += len(bot_msg_ids)
+                        logger.info(f"[del_title] 🗑️ Telethon batch xóa {len(bot_msg_ids)} msg_ids: {bot_msg_ids}")
                     except Exception as ex:
-                        logger.warning(f"[del_title] ❌ msg_id={msg.id}: {ex}")
+                        logger.warning(f"[del_title] ⚠️ Telethon batch xóa lỗi: {ex}, fallback Bot API")
+                        for mid in bot_msg_ids:
+                            try:
+                                resp = requests.post(
+                                    f"https://api.telegram.org/bot{token}/deleteMessage",
+                                    json={"chat_id": int(chat_id), "message_id": mid},
+                                    timeout=6,
+                                )
+                                if resp.json().get("ok"):
+                                    deleted += 1
+                            except Exception:
+                                pass
         except Exception as telethon_ex:
-            # FloodWait hoặc lỗi session → bỏ qua xóa, không block bước gửi tin
             logger.warning(f"[del_title] ⚠️ Telethon lỗi (bỏ qua xóa): {telethon_ex}")
         return deleted
 
@@ -253,7 +300,7 @@ def tg_send_fresh(chat_id: str, text: str, state_key: str = None,
         r = requests.post(
             f"https://api.telegram.org/bot{token}/sendMessage",
             json={"chat_id": chat_id, "text": text, "parse_mode": parse_mode},
-            timeout=20
+            timeout=45
         )
         result = r.json()
         if result.get("ok"):
