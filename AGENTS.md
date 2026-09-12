@@ -1161,3 +1161,27 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 > 4. **Tích Hợp Tuần Tự Trong `train_5min.yml` & Đồng Bộ Secret (Single Train Integration)**:
 >    - Toa Cable Link Down BẮT BUỘC nằm trong `train_5min.yml` với cờ `steps.sched.outputs.cable_ld == 'true'`, bọc lệnh chạy `python cable_link_down_report.py || true`.
 >    - Secret `CABLE_BOT_TOKEN` BẮT BUỘC được cấu hình trên GitHub Repository quản lý runner (`MON6879/tni-sitedown-relay`).
+
+# 🛡️ POST-MORTEM RULE — 12/09/2026: THU THẬP TEMPLATE 1 HAI DẠNG (DUAL-TYPE) CHO BOT 15 TNI CABLE & TỰ ĐỘNG GOM ẢNH THEO DÒNG (RULE PM-21)
+
+> ### Nguồn gốc: **Phân Hệ Thu Thập Báo Cáo Sự Cố Cáp (Bot 15 TNI CABLE)** (`api/cable_bot.py`, `apps_script_cable.gs`, Group `8 TNI CABLE BROKEN SOS` ID `-5531350787`)
+> - **Yêu Cầu Vận Hành Thực Tế (12/09/2026)**:
+>   Nhân viên hiện trường có 2 cách gửi thông tin bắt đầu sự cố cáp (Template 1 / Step 1) trước khi gửi ảnh:
+>   1. Gõ cú pháp Team notice: `Team [X] today()...` (chờ Step 2 `Incident Name : ...`).
+>   2. Sao chép trực tiếp tin tiến độ sự cố tuyến cáp từ báo cáo định kỳ: `Progress: ... <=> ... link down ...` (ví dụ: `Progress: 12/09/26 07:38 <=> 🟢 T3 - IP : TNI0341SRT001-TNI0507SRT001\n🔗 link down - 07/09/26 13:10 => 11/09/2026 18:24:34 Ground condition not yet good`).
+>   Bot 15 BẮT BUỘC phải nhận diện cả 2 dạng này là Template 1 để tự động tạo dòng mới Hàng 2 với mã REF, gán đúng Team Name, ghi nhận sự cố và kích hoạt sẵn cơ chế gom ảnh vào đúng dòng.
+>
+> ### 🔴 RULE PM-21: 4 NGUYÊN TẮC THU THẬP TEMPLATE 1 HAI DẠNG CHO CABLE BOT
+> 1. **Nhận Diện Kép Cho Template 1 (Dual-Type Step 1 Recognition)**:
+>    - `is_type1`: Khớp khi có `Team \d+` kèm `today / route broken / splicer` hoặc `parse_cable_type()`.
+>    - `is_type2`: Khớp khi text chứa `link down` kèm (`progress`, `<=>`, mã `T1..T4`, `SRT`, hoặc `TNIxxxx`).
+>    - Tuyệt đối bỏ qua tin nhắn tự động của chính Bot 15 (`🔌 15 TNI CABLE — LINK DOWN REPORT`) để chống vòng lặp.
+> 2. **Trích Xuất Team Name & Đồng Bộ Chấm Màu Site Down**:
+>    - BẮT BUỘC nhận diện cả `Team X` và `T[1-4]` (bao gồm `T1s1..T4s1`, `T1 S1..T4 S1`), gán chấm màu đồng nhất (`🟠T1/T1 S1`, `🔵T2/T2s1`, `🟢T3`, `🟡T4`).
+> 3. **Ghi Nhận Ngay Nội Dung Sự Cố Tuyến Cáp Vào Cột J (Route Broken)**:
+>    - Đối với tin nhắn Loại 2, toàn bộ nội dung tiến độ đứt cáp BẮT BUỘC được ghi thẳng vào Cột J (`Route Broken`) trong `cableAddTemplate()`, không bắt buộc người dùng phải gõ lại Step 2 (`Incident Name : ...`).
+> 4. **Khóa State Gom Ảnh Theo Dòng (Photo-Row Anchor Lock)**:
+>    - Bot phản hồi xác nhận 2 dòng chuẩn gọn:
+>      `🔌 REF:{ref_pad} | {team_tag} | 🗓️ {date} {time}`
+>      `📷 Reply photos to attach | ✅ Reply Done to close`
+>    - Caching cả `msg.message_id` và `bot_msg.message_id` vào `MSG_REF_CACHE`, kèm fallback trong `resolve_ref_from_msg()` và fallback ±15 phút theo `sender_id` trong GAS để đảm bảo ảnh gửi kèm hoặc reply đều rơi vào đúng Cột I (`Photos`) của dòng vừa tạo.

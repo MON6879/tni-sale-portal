@@ -201,11 +201,12 @@ grep -c 'continue-on-error: true' train_5min.yml                # Phải = tổn
 
 | Tên chức năng / Bot | Endpoint Webhook / Deployment | Apps Script Web App URL | Các file Python liên quan (Phải đồng bộ `MAIN_GAS_FALLBACK`) | Workflow / Docs liên quan (Phải đồng bộ) |
 |---|---|---|---|---|
-| **Main & Asset Collector Bot** (`@TNIASSETorderREQUEST_BOT`) | `https://tni-bot.vercel.app/api/collector` | `AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA` (Version `@302`) | `api/collector.py`, `daily_read_report.py`, `daily_plan_report.py`, `daily_bod_assign.py`, `cron_send.py`, `backlog_send.py`, `site_clear_report.py` | `system_map.md`, `SYSTEM_DOC.md`, `AGENTS.md` |
-| **Search Bot** (`@SEARCHTNITASKWOBOT`) | `https://tni-bot.vercel.app/api/search_bot` | `AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA` (Version `@302`) / Vercel `v4.5` | `api/search_bot.py` | `system_map.md`, `SYSTEM_DOC.md`, `AGENTS.md` |
+| **Main & Asset Collector Bot** (`@TNIASSETorderREQUEST_BOT`) | `https://tni-bot.vercel.app/api/collector` | `AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA` (Version `@428`) | `api/collector.py`, `daily_read_report.py`, `daily_plan_report.py`, `daily_bod_assign.py`, `cron_send.py`, `backlog_send.py`, `site_clear_report.py` | `system_map.md`, `SYSTEM_DOC.md`, `AGENTS.md` |
+| **Search Bot** (`@SEARCHTNITASKWOBOT`) | `https://tni-bot.vercel.app/api/search_bot` | `AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA` (Version `@428`) / Vercel `v4.5` | `api/search_bot.py` | `system_map.md`, `SYSTEM_DOC.md`, `AGENTS.md` |
 | **Refuel & Site Down GAS** | Apps Script Web App | `AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-` (Version `@98`) | `api/refuel_collector.py`, `site_down_v2.gs`, `botlookup_relay.py` | `system_map.md`, `SYSTEM_DOC.md` |
 | **Site Down Bot (Relay)** (`@tni_site_down_bot`) | `https://tni-bot.vercel.app/api/site_down_relay` | `AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA` (Version `@349`) | `api/site_down_relay.py`, `botlookup_relay.py` | `system_map.md`, `SYSTEM_DOC.md` |
 | **Construction Bot** (`@8903841312`) | `https://tni-bot.vercel.app/api/construction` (Vercel Proxy) | `AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec` | `api/construction.py` | `system_map.md`, `SYSTEM_DOC.md` |
+| **15 TNI CABLE Bot** (`@TNI_CABLE_BOT`) | `https://tni-bot.vercel.app/api/cable_bot` | `AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA` (Version `@430`) | `api/cable_bot.py`, `cable_link_down_report.py`, `apps_script_cable.gs` | `system_map.md`, `AGENTS.md` |
 
 ---
 
