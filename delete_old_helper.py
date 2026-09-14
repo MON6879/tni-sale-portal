@@ -88,9 +88,13 @@ def delete_telegram_msg(bot_token: str, chat_id, message_id: int) -> bool:
             return True
         else:
             desc = data.get('description', '')
-            # Nếu tin nhắn đã bị xóa trước đó, coi như thành công để gỡ khỏi bộ nhớ
+            # Nếu tin nhắn đã bị xóa trước đó → gỡ khỏi bộ nhớ
             if "message to delete not found" in desc.lower():
                 print(f"[delete_old] 🗑️ msg_id={message_id} đã được xóa trước đó (không tìm thấy)")
+                return True
+            # Tin >48h → Bot không thể xóa cho mọi người (Telegram limit) → gạch bỏ vĩnh viễn, không loop lại
+            if "can't be deleted for everyone" in desc.lower() or "message_id_invalid" in desc.lower():
+                print(f"[delete_old] ⏳ msg_id={message_id} quá 48h, không xóa được cho everyone → bỏ qua (discard)")
                 return True
             print(f"[delete_old] ⚠️ msg_id={message_id}: {desc}")
             return False

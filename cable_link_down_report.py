@@ -32,6 +32,11 @@ CABLE_SHEET_ID  = "1C8hU8SXpOdq-v6z7iLGoqwDJmO9DYudZ3rhflb7LC8Y"
 LINK_DOWN_GID   = "263097982"
 SHEET_CSV_URL   = f"https://docs.google.com/spreadsheets/d/{CABLE_SHEET_ID}/export?format=csv&gid={LINK_DOWN_GID}"
 
+try:
+    CABLE_CHAT_ID = int(os.getenv("CABLE_CHAT_ID", "-5531350787").strip())
+except (ValueError, AttributeError):
+    CABLE_CHAT_ID = -5531350787
+
 TZ_MM           = timezone(timedelta(hours=6, minutes=30))  # Myanmar UTC+6:30
 DELETE_KEY      = "CABLE_LINK_DOWN_REPORT"
 
@@ -187,7 +192,9 @@ def send_telegram_report(text: str) -> int | None:
 
 
 def run_cable_link_down():
-    """Hàm chạy chính: Đọc sheet -> Xóa tin cũ -> Gửi tin mới -> Lưu message_id."""
+    """Hàm chạy chính: Đọc sheet -> nếu có nội dung: Xóa tin cũ -> Gửi tin mới -> Lưu ID.
+    Nếu sheet rỗng (không có link down): bỏ qua hoàn toàn, không gửi, không xóa.
+    """
     print("=" * 60)
     print("🔌 KHỞI ĐỘNG TOA BÁO CÁO CABLE LINK DOWN (BOT 15)")
     print("=" * 60)
@@ -196,6 +203,12 @@ def run_cable_link_down():
         items = fetch_link_down_items()
     except Exception as ex:
         print(f"[Cable Link Down] ❌ Lỗi đọc dữ liệu sheet: {ex}")
+        return
+
+    # ── Guard: chỉ xóa cũ & gửi khi có nội dung thực sự ──────────────────
+    if not items:
+        print("[Cable Link Down] ✅ No link down items found — skip send & delete.")
+        print("=" * 60)
         return
 
     msg_text = build_telegram_message(items)
