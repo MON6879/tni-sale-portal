@@ -158,40 +158,110 @@ tbody tr:hover{background:#fafcff}
 
 <!-- ══ NHẬP HÀNG ══ -->
 <div class="sec" id="s-nhap">
-  <div class="panel">
-    <div class="ph"><h3 data-lang="nhap_title">➕ Thêm Phiếu Nhập & Phân Bổ Lợi Nhuận</h3></div>
-    <div class="pb">
-      <div class="fg">
-        <div class="f"><label data-lang="p_name">Tên Sản Phẩm *</label><input id="n-ten" placeholder="VD: UPS 1200VA APC"/></div>
-        <div class="f"><label data-lang="p_model">Model / Mã SP</label><input id="n-model" placeholder="APC-BX1200"/></div>
-        <div class="f"><label data-lang="p_serial">Serial Number</label><input id="n-serial" placeholder="SN2024001"/></div>
-        <div class="f"><label data-lang="p_category">Danh Mục</label><select id="n-dm"><option>UPS</option><option>Solar Panel</option><option>Inverter</option><option>Ắc Quy</option><option>Phụ Kiện Solar</option><option>Cáp &amp; Đầu Nối</option><option>Khác</option></select></div>
-        <div class="f"><label data-lang="p_qty">Số Lượng *</label><input id="n-sl" type="number" min="1" placeholder="0" oninput="calcNhapProfit()"/></div>
-        <div class="f"><label data-lang="cost_price_83">Đơn Giá Gốc Đầu Vào (83%) (₫) *</label><input id="n-gg" type="number" placeholder="0" oninput="calcNhapProfit()"/></div>
-        <div class="f"><label data-lang="actual_selling_price">Giá Thực Bán (₫) *</label><input id="n-gb" type="number" placeholder="0" oninput="calcNhapProfit()"/></div>
-        <div class="f"><label data-lang="p_supplier">Nhà Cung Cấp</label><input id="n-ncc" placeholder="Tên NCC"/></div>
-        <div class="f"><label data-lang="p_date">Ngày Nhập</label><input id="n-ngay" type="date"/></div>
-        <div class="f"><label data-lang="p_warranty">Bảo Hành (tháng)</label><input id="n-bh" type="number" placeholder="12"/></div>
-        <div class="f" style="grid-column:1/-1"><label data-lang="p_note">Ghi Chú</label><textarea id="n-gc" placeholder="..."></textarea></div>
-      </div>
+  <!-- Chuyển đổi chế độ nhập: Đơn lẻ vs Hàng loạt -->
+  <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+    <div style="display:flex;gap:6px">
+      <button class="btn b-bl" id="btn-mode-single" onclick="switchNhapMode('single')" style="font-weight:600">➕ Nhập Đơn Lẻ (Single)</button>
+      <button class="btn b-out" id="btn-mode-bulk" onclick="switchNhapMode('bulk')" style="font-weight:600">📥 Import Hàng Loạt (.CSV / Excel)</button>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button class="btn b-gn b-sm" onclick="downloadNhapTemplate()">📥 Tải File Mẫu (.CSV)</button>
+      <button class="btn b-bl b-sm" onclick="document.getElementById('bulk-file-input').click()">📁 Chọn File .CSV</button>
+      <input type="file" id="bulk-file-input" accept=".csv,.txt" onchange="handleBulkFile(event)" style="display:none"/>
+    </div>
+  </div>
 
-      <!-- 💡 LIVE PROFIT & 17% MARGIN PREVIEW (THEO CHUẨN CHI NHÁNH & CTY) -->
-      <div id="nhap-calc-box" style="margin-top:14px;padding:12px 14px;background:#f8fafc;border-radius:8px;border:1px solid #cbd5e1;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
-        <div><span style="font-size:11px;color:#0284c7" data-lang="lbl_cost_83">🏷️ Giá Gốc (83%)</span><div id="nc-goc" style="font-size:15px;font-weight:700;color:#0284c7">0 ₫</div></div>
-        <div><span style="font-size:11px;color:#1e40af" data-lang="lbl_comp_17">🏢 LN Trả Về Cty 17%</span><div id="nc-cty17" style="font-size:15px;font-weight:700;color:#1e40af">0 ₫ / SP</div></div>
-        <div><span style="font-size:11px;color:#ea580c" data-lang="lbl_min_price">🛡️ Mức Giá Bán Thấp Nhất (100%)</span><div id="nc-minsell" style="font-size:15px;font-weight:700;color:#ea580c">0 ₫ / SP</div></div>
-        <div><span style="font-size:11px;color:#16a34a" data-lang="lbl_act_price">📈 Giá Thực Bán</span><div id="nc-actsell" style="font-size:15px;font-weight:700;color:#16a34a">0 ₫ / SP</div></div>
-        <div><span style="font-size:11px;color:#7c3aed" data-lang="lbl_branch_profit">🏪 Lợi Nhuận Chi Nhánh</span><div id="nc-branch" style="font-size:15px;font-weight:700;color:#7c3aed">0 ₫ / SP</div></div>
-      </div>
+  <!-- PHẦN 1: NHẬP ĐƠN LẺ -->
+  <div id="nhap-single-container">
+    <div class="panel">
+      <div class="ph"><h3 data-lang="nhap_title">➕ Thêm Phiếu Nhập & Phân Bổ Lợi Nhuận</h3></div>
+      <div class="pb">
+        <div class="fg">
+          <div class="f"><label data-lang="p_name">Tên Sản Phẩm *</label><input id="n-ten" placeholder="VD: UPS 1200VA APC"/></div>
+          <div class="f"><label data-lang="p_model">Model / Mã SP</label><input id="n-model" placeholder="APC-BX1200"/></div>
+          <div class="f"><label data-lang="p_serial">Serial Number</label><input id="n-serial" placeholder="SN2024001"/></div>
+          <div class="f"><label data-lang="p_category">Danh Mục</label><select id="n-dm"><option>UPS</option><option>Solar Panel</option><option>Inverter</option><option>Ắc Quy</option><option>Phụ Kiện Solar</option><option>Cáp &amp; Đầu Nối</option><option>Khác</option></select></div>
+          <div class="f"><label data-lang="p_qty">Số Lượng *</label><input id="n-sl" type="number" min="1" placeholder="0" oninput="calcNhapProfit()"/></div>
+          <div class="f"><label data-lang="cost_price_83">Đơn Giá Gốc Đầu Vào (83%) (₫) *</label><input id="n-gg" type="number" placeholder="0" oninput="calcNhapProfit()"/></div>
+          <div class="f"><label data-lang="actual_selling_price">Giá Thực Bán (₫) *</label><input id="n-gb" type="number" placeholder="0" oninput="calcNhapProfit()"/></div>
+          <div class="f"><label data-lang="p_supplier">Nhà Cung Cấp</label><input id="n-ncc" placeholder="Tên NCC"/></div>
+          <div class="f"><label data-lang="p_date">Ngày Nhập</label><input id="n-ngay" type="date"/></div>
+          <div class="f"><label data-lang="p_warranty">Bảo Hành (tháng)</label><input id="n-bh" type="number" placeholder="12"/></div>
+          <div class="f" style="grid-column:1/-1"><label data-lang="p_note">Ghi Chú</label><textarea id="n-gc" placeholder="..."></textarea></div>
+        </div>
 
-      <div class="fa">
-        <button class="btn b-bl" onclick="addNhap()">📦 Lưu Phiếu Nhập</button>
-        <button class="btn b-out" onclick="clrForm('n-');calcNhapProfit()">✕ Xóa</button>
+        <!-- 💡 LIVE PROFIT & 17% MARGIN PREVIEW (THEO CHUẨN CHI NHÁNH & CTY) -->
+        <div id="nhap-calc-box" style="margin-top:14px;padding:12px 14px;background:#f8fafc;border-radius:8px;border:1px solid #cbd5e1;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+          <div><span style="font-size:11px;color:#0284c7" data-lang="lbl_cost_83">🏷️ Giá Gốc (83%)</span><div id="nc-goc" style="font-size:15px;font-weight:700;color:#0284c7">0 ₫</div></div>
+          <div><span style="font-size:11px;color:#1e40af" data-lang="lbl_comp_17">🏢 LN Trả Về Cty 17%</span><div id="nc-cty17" style="font-size:15px;font-weight:700;color:#1e40af">0 ₫ / SP</div></div>
+          <div><span style="font-size:11px;color:#ea580c" data-lang="lbl_min_price">🛡️ Mức Giá Bán Thấp Nhất (100%)</span><div id="nc-minsell" style="font-size:15px;font-weight:700;color:#ea580c">0 ₫ / SP</div></div>
+          <div><span style="font-size:11px;color:#16a34a" data-lang="lbl_act_price">📈 Giá Thực Bán</span><div id="nc-actsell" style="font-size:15px;font-weight:700;color:#16a34a">0 ₫ / SP</div></div>
+          <div><span style="font-size:11px;color:#7c3aed" data-lang="lbl_branch_profit">🏪 Lợi Nhuận Chi Nhánh</span><div id="nc-branch" style="font-size:15px;font-weight:700;color:#7c3aed">0 ₫ / SP</div></div>
+        </div>
+
+        <div class="fa">
+          <button class="btn b-bl" onclick="addNhap()">📦 Lưu Phiếu Nhập</button>
+          <button class="btn b-out" onclick="clrForm('n-');calcNhapProfit()">✕ Xóa</button>
+        </div>
       </div>
     </div>
   </div>
-  <div class="panel"><div class="ph"><h3>📋 Danh Sách Nhập Hàng</h3><button class="btn b-sm" style="background:#f1f5f9" onclick="print()">🖨</button></div>
-  <div class="pb tw" id="t-nhap"></div></div>
+
+  <!-- PHẦN 2: IMPORT HÀNG LOẠT (BULK IMPORT) -->
+  <div id="nhap-bulk-container" style="display:none">
+    <div class="panel">
+      <div class="ph">
+        <h3>📥 Import Hàng Loạt Bằng File .CSV Hoặc Dán Trực Tiếp Từ Excel</h3>
+        <span style="font-size:12px;color:#64748b">Cú pháp chuẩn: Tên SP | Model | Serial | Danh Mục | Số Lượng | Giá Gốc (83%) | Giá Bán | NCC | BH | Ghi Chú</span>
+      </div>
+      <div class="pb">
+        <div style="background:#eff6ff;padding:12px 14px;border-radius:8px;border:1px solid #bfdbfe;margin-bottom:12px;font-size:12.5px;line-height:1.6">
+          <b>💡 Hướng dẫn 3 bước đơn giản cho nhân viên:</b><br/>
+          <b>1.</b> Bấm nút <button class="btn b-gn b-xs" onclick="downloadNhapTemplate()">📥 Tải File Mẫu (.CSV)</button> để tải file template có sẵn công thức.<br/>
+          <b>2.</b> Mở file bằng <b>Excel</b> hoặc <b>Google Sheets</b>, nhập danh sách sản phẩm rồi lưu file.<br/>
+          <b>3.</b> Chọn file tải lên bằng nút <button class="btn b-bl b-xs" onclick="document.getElementById('bulk-file-input').click()">📁 Chọn File</button> <b>HOẶC</b> bôi đen bảng trong Excel bấm <code>Ctrl+C</code> rồi <b>dán (Ctrl+V)</b> vào khung bên dưới:
+        </div>
+
+        <textarea id="bulk-paste-area" rows="6" style="width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;font-family:monospace;font-size:12px;line-height:1.5" placeholder="Dán (Ctrl+V) bảng dữ liệu từ Excel / Google Sheets vào đây...&#10;Ví dụ:&#10;UPS APC BX1200	APC-BX1200	SN001, SN002	UPS	2	830000	1250000	APC VN	24	Hàng nguyên seal&#10;Pin Longi 450W	LR4-72HPH	LG01, LG02	Solar Panel	10	1660000	2200000	Longi	120	Loại A" oninput="parseBulkInput()"></textarea>
+
+        <div style="display:flex;gap:8px;margin-top:10px;justify-content:space-between;flex-wrap:wrap">
+          <div style="display:flex;gap:8px">
+            <button class="btn b-bl" onclick="parseBulkInput()">🔍 Phân Tích &amp; Xem Trước (Preview)</button>
+            <button class="btn b-out" onclick="document.getElementById('bulk-paste-area').value='';parseBulkInput()">✕ Xóa Khung Dán</button>
+          </div>
+          <button class="btn b-gn" id="btn-confirm-bulk" onclick="confirmBulkImport()" style="font-weight:700" disabled>🚀 Xác Nhận Import Hàng Loạt Vào Kho (0 Món)</button>
+        </div>
+
+        <!-- THẺ THỐNG KÊ NHANH BATCH IMPORT -->
+        <div id="bulk-stats-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px;display:none">
+          <div class="card c-bl"><div class="lbl2">📦 Mặt Hàng</div><div class="val" id="bs-items">0</div><div class="sub">Hợp lệ</div></div>
+          <div class="card c-gn"><div class="lbl2">🔢 Tổng Số Lượng</div><div class="val" id="bs-qty">0</div><div class="sub">PCS nhập kho</div></div>
+          <div class="card c-bl"><div class="lbl2">💰 Vốn Gốc (83%)</div><div class="val" id="bs-cost" style="font-size:15px">0 ₫</div><div class="sub">Chi nhánh tự chi</div></div>
+          <div class="card c-pu"><div class="lbl2">🏢 LN Trả Cty (17%)</div><div class="val" id="bs-cty" style="font-size:15px">0 ₫</div><div class="sub">Cam kết nộp cty</div></div>
+          <div class="card c-or"><div class="lbl2">🛡️ Tổng Giá Sàn</div><div class="val" id="bs-min" style="font-size:15px">0 ₫</div><div class="sub">Vốn + 17% Cty</div></div>
+          <div class="card c-yw"><div class="lbl2">🏪 LN Chi Nhánh</div><div class="val" id="bs-branch" style="font-size:15px;color:var(--gn)">0 ₫</div><div class="sub">Dự kiến đạt được</div></div>
+        </div>
+
+        <!-- BẢNG PREVIEW CHI TIẾT -->
+        <div id="bulk-preview-wrap" style="margin-top:14px;display:none">
+          <h4 style="margin-bottom:8px;color:#334155">📋 Danh Sách Sản Phẩm Xem Trước:</h4>
+          <div class="tw" id="bulk-preview-table"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DANH SÁCH PHIẾU NHẬP HIỆN TẠI -->
+  <div class="panel">
+    <div class="ph">
+      <h3>📋 Danh Sách Nhập Hàng</h3>
+      <div style="display:flex;gap:6px">
+        <button class="btn b-sm" style="background:#eff6ff;color:#2563eb" onclick="downloadCurrentNhapData()">⬇ Xuất CSV Kho</button>
+        <button class="btn b-sm" style="background:#f1f5f9" onclick="print()">🖨</button>
+      </div>
+    </div>
+    <div class="pb tw" id="t-nhap"></div>
+  </div>
 </div>
 
 <!-- ══ TỒN KHO ══ -->
@@ -845,6 +915,314 @@ function rDash(){
 // ═══════════════════════════════════════════════════
 // NHẬP HÀNG & TÍNH TOÁN LỢI NHUẬN ĐẦU VÀO
 // ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+// 📥 IMPORT HÀNG LOẠT (BULK IMPORT) & TẢI TEMPLATE
+// ═══════════════════════════════════════════════════
+let parsedBulkItems = [];
+
+function switchNhapMode(mode) {
+  const singleC = document.getElementById('nhap-single-container');
+  const bulkC = document.getElementById('nhap-bulk-container');
+  const btnSingle = document.getElementById('btn-mode-single');
+  const btnBulk = document.getElementById('btn-mode-bulk');
+
+  if (mode === 'bulk') {
+    if (singleC) singleC.style.display = 'none';
+    if (bulkC) bulkC.style.display = 'block';
+    if (btnSingle) { btnSingle.className = 'btn b-out'; }
+    if (btnBulk) { btnBulk.className = 'btn b-bl'; }
+  } else {
+    if (singleC) singleC.style.display = 'block';
+    if (bulkC) bulkC.style.display = 'none';
+    if (btnSingle) { btnSingle.className = 'btn b-bl'; }
+    if (btnBulk) { btnBulk.className = 'btn b-out'; }
+  }
+}
+
+function downloadNhapTemplate() {
+  const headers = [
+    "Tên Sản Phẩm",
+    "Model / Mã SP",
+    "Serial Numbers (ngăn cách dấu phẩy)",
+    "Danh Mục",
+    "Số Lượng",
+    "Giá Gốc Đầu Vào (83%)",
+    "Giá Thực Bán (để trống = lấy giá sàn 100%)",
+    "Nhà Cung Cấp",
+    "Bảo Hành (tháng)",
+    "Ghi Chú"
+  ];
+  const sampleRows = [
+    ["UPS APC BX1200", "APC-BX1200", "SN001, SN002", "UPS", "2", "830000", "1250000", "APC Vietnam", "24", "Hàng mới nguyên seal"],
+    ["Tấm Pin Solar 450W Longi", "LR4-72HPH-450M", "LG450-01, LG450-02", "Solar Panel", "5", "1660000", "2200000", "Longi Solar", "120", "Bảo hành hiệu suất 25 năm"],
+    ["Inverter Hybrid 5kW Deye", "SUN-5K-SG03LP1", "DY5K-8899", "Inverter", "1", "16600000", "22000000", "Deye Solar", "60", "Kèm wifi module"],
+    ["Ắc Quy Vision 12V 100Ah", "6FM100-X", "VS100-01, VS100-02", "Ắc Quy", "4", "2490000", "3200000", "Vision Battery", "12", "Chuyên dụng cho UPS & Solar"]
+  ];
+  
+  let csvContent = "\uFEFF" + headers.join(",") + "\n" + sampleRows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Mau_Nhap_Hang_TNI_Sale_${td()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  al("📥 Đã tải file mẫu: Mau_Nhap_Hang_TNI_Sale.csv");
+}
+
+function handleBulkFile(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    document.getElementById('bulk-paste-area').value = text;
+    switchNhapMode('bulk');
+    parseBulkInput();
+    al(`📁 Đã đọc file "${file.name}"!`);
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+function parseBulkInput() {
+  const raw = (document.getElementById('bulk-paste-area')?.value || '').trim();
+  if (!raw) {
+    parsedBulkItems = [];
+    document.getElementById('bulk-stats-cards').style.display = 'none';
+    document.getElementById('bulk-preview-wrap').style.display = 'none';
+    const btn = document.getElementById('btn-confirm-bulk');
+    if (btn) { btn.disabled = true; btn.textContent = '🚀 Xác Nhận Import Hàng Loạt Vào Kho (0 Món)'; }
+    return;
+  }
+
+  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+  if (lines.length === 0) return;
+
+  // Kiểm tra xem dòng 1 có phải header không
+  let startIndex = 0;
+  const firstLine = lines[0].toLowerCase();
+  if (firstLine.includes('tên') || firstLine.includes('product') || firstLine.includes('model') || firstLine.includes('số lượng') || firstLine.includes('qty')) {
+    startIndex = 1;
+  }
+
+  parsedBulkItems = [];
+  for (let i = startIndex; i < lines.length; i++) {
+    const line = lines[i];
+    // Tự động nhận diện dấu phân cách: Tab (Excel), phẩy (CSV), hoặc pipe (|)
+    let parts = [];
+    if (line.includes('\t')) {
+      parts = line.split('\t').map(p => p.trim());
+    } else if (line.includes('|')) {
+      parts = line.split('|').map(p => p.trim());
+    } else {
+      // Phân tích CSV có dấu ngoặc kép
+      parts = parseCSVLine(line);
+    }
+
+    if (!parts || parts.length === 0 || !parts[0]) continue;
+
+    const ten = parts[0] || '';
+    const model = parts[1] || '-';
+    const serial = parts[2] || '';
+    const dm = parts[3] || 'Thiết bị';
+    const sl = parseInt((parts[4] || '1').replace(/\D/g, ''), 10) || 1;
+    const gg = parseFloat((parts[5] || '0').replace(/[^0-9.]/g, '')) || 0;
+    
+    // Tính toán tài chính chuẩn 5 cột
+    const lnCty = gg > 0 ? Math.round(gg / 83 * 17) : 0;
+    const minSell = gg + lnCty;
+    const rawGb = parseFloat((parts[6] || '0').replace(/[^0-9.]/g, '')) || 0;
+    const gb = rawGb > 0 ? rawGb : minSell;
+    const lnBranch = Math.max(0, gb - minSell);
+    const ncc = parts[7] || '-';
+    const bh = parseInt((parts[8] || '12').replace(/\D/g, ''), 10) || 12;
+    const gc = parts.slice(9).join(' | ') || 'Import hàng loạt';
+
+    parsedBulkItems.push({
+      ten, model, serial, dm, sl,
+      gg, lnCty, minSell, gb, lnBranch,
+      ncc, bh, gc,
+      valid: ten.length > 0 && sl > 0 && gg > 0
+    });
+  }
+
+  renderBulkPreview(parsedBulkItems);
+}
+
+function parseCSVLine(text) {
+  const result = [];
+  let cur = '';
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (c === '"') {
+      if (inQuotes && text[i+1] === '"') {
+        cur += '"'; i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (c === ',' && !inQuotes) {
+      result.push(cur.trim()); cur = '';
+    } else {
+      cur += c;
+    }
+  }
+  result.push(cur.trim());
+  return result;
+}
+
+function renderBulkPreview(items) {
+  const cards = document.getElementById('bulk-stats-cards');
+  const wrap = document.getElementById('bulk-preview-wrap');
+  const btn = document.getElementById('btn-confirm-bulk');
+  const tableDiv = document.getElementById('bulk-preview-table');
+
+  if (!items || items.length === 0) {
+    if (cards) cards.style.display = 'none';
+    if (wrap) wrap.style.display = 'none';
+    if (btn) { btn.disabled = true; btn.textContent = '🚀 Xác Nhận Import Hàng Loạt Vào Kho (0 Món)'; }
+    return;
+  }
+
+  const validItems = items.filter(it => it.valid);
+  const totQty = items.reduce((s, it) => s + it.sl, 0);
+  const totCost = items.reduce((s, it) => s + (it.gg * it.sl), 0);
+  const totCty = items.reduce((s, it) => s + (it.lnCty * it.sl), 0);
+  const totMin = items.reduce((s, it) => s + (it.minSell * it.sl), 0);
+  const totBranch = items.reduce((s, it) => s + (it.lnBranch * it.sl), 0);
+
+  // Hiển thị thống kê
+  document.getElementById('bs-items').textContent = `${validItems.length} / ${items.length}`;
+  document.getElementById('bs-qty').textContent = totQty;
+  document.getElementById('bs-cost').textContent = fn(totCost) + ' ₫';
+  document.getElementById('bs-cty').textContent = fn(totCty) + ' ₫';
+  document.getElementById('bs-min').textContent = fn(totMin) + ' ₫';
+  document.getElementById('bs-branch').textContent = fn(totBranch) + ' ₫';
+
+  if (cards) cards.style.display = 'grid';
+  if (wrap) wrap.style.display = 'block';
+  if (btn) {
+    btn.disabled = validItems.length === 0;
+    btn.textContent = `🚀 Xác Nhận Import Hàng Loạt (${validItems.length} Sản Phẩm)`;
+  }
+
+  // Render bảng preview
+  const headers = ['#', 'Trạng Thái', 'Tên Sản Phẩm', 'Model', 'SL', 'Giá Gốc (83%)', 'LN Cty (17%)', 'Giá Sàn (100%)', 'Giá Thực Bán', 'LN Chi Nhánh', 'NCC', 'BH'];
+  const rows = items.map((it, idx) => {
+    const statusHtml = it.valid ? '<span class="badge bk-gn">✓ Hợp lệ</span>' : '<span class="badge bk-rd">⚠️ Lỗi</span>';
+    return [
+      idx + 1,
+      statusHtml,
+      `<b>${it.ten}</b>`,
+      it.model || '-',
+      `<b>${it.sl}</b>`,
+      fn(it.gg) + ' ₫',
+      `<span style="color:#1e40af;font-weight:600">${fn(it.lnCty)} ₫</span>`,
+      `<span style="color:var(--or);font-weight:600">${fn(it.minSell)} ₫</span>`,
+      `<b>${fn(it.gb)} ₫</b>`,
+      `<span style="color:var(--gn);font-weight:700">${fn(it.lnBranch)} ₫</span>`,
+      it.ncc || '-',
+      (it.bh || 12) + 'th'
+    ];
+  });
+
+  tableDiv.innerHTML = tbl(headers, rows);
+}
+
+function confirmBulkImport() {
+  const validItems = parsedBulkItems.filter(it => it.valid);
+  if (validItems.length === 0) {
+    al('Không có sản phẩm hợp lệ để import!', 'er');
+    return;
+  }
+
+  const btn = document.getElementById('btn-confirm-bulk');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang lưu vào hệ thống...'; }
+
+  // 1. Lưu vào Local Database
+  validItems.forEach(it => {
+    DB.add('nhap', {
+      ten: it.ten,
+      model: it.model,
+      serial: it.serial,
+      dm: it.dm,
+      sl: it.sl,
+      gg: it.gg,
+      lnCty: it.lnCty,
+      minSell: it.minSell,
+      gb: it.gb,
+      lnBranch: it.lnBranch,
+      ncc: it.ncc,
+      ngay: td(),
+      bh: it.bh,
+      gc: it.gc
+    });
+  });
+
+  // 2. Gửi đồng bộ lên Google Sheet qua Apps Script Web App
+  syncBulkToGoogleSheet(validItems);
+
+  // 3. Cập nhật giao diện
+  al(`✅ Đã import thành công ${validItems.length} sản phẩm vào kho!`);
+  document.getElementById('bulk-paste-area').value = '';
+  parsedBulkItems = [];
+  renderBulkPreview([]);
+  switchNhapMode('single');
+  rNhap();
+  renderTK();
+  rDash();
+}
+
+function syncBulkToGoogleSheet(items) {
+  const gasUrl = "https://script.google.com/macros/s/AKfycbx09J8PPi_IN3_n_ho8QF4RapsPh5uzLchVfS9T89iuw-4QMZWU_ynlhzDvav4wRvj4/exec";
+  try {
+    fetch(gasUrl, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "bulk_nhap", items: items })
+    }).then(() => {
+      Logger ? Logger.log("Bulk synced to GAS") : console.log("Bulk synced to GAS");
+    }).catch(err => {
+      console.warn("GAS sync offline fallback:", err);
+    });
+  } catch(e) {
+    console.warn("GAS sync exception:", e);
+  }
+}
+
+function downloadCurrentNhapData() {
+  const d = DB.g('nhap');
+  if (!d || d.length === 0) { al('Chưa có dữ liệu nhập hàng!', 'er'); return; }
+  const headers = ['Mã Nhập', 'Tên Sản Phẩm', 'Model', 'Serial', 'Danh Mục', 'Số Lượng', 'Giá Gốc (83%)', 'LN Cty (17%)', 'Giá Sàn (100%)', 'Giá Thực Bán', 'LN Chi Nhánh', 'NCC', 'Bảo Hành', 'Ngày Nhập', 'Ghi Chú'];
+  const rows = d.map(r => [
+    'NHAP-' + r.id,
+    `"${(r.ten||'').replace(/"/g, '""')}"`,
+    `"${(r.model||'').replace(/"/g, '""')}"`,
+    `"${(r.serial||'').replace(/"/g, '""')}"`,
+    r.dm || 'Thiết bị',
+    r.sl || 1,
+    r.gg || 0,
+    r.lnCty || 0,
+    r.minSell || 0,
+    r.gb || 0,
+    r.lnBranch || 0,
+    `"${(r.ncc||'').replace(/"/g, '""')}"`,
+    r.bh || 12,
+    r.ngay || td(),
+    `"${(r.gc||'').replace(/"/g, '""')}"`
+  ]);
+  const csv = "\uFEFF" + headers.join(',') + "\n" + rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `Kho_Nhap_Hang_${td()}.csv`;
+  a.click();
+}
+
 function calcNhapProfit(){
   const gg = Number(v('n-gg')) || 0;
   const lnCty17 = gg > 0 ? Math.round(gg / 83 * 17) : 0;
