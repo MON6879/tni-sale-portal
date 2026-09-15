@@ -1254,3 +1254,30 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 >   - Sự cố mới → `cable_add_template` → Detail cable
 >   - Progress update → `cable_update_link_now` → Link down now
 > - **TUYỆT ĐỐI CẤM** dùng `cable_add_template` cho progress update Type 2 vì không bao giờ cập nhật SSOT auto-report.
+
+---
+
+# 📊 STRICT BI PORTAL & LIVE SYNC RULE: CẤM HARDCODE DỮ LIỆU CŨ — BẮT BUỘC ĐỒNG BỘ 100% SỐNG QUA GHẾ BI-WO-SYNC (STRICT BI PORTAL ZERO-STALE-DATA & SEAT BI-WO-SYNC POLICY)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (BI PORTAL FRESHNESS & SEAT BI-WO-SYNC STANDARD)**:
+> 
+> ### 🔴 RULE PM-27: QUY ĐỊNH VẬN HÀNH GHẾ BI-WO-SYNC (TOA WO DETAIL) & BẢO VỆ BI PORTAL
+> 1. **Tuyệt Đối Cấm Hardcode Dữ Liệu Tĩnh Lâu Ngày (Zero Stale Static Data Policy)**:
+>    - Toàn bộ các bảng biểu trên BI Portal (`index.html`, `executive_dashboard.html`), đặc biệt là Tab 3 (WO Detail) và Executive Summary, TUYỆT ĐỐI KHÔNG ĐƯỢC để dữ liệu ngày cũ cố định (như sự cố tồn đọng ngày 05/08).
+>    - Mọi dữ liệu hiển thị BẮT BUỘC phải được kết nối nguồn sống (Live SSOT) hoặc tự động làm mới từ Google Sheets định kỳ.
+> 2. **Định Danh Chính Thức: Ghế BI-WO-SYNC (Toa WO Detail)**:
+>    - **Tên ghế**: `Ghế BI-WO-SYNC` (Toa WO Detail trong đoàn tàu thời gian `train_5min.yml`).
+>    - **File thực thi**: `sync_wo_detail.py`.
+>    - **Nguồn dữ liệu (SSOT)**: 
+>      - Tab `Progress Team Task and WO+Oil` (GID `159298579`) từ Google Sheet `13p_63iH1H2sW3Z7z_Wb8FbvM7e_Peb9iO29kM57iGq0`.
+>      - Tab `Sum all WO Team` (GID `1840482617`).
+>    - **Lịch chạy định kỳ**: Nhịp 05:46 và 15:46 MMT hàng ngày (khớp với chu kỳ chốt ca sáng và chiều của các đội kỹ thuật), đồng thời cho phép kích hoạt thủ công qua `workflow_dispatch`.
+> 3. **Kiến Trúc Hai Lớp Fallback Chống CORS & Nghẽn Mạng (Dual-Layer Sync Architecture)**:
+>    - **Lớp 1 (Batch Offline Cache)**: `sync_wo_detail.py` chạy trên GitHub Actions cào live Google Sheets, tạo file `api/wo_detail_cache.json` và tiêm trực tiếp HTML mới nhất vào `index.html` & `executive_dashboard.html`, đẩy lên GitHub Pages/Vercel.
+>    - **Lớp 2 (Client Live Fetch)**: Frontend JavaScript (`refreshWoDetailLive()`) tự động fetch từ Serverless API endpoint `/api/bi_data?action=wo_detail`. Nếu API bận hoặc offline, tự động fallback sang Google Sheets GViz endpoint (`gviz/tq?tqx=out:csv`). Tuyệt đối KHÔNG dùng URL `export?format=csv` gây lỗi CORS trên trình duyệt!
+> 4. **Checklist Kiểm Tra Khi Chạm Vào BI Portal**:
+>    - ① Chạy `python sync_wo_detail.py` kiểm tra parsing 7 bảng và tính toán tổng số WO.
+>    - ② Kiểm tra `grep 05/08` hoặc các mốc ngày cũ xem đã bị thanh lọc 100% chưa.
+>    - ③ Kiểm tra endpoint `/api/bi_data?action=wo_detail` có trả về JSON hợp lệ với status 200 hay không.
+>    - ④ Đồng bộ đồng thời cả 3 repositories (`Task and WO`, `tni-search`, `tni-sitedown`) và root.
+

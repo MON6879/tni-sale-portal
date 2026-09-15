@@ -635,6 +635,7 @@ Trong `apps_script_collector.js`:
 | [collector.py](file:///d:/6.%20AI/1.%20QLTC/Task%20and%20WO/api/collector.py) | **Vercel webhook** | Bot thu thập — lưu Order/Revoke... vào Sheet |
 | [cron_send.py](file:///d:/6.%20AI/1.%20QLTC/Task%20and%20WO/cron_send.py) | **GitHub Actions** | Gửi Report 4 (Daily EOD Task & Stats) và Report 3.1 (Asset) lúc 05:51 & 15:51 MMT |
 | [backlog_send.py](file:///d:/6.%20AI/1.%20QLTC/Task%20and%20WO/backlog_send.py) | **GitHub Actions** | Gửi Reports 1, 2, 3 (Daily Backlog Category/Desc, DailyWO, Main DG Material Need) lúc 05:46 & 15:46 MMT |
+| [sync_wo_detail.py](file:///d:/6.%20AI/1.%20QLTC/Task%20and%20WO/sync_wo_detail.py) | **GitHub Actions / Vercel** | **Ghế BI-WO-SYNC** (Toa WO Detail): Tự động đồng bộ 7 bảng WO Detail & Summary Cards sang BI Portal lúc 05:46 & 15:46 MMT |
 | [daily_plan_report.py](file:///d:/6.%20AI/1.%20QLTC/Task%20and%20WO/daily_plan_report.py) | **GitHub Actions** | Thu thập Daily Plan từ TL → Sheet + gửi report 3Day/7Day/Month |
 | [telegram_bot.py](file:///d:/6.%20AI/1.%20QLTC/Task%20and%20WO/telegram_bot.py) | ~~GitHub Actions~~ | ⚠️ ĐÃ THAY THẾ bởi `api/search_bot.py` (Vercel webhook) |
 | [apps_script_collector.js](file:///d:/6.%20AI/1.%20QLTC/Task%20and%20WO/apps_script_collector.js) | **Apps Script** | Backend xử lý dữ liệu Sheet |
