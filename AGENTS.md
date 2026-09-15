@@ -198,9 +198,29 @@
 > 2. **Chốt Chặn Idempotency Guard Cho Tin Nhắn Note (Mandatory 15-Min Note Idempotency Guard)**: Khi gửi tin Note chỉ đạo (`control_note`) hoặc bất kỳ tin phản hồi tự động nào qua Telethon/Bot API, script BẮT BUỘC phải kiểm tra tối thiểu 5 tin nhắn gần nhất trong chat. Nếu tin Note có cùng nội dung đã được gửi trong vòng 15 phút (`age_secs < 900`), BẮT BUỘC phải **BỎ QUA (SKIP)** ngay lập tức, tuyệt đối không gửi lại!
 > 3. **Kiểm Tra & Thanh Lọc Lịch Sử Khi Phát Hiện Nhân Đôi (Auto Forensics & Clean Purge)**: Khi phát hiện sự cố nhân đôi tin nhắn, AI BẮT BUỘC phải dùng Telethon kiểm tra thực tế lịch sử tin nhắn trong các nhóm, xác định nguyên nhân gốc (so sánh timestamp, message ID, runner IP) và tự động xóa sạch các bản tin gửi trùng bằng `client.delete_messages(..., revoke=True)` trước khi báo hoàn thành!
 
+# 📷 STRICT PHOTO COLLECTION & CHAT PRIVACY RULE: THU THẬP HÌNH ẢNH CỬA SỔ 10 PHÚT, GOOGLE DRIVE FOLDER & BẢO MẬT GROUP VS CHAT CÁ NHÂN (PHOTO COLLECTION & CHAT PRIVACY POLICY)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (PHOTO COLLECTION & CHAT PRIVACY STANDARD)**:
+> 1. **Cửa Sổ Thu Thập Hình Ảnh 10 Phút (10-Minute Photo Collection Window)**:
+>    - Sau khi nhân viên gửi một tin nhắn text báo cáo (theo bất kỳ Template nào), hệ thống BẮT BUỘC mở một cửa sổ thu thập hình ảnh đính kèm kéo dài **10 phút** (`PHOTO_WINDOW_MINUTES = 10`).
+>    - Toàn bộ ảnh mà nhân viên đó gửi trong vòng 10 phút BẮT BUỘC phải được tự động tải về và gắn vào đúng đơn hàng/báo cáo text đó.
+>    - **Điều Kiện Dừng Thu Thập**: Cửa sổ thu thập ảnh sẽ DỪNG NGAY LẬP TỨC khi:
+>      (a) Đã hết 10 phút kể từ tin nhắn text trước đó.
+>      (b) HOẶC nhân viên đó gửi tiếp một tin nhắn text báo cáo MỚI ➔ Hệ thống chốt đơn cũ và chuyển cửa sổ thu thập sang đơn mới!
+> 2. **Lưu Trữ Hình Ảnh Theo Thư Mục Template Trên Google Drive**:
+>    - Toàn bộ hình ảnh thu thập BẮT BUỘC phải được tải về Google Drive Folder gốc: `11HcMa63slXPOHrveHxmqZTZerzKPfjVt`.
+>    - Tự động phân loại và lưu vào các thư mục con mang tên của từng Template tương ứng (ví dụ: `Đã bán`, `Báo giá Solar`, `Tư vấn KH`...).
+>    - Tạo link "Download All" (link thư mục Drive) và danh sách link ảnh đính kèm cập nhật vào các cột tương ứng trên Google Sheet.
+> 3. **Bảo Mật Group Công Cộng vs Chat Cá Nhân (Group Auto-Delete vs Private Chat Retention)**:
+>    - Khi nhân viên gửi tin nhắn trong **Group / Supergroup**: Bot BẮT BUỘC **xóa ngay lập tức tin nhắn gốc** (`deleteMessage`) để bảo vệ thông tin cá nhân khách hàng (Số điện thoại, Tên, Địa chỉ, Chứng từ) không bị lộ cho thành viên khác trong nhóm.
+>    - Khi nhân viên gửi tin nhắn trong **Chat Cá Nhân Với Bot (`chat.type === "private"`)**: Bot **TUYỆT ĐỐI KHÔNG ĐƯỢC XÓA** tin nhắn gốc! Phải giữ nguyên tin nhắn trong chat riêng để nhân viên tiện tra cứu, đối chiếu lịch sử giao dịch cá nhân.
+> 4. **Khử Trùng Lặp Cột A (Deduplication on Column A Guard)**:
+>    - Mọi bảng thu thập dữ liệu BẮT BUỘC phải có cơ chế kiểm tra Cột A (Dedup Guard). Nếu phát hiện nội dung Cột A bị trùng lặp, BẮT BUỘC phải xóa dòng trùng phía dưới, giữ nguyên dòng mới nhất ở trên (Zero Duplicate Records).
+
 ---
 
 # 🎯 STRICT RULE: SỬA CÁI NÀO TÌM ĐÚNG CÁI ĐÓ ĐỂ SỬA — TIN NÀO XÓA TIN NẤY (STRICT SCOPE ISOLATION & ZERO-COLLATERAL-DAMAGE)
+
 
 > ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (TARGETED SCOPE & ISOLATED CLEANUP POLICY)**:
 > 1. **Sửa Cái Nào Tìm Đúng Cái Đó Để Sửa (Strict Targeted Execution)**: Khi Người Dùng yêu cầu sửa lỗi hay tính năng ở thành phần nào, BẮT BUỘC chỉ tìm đúng file, đúng hàm, đúng dòng liên quan trực tiếp đến thành phần đó để xử lý. TUYỆT ĐỐI KHÔNG sửa lan man sang file hoặc logic khác.
@@ -1212,10 +1232,25 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 >    - Tuyệt đối bỏ qua tin nhắn tự động của chính Bot 15 (`🔌 15 TNI CABLE — LINK DOWN REPORT`) để chống vòng lặp.
 > 2. **Trích Xuất Team Name & Đồng Bộ Chấm Màu Site Down**:
 >    - BẮT BUỘC nhận diện cả `Team X` và `T[1-4]` (bao gồm `T1s1..T4s1`, `T1 S1..T4 S1`), gán chấm màu đồng nhất (`🟠T1/T1 S1`, `🔵T2/T2s1`, `🟢T3`, `🟡T4`).
-> 3. **Ghi Nhận Ngay Nội Dung Sự Cố Tuyến Cáp Vào Cột J (Route Broken)**:
->    - Đối với tin nhắn Loại 2, toàn bộ nội dung tiến độ đứt cáp BẮT BUỘC được ghi thẳng vào Cột J (`Route Broken`) trong `cableAddTemplate()`, không bắt buộc người dùng phải gõ lại Step 2 (`Incident Name : ...`).
+> 3. **Phân Tách Luồng Xử Lý Loại 1 vs Loại 2 (Type 1 vs Type 2 Routing Split)**:
+>    - **Loại 1 (`is_type1 and not is_type2`)**: Gọi `cable_add_template` → INSERT ROW MỚI vào tab **Detail cable** (Cột J Route Broken). Tạo mã REF, khởi tạo cơ chế gom ảnh.
+>    - **Loại 2 (`is_type2 and not is_type1`)**: Gọi `cable_update_link_now` → UPDATE ô Cột C của tab **Link down now** (GID `263097982`) — đây là SSOT cho auto-report `:16/:46`. KHÔNG tạo row mới. Không cần REF.
+>    - **TUYỆT ĐỐI KHÔNG** dùng `cable_add_template` cho Loại 2 vì nó chỉ ghi vào audit collector mà KHÔNG cập nhật SSOT auto-report. Nội dung dòng 2 (`🔗 link down - [date] => [ETA]`) sẽ mãi không được lưu vào đúng chỗ.
 > 4. **Khóa State Gom Ảnh Theo Dòng (Photo-Row Anchor Lock)**:
 >    - Bot phản hồi xác nhận 2 dòng chuẩn gọn:
 >      `🔌 REF:{ref_pad} | {team_tag} | 🗓️ {date} {time}`
 >      `📷 Reply photos to attach | ✅ Reply Done to close`
 >    - Caching cả `msg.message_id` và `bot_msg.message_id` vào `MSG_REF_CACHE`, kèm fallback trong `resolve_ref_from_msg()` và fallback ±15 phút theo `sender_id` trong GAS để đảm bảo ảnh gửi kèm hoặc reply đều rơi vào đúng Cột I (`Photos`) của dòng vừa tạo.
+>
+> ### 🔴 RULE PM-26: PHÂN TÁCH 2 TAB CABLE SSOT — CẤM NHẦM `cable_add_template` vs `cable_update_link_now`
+> Khi làm việc với phân hệ Cable Bot, BẮT BUỘC hiểu rõ 2 tab HOÀN TOÀN RIÊNG BIỆT:
+>
+> | Tab | GID | Ghi bởi | Đọc bởi | Vai trò |
+> |---|---|---|---|---|
+> | **Detail cable** | (mặc định) | `cableAddTemplate()` via action `cable_add_template` | Manual / admin | Audit trail cho mỗi sự cố mới |
+> | **Link down now** | `263097982` | `cableUpdateLinkNow()` via action `cable_update_link_now` | `cable_link_down_report.py` (:16/:46) | **SSOT** cho báo cáo tiến độ tự động |
+>
+> - **Khi thêm chức năng GHI vào Cable**: BẮT BUỘC hỏi "đây là sự cố mới hay progress update cho link đang down?"
+>   - Sự cố mới → `cable_add_template` → Detail cable
+>   - Progress update → `cable_update_link_now` → Link down now
+> - **TUYỆT ĐỐI CẤM** dùng `cable_add_template` cho progress update Type 2 vì không bao giờ cập nhật SSOT auto-report.
