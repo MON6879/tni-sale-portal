@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UPS & Solar Manager</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bl:#2563eb;--bl2:#1d4ed8;--gn:#16a34a;--rd:#dc2626;--or:#ea580c;--yw:#ca8a04;--pu:#7c3aed;--gray:#f1f5f9;--dark:#1e293b;--tx:#334155;--bd:#e2e8f0;--wh:#fff}
+body{font-family:'Segoe UI',sans-serif;background:#f0f4f8;color:var(--tx);display:flex;height:100vh;overflow:hidden}
+/* SIDEBAR */
+#sb{width:210px;background:var(--dark);flex-shrink:0;display:flex;flex-direction:column;overflow-y:auto}
+#sb .logo{padding:18px 14px 14px;font-size:17px;font-weight:700;color:#fff;border-bottom:1px solid #334155}
+#sb .logo span{color:#38bdf8}
+#sb nav a{display:flex;align-items:center;gap:9px;padding:10px 14px;cursor:pointer;font-size:13px;color:#94a3b8;text-decoration:none;border-left:3px solid transparent;transition:.15s}
+#sb nav a:hover{background:#334155;color:#e2e8f0}
+#sb nav a.active{background:#1e3a5f;color:#fff;border-left-color:#38bdf8}
+#sb .lbl{padding:12px 14px 3px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#475569}
+/* MAIN */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#topbar{background:#fff;border-bottom:1px solid var(--bd);padding:10px 22px;display:flex;align-items:center;justify-content:space-between}
+#topbar h2{font-size:16px;font-weight:600;color:var(--dark)}
+#content{flex:1;overflow-y:auto;padding:18px 22px}
+/* CARDS */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px}
+.card{background:#fff;border-radius:10px;padding:14px;border:1px solid var(--bd)}
+.card .lbl2{font-size:11.5px;color:#64748b;margin-bottom:4px}
+.card .val{font-size:22px;font-weight:700}
+.card .sub{font-size:11px;color:#94a3b8;margin-top:2px}
+.c-bl .val{color:var(--bl)}.c-gn .val{color:var(--gn)}.c-or .val{color:var(--or)}.c-rd .val{color:var(--rd)}.c-yw .val{color:var(--yw)}.c-pu .val{color:var(--pu)}
+/* PANEL */
+.panel{background:#fff;border-radius:10px;border:1px solid var(--bd);margin-bottom:16px}
+.ph{padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.ph h3{font-size:14px;font-weight:600;color:var(--dark)}
+.pb{padding:14px 16px}
+/* FORM */
+.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.f{display:flex;flex-direction:column;gap:3px}
+.f label{font-size:11.5px;font-weight:500;color:#475569}
+.f input,.f select,.f textarea{padding:7px 9px;border:1px solid var(--bd);border-radius:6px;font-size:13px;color:var(--tx)}
+.f input:focus,.f select:focus,.f textarea:focus{outline:none;border-color:var(--bl)}
+.f textarea{resize:vertical;min-height:55px}
+.fa{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+/* BUTTONS */
+.btn{padding:7px 14px;border-radius:6px;font-size:12.5px;font-weight:500;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:5px}
+.btn:hover{opacity:.87}
+.b-bl{background:var(--bl);color:#fff}.b-gn{background:var(--gn);color:#fff}
+.b-rd{background:var(--rd);color:#fff}.b-or{background:var(--or);color:#fff}
+.b-pu{background:var(--pu);color:#fff}.b-yw{background:var(--yw);color:#fff}
+.b-out{background:#fff;color:var(--bl);border:1.5px solid var(--bl)}
+.b-sm{padding:5px 9px;font-size:12px}.b-xs{padding:3px 6px;font-size:11px}
+/* TABLE */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{background:#f8fafc;padding:8px 10px;text-align:left;font-weight:600;color:#475569;font-size:11.5px;white-space:nowrap;border-bottom:1px solid var(--bd)}
+tbody td{padding:8px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+tbody tr:hover{background:#fafcff}
+.bk{display:inline-block;padding:2px 7px;border-radius:99px;font-size:11px;font-weight:600}
+.bk-gn{background:#dcfce7;color:#15803d}.bk-bl{background:#dbeafe;color:#1e40af}
+.bk-or{background:#ffedd5;color:#c2410c}.bk-rd{background:#fee2e2;color:#b91c1c}
+.bk-yw{background:#fef9c3;color:#854d0e}.bk-pu{background:#f3e8ff;color:#6b21a8}.bk-gy{background:#f1f5f9;color:#475569}
+/* ADS */
+.fb-card{background:linear-gradient(135deg,#1877f2,#0a5dc2);border-radius:10px;padding:14px;color:#fff}
+.tk-card{background:linear-gradient(135deg,#010101,#333);border-radius:10px;padding:14px;color:#fff;border:1px solid #fe2c55}
+.tk-card .val,.fb-card .val{font-size:20px;font-weight:700;color:#fff}
+.tk-card .lbl2,.fb-card .lbl2{font-size:11px;color:rgba(255,255,255,.75);margin-bottom:3px}
+.tk-card .sub,.fb-card .sub{font-size:10.5px;color:rgba(255,255,255,.6);margin-top:2px}
+.roi-bar{height:8px;border-radius:4px;background:#e2e8f0;overflow:hidden;margin-top:4px}
+.roi-fill{height:100%;border-radius:4px;background:var(--gn);transition:width .5s}
+.platform-fb{color:#1877f2;font-weight:700}.platform-tk{color:#fe2c55;font-weight:700}
+.lead-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:99px;font-size:11px;font-weight:600}
+
+/* TABS */
+.tabs{display:flex;gap:2px;margin-bottom:14px;border-bottom:2px solid var(--bd);flex-wrap:wrap}
+.tab{padding:7px 14px;cursor:pointer;font-size:12.5px;font-weight:500;color:#64748b;border-bottom:2px solid transparent;margin-bottom:-2px}
+.tab.on{color:var(--bl);border-bottom-color:var(--bl)}
+/* SECTION */
+.sec{display:none}.sec.on{display:block}
+/* ALERT */
+#alert{position:fixed;top:60px;right:20px;z-index:999;min-width:260px;padding:10px 16px;border-radius:8px;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,.12);display:none}
+.al-ok{background:#dcfce7;color:#166534;border:1px solid #bbf7d0}
+.al-er{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
+/* QUOTATION */
+.qrow{display:flex;gap:8px;align-items:center;margin-bottom:6px;padding:6px 8px;background:#f8fafc;border-radius:6px;font-size:12.5px}
+.qrow input{padding:5px 7px;border:1px solid var(--bd);border-radius:5px;font-size:12px}
+.qrow input:focus{outline:none;border-color:var(--bl)}
+.qtotal{background:var(--dark);color:#fff;border-radius:8px;padding:14px 16px;margin-top:10px;font-size:14px}
+.qtotal .big{font-size:22px;font-weight:700;color:#34d399}
+/* STOCK WARNING */
+.warn{background:#fffbeb;border:1px solid #fcd34d;border-radius:7px;padding:8px 12px;font-size:12.5px;color:#92400e;margin-bottom:10px}
+/* GRID 2 */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:900px){.g2{grid-template-columns:1fr}}
+/* PRINT */
+@media print{#sb,#topbar,.btn,#alert,.no-print{display:none!important}#content{padding:0}}
+</style>
+</head>
+<body>
+<div id="alert"></div>
+
+<!-- ══ SIDEBAR ══ -->
+<div id="sb">
+  <div class="logo">⚡ TNI <span>Sale</span></div>
+  <nav>
+    <div class="lbl">Tổng quan</div>
+    <a class="active" onclick="go('dashboard')">📊 Dashboard</a>
+
+    <div class="lbl">Kho hàng</div>
+    <a onclick="go('nhap')">📦 Nhập Hàng</a>
+    <a onclick="go('tonkho')">🗄️ Tồn Kho</a>
+    <a onclick="go('tamung')">🧑‍💼 Tạm Ứng Hàng</a>
+
+    <div class="lbl">Kinh doanh</div>
+    <a onclick="go('banhang')">🛒 Bán Hàng</a>
+    <a onclick="go('baogiaups')">📄 Báo Giá Thiết Bị</a>
+    <a onclick="go('baogiasolar')">☀️ Báo Giá Solar</a>
+    <a onclick="go('daily')">🏪 Đại Lý &amp; PP</a>
+    <a onclick="go('kygoi')">📋 Ký Gởi</a>
+
+    <div class="lbl">Khách hàng</div>
+    <a onclick="go('crm')">👥 CRM &amp; Khảo Sát</a>
+
+    <div class="lbl">Marketing</div>
+    <a onclick="go('quangcao')">📢 Quảng Cáo FB/TT</a>
+    <a onclick="go('leads')">🎯 Leads & Chuyển Đổi</a>
+
+    <div class="lbl">Tài chính</div>
+    <a onclick="go('loinhuan')">💰 Lợi Nhuận</a>
+    <a onclick="go('baocao')">📈 Báo Cáo</a>
+  </nav>
+</div>
+
+<!-- ══ MAIN ══ -->
+<div id="main">
+<div id="topbar">
+  <h2 id="ptitle">📊 Dashboard</h2>
+  <div style="display:flex;gap:8px;align-items:center">
+    <a href="https://docs.google.com/spreadsheets/d/1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA" target="_blank" class="btn b-bl b-sm" style="text-decoration:none">📊 Mở Google Sheet</a> <button class="btn b-sm" id="lang-btn" onclick="toggleLang()" style="background:#e0f2fe;color:#0369a1;font-weight:600">🌐 🇻🇳 VN / 🇬🇧 EN</button>
+    <span id="clk" style="font-size:11.5px;color:#94a3b8"></span>
+    <button class="btn b-out b-sm" onclick="exportCSV()">⬇ CSV</button>
+    <button class="btn b-sm" style="background:#f1f5f9;color:#475569" onclick="clearAllData()">🗑 Reset</button>
+  </div>
+</div>
+<div id="content">
+
+<!-- ══ DASHBOARD ══ -->
+<div class="sec on" id="s-dashboard">
+  <div class="cards" id="dc"></div>
+  <div class="g2">
+    <div class="panel"><div class="ph"><h3>📦 Nhập gần đây</h3></div><div class="pb tw" id="d-nhap"></div></div>
+    <div class="panel"><div class="ph"><h3>🛒 Bán gần đây</h3></div><div class="pb tw" id="d-ban"></div></div>
+  </div>
+  <div class="g2">
+    <div class="panel"><div class="ph"><h3>⚠️ Tồn kho sắp hết</h3></div><div class="pb tw" id="d-warn"></div></div>
+    <div class="panel"><div class="ph"><h3>🧑‍💼 Tạm ứng đang mở</h3></div><div class="pb tw" id="d-tu"></div></div>
+  </div>
+</div>
+
+<!-- ══ NHẬP HÀNG ══ -->
+<div class="sec" id="s-nhap">
+  <div class="panel">
+    <div class="ph"><h3 data-lang="nhap_title">➕ Thêm Phiếu Nhập & Phân Bổ Lợi Nhuận</h3></div>
+    <div class="pb">
+      <div class="fg">
+        <div class="f"><label data-lang="p_name">Tên Sản Phẩm *</label><input id="n-ten" placeholder="VD: UPS 1200VA APC"/></div>
+        <div class="f"><label data-lang="p_model">Model / Mã SP</label><input id="n-model" placeholder="APC-BX1200"/></div>
+        <div class="f"><label data-lang="p_serial">Serial Number</label><input id="n-serial" placeholder="SN2024001"/></div>
+        <div class="f"><label data-lang="p_category">Danh Mục</label><select id="n-dm"><option>UPS</option><option>Solar Panel</option><option>Inverter</option><option>Ắc Quy</option><option>Phụ Kiện Solar</option><option>Cáp &amp; Đầu Nối</option><option>Khác</option></select></div>
+        <div class="f"><label data-lang="p_qty">Số Lượng *</label><input id="n-sl" type="number" min="1" placeholder="0" oninput="calcNhapProfit()"/></div>
+        <div class="f"><label data-lang="cost_price_83">Đơn Giá Gốc Đầu Vào (83%) (₫) *</label><input id="n-gg" type="number" placeholder="0" oninput="calcNhapProfit()"/></div>
+        <div class="f"><label data-lang="actual_selling_price">Giá Thực Bán (₫) *</label><input id="n-gb" type="number" placeholder="0" oninput="calcNhapProfit()"/></div>
+        <div class="f"><label data-lang="p_supplier">Nhà Cung Cấp</label><input id="n-ncc" placeholder="Tên NCC"/></div>
+        <div class="f"><label data-lang="p_date">Ngày Nhập</label><input id="n-ngay" type="date"/></div>
+        <div class="f"><label data-lang="p_warranty">Bảo Hành (tháng)</label><input id="n-bh" type="number" placeholder="12"/></div>
+        <div class="f" style="grid-column:1/-1"><label data-lang="p_note">Ghi Chú</label><textarea id="n-gc" placeholder="..."></textarea></div>
+      </div>
+
+      <!-- 💡 LIVE PROFIT & 17% MARGIN PREVIEW (THEO CHUẨN CHI NHÁNH & CTY) -->
+      <div id="nhap-calc-box" style="margin-top:14px;padding:12px 14px;background:#f8fafc;border-radius:8px;border:1px solid #cbd5e1;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+        <div><span style="font-size:11px;color:#0284c7" data-lang="lbl_cost_83">🏷️ Giá Gốc (83%)</span><div id="nc-goc" style="font-size:15px;font-weight:700;color:#0284c7">0 ₫</div></div>
+        <div><span style="font-size:11px;color:#1e40af" data-lang="lbl_comp_17">🏢 LN Trả Về Cty 17%</span><div id="nc-cty17" style="font-size:15px;font-weight:700;color:#1e40af">0 ₫ / SP</div></div>
+        <div><span style="font-size:11px;color:#ea580c" data-lang="lbl_min_price">🛡️ Mức Giá Bán Thấp Nhất (100%)</span><div id="nc-minsell" style="font-size:15px;font-weight:700;color:#ea580c">0 ₫ / SP</div></div>
+        <div><span style="font-size:11px;color:#16a34a" data-lang="lbl_act_price">📈 Giá Thực Bán</span><div id="nc-actsell" style="font-size:15px;font-weight:700;color:#16a34a">0 ₫ / SP</div></div>
+        <div><span style="font-size:11px;color:#7c3aed" data-lang="lbl_branch_profit">🏪 Lợi Nhuận Chi Nhánh</span><div id="nc-branch" style="font-size:15px;font-weight:700;color:#7c3aed">0 ₫ / SP</div></div>
+      </div>
+
+      <div class="fa">
+        <button class="btn b-bl" onclick="addNhap()">📦 Lưu Phiếu Nhập</button>
+        <button class="btn b-out" onclick="clrForm('n-');calcNhapProfit()">✕ Xóa</button>
+      </div>
+    </div>
+  </div>
+  <div class="panel"><div class="ph"><h3>📋 Danh Sách Nhập Hàng</h3><button class="btn b-sm" style="background:#f1f5f9" onclick="print()">🖨</button></div>
+  <div class="pb tw" id="t-nhap"></div></div>
+</div>
+
+<!-- ══ TỒN KHO ══ -->
+<div class="sec" id="s-tonkho">
+  <div class="panel">
+    <div class="ph"><h3>🗄️ Tồn Kho Hiện Tại</h3>
+      <div style="display:flex;gap:6px">
+        <input id="sk-q" placeholder="🔍 Tìm sản phẩm..." oninput="renderTK()" style="padding:6px 10px;border:1px solid var(--bd);border-radius:6px;font-size:12.5px;width:200px"/>
+        <select id="sk-dm" onchange="renderTK()" style="padding:6px 8px;border:1px solid var(--bd);border-radius:6px;font-size:12.5px">
+          <option value="">Tất cả danh mục</option>
+          <option>UPS</option><option>Solar Panel</option><option>Inverter</option>
+          <option>Ắc Quy</option><option>Phụ Kiện Solar</option><option>Cáp &amp; Đầu Nối</option><option>Khác</option>
+        </select>
+      </div>
+    </div>
+    <div class="pb"><div id="tk-warn"></div><div class="tw" id="t-tonkho"></div></div>
+  </div>
+</div>
+
+<!-- ══ TẠM ỨNG HÀNG ══ -->
+<div class="sec" id="s-tamung">
+  <div class="panel">
+    <div class="ph"><h3>🧑‍💼 Tạo Phiếu Tạm Ứng Hàng</h3></div>
+    <div class="pb">
+      <div class="fg">
+        <div class="f"><label>Nhân Viên *</label><input id="tu-nv" placeholder="Họ tên nhân viên"/></div>
+        <div class="f"><label>Mã NV / Phòng Ban</label><input id="tu-ma" placeholder="NV001 / Kinh doanh"/></div>
+        <div class="f"><label>Sản Phẩm *</label><select id="tu-sp"></select></div>
+        <div class="f"><label>Số Lượng *</label><input id="tu-sl" type="number" min="1" placeholder="0"/></div>
+        <div class="f"><label>Mục Đích</label><select id="tu-md"><option>Trưng bày / Demo</option><option>Bán cho khách</option><option>Khảo sát lắp đặt</option><option>Hội chợ / Sự kiện</option><option>Khác</option></select></div>
+        <div class="f"><label>Ngày Lấy</label><input id="tu-ngay" type="date"/></div>
+        <div class="f"><label>Hạn Hoàn Trả</label><input id="tu-han" type="date"/></div>
+        <div class="f" style="grid-column:1/-1"><label>Ghi Chú</label><textarea id="tu-gc" placeholder="Ghi chú mục đích, địa điểm..."></textarea></div>
+      </div>
+      <div class="fa"><button class="btn b-pu" onclick="addTamUng()">🧑‍💼 Xác Nhận Tạm Ứng</button></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ph"><h3>📋 Danh Sách Tạm Ứng</h3></div>
+    <div class="pb tw" id="t-tamung"></div>
+  </div>
+</div>
+
+<!-- ══ BÁN HÀNG ══ -->
+<div class="sec" id="s-banhang">
+  <div class="panel">
+    <div class="ph"><h3>🛒 Tạo Đơn Bán</h3></div>
+    <div class="pb">
+      <div class="fg">
+        <div class="f"><label>Sản Phẩm *</label><select id="b-sp" onchange="autoPrice('b-sp','b-gia')"></select></div>
+        <div class="f"><label>Số Lượng (Quantity) *</label><input id="b-sl" type="number" min="1" placeholder="1"/></div>
+        <div class="f"><label>Serial Number (Số Serial)</label><input id="b-serial" placeholder="SN123456..."/></div>
+        <div class="f"><label>Giá Bán (₫) *</label><input id="b-gia" type="number" placeholder="0"/></div>
+        <div class="f"><label>Khách Hàng (Buyer's Name)</label><input id="b-kh" placeholder="Tên khách hàng"/></div>
+        <div class="f"><label>Điện Thoại KH (Phone Number)</label><input id="b-dt" placeholder="0xxxxxxx"/></div>
+        <div class="f"><label>Hình Ảnh (Drive URL / Link)</label><input id="b-photo" placeholder="https://drive.google.com/..."/></div>
+        <div class="f"><label>Thanh Toán</label><select id="b-tt"><option>Tiền mặt</option><option>Chuyển khoản</option><option>Công nợ</option><option>Quẹt thẻ</option></select></div>
+        <div class="f"><label>Kênh Bán</label><select id="b-kenh"><option>Trực tiếp</option><option>Đại lý</option><option>Online</option><option>Giới thiệu</option><option>Báo giá Solar</option></select></div>
+        <div class="f"><label>Ngày Bán</label><input id="b-ngay" type="date"/></div>
+        <div class="f" style="grid-column:1/-1"><label>Ghi Chú</label><textarea id="b-gc" placeholder="..."></textarea></div>
+      </div>
+
+      <!-- 💡 TELEGRAM SYNTAX BOX -->
+      <div style="margin-top:12px;padding:10px 14px;background:#f1f5f9;border-radius:8px;border:1px solid #cbd5e1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div style="font-size:12px">
+          <b>📱 Cú pháp Telegram Bot (Sales Record)</b>:
+          <code style="background:#fff;padding:2px 6px;border-radius:4px;border:1px solid #e2e8f0;display:inline-block;margin-top:2px">Sales Record : Product Name | quanlity | Serial | Buyer's Name | Phone Number</code>
+        </div>
+        <button class="btn b-bl b-xs" onclick="const opt=document.getElementById('b-sp');const spName=(opt&&opt.options[opt.selectedIndex])?opt.options[opt.selectedIndex].text.split('[')[0].trim():'Product Name';navigator.clipboard.writeText('Sales Record : '+spName+' | '+(v('b-sl')||1)+' | '+(v('b-serial')||'SN123456')+' | '+(v('b-kh')||'Buyer Name')+' | '+(v('b-dt')||'09xxxxxxx'));al('📋 Đã sao chép cú pháp Telegram!')">📋 Sao Chép Mẫu</button>
+      </div>
+
+      <div class="fa"><button class="btn b-gn" onclick="addBan()">✅ Xác Nhận Bán</button></div>
+    </div>
+  </div>
+  <div class="panel"><div class="ph"><h3>📋 Lịch Sử Bán Hàng</h3></div><div class="pb tw" id="t-ban"></div></div>
+</div>
+
+<!-- ══ BÁO GIÁ UPS ══ -->
+<div class="sec" id="s-baogiaups">
+  <div class="g2">
+    <div class="panel">
+      <div class="ph"><h3>📄 Tạo Báo Giá Thiết Bị</h3></div>
+      <div class="pb">
+        <div class="fg">
+          <div class="f"><label>Khách Hàng / Công Ty *</label><input id="qu-kh" placeholder="Tên KH / Công ty"/></div>
+          <div class="f"><label>Điện Thoại</label><input id="qu-dt" placeholder="0xxxxxxx"/></div>
+          <div class="f"><label>Địa Chỉ</label><input id="qu-dc" placeholder="Địa chỉ"/></div>
+          <div class="f"><label>Người Lập BG</label><input id="qu-nlbg" placeholder="Tên nhân viên"/></div>
+          <div class="f"><label>Ngày</label><input id="qu-ngay" type="date"/></div>
+          <div class="f"><label>Hiệu Lực (ngày)</label><input id="qu-hl" type="number" value="7" min="1"/></div>
+        </div>
+        <div style="margin-top:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <b style="font-size:13px">📦 Danh sách thiết bị</b>
+            <button class="btn b-bl b-sm" onclick="addQRow('qu-items')">+ Thêm dòng</button>
+          </div>
+          <div id="qu-items"></div>
+          <div class="qtotal" id="qu-total">
+            <div style="font-size:12px;color:#94a3b8;margin-bottom:4px">Tổng Báo Giá</div>
+            <div class="big">0 ₫</div>
+          </div>
+        </div>
+        <div class="fa">
+          <button class="btn b-bl" onclick="saveQuote('ups')">💾 Lưu Báo Giá</button>
+          <button class="btn b-out" onclick="printQuote('ups')">🖨 In / PDF</button>
+        </div>
+      </div>
+    </div>
+    <div class="panel"><div class="ph"><h3>📋 Danh Sách Báo Giá Thiết Bị</h3></div><div class="pb tw" id="t-quups"></div></div>
+  </div>
+</div>
+
+<!-- ══ BÁO GIÁ SOLAR ══ -->
+<div class="sec" id="s-baogiasolar">
+  <div class="g2">
+    <div class="panel">
+      <div class="ph"><h3>☀️ Tạo Báo Giá Hệ Solar</h3></div>
+      <div class="pb">
+        <div class="fg">
+          <div class="f"><label>Khách Hàng / Công Ty *</label><input id="qs-kh" placeholder="Tên KH / Công ty"/></div>
+          <div class="f"><label>Điện Thoại</label><input id="qs-dt" placeholder="0xxxxxxx"/></div>
+          <div class="f"><label>Địa Chỉ Lắp Đặt</label><input id="qs-dc" placeholder="Địa chỉ lắp đặt"/></div>
+          <div class="f"><label>Loại Hệ Thống</label><select id="qs-loai"><option>Hòa lưới (On-Grid)</option><option>Độc lập (Off-Grid)</option><option>Hybrid (Hòa lưới + Dự trữ)</option></select></div>
+          <div class="f"><label>Công Suất (kWp)</label><input id="qs-cs" type="number" placeholder="5" step="0.5"/></div>
+          <div class="f"><label>Người Lập BG</label><input id="qs-nlbg" placeholder="Nhân viên"/></div>
+          <div class="f"><label>Ngày BG</label><input id="qs-ngay" type="date"/></div>
+          <div class="f"><label>Hiệu Lực (ngày)</label><input id="qs-hl" type="number" value="15"/></div>
+        </div>
+
+        <div style="margin-top:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <b style="font-size:13px">🔧 Thành Phần Hệ Thống</b>
+            <button class="btn b-yw b-sm" onclick="addQRow('qs-items')">+ Thêm dòng</button>
+          </div>
+          <!-- Preset nhanh -->
+          <div style="margin-bottom:10px;display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn b-sm" style="background:#fef9c3;color:#854d0e;font-size:11.5px" onclick="presetSolar('ongrid')">⚡ Bộ Hòa Lưới 5kWp</button>
+            <button class="btn b-sm" style="background:#fef9c3;color:#854d0e;font-size:11.5px" onclick="presetSolar('offgrid')">🔋 Bộ Off-Grid 3kWp</button>
+            <button class="btn b-sm" style="background:#fef9c3;color:#854d0e;font-size:11.5px" onclick="presetSolar('hybrid')">🌐 Hybrid 5kWp+15kWh</button>
+          </div>
+          <div id="qs-items"></div>
+          <div class="qtotal" id="qs-total">
+            <div style="font-size:12px;color:#94a3b8;margin-bottom:4px">Tổng Báo Giá Hệ Solar</div>
+            <div class="big">0 ₫</div>
+            <div style="font-size:11.5px;color:#86efac;margin-top:4px" id="qs-note"></div>
+          </div>
+        </div>
+        <div class="fa">
+          <button class="btn b-yw" onclick="saveQuote('solar')">💾 Lưu Báo Giá</button>
+          <button class="btn b-out" onclick="printQuote('solar')">🖨 In / PDF</button>
+        </div>
+      </div>
+    </div>
+    <div class="panel"><div class="ph"><h3>📋 Danh Sách Báo Giá Solar</h3></div><div class="pb tw" id="t-qusolar"></div></div>
+  </div>
+</div>
+
+<!-- ══ ĐẠI LÝ ══ -->
+<div class="sec" id="s-daily">
+  <div class="tabs">
+    <div class="tab on" onclick="sw(this,'td-ds')">🏪 Danh Sách Đại Lý</div>
+    <div class="tab" onclick="sw(this,'td-pp')">🚚 Phân Phối Hàng</div>
+  </div>
+  <div id="td-ds">
+    <div class="panel">
+      <div class="ph"><h3>Danh Sách Đại Lý</h3><button class="btn b-bl b-sm" onclick="tog('fdl')">+ Thêm</button></div>
+      <div class="pb" id="fdl" style="display:none">
+        <div class="fg">
+          <div class="f"><label>Tên Đại Lý *</label><input id="dl-ten" placeholder="Tên cửa hàng"/></div>
+          <div class="f"><label>Chủ / Liên Hệ</label><input id="dl-chu" placeholder="Họ tên"/></div>
+          <div class="f"><label>Điện Thoại</label><input id="dl-dt" placeholder="0xxxxxxx"/></div>
+          <div class="f"><label>Địa Chỉ</label><input id="dl-dc" placeholder="Địa chỉ"/></div>
+          <div class="f"><label>Khu Vực</label><select id="dl-kv"><option>TP.HCM</option><option>Hà Nội</option><option>Miền Nam</option><option>Miền Bắc</option><option>Miền Trung</option><option>Khác</option></select></div>
+          <div class="f"><label>Loại</label><select id="dl-loai"><option>Đại lý cấp 1</option><option>Đại lý cấp 2</option><option>Điểm bán lẻ</option></select></div>
+          <div class="f"><label>Chiết Khấu (%)</label><input id="dl-ck" type="number" min="0" max="50" placeholder="0"/></div>
+        </div>
+        <div class="fa"><button class="btn b-bl" onclick="addDL()">💾 Lưu Đại Lý</button></div>
+      </div>
+    </div>
+    <div class="panel"><div class="ph"><h3>🏪 Đại Lý</h3></div><div class="pb tw" id="t-daily"></div></div>
+  </div>
+  <div id="td-pp" style="display:none">
+    <div class="panel">
+      <div class="ph"><h3>🚚 Phân Phối Hàng</h3></div>
+      <div class="pb">
+        <div class="fg">
+          <div class="f"><label>Đại Lý *</label><select id="pp-dl"></select></div>
+          <div class="f"><label>Sản Phẩm *</label><select id="pp-sp" onchange="autoPrice('pp-sp','pp-gia')"></select></div>
+          <div class="f"><label>Số Lượng *</label><input id="pp-sl" type="number" min="1" placeholder="0"/></div>
+          <div class="f"><label>Giá Sỉ (₫)</label><input id="pp-gia" type="number" placeholder="0"/></div>
+          <div class="f"><label>Ngày Giao</label><input id="pp-ngay" type="date"/></div>
+          <div class="f"><label>Ghi Chú</label><input id="pp-gc" placeholder="..."/></div>
+        </div>
+        <div class="fa"><button class="btn b-or" onclick="addPP()">🚚 Xác Nhận Phân Phối</button></div>
+      </div>
+    </div>
+    <div class="panel"><div class="ph"><h3>📋 Lịch Sử Phân Phối</h3></div><div class="pb tw" id="t-pp"></div></div>
+  </div>
+</div>
+
+<!-- ══ KÝ GỞI ══ -->
+<div class="sec" id="s-kygoi">
+  <div class="panel">
+    <div class="ph"><h3>📋 Tạo Phiếu Ký Gởi</h3></div>
+    <div class="pb">
+      <div class="fg">
+        <div class="f"><label>Điểm Bán *</label><input id="kg-db" placeholder="Tên điểm bán"/></div>
+        <div class="f"><label>Người Nhận</label><input id="kg-nn" placeholder="Họ tên"/></div>
+        <div class="f"><label>Điện Thoại</label><input id="kg-dt" placeholder="0xxxxxxx"/></div>
+        <div class="f"><label>Sản Phẩm *</label><select id="kg-sp" onchange="autoPrice('kg-sp','kg-gia');calcKGProfit()"></select></div>
+        <div class="f"><label>Số Lượng *</label><input id="kg-sl" type="number" min="1" placeholder="0" oninput="calcKGProfit()"/></div>
+        <div class="f"><label>Giá Bán Tại Điểm (₫)</label><input id="kg-gia" type="number" placeholder="0" oninput="calcKGProfit()"/></div>
+        <div class="f"><label>Ngày Gởi</label><input id="kg-ngay" type="date"/></div>
+        <div class="f"><label>Hạn (ngày)</label><input id="kg-han" type="number" placeholder="30"/></div>
+      </div>
+
+      <!-- 💡 LIVE CONSIGNMENT 17% & COMPANY PROFIT PREVIEW -->
+      <div id="kg-calc-box" style="margin-top:14px;padding:12px 14px;background:#fff7ed;border-radius:8px;border:1px solid #fed7aa;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+        <div><span style="font-size:11px;color:#9a3412">📦 Giá Vốn Sản Phẩm (Gốc)</span><div id="kg-c-gg" style="font-size:15px;font-weight:700;color:#1e293b">0 ₫ / SP</div></div>
+        <div><span style="font-size:11px;color:#9a3412">💵 Tổng Tiền Bán Dự Kiến (SL x Giá Bán)</span><div id="kg-c-tt" style="font-size:15px;font-weight:700;color:#2563eb">0 ₫</div></div>
+        <div><span style="font-size:11px;color:#c2410c">🤝 17% Điểm Bán Hưởng (Hoa Hồng 17%)</span><div id="kg-c-hh" style="font-size:15px;font-weight:700;color:#ea580c">0 ₫</div></div>
+        <div><span style="font-size:11px;color:#15803d">🏢 Lợi Nhuận Còn Lại Cty (Sau Trừ Vốn & 17%)</span><div id="kg-c-ln" style="font-size:15px;font-weight:700;color:#16a34a">0 ₫</div></div>
+      </div>
+
+      <div class="fa">
+        <button class="btn b-or" onclick="addKG()">📋 Xác Nhận Ký Gởi</button>
+        <button class="btn b-out" onclick="clrForm('kg-');calcKGProfit()">✕ Xóa</button>
+      </div>
+    </div>
+  </div>
+  <div class="panel"><div class="ph"><h3>📦 Danh Sách Ký Gởi</h3></div><div class="pb tw" id="t-kygoi"></div></div>
+</div>
+
+<!-- ══ CRM ══ -->
+<div class="sec" id="s-crm">
+  <div class="tabs">
+    <div class="tab on" onclick="sw(this,'tc-kh')">👤 Khách Hàng</div>
+    <div class="tab" onclick="sw(this,'tc-ks')">📝 Khảo Sát Đại Lý</div>
+    <div class="tab" onclick="sw(this,'tc-lk')">📞 Lịch Tiếp Xúc</div>
+  </div>
+  <div id="tc-kh">
+    <div class="panel">
+      <div class="ph"><h3>👤 Khách Hàng</h3><button class="btn b-bl b-sm" onclick="tog('fkh')">+ Thêm</button></div>
+      <div class="pb" id="fkh" style="display:none">
+        <div class="fg">
+          <div class="f"><label>Họ Tên *</label><input id="kh-ten" placeholder="Họ và tên"/></div>
+          <div class="f"><label>Điện Thoại</label><input id="kh-dt" placeholder="0xxxxxxx"/></div>
+          <div class="f"><label>Email</label><input id="kh-em" placeholder="email@..."/></div>
+          <div class="f"><label>Công Ty</label><input id="kh-cty" placeholder="Tên công ty"/></div>
+          <div class="f"><label>Địa Chỉ</label><input id="kh-dc" placeholder="Địa chỉ"/></div>
+          <div class="f"><label>Loại KH</label><select id="kh-loai"><option>Khách lẻ</option><option>Doanh nghiệp</option><option>Tiềm năng</option><option>VIP</option></select></div>
+          <div class="f"><label>Quan Tâm</label><select id="kh-qt"><option>UPS</option><option>Solar</option><option>Cả hai</option><option>Khác</option></select></div>
+          <div class="f" style="grid-column:1/-1"><label>Ghi Chú</label><textarea id="kh-gc" placeholder="..."></textarea></div>
+        </div>
+        <div class="fa"><button class="btn b-bl" onclick="addKH()">💾 Lưu</button></div>
+      </div>
+    </div>
+    <div class="panel"><div class="ph"><h3>👥 Danh Sách</h3></div><div class="pb tw" id="t-kh"></div></div>
+  </div>
+  <div id="tc-ks" style="display:none">
+    <div class="panel">
+      <div class="ph"><h3>📝 Phiếu Khảo Sát Đại Lý</h3></div>
+      <div class="pb">
+        <div class="fg">
+          <div class="f"><label>Tên Đại Lý *</label><input id="ks-ten" placeholder="Tên cửa hàng"/></div>
+          <div class="f"><label>Người Khảo Sát</label><input id="ks-nks" placeholder="Nhân viên"/></div>
+          <div class="f"><label>Địa Điểm</label><input id="ks-dd" placeholder="Địa chỉ"/></div>
+          <div class="f"><label>Ngày</label><input id="ks-ngay" type="date"/></div>
+          <div class="f"><label>Nhu Cầu/tháng (cái)</label><input id="ks-nc" type="number" placeholder="0"/></div>
+          <div class="f"><label>Thương Hiệu Đang Bán</label><input id="ks-th" placeholder="APC, Santak..."/></div>
+          <div class="f"><label>Mức Giá Phù Hợp (₫)</label><input id="ks-mg" type="number" placeholder="0"/></div>
+          <div class="f"><label>Tiềm Năng</label><select id="ks-tn"><option>Cao</option><option>Trung bình</option><option>Thấp</option></select></div>
+          <div class="f" style="grid-column:1/-1"><label>Nhận Xét</label><textarea id="ks-nx" placeholder="..."></textarea></div>
+        </div>
+        <div class="fa"><button class="btn b-bl" onclick="addKS()">📝 Lưu Khảo Sát</button></div>
+      </div>
+    </div>
+    <div class="panel"><div class="ph"><h3>📊 Danh Sách Khảo Sát</h3></div><div class="pb tw" id="t-ks"></div></div>
+  </div>
+  <div id="tc-lk" style="display:none">
+    <div class="panel">
+      <div class="ph"><h3>📞 Ghi Nhận Tiếp Xúc</h3></div>
+      <div class="pb">
+        <div class="fg">
+          <div class="f"><label>Khách / Đại Lý *</label><input id="lk-ten" placeholder="Tên"/></div>
+          <div class="f"><label>Điện Thoại</label><input id="lk-dt" placeholder="0xxxxxxx"/></div>
+          <div class="f"><label>Hình Thức</label><select id="lk-ht"><option>Gặp trực tiếp</option><option>Gọi điện</option><option>Zalo/Viber</option><option>Email</option></select></div>
+          <div class="f"><label>Ngày</label><input id="lk-ngay" type="date"/></div>
+          <div class="f" style="grid-column:1/-1"><label>Nội Dung</label><textarea id="lk-nd" placeholder="..."></textarea></div>
+          <div class="f"><label>Hành Động Tiếp Theo</label><input id="lk-hd" placeholder="Gửi báo giá, thăm lại..."/></div>
+          <div class="f"><label>Follow-up</label><input id="lk-fu" type="date"/></div>
+        </div>
+        <div class="fa"><button class="btn b-bl" onclick="addLK()">📞 Lưu</button></div>
+      </div>
+    </div>
+    <div class="panel"><div class="ph"><h3>📋 Lịch Sử Tiếp Xúc</h3></div><div class="pb tw" id="t-lk"></div></div>
+  </div>
+</div>
+
+<!-- ══ QUẢNG CÁO ══ -->
+<div class="sec" id="s-quangcao">
+  <!-- Summary Cards -->
+  <div id="ads-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px"></div>
+
+  <div class="g2">
+    <!-- Tạo chiến dịch -->
+    <div class="panel">
+      <div class="ph"><h3>📢 Tạo Chiến Dịch Quảng Cáo</h3></div>
+      <div class="pb">
+        <div class="fg">
+          <div class="f"><label>Nền Tảng *</label>
+            <select id="ad-pl">
+              <option value="facebook">📘 Facebook Ads</option>
+              <option value="tiktok">🎵 TikTok Ads</option>
+              <option value="both">📘🎵 Cả hai</option>
+            </select>
+          </div>
+          <div class="f"><label>Tên Chiến Dịch *</label><input id="ad-name" placeholder="VD: Solar HCM T9/2026"/></div>
+          <div class="f"><label>Mục Tiêu</label>
+            <select id="ad-obj">
+              <option>Tăng nhận diện thương hiệu</option>
+              <option>Tạo lead (khách hàng tiềm năng)</option>
+              <option>Bán hàng trực tiếp</option>
+              <option>Tăng traffic website</option>
+              <option>Re-marketing</option>
+            </select>
+          </div>
+          <div class="f"><label>Ngân Sách (₫) *</label><input id="ad-budget" type="number" placeholder="0"/></div>
+          <div class="f"><label>Ngày Bắt Đầu</label><input id="ad-start" type="date"/></div>
+          <div class="f"><label>Ngày Kết Thúc</label><input id="ad-end" type="date"/></div>
+          <div class="f"><label>Sản Phẩm Quảng Cáo</label>
+            <select id="ad-sp"><option value="">-- Tất cả / Chung --</option><option>UPS</option><option>Solar System</option><option>Combo UPS + Solar</option></select>
+          </div>
+          <div class="f"><label>Người Phụ Trách</label><input id="ad-npt" placeholder="Tên nhân viên"/></div>
+          <div class="f" style="grid-column:1/-1"><label>Nội Dung / Thông Điệp</label><textarea id="ad-msg" placeholder="Thông điệp quảng cáo chính..."></textarea></div>
+        </div>
+        <div class="fa"><button class="btn b-bl" onclick="addCampaign()">🚀 Tạo Chiến Dịch</button></div>
+      </div>
+    </div>
+
+    <!-- Nhập kết quả -->
+    <div class="panel">
+      <div class="ph"><h3>📊 Cập Nhật Kết Quả Chạy Ads</h3></div>
+      <div class="pb">
+        <div class="fg">
+          <div class="f"><label>Chọn Chiến Dịch *</label><select id="adr-camp"></select></div>
+          <div class="f"><label>Ngày Cập Nhật</label><input id="adr-ngay" type="date"/></div>
+          <div class="f"><label>Chi Phí Thực Tế (₫)</label><input id="adr-spend" type="number" placeholder="0"/></div>
+          <div class="f"><label>Lượt Hiển Thị (Impressions)</label><input id="adr-imp" type="number" placeholder="0"/></div>
+          <div class="f"><label>Lượt Click</label><input id="adr-click" type="number" placeholder="0"/></div>
+          <div class="f"><label>Số Leads (tin nhắn/form)</label><input id="adr-leads" type="number" placeholder="0"/></div>
+          <div class="f"><label>Số Chuyển Đổi (đã mua)</label><input id="adr-conv" type="number" placeholder="0"/></div>
+          <div class="f"><label>Doanh Thu Từ Ads (₫)</label><input id="adr-rev" type="number" placeholder="0"/></div>
+        </div>
+        <div style="background:#f8fafc;border-radius:8px;padding:10px;margin-top:10px;font-size:12.5px" id="adr-preview">
+          <span style="color:#64748b">Điền số liệu để xem CPL, CPC, ROI...</span>
+        </div>
+        <div class="fa"><button class="btn b-gn" onclick="addAdsResult()">📊 Lưu Kết Quả</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Danh sách chiến dịch -->
+  <div class="panel">
+    <div class="ph"><h3>📋 Danh Sách Chiến Dịch</h3></div>
+    <div class="pb tw" id="t-camps"></div>
+  </div>
+
+  <!-- Kết quả chi tiết -->
+  <div class="panel">
+    <div class="ph"><h3>📈 Chi Tiết Hiệu Quả Ads</h3></div>
+    <div class="pb tw" id="t-adsresults"></div>
+  </div>
+</div>
+
+<!-- ══ LEADS ══ -->
+<div class="sec" id="s-leads">
+  <div class="cards" id="leads-cards"></div>
+  <div class="g2">
+    <div class="panel">
+      <div class="ph"><h3>🎯 Ghi Nhận Lead Mới</h3></div>
+      <div class="pb">
+        <div class="fg">
+          <div class="f"><label>Tên Khách *</label><input id="ld-ten" placeholder="Họ tên khách"/></div>
+          <div class="f"><label>Điện Thoại *</label><input id="ld-dt" placeholder="0xxxxxxx"/></div>
+          <div class="f"><label>Nguồn Lead</label>
+            <select id="ld-src">
+              <option value="facebook">📘 Facebook Ads</option>
+              <option value="tiktok">🎵 TikTok Ads</option>
+              <option value="zalo">💬 Zalo</option>
+              <option value="ref">🤝 Giới thiệu</option>
+              <option value="walk">🚶 Khách vãng lai</option>
+              <option value="other">🔗 Khác</option>
+            </select>
+          </div>
+          <div class="f"><label>Chiến Dịch</label><select id="ld-camp"><option value="">-- Không thuộc CD nào --</option></select></div>
+          <div class="f"><label>Quan Tâm</label>
+            <select id="ld-qt"><option>UPS</option><option>Solar System</option><option>Combo</option><option>Tư vấn</option></select>
+          </div>
+          <div class="f"><label>Mức Độ Nóng</label>
+            <select id="ld-hot"><option value="hot">🔥 Hot (mua ngay)</option><option value="warm">🌡 Warm (cân nhắc)</option><option value="cold">❄️ Cold (tìm hiểu)</option></select>
+          </div>
+          <div class="f"><label>Ngày Vào Lead</label><input id="ld-ngay" type="date"/></div>
+          <div class="f"><label>Địa Chỉ / Khu Vực</label><input id="ld-dc" placeholder="Quận, thành phố"/></div>
+          <div class="f" style="grid-column:1/-1"><label>Ghi Chú / Nhu Cầu</label><textarea id="ld-gc" placeholder="Nhu cầu cụ thể, ngân sách dự kiến..."></textarea></div>
+        </div>
+        <div class="fa"><button class="btn b-bl" onclick="addLead()">🎯 Lưu Lead</button></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="ph"><h3>🔄 Cập Nhật Trạng Thái Lead</h3></div>
+      <div class="pb">
+        <div class="fg">
+          <div class="f"><label>Chọn Lead</label><select id="ldup-id"></select></div>
+          <div class="f"><label>Trạng Thái Mới</label>
+            <select id="ldup-ts">
+              <option value="new">🆕 Mới vào</option>
+              <option value="contacted">📞 Đã liên hệ</option>
+              <option value="quoted">📄 Đã báo giá</option>
+              <option value="negotiating">🤝 Đang thương lượng</option>
+              <option value="won">✅ Chốt đơn</option>
+              <option value="lost">❌ Không thành</option>
+            </select>
+          </div>
+          <div class="f"><label>Ghi Chú Cập Nhật</label><input id="ldup-gc" placeholder="Lý do, bước tiếp theo..."/></div>
+        </div>
+        <div class="fa"><button class="btn b-or" onclick="updLead()">🔄 Cập Nhật</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Funnel visualization -->
+  <div class="panel">
+    <div class="ph"><h3>📊 Sales Funnel — Chuyển Đổi Lead → Đơn</h3></div>
+    <div class="pb" id="funnel-view"></div>
+  </div>
+
+  <div class="panel">
+    <div class="ph"><h3>📋 Danh Sách Leads</h3>
+      <div style="display:flex;gap:6px">
+        <select id="ld-filter-src" onchange="rLeads()" style="padding:5px 7px;border:1px solid var(--bd);border-radius:5px;font-size:12px">
+          <option value="">Tất cả nguồn</option>
+          <option value="facebook">Facebook</option><option value="tiktok">TikTok</option>
+          <option value="zalo">Zalo</option><option value="ref">Giới thiệu</option>
+        </select>
+        <select id="ld-filter-ts" onchange="rLeads()" style="padding:5px 7px;border:1px solid var(--bd);border-radius:5px;font-size:12px">
+          <option value="">Tất cả trạng thái</option>
+          <option value="new">Mới</option><option value="contacted">Đã LH</option>
+          <option value="quoted">Đã BG</option><option value="won">Chốt đơn</option><option value="lost">Không thành</option>
+        </select>
+      </div>
+    </div>
+    <div class="pb tw" id="t-leads"></div>
+  </div>
+</div>
+
+<!-- ══ LỢI NHUẬN ══ -->
+<div class="sec" id="s-loinhuan">
+  <div class="cards" id="ln-cards"></div>
+  <div class="g2">
+    <div class="panel">
+      <div class="ph"><h3>💰 Báo Cáo Lợi Nhuận</h3>
+        <select id="ln-f" onchange="renderLN()" style="padding:5px 7px;border:1px solid var(--bd);border-radius:5px;font-size:12px">
+          <option value="all">Tất cả</option><option value="month">Tháng này</option><option value="week">7 ngày</option>
+        </select>
+      </div>
+      <div class="pb" id="ln-detail"></div>
+    </div>
+    <div class="panel"><div class="ph"><h3>📊 Theo Sản Phẩm</h3></div><div class="pb tw" id="ln-sp"></div></div>
+  </div>
+</div>
+
+<!-- ══ BÁO CÁO ══ -->
+<div class="sec" id="s-baocao">
+  <div class="cards" id="bc-c"></div>
+  <div class="panel"><div class="ph"><h3>📈 Tổng Quan Kho Hàng</h3><button class="btn b-bl b-sm" onclick="exportCSV()">⬇ CSV</button></div>
+  <div class="pb tw" id="t-bc"></div></div>
+</div>
+
+</div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ══ PRINT AREA ══ -->
+<div id="print-area" style="display:none"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════
+const DB={
+  g:k=>JSON.parse(localStorage.getItem('u_'+k)||'[]'),
+  s:(k,v)=>localStorage.setItem('u_'+k,JSON.stringify(v)),
+  add:(k,item)=>{let d=DB.g(k);d.push({...item,id:Date.now()});DB.s(k,d);return item;}
+};
+
+// Seed demo
+if(!localStorage.getItem('u_init')){
+  DB.add('nhap',{ten:'UPS 650VA APC',model:'BX650LI',serial:'SN001',dm:'UPS',sl:10,gg:850000,gb:1250000,ncc:'APC VN',ngay:td(),bh:24,gc:''});
+  DB.add('nhap',{ten:'UPS 1200VA Santak',model:'TG-1200',serial:'SN002',dm:'UPS',sl:6,gg:1400000,gb:2100000,ncc:'Santak',ngay:td(),bh:24,gc:''});
+  DB.add('nhap',{ten:'Solar Panel 400W Jinko',model:'JK-400M',serial:'SN003',dm:'Solar Panel',sl:20,gg:1800000,gb:2500000,ncc:'Jinko VN',ngay:td(),bh:12,gc:''});
+  DB.add('nhap',{ten:'Inverter Growatt 5kW',model:'SPF-5000',serial:'SN004',dm:'Inverter',sl:3,gg:12000000,gb:17000000,ncc:'Growatt',ngay:td(),bh:24,gc:''});
+  DB.add('nhap',{ten:'Ắc Quy GEL 100Ah',model:'GEL-100',serial:'SN005',dm:'Ắc Quy',sl:15,gg:3200000,gb:4500000,ncc:'Deco VN',ngay:td(),bh:12,gc:''});
+  DB.add('daily',{ten:'Điện Tử Minh Khoa',chu:'Khoa Nguyễn',dt:'0901234567',dc:'Q.7 HCM',kv:'TP.HCM',loai:'Đại lý cấp 1',ck:10});
+  localStorage.setItem('u_init','1');
+}
+
+function td(){return new Date().toISOString().slice(0,10);}
+function fn(n){return Number(n||0).toLocaleString('vi-VN');}
+function fd(d){if(!d)return '';try{return new Date(d).toLocaleDateString('vi-VN');}catch{return d;}}
+function v(id){return document.getElementById(id)?.value?.trim()||'';}
+
+// ═══════════════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════════════
+const ptitles={dashboard:'📊 Dashboard',nhap:'📦 Nhập Hàng',tonkho:'🗄️ Tồn Kho',tamung:'🧑‍💼 Tạm Ứng Hàng',
+  banhang:'🛒 Bán Hàng',baogiaups:'📄 Báo Giá Thiết Bị',baogiasolar:'☀️ Báo Giá Hệ Solar',
+  daily:'🏪 Đại Lý & Phân Phối',kygoi:'📋 Ký Gởi',crm:'👥 CRM & Khảo Sát',
+  quangcao:'📢 Quảng Cáo Facebook & TikTok',leads:'🎯 Leads & Chuyển Đổi',
+  loinhuan:'💰 Lợi Nhuận',baocao:'📈 Báo Cáo'};
+
+const renders={
+  dashboard:rDash,nhap:rNhap,tonkho:renderTK,tamung:rTU,
+  banhang:()=>{popSP(['b-sp']);rBan();},
+  baogiaups:()=>{if(!document.getElementById('qu-items').children.length)addQRow('qu-items');rQuUPS();},
+  baogiasolar:()=>{if(!document.getElementById('qs-items').children.length)addQRow('qs-items');rQuSolar();},
+  daily:()=>{rDL();popSP(['pp-sp']);popDL();},
+  kygoi:()=>{popSP(['kg-sp','tu-sp']);rKG();},
+  crm:()=>{rKH();rKS();rLK();},
+  quangcao:()=>{rCampaigns();popCamps(['adr-camp']);rAdsResults();renderAdsSummary();},
+  leads:()=>{popCamps(['ld-camp']);rLeads();popLeadSel();renderFunnel();renderLeadsCards();},
+  loinhuan:renderLN,baocao:rBC
+};
+
+
+function go(id){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('#sb nav a').forEach(a=>a.classList.remove('active'));
+  const s=document.getElementById('s-'+id); if(s) s.classList.add('on');
+  document.getElementById('ptitle').textContent=ptitles[id]||id;
+  if(event?.target?.closest('a')) event.target.closest('a').classList.add('active');
+  if(renders[id]) renders[id]();
+}
+function sw(el,tid){
+  el.closest('.tabs').querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  const p=el.closest('.sec');
+  p.querySelectorAll('[id^="t"+el.closest(".tabs").id?.replace("tabs-","")],#'+tid).forEach(()=>{});
+  // hide all sibling tab panels
+  const allPanels=p.querySelectorAll('[id^="t"]');
+  // simpler: hide siblings
+  const cur=document.getElementById(tid);
+  if(!cur) return;
+  let sib=cur.parentNode.children;
+  for(let c of sib) if(c.id && c.id!==tid && !c.classList.contains('tabs')) c.style.display='none';
+  cur.style.display='';
+}
+function tog(id){const e=document.getElementById(id);e.style.display=e.style.display==='none'?'':'none';}
+
+// ═══════════════════════════════════════════════════
+// ALERT
+// ═══════════════════════════════════════════════════
+function al(msg,type='ok'){
+  const e=document.getElementById('alert');
+  e.className='al-'+type; e.textContent=msg; e.style.display='block';
+  setTimeout(()=>e.style.display='none',3000);
+}
+
+// ═══════════════════════════════════════════════════
+// INVENTORY (computed)
+// ═══════════════════════════════════════════════════
+function getTK(){
+  const nhap=DB.g('nhap'),ban=DB.g('ban'),pp=DB.g('pp'),kg=DB.g('kygoi'),tu=DB.g('tamung');
+  const m={};
+  nhap.forEach(r=>{
+    if(!m[r.id]) m[r.id]={id:r.id,ten:r.ten,model:r.model||'',dm:r.dm,giagoc:r.gg,giaban:r.gb,nhap:0,ban:0,pp:0,kg:0,tu:0,bh:r.bh};
+    m[r.id].nhap+=Number(r.sl);
+  });
+  ban.forEach(r=>{if(m[r.spId]) m[r.spId].ban+=Number(r.sl);});
+  pp.forEach(r=>{if(m[r.spId]) m[r.spId].pp+=Number(r.sl);});
+  kg.forEach(r=>{if(m[r.spId]&&r.ts!=='Đã thu hồi') m[r.spId].kg+=Number(r.sl);});
+  tu.forEach(r=>{if(m[r.spId]&&r.ts==='Đang ứng') m[r.spId].tu+=Number(r.sl);});
+  return Object.values(m).map(r=>{
+    const tonTong = r.nhap - r.ban - r.pp;
+    const khaDung = Math.max(0, tonTong - r.kg - r.tu);
+    return {...r, ton: tonTong, tonTong: tonTong, khaDung: khaDung, giaTriTon: tonTong * Number(r.giagoc||0)};
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// POPULATE SELECTS
+// ═══════════════════════════════════════════════════
+function popSP(ids){
+  const tk=getTK().filter(r=>r.ton>0);
+  ids.forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    const val=el.value;
+    el.innerHTML='<option value="">-- Chọn SP --</option>';
+    tk.forEach(r=>el.innerHTML+=`<option value="${r.id}" data-gb="${r.giaban}" data-gg="${r.giagoc}">${r.ten} [${r.dm}|Tồn:${r.ton}]</option>`);
+    el.value=val;
+  });
+}
+function popDL(){
+  const el=document.getElementById('pp-dl'); if(!el) return;
+  el.innerHTML='<option value="">-- Chọn đại lý --</option>';
+  DB.g('daily').forEach(r=>el.innerHTML+=`<option value="${r.id}">${r.ten}</option>`);
+}
+function autoPrice(spId,giaId){
+  const opt=document.getElementById(spId)?.options;
+  if(!opt||!opt[opt.selectedIndex]) return;
+  const gb=opt[opt.selectedIndex].dataset.gb;
+  if(gb) document.getElementById(giaId).value=gb;
+  if(spId==='kg-sp'&&typeof calcKGProfit==='function') calcKGProfit();
+}
+
+// ═══════════════════════════════════════════════════
+// TABLE HELPER
+// ═══════════════════════════════════════════════════
+function bk(t,c){return `<span class="bk bk-${c}">${t}</span>`;}
+function tbl(hs,rows){
+  if(!rows.length) return '<p style="color:#94a3b8;font-size:12.5px;padding:6px 0">Chưa có dữ liệu</p>';
+  return `<table><thead><tr>${hs.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+  <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+}
+function del(k,id,cb){DB.s(k,DB.g(k).filter(r=>r.id!==id));cb();al('🗑 Đã xóa');}
+function clrForm(prefix){document.querySelectorAll(`[id^="${prefix}"]`).forEach(e=>{if(e.tagName==='SELECT')e.selectedIndex=0;else if(e.type!=='date')e.value='';});}
+
+// ═══════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════
+function rDash(){
+  const nhap=DB.g('nhap'),ban=DB.g('ban'),dl=DB.g('daily'),tu=DB.g('tamung');
+  const dt=ban.reduce((s,r)=>s+r.gia*r.sl,0);
+  const ln=ban.reduce((s,r)=>{const sp=nhap.find(n=>n.id==r.spId);return s+(r.gia-Number(sp?.gg||0))*r.sl;},0);
+  const tk=getTK(),tot=tk.reduce((s,r)=>s+r.ton,0);
+  document.getElementById('dc').innerHTML=`
+    <div class="card c-bl"><div class="lbl2">📦 Tổng Tồn Kho</div><div class="val">${tot}</div><div class="sub">${nhap.length} mã hàng</div></div>
+    <div class="card c-gn"><div class="lbl2">💵 Doanh Thu</div><div class="val">${fn(dt)}₫</div><div class="sub">${ban.length} đơn bán</div></div>
+    <div class="card c-or"><div class="lbl2">📈 Lợi Nhuận</div><div class="val">${fn(ln)}₫</div><div class="sub">Gộp toàn bộ</div></div>
+    <div class="card c-pu"><div class="lbl2">🏪 Đại Lý</div><div class="val">${dl.length}</div><div class="sub">${tu.filter(r=>r.ts==='Đang ứng').length} đang tạm ứng</div></div>`;
+  const n5=[...nhap].reverse().slice(0,5);
+  document.getElementById('d-nhap').innerHTML=tbl(['SP','SL','Giá Gốc','Ngày'],n5.map(r=>[r.ten,r.sl,fn(r.gg)+'₫',fd(r.ngay)]));
+  const b5=[...ban].reverse().slice(0,5);
+  document.getElementById('d-ban').innerHTML=tbl(['SP','SL','Giá Bán','Ngày'],b5.map(r=>{const sp=nhap.find(n=>n.id==r.spId);return[sp?.ten||r.spN||'?',r.sl,fn(r.gia)+'₫',fd(r.ngay)];}));
+  const warn=tk.filter(r=>r.ton>0&&r.ton<=3);
+  document.getElementById('d-warn').innerHTML=warn.length?tbl(['SP','Tồn'],warn.map(r=>[r.ten,`<b style="color:var(--or)">${r.ton}</b>`])):'<p style="color:#94a3b8;font-size:12.5px">Không có cảnh báo ✅</p>';
+  const tu2=tu.filter(r=>r.ts==='Đang ứng').slice(0,5);
+  document.getElementById('d-tu').innerHTML=tbl(['NV','SP','SL','Hạn'],tu2.map(r=>[r.nv,r.spN||'?',r.sl,fd(r.han)]));
+}
+
+// ═══════════════════════════════════════════════════
+// NHẬP HÀNG & TÍNH TOÁN LỢI NHUẬN ĐẦU VÀO
+// ═══════════════════════════════════════════════════
+function calcNhapProfit(){
+  const gg = Number(v('n-gg')) || 0;
+  const lnCty17 = gg > 0 ? Math.round(gg / 83 * 17) : 0;
+  const minSell = gg + lnCty17;
+  const gbInput = v('n-gb');
+  let gb = Number(gbInput) || 0;
+  const lnBranch = Math.max(0, gb - minSell);
+
+  const gocEl = document.getElementById('nc-goc');
+  const cty17El = document.getElementById('nc-cty17');
+  const minSellEl = document.getElementById('nc-minsell');
+  const actSellEl = document.getElementById('nc-actsell');
+  const branchEl = document.getElementById('nc-branch');
+
+  if (gocEl) gocEl.innerHTML = `${fn(gg)} ₫ <small style="font-weight:normal;color:#0369a1">(83% vốn)</small>`;
+  if (cty17El) cty17El.innerHTML = `${fn(lnCty17)} ₫ / SP <small style="font-weight:normal;color:#1e40af">(17% trả Cty)</small>`;
+  if (minSellEl) minSellEl.innerHTML = `${fn(minSell)} ₫ / SP <small style="font-weight:normal;color:#9a3412">(Giá sàn thấp nhất)</small>`;
+  if (actSellEl) actSellEl.innerHTML = `${fn(gb)} ₫ / SP ${gb >= minSell ? `<small style="color:var(--gn)">✓ Đạt chuẩn</small>` : `<small style="color:var(--rd)">⚠️ Dưới giá sàn</small>`}`;
+  if (branchEl) branchEl.innerHTML = `<span style="color:${lnBranch > 0 ? 'var(--gn)' : '#64748b'};font-weight:700">${fn(lnBranch)} ₫ / SP</span>`;
+}
+
+function addNhap(){
+  const ten=v('n-ten'),sl=v('n-sl'),gg=v('n-gg');
+  if(!ten||!sl||!gg){al('Nhập đủ: Tên, SL, Giá gốc','er');return;}
+  const cost = +gg;
+  const lnCty = cost > 0 ? Math.round(cost / 83 * 17) : 0;
+  const minSell = cost + lnCty;
+  const actualSell = +v('n-gb') || minSell;
+  const lnBranch = Math.max(0, actualSell - minSell);
+
+  DB.add('nhap',{
+    ten,model:v('n-model'),serial:v('n-serial'),dm:v('n-dm'),
+    sl:+sl,gg:cost,lnCty,minSell,gb:actualSell,lnBranch,
+    ncc:v('n-ncc'),ngay:v('n-ngay')||td(),bh:+v('n-bh')||12,gc:v('n-gc')
+  });
+  al('✅ Đã lưu phiếu nhập!'); clrForm('n-'); calcNhapProfit(); rNhap();
+}
+
+function rNhap(){
+  const d=DB.g('nhap');
+  document.getElementById('t-nhap').innerHTML=tbl(['#','Tên SP','Model','DM','SL','Giá Gốc (83%)','LN Cty 17%','Giá Sàn (100%)','Giá Thực Bán','LN Chi Nhánh','NCC','BH','Ngày',''],
+    d.map((r,i)=>{
+      const gg = Number(r.gg || 0);
+      const lnCty = r.lnCty || (gg > 0 ? Math.round(gg / 83 * 17) : 0);
+      const minSell = r.minSell || (gg + lnCty);
+      const gb = Number(r.gb || 0) || minSell;
+      const lnBranch = r.lnBranch !== undefined ? r.lnBranch : Math.max(0, gb - minSell);
+      return [
+        i+1,
+        `<b>${r.ten}</b>`,
+        r.model||'-',
+        bk(r.dm,'bl'),
+        r.sl,
+        fn(gg)+'₫',
+        `<span style="color:#1e40af;font-weight:600">${fn(lnCty)}₫</span>`,
+        `<span style="color:var(--or);font-weight:600">${fn(minSell)}₫</span>`,
+        `<b>${fn(gb)}₫</b>`,
+        `<b style="color:${lnBranch>0?'var(--gn)':'#64748b'}">${fn(lnBranch)}₫</b>`,
+        r.ncc||'-',
+        (r.bh||'-')+'th',
+        fd(r.ngay),
+        `<button class="btn b-xs b-rd" onclick="del('nhap',${r.id},rNhap)">🗑</button>`
+      ];
+    }));
+}
+
+// ═══════════════════════════════════════════════════
+// TỒN KHO
+// ═══════════════════════════════════════════════════
+function renderTK(){
+  const q=(v('sk-q')||'').toLowerCase(),dm=v('sk-dm');
+  const allData=getTK();
+  const data=allData.filter(r=>(!q||(r.ten+r.model).toLowerCase().includes(q))&&(!dm||r.dm===dm));
+
+  // Tính tổng các chỉ số
+  const totNhap = allData.reduce((s,r)=>s+r.nhap,0);
+  const totBan  = allData.reduce((s,r)=>s+r.ban,0);
+  const totPP   = allData.reduce((s,r)=>s+r.pp,0);
+  const totKG   = allData.reduce((s,r)=>s+r.kg,0);
+  const totTU   = allData.reduce((s,r)=>s+r.tu,0);
+  const totTon  = allData.reduce((s,r)=>s+r.ton,0);
+  const totKD   = allData.reduce((s,r)=>s+r.khaDung,0);
+  const totVal  = allData.reduce((s,r)=>s+r.giaTriTon,0);
+
+  // Thẻ tổng quan
+  const cardsHtml = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px">
+      <div class="card c-bl"><div class="lbl2">📦 Đã Nhập</div><div class="val">${totNhap}</div><div class="sub">Toàn bộ kho</div></div>
+      <div class="card c-gn"><div class="lbl2">🛒 Đã Bán</div><div class="val">${totBan}</div><div class="sub">Khách lẻ & DN</div></div>
+      <div class="card c-or"><div class="lbl2">📋 Đang Ký Gởi</div><div class="val">${totKG}</div><div class="sub">Tại các điểm bán</div></div>
+      <div class="card c-pu"><div class="lbl2">🧑‍💼 Đang Tạm Ứng</div><div class="val">${totTU}</div><div class="sub">NV demo / bán</div></div>
+      <div class="card c-yw"><div class="lbl2">🗄️ Tồn Kho Tổng</div><div class="val">${totTon}</div><div class="sub">Nhập - Bán - PP</div></div>
+      <div class="card c-gn"><div class="lbl2">🟢 Tồn Khả Dụng</div><div class="val">${totKD}</div><div class="sub">Sẵn sàng xuất</div></div>
+      <div class="card c-bl"><div class="lbl2">💰 Giá Trị Tồn Gốc</div><div class="val" style="font-size:16px">${fn(totVal)}₫</div><div class="sub">Theo giá vốn (83%)</div></div>
+    </div>`;
+
+  const warn=data.filter(r=>r.ton>0&&r.ton<=3);
+  const warnHtml = warn.length?`<div class="warn">⚠️ Sắp hết hàng: ${warn.map(r=>`<b>${r.ten}</b> (Tồn: ${r.ton} | Khả dụng: ${r.khaDung})`).join(', ')}</div>`:'';
+  
+  document.getElementById('tk-warn').innerHTML = cardsHtml + warnHtml;
+  document.getElementById('t-tonkho').innerHTML=tbl(
+    ['Tên SP','Model','DM','Đã Nhập','Đã Bán','Ký Gởi','Tồn Kho','Khả Dụng','Giá Gốc (83%)','LN Cty 17%','Giá Sàn (100%)','Giá Thực Bán','LN Chi Nhánh','Tổng LN Cty','Tổng LN Chi Nhánh','Giá Trị Tồn Gốc','Trạng Thái'],
+    data.map(r=>{
+      const gg = Number(r.giagoc || 0);
+      const lnCty = gg > 0 ? Math.round(gg / 83 * 17) : 0;
+      const minSell = gg + lnCty;
+      const gb = Number(r.giaban || 0) || minSell;
+      const lnBranch = Math.max(0, gb - minSell);
+      const totLnCty = r.ban * lnCty;
+      const totLnBranch = r.ban * lnBranch;
+      const valTonGoc = r.ton * gg;
+      return [
+        `<b>${r.ten}</b>`,
+        r.model||'-',
+        bk(r.dm,'bl'),
+        r.nhap,
+        `<b style="color:var(--gn)">${r.ban}</b>`,
+        `<span style="color:var(--or);font-weight:600">${r.kg}</span>`,
+        `<b>${r.ton}</b>`,
+        `<b style="color:${r.khaDung>0?'var(--gn)':'var(--rd)'}">${r.khaDung}</b>`,
+        fn(gg)+'₫',
+        `<span style="color:#1e40af;font-weight:600">${fn(lnCty)}₫</span>`,
+        `<span style="color:var(--or);font-weight:600">${fn(minSell)}₫</span>`,
+        `<b>${fn(gb)}₫</b>`,
+        `<b style="color:${lnBranch>0?'var(--gn)':'#64748b'}">${fn(lnBranch)}₫</b>`,
+        `<span style="color:#1e40af;font-weight:700">${fn(totLnCty)}₫</span>`,
+        `<span style="color:var(--gn);font-weight:700">${fn(totLnBranch)}₫</span>`,
+        fn(valTonGoc)+'₫',
+        r.khaDung>5?bk('Sẵn hàng','gn'):r.khaDung>0?bk('Sắp hết','or'):bk('Hết hàng','rd')
+      ];
+    })
+  );
+}
+
+// ═══════════════════════════════════════════════════
+// TẠM ỨNG HÀNG
+// ═══════════════════════════════════════════════════
+function addTamUng(){
+  const nv=v('tu-nv'),spId=v('tu-sp'),sl=v('tu-sl');
+  if(!nv||!spId||!sl){al('Nhập đủ: NV, SP, SL','er');return;}
+  const sp=getTK().find(r=>r.id==spId);
+  if(+sl>sp.ton){al(`Không đủ hàng! Tồn: ${sp.ton}`,'er');return;}
+  DB.add('tamung',{nv,ma:v('tu-ma'),spId:+spId,spN:sp.ten,sl:+sl,md:v('tu-md'),ngay:v('tu-ngay')||td(),han:v('tu-han'),gc:v('tu-gc'),ts:'Đang ứng'});
+  al('✅ Đã ghi nhận tạm ứng!'); clrForm('tu-'); rTU(); popSP(['b-sp','pp-sp','kg-sp']);
+}
+function rTU(){
+  popSP(['tu-sp']);
+  const d=DB.g('tamung');
+  document.getElementById('t-tamung').innerHTML=tbl(['#','Nhân Viên','Mã NV','Sản Phẩm','SL','Mục Đích','Ngày Lấy','Hạn HT','Trạng Thái',''],
+    d.map((r,i)=>[i+1,r.nv,r.ma||'-',r.spN,r.sl,r.md,fd(r.ngay),fd(r.han)||'-',
+      bk(r.ts,r.ts==='Đang ứng'?'or':r.ts==='Đã hoàn trả'?'gn':'rd'),
+      `<button class="btn b-xs b-gn" onclick="updTU(${r.id},'Đã hoàn trả')">↩ Hoàn</button>
+       <button class="btn b-xs b-rd" onclick="del('tamung',${r.id},rTU)">🗑</button>`]));
+}
+function updTU(id,ts){let d=DB.g('tamung');d=d.map(r=>r.id==id?{...r,ts}:r);DB.s('tamung',d);rTU();al('✅ Cập nhật!');}
+
+// ═══════════════════════════════════════════════════
+// BÁN HÀNG
+// ═══════════════════════════════════════════════════
+function addBan(){
+  const spId=v('b-sp'),sl=v('b-sl'),gia=v('b-gia');
+  if(!spId||!sl||!gia){al('Chọn SP, nhập SL và giá','er');return;}
+  const sp=getTK().find(r=>r.id==spId);
+  if(+sl>sp.ton){al(`Không đủ hàng! Tồn: ${sp.ton}`,'er');return;}
+  DB.add('ban',{
+    spId:+spId,
+    spN:sp.ten,
+    sl:+sl,
+    serial:v('b-serial')||'',
+    gia:+gia,
+    kh:v('b-kh'),
+    dt:v('b-dt'),
+    photo:v('b-photo')||'',
+    tt:v('b-tt'),
+    ngay:v('b-ngay')||td(),
+    kenh:v('b-kenh'),
+    gc:v('b-gc')
+  });
+  al('✅ Đã ghi nhận đơn bán!'); clrForm('b-'); rBan(); popSP(['b-sp']);
+}
+function rBan(){
+  const nhap=DB.g('nhap'),ban=DB.g('ban');
+  document.getElementById('t-ban').innerHTML=tbl(['#','SP','SL','Serial','Giá Bán','Lợi Nhuận','Khách Hàng','SĐT','Ảnh Drive','TT','Kênh','Ngày',''],
+    ban.map((r,i)=>{
+      const sp=nhap.find(n=>n.id==r.spId),ln=(r.gia-Number(sp?.gg||0))*r.sl;
+      const photoHtml = r.photo ? `<a href="${r.photo}" target="_blank" style="color:var(--bl);text-decoration:none">📷 Xem ảnh</a>` : '-';
+      return [
+        i+1,
+        r.spN,
+        r.sl,
+        r.serial ? `<code style="background:#f1f5f9;padding:1px 4px;border-radius:3px">${r.serial}</code>` : '-',
+        fn(r.gia)+'₫',
+        `<span style="color:${ln>=0?'var(--gn)':'var(--rd)'};font-weight:600">${fn(ln)}₫</span>`,
+        r.kh||'-',
+        r.dt||'-',
+        photoHtml,
+        bk(r.tt,r.tt==='Công nợ'?'or':'gn'),
+        bk(r.kenh,'bl'),
+        fd(r.ngay),
+        `<button class="btn b-xs b-rd" onclick="del('ban',${r.id},()=>{rBan();popSP(['b-sp']);})">🗑</button>`
+      ];
+    }));
+}
+
+// ═══════════════════════════════════════════════════
+// BÁO GIÁ — QUOTATION ROWS
+// ═══════════════════════════════════════════════════
+function addQRow(containerId){
+  const c=document.getElementById(containerId);
+  const d=document.createElement('div');d.className='qrow';
+  d.innerHTML=`<input placeholder="Tên thiết bị / hạng mục" style="flex:2;min-width:150px" oninput="calcQ('${containerId}')"/>
+    <input placeholder="Đơn vị" style="width:60px" oninput="calcQ('${containerId}')"/>
+    <input type="number" placeholder="SL" style="width:55px" oninput="calcQ('${containerId}')"/>
+    <input type="number" placeholder="Đơn giá (₫)" style="width:120px" oninput="calcQ('${containerId}')"/>
+    <span style="min-width:90px;text-align:right;font-weight:600;color:var(--bl)">0 ₫</span>
+    <button class="btn b-xs b-rd" onclick="this.parentNode.remove();calcQ('${containerId}')">✕</button>`;
+  c.appendChild(d);
+}
+function calcQ(cid){
+  const rows=document.getElementById(cid).children;
+  let total=0;
+  for(let r of rows){
+    const sl=+r.children[2].value||0,dg=+r.children[3].value||0,tt=sl*dg;
+    r.children[4].textContent=fn(tt)+' ₫';total+=tt;
+  }
+  const tid=cid.replace('items','total');
+  const el=document.getElementById(tid);
+  if(el){
+    el.querySelector('.big').textContent=fn(total)+' ₫';
+    const note=el.querySelector('#qs-note');
+    if(note&&total>0){note.textContent=`≈ ${fn(Math.round(total/1000000))} triệu | Thu hồi vốn ~${Math.round(60/((total/1000000)*0.15))} năm (giả định)`;}
+  }
+}
+
+// Preset Solar
+function presetSolar(type){
+  const c=document.getElementById('qs-items');c.innerHTML='';
+  const presets={
+    ongrid:[['Tấm pin Solar 400W Monocrystalline','Tấm',10,2500000],['Inverter Growatt 5kW On-Grid','Bộ',1,17000000],['Khung giá đỡ Inox','Bộ',1,3500000],['Dây cáp DC Solar 4mm²','Mét',80,25000],['Hộp tủ điện AC/DC','Bộ',1,2000000],['Công lắp đặt & thi công','Gói',1,5000000]],
+    offgrid:[['Tấm pin Solar 400W Poly','Tấm',6,2300000],['Inverter Off-Grid 3kW','Bộ',1,9000000],['Ắc quy GEL 200Ah 12V','Cái',4,7500000],['Khung giá đỡ','Bộ',1,2800000],['Bộ điều khiển sạc 60A','Bộ',1,1500000],['Công lắp đặt','Gói',1,4000000]],
+    hybrid:[['Tấm pin Solar 400W Mono','Tấm',12,2500000],['Hybrid Inverter 5kW Growatt','Bộ',1,22000000],['Pin Lithium LFP 15kWh','Bộ',1,85000000],['Khung giá đỡ','Bộ',1,4000000],['Tủ điện & đấu nối','Bộ',1,3500000],['Công lắp đặt & thi công','Gói',1,8000000]]
+  };
+  (presets[type]||[]).forEach(([ten,dv,sl,dg])=>{
+    addQRow('qs-items');
+    const r=c.lastElementChild;
+    r.children[0].value=ten;r.children[1].value=dv;r.children[2].value=sl;r.children[3].value=dg;
+  });
+  calcQ('qs-items');
+}
+
+function saveQuote(type){
+  const prefix=type==='ups'?'qu':'qs';
+  const kh=v(prefix+'-kh'); if(!kh){al('Nhập tên khách hàng','er');return;}
+  const rows=[...document.getElementById(prefix+'-items').children].map(r=>({ten:r.children[0].value,dv:r.children[1].value,sl:+r.children[2].value,dg:+r.children[3].value}));
+  const total=rows.reduce((s,r)=>s+r.sl*r.dg,0);
+  DB.add('quote'+type,{kh,dt:v(prefix+'-dt'),dc:v(prefix+'-dc'),nlbg:v(prefix+'-nlbg'),ngay:v(prefix+'-ngay')||td(),hl:v(prefix+'-hl')||7,rows,total,loai:type==='solar'?v('qs-loai'):'UPS',cs:v('qs-cs')||''});
+  al(`✅ Đã lưu báo giá ${type.toUpperCase()}!`);
+  if(type==='ups') rQuUPS(); else rQuSolar();
+}
+function rQuUPS(){
+  const d=DB.g('quoteups');
+  document.getElementById('t-quups').innerHTML=tbl(['#','Khách','ĐT','Tổng BG','Ngày','HLực',''],
+    d.map((r,i)=>[i+1,r.kh,r.dt||'-',`<b>${fn(r.total)}₫</b>`,fd(r.ngay),r.hl+'ng',
+      `<button class="btn b-xs b-out" onclick="viewQuote('ups',${r.id})">👁</button>
+       <button class="btn b-xs b-rd" onclick="del('quoteups',${r.id},rQuUPS)">🗑</button>`]));
+}
+function rQuSolar(){
+  const d=DB.g('quotesolar');
+  document.getElementById('t-qusolar').innerHTML=tbl(['#','Khách','Loại HT','CS','Tổng BG','Ngày',''],
+    d.map((r,i)=>[i+1,r.kh,bk(r.loai,'yw'),r.cs?r.cs+'kWp':'-',`<b>${fn(r.total)}₫</b>`,fd(r.ngay),
+      `<button class="btn b-xs b-out" onclick="viewQuote('solar',${r.id})">👁</button>
+       <button class="btn b-xs b-rd" onclick="del('quotesolar',${r.id},rQuSolar)">🗑</button>`]));
+}
+function viewQuote(type,id){
+  const d=DB.g('quote'+type).find(r=>r.id==id); if(!d) return;
+  const rows=d.rows.map(r=>`<tr><td>${r.ten}</td><td style="text-align:center">${r.dv}</td><td style="text-align:center">${r.sl}</td><td style="text-align:right">${fn(r.dg)}</td><td style="text-align:right;font-weight:600">${fn(r.sl*r.dg)}</td></tr>`).join('');
+  const html=`<html><head><meta charset="UTF-8"><title>Báo Giá</title>
+  <style>body{font-family:'Segoe UI',sans-serif;padding:30px;color:#1e293b}h2{color:#1d4ed8}table{width:100%;border-collapse:collapse;margin-top:16px}th{background:#f1f5f9;padding:8px;font-size:13px}td{padding:8px;border-bottom:1px solid #e2e8f0;font-size:13px}.total{font-size:18px;font-weight:700;color:#16a34a;text-align:right;margin-top:10px;padding:10px 0}</style></head>
+  <body><h2>${type==='solar'?'☀️ BÁO GIÁ HỆ THỐNG SOLAR':'📄 BÁO GIÁ UPS'}</h2>
+  <p><b>Khách hàng:</b> ${d.kh} &nbsp;|&nbsp; <b>ĐT:</b> ${d.dt||'-'}</p>
+  <p><b>Địa chỉ:</b> ${d.dc||'-'} &nbsp;|&nbsp; ${type==='solar'?`<b>Loại hệ:</b> ${d.loai} | <b>CS:</b> ${d.cs||'-'}kWp`:''}</p>
+  <p><b>Ngày:</b> ${fd(d.ngay)} &nbsp;|&nbsp; <b>Hiệu lực:</b> ${d.hl} ngày &nbsp;|&nbsp; <b>Người lập:</b> ${d.nlbg||'-'}</p>
+  <table><thead><tr><th>Hạng Mục / Thiết Bị</th><th>ĐV</th><th>SL</th><th>Đơn Giá (₫)</th><th>Thành Tiền (₫)</th></tr></thead><tbody>${rows}</tbody></table>
+  <div class="total">TỔNG: ${fn(d.total)} ₫</div>
+  <p style="font-size:12px;color:#64748b;margin-top:20px">* Báo giá có hiệu lực ${d.hl} ngày kể từ ngày lập. Giá chưa bao gồm VAT.</p>
+  </body></html>`;
+  const w=window.open('','_blank');w.document.write(html);w.document.close();w.print();
+}
+function printQuote(type){saveQuote(type);}
+
+// ═══════════════════════════════════════════════════
+// ĐẠI LÝ & PHÂN PHỐI
+// ═══════════════════════════════════════════════════
+function addDL(){
+  const ten=v('dl-ten'); if(!ten){al('Nhập tên đại lý','er');return;}
+  DB.add('daily',{ten,chu:v('dl-chu'),dt:v('dl-dt'),dc:v('dl-dc'),kv:v('dl-kv'),loai:v('dl-loai'),ck:+v('dl-ck')||0});
+  al('✅ Đã thêm đại lý!'); tog('fdl'); clrForm('dl-'); rDL(); popDL();
+}
+function rDL(){
+  document.getElementById('t-daily').innerHTML=tbl(['#','Tên Đại Lý','Chủ','ĐT','Khu Vực','Loại','CK%',''],
+    DB.g('daily').map((r,i)=>[i+1,r.ten,r.chu||'-',r.dt||'-',r.kv,bk(r.loai,'bl'),r.ck||0,
+      `<button class="btn b-xs b-rd" onclick="del('daily',${r.id},()=>{rDL();popDL();})">🗑</button>`]));
+}
+function addPP(){
+  const dlId=v('pp-dl'),spId=v('pp-sp'),sl=v('pp-sl');
+  if(!dlId||!spId||!sl){al('Chọn đại lý, SP và SL','er');return;}
+  const sp=getTK().find(r=>r.id==spId),dl=DB.g('daily').find(r=>r.id==dlId);
+  if(+sl>sp.ton){al(`Không đủ hàng! Tồn: ${sp.ton}`,'er');return;}
+  DB.add('pp',{dlId:+dlId,dlN:dl.ten,spId:+spId,spN:sp.ten,sl:+sl,gia:+v('pp-gia'),ngay:v('pp-ngay')||td(),gc:v('pp-gc')});
+  al('✅ Đã phân phối!'); clrForm('pp-'); renderPP(); popSP(['pp-sp']);
+}
+function renderPP(){
+  document.getElementById('t-pp').innerHTML=tbl(['#','Đại Lý','Sản Phẩm','SL','Giá Sỉ','Thành Tiền','Ngày',''],
+    DB.g('pp').map((r,i)=>[i+1,r.dlN,r.spN,r.sl,fn(r.gia)+'₫',fn(r.gia*r.sl)+'₫',fd(r.ngay),
+      `<button class="btn b-xs b-rd" onclick="del('pp',${r.id},()=>{renderPP();popSP(['pp-sp']);})">🗑</button>`]));
+}
+
+// ═══════════════════════════════════════════════════
+// KÝ GỞI (HỖ TRỢ TÍNH TOÁN 17% CHIẾT KHẤU ĐIỂM BÁN & LỢI NHUẬN CÒN LẠI CTY)
+// ═══════════════════════════════════════════════════
+function calcKGProfit(){
+  const spId = v('kg-sp');
+  const sl = Number(v('kg-sl')) || 0;
+  const giaBan = Number(v('kg-gia')) || 0;
+  const nhap = DB.g('nhap');
+  const sp = nhap.find(r => r.id == spId);
+  const giaGoc = Number(sp?.gg || 0);
+
+  const tongDoanhThu = sl * giaBan;
+  const hh17DonVi = Math.round(giaBan * 0.17);
+  const tongHH17 = sl * hh17DonVi;
+  const lnCtyDonVi = (giaBan - giaGoc) - hh17DonVi;
+  const tongLNCty = sl * lnCtyDonVi;
+  const pctCty = giaBan > 0 ? ((lnCtyDonVi / giaBan) * 100).toFixed(1) : 0;
+
+  const ggEl = document.getElementById('kg-c-gg');
+  const ttEl = document.getElementById('kg-c-tt');
+  const hhEl = document.getElementById('kg-c-hh');
+  const lnEl = document.getElementById('kg-c-ln');
+
+  if (ggEl) ggEl.textContent = `${fn(giaGoc)} ₫ / SP`;
+  if (ttEl) ttEl.textContent = `${fn(tongDoanhThu)} ₫ (${sl} SP)`;
+  if (hhEl) hhEl.innerHTML = `${fn(tongHH17)} ₫ <small style="font-weight:normal;color:#c2410c">(${fn(hh17DonVi)}₫/SP - 17%)</small>`;
+  if (lnEl) lnEl.innerHTML = `<span style="color:${tongLNCty >= 0 ? 'var(--gn)' : 'var(--rd)'}">${fn(tongLNCty)} ₫</span> <small style="font-weight:normal;color:#64748b">(${fn(lnCtyDonVi)}₫/SP ~ ${pctCty}%)</small>`;
+}
+
+function addKG(){
+  const db=v('kg-db'),spId=v('kg-sp'),sl=v('kg-sl');
+  if(!db||!spId||!sl){al('Điền đủ điểm bán, SP, SL','er');return;}
+  const sp=DB.g('nhap').find(r=>r.id==spId);
+  const giaBan = Number(v('kg-gia')) || Number(sp?.gb || 0);
+  const giaGoc = Number(sp?.gg || 0);
+  const hh17 = Math.round(giaBan * 0.17);
+  const lnCty = (giaBan - giaGoc) - hh17;
+
+  DB.add('kygoi',{
+    db,
+    nn:v('kg-nn'),
+    dt:v('kg-dt'),
+    spId:+spId,
+    spN:sp?.ten||'?',
+    model:sp?.model||'-',
+    sl:+sl,
+    giagoc: giaGoc,
+    gia: giaBan,
+    hh17: hh17,
+    lnCty: lnCty,
+    tongHH17: hh17 * (+sl),
+    tongLNCty: lnCty * (+sl),
+    ngay:v('kg-ngay')||td(),
+    han:v('kg-han')||30,
+    ts:'Đang gởi'
+  });
+  al('✅ Đã tạo phiếu ký gởi!'); clrForm('kg-'); calcKGProfit(); rKG();
+}
+
+function rKG(){
+  popSP(['kg-sp']);
+  const nhap = DB.g('nhap');
+  const d = DB.g('kygoi');
+
+  document.getElementById('t-kygoi').innerHTML=tbl(
+    ['#','Điểm Bán','SP','SL','Giá Gốc','Giá Bán','17% Điểm Bán','LN Còn Lại Cty','Ngày','Hạn','Trạng Thái',''],
+    d.map((r,i)=>{
+      const sp = nhap.find(n => n.id == r.spId);
+      const gg = r.giagoc !== undefined ? r.giagoc : Number(sp?.gg || 0);
+      const gb = r.gia || 0;
+      const hh17 = r.hh17 !== undefined ? r.hh17 : Math.round(gb * 0.17);
+      const lnCty = r.lnCty !== undefined ? r.lnCty : ((gb - gg) - hh17);
+      const tongHH17 = r.tongHH17 !== undefined ? r.tongHH17 : (hh17 * r.sl);
+      const tongLNCty = r.tongLNCty !== undefined ? r.tongLNCty : (lnCty * r.sl);
+
+      return [
+        i+1,
+        `<b>${r.db}</b><br><small style="color:#64748b">${r.nn||'-'} (${r.dt||'-'})</small>`,
+        r.spN,
+        `<b>${r.sl}</b>`,
+        fn(gg)+'₫',
+        fn(gb)+'₫',
+        `<span style="color:var(--or);font-weight:600">${fn(tongHH17)}₫</span><br><small style="color:#64748b">(${fn(hh17)}₫/sp)</small>`,
+        `<b style="color:${tongLNCty>=0?'var(--gn)':'var(--rd)'}">${fn(tongLNCty)}₫</b><br><small style="color:#64748b">(${fn(lnCty)}₫/sp)</small>`,
+        fd(r.ngay),
+        r.han+'ng',
+        bk(r.ts,r.ts==='Đang gởi'?'or':r.ts==='Đã bán'?'gn':'gy'),
+        `<button class="btn b-xs b-gn" onclick="updKG(${r.id},'Đã bán')">✅ Bán</button>
+         <button class="btn b-xs b-gy" onclick="updKG(${r.id},'Đã thu hồi')">↩</button>
+         <button class="btn b-xs b-rd" onclick="del('kygoi',${r.id},rKG)">🗑</button>`
+      ];
+    })
+  );
+}
+function updKG(id,ts){let d=DB.g('kygoi');d=d.map(r=>r.id==id?{...r,ts}:r);DB.s('kygoi',d);rKG();}
+
+// ═══════════════════════════════════════════════════
+// CRM
+// ═══════════════════════════════════════════════════
+function addKH(){const ten=v('kh-ten');if(!ten){al('Nhập tên','er');return;}
+  DB.add('kh',{ten,dt:v('kh-dt'),em:v('kh-em'),cty:v('kh-cty'),dc:v('kh-dc'),loai:v('kh-loai'),qt:v('kh-qt'),gc:v('kh-gc'),ngay:td()});
+  al('✅ Đã lưu!');tog('fkh');clrForm('kh-');rKH();}
+function rKH(){document.getElementById('t-kh').innerHTML=tbl(['#','Họ Tên','ĐT','Công Ty','Loại','Q.Tâm',''],
+  DB.g('kh').map((r,i)=>[i+1,r.ten,r.dt||'-',r.cty||'-',bk(r.loai,'bl'),bk(r.qt,'or'),
+    `<button class="btn b-xs b-rd" onclick="del('kh',${r.id},rKH)">🗑</button>`]));}
+
+function addKS(){const ten=v('ks-ten');if(!ten){al('Nhập tên','er');return;}
+  DB.add('khaosat',{ten,nks:v('ks-nks'),dd:v('ks-dd'),ngay:v('ks-ngay')||td(),nc:v('ks-nc'),th:v('ks-th'),mg:v('ks-mg'),tn:v('ks-tn'),nx:v('ks-nx')});
+  al('✅ Đã lưu!');clrForm('ks-');rKS();}
+function rKS(){document.getElementById('t-ks').innerHTML=tbl(['#','Đại Lý','Người KS','NC/tháng','Đang Bán','Tiềm Năng','Ngày'],
+  DB.g('khaosat').map((r,i)=>[i+1,r.ten,r.nks||'-',r.nc||'-',r.th||'-',
+    bk(r.tn,r.tn==='Cao'?'gn':r.tn==='Trung bình'?'or':'rd'),fd(r.ngay)]));}
+
+function addLK(){const ten=v('lk-ten');if(!ten){al('Nhập tên','er');return;}
+  DB.add('lienlac',{ten,dt:v('lk-dt'),ht:v('lk-ht'),ngay:v('lk-ngay')||td(),nd:v('lk-nd'),hd:v('lk-hd'),fu:v('lk-fu')});
+  al('✅ Đã lưu!');clrForm('lk-');rLK();}
+function rLK(){document.getElementById('t-lk').innerHTML=tbl(['#','Khách/ĐL','Hình Thức','Ngày','Hành Động Tiếp','Follow-up',''],
+  DB.g('lienlac').map((r,i)=>[i+1,r.ten,bk(r.ht,'bl'),fd(r.ngay),r.hd||'-',fd(r.fu)||'-',
+    `<button class="btn b-xs b-rd" onclick="del('lienlac',${r.id},rLK)">🗑</button>`]));}
+
+// ═══════════════════════════════════════════════════
+// LỢI NHUẬN (BÁN TRỰC TIẾP & KÝ GỞI 17%)
+// ═══════════════════════════════════════════════════
+function renderLN(){
+  const nhap=DB.g('nhap'),ban=DB.g('ban'),kg=DB.g('kygoi'),f=v('ln-f')||'all';
+  const now=new Date();
+
+  // Lọc theo thời gian
+  const filterDate = (dateStr) => {
+    if (f === 'all') return true;
+    const d = new Date(dateStr);
+    if (f === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    if (f === 'week') { const w = new Date(now); w.setDate(now.getDate() - 7); return d >= w; }
+    return true;
+  };
+
+  // 1. Đơn bán trực tiếp
+  const fb = ban.filter(r => filterDate(r.ngay));
+  const vonTrucTiep = fb.reduce((s,r)=>{ const sp = nhap.find(n => n.id == r.spId); return s + Number(sp?.gg || 0) * r.sl; }, 0);
+  const dtTrucTiep = fb.reduce((s,r) => s + r.gia * r.sl, 0);
+  const lnTrucTiep = dtTrucTiep - vonTrucTiep;
+
+  // 2. Ký gởi (Đã bán và Đang gởi)
+  const fkg = kg.filter(r => filterDate(r.ngay));
+  const kgDaBan = fkg.filter(r => r.ts === 'Đã bán');
+  const kgDangGoi = fkg.filter(r => r.ts === 'Đang gởi');
+
+  const dtKGBan = kgDaBan.reduce((s, r) => s + (r.gia * r.sl), 0);
+  const vonKGBan = kgDaBan.reduce((s, r) => { const sp = nhap.find(n => n.id == r.spId); return s + (Number(r.giagoc || sp?.gg || 0) * r.sl); }, 0);
+  const hh17KGBan = kgDaBan.reduce((s, r) => s + (r.tongHH17 || (Math.round(r.gia * 0.17) * r.sl)), 0);
+  const lnCtyKGBan = (dtKGBan - vonKGBan) - hh17KGBan;
+
+  const dtKGDangGoi = kgDangGoi.reduce((s, r) => s + (r.gia * r.sl), 0);
+  const hh17KGDangGoi = kgDangGoi.reduce((s, r) => s + (r.tongHH17 || (Math.round(r.gia * 0.17) * r.sl)), 0);
+
+  // 3. Tổng hợp toàn diện
+  const tongDoanhThuThuc = dtTrucTiep + dtKGBan;
+  const tongVonThuc = vonTrucTiep + vonKGBan;
+  const tongLNRongCty = lnTrucTiep + lnCtyKGBan;
+  const tsRong = tongDoanhThuThuc > 0 ? ((tongLNRongCty / tongDoanhThuThuc) * 100).toFixed(1) : 0;
+
+  document.getElementById('ln-cards').innerHTML = `
+    <div class="card c-bl"><div class="lbl2">💸 Tổng Vốn Hàng Bán</div><div class="val">${fn(tongVonThuc)}₫</div><div class="sub">Trực tiếp + Ký gởi đã bán</div></div>
+    <div class="card c-gn"><div class="lbl2">💵 Doanh Thu Thực</div><div class="val">${fn(tongDoanhThuThuc)}₫</div><div class="sub">${fb.length} đơn bán + ${kgDaBan.length} ký gởi bán</div></div>
+    <div class="card c-or"><div class="lbl2">🤝 17% Ký Gởi Đã Chia</div><div class="val">${fn(hh17KGBan)}₫</div><div class="sub">Hoa hồng cho điểm bán</div></div>
+    <div class="card c-pu"><div class="lbl2">💎 LN Thuần Còn Lại Cty</div><div class="val">${fn(tongLNRongCty)}₫</div><div class="sub">Tỷ suất ròng: ${tsRong}%</div></div>`;
+
+  document.getElementById('ln-detail').innerHTML = `
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd);font-size:13px">
+      <span>1. Bán hàng trực tiếp</span>
+      <span>DT: <b>${fn(dtTrucTiep)}₫</b> | LN: <b style="color:var(--gn)">${fn(lnTrucTiep)}₫</b></span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd);font-size:13px">
+      <span>2. Ký gởi đã bán (Đại lý/Điểm bán)</span>
+      <span>DT: <b>${fn(dtKGBan)}₫</b> | 17% HH: <b style="color:var(--or)">${fn(hh17KGBan)}₫</b></span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd);font-size:13px">
+      <span>3. Lợi nhuận cty từ ký gởi đã bán</span>
+      <span style="color:var(--gn);font-weight:700">${fn(lnCtyKGBan)}₫</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd);font-size:13px">
+      <span>4. Ký gởi đang chạy (Dự kiến)</span>
+      <span>DT dự kiến: ${fn(dtKGDangGoi)}₫ | 17% HH: ${fn(hh17KGDangGoi)}₫</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:12px 0;font-size:15px;font-weight:700">
+      <span style="color:var(--bl)">TỔNG LỢI NHUẬN RÒNG CTY THỰC NHẬN</span>
+      <span style="color:${tongLNRongCty >= 0 ? 'var(--gn)' : 'var(--rd)'}">${fn(tongLNRongCty)}₫ (${tsRong}%)</span>
+    </div>`;
+
+  const byP={};
+  fb.forEach(r=>{
+    const sp=nhap.find(n=>n.id==r.spId),k=r.spN||sp?.ten||'?';
+    if(!byP[k]) byP[k]={ten:k,sl:0,dt:0,von:0,hh17:0,lnCty:0};
+    byP[k].sl+=r.sl; byP[k].dt+=r.gia*r.sl; byP[k].von+=Number(sp?.gg||0)*r.sl;
+    byP[k].lnCty+=(r.gia-Number(sp?.gg||0))*r.sl;
+  });
+  kgDaBan.forEach(r=>{
+    const sp=nhap.find(n=>n.id==r.spId),k=r.spN||sp?.ten||'?';
+    if(!byP[k]) byP[k]={ten:k,sl:0,dt:0,von:0,hh17:0,lnCty:0};
+    const v0 = Number(r.giagoc||sp?.gg||0)*r.sl;
+    const dt0 = r.gia*r.sl;
+    const hh0 = r.tongHH17 || (Math.round(r.gia*0.17)*r.sl);
+    byP[k].sl+=r.sl; byP[k].dt+=dt0; byP[k].von+=v0; byP[k].hh17+=hh0;
+    byP[k].lnCty+=((dt0 - v0) - hh0);
+  });
+
+  document.getElementById('ln-sp').innerHTML=tbl(['Sản Phẩm','SL Bán','Doanh Thu','17% Ký Gởi','LN Thuần Cty','Tỷ Suất'],
+    Object.values(byP).map(r=>{
+      const t=r.dt>0?((r.lnCty/r.dt)*100).toFixed(1):0;
+      return [
+        `<b>${r.ten}</b>`,
+        r.sl,
+        fn(r.dt)+'₫',
+        `<span style="color:var(--or);font-weight:600">${fn(r.hh17)}₫</span>`,
+        `<span style="color:${r.lnCty>=0?'var(--gn)':'var(--rd)'};font-weight:700">${fn(r.lnCty)}₫</span>`,
+        `<span style="color:${r.lnCty>=0?'var(--gn)':'var(--rd)'}">${t}%</span>`
+      ];
+    }));
+}
+
+// ═══════════════════════════════════════════════════
+// BÁO CÁO TỔNG
+// ═══════════════════════════════════════════════════
+function rBC(){
+  const tk=getTK(),ban=DB.g('ban'),dl=DB.g('daily'),kg=DB.g('kygoi'),tu=DB.g('tamung');
+  const dt=ban.reduce((s,r)=>s+r.gia*r.sl,0);
+  document.getElementById('bc-c').innerHTML=`
+    <div class="card c-bl"><div class="lbl2">Mã Hàng</div><div class="val">${DB.g('nhap').length}</div></div>
+    <div class="card c-gn"><div class="lbl2">Đơn Bán</div><div class="val">${ban.length}</div></div>
+    <div class="card c-or"><div class="lbl2">Doanh Thu</div><div class="val">${fn(dt)}₫</div></div>
+    <div class="card c-pu"><div class="lbl2">Đại Lý</div><div class="val">${dl.length}</div></div>
+    <div class="card c-yw"><div class="lbl2">Ký Gởi Đang Chạy</div><div class="val">${kg.filter(r=>r.ts==='Đang gởi').length}</div></div>
+    <div class="card c-rd"><div class="lbl2">Tạm Ứng Đang Mở</div><div class="val">${tu.filter(r=>r.ts==='Đang ứng').length}</div></div>`;
+  document.getElementById('t-bc').innerHTML=tbl(['SP','Model','DM','Nhập','Bán','Tồn','Giá Gốc','Giá Bán','Trạng Thái'],
+    tk.map(r=>[r.ten,r.model||'-',bk(r.dm,'bl'),r.nhap,r.ban,r.ton,fn(r.giagoc)+'₫',fn(r.giaban)+'₫',
+      r.ton>5?bk('Đủ hàng','gn'):r.ton>0?bk('Sắp hết','or'):bk('Hết hàng','rd')]));
+}
+
+// ═══════════════════════════════════════════════════
+// EXPORT CSV
+// ═══════════════════════════════════════════════════
+function exportCSV(){
+  const nhap=DB.g('nhap'),ban=DB.g('ban');
+  const rows=[['Ngày','Sản Phẩm','SL','Giá Bán','Giá Gốc','Lợi Nhuận','Khách','Kênh','TT']];
+  ban.forEach(r=>{const sp=nhap.find(n=>n.id==r.spId),ln=(r.gia-Number(sp?.gg||0))*r.sl;
+    rows.push([r.ngay,r.spN,r.sl,r.gia,sp?.gg||0,ln,r.kh||'',r.kenh||'',r.tt||'']);});
+  const csv=rows.map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download=`TNI_Sale_${td()}.csv`;a.click();
+}
+
+function clearAllData(){if(confirm('Xóa TOÀN BỘ dữ liệu? Không thể phục hồi!')){'nhap,ban,daily,pp,kygoi,kh,khaosat,lienlac,quoteups,quotesolar,tamung'.split(',').forEach(k=>DB.s(k,[]));localStorage.removeItem('u_init');location.reload();}}
+
+// ═══════════════════════════════════════════════════
+// 📢 QUẢNG CÁO — CAMPAIGNS
+// ═══════════════════════════════════════════════════
+const PLATFORMS = {facebook:'📘 Facebook',tiktok:'🎵 TikTok',both:'📘🎵 Cả hai'};
+const PCOLORS   = {facebook:'fb-card',tiktok:'tk-card',both:'c-pu'};
+
+function addCampaign(){
+  const name=v('ad-name'),budget=v('ad-budget');
+  if(!name||!budget){al('Nhập tên chiến dịch và ngân sách','er');return;}
+  DB.add('campaigns',{pl:v('ad-pl'),name,obj:v('ad-obj'),budget:+budget,
+    start:v('ad-start')||td(),end:v('ad-end'),sp:v('ad-sp'),npt:v('ad-npt'),
+    msg:v('ad-msg'),status:'Đang chạy'});
+  al('🚀 Đã tạo chiến dịch!');clrForm('ad-');rCampaigns();popCamps(['adr-camp','ld-camp']);renderAdsSummary();
+}
+
+function rCampaigns(){
+  const d=DB.g('campaigns');
+  document.getElementById('t-camps').innerHTML=tbl(
+    ['#','Nền Tảng','Tên Chiến Dịch','Mục Tiêu','Ngân Sách','SP','Người PT','Ngày BĐ','Trạng Thái',''],
+    d.map((r,i)=>[i+1,
+      `<span class="${r.pl==='facebook'?'platform-fb':'platform-tk'}">${PLATFORMS[r.pl]||r.pl}</span>`,
+      `<b>${r.name}</b>`,r.obj,fn(r.budget)+'₫',r.sp||'Tất cả',r.npt||'-',fd(r.start),
+      bk(r.status,r.status==='Đang chạy'?'gn':'gy'),
+      `<button class="btn b-xs b-gy" onclick="toggleCamp(${r.id})">${r.status==='Đang chạy'?'⏸ Dừng':'▶ Chạy'}</button>
+       <button class="btn b-xs b-rd" onclick="del('campaigns',${r.id},()=>{rCampaigns();popCamps(['adr-camp','ld-camp']);})">🗑</button>`]));
+}
+
+function toggleCamp(id){
+  let d=DB.g('campaigns');
+  d=d.map(r=>r.id==id?{...r,status:r.status==='Đang chạy'?'Đã dừng':'Đang chạy'}:r);
+  DB.s('campaigns',d);rCampaigns();
+}
+
+function popCamps(ids){
+  const camps=DB.g('campaigns');
+  ids.forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    const val=el.value;
+    el.innerHTML='<option value="">-- Chọn chiến dịch --</option>';
+    camps.forEach(r=>el.innerHTML+=`<option value="${r.id}">${PLATFORMS[r.pl]} ${r.name}</option>`);
+    el.value=val;
+  });
+}
+
+// ── ADS RESULTS ──
+function addAdsResult(){
+  const campId=v('adr-camp');if(!campId){al('Chọn chiến dịch','er');return;}
+  const camp=DB.g('campaigns').find(r=>r.id==campId);
+  const spend=+v('adr-spend')||0,imp=+v('adr-imp')||0,click=+v('adr-click')||0;
+  const leads=+v('adr-leads')||0,conv=+v('adr-conv')||0,rev=+v('adr-rev')||0;
+  const cpc = click>0?Math.round(spend/click):0;
+  const cpl = leads>0?Math.round(spend/leads):0;
+  const roi = spend>0?((rev-spend)/spend*100).toFixed(1):0;
+  DB.add('adsresults',{campId:+campId,campName:camp.name,pl:camp.pl,ngay:v('adr-ngay')||td(),
+    spend,imp,click,leads,conv,rev,cpc,cpl,roi});
+  al('📊 Đã lưu kết quả!');clrForm('adr-');rAdsResults();renderAdsSummary();
+}
+
+// Live preview CPL/ROI khi nhập
+['adr-spend','adr-click','adr-leads','adr-conv','adr-rev'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('input',()=>{
+    const spend=+v('adr-spend')||0,click=+v('adr-click')||0;
+    const leads=+v('adr-leads')||0,rev=+v('adr-rev')||0;
+    const cpc=click>0?Math.round(spend/click):0;
+    const cpl=leads>0?Math.round(spend/leads):0;
+    const roi=spend>0?((rev-spend)/spend*100).toFixed(1):0;
+    const cvr=leads>0?((+v('adr-conv')/leads)*100).toFixed(1):0;
+    document.getElementById('adr-preview').innerHTML=`
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center">
+        <div><div style="font-size:16px;font-weight:700;color:var(--bl)">${fn(cpc)}₫</div><div style="color:#64748b;font-size:11px">CPC (Chi phí/click)</div></div>
+        <div><div style="font-size:16px;font-weight:700;color:var(--or)">${fn(cpl)}₫</div><div style="color:#64748b;font-size:11px">CPL (Chi phí/lead)</div></div>
+        <div><div style="font-size:16px;font-weight:700;color:${roi>=0?'var(--gn)':'var(--rd)'}">${roi}%</div><div style="color:#64748b;font-size:11px">ROI</div></div>
+        <div><div style="font-size:16px;font-weight:700;color:var(--pu)">${cvr}%</div><div style="color:#64748b;font-size:11px">Lead→Mua</div></div>
+      </div>`;
+  });
+});
+
+function rAdsResults(){
+  const d=DB.g('adsresults');
+  document.getElementById('t-adsresults').innerHTML=tbl(
+    ['Ngày','Chiến Dịch','Platform','Chi Phí','Imp','Click','Leads','Chuyển Đổi','Doanh Thu','CPC','CPL','ROI',''],
+    d.map(r=>[fd(r.ngay),r.campName,
+      `<span class="${r.pl==='facebook'?'platform-fb':'platform-tk'}">${PLATFORMS[r.pl]||r.pl}</span>`,
+      fn(r.spend)+'₫',fn(r.imp),fn(r.click),r.leads,r.conv,fn(r.rev)+'₫',
+      fn(r.cpc)+'₫',fn(r.cpl)+'₫',
+      `<span style="color:${r.roi>=0?'var(--gn)':'var(--rd)'};font-weight:600">${r.roi}%</span>`,
+      `<button class="btn b-xs b-rd" onclick="del('adsresults',${r.id},rAdsResults)">🗑</button>`]));
+}
+
+function renderAdsSummary(){
+  const results=DB.g('adsresults');
+  const camps=DB.g('campaigns');
+  const totalSpend=results.reduce((s,r)=>s+r.spend,0);
+  const totalLeads=results.reduce((s,r)=>s+r.leads,0);
+  const totalRev=results.reduce((s,r)=>s+r.rev,0);
+  const totalConv=results.reduce((s,r)=>s+r.conv,0);
+  const roi=totalSpend>0?((totalRev-totalSpend)/totalSpend*100).toFixed(1):0;
+  const fbSpend=results.filter(r=>r.pl==='facebook').reduce((s,r)=>s+r.spend,0);
+  const tkSpend=results.filter(r=>r.pl==='tiktok').reduce((s,r)=>s+r.spend,0);
+
+  document.getElementById('ads-cards').innerHTML=`
+    <div class="fb-card"><div class="lbl2">📘 Facebook — Chi Phí</div><div class="val">${fn(fbSpend)}₫</div><div class="sub">${results.filter(r=>r.pl==='facebook').reduce((s,r)=>s+r.leads,0)} leads</div></div>
+    <div class="tk-card"><div class="lbl2">🎵 TikTok — Chi Phí</div><div class="val">${fn(tkSpend)}₫</div><div class="sub">${results.filter(r=>r.pl==='tiktok').reduce((s,r)=>s+r.leads,0)} leads</div></div>
+    <div class="card c-or"><div class="lbl2">💸 Tổng Chi Phí Ads</div><div class="val">${fn(totalSpend)}₫</div><div class="sub">${camps.length} chiến dịch</div></div>
+    <div class="card c-gn"><div class="lbl2">📥 Tổng Leads</div><div class="val">${totalLeads}</div><div class="sub">CPL: ${totalLeads>0?fn(Math.round(totalSpend/totalLeads)):'0'}₫</div></div>
+    <div class="card c-bl"><div class="lbl2">💵 Doanh Thu Từ Ads</div><div class="val">${fn(totalRev)}₫</div><div class="sub">${totalConv} đơn</div></div>
+    <div class="card ${roi>=0?'c-gn':'c-rd'}"><div class="lbl2">📈 ROI Quảng Cáo</div><div class="val">${roi}%</div><div class="sub">${roi>=0?'Hiệu quả ✅':'Cần xem lại ⚠️'}</div></div>`;
+}
+
+// ═══════════════════════════════════════════════════
+// 🎯 LEADS
+// ═══════════════════════════════════════════════════
+const LD_TS = {new:'🆕 Mới',contacted:'📞 Đã LH',quoted:'📄 Đã BG',negotiating:'🤝 Thương lượng',won:'✅ Chốt đơn',lost:'❌ Không thành'};
+const LD_TS_COLOR = {new:'bl',contacted:'or',quoted:'yw',negotiating:'pu',won:'gn',lost:'rd'};
+const LD_SRC_LABEL = {facebook:'📘 Facebook',tiktok:'🎵 TikTok',zalo:'💬 Zalo',ref:'🤝 Giới thiệu',walk:'🚶 Vãng lai',other:'🔗 Khác'};
+
+function addLead(){
+  const ten=v('ld-ten'),dt=v('ld-dt');
+  if(!ten||!dt){al('Nhập tên và điện thoại','er');return;}
+  const camp=DB.g('campaigns').find(r=>r.id==v('ld-camp'));
+  DB.add('leads',{ten,dt,src:v('ld-src'),campId:v('ld-camp')||'',campName:camp?.name||'',
+    qt:v('ld-qt'),hot:v('ld-hot'),ngay:v('ld-ngay')||td(),dc:v('ld-dc'),gc:v('ld-gc'),ts:'new'});
+  al('🎯 Đã lưu lead!');clrForm('ld-');rLeads();popLeadSel();renderFunnel();renderLeadsCards();
+}
+
+function updLead(){
+  const id=v('ldup-id'),ts=v('ldup-ts');if(!id){al('Chọn lead cần cập nhật','er');return;}
+  let d=DB.g('leads');d=d.map(r=>r.id==id?{...r,ts,note:v('ldup-gc')}:r);DB.s('leads',d);
+  al('✅ Đã cập nhật lead!');rLeads();popLeadSel();renderFunnel();renderLeadsCards();
+}
+
+function popLeadSel(){
+  const el=document.getElementById('ldup-id');if(!el)return;
+  el.innerHTML='<option value="">-- Chọn lead --</option>';
+  DB.g('leads').filter(r=>r.ts!=='won'&&r.ts!=='lost').forEach(r=>
+    el.innerHTML+=`<option value="${r.id}">${r.ten} (${LD_SRC_LABEL[r.src]||r.src}) - ${LD_TS[r.ts]||r.ts}</option>`);
+}
+
+function rLeads(){
+  const fsrc=v('ld-filter-src'),fts=v('ld-filter-ts');
+  const data=DB.g('leads').filter(r=>(!fsrc||r.src===fsrc)&&(!fts||r.ts===fts));
+  const hotIcons={hot:'🔥',warm:'🌡',cold:'❄️'};
+  document.getElementById('t-leads').innerHTML=tbl(
+    ['#','Khách','ĐT','Nguồn','Chiến Dịch','Quan Tâm','Độ Nóng','Khu Vực','Trạng Thái','Ngày',''],
+    data.map((r,i)=>[i+1,`<b>${r.ten}</b>`,r.dt,
+      `<span class="${r.src==='facebook'?'platform-fb':r.src==='tiktok'?'platform-tk':''}">${LD_SRC_LABEL[r.src]||r.src}</span>`,
+      r.campName||'-',r.qt,hotIcons[r.hot]||'',r.dc||'-',
+      bk(LD_TS[r.ts]||r.ts,LD_TS_COLOR[r.ts]||'gy'),fd(r.ngay),
+      `<button class="btn b-xs b-rd" onclick="del('leads',${r.id},()=>{rLeads();popLeadSel();renderFunnel();})">🗑</button>`]));
+}
+
+function renderFunnel(){
+  const leads=DB.g('leads');
+  const stages=[
+    {key:'new',label:'🆕 Mới vào',color:'#2563eb'},
+    {key:'contacted',label:'📞 Đã liên hệ',color:'#7c3aed'},
+    {key:'quoted',label:'📄 Đã báo giá',color:'#ca8a04'},
+    {key:'negotiating',label:'🤝 Thương lượng',color:'#ea580c'},
+    {key:'won',label:'✅ Chốt đơn',color:'#16a34a'},
+    {key:'lost',label:'❌ Không thành',color:'#dc2626'},
+  ];
+  const total=leads.length||1;
+  const html=stages.map(s=>{
+    const cnt=leads.filter(r=>r.ts===s.key).length;
+    const pct=Math.round(cnt/total*100);
+    const w=Math.max(pct,5);
+    return `<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px;font-size:12.5px">
+        <span>${s.label}</span><span><b>${cnt}</b> leads (${pct}%)</span>
+      </div>
+      <div style="height:28px;background:#f1f5f9;border-radius:6px;overflow:hidden">
+        <div style="height:100%;width:${w}%;background:${s.color};border-radius:6px;display:flex;align-items:center;padding-left:8px;color:#fff;font-size:12px;font-weight:600;transition:width .5s">${cnt>0?cnt:''}</div>
+      </div></div>`;
+  }).join('');
+  const won=leads.filter(r=>r.ts==='won').length;
+  const cvr=leads.length>0?((won/leads.length)*100).toFixed(1):0;
+  document.getElementById('funnel-view').innerHTML=html+
+    `<div style="margin-top:12px;padding:10px 14px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0;font-size:13px">
+      <b>Tổng chuyển đổi: ${won}/${leads.length} leads = <span style="color:var(--gn)">${cvr}% tỷ lệ chốt đơn</span></b>
+    </div>`;
+}
+
+function renderLeadsCards(){
+  const leads=DB.g('leads');
+  const results=DB.g('adsresults');
+  const fbLeads=leads.filter(r=>r.src==='facebook').length;
+  const tkLeads=leads.filter(r=>r.src==='tiktok').length;
+  const won=leads.filter(r=>r.ts==='won').length;
+  const hot=leads.filter(r=>r.hot==='hot'&&r.ts!=='won'&&r.ts!=='lost').length;
+  document.getElementById('leads-cards').innerHTML=`
+    <div class="fb-card"><div class="lbl2">📘 Leads Facebook</div><div class="val">${fbLeads}</div><div class="sub">từ FB Ads</div></div>
+    <div class="tk-card"><div class="lbl2">🎵 Leads TikTok</div><div class="val">${tkLeads}</div><div class="sub">từ TT Ads</div></div>
+    <div class="card c-gn"><div class="lbl2">✅ Đã Chốt Đơn</div><div class="val">${won}</div><div class="sub">/${leads.length} tổng leads</div></div>
+    <div class="card c-rd"><div class="lbl2">🔥 Lead Hot Đang Mở</div><div class="val">${hot}</div><div class="sub">cần chăm sóc ngay</div></div>`;
+}
+
+// ═══════════════════════════════════════════════════
+// 🌐 BILINGUAL SUPPORT (VIỆT - ANH)
+// ═══════════════════════════════════════════════════
+let currentLang = localStorage.getItem('ups_lang') || 'vi';
+
+const DICT = {
+  vi: {
+    nhap_title: '➕ Thêm Phiếu Nhập & Phân Bổ Lợi Nhuận',
+    p_name: 'Tên Sản Phẩm *',
+    p_model: 'Model / Mã SP',
+    p_serial: 'Serial Number',
+    p_category: 'Danh Mục',
+    p_qty: 'Số Lượng *',
+    cost_price_83: 'Đơn Giá Gốc Đầu Vào (83%) (₫) *',
+    actual_selling_price: 'Giá Thực Bán (₫) *',
+    p_supplier: 'Nhà Cung Cấp',
+    p_date: 'Ngày Nhập',
+    p_warranty: 'Bảo Hành (tháng)',
+    p_note: 'Ghi Chú',
+    lbl_cost_83: '🏷️ Giá Gốc (83%)',
+    lbl_comp_17: '🏢 LN Trả Về Cty 17%',
+    lbl_min_price: '🛡️ Mức Giá Bán Thấp Nhất (100%)',
+    lbl_act_price: '📈 Giá Thực Bán',
+    lbl_branch_profit: '🏪 Lợi Nhuận Chi Nhánh'
+  },
+  en: {
+    nhap_title: '➕ Goods Intake & Profit Allocation',
+    p_name: 'Product Name *',
+    p_model: 'Model / Item Code',
+    p_serial: 'Serial Number',
+    p_category: 'Category',
+    p_qty: 'Quantity *',
+    cost_price_83: 'Base Cost Price (83%) ($/₫) *',
+    actual_selling_price: 'Actual Selling Price ($/₫) *',
+    p_supplier: 'Supplier',
+    p_date: 'Date Added',
+    p_warranty: 'Warranty (Months)',
+    p_note: 'Note',
+    lbl_cost_83: '🏷️ Base Cost (83%)',
+    lbl_comp_17: '🏢 Return to Company 17%',
+    lbl_min_price: '🛡️ Min Floor Price (100%)',
+    lbl_act_price: '📈 Actual Selling Price',
+    lbl_branch_profit: '🏪 Branch Profit'
+  }
+};
+
+function applyLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('ups_lang', lang);
+  const btn = document.getElementById('lang-btn');
+  if (btn) btn.innerHTML = lang === 'vi' ? '🌐 🇻🇳 VN (Click to EN)' : '🌐 🇬🇧 EN (Click to VN)';
+  
+  document.querySelectorAll('[data-lang]').forEach(el => {
+    const k = el.getAttribute('data-lang');
+    if (DICT[lang] && DICT[lang][k]) {
+      el.textContent = DICT[lang][k];
+    }
+  });
+}
+
+function toggleLang() {
+  applyLang(currentLang === 'vi' ? 'en' : 'vi');
+}
+
+setInterval(()=>{document.getElementById('clk').textContent=new Date().toLocaleString(currentLang==='vi'?'vi-VN':'en-US');},1000);
+document.querySelectorAll('input[type="date"]').forEach(e=>e.value=td());
+// Init quotation rows
+addQRow('qu-items');
+applyLang(currentLang);
+rDash();
+</script>
+</body>
+</html>
