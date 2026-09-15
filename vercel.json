@@ -2,6 +2,8 @@
   "builds": [
     { "src": "index.html",              "use": "@vercel/static" },
     { "src": "executive_dashboard.html", "use": "@vercel/static" },
+    { "src": "tni_sale.html",          "use": "@vercel/static" },
+    { "src": "sale.html",              "use": "@vercel/static" },
     { "src": "api/index.py",           "use": "@vercel/python", "config": { "maxDuration": 60 } },
     { "src": "api/collector.py",       "use": "@vercel/python", "config": { "maxDuration": 30 } },
     { "src": "api/search_bot.py",      "use": "@vercel/python", "config": { "maxDuration": 60 } },
@@ -16,6 +18,9 @@
     { "src": "/",                      "dest": "index.html", "headers": { "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0" } },
     { "src": "/index.html",            "dest": "index.html", "headers": { "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0" } },
     { "src": "/executive_dashboard.html", "dest": "executive_dashboard.html", "headers": { "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0" } },
+    { "src": "/tni_sale.html",         "dest": "tni_sale.html", "headers": { "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0" } },
+    { "src": "/sale",                  "dest": "tni_sale.html", "headers": { "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0" } },
+    { "src": "/sale.html",             "dest": "sale.html", "headers": { "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0" } },
     { "src": "/api/index",             "dest": "api/index.py" },
     { "src": "/api/collector",         "dest": "api/collector.py" },
     { "src": "/api/search_bot",        "dest": "api/search_bot.py" },
