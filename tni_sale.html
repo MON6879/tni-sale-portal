@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>TNI Sale — Quản Lý Bán Hàng & Phân Bổ Lợi Nhuận</title>
+<title>TNI Sale — Sales & Profit Distribution Management | Viettel Construction Myanmar</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bl:#2563eb;--bl2:#1d4ed8;--gn:#16a34a;--rd:#dc2626;--or:#ea580c;--yw:#ca8a04;--pu:#7c3aed;--gray:#f1f5f9;--dark:#1e293b;--tx:#334155;--bd:#e2e8f0;--wh:#fff}
@@ -93,6 +93,30 @@ tbody tr:hover{background:#fafcff}
 @media(max-width:900px){.g2{grid-template-columns:1fr}}
 /* PRINT */
 @media print{#sb,#topbar,.btn,#alert,.no-print{display:none!important}#content{padding:0}}
+
+/* WATERMARK & PRINT STYLES */
+.quote-watermark {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-30deg);
+  font-size: 58px;
+  font-weight: 900;
+  color: rgba(220, 38, 38, 0.05);
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  pointer-events: none;
+  z-index: 0;
+  white-space: nowrap;
+  user-select: none;
+}
+@media print {
+  .no-print, #sb, #topbar, .btn { display: none !important; }
+  body { background: #fff !important; }
+  .quote-print-box { border: none !important; box-shadow: none !important; }
+  .quote-watermark { color: rgba(220, 38, 38, 0.06) !important; }
+}
+
 </style>
 </head>
 <body>
@@ -102,31 +126,31 @@ tbody tr:hover{background:#fafcff}
 <div id="sb">
   <div class="logo">⚡ TNI <span>Sale</span></div>
   <nav>
-    <div class="lbl">Tổng quan</div>
-    <a class="active" onclick="go('dashboard')">📊 Dashboard</a>
+    <div class="lbl">Overview / Tổng quan</div>
+    <a class="active" onclick="go('dashboard')">📊 Dashboard <small style="color:#64748b;font-size:10.5px;margin-left:auto">Tổng quan</small></a>
 
-    <div class="lbl">Kho hàng</div>
-    <a onclick="go('nhap')">📦 Nhập Hàng</a>
-    <a onclick="go('tonkho')">🗄️ Tồn Kho</a>
-    <a onclick="go('tamung')">🧑‍💼 Tạm Ứng Hàng</a>
+    <div class="lbl">Warehouse / Kho hàng</div>
+    <a onclick="go('nhap')">📦 Goods Intake <small style="color:#64748b;font-size:10.5px;margin-left:auto">Nhập hàng</small></a>
+    <a onclick="go('tonkho')">🗄️ Inventory <small style="color:#64748b;font-size:10.5px;margin-left:auto">Tồn kho</small></a>
+    <a onclick="go('tamung')">🧑‍💼 Stock Advance <small style="color:#64748b;font-size:10.5px;margin-left:auto">Tạm ứng</small></a>
 
-    <div class="lbl">Kinh doanh</div>
-    <a onclick="go('banhang')">🛒 Bán Hàng</a>
-    <a onclick="go('baogiaups')">📄 Báo Giá Thiết Bị</a>
-    <a onclick="go('baogiasolar')">☀️ Báo Giá Solar</a>
-    <a onclick="go('daily')">🏪 Đại Lý &amp; PP</a>
-    <a onclick="go('kygoi')">📋 Ký Gởi</a>
+    <div class="lbl">Sales &amp; Quotation / Bán hàng</div>
+    <a onclick="go('banhang')">🛒 Sales Orders <small style="color:#64748b;font-size:10.5px;margin-left:auto">Bán hàng</small></a>
+    <a onclick="go('baogiaups')">📄 Device Quote <small style="color:#64748b;font-size:10.5px;margin-left:auto">BG Thiết bị</small></a>
+    <a onclick="go('baogiasolar')">☀️ Solar Quote <small style="color:#38bdf8;font-size:10.5px;margin-left:auto">BG Solar</small></a>
+    <a onclick="go('daily')">🏪 Distribution <small style="color:#64748b;font-size:10.5px;margin-left:auto">Đại lý</small></a>
+    <a onclick="go('kygoi')">📋 Consignment <small style="color:#64748b;font-size:10.5px;margin-left:auto">Ký gởi</small></a>
 
-    <div class="lbl">Khách hàng</div>
-    <a onclick="go('crm')">👥 CRM &amp; Khảo Sát</a>
+    <div class="lbl">Clients / Khách hàng</div>
+    <a onclick="go('crm')">👥 CRM &amp; Survey <small style="color:#64748b;font-size:10.5px;margin-left:auto">Khảo sát</small></a>
 
     <div class="lbl">Marketing</div>
-    <a onclick="go('quangcao')">📢 Quảng Cáo FB/TT</a>
-    <a onclick="go('leads')">🎯 Leads & Chuyển Đổi</a>
+    <a onclick="go('quangcao')">📢 Ads Campaigns <small style="color:#64748b;font-size:10.5px;margin-left:auto">Quảng cáo</small></a>
+    <a onclick="go('leads')">🎯 Leads &amp; Conv <small style="color:#64748b;font-size:10.5px;margin-left:auto">Chuyển đổi</small></a>
 
-    <div class="lbl">Tài chính</div>
-    <a onclick="go('loinhuan')">💰 Lợi Nhuận</a>
-    <a onclick="go('baocao')">📈 Báo Cáo</a>
+    <div class="lbl">Finance / Tài chính</div>
+    <a onclick="go('loinhuan')">💰 Profit &amp; Loss <small style="color:#64748b;font-size:10.5px;margin-left:auto">Lợi nhuận</small></a>
+    <a onclick="go('baocao')">📈 Reports <small style="color:#64748b;font-size:10.5px;margin-left:auto">Báo cáo</small></a>
   </nav>
 </div>
 
@@ -134,8 +158,15 @@ tbody tr:hover{background:#fafcff}
 <div id="main">
 <div id="topbar">
   <h2 id="ptitle">📊 Dashboard</h2>
-  <div style="display:flex;gap:8px;align-items:center">
-    <a href="https://docs.google.com/spreadsheets/d/1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA" target="_blank" class="btn b-bl b-sm" style="text-decoration:none">📊 Mở Google Sheet</a> <button class="btn b-sm" id="lang-btn" onclick="toggleLang()" style="background:#e0f2fe;color:#0369a1;font-weight:600">🌐 🇻🇳 VN / 🇬🇧 EN</button>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <!-- Cài đặt % Lợi Nhuận & Thuế Nộp Tổng Công Ty (Nhập tay linh hoạt) -->
+    <div style="display:flex;align-items:center;gap:5px;background:#eff6ff;padding:4px 9px;border-radius:7px;border:1px solid #bfdbfe">
+      <span style="font-size:11px;font-weight:600;color:#1e40af">🏢 % Cty:</span>
+      <input id="cfg-cty-rate" type="number" value="17" min="0" max="100" step="0.5" style="width:48px;padding:2px 4px;border:1px solid #3b82f6;border-radius:4px;font-size:12px;font-weight:bold;color:#1e40af;text-align:center" oninput="setCompanyRate(this.value)" title="Tỷ lệ % Lợi nhuận và Thuế nộp về Tổng Công Ty"/>
+      <span style="font-size:11px;color:#1e40af">%</span>
+    </div>
+    <a href="https://docs.google.com/spreadsheets/d/1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA" target="_blank" class="btn b-bl b-sm" style="text-decoration:none">📊 Google Sheet</a>
+    <button class="btn b-sm" id="lang-btn" onclick="toggleLang()" style="background:#e0f2fe;color:#0369a1;font-weight:600">🌐 EN / VN</button>
     <span id="clk" style="font-size:11.5px;color:#94a3b8"></span>
     <button class="btn b-out b-sm" onclick="exportCSV()">⬇ CSV</button>
     <button class="btn b-sm" style="background:#f1f5f9;color:#475569" onclick="clearAllData()">🗑 Reset</button>
@@ -374,48 +405,188 @@ tbody tr:hover{background:#fafcff}
   </div>
 </div>
 
-<!-- ══ BÁO GIÁ SOLAR ══ -->
+<!-- ══ BÁO GIÁ SOLAR (VIETTEL CONSTRUCTION MYANMAR & GOOGLE SHEET TEMPLATE) ══ -->
 <div class="sec" id="s-baogiasolar">
+  <!-- BĂNG THÔNG TIN CÔNG TY VIETTEL CONSTRUCTION MYANMAR & PHÂN QUYỀN XEM LỊCH SỬ -->
+  <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px 18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;border-bottom:1px solid #f1f5f9;padding-bottom:12px;margin-bottom:12px">
+      <!-- Header đỏ theo hình ảnh đính kèm -->
+      <div>
+        <div style="font-size:16px;font-weight:900;color:#dc2626;letter-spacing:0.5px">VIETTEL CONSTRUCTION MYANMAR COMPANY LIMITED</div>
+        <div style="font-size:12px;color:#334155;margin-top:3px"><b>A:</b> No 1237 Waizanyantar Street, South Okkalapa, Yangon, Myanmar</div>
+        <div style="font-size:12px;color:#334155;margin-top:2px"><b>W:</b> www.viettelconstructionmyanmar.com &nbsp;&nbsp;|&nbsp;&nbsp; <b>H:</b> 0965 1900 009</div>
+      </div>
+      <div style="text-align:right">
+        <span class="bk bk-bl" style="font-size:12px;padding:4px 10px;font-weight:700">TNI SOLAR OFFICIAL QUOTATION</span>
+        <div style="font-size:11px;color:#64748b;margin-top:4px">Template chuẩn Google Sheet GID 1879621220</div>
+      </div>
+    </div>
+
+    <!-- THANH PHÂN QUYỀN NHÂN VIÊN & TRA CỨU BÁO GIÁ RIÊNG BIỆT -->
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between;background:#f8fafc;padding:10px 12px;border-radius:8px;border:1px solid #cbd5e1">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <label style="font-size:12px;font-weight:600;color:#1e3a8a;display:flex;align-items:center;gap:4px">
+          👤 Đang xem với tư cách (Staff / Gmail):
+          <input id="qs-filter-user" value="Zin Ko Ko" placeholder="Tên nhân viên hoặc Gmail..." style="padding:4px 8px;border:1px solid #94a3b8;border-radius:5px;font-size:12px;width:180px;font-weight:bold;color:#1e293b" onchange="filterQuotesByUser()"/>
+        </label>
+        <button class="btn b-bl b-xs" onclick="filterQuotesByUser()">🔍 Lọc Báo Giá</button>
+        <button class="btn b-out b-xs" onclick="document.getElementById('qs-filter-user').value='all';filterQuotesByUser()">👥 Xem Tất Cả (Admin)</button>
+      </div>
+
+      <!-- DROPDOWN CHỌN TÊN ĐỂ NHÌN LẠI VÀ SỬA GIÁ -->
+      <div style="display:flex;gap:6px;align-items:center">
+        <span style="font-size:12px;font-weight:600;color:#b91c1c">📋 Chọn Báo Giá Cũ:</span>
+        <select id="qs-history-select" style="padding:5px 9px;border:1.5px solid #dc2626;border-radius:6px;font-size:12px;font-weight:600;color:#1e293b;max-width:280px" onchange="loadSelectedQuote(this.value)">
+          <option value="">-- Chọn khách hàng / Mã BG để xem lại --</option>
+        </select>
+        <button class="btn b-gn b-xs" onclick="loadSelectedQuote(document.getElementById('qs-history-select').value)">👁️ Xem &amp; Sửa</button>
+      </div>
+    </div>
+  </div>
+
   <div class="g2">
+    <!-- KHUNG TẠO / SỬA BÁO GIÁ CHỦ ĐẠO -->
     <div class="panel">
-      <div class="ph"><h3>☀️ Tạo Báo Giá Hệ Solar</h3></div>
+      <div class="ph" style="background:#fef2f2">
+        <div style="display:flex;justify-content:space-between;align-items:center;width:100%;flex-wrap:wrap;gap:8px">
+          <h3 style="color:#991b1b;display:flex;align-items:center;gap:6px">
+            ☀️ <span id="qs-form-mode-title">Tạo / Chỉnh Sửa Báo Giá Solar</span>
+            <span id="qs-current-badge" class="bk bk-yw" style="display:none">Đang sửa: VCM-07-02</span>
+          </h3>
+          <div style="display:flex;gap:6px">
+            <button class="btn b-out b-sm" onclick="resetNewSolarQuote()">➕ Tạo Báo Giá Mới</button>
+            <button class="btn b-yw b-sm" onclick="presetSolar('zinkoko')">⭐ Mẫu Chuẩn 6kW (Zin Ko Ko)</button>
+          </div>
+        </div>
+      </div>
       <div class="pb">
+        <!-- THÔNG TIN CHUNG CỦA BÁO GIÁ -->
         <div class="fg">
-          <div class="f"><label>Khách Hàng / Công Ty *</label><input id="qs-kh" placeholder="Tên KH / Công ty"/></div>
-          <div class="f"><label>Điện Thoại</label><input id="qs-dt" placeholder="0xxxxxxx"/></div>
-          <div class="f"><label>Địa Chỉ Lắp Đặt</label><input id="qs-dc" placeholder="Địa chỉ lắp đặt"/></div>
-          <div class="f"><label>Loại Hệ Thống</label><select id="qs-loai"><option>Hòa lưới (On-Grid)</option><option>Độc lập (Off-Grid)</option><option>Hybrid (Hòa lưới + Dự trữ)</option></select></div>
-          <div class="f"><label>Công Suất (kWp)</label><input id="qs-cs" type="number" placeholder="5" step="0.5"/></div>
-          <div class="f"><label>Người Lập BG</label><input id="qs-nlbg" placeholder="Nhân viên"/></div>
-          <div class="f"><label>Ngày BG</label><input id="qs-ngay" type="date"/></div>
+          <div class="f"><label>Mã Báo Giá (Quote Ref)</label><input id="qs-code" value="VCM-07-02" placeholder="VD: VCM-07-02" style="font-weight:bold;color:#1e40af"/></div>
+          <div class="f"><label>Tên Khách Hàng (Mr/Ms) *</label><input id="qs-kh" value="Zin Ko Ko" placeholder="Tên khách hàng"/></div>
+          <div class="f"><label>Điện Thoại Khách</label><input id="qs-dt" placeholder="09xxxxxxx"/></div>
+          <div class="f"><label>Gmail / Email Khách</label><input id="qs-email" placeholder="customer@gmail.com"/></div>
+          <div class="f"><label>Dự Án / Địa Chỉ Lắp Đặt</label><input id="qs-dc" placeholder="Yangon, Myanmar..."/></div>
+          <div class="f"><label>Tiêu Đề / Subject</label><input id="qs-subj" value="6kW Solar System" placeholder="VD: 6kW Solar System"/></div>
+          <div class="f"><label>Loại Hệ Thống</label><select id="qs-loai"><option selected>Hybrid (Hòa lưới + Dự trữ)</option><option>Hòa lưới (On-Grid)</option><option>Độc lập (Off-Grid)</option></select></div>
+          <div class="f"><label>Công Suất (kWp)</label><input id="qs-cs" type="number" value="6" step="0.5"/></div>
+          <div class="f"><label>Nhân Viên Lập (Staff)</label><input id="qs-nlbg" value="Zin Ko Ko" placeholder="Tên nhân viên"/></div>
+          <div class="f"><label>Mã NV / Phòng Ban</label><input id="qs-staffid" value="NV001" placeholder="Mã NV"/></div>
+          <div class="f"><label>Ngày Báo Giá</label><input id="qs-ngay" type="date"/></div>
           <div class="f"><label>Hiệu Lực (ngày)</label><input id="qs-hl" type="number" value="15"/></div>
+          <div class="f"><label>Tiền Tệ Báo Giá</label>
+            <select id="qs-curr" onchange="calcSolarTable()">
+              <option value="Kyats" selected>Kyats (Myanmar)</option>
+              <option value="USD">USD ($)</option>
+              <option value="VND">VND (₫)</option>
+            </select>
+          </div>
+          <div class="f" style="grid-column:1/-1">
+            <label style="color:#b91c1c;font-weight:bold">📤 Chia Sẻ Báo Giá Này Cho (Nhân viên / Gmail):</label>
+            <input id="qs-shareto" placeholder="Nhập tên nhân viên hoặc địa chỉ Gmail (người này sẽ xem được lịch sử riêng của họ)..." style="border:1.5px solid #f87171"/>
+          </div>
         </div>
 
-        <div style="margin-top:14px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <b style="font-size:13px">🔧 Thành Phần Hệ Thống</b>
-            <button class="btn b-yw b-sm" onclick="addQRow('qs-items')">+ Thêm dòng</button>
+        <!-- BẢNG CHI TIẾT VẬT TƯ & ĐIỀU CHỈNH GIÁ (9 CỘT THEO MẪU SHEET GID 1879621220) -->
+        <div style="margin-top:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">
+            <b style="font-size:13px;color:#1e3a8a">📦 Bảng Vật Tư &amp; Giá Cả (Có thể chỉnh sửa giá trực tiếp):</b>
+            <div style="display:flex;gap:6px">
+              <button class="btn b-bl b-xs" onclick="addSolarItemRow()">+ Thêm dòng vật tư</button>
+              <button class="btn b-sm" style="background:#fef9c3;color:#854d0e;font-size:11px" onclick="presetSolar('ongrid5k')">Bộ 5kW OnGrid</button>
+              <button class="btn b-sm" style="background:#fef9c3;color:#854d0e;font-size:11px" onclick="presetSolar('hybrid5k')">Bộ Hybrid 5kW</button>
+            </div>
           </div>
-          <!-- Preset nhanh -->
-          <div style="margin-bottom:10px;display:flex;gap:6px;flex-wrap:wrap">
-            <button class="btn b-sm" style="background:#fef9c3;color:#854d0e;font-size:11.5px" onclick="presetSolar('ongrid')">⚡ Bộ Hòa Lưới 5kWp</button>
-            <button class="btn b-sm" style="background:#fef9c3;color:#854d0e;font-size:11.5px" onclick="presetSolar('offgrid')">🔋 Bộ Off-Grid 3kWp</button>
-            <button class="btn b-sm" style="background:#fef9c3;color:#854d0e;font-size:11.5px" onclick="presetSolar('hybrid')">🌐 Hybrid 5kWp+15kWh</button>
+
+          <div class="tw" style="max-height:420px;overflow-y:auto;border:1px solid #cbd5e1;border-radius:8px">
+            <table id="qs-items-table" style="font-size:12px">
+              <thead>
+                <tr style="background:#f1f5f9">
+                  <th style="width:35px;text-align:center">#</th>
+                  <th>Hạng Mục / Material Specs *</th>
+                  <th style="width:90px">Brand</th>
+                  <th style="width:60px">ĐVT</th>
+                  <th style="width:60px;text-align:center">SL *</th>
+                  <th style="width:120px;text-align:right">Đơn Giá *</th>
+                  <th style="width:130px;text-align:right">Thành Tiền</th>
+                  <th style="width:140px">Bảo Hành / Remark</th>
+                  <th style="width:40px;text-align:center">Xóa</th>
+                </tr>
+              </thead>
+              <tbody id="qs-table-body">
+                <!-- Các dòng vật tư sinh ra tại đây -->
+              </tbody>
+            </table>
           </div>
-          <div id="qs-items"></div>
-          <div class="qtotal" id="qs-total">
-            <div style="font-size:12px;color:#94a3b8;margin-bottom:4px">Tổng Báo Giá Hệ Solar</div>
-            <div class="big">0 ₫</div>
-            <div style="font-size:11.5px;color:#86efac;margin-top:4px" id="qs-note"></div>
+
+          <!-- TỔNG KẾT BÁO GIÁ & LỊCH TRÌNH THANH TOÁN THEO MẪU -->
+          <div class="qtotal" id="qs-total-box" style="margin-top:12px;background:#0f172a">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+              <div>
+                <div style="font-size:12px;color:#94a3b8">TỔNG GIÁ TRỊ BÁO GIÁ (TOTAL AMOUNT):</div>
+                <div class="big" id="qs-big-total" style="font-size:24px;color:#38bdf8">0 Kyats</div>
+                <div style="font-size:11.5px;color:#cbd5e1;margin-top:3px">* Chi phí vận chuyển: Shipping costs are not included (Depends on Site).</div>
+              </div>
+              <!-- Điều khoản thanh toán 50% - 40% - 10% -->
+              <div style="background:rgba(255,255,255,0.08);padding:8px 12px;border-radius:6px;font-size:11.5px;line-height:1.6;border-left:3px solid #38bdf8">
+                <b>Tiến độ thanh toán:</b><br/>
+                &bull; Đợt 1 (Tạm ứng 50% khi ký HĐ): <b id="qs-pay-50" style="color:#fde047">0</b><br/>
+                &bull; Đợt 2 (Giao hàng 40%): <b id="qs-pay-40" style="color:#6ee7b7">0</b><br/>
+                &bull; Đợt 3 (Nghiệm thu &amp; Bàn giao 10%): <b id="qs-pay-10" style="color:#93c5fd">0</b>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="fa">
-          <button class="btn b-yw" onclick="saveQuote('solar')">💾 Lưu Báo Giá</button>
-          <button class="btn b-out" onclick="printQuote('solar')">🖨 In / PDF</button>
+
+        <!-- HÀNG NÚT THAO TÁC BÁO GIÁ -->
+        <div class="fa" style="margin-top:14px;justify-content:space-between;align-items:center">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn b-bl" onclick="saveSolarQuote(false)" style="font-weight:700">💾 Lưu / Cập Nhật Báo Giá</button>
+            <button class="btn b-gn" onclick="saveSolarQuote(true)" style="font-weight:700">🖨️ In / In Lại Báo Giá</button>
+            <button class="btn b-out" onclick="resetNewSolarQuote()">➕ Tạo Mới</button>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn b-pu b-sm" onclick="shareQuoteViaGmail()">📧 Gửi Qua Gmail</button>
+            <button class="btn b-sm" style="background:#e0f2fe;color:#0369a1;font-weight:600" onclick="copyShareQuoteLink()">🔗 Copy Link Chia Sẻ</button>
+          </div>
         </div>
       </div>
     </div>
-    <div class="panel"><div class="ph"><h3>📋 Danh Sách Báo Giá Solar</h3></div><div class="pb tw" id="t-qusolar"></div></div>
+
+    <!-- KHUNG LỊCH SỬ BÁO GIÁ ĐÃ LƯU & CÁCH LY THEO NHÂN VIÊN / GMAIL -->
+    <div class="panel">
+      <div class="ph" style="background:#f8fafc">
+        <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
+          <h3 style="color:#1e293b">📋 Lịch Sử Báo Giá Solar</h3>
+          <span id="qs-history-count" style="font-size:12px;color:#64748b">0 báo giá</span>
+        </div>
+      </div>
+      <div class="pb">
+        <div style="background:#eff6ff;padding:8px 12px;border-radius:6px;border:1px solid #bfdbfe;margin-bottom:10px;font-size:12px;color:#1e40af">
+          🛡️ <b>Chính sách bảo mật:</b> Khi chia sẻ cho nhân viên hoặc Gmail nào, người đó sẽ chỉ thấy lịch sử của chính họ. Dữ liệu được đồng bộ 100% lên tab <code>Báo Giá Solar</code> trên Google Sheet.
+        </div>
+        <div class="tw" id="t-qusolar-container">
+          <table style="font-size:12px">
+            <thead>
+              <tr style="background:#f1f5f9">
+                <th>#</th>
+                <th>Mã BG</th>
+                <th>Khách Hàng</th>
+                <th>Công Suất</th>
+                <th style="text-align:right">Tổng Báo Giá</th>
+                <th>Nhân Viên</th>
+                <th>Chia Sẻ</th>
+                <th>Ngày</th>
+                <th style="text-align:center">Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody id="t-qusolar-body">
+              <!-- Danh sách báo giá đã lưu -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -752,22 +923,108 @@ tbody tr:hover{background:#fafcff}
 // ═══════════════════════════════════════════════════
 // DATA
 // ═══════════════════════════════════════════════════
-const DB={
-  g:k=>JSON.parse(localStorage.getItem('u_'+k)||'[]'),
-  s:(k,v)=>localStorage.setItem('u_'+k,JSON.stringify(v)),
-  add:(k,item)=>{let d=DB.g(k);d.push({...item,id:Date.now()});DB.s(k,d);return item;}
+// ══════════════════════════════════════════════════════════
+// DB: Hybrid — localStorage cache + Google Sheet (SSOT)
+// GAS URL = QLTC_GAS deployed endpoint
+// ══════════════════════════════════════════════════════════
+const GAS_SALE_URL = 'https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec';
+
+const DB = {
+  // ── Local cache read/write ──────────────────────────────
+  g: k => JSON.parse(localStorage.getItem('u_' + k) || '[]'),
+  s: (k, v) => localStorage.setItem('u_' + k, JSON.stringify(v)),
+
+  // ── Add: write local first (instant UI), then push to Sheet ──
+  add: (k, item) => {
+    item.id = item.id || Date.now();
+    let d = DB.g(k);
+    d.push(item);
+    DB.s(k, d);
+    DB._push('sale_add', { col: k, data: item });
+    return item;
+  },
+
+  // ── Update field(s) locally + Sheet ──────────────────────
+  upd: (k, id, fields) => {
+    let d = DB.g(k);
+    d = d.map(r => r.id == id ? { ...r, ...fields } : r);
+    DB.s(k, d);
+    DB._push('sale_update', { col: k, id: id, fields: fields });
+  },
+
+  // ── Delete locally + Sheet ───────────────────────────────
+  del: (k, id) => {
+    let d = DB.g(k).filter(r => r.id != id);
+    DB.s(k, d);
+    DB._push('sale_delete', { col: k, id: id });
+  },
+
+  // ── Bulk add ─────────────────────────────────────────────
+  bulk: (k, items) => {
+    let d = DB.g(k);
+    items.forEach(item => { item.id = item.id || Date.now() + Math.random(); d.push(item); });
+    DB.s(k, d);
+    DB._push('sale_bulk', { col: k, items: items });
+  },
+
+  // ── Background push to GAS (fire-and-forget) ────────────
+  _push: (action, body) => {
+    fetch(GAS_SALE_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: action, ...body })
+    }).catch(e => console.warn('[DB] GAS push failed:', e));
+  },
+
+  // ── Pull live data from Sheet → refresh local cache ─────
+  pull: async (k, onDone) => {
+    try {
+      const res  = await fetch(GAS_SALE_URL, {
+        method: 'POST', mode: 'cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'sale_get', col: k })
+      });
+      const json = await res.json();
+      if (json.ok && Array.isArray(json.data) && json.data.length > 0) {
+        DB.s(k, json.data);
+        if (onDone) onDone(json.data);
+      }
+    } catch(e) {
+      console.warn('[DB] Pull failed for', k, e);
+    }
+  },
+
+  // ── Pull all collections on page load ────────────────────
+  pullAll: () => {
+    const cols = ['nhap','ban','tamung','khaosat','daily','pp','kygoi','lienlac','kh','camps','adsresults','leads'];
+    cols.forEach(k => DB.pull(k, () => {
+      // Re-render nếu section đang hiển thị
+      const sec = document.getElementById('s-' + (k === 'tamung' ? 'tamung' : k === 'ban' ? 'banhang' : k));
+      if (sec && sec.classList.contains('on')) {
+        const fn = renders[k === 'ban' ? 'banhang' : k === 'tamung' ? 'tamung' : k];
+        if (fn) fn();
+      }
+      // Dashboard và tonkho luôn cần refresh
+      if (['nhap','ban','tamung'].includes(k)) { rDash && rDash(); renderTK && renderTK(); }
+    }));
+  }
 };
 
-// Seed demo
-if(!localStorage.getItem('u_init')){
-  DB.add('nhap',{ten:'UPS 650VA APC',model:'BX650LI',serial:'SN001',dm:'UPS',sl:10,gg:850000,gb:1250000,ncc:'APC VN',ngay:td(),bh:24,gc:''});
-  DB.add('nhap',{ten:'UPS 1200VA Santak',model:'TG-1200',serial:'SN002',dm:'UPS',sl:6,gg:1400000,gb:2100000,ncc:'Santak',ngay:td(),bh:24,gc:''});
-  DB.add('nhap',{ten:'Solar Panel 400W Jinko',model:'JK-400M',serial:'SN003',dm:'Solar Panel',sl:20,gg:1800000,gb:2500000,ncc:'Jinko VN',ngay:td(),bh:12,gc:''});
-  DB.add('nhap',{ten:'Inverter Growatt 5kW',model:'SPF-5000',serial:'SN004',dm:'Inverter',sl:3,gg:12000000,gb:17000000,ncc:'Growatt',ngay:td(),bh:24,gc:''});
-  DB.add('nhap',{ten:'Ắc Quy GEL 100Ah',model:'GEL-100',serial:'SN005',dm:'Ắc Quy',sl:15,gg:3200000,gb:4500000,ncc:'Deco VN',ngay:td(),bh:12,gc:''});
-  DB.add('daily',{ten:'Điện Tử Minh Khoa',chu:'Khoa Nguyễn',dt:'0901234567',dc:'Q.7 HCM',kv:'TP.HCM',loai:'Đại lý cấp 1',ck:10});
-  localStorage.setItem('u_init','1');
+// ── Seed demo nếu chưa có dữ liệu và offline ────────────────────
+if (!localStorage.getItem('u_init')) {
+  DB.add('nhap', {ten:'UPS 650VA APC',model:'BX650LI',serial:'SN001',dm:'UPS',sl:10,gg:850000,gb:1250000,ncc:'APC VN',ngay:td(),bh:24,gc:''});
+  DB.add('nhap', {ten:'UPS 1200VA Santak',model:'TG-1200',serial:'SN002',dm:'UPS',sl:6,gg:1400000,gb:2100000,ncc:'Santak',ngay:td(),bh:24,gc:''});
+  DB.add('nhap', {ten:'Solar Panel 400W Jinko',model:'JK-400M',serial:'SN003',dm:'Solar Panel',sl:20,gg:1800000,gb:2500000,ncc:'Jinko VN',ngay:td(),bh:12,gc:''});
+  DB.add('nhap', {ten:'Inverter Growatt 5kW',model:'SPF-5000',serial:'SN004',dm:'Inverter',sl:3,gg:12000000,gb:17000000,ncc:'Growatt',ngay:td(),bh:24,gc:''});
+  DB.add('nhap', {ten:'Ắc Quy GEL 100Ah',model:'GEL-100',serial:'SN005',dm:'Ắc Quy',sl:15,gg:3200000,gb:4500000,ncc:'Deco VN',ngay:td(),bh:12,gc:''});
+  DB.add('daily', {ten:'Điện Tử Minh Khoa',chu:'Khoa Nguyễn',dt:'0901234567',dc:'Q.7 HCM',kv:'TP.HCM',loai:'Đại lý cấp 1',ck:10});
+  localStorage.setItem('u_init', '1');
 }
+
+// ── Sau khi trang load xong → pull dữ liệu sống từ Sheet ────────
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => DB.pullAll(), 1200); // delay 1.2s để UI render trước
+});
 
 function td(){return new Date().toISOString().slice(0,10);}
 function fn(n){return Number(n||0).toLocaleString('vi-VN');}
@@ -886,7 +1143,7 @@ function tbl(hs,rows){
   return `<table><thead><tr>${hs.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
   <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
 }
-function del(k,id,cb){DB.s(k,DB.g(k).filter(r=>r.id!==id));cb();al('🗑 Đã xóa');}
+function del(k,id,cb){DB.del(k,id);cb();al('🗑 Đã xóa');}
 function clrForm(prefix){document.querySelectorAll(`[id^="${prefix}"]`).forEach(e=>{if(e.tagName==='SELECT')e.selectedIndex=0;else if(e.type!=='date')e.value='';});}
 
 // ═══════════════════════════════════════════════════
@@ -1457,61 +1714,723 @@ function calcQ(cid){
   }
 }
 
-// Preset Solar
-function presetSolar(type){
-  const c=document.getElementById('qs-items');c.innerHTML='';
-  const presets={
-    ongrid:[['Tấm pin Solar 400W Monocrystalline','Tấm',10,2500000],['Inverter Growatt 5kW On-Grid','Bộ',1,17000000],['Khung giá đỡ Inox','Bộ',1,3500000],['Dây cáp DC Solar 4mm²','Mét',80,25000],['Hộp tủ điện AC/DC','Bộ',1,2000000],['Công lắp đặt & thi công','Gói',1,5000000]],
-    offgrid:[['Tấm pin Solar 400W Poly','Tấm',6,2300000],['Inverter Off-Grid 3kW','Bộ',1,9000000],['Ắc quy GEL 200Ah 12V','Cái',4,7500000],['Khung giá đỡ','Bộ',1,2800000],['Bộ điều khiển sạc 60A','Bộ',1,1500000],['Công lắp đặt','Gói',1,4000000]],
-    hybrid:[['Tấm pin Solar 400W Mono','Tấm',12,2500000],['Hybrid Inverter 5kW Growatt','Bộ',1,22000000],['Pin Lithium LFP 15kWh','Bộ',1,85000000],['Khung giá đỡ','Bộ',1,4000000],['Tủ điện & đấu nối','Bộ',1,3500000],['Công lắp đặt & thi công','Gói',1,8000000]]
-  };
-  (presets[type]||[]).forEach(([ten,dv,sl,dg])=>{
-    addQRow('qs-items');
-    const r=c.lastElementChild;
-    r.children[0].value=ten;r.children[1].value=dv;r.children[2].value=sl;r.children[3].value=dg;
-  });
-  calcQ('qs-items');
+
+// ── CÀI ĐẶT % LỢI NHUẬN & THUẾ NỘP TỔNG CÔNG TY (ĐIỀU CHỈNH LINH HOẠT) ───────
+function getCompanyRate() {
+  const r = localStorage.getItem('tni_company_tax_rate');
+  return r !== null && !isNaN(Number(r)) ? Number(r) : 17;
+}
+function setCompanyRate(val) {
+  const num = Math.max(0, Math.min(100, Number(val) || 0));
+  localStorage.setItem('tni_company_tax_rate', num);
+  const el = document.getElementById('cfg-cty-rate');
+  if (el) el.value = num;
+  calcNhapProfit();
+  if (typeof renderLN === 'function') renderLN();
+  if (typeof rKG === 'function') rKG();
 }
 
-function saveQuote(type){
-  const prefix=type==='ups'?'qu':'qs';
-  const kh=v(prefix+'-kh'); if(!kh){al('Nhập tên khách hàng','er');return;}
-  const rows=[...document.getElementById(prefix+'-items').children].map(r=>({ten:r.children[0].value,dv:r.children[1].value,sl:+r.children[2].value,dg:+r.children[3].value}));
-  const total=rows.reduce((s,r)=>s+r.sl*r.dg,0);
-  DB.add('quote'+type,{kh,dt:v(prefix+'-dt'),dc:v(prefix+'-dc'),nlbg:v(prefix+'-nlbg'),ngay:v(prefix+'-ngay')||td(),hl:v(prefix+'-hl')||7,rows,total,loai:type==='solar'?v('qs-loai'):'UPS',cs:v('qs-cs')||''});
-  al(`✅ Đã lưu báo giá ${type.toUpperCase()}!`);
-  if(type==='ups') rQuUPS(); else rQuSolar();
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ☀️ HỆ THỐNG BÁO GIÁ SOLAR — VIETTEL CONSTRUCTION MYANMAR (GOOGLE SHEET GID 1879621220)
+// 🛡️ BẢO MẬT & PHÂN QUYỀN: Chia sẻ cho ai người đó chỉ thấy lịch sử của chính họ
+// 🖨️ IN LẠI & SỬA GIÁ: Cho phép sửa bất kỳ giá/SL nào và in lại ngay lập tức
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const DEFAULT_6KW_PRESET = [
+  { ten: "6kW Inverter (Single Phase)", brand: "Growatt", dv: "Nos", sl: 1, dg: 2842000, remark: "1 Year Warranty" },
+  { ten: "610W (bifacial) Solar Panel", brand: "Longi", dv: "Nos", sl: 10, dg: 522000, remark: "12 Year Warranty" },
+  { ten: "LiFePO4 Battery (51.2V, 320Ah)", brand: "CATL", dv: "Nos", sl: 1, dg: 8352000, remark: "2 Year Warranty" },
+  { ten: "Battery Breaker & Cable", brand: "Schneider/Chint", dv: "Lot", sl: 1, dg: 350000, remark: "Dành cho SP 6kW" },
+  { ten: "Installation Fees 10 Kw", brand: "Viettel", dv: "set", sl: 6, dg: 120000, remark: "Tiêu chuẩn kỹ thuật" },
+  { ten: "DC Breaker & Accessories", brand: "Chint", dv: "Lot", sl: 1, dg: 500000, remark: "Bảo vệ hệ thống" },
+  { ten: "Solar Mounting Bracket", brand: "Alloy", dv: "Lot", sl: 1, dg: 200000, remark: "Khung nhôm định hình" },
+  { ten: "AC In\Out Materials", brand: "TNI", dv: "Lot", sl: 1, dg: 50000, remark: "Vật tư phụ AC" },
+  { ten: "Estimated Earthing System Cost", brand: "Viettel", dv: "Lot", sl: 1, dg: 500000, remark: "Varies On Site" },
+  { ten: "Estimated AC In\Out Cable (10mmsq)", brand: "Cadivi", dv: "Lot", sl: 1, dg: 50000, remark: "Varies On Site" },
+  { ten: "Delivery", brand: "Logistics", dv: "Lot", sl: 1, dg: 800000, remark: "Depends on Site" }
+];
+
+let currentEditingSolarId = null;
+
+function addSolarItemRow(data) {
+  const tbody = document.getElementById('qs-table-body');
+  if (!tbody) return;
+  const idx = tbody.children.length + 1;
+  const item = data || { ten: "", brand: "", dv: "Nos", sl: 1, dg: 0, remark: "" };
+
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td style="text-align:center;font-weight:600;color:#64748b" class="row-num">${idx}</td>
+    <td><input class="r-ten" value="${item.ten || ''}" placeholder="Tên vật tư / Thiết bị" style="width:100%;padding:4px 6px;border:1px solid var(--bd);border-radius:4px;font-size:12px"/></td>
+    <td><input class="r-brand" value="${item.brand || ''}" placeholder="Hãng / Brand" style="width:100%;padding:4px 6px;border:1px solid var(--bd);border-radius:4px;font-size:12px"/></td>
+    <td><input class="r-dv" value="${item.dv || 'Nos'}" placeholder="ĐVT" style="width:100%;padding:4px 6px;border:1px solid var(--bd);border-radius:4px;font-size:12px;text-align:center"/></td>
+    <td><input class="r-sl" type="number" min="1" value="${item.sl || 1}" style="width:100%;padding:4px 6px;border:1px solid var(--bd);border-radius:4px;font-size:12px;text-align:center" oninput="calcSolarTable()"/></td>
+    <td><input class="r-dg" type="number" min="0" value="${item.dg || 0}" style="width:100%;padding:4px 6px;border:1px solid var(--bd);border-radius:4px;font-size:12px;text-align:right;font-weight:600;color:#1e40af" oninput="calcSolarTable()"/></td>
+    <td style="text-align:right;font-weight:700;color:#16a34a" class="r-tt">0</td>
+    <td><input class="r-rem" value="${item.remark || ''}" placeholder="Bảo hành / Remark" style="width:100%;padding:4px 6px;border:1px solid var(--bd);border-radius:4px;font-size:12px"/></td>
+    <td style="text-align:center"><button class="btn b-xs b-rd" onclick="this.closest('tr').remove();reindexSolarTable();calcSolarTable()">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+  calcSolarTable();
 }
-function rQuUPS(){
-  const d=DB.g('quoteups');
-  document.getElementById('t-quups').innerHTML=tbl(['#','Khách','ĐT','Tổng BG','Ngày','HLực',''],
-    d.map((r,i)=>[i+1,r.kh,r.dt||'-',`<b>${fn(r.total)}₫</b>`,fd(r.ngay),r.hl+'ng',
-      `<button class="btn b-xs b-out" onclick="viewQuote('ups',${r.id})">👁</button>
-       <button class="btn b-xs b-rd" onclick="del('quoteups',${r.id},rQuUPS)">🗑</button>`]));
+
+function reindexSolarTable() {
+  const tbody = document.getElementById('qs-table-body');
+  if (!tbody) return;
+  [...tbody.children].forEach((tr, i) => {
+    const tdNum = tr.querySelector('.row-num');
+    if (tdNum) tdNum.textContent = i + 1;
+  });
 }
-function rQuSolar(){
-  const d=DB.g('quotesolar');
-  document.getElementById('t-qusolar').innerHTML=tbl(['#','Khách','Loại HT','CS','Tổng BG','Ngày',''],
-    d.map((r,i)=>[i+1,r.kh,bk(r.loai,'yw'),r.cs?r.cs+'kWp':'-',`<b>${fn(r.total)}₫</b>`,fd(r.ngay),
-      `<button class="btn b-xs b-out" onclick="viewQuote('solar',${r.id})">👁</button>
-       <button class="btn b-xs b-rd" onclick="del('quotesolar',${r.id},rQuSolar)">🗑</button>`]));
+
+function calcSolarTable() {
+  const tbody = document.getElementById('qs-table-body');
+  if (!tbody) return;
+  const curr = (v('qs-curr') || 'Kyats');
+  let grandTotal = 0;
+
+  [...tbody.children].forEach(tr => {
+    const sl = Number(tr.querySelector('.r-sl')?.value || 0);
+    const dg = Number(tr.querySelector('.r-dg')?.value || 0);
+    const lineTotal = sl * dg;
+    grandTotal += lineTotal;
+    const ttEl = tr.querySelector('.r-tt');
+    if (ttEl) ttEl.textContent = fn(lineTotal) + ' ' + curr;
+  });
+
+  const bigTotalEl = document.getElementById('qs-big-total');
+  if (bigTotalEl) bigTotalEl.textContent = fn(grandTotal) + ' ' + curr;
+
+  // Tiến độ thanh toán 50% - 40% - 10% theo mẫu
+  const p50 = Math.round(grandTotal * 0.5);
+  const p40 = Math.round(grandTotal * 0.4);
+  const p10 = grandTotal - p50 - p40;
+
+  const p50El = document.getElementById('qs-pay-50');
+  const p40El = document.getElementById('qs-pay-40');
+  const p10El = document.getElementById('qs-pay-10');
+
+  if (p50El) p50El.textContent = fn(p50) + ' ' + curr + ' (50%)';
+  if (p40El) p40El.textContent = fn(p40) + ' ' + curr + ' (40%)';
+  if (p10El) p10El.textContent = fn(p10) + ' ' + curr + ' (10%)';
 }
-function viewQuote(type,id){
-  const d=DB.g('quote'+type).find(r=>r.id==id); if(!d) return;
-  const rows=d.rows.map(r=>`<tr><td>${r.ten}</td><td style="text-align:center">${r.dv}</td><td style="text-align:center">${r.sl}</td><td style="text-align:right">${fn(r.dg)}</td><td style="text-align:right;font-weight:600">${fn(r.sl*r.dg)}</td></tr>`).join('');
-  const html=`<html><head><meta charset="UTF-8"><title>Báo Giá</title>
-  <style>body{font-family:'Segoe UI',sans-serif;padding:30px;color:#1e293b}h2{color:#1d4ed8}table{width:100%;border-collapse:collapse;margin-top:16px}th{background:#f1f5f9;padding:8px;font-size:13px}td{padding:8px;border-bottom:1px solid #e2e8f0;font-size:13px}.total{font-size:18px;font-weight:700;color:#16a34a;text-align:right;margin-top:10px;padding:10px 0}</style></head>
-  <body><h2>${type==='solar'?'☀️ BÁO GIÁ HỆ THỐNG SOLAR':'📄 BÁO GIÁ UPS'}</h2>
-  <p><b>Khách hàng:</b> ${d.kh} &nbsp;|&nbsp; <b>ĐT:</b> ${d.dt||'-'}</p>
-  <p><b>Địa chỉ:</b> ${d.dc||'-'} &nbsp;|&nbsp; ${type==='solar'?`<b>Loại hệ:</b> ${d.loai} | <b>CS:</b> ${d.cs||'-'}kWp`:''}</p>
-  <p><b>Ngày:</b> ${fd(d.ngay)} &nbsp;|&nbsp; <b>Hiệu lực:</b> ${d.hl} ngày &nbsp;|&nbsp; <b>Người lập:</b> ${d.nlbg||'-'}</p>
-  <table><thead><tr><th>Hạng Mục / Thiết Bị</th><th>ĐV</th><th>SL</th><th>Đơn Giá (₫)</th><th>Thành Tiền (₫)</th></tr></thead><tbody>${rows}</tbody></table>
-  <div class="total">TỔNG: ${fn(d.total)} ₫</div>
-  <p style="font-size:12px;color:#64748b;margin-top:20px">* Báo giá có hiệu lực ${d.hl} ngày kể từ ngày lập. Giá chưa bao gồm VAT.</p>
-  </body></html>`;
-  const w=window.open('','_blank');w.document.write(html);w.document.close();w.print();
+
+function presetSolar(type) {
+  const tbody = document.getElementById('qs-table-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  if (type === 'zinkoko') {
+    document.getElementById('qs-code').value = 'VCM-07-02';
+    document.getElementById('qs-kh').value = 'Zin Ko Ko';
+    document.getElementById('qs-subj').value = '6kW Solar System';
+    document.getElementById('qs-cs').value = '6';
+    document.getElementById('qs-loai').value = 'Hybrid (Hòa lưới + Dự trữ)';
+    document.getElementById('qs-curr').value = 'Kyats';
+    DEFAULT_6KW_PRESET.forEach(it => addSolarItemRow(it));
+  } else if (type === 'ongrid5k') {
+    document.getElementById('qs-subj').value = '5kW On-Grid Solar System';
+    document.getElementById('qs-cs').value = '5';
+    document.getElementById('qs-loai').value = 'Hòa lưới (On-Grid)';
+    const ongridItems = [
+      { ten: "Tấm pin Solar 550W Mono", brand: "Longi", dv: "Nos", sl: 10, dg: 450000, remark: "12 Year Warranty" },
+      { ten: "Inverter Growatt 5kW Single Phase", brand: "Growatt", dv: "Nos", sl: 1, dg: 2400000, remark: "5 Year Warranty" },
+      { ten: "Khung giá đỡ Inox", brand: "TNI", dv: "Lot", sl: 1, dg: 450000, remark: "Chống rỉ sét" },
+      { ten: "Dây cáp & Tủ điện AC/DC", brand: "Chint", dv: "Lot", sl: 1, dg: 550000, remark: "Tiêu chuẩn IEC" },
+      { ten: "Công lắp đặt & đấu nối", brand: "Viettel", dv: "set", sl: 1, dg: 700000, remark: "Bảo hành thi công" }
+    ];
+    ongridItems.forEach(it => addSolarItemRow(it));
+  } else if (type === 'hybrid5k') {
+    document.getElementById('qs-subj').value = '5kW Hybrid Solar + 10kWh Battery';
+    document.getElementById('qs-cs').value = '5';
+    document.getElementById('qs-loai').value = 'Hybrid (Hòa lưới + Dự trữ)';
+    const hybridItems = [
+      { ten: "Tấm pin Solar 550W Mono", brand: "Longi", dv: "Nos", sl: 10, dg: 450000, remark: "12 Year Warranty" },
+      { ten: "Inverter Hybrid Deye 5kW", brand: "Deye", dv: "Nos", sl: 1, dg: 3200000, remark: "5 Year Warranty" },
+      { ten: "Pin Lithium LiFePO4 51.2V 200Ah (10kWh)", brand: "CATL", dv: "Nos", sl: 1, dg: 6500000, remark: "3 Year Warranty" },
+      { ten: "Tủ điện bảo vệ AC/DC & Chống sét", brand: "Schneider", dv: "Lot", sl: 1, dg: 800000, remark: "Tiêu chuẩn cao" },
+      { ten: "Khung giá đỡ & Cáp chuyên dụng", brand: "TNI", dv: "Lot", sl: 1, dg: 600000, remark: "Lot trọn gói" },
+      { ten: "Công lắp đặt trọn gói", brand: "Viettel", dv: "set", sl: 1, dg: 900000, remark: "Kiểm định an toàn" }
+    ];
+    hybridItems.forEach(it => addSolarItemRow(it));
+  }
+  calcSolarTable();
+  al('✅ Đã tải mẫu báo giá thành công!');
 }
-function printQuote(type){saveQuote(type);}
+
+function resetNewSolarQuote() {
+  currentEditingSolarId = null;
+  const dateStr = UtilitiesDatePrefix();
+  document.getElementById('qs-code').value = 'VCM-' + dateStr + '-' + Math.floor(100 + Math.random() * 900);
+  document.getElementById('qs-kh').value = '';
+  document.getElementById('qs-dt').value = '';
+  document.getElementById('qs-email').value = '';
+  document.getElementById('qs-dc').value = '';
+  document.getElementById('qs-subj').value = '6kW Solar System';
+  document.getElementById('qs-cs').value = '6';
+  document.getElementById('qs-shareto').value = '';
+  document.getElementById('qs-form-mode-title').textContent = 'Tạo Báo Giá Solar Mới';
+  const badge = document.getElementById('qs-current-badge');
+  if (badge) badge.style.display = 'none';
+
+  const tbody = document.getElementById('qs-table-body');
+  if (tbody) tbody.innerHTML = '';
+  DEFAULT_6KW_PRESET.slice(0, 4).forEach(it => addSolarItemRow(it));
+  calcSolarTable();
+}
+
+function UtilitiesDatePrefix() {
+  const d = new Date();
+  const yy = String(d.getFullYear()).slice(-2);
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return yy + mm + dd;
+}
+
+// LƯU / CẬP NHẬT BÁO GIÁ & ĐỒNG BỘ GOOGLE SHEET TAB BÁO GIÁ SOLAR
+function saveSolarQuote(andPrint) {
+  const code = (v('qs-code') || ('VCM-' + UtilitiesDatePrefix() + '-01')).trim();
+  const kh = v('qs-kh');
+  if (!kh) { al('Vui lòng nhập tên khách hàng!', 'er'); return; }
+
+  const tbody = document.getElementById('qs-table-body');
+  const rows = [];
+  if (tbody) {
+    [...tbody.children].forEach(tr => {
+      const ten = tr.querySelector('.r-ten')?.value.trim();
+      if (ten) {
+        rows.push({
+          ten: ten,
+          brand: tr.querySelector('.r-brand')?.value.trim() || '-',
+          dv: tr.querySelector('.r-dv')?.value.trim() || 'Nos',
+          sl: Number(tr.querySelector('.r-sl')?.value || 1),
+          dg: Number(tr.querySelector('.r-dg')?.value || 0),
+          remark: tr.querySelector('.r-rem')?.value.trim() || ''
+        });
+      }
+    });
+  }
+
+  if (rows.length === 0) { al('Vui lòng nhập ít nhất 1 dòng vật tư!', 'er'); return; }
+
+  const total = rows.reduce((s, r) => s + r.sl * r.dg, 0);
+  const curr = v('qs-curr') || 'Kyats';
+  const staff = v('qs-nlbg') || 'Zin Ko Ko';
+  const staffId = v('qs-staffid') || 'NV001';
+  const shareTo = v('qs-shareto') || '';
+  const email = v('qs-email') || '';
+
+  const quoteObj = {
+    code: code,
+    kh: kh,
+    dt: v('qs-dt') || '',
+    email: email,
+    dc: v('qs-dc') || '',
+    subj: v('qs-subj') || 'Solar System',
+    loai: v('qs-loai') || 'Hybrid',
+    cs: v('qs-cs') || '6',
+    nlbg: staff,
+    staffId: staffId,
+    sharedTo: shareTo,
+    ngay: v('qs-ngay') || td(),
+    hl: Number(v('qs-hl') || 15),
+    currency: curr,
+    rows: rows,
+    total: total,
+    updatedAt: new Date().toISOString()
+  };
+
+  let list = DB.g('quotesolar');
+  let isUpdate = false;
+
+  if (currentEditingSolarId) {
+    list = list.map(q => q.id === currentEditingSolarId ? { ...quoteObj, id: currentEditingSolarId } : q);
+    isUpdate = true;
+  } else {
+    // Kiểm tra xem đã có code này chưa
+    const existIdx = list.findIndex(q => q.code && q.code.toUpperCase() === code.toUpperCase());
+    if (existIdx >= 0) {
+      list[existIdx] = { ...quoteObj, id: list[existIdx].id };
+      currentEditingSolarId = list[existIdx].id;
+      isUpdate = true;
+    } else {
+      const newId = Date.now();
+      quoteObj.id = newId;
+      currentEditingSolarId = newId;
+      list.unshift(quoteObj);
+    }
+  }
+
+  DB.s('quotesolar', list);
+  al(`✅ Đã ${isUpdate ? 'cập nhật' : 'lưu'} báo giá ${code} (${fn(total)} ${curr})!`);
+
+  // Đồng bộ lên Google Sheet tab "Báo Giá Solar"
+  syncQuoteToGoogleSheet(quoteObj);
+
+  // Cập nhật giao diện lịch sử
+  filterQuotesByUser();
+
+  if (andPrint) {
+    viewQuote('solar', currentEditingSolarId);
+  }
+}
+
+// ĐỒNG BỘ LÊN GOOGLE SHEET QUA POST / GET
+function syncQuoteToGoogleSheet(quote) {
+  const gasUrl = "https://script.google.com/macros/s/AKfycbx09J8PPi_IN3_n_ho8QF4RapsPh5uzLchVfS9T89iuw-4QMZWU_ynlhzDvav4wRvj4/exec";
+  try {
+    fetch(gasUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: JSON.stringify({ action: "save_quote_solar", quote: quote }),
+      mode: 'no-cors'
+    }).then(() => {
+      console.log("Synced quote to GAS sheet BaoGiaSolar");
+    }).catch(e => console.warn("GAS sync error:", e));
+  } catch(err) {
+    console.warn("GAS sync failed:", err);
+  }
+}
+
+// CÁCH LY LỊCH SỬ BÁO GIÁ: CHỈ THẤY LỊCH SỬ CỦA CHÍNH MÌNH HOẶC ĐƯỢC CHIA SẺ
+function filterQuotesByUser() {
+  const filterVal = (document.getElementById('qs-filter-user')?.value || '').toLowerCase().trim();
+  const allQuotes = DB.g('quotesolar');
+
+  const filtered = allQuotes.filter(q => {
+    if (!filterVal || filterVal === 'all') return true;
+    const staff = (q.nlbg || '').toLowerCase();
+    const staffId = (q.staffId || '').toLowerCase();
+    const sharedTo = (q.sharedTo || '').toLowerCase();
+    const email = (q.email || '').toLowerCase();
+    const kh = (q.kh || '').toLowerCase();
+
+    return staff.includes(filterVal) || staffId.includes(filterVal) || sharedTo.includes(filterVal) || email.includes(filterVal) || kh.includes(filterVal);
+  });
+
+  // 1. Cập nhật Dropdown chọn tên để xem lại
+  const sel = document.getElementById('qs-history-select');
+  if (sel) {
+    sel.innerHTML = '<option value="">-- Chọn khách hàng / Mã BG để xem lại --</option>';
+    filtered.forEach(q => {
+      const opt = document.createElement('option');
+      opt.value = q.id;
+      opt.textContent = `${q.code || 'VCM'} - ${q.kh} (${q.cs || 6}kWp - ${fn(q.total)} ${q.currency || 'Kyats'}) [${q.nlbg || 'Staff'}]`;
+      if (currentEditingSolarId && q.id === currentEditingSolarId) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  // 2. Cập nhật bảng lịch sử
+  const tbody = document.getElementById('t-qusolar-body');
+  const cntEl = document.getElementById('qs-history-count');
+  if (cntEl) cntEl.textContent = `${filtered.length} báo giá`;
+
+  if (tbody) {
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:16px;color:#94a3b8">Không tìm thấy báo giá nào thuộc nhân viên / Gmail "${filterVal || 'hiện tại'}"</td></tr>`;
+    } else {
+      tbody.innerHTML = filtered.map((q, i) => `
+        <tr style="${currentEditingSolarId === q.id ? 'background:#eff6ff' : ''}">
+          <td style="text-align:center">${i + 1}</td>
+          <td><b>${q.code || '-'}</b></td>
+          <td><b>${q.kh}</b><br><small style="color:#64748b">${q.dt || q.email || '-'}</small></td>
+          <td><span class="bk bk-yw">${q.cs || 6} kWp</span></td>
+          <td style="text-align:right"><b>${fn(q.total)}</b> <small>${q.currency || 'Kyats'}</small></td>
+          <td>${q.nlbg || '-'}</td>
+          <td><small style="color:#2563eb">${q.sharedTo || q.email || 'Nội bộ'}</small></td>
+          <td>${fd(q.ngay)}</td>
+          <td style="text-align:center;white-space:nowrap">
+            <button class="btn b-xs b-bl" onclick="loadSelectedQuote(${q.id})" title="Chỉnh sửa giá & thông tin">✏️ Sửa</button>
+            <button class="btn b-xs b-gn" onclick="viewQuote('solar', ${q.id})" title="In lại báo giá chính thức">🖨️ In Lại</button>
+            <button class="btn b-xs b-pu" onclick="shareQuoteViaGmail(${q.id})" title="Gửi Gmail cho khách">📧</button>
+            <button class="btn b-xs b-rd" onclick="delSolarQuote(${q.id})">🗑</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+  }
+}
+
+function loadSelectedQuote(quoteId) {
+  if (!quoteId) return;
+  const quote = DB.g('quotesolar').find(q => q.id == quoteId || q.code == quoteId);
+  if (!quote) return;
+
+  currentEditingSolarId = quote.id;
+  document.getElementById('qs-code').value = quote.code || '';
+  document.getElementById('qs-kh').value = quote.kh || '';
+  document.getElementById('qs-dt').value = quote.dt || '';
+  document.getElementById('qs-email').value = quote.email || '';
+  document.getElementById('qs-dc').value = quote.dc || '';
+  document.getElementById('qs-subj').value = quote.subj || '6kW Solar System';
+  document.getElementById('qs-loai').value = quote.loai || 'Hybrid (Hòa lưới + Dự trữ)';
+  document.getElementById('qs-cs').value = quote.cs || '6';
+  document.getElementById('qs-nlbg').value = quote.nlbg || 'Zin Ko Ko';
+  document.getElementById('qs-staffid').value = quote.staffId || 'NV001';
+  document.getElementById('qs-ngay').value = quote.ngay || td();
+  document.getElementById('qs-hl').value = quote.hl || 15;
+  document.getElementById('qs-curr').value = quote.currency || 'Kyats';
+  document.getElementById('qs-shareto').value = quote.sharedTo || quote.email || '';
+
+  document.getElementById('qs-form-mode-title').textContent = 'Chỉnh Sửa Báo Giá (Sửa Giá & In Lại)';
+  const badge = document.getElementById('qs-current-badge');
+  if (badge) {
+    badge.textContent = `Đang sửa: ${quote.code || 'Báo Giá'}`;
+    badge.style.display = 'inline-block';
+  }
+
+  const tbody = document.getElementById('qs-table-body');
+  if (tbody) {
+    tbody.innerHTML = '';
+    (quote.rows || []).forEach(it => addSolarItemRow(it));
+  }
+  calcSolarTable();
+  al(`📋 Đã mở báo giá "${quote.code || ''} - ${quote.kh}". Bạn có thể sửa giá và bấm "In / In Lại Báo Giá"!`);
+}
+
+function delSolarQuote(id) {
+  if (!confirm('Bạn có chắc muốn xóa báo giá này không?')) return;
+  let list = DB.g('quotesolar').filter(q => q.id != id);
+  DB.s('quotesolar', list);
+  if (currentEditingSolarId == id) resetNewSolarQuote();
+  filterQuotesByUser();
+  al('🗑️ Đã xóa báo giá!');
+}
+
+function shareQuoteViaGmail(specificId) {
+  const id = specificId || currentEditingSolarId;
+  const quote = DB.g('quotesolar').find(q => q.id == id) || {
+    code: v('qs-code'), kh: v('qs-kh'), dt: v('qs-dt'), email: v('qs-email'),
+    dc: v('qs-dc'), cs: v('qs-cs'), total: v('qs-big-total'), currency: v('qs-curr')
+  };
+
+  const targetEmail = prompt('Nhập địa chỉ Gmail để chia sẻ báo giá này:', quote.email || quote.sharedTo || '');
+  if (!targetEmail || !targetEmail.includes('@')) {
+    if (targetEmail) al('Gmail không hợp lệ!', 'er');
+    return;
+  }
+
+  // Cập nhật người được chia sẻ
+  document.getElementById('qs-shareto').value = targetEmail;
+  if (quote.id) {
+    let list = DB.g('quotesolar');
+    list = list.map(q => q.id === quote.id ? { ...q, sharedTo: targetEmail, email: targetEmail } : q);
+    DB.s('quotesolar', list);
+    syncQuoteToGoogleSheet({ ...quote, sharedTo: targetEmail, sendEmail: true });
+    filterQuotesByUser();
+  }
+
+  const subject = encodeURIComponent(`[VIETTEL CONSTRUCTION MYANMAR] Solar System Quotation - Ref: ${quote.code || 'VCM-07-02'}`);
+  const body = encodeURIComponent(
+`Dear ${quote.kh || 'Valued Customer'},
+
+Viettel Construction Myanmar Company Limited is pleased to present your Solar System Quotation.
+
+- Quotation Ref: ${quote.code || 'VCM-07-02'}
+- Project / Customer: ${quote.kh} (${quote.dc || 'Myanmar'})
+- System Capacity: ${quote.cs || 6} kWp
+- Total Amount: ${fn(quote.total)} ${quote.currency || 'Kyats'}
+- Validity: 15 days
+
+View Online Quotation:
+${window.location.origin}/sale?quote=${quote.code || 'VCM-07-02'}&user=${encodeURIComponent(targetEmail)}
+
+Thank you for choosing Viettel Construction Myanmar!
+Hotline: 0965 1900 009 | Website: www.viettelconstructionmyanmar.com`
+  );
+
+  window.open(`mailto:${targetEmail}?subject=${subject}&body=${body}`, '_blank');
+  al(`📧 Đã tạo bản thảo gửi báo giá đến ${targetEmail}!`);
+}
+
+function copyShareQuoteLink() {
+  const code = v('qs-code') || 'VCM-07-02';
+  const user = v('qs-shareto') || v('qs-email') || v('qs-nlbg') || 'customer';
+  const url = `${window.location.origin}/sale?quote=${encodeURIComponent(code)}&user=${encodeURIComponent(user)}`;
+  navigator.clipboard.writeText(url).then(() => {
+    al(`🔗 Đã sao chép link báo giá riêng cho: ${user}!`);
+  }).catch(() => {
+    prompt('Link chia sẻ báo giá riêng:', url);
+  });
+}
+
+// HÀM IN BÁO GIÁ CHUẨN ĐẦY ĐỦ: HEADER ĐỎ VIETTEL, WATERMARK CHỮ CHÌM, 9 CỘT THEO SHEET GID 1879621220
+function viewQuote(type, id) {
+  if (type !== 'solar') {
+    // Thiết bị chung
+    const d = DB.g('quoteups').find(r => r.id == id); if (!d) return;
+    const rows = d.rows.map(r => `<tr><td>${r.ten}</td><td style="text-align:center">${r.dv}</td><td style="text-align:center">${r.sl}</td><td style="text-align:right">${fn(r.dg)}</td><td style="text-align:right;font-weight:600">${fn(r.sl * r.dg)}</td></tr>`).join('');
+    const html = `<html><head><meta charset="UTF-8"><title>Báo Giá Thiết Bị</title>
+    <style>body{font-family:'Segoe UI',sans-serif;padding:30px;color:#1e293b}h2{color:#1d4ed8}table{width:100%;border-collapse:collapse;margin-top:16px}th{background:#f1f5f9;padding:8px;font-size:13px}td{padding:8px;border-bottom:1px solid #e2e8f0;font-size:13px}.total{font-size:18px;font-weight:700;color:#16a34a;text-align:right;margin-top:10px;padding:10px 0}</style></head>
+    <body><h2>📄 BÁO GIÁ THIẾT BỊ</h2>
+    <p><b>Khách hàng:</b> ${d.kh} &nbsp;|&nbsp; <b>ĐT:</b> ${d.dt||'-'}</p>
+    <p><b>Địa chỉ:</b> ${d.dc||'-'}</p>
+    <p><b>Ngày:</b> ${fd(d.ngay)} &nbsp;|&nbsp; <b>Hiệu lực:</b> ${d.hl} ngày &nbsp;|&nbsp; <b>Người lập:</b> ${d.nlbg||'-'}</p>
+    <table><thead><tr><th>Hạng Mục / Thiết Bị</th><th>ĐV</th><th>SL</th><th>Đơn Giá</th><th>Thành Tiền</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="total">TỔNG: ${fn(d.total)} ₫</div>
+    <p style="font-size:12px;color:#64748b;margin-top:20px">* Báo giá có hiệu lực ${d.hl} ngày kể từ ngày lập. Giá chưa bao gồm VAT.</p>
+    </body></html>`;
+    const w = window.open('', '_blank'); w.document.write(html); w.document.close(); w.print();
+    return;
+  }
+
+  // BÁO GIÁ SOLAR CHÍNH THỨC — VIETTEL CONSTRUCTION MYANMAR & TIẾNG ANH CHỦ ĐẠO
+  const d = DB.g('quotesolar').find(r => r.id == id) || {
+    code: v('qs-code') || 'VCM-07-02',
+    kh: v('qs-kh') || 'Zin Ko Ko',
+    dt: v('qs-dt') || '-',
+    dc: v('qs-dc') || 'Yangon, Myanmar',
+    subj: v('qs-subj') || '6kW Solar System',
+    loai: v('qs-loai') || 'Hybrid',
+    cs: v('qs-cs') || '6',
+    ngay: v('qs-ngay') || td(),
+    hl: v('qs-hl') || 15,
+    nlbg: v('qs-nlbg') || 'Zin Ko Ko',
+    currency: v('qs-curr') || 'Kyats',
+    rows: [...document.getElementById('qs-table-body')?.children || []].map(tr => ({
+      ten: tr.querySelector('.r-ten')?.value || '',
+      brand: tr.querySelector('.r-brand')?.value || '-',
+      dv: tr.querySelector('.r-dv')?.value || 'Nos',
+      sl: Number(tr.querySelector('.r-sl')?.value || 1),
+      dg: Number(tr.querySelector('.r-dg')?.value || 0),
+      remark: tr.querySelector('.r-rem')?.value || ''
+    }))
+  };
+
+  const curr = d.currency || 'Kyats';
+  const rows = (d.rows || []).map((r, i) => `
+    <tr>
+      <td style="text-align:center;padding:8px 6px;border:1px solid #cbd5e1">${i + 1}</td>
+      <td style="padding:8px;border:1px solid #cbd5e1;font-weight:600">${r.ten}</td>
+      <td style="text-align:center;padding:8px;border:1px solid #cbd5e1">${r.brand || '-'}</td>
+      <td style="text-align:center;padding:8px;border:1px solid #cbd5e1">${r.dv || 'Nos'}</td>
+      <td style="text-align:center;padding:8px;border:1px solid #cbd5e1;font-weight:600">${r.sl}</td>
+      <td style="text-align:right;padding:8px;border:1px solid #cbd5e1">${fn(r.dg)}</td>
+      <td style="text-align:right;padding:8px;border:1px solid #cbd5e1;font-weight:700;color:#0f172a">${fn(r.sl * r.dg)}</td>
+      <td style="padding:8px;border:1px solid #cbd5e1;color:#475569;font-size:11.5px">${r.remark || '-'}</td>
+    </tr>
+  `).join('');
+
+  const total = (d.rows || []).reduce((s, r) => s + (r.sl * r.dg), 0);
+  const p50 = Math.round(total * 0.5);
+  const p40 = Math.round(total * 0.4);
+  const p10 = total - p50 - p40;
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quotation_${d.code || 'VCM'}_${d.kh || 'Client'}</title>
+  <style>
+    @page { size: A4 portrait; margin: 12mm 15mm; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; line-height: 1.4; margin: 0; padding: 15px; position: relative; }
+    
+    /* CHỮ CHÌM / WATERMARK CHÉO NỀN TRANG BÁO GIÁ */
+    .watermark {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-32deg);
+      font-size: 50px;
+      font-weight: 900;
+      color: rgba(220, 38, 38, 0.05);
+      text-transform: uppercase;
+      letter-spacing: 5px;
+      pointer-events: none;
+      z-index: -1;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    /* HEADER CÔNG TY MÀU ĐỎ */
+    .co-header {
+      color: #dc2626;
+      border-bottom: 2px solid #dc2626;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+    }
+    .co-title { font-size: 17px; font-weight: 900; letter-spacing: 0.5px; }
+    .co-sub { font-size: 12px; color: #334155; margin-top: 3px; font-weight: 500; }
+
+    /* QUOTATION TITLE */
+    .quote-title-box { text-align: center; margin: 14px 0 16px; }
+    .quote-title { font-size: 20px; font-weight: 800; color: #1e3a8a; letter-spacing: 1px; margin: 0; }
+    .quote-sub { font-size: 12px; color: #64748b; font-weight: 600; margin-top: 2px; }
+
+    /* INFO GRID */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 8px 16px;
+      font-size: 12.5px;
+      background: #f8fafc;
+      padding: 10px 14px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 14px;
+    }
+    .info-item { display: flex; gap: 6px; }
+    .info-item b { color: #334155; min-width: 90px; }
+
+    /* TABLE */
+    table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+    th { background: #f1f5f9; padding: 8px 6px; font-weight: 700; color: #334155; border: 1px solid #cbd5e1; font-size: 11.5px; }
+    td { vertical-align: middle; }
+
+    /* SUMMARY & PAYMENT */
+    .total-box {
+      margin-top: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .total-row {
+      background: #f8fafc;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      font-weight: bold;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .total-val { font-size: 18px; color: #dc2626; }
+    
+    .pay-schedule {
+      padding: 10px 14px;
+      font-size: 12px;
+      background: #fff;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .pay-item { background: #f8fafc; padding: 6px 10px; border-radius: 4px; border: 1px solid #e2e8f0; }
+
+    /* SIGNATURES */
+    .sig-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-top: 35px;
+      text-align: center;
+      font-size: 12.5px;
+      page-break-inside: avoid;
+    }
+    .sig-box { min-height: 80px; }
+
+    @media print {
+      body { padding: 0; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <!-- CHỮ CHÌM CHÉO NỀN (WATERMARK) -->
+  <div class="watermark">VIETTEL CONSTRUCTION MYANMAR</div>
+
+  <!-- HEADER ĐỎ VIETTEL CONSTRUCTION MYANMAR -->
+  <div class="co-header">
+    <div class="co-title">VIETTEL CONSTRUCTION MYANMAR COMPANY LIMITED</div>
+    <div class="co-sub"><b>A:</b> No 1237 Waizanyantar Street, South Okkalapa, Yangon, Myanmar</div>
+    <div class="co-sub"><b>W:</b> www.viettelconstructionmyanmar.com &nbsp;&nbsp;|&nbsp;&nbsp; <b>H:</b> 0965 1900 009</div>
+  </div>
+
+  <!-- TIÊU ĐỀ BÁO GIÁ TIẾNG ANH CHỦ ĐẠO -->
+  <div class="quote-title-box">
+    <h1 class="quote-title">SOLAR SYSTEM QUOTATION</h1>
+    <div class="quote-sub">VIETTEL CONSTRUCTION MYANMAR &bull; TNI SOLAR DIVISION</div>
+  </div>
+
+  <!-- BẢNG THÔNG TIN KHÁCH HÀNG & DỰ ÁN (THEO TEMPLATE GOOGLE SHEET GID 1879621220) -->
+  <div class="info-grid">
+    <div class="info-item"><b>Quotation No:</b> <span style="font-weight:bold;color:#1e40af">${d.code || 'VCM-07-02'}</span></div>
+    <div class="info-item"><b>Date:</b> <span>${fd(d.ngay)}</span></div>
+    <div class="info-item"><b>Mr / Ms:</b> <span style="font-weight:bold">${d.kh || '-'}</span></div>
+    <div class="info-item"><b>Validity:</b> <span>${d.hl || 15} Days</span></div>
+    <div class="info-item"><b>Phone Number:</b> <span>${d.dt || '-'}</span></div>
+    <div class="info-item"><b>Prepared By:</b> <span>${d.nlbg || 'Zin Ko Ko'}</span></div>
+    <div class="info-item"><b>Project / Site:</b> <span>${d.dc || '-'}</span></div>
+    <div class="info-item"><b>System Type:</b> <span>${d.loai || 'Hybrid'} (${d.cs || 6} kWp)</span></div>
+    <div class="info-item" style="grid-column:1/-1"><b>Subject:</b> <span style="font-weight:600">${d.subj || (d.cs ? d.cs + 'kW Solar System' : 'Solar System')}</span></div>
+  </div>
+
+  <!-- BẢNG VẬT TƯ ĐẦY ĐỦ 9 CỘT THEO MẪU SHEET -->
+  <table>
+    <thead>
+      <tr>
+        <th style="width:30px">No.</th>
+        <th>Material Specifications</th>
+        <th style="width:90px">Brand</th>
+        <th style="width:50px">Unit</th>
+        <th style="width:45px">Qty</th>
+        <th style="width:110px;text-align:right">Unit Price (${curr})</th>
+        <th style="width:120px;text-align:right">Total Amount (${curr})</th>
+        <th style="width:130px">Remark / Warranty</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rows}
+    </tbody>
+  </table>
+
+  <!-- TỔNG CỘNG & TIẾN ĐỘ THANH TOÁN (50% - 40% - 10%) -->
+  <div class="total-box">
+    <div class="total-row">
+      <span>TOTAL AMOUNT (${curr.toUpperCase()}):</span>
+      <span class="total-val">${fn(total)} ${curr}</span>
+    </div>
+    <div class="pay-schedule">
+      <div class="pay-item">
+        <b style="color:#ca8a04">1st Payment (50% Advance):</b><br/>
+        <span style="font-size:13px;font-weight:700;color:#1e293b">${fn(p50)} ${curr}</span><br/>
+        <small style="color:#64748b">Upon Contract Signing</small>
+      </div>
+      <div class="pay-item">
+        <b style="color:#16a34a">2nd Payment (40% Delivery):</b><br/>
+        <span style="font-size:13px;font-weight:700;color:#1e293b">${fn(p40)} ${curr}</span><br/>
+        <small style="color:#64748b">Upon Equipment Arrival</small>
+      </div>
+      <div class="pay-item">
+        <b style="color:#2563eb">3rd Payment (10% Handover):</b><br/>
+        <span style="font-size:13px;font-weight:700;color:#1e293b">${fn(p10)} ${curr}</span><br/>
+        <small style="color:#64748b">Upon Commissioning</small>
+      </div>
+    </div>
+  </div>
+
+  <div style="font-size:11.5px;color:#64748b;margin-top:10px;line-height:1.5">
+    * <b>Notice:</b> Shipping costs are not included (Depends on Site).<br/>
+    * Quotation is valid for <b>${d.hl || 15} days</b> from the date of issue.<br/>
+    * All warranty terms are provided per manufacturer specifications and Viettel Construction Myanmar standards.
+  </div>
+
+  <!-- CHỮ KÝ XÁC NHẬN 2 BÊN -->
+  <div class="sig-section">
+    <div>
+      <b>CUSTOMER ACCEPTANCE</b><br/>
+      <small style="color:#64748b">(Sign &amp; Full Name)</small>
+      <div class="sig-box"></div>
+      <b>${d.kh || ''}</b>
+    </div>
+    <div>
+      <b>VIETTEL CONSTRUCTION MYANMAR CO., LTD</b><br/>
+      <small style="color:#64748b">(Authorized Signature &amp; Stamp)</small>
+      <div class="sig-box"></div>
+      <b>${d.nlbg || 'Authorized Representative'}</b>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  setTimeout(() => { w.print(); }, 500);
+}
+
 
 // ═══════════════════════════════════════════════════
 // ĐẠI LÝ & PHÂN PHỐI
@@ -1993,46 +2912,46 @@ function renderLeadsCards(){
 // ═══════════════════════════════════════════════════
 // 🌐 BILINGUAL SUPPORT (VIỆT - ANH)
 // ═══════════════════════════════════════════════════
-let currentLang = localStorage.getItem('ups_lang') || 'vi';
+let currentLang = localStorage.getItem('ups_lang') || 'en';
 
 const DICT = {
+  en: {
+    nhap_title: '➕ Goods Intake & Cost Allocation (Nhập Hàng & Phân Bổ Vốn)',
+    p_name: 'Product Name * (Tên Sản Phẩm)',
+    p_model: 'Model / Item Code (Mã SP)',
+    p_serial: 'Serial Number (Số Serial)',
+    p_category: 'Category (Danh Mục)',
+    p_qty: 'Quantity * (Số Lượng)',
+    cost_price_83: 'Base Cost (Vốn Gốc Đầu Vào) *',
+    actual_selling_price: 'Actual Selling Price (Giá Thực Bán) *',
+    p_supplier: 'Supplier (Nhà Cung Cấp)',
+    p_date: 'Intake Date (Ngày Nhập)',
+    p_warranty: 'Warranty (Months / Bảo Hành)',
+    p_note: 'Notes (Ghi Chú)',
+    lbl_cost_83: '🏷️ Base Cost (Vốn Gốc Chi Nhánh)',
+    lbl_comp_17: '🏢 HO Profit & Tax Obligation (LN & Thuế Cty)',
+    lbl_min_price: '🛡️ Minimum Selling Floor (Giá Sàn Tối Thiểu)',
+    lbl_act_price: '📈 Actual Selling Price (Giá Thực Bán)',
+    lbl_branch_profit: '🏪 Branch Retained Profit (Lợi Nhuận Chi Nhánh)'
+  },
   vi: {
-    nhap_title: '➕ Thêm Phiếu Nhập & Phân Bổ Lợi Nhuận',
+    nhap_title: '➕ Nhập Hàng & Phân Bổ Lợi Nhuận',
     p_name: 'Tên Sản Phẩm *',
     p_model: 'Model / Mã SP',
     p_serial: 'Serial Number',
     p_category: 'Danh Mục',
     p_qty: 'Số Lượng *',
-    cost_price_83: 'Đơn Giá Gốc Đầu Vào (83%) (₫) *',
-    actual_selling_price: 'Giá Thực Bán (₫) *',
+    cost_price_83: 'Đơn Giá Gốc Đầu Vào *',
+    actual_selling_price: 'Giá Thực Bán *',
     p_supplier: 'Nhà Cung Cấp',
     p_date: 'Ngày Nhập',
     p_warranty: 'Bảo Hành (tháng)',
     p_note: 'Ghi Chú',
-    lbl_cost_83: '🏷️ Giá Gốc (83%)',
-    lbl_comp_17: '🏢 LN Trả Về Cty 17%',
-    lbl_min_price: '🛡️ Mức Giá Bán Thấp Nhất (100%)',
+    lbl_cost_83: '🏷️ Giá Gốc (Chi nhánh tự chi)',
+    lbl_comp_17: '🏢 Lợi Nhuận & Thuế Nộp Cty',
+    lbl_min_price: '🛡️ Mức Giá Bán Thấp Nhất',
     lbl_act_price: '📈 Giá Thực Bán',
     lbl_branch_profit: '🏪 Lợi Nhuận Chi Nhánh'
-  },
-  en: {
-    nhap_title: '➕ Goods Intake & Profit Allocation',
-    p_name: 'Product Name *',
-    p_model: 'Model / Item Code',
-    p_serial: 'Serial Number',
-    p_category: 'Category',
-    p_qty: 'Quantity *',
-    cost_price_83: 'Base Cost Price (83%) ($/₫) *',
-    actual_selling_price: 'Actual Selling Price ($/₫) *',
-    p_supplier: 'Supplier',
-    p_date: 'Date Added',
-    p_warranty: 'Warranty (Months)',
-    p_note: 'Note',
-    lbl_cost_83: '🏷️ Base Cost (83%)',
-    lbl_comp_17: '🏢 Return to Company 17%',
-    lbl_min_price: '🛡️ Min Floor Price (100%)',
-    lbl_act_price: '📈 Actual Selling Price',
-    lbl_branch_profit: '🏪 Branch Profit'
   }
 };
 
@@ -2059,6 +2978,27 @@ document.querySelectorAll('input[type="date"]').forEach(e=>e.value=td());
 // Init quotation rows
 addQRow('qu-items');
 applyLang(currentLang);
+setCompanyRate(getCompanyRate());
+if (document.getElementById('qs-table-body') && document.getElementById('qs-table-body').children.length === 0) {
+  presetSolar('zinkoko');
+}
+filterQuotesByUser();
+
+// Check URL parameters for Direct Quotation Sharing
+const urlParams = new URLSearchParams(window.location.search);
+const sharedQuote = urlParams.get('quote');
+const sharedUser = urlParams.get('user') || urlParams.get('staff') || urlParams.get('email');
+if (sharedUser) {
+  const filterInput = document.getElementById('qs-filter-user');
+  if (filterInput) {
+    filterInput.value = sharedUser;
+    filterQuotesByUser();
+  }
+}
+if (sharedQuote) {
+  go('baogiasolar');
+  loadSelectedQuote(sharedQuote);
+}
 rDash();
 </script>
 </body>
