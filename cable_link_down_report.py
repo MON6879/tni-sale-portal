@@ -191,54 +191,9 @@ def send_telegram_report(text: str) -> int | None:
         return None
 
 
-def try_edit_message(msg_id: int, new_text: str) -> bool:
-    """Thử edit tin nhắn cũ tại chỗ. Trả về True nếu thành công."""
-    if not msg_id:
-        return False
-    url = f"https://api.telegram.org/bot{CABLE_BOT_TOKEN}/editMessageText"
-    payload = {
-        "chat_id": CABLE_CHAT_ID,
-        "message_id": msg_id,
-        "text": new_text,
-        "parse_mode": "HTML",
-        "disable_web_page_preview": True
-    }
-    try:
-        resp = requests.post(url, json=payload, timeout=15)
-        data = resp.json()
-        if data.get("ok"):
-            print(f"[Cable Link Down] ✏️ Edited existing message ID {msg_id}")
-            return True
-        desc = data.get("description", "")
-        print(f"[Cable Link Down] ⚠️ Edit failed (mid={msg_id}): {desc}")
-        # Tin không còn tồn tại → cần gửi mới
-        return False
-    except Exception as ex:
-        print(f"[Cable Link Down] ⚠️ Edit error: {ex}")
-        return False
-
-
-def get_stored_msgid() -> int | None:
-    """Lấy msg_id đã lưu từ GAS, với timeout ngắn 10s."""
-    try:
-        resp = requests.get(
-            APPS_SCRIPT_URL,
-            params={"action": "get_msgids", "key": DELETE_KEY},
-            timeout=10,
-            allow_redirects=True
-        )
-        if resp.status_code == 200:
-            ids = resp.json().get("msgids", [])
-            if ids:
-                return int(ids[-1])
-    except Exception as ex:
-        print(f"[Cable Link Down] ⚠️ get_stored_msgid timeout/error: {ex}")
-    return None
-
-
 def run_cable_link_down():
-    """Hàm chạy chính: Đọc sheet → Edit tin cũ nếu còn, nếu không gửi mới → Lưu ID.
-    Chiến lược Edit-or-Send: không xóa, không tạo chồng, không phụ thuộc GAS cho delete.
+    """Hàm chạy chính: Đọc sheet → Xóa tin cũ → Gửi tin mới → Lưu ID.
+    Chiến lược: Delete-then-Send. GAS retry 3 lần chống cold-start buổi sáng.
     """
     print("=" * 60)
     print("🔌 KHỞI ĐỘNG TOA BÁO CÁO CABLE LINK DOWN (BOT 15)")
@@ -250,7 +205,7 @@ def run_cable_link_down():
         print(f"[Cable Link Down] ❌ Lỗi đọc dữ liệu sheet: {ex}")
         return
 
-    # ── Guard: chỉ xử lý khi có nội dung thực sự ──────────────────
+    # ── Guard: chỉ xóa cũ & gửi khi có nội dung thực sự ──────────────────
     if not items:
         print("[Cable Link Down] ✅ No link down items found — skip send & delete.")
         print("=" * 60)
@@ -258,26 +213,26 @@ def run_cable_link_down():
 
     msg_text = build_telegram_message(items)
 
-    # ── Bước 1: Thử edit tin cũ ────────────────────────────────────
-    stored_mid = get_stored_msgid()
-    print(f"[Cable Link Down] 📋 Stored msg_id: {stored_mid}")
+    print(f"[Cable Link Down] 🗑️ Cleaning up previous link down report...")
+    delete_old_messages_bot(CABLE_BOT_TOKEN, CABLE_CHAT_ID, APPS_SCRIPT_URL, DELETE_KEY)
 
-    edited = try_edit_message(stored_mid, msg_text) if stored_mid else False
+    new_mid = send_telegram_report(msg_text)
 
-    if edited:
-        # Edit thành công → không gửi mới → không tạo chồng tin
-        print("[Cable Link Down] ✅ Updated existing message in-place (no new message created).")
-    else:
-        # Edit thất bại hoặc không có ID → gửi tin mới
-        print("[Cable Link Down] 📤 Sending new message...")
-        new_mid = send_telegram_report(msg_text)
-        if new_mid:
-            # Lưu ID mới vào GAS (best-effort, timeout ngắn)
+    if new_mid:
+        # Lưu ID mới vào GAS — retry 3 lần chống GAS cold-start
+        saved = False
+        for attempt in range(3):
             try:
                 save_msgids(APPS_SCRIPT_URL, DELETE_KEY, [new_mid])
-                print(f"[Cable Link Down] 💾 Saved new message ID {new_mid} to GAS Properties.")
+                print(f"[Cable Link Down] 💾 Saved msg_id {new_mid} (attempt {attempt+1})")
+                saved = True
+                break
             except Exception as ex:
-                print(f"[Cable Link Down] ⚠️ save_msgids failed (non-critical): {ex}")
+                print(f"[Cable Link Down] ⚠️ save_msgids attempt {attempt+1} failed: {ex}")
+                if attempt < 2:
+                    import time; time.sleep(5)
+        if not saved:
+            print(f"[Cable Link Down] ❌ Could not save msg_id {new_mid} after 3 attempts.")
 
     print("=" * 60)
     print("🏁 TOA BÁO CÁO CABLE LINK DOWN HOÀN TẤT")
@@ -286,4 +241,3 @@ def run_cable_link_down():
 
 if __name__ == "__main__":
     run_cable_link_down()
-

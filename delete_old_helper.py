@@ -18,6 +18,7 @@ MAIN_GAS_FALLBACK = "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P
 def get_old_msgids(gas_url: str, key: str) -> list[int]:
     """Đọc message_ids cũ từ GAS PropertiesService.
     Returns list of message_id (int). Rỗng nếu lỗi hoặc chưa có.
+    Retry 3 lần (timeout 45s mỗi lần) để chống GAS cold-start buổi sáng.
     """
     if not gas_url or "AKfycbzGFdnE" in gas_url or "AKfycbz-" not in gas_url:
         gas_url = MAIN_GAS_FALLBACK
@@ -26,22 +27,30 @@ def get_old_msgids(gas_url: str, key: str) -> list[int]:
         urls.append(MAIN_GAS_FALLBACK)
     if not key:
         return []
-    for u in urls:
-        try:
-            resp = requests.get(
-                u,
-                params={"action": "get_msgids", "key": key},
-                timeout=15,
-                allow_redirects=True
-            )
-            if resp.status_code == 200:
-                data = resp.json()
-                raw = data.get("msgids", [])
-                if raw:
-                    return [int(x) for x in raw]
-        except Exception as ex:
-            print(f"[delete_old] ⚠️ get_msgids({key}) lỗi: {ex}")
+    import time as _time
+    for attempt in range(3):
+        for u in urls:
+            try:
+                resp = requests.get(
+                    u,
+                    params={"action": "get_msgids", "key": key},
+                    timeout=45,
+                    allow_redirects=True
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    raw = data.get("msgids", [])
+                    if raw:
+                        return [int(x) for x in raw]
+                    # GAS trả OK nhưng rỗng → tin chưa được lưu, không cần retry
+                    return []
+            except Exception as ex:
+                print(f"[delete_old] ⚠️ get_msgids({key}) attempt {attempt+1} lỗi: {ex}")
+        if attempt < 2:
+            print(f"[delete_old] 🔄 Retry get_msgids sau 8s (attempt {attempt+2}/3)...")
+            _time.sleep(8)
     return []
+
 
 
 def save_msgids(gas_url: str, key: str, msgids: list[int]):
