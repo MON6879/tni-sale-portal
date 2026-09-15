@@ -207,6 +207,7 @@ grep -c 'continue-on-error: true' train_5min.yml                # Phải = tổn
 | **Site Down Bot (Relay)** (`@tni_site_down_bot`) | `https://tni-bot.vercel.app/api/site_down_relay` | `AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA` (Version `@349`) | `api/site_down_relay.py`, `botlookup_relay.py` | `system_map.md`, `SYSTEM_DOC.md` |
 | **Construction Bot** (`@8903841312`) | `https://tni-bot.vercel.app/api/construction` (Vercel Proxy) | `AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec` | `api/construction.py` | `system_map.md`, `SYSTEM_DOC.md` |
 | **15 TNI CABLE Bot** (`@TNI_CABLE_BOT`) | `https://tni-bot.vercel.app/api/cable_bot` | `AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA` (Version `@430`) | `api/cable_bot.py`, `cable_link_down_report.py`, `apps_script_cable.gs` | `system_map.md`, `AGENTS.md` |
+| **TNI Sale** (Web App + Telegram Collector Bot `8647102342`) | Frontend: `tni_sale.html` (static) | **Dedicated GAS**: `AKfycbx09J8PPi_IN3_n_ho8QF4RapsPh5uzLchVfS9T89iuw-4QMZWU_ynlhzDvav4wRvj4` + **Main GAS** `sale_backend.gs` (CRUD `sale_*`) | `apps_script_ups_solar/TNI Sale.js`, `QLTC_GAS/sale_backend.gs`, `tni_sale.html` | Sheet: `1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA` |
 
 ---
 
@@ -1387,6 +1388,9 @@ KHÔNG ĐỤNG:
 | **`Ghế EXT-ATTENDANCE-BOT`** | Cổng Ngoại Giao Điểm Danh | Webhook Bot Điểm Danh `@8628370628` | Báo trễ nhận diện ảnh về DM Admin |
 | **`Ghế BOT-CABLE-15`** | Bot 15 TNI CABLE Thu Thập Cáp | Webhook `/api/cable_bot`, `@TNI_CABLE_BOT` (8758104446), Nhóm `8 TNI CABLE BROKEN SOS` (-5531350787) | Phản hồi sự cố cáp kèm Note vật tư & bảo dưỡng, lưu ảnh Drive folder theo REF |
 | **`Ghế GAS-CABLE-15`** | Quản Trị GAS Cable | `apps_script_cable.gs` (@387), ghi Sheet `Detail cable`, trả link Drive Folder tải tất cả ảnh | Báo lỗi Drive / Sheet Cable về DM Admin |
+| **`Ghế WEB-SALE-16`** | Frontend TNI Sale Web App | `tni_sale.html` (static SPA 164KB), 13 module bán hàng, báo giá Solar/UPS, CRM, Ads, song ngữ VN/EN | Cảnh báo khi localStorage rỗng hoặc sync GAS thất bại |
+| **`Ghế GAS-SALE-16`** | Backend GAS Sale CRUD + Collector | **Dedicated GAS**: `apps_script_ups_solar/TNI Sale.js` (1807 dòng) Deploy `AKfycbx09J8PPi...` + **Main GAS**: `QLTC_GAS/sale_backend.gs` (180 dòng, CRUD `sale_*`) | Sheet `1s-V0owHlwub...wQBA` (12 tabs: NhapHang, Sales Record, Consignment, Warranty...) |
+| **`Ghế BOT-SALE-16`** | Telegram Sale Collector Bot | Bot Token `8647102342` (ScriptProperties `BOT_TOKEN`), thu thập đơn hàng từ Telegram Groups, xóa tin gốc sau khi lưu, lưu ảnh vào Drive Folder `11HcMa63slXPOHrveHxmqZTZerzKPfjVt` | Báo lỗi thu thập / Drive quota hết về DM Admin |
 | **`Ghế GAS-VERIFY-0`** | Xác Nhận Đủ File GAS | `QLTC_GAS` = 17 files, `apps_script_sitedown` = 1 file | DỪNG NGAY nếu thiếu file, KHÔNG push! |
 | **`Ghế GAS-PUSH-1`** | Đẩy Code Lên GAS Cloud | `npx clasp push` (theo đúng thư mục chuyên biệt) | Báo lỗi push / xung đột về DM Admin |
 | **`Ghế GAS-DEPLOY-2`** | Deploy Đè Đúng Deployment | `npx clasp deploy -i [DEPLOYMENT_ID_CHUẨN] -d "..."` | DỪNG nếu dùng sai Deployment ID! |

@@ -1325,4 +1325,91 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 > 3. **Bảo Đảm Tính Nhất Quán 100% Trên Toàn Hệ Thống**:
 >    - Toàn bộ các bảng tính (`NhapHang`, `Tổng Hợp`, `Consignment`), mã nguồn Apps Script (`apps_script_ups_solar`) và Giao diện Web App (`ups_manager.html`) BẮT BUỘC phải áp dụng chính xác công thức toán học và cấu trúc cột này!
 
+---
+
+# 📊 STRICT TEAM SUMMARY PARSING RULE: PHÂN TÁCH KỸ SƯ CÁ NHÂN VS TỔNG HỢP TOÀN ĐỘI & TỰ ĐỘNG TÍNH TOÁN DATE LABELS (STRICT TEAM SUMMARY ISOLATION & DYNAMIC DATE POLICY)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (TEAM SUMMARY ISOLATION & DYNAMIC DATE STANDARD)**:
+> 
+> ### 🔴 RULE PM-30: NGUYÊN TẮC PHÂN TÁCH KỸ SƯ CÁ NHÂN VS TỔNG HỢP TOÀN ĐỘI TRÊN GOOGLE SHEET
+> 1. **Phân Tách Tuyệt Đối 2 Vùng Dữ Liệu Khi Parse Bảng Tính Tổng Hợp**:
+>    - Khi đọc bảng tính Google Sheet chứa cả danh sách kỹ sư cá nhân và dòng tổng kết toàn đội (ví dụ tab `Sum all WO Team` GID `1840482617`):
+>    - Các dòng trên (dòng 3 đến 31) là dữ liệu của từng kỹ sư riêng lẻ. Dòng tổng kết của các Đội nằm ở phân vùng phía dưới (từ dòng 35 trở đi).
+>    - **TUYỆT ĐỐI CẤM** dùng `rows.find()` tìm mã đội chung chung quét từ dòng đầu tiên, vì sẽ bắt nhầm kỹ sư cá nhân đầu tiên thuộc đội đó (khiến số liệu toàn đội hàng trăm WO bị biến thành số liệu 5-10 WO của 1 cá nhân)!
+>    - **BẮT BUỘC** tìm kiếm trên phân vùng tổng hợp (`rows.slice(35)`) và kiểm tra điều kiện kép: chứa mã đội (`MYT_TNI_TEAM01`..`04`) VÀ cột chức vụ chứa `'leader'` / `'Team leader'`.
+> 2. **Tự Động Tính Toán Động Mốc Ngày Tháng D0, D1, D2, Plan**:
+>    - Toàn bộ nhãn ngày tháng hiển thị (`Close D0`, `Close D1`, `Close D2`, `Plan D+1`) BẮT BUỘC phải được tính toán tự động dựa trên mốc thời gian thực tế `Export time` trích xuất từ Sheet.
+>    - **TUYỆT ĐỐI CẤM** fallback về các chuỗi ngày tháng cũ trong quá khứ (như `17/08`, `16/08`, `15/08`, `Plan: 18/08/26`).
+
+
+
+
+
+---
+
+# 🏢 STRICT HO PROFIT & TAX RATE INPUT RULE: LỢI NHUẬN & THUẾ PHẢI TRẢ VỀ TỔNG CÔNG TY — Ô NHẬP TAY % LINH HOẠT & CẤM ĐÁNH ĐỒNG KÝ GỞI (STRICT HO PROFIT & TAX OBLIGATION & DYNAMIC RATE INPUT POLICY)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (HO PROFIT & TAX OBLIGATION & DYNAMIC RATE INPUT STANDARD)**:
+> 
+> ### 🔴 RULE PM-31: ĐỊNH DANH CHUẨN LỢI NHUẬN & THUẾ NỘP CÔNG TY VÀ Ô NHẬP TAY % LINH HOẠT
+> 1. **Định Danh Đúng Bản Chất — CẤM Nhầm Lẫn Thành "Hoa Hồng Ký Gởi"**:
+>    - Khi tính toán khoản tiền trích nộp về Tổng Công Ty, BẮT BUỘC phải gọi đúng tên: **"Lợi Nhuận & Thuế Phải Trả Về Tổng Công Ty" (HO Profit & Tax Obligation)**.
+>    - **TUYỆT ĐỐI CẤM** nhầm lẫn hoặc hiển thị thành "Hoa hồng Ký gởi đã chia", vì đây là nghĩa vụ lợi nhuận và thuế pháp lý nộp về tổng công ty từ doanh thu bán hàng của chi nhánh.
+> 2. **Ô Nhập Tay Tỷ Lệ % Linh Hoạt (Zero Hardcoded Rate)**:
+>    - **TUYỆT ĐỐI CẤM** hardcode cố định số 17% trong logic hoặc trên giao diện mà không có khả năng điều chỉnh.
+>    - **BẮT BUỘC** cung cấp ô nhập tay tỷ lệ % (`cfg-cty-rate`, mặc định 17%, có thể đổi thành 15%, 18%, 20%...) lưu vào `localStorage`. Khi người dùng thay đổi tỷ lệ, toàn bộ công thức giá sàn, tiền nộp cty, lợi nhuận chi nhánh trên Dashboard, Nhập hàng, Ký gởi và Báo cáo P&L phải tự động tính toán lại 100%!
+
+---
+
+# ☀️ STRICT SOLAR QUOTATION & SHARING ISOLATION RULE: BÁO GIÁ VIETTEL CONSTRUCTION MYANMAR CHUẨN GOOGLE SHEET, WATERMARK CHỮ CHÌM & CÁCH LY LỊCH SỬ NHÂN VIÊN / GMAIL (STRICT SOLAR QUOTATION BRANDING, RE-PRINT & ROLE ISOLATION POLICY)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (SOLAR QUOTATION BRANDING, RE-PRINT & ISOLATION STANDARD)**:
+> 
+> ### 🔴 RULE PM-32: BÁO GIÁ SOLAR VIETTEL CONSTRUCTION MYANMAR, WATERMARK CHỮ CHÌM, SỬA GIÁ & PHÂN QUYỀN CÁCH LY
+> 1. **Nhận Diện Thương Hiệu Báo Giá Viettel Construction Myanmar Bắt Buộc**:
+>    - Header báo giá BẮT BUỘC in màu ĐỎ đậm (`#dc2626`): **VIETTEL CONSTRUCTION MYANMAR COMPANY LIMITED**, địa chỉ: `No 1237 Waizanyantar Street, South Okkalapa, Yangon, Myanmar`, hotline: `0965 1900 009`, website: `www.viettelconstructionmyanmar.com`.
+>    - Tiêu đề báo giá tiếng Anh chủ đạo: **SOLAR SYSTEM QUOTATION**.
+>    - BẮT BUỘC chèn chữ chìm **watermark mờ** (`VIETTEL CONSTRUCTION MYANMAR`, opacity ~0.04-0.06) in nghiêng chéo nền toàn bộ trang in.
+> 2. **Bám Sát 100% Cấu Trúc Bảng Tính Mẫu Google Sheet GID `1879621220`**:
+>    - Bảng vật tư phải đủ 9 cột: `No.` | `Material Specifications` | `Brand` | `Unit` | `Qty` | `Unit Price (Kyats/Currency)` | `Total Amount` | `Remark / Warranty`.
+>    - Tích hợp sẵn mẫu 6kW Solar System chuẩn (19,584,000 Kyats) và tiến độ thanh toán 3 đợt: 50% (Ký HĐ), 40% (Giao hàng), 10% (Bàn giao).
+> 3. **Cho Phép Sửa Giá Trực Tiếp & In Lại Báo Giá Ngay Lập Tức**:
+>    - Người dùng có thể chọn bất kỳ báo giá cũ nào từ dropdown theo tên khách hàng / mã báo giá để load lại toàn bộ dữ liệu.
+>    - Cho phép sửa trực tiếp từng đơn giá, số lượng, vật tư và bấm "Lưu / Cập Nhật Báo Giá" hoặc "In / In Lại Báo Giá" để xuất ra bản in mới nhất.
+> 4. **Bảo Mật Phân Quyền Cách Ly Tuyệt Đối (Strict Role / Staff / Gmail Isolation)**:
+>    - Khi chia sẻ báo giá cho nhân viên nào hoặc gửi qua Gmail nào, người đó CHỈ ĐƯỢC PHÉP xem lịch sử báo giá của chính mình, TUYỆT ĐỐI KHÔNG được xem báo giá của nhân viên hay khách hàng khác!
+> 5. **Lưu Trữ Tập Trung Vào 1 Sheet Duy Nhất**:
+>    - Toàn bộ thông tin báo giá, lịch sử sửa giá và người được chia sẻ BẮT BUỘC lưu vào đúng 1 tab duy nhất: `Báo Giá Solar` trên Master Google Sheet `1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA`.
+
+# 🏪 POST-MORTEM RULE — 15/09/2026: ĐĂNG KÝ QUẢN TRỊ PHÂN HỆ TNI SALE — 3 GHẾ CHUYÊN BIỆT & BẢO MẬT GAS & CHUYỂN SSOT (RULE PM-33)
+
+> ### Nguồn gốc: **Phúc Tra Chuyên Gia Hệ Thống TNI Sale (15/09/2026)**
+> - **Root Cause**: Phân hệ TNI Sale (13 module: Nhập hàng, Bán hàng, Tồn kho, Tạm ứng, Đại lý, Ký gởi, CRM, Báo giá UPS, Báo giá Solar, Quảng cáo, Leads, Profit/Loss, Reports) đang hoạt động **HOÀN TOÀN NGOÀI RADAR HỆ THỐNG QUẢN TRỊ** — không có trong AGENTS.md, system_map.md, hay train_5min.yml. Dữ liệu chính nằm trên `localStorage` (mất khi xóa cache). Bot token hardcode công khai. GAS Access = `ANYONE_ANONYMOUS`.
+>
+> ### 🔴 RULE PM-33: 6 NGUYÊN TẮC QUẢN TRỊ PHÂN HỆ TNI SALE
+> 1. **3 Ghế Chuyên Biệt Bắt Buộc (Mandatory 3-Seat Assignment)**:
+>    - `Ghế WEB-SALE-16`: Frontend `tni_sale.html` (static SPA 164KB, 13 module, song ngữ VN/EN).
+>    - `Ghế GAS-SALE-16`: Backend GAS Sale — **Dedicated GAS** `apps_script_ups_solar/TNI Sale.js` (Deploy `AKfycbx09J8PPi_IN3_n_ho8QF4RapsPh5uzLchVfS9T89iuw-4QMZWU_ynlhzDvav4wRvj4`) + **Main GAS** `QLTC_GAS/sale_backend.gs` (CRUD `sale_*` actions).
+>    - `Ghế BOT-SALE-16`: Telegram Sale Collector Bot (Token `8647102342` trong `ScriptProperties`), thu thập đơn hàng, lưu ảnh Drive Folder `11HcMa63slXPOHrveHxmqZTZerzKPfjVt`.
+> 2. **Sửa TNI Sale GAS → Vào Đúng Project Chuyên Biệt (Strict Dedicated GAS Targeting)**:
+>    - Sửa logic thu thập / webhook / Telegram: VÀO `apps_script_ups_solar` (Script riêng, deploy `AKfycbx09J8PPi...`).
+>    - Sửa CRUD cơ bản (`sale_add/get/update/delete/bulk`): VÀO `QLTC_GAS/sale_backend.gs` (nằm trong Main GAS Hub, deploy `AKfycbz-NZlBk...`).
+>    - TUYỆT ĐỐI CẤM nhầm project khi sửa!
+> 3. **Bảo Mật Bắt Buộc (Mandatory Security)**:
+>    - Bot Token BẮT BUỘC lưu trong `ScriptProperties` (`PropertiesService.getScriptProperties()`), TUYỆT ĐỐI CẤM hardcode trực tiếp trong code.
+>    - GAS doPost() BẮT BUỘC kiểm tra API key hoặc caller identity trước khi thực thi.
+>    - Khi sửa code frontend `tni_sale.html`, TUYỆT ĐỐI CẤM để lộ API key, bot token, hoặc secret nào trong HTML source.
+> 4. **Sheet TNI Sale SSOT (Single Source of Truth)**:
+>    - Spreadsheet ID: `1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA`.
+>    - 12 tabs chuẩn: `Tổng Hợp`, `Sales Record`, `Sales to dealers`, `Consignment`, `Warranty requests`, `Warranty fulfillment`, `Face+Tiktok`, `NhapHang`, `Đã bán`, `Báo Giá Solar`, `List Group Telegram`, `Template Sale`.
+> 5. **Công Thức Tài Chính Chuẩn 83%/17% Bất Biến**:
+>    - Giá Gốc = 83% vốn đầu vào.
+>    - LN Trả Cty = `Math.round(giá_gốc / 83 * 17)` (17% tổng giá 100%).
+>    - Giá Sàn = Giá Gốc + LN Cty (100%).
+>    - LN Chi Nhánh = `Math.max(0, giá_thực_bán - giá_sàn)`.
+>    - TUYỆT ĐỐI CẤM sửa công thức này mà không có phê duyệt từ quản lý!
+> 6. **Lộ Trình Chuyển Đổi Storage (Migration Roadmap)**:
+>    - Hiện tại: `localStorage` = primary, Google Sheet = backup (fire-and-forget sync).
+>    - Mục tiêu: Chuyển Google Sheet thành SSOT, frontend đọc từ GAS endpoint, localStorage chỉ là cache.
+>    - Khi chuyển đổi, BẮT BUỘC phải giữ nguyên 100% dữ liệu hiện có, TUYỆT ĐỐI CẤM mất dữ liệu!
 
