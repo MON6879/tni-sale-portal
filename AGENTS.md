@@ -1281,3 +1281,48 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 >    - ③ Kiểm tra endpoint `/api/bi_data?action=wo_detail` có trả về JSON hợp lệ với status 200 hay không.
 >    - ④ Đồng bộ đồng thời cả 3 repositories (`Task and WO`, `tni-search`, `tni-sitedown`) và root.
 
+---
+
+# 🛒 STRICT SALES & TELEGRAM COLLECTOR RULE: BẢO VỆ CẤU TRÚC CỘT TEMPLATE & TRUY VẾT ẢNH ĐỘNG (STRICT TELEGRAM SALES TEMPLATE & DYNAMIC COLUMN MAPPING POLICY)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (SALES TEMPLATE & DYNAMIC PHOTO MAPPING STANDARD)**:
+> 
+> ### 🔴 RULE PM-28: QUY ĐỊNH CẤU TRÚC CỘT THU THẬP TỪ TEMPLATE TELEGRAM DẠNG PHÂN CÁCH (|) & TRUY VẾT CỘT ẢNH ĐỘNG
+> 1. **Khớp Cột 1-1 Với Template Người Dùng**:
+>    - Khi người dùng cấu hình template trong tab `Template Sale` dạng `[Keyword] : Field 1 | Field 2 | ...`:
+>    - Sheet đích (Target Tab) BẮT BUỘC phải có đầy đủ:
+>      - Cột định danh: `REF ID`
+>      - Cột thời gian: `Date` (Ngày), `Time` (Giờ)
+>      - Các cột thông tin chính tương ứng 1-1 với template: `Product Name`, `Quantity`, `Serial Number` (hoặc `Serial Numbers List`), `Buyer's Name` (hoặc `Dealer Name`), `Phone Number`, `Note`.
+>      - Cột thu thập hình ảnh: `Drive Photos` (chứa URLs ảnh lưu vào Google Drive).
+>      - Cột tải tất cả: `Download All Link` (link folder Drive chứa toàn bộ ảnh của đơn hàng).
+>      - Cột nhân viên: `Staff Name` (tên người gửi tin).
+> 2. **Tuyệt Đối Cấm Hardcode Vị Trí Cột Ảnh (Zero Hardcoded Column Index)**:
+>    - Trong các hàm cập nhật link ảnh (`updateOrderPhotoLinks`), BẮT BUỘC phải tra cứu động vị trí cột `Drive Photos` và `Download All Link` bằng cách đọc header row 1 (`toLowerCase().includes("photo")`, `toLowerCase().includes("download")`).
+>    - TUYỆT ĐỐI CẤM hardcode vị trí cột cố định (ví dụ Cột 10, Cột 11) vì khi người dùng thêm cột `Serial` hoặc `Quantity`, số thứ tự cột bị dịch chuyển sẽ gây ghi đè làm hỏng dữ liệu thông tin khách hàng!
+> 3. **Bảo Tồn 100% Nội Dung Tab Template Sale Do Người Dùng Tạo**:
+>    - Khi chạy hàm `setupAllSheets()` hoặc đồng bộ, CHỈ ĐƯỢC PHÉP tạo thêm tab mới và đặt tiêu đề chuẩn cho các tab đích.
+>    - TUYỆT ĐỐI CẤM ghi đè hoặc xóa các dòng template mà người dùng đã soạn trong tab `Template Sale`.
+
+---
+
+# 💵 STRICT BRANCH & COMPANY FINANCE RULE: CƠ CHẾ TÀI CHÍNH CHI NHÁNH & CÔNG TY — GIÁ GỐC (83%) + LN TRẢ VỀ CTY (17%) = GIÁ BÁN THẤP NHẤT (100%), TĂNG GIÁ THỰC BÁN & LỢI NHUẬN CHI NHÁNH (RULE PM-29 & BRANCH-COMPANY MARGIN FORMULA POLICY)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (BRANCH-COMPANY MARGIN FORMULA & SUMMARY STANDARD)**:
+> 
+> ### 🔴 RULE PM-29: QUY ĐỊNH CƠ CHẾ PHÂN CHIA TÀI CHÍNH GIỮA CHI NHÁNH & CÔNG TY TRONG BÁN HÀNG
+> 1. **Cơ Chế Tài Chính 5 Cột Bắt Buộc (The 5 Core Financial Columns)**:
+>    - **Cột 1 — Giá Gốc Đầu Vào (83%)** (Cost Price $C$): Mức giá chi nhánh tự bỏ vốn mua hàng từ nhà cung cấp hoặc nhập kho.
+>    - **Cột 2 — Lợi Nhuận Trả Về Cty 17% / SP** ($\text{LN Cty 17\%} = C \times \frac{17}{83}$ hoặc $\text{Giá Sàn} \times 17\%$): Khoản lợi nhuận cam kết bắt buộc phải nộp trả về Công ty trên mỗi sản phẩm bán ra.
+>    - **Cột 3 — Mức Giá Bán Thấp Nhất (100%)** ($\text{Giá Sàn Thấp Nhất} = C + \text{LN Cty 17\%} = \frac{C}{0.83}$): Mức giá sàn tối thiểu được phép bán ra. Chi nhánh tuyệt đối KHÔNG được phép bán dưới mức giá sàn này vì sẽ không đủ bù vốn giá gốc và 17% nộp về công ty.
+>    - **Cột 4 — Giá Thực Bán** (Actual Selling Price $P_{\text{act}}$): Mức giá thực tế chi nhánh bán cho khách hàng hoặc đối tác (chi nhánh có quyền tăng giá bán cao hơn mức giá sàn thấp nhất).
+>    - **Cột 5 — Lợi Nhuận Chi Nhánh / SP** ($\text{LN Chi Nhánh} = \max(0, P_{\text{act}} - \text{Mức Giá Bán Thấp Nhất})$): Toàn bộ phần chênh lệch dôi dư khi chi nhánh bán cao hơn mức giá sàn thuộc về quyền lợi và lợi nhuận ròng của Chi nhánh (100%).
+> 2. **Cơ Chế Báo Cáo Tổng Hợp Toàn Cảnh (Master Summary Cockpit)**:
+>    - `Tổng LN Trả Về Cty` = $\text{Tổng Đã Bán} \times \text{LN Trả Về Cty 17\% / SP}$.
+>    - `Tổng LN Chi Nhánh` = $\text{Tổng Đã Bán} \times \text{LN Chi Nhánh / SP}$.
+>    - `Tổng Doanh Thu Thực Bán` = $\text{Tổng Đã Bán} \times \text{Giá Thực Bán}$.
+>    - `Tổng Giá Trị Tồn Kho Giá Gốc` = $\text{Tồn Kho Tổng} \times \text{Giá Gốc Đầu Vào (83\%)}$.
+> 3. **Bảo Đảm Tính Nhất Quán 100% Trên Toàn Hệ Thống**:
+>    - Toàn bộ các bảng tính (`NhapHang`, `Tổng Hợp`, `Consignment`), mã nguồn Apps Script (`apps_script_ups_solar`) và Giao diện Web App (`ups_manager.html`) BẮT BUỘC phải áp dụng chính xác công thức toán học và cấu trúc cột này!
+
+
