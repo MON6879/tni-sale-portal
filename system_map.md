@@ -843,7 +843,11 @@ Bot gửi tin nhắn xác nhận hoàn thành điểm danh về cho người dù
   - `ATTENDANCE_SS_ID` = `18zQB4i0Fu4QfKKkkUZUd6SKWIEbdWDiwdpgNSaL9v54` (ID bảng tính điểm danh)
   - `DRIVE_FOLDER_ID` = `1qT8RxGKgVyUo-EG7PwVvH2MSE5bxPUJb` (ID thư mục lưu ảnh)
   - `GEMINI_API_KEY` = *(API Key kết nối Gemini AI)*
-- **Cách chạy khởi tạo cấu hình:** Chọn chạy hàm `initAttendanceScriptProperties()` và `setupAttendanceWebhook()` từ Editor.
+  - `DAILY_ATT_CHAT_ID` = `-5465634644` (**Group 10: 10. TNI DAILY ADDTENDANCE** — 34 members)
+- **Lịch tự động:**
+  - `08:45 MMT` → `sendDailyAttendanceTemplates()` → gửi 8 template live status (Working / Take Leave / Take Leave Not report) + 1 tin tổng hợp kiểm tra thành viên chưa vào Group 10 và người cần xóa (tự xóa tin cũ trước khi gửi mới).
+  - `09:00 MMT` → `sendDailyAttendanceReport()` → gửi báo cáo tổng hợp vào CONTROL + T1/T2/T3/T4
+- **Deployment `@87`:** `AKfycbzSz_ISXgertxBDadw4BBQX1JdMjW650_o4He0o4Lh-uf1hV5O3YaE-ohlqI2CHyAcVFg` (Chuẩn 100% tiếng Anh, 3-status system, membership check).
 
 ---
 

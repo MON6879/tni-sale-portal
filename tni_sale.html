@@ -126,36 +126,36 @@ tbody tr:hover{background:#fafcff}
 <div id="sb">
   <div class="logo">⚡ TNI <span>Sale</span></div>
   <nav>
-    <div class="lbl">Overview / Tổng quan</div>
-    <a class="active" onclick="go('dashboard')">📊 Dashboard <small style="color:#64748b;font-size:10.5px;margin-left:auto">Tổng quan</small></a>
+    <div class="lbl" data-nav-lbl="overview">Overview</div>
+    <a class="active" onclick="go('dashboard')" data-nav-a="dashboard">📊 Dashboard</a>
 
-    <div class="lbl">Warehouse / Kho hàng</div>
-    <a onclick="go('nhap')">📦 Goods Intake <small style="color:#64748b;font-size:10.5px;margin-left:auto">Nhập hàng</small></a>
-    <a onclick="go('tonkho')">🗄️ Inventory <small style="color:#64748b;font-size:10.5px;margin-left:auto">Tồn kho</small></a>
-    <a onclick="go('tamung')">🧑‍💼 Stock Advance <small style="color:#64748b;font-size:10.5px;margin-left:auto">Tạm ứng</small></a>
+    <div class="lbl" data-nav-lbl="warehouse">Warehouse</div>
+    <a onclick="go('nhap')" data-nav-a="nhap">📦 Goods Intake</a>
+    <a onclick="go('tonkho')" data-nav-a="tonkho">🗄️ Inventory</a>
+    <a onclick="go('tamung')" data-nav-a="tamung">🧑‍💼 Stock Advance</a>
 
-    <div class="lbl">Sales &amp; Quotation / Bán hàng</div>
-    <a onclick="go('banhang')">🛒 Sales Orders <small style="color:#64748b;font-size:10.5px;margin-left:auto">Bán hàng</small></a>
-    <a onclick="go('baogiaups')">📄 Device Quote <small style="color:#64748b;font-size:10.5px;margin-left:auto">BG Thiết bị</small></a>
-    <a onclick="go('baogiasolar')">☀️ Solar Quote <small style="color:#38bdf8;font-size:10.5px;margin-left:auto">BG Solar</small></a>
-    <a onclick="go('daily')">🏪 Distribution <small style="color:#64748b;font-size:10.5px;margin-left:auto">Đại lý</small></a>
-    <a onclick="go('kygoi')">📋 Consignment <small style="color:#64748b;font-size:10.5px;margin-left:auto">Ký gởi</small></a>
+    <div class="lbl" data-nav-lbl="sales">Sales &amp; Quotation</div>
+    <a onclick="go('banhang')" data-nav-a="banhang">🛒 Sales Orders</a>
+    <a onclick="go('baogiaups')" data-nav-a="baogiaups">📄 Device Quote</a>
+    <a onclick="go('baogiasolar')" data-nav-a="baogiasolar">☀️ Solar Quote <small style="color:#38bdf8;font-size:10.5px;margin-left:auto">VCM</small></a>
+    <a onclick="go('daily')" data-nav-a="daily">🏪 Distribution</a>
+    <a onclick="go('kygoi')" data-nav-a="kygoi">📋 Consignment</a>
 
-    <div class="lbl">Clients / Khách hàng</div>
-    <a onclick="go('crm')">👥 CRM &amp; Survey <small style="color:#64748b;font-size:10.5px;margin-left:auto">Khảo sát</small></a>
+    <div class="lbl" data-nav-lbl="clients">Clients</div>
+    <a onclick="go('crm')" data-nav-a="crm">👥 CRM &amp; Survey</a>
 
-    <div class="lbl">Marketing</div>
-    <a onclick="go('quangcao')">📢 Ads Campaigns <small style="color:#64748b;font-size:10.5px;margin-left:auto">Quảng cáo</small></a>
-    <a onclick="go('leads')">🎯 Leads &amp; Conv <small style="color:#64748b;font-size:10.5px;margin-left:auto">Chuyển đổi</small></a>
+    <div class="lbl" data-nav-lbl="marketing">Marketing</div>
+    <a onclick="go('quangcao')" data-nav-a="quangcao">📢 Ads Campaigns</a>
+    <a onclick="go('leads')" data-nav-a="leads">🎯 Leads &amp; Conv</a>
 
-    <div class="lbl">Finance / Tài chính</div>
-    <a onclick="go('loinhuan')">💰 Profit &amp; Loss <small style="color:#64748b;font-size:10.5px;margin-left:auto">Lợi nhuận</small></a>
-    <a onclick="go('baocao')">📈 Reports <small style="color:#64748b;font-size:10.5px;margin-left:auto">Báo cáo</small></a>
+    <div class="lbl" data-nav-lbl="finance">Finance</div>
+    <a onclick="go('loinhuan')" data-nav-a="loinhuan">💰 Profit &amp; Loss</a>
+    <a onclick="go('baocao')" data-nav-a="baocao">📈 Reports</a>
 
-    <div class="lbl" style="color:#f59e0b">👤 Staff Portal / Nhân viên</div>
-    <a onclick="go('mystats')">📊 My Performance <small style="color:#f59e0b;font-size:10.5px;margin-left:auto">Cá nhân</small></a>
-    <a onclick="go('myquotes')">📄 My Quotations <small style="color:#f59e0b;font-size:10.5px;margin-left:auto">Báo giá</small></a>
-    <a onclick="go('mysurvey')">📝 My Surveys <small style="color:#f59e0b;font-size:10.5px;margin-left:auto">Khảo sát</small></a>
+    <div class="lbl" data-nav-lbl="staff" style="color:#f59e0b">👤 Staff Portal</div>
+    <a onclick="go('mystats')" data-nav-a="mystats">📊 My Performance</a>
+    <a onclick="go('myquotes')" data-nav-a="myquotes">📄 My Quotations</a>
+    <a onclick="go('mysurvey')" data-nav-a="mysurvey">📝 My Surveys</a>
   </nav>
 </div>
 
@@ -166,7 +166,7 @@ tbody tr:hover{background:#fafcff}
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
     <!-- Cài đặt % Lợi Nhuận & Thuế Nộp Tổng Công Ty (Nhập tay linh hoạt) -->
     <div style="display:flex;align-items:center;gap:5px;background:#eff6ff;padding:4px 9px;border-radius:7px;border:1px solid #bfdbfe">
-      <span style="font-size:11px;font-weight:600;color:#1e40af">🏢 % Cty:</span>
+      <span id="cfg-cty-label" style="font-size:11px;font-weight:600;color:#1e40af">🏢 % HO:</span>
       <input id="cfg-cty-rate" type="number" value="17" min="0" max="100" step="0.5" style="width:48px;padding:2px 4px;border:1px solid #3b82f6;border-radius:4px;font-size:12px;font-weight:bold;color:#1e40af;text-align:center" oninput="setCompanyRate(this.value)" title="Tỷ lệ % Lợi nhuận và Thuế nộp về Tổng Công Ty"/>
       <span style="font-size:11px;color:#1e40af">%</span>
     </div>
@@ -183,12 +183,12 @@ tbody tr:hover{background:#fafcff}
 <div class="sec on" id="s-dashboard">
   <div class="cards" id="dc"></div>
   <div class="g2">
-    <div class="panel"><div class="ph"><h3>📦 Recent Intake</h3></div><div class="pb tw" id="d-nhap"></div></div>
-    <div class="panel"><div class="ph"><h3>🛒 Recent Sales</h3></div><div class="pb tw" id="d-ban"></div></div>
+    <div class="panel"><div class="ph"><h3 id="d-nhap-h3">📦 Recent Intake</h3></div><div class="pb tw" id="d-nhap"></div></div>
+    <div class="panel"><div class="ph"><h3 id="d-ban-h3">🛒 Recent Sales</h3></div><div class="pb tw" id="d-ban"></div></div>
   </div>
   <div class="g2">
-    <div class="panel"><div class="ph"><h3>⚠️ Low Stock Alert</h3></div><div class="pb tw" id="d-warn"></div></div>
-    <div class="panel"><div class="ph"><h3>🧑‍💼 Open Advances</h3></div><div class="pb tw" id="d-tu"></div></div>
+    <div class="panel"><div class="ph"><h3 id="d-warn-h3">⚠️ Low Stock Alert</h3></div><div class="pb tw" id="d-warn"></div></div>
+    <div class="panel"><div class="ph"><h3 id="d-tu-h3">🧑‍💼 Open Advances</h3></div><div class="pb tw" id="d-tu"></div></div>
   </div>
 </div>
 
@@ -197,12 +197,12 @@ tbody tr:hover{background:#fafcff}
   <!-- Chuyển đổi chế độ nhập: Đơn lẻ vs Hàng loạt -->
   <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;justify-content:space-between;flex-wrap:wrap">
     <div style="display:flex;gap:6px">
-      <button class="btn b-bl" id="btn-mode-single" onclick="switchNhapMode('single')" style="font-weight:600">➕ Nhập Đơn Lẻ (Single)</button>
-      <button class="btn b-out" id="btn-mode-bulk" onclick="switchNhapMode('bulk')" style="font-weight:600">📥 Import Hàng Loạt (.CSV / Excel)</button>
+      <button class="btn b-bl" id="btn-mode-single" onclick="switchNhapMode('single')" style="font-weight:600" data-lang="btn_single_intake">➕ Single Intake</button>
+      <button class="btn b-out" id="btn-mode-bulk" onclick="switchNhapMode('bulk')" style="font-weight:600" data-lang="btn_bulk_intake">📥 Bulk Import (.CSV / Excel)</button>
     </div>
     <div style="display:flex;gap:6px">
-      <button class="btn b-gn b-sm" onclick="downloadNhapTemplate()">📥 Tải File Mẫu (.CSV)</button>
-      <button class="btn b-bl b-sm" onclick="document.getElementById('bulk-file-input').click()">📁 Chọn File .CSV</button>
+      <button class="btn b-gn b-sm" onclick="downloadNhapTemplate()" data-lang="btn_download_tpl">📥 Download CSV Template</button>
+      <button class="btn b-bl b-sm" onclick="document.getElementById('bulk-file-input').click()" data-lang="btn_choose_csv">📁 Choose .CSV File</button>
       <input type="file" id="bulk-file-input" accept=".csv,.txt" onchange="handleBulkFile(event)" style="display:none"/>
     </div>
   </div>
@@ -236,8 +236,8 @@ tbody tr:hover{background:#fafcff}
         </div>
 
         <div class="fa">
-          <button class="btn b-bl" onclick="addNhap()">📦 Lưu Phiếu Nhập</button>
-          <button class="btn b-out" onclick="clrForm('n-');calcNhapProfit()">✕ Xóa</button>
+          <button class="btn b-bl" onclick="addNhap()" data-lang="btn_save_intake">📦 Save Intake</button>
+          <button class="btn b-out" onclick="clrForm('n-');calcNhapProfit()" data-lang="btn_clear">✕ Clear</button>
         </div>
       </div>
     </div>
@@ -921,70 +921,70 @@ tbody tr:hover{background:#fafcff}
 <!-- ══ STAFF: MY PERFORMANCE ══ -->
 <div class="sec" id="s-mystats">
   <div class="panel" style="border-left:4px solid #f59e0b">
-    <div class="ph"><h3>👤 Đăng Nhập Nhân Viên (Staff Login)</h3></div>
+    <div class="ph"><h3>👤 Staff Login</h3></div>
     <div class="pb">
       <div class="fg">
-        <div class="f"><label>Tên Nhân Viên / Staff Name *</label><input id="my-name" placeholder="VD: Nguyễn Văn A"/></div>
-        <div class="f"><label>Mã NV / Staff ID</label><input id="my-id" placeholder="VD: NV001"/></div>
+        <div class="f"><label>Staff Name *</label><input id="my-name" placeholder="e.g. John Doe"/></div>
+        <div class="f"><label>Staff ID</label><input id="my-id" placeholder="e.g. NV001"/></div>
       </div>
-      <div class="fa"><button class="btn b-bl" onclick="renderMyStats()" style="font-weight:700">🔍 Xem Tiến Độ Cá Nhân (View My Performance)</button></div>
+      <div class="fa"><button class="btn b-bl" onclick="renderMyStats()" style="font-weight:700">🔍 View My Performance</button></div>
     </div>
   </div>
   <div id="my-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px"></div>
   <div class="g2">
-    <div class="panel"><div class="ph"><h3>🛒 Đơn Bán Của Tôi (My Sales)</h3></div><div class="pb tw" id="my-sales"><div style="color:#94a3b8;padding:20px;text-align:center">Nhập tên và bấm "Xem Tiến Độ" để hiển thị</div></div></div>
-    <div class="panel"><div class="ph"><h3>💰 Lợi Nhuận Cá Nhân (My Profit)</h3></div><div class="pb tw" id="my-profit"><div style="color:#94a3b8;padding:20px;text-align:center">Nhập tên và bấm "Xem Tiến Độ" để hiển thị</div></div></div>
+    <div class="panel"><div class="ph"><h3>🛒 My Sales</h3></div><div class="pb tw" id="my-sales"><div style="color:#94a3b8;padding:20px;text-align:center">Enter name and click "View" to display</div></div></div>
+    <div class="panel"><div class="ph"><h3>💰 My Profit</h3></div><div class="pb tw" id="my-profit"><div style="color:#94a3b8;padding:20px;text-align:center">Enter name and click "View" to display</div></div></div>
   </div>
   <div class="g2">
-    <div class="panel"><div class="ph"><h3>📋 Hàng Ký Gởi Đang Quản Lý (My Consignment)</h3></div><div class="pb tw" id="my-consign"><div style="color:#94a3b8;padding:20px;text-align:center">—</div></div></div>
-    <div class="panel"><div class="ph"><h3>🧑‍💼 Hàng Tạm Ứng (My Advance)</h3></div><div class="pb tw" id="my-advance"><div style="color:#94a3b8;padding:20px;text-align:center">—</div></div></div>
+    <div class="panel"><div class="ph"><h3>📋 My Consignment</h3></div><div class="pb tw" id="my-consign"><div style="color:#94a3b8;padding:20px;text-align:center">—</div></div></div>
+    <div class="panel"><div class="ph"><h3>🧑‍💼 My Advance</h3></div><div class="pb tw" id="my-advance"><div style="color:#94a3b8;padding:20px;text-align:center">—</div></div></div>
   </div>
 </div>
 
 <!-- ══ STAFF: MY QUOTATIONS ══ -->
 <div class="sec" id="s-myquotes">
   <div class="panel" style="border-left:4px solid #f59e0b">
-    <div class="ph"><h3>📄 Báo Giá Của Tôi (My Quotations)</h3>
+    <div class="ph"><h3>📄 My Quotations</h3>
       <div style="display:flex;gap:6px">
-        <input id="mq-name" placeholder="🔍 Tên NV hoặc Mã NV..." oninput="renderMyQuotes()" style="padding:4px 10px;border:1px solid var(--bd);border-radius:6px;font-size:12px;width:180px"/>
-        <button class="btn b-bl b-sm" onclick="renderMyQuotes()">🔍 Lọc</button>
+        <input id="mq-name" placeholder="🔍 Staff name or ID..." oninput="renderMyQuotes()" style="padding:4px 10px;border:1px solid var(--bd);border-radius:6px;font-size:12px;width:180px"/>
+        <button class="btn b-bl b-sm" onclick="renderMyQuotes()">🔍 Filter</button>
       </div>
     </div>
     <div class="pb">
       <div style="background:#fffbeb;padding:10px 14px;border-radius:8px;border:1px solid #fde68a;font-size:12.5px;line-height:1.6;margin-bottom:12px">
-        <b>💡 Chia sẻ cho NV:</b> Gửi link <code>tni-bot.vercel.app/sale?staff=TÊN_NV</code> — NV chỉ xem được báo giá của mình, KHÔNG thấy của người khác.
+        <b>💡 Share with staff:</b> Send link <code>tni-bot.vercel.app/sale?staff=STAFF_NAME</code> — Staff can only view their own quotations.
       </div>
     </div>
   </div>
   <div class="g2">
-    <div class="panel"><div class="ph"><h3>☀️ Báo Giá Solar</h3></div><div class="pb tw" id="mq-solar"><div style="color:#94a3b8;padding:20px;text-align:center">Nhập tên NV để lọc</div></div></div>
-    <div class="panel"><div class="ph"><h3>📄 Báo Giá UPS / Thiết Bị</h3></div><div class="pb tw" id="mq-ups"><div style="color:#94a3b8;padding:20px;text-align:center">Nhập tên NV để lọc</div></div></div>
+    <div class="panel"><div class="ph"><h3>☀️ Solar Quotations</h3></div><div class="pb tw" id="mq-solar"><div style="color:#94a3b8;padding:20px;text-align:center">Enter staff name to filter</div></div></div>
+    <div class="panel"><div class="ph"><h3>📄 UPS / Device Quotations</h3></div><div class="pb tw" id="mq-ups"><div style="color:#94a3b8;padding:20px;text-align:center">Enter staff name to filter</div></div></div>
   </div>
 </div>
 
 <!-- ══ STAFF: MY SURVEYS ══ -->
 <div class="sec" id="s-mysurvey">
   <div class="panel" style="border-left:4px solid #f59e0b">
-    <div class="ph"><h3>📝 Khảo Sát Khách Hàng & Đối Tác (Customer & Partner Survey)</h3></div>
+    <div class="ph"><h3>📝 Customer & Partner Survey</h3></div>
     <div class="pb">
       <div style="background:#fffbeb;padding:10px 14px;border-radius:8px;border:1px solid #fde68a;font-size:12.5px;line-height:1.6;margin-bottom:12px">
-        <b>💡 Chia sẻ cho NV:</b> Gửi link <code>tni-bot.vercel.app/sale?staff=TÊN_NV&tab=mysurvey</code> — NV mở ra là vào thẳng trang khảo sát.
+        <b>💡 Share with staff:</b> Send link <code>tni-bot.vercel.app/sale?staff=STAFF_NAME&tab=mysurvey</code> — Staff opens directly to survey page.
       </div>
       <div class="fg">
-        <div class="f"><label>👤 NV Khảo Sát *</label><input id="sv-nv" placeholder="Tên NV thực hiện"/></div>
-        <div class="f"><label>📋 Loại Khảo Sát</label><select id="sv-type"><option>Khách hàng tiềm năng</option><option>Đối tác ký gởi</option><option>Đại lý mới</option><option>Khảo sát thị trường</option><option>Chăm sóc sau bán</option></select></div>
-        <div class="f"><label>👤 Tên KH / Đối Tác *</label><input id="sv-kh" placeholder="Tên khách hàng hoặc đối tác"/></div>
-        <div class="f"><label>📞 Số Điện Thoại</label><input id="sv-dt" placeholder="09xx xxx xxx"/></div>
-        <div class="f"><label>📍 Địa Chỉ / Khu Vực</label><input id="sv-dc" placeholder="Quận, Thành phố..."/></div>
-        <div class="f"><label>📦 Quan Tâm Sản Phẩm</label><select id="sv-sp"><option>UPS (Bộ Lưu Điện)</option><option>Solar Panel</option><option>Inverter</option><option>Ắc Quy</option><option>Combo Solar System</option><option>Phụ Kiện</option><option>Khác</option></select></div>
-        <div class="f"><label>💰 Mức Ngân Sách</label><select id="sv-ns"><option>Chưa xác định</option><option>Dưới 5 triệu</option><option>5 - 20 triệu</option><option>20 - 50 triệu</option><option>50 - 200 triệu</option><option>Trên 200 triệu</option></select></div>
-        <div class="f"><label>🔥 Mức Độ Quan Tâm</label><select id="sv-md"><option>🔴 Rất quan tâm (Hot)</option><option>🟡 Quan tâm (Warm)</option><option>🔵 Tìm hiểu (Cool)</option><option>⚪ Chưa quyết (Cold)</option></select></div>
-        <div class="f"><label>🏪 Tiềm Năng Hợp Tác</label><select id="sv-ht"><option>Mua lẻ</option><option>Đại lý cấp 1</option><option>Đại lý cấp 2</option><option>Ký gởi bán</option><option>Đối tác dự án</option></select></div>
-        <div class="f" style="grid-column:1/-1"><label>📝 Ghi Chú Chi Tiết</label><textarea id="sv-gc" rows="3" placeholder="Nhu cầu cụ thể, thời gian dự kiến mua, ghi chú đặc biệt..."></textarea></div>
+        <div class="f"><label>👤 Surveyor *</label><input id="sv-nv" placeholder="Staff name"/></div>
+        <div class="f"><label>📋 Survey Type</label><select id="sv-type"><option>Potential Customer</option><option>Consignment Partner</option><option>New Dealer</option><option>Market Research</option><option>After-Sales Care</option></select></div>
+        <div class="f"><label>👤 Customer / Partner *</label><input id="sv-kh" placeholder="Name"/></div>
+        <div class="f"><label>📞 Phone</label><input id="sv-dt" placeholder="09xx xxx xxx"/></div>
+        <div class="f"><label>📍 Location / Area</label><input id="sv-dc" placeholder="District, City..."/></div>
+        <div class="f"><label>📦 Product Interest</label><select id="sv-sp"><option>UPS</option><option>Solar Panel</option><option>Inverter</option><option>Battery</option><option>Combo Solar System</option><option>Accessories</option><option>Other</option></select></div>
+        <div class="f"><label>💰 Budget Range</label><select id="sv-ns"><option>Not determined</option><option>Under 5M</option><option>5M - 20M</option><option>20M - 50M</option><option>50M - 200M</option><option>Over 200M</option></select></div>
+        <div class="f"><label>🔥 Interest Level</label><select id="sv-md"><option>🔴 Very interested (Hot)</option><option>🟡 Interested (Warm)</option><option>🔵 Exploring (Cool)</option><option>⚪ Undecided (Cold)</option></select></div>
+        <div class="f"><label>🏪 Partnership Potential</label><select id="sv-ht"><option>Retail buyer</option><option>Tier 1 Dealer</option><option>Tier 2 Dealer</option><option>Consignment sales</option><option>Project partner</option></select></div>
+        <div class="f" style="grid-column:1/-1"><label>📝 Detailed Notes</label><textarea id="sv-gc" rows="3" placeholder="Specific needs, expected purchase timeline, special notes..."></textarea></div>
       </div>
       <div class="fa">
-        <button class="btn b-bl" onclick="addSurvey()" style="font-weight:700">📝 Lưu Khảo Sát</button>
-        <button class="btn b-out" onclick="clrForm('sv-')">✕ Xóa Form</button>
+        <button class="btn b-bl" onclick="addSurvey()" style="font-weight:700">📝 Save Survey</button>
+        <button class="btn b-out" onclick="clrForm('sv-')">✕ Clear</button>
       </div>
     </div>
   </div>
@@ -1238,23 +1238,36 @@ function clrForm(prefix){document.querySelectorAll(`[id^="${prefix}"]`).forEach(
 // DASHBOARD
 // ═══════════════════════════════════════════════════
 function rDash(){
+  const isVi = currentLang === 'vi';
   const nhap=DB.g('nhap'),ban=DB.g('ban'),dl=DB.g('daily'),tu=DB.g('tamung');
   const dt=ban.reduce((s,r)=>s+r.gia*r.sl,0);
   const ln=ban.reduce((s,r)=>{const sp=nhap.find(n=>n.id==r.spId);return s+(r.gia-Number(sp?.gg||0))*r.sl;},0);
   const tk=getTK(),tot=tk.reduce((s,r)=>s+r.ton,0);
   document.getElementById('dc').innerHTML=`
-    <div class="card c-bl"><div class="lbl2">📦 Total Stock</div><div class="val">${tot}</div><div class="sub">${nhap.length} items</div></div>
-    <div class="card c-gn"><div class="lbl2">💵 Revenue</div><div class="val">${fn(dt)}₫</div><div class="sub">${ban.length} orders</div></div>
-    <div class="card c-or"><div class="lbl2">📈 Profit</div><div class="val">${fn(ln)}₫</div><div class="sub">All combined</div></div>
-    <div class="card c-pu"><div class="lbl2">🏪 Dealers</div><div class="val">${dl.length}</div><div class="sub">${tu.filter(r=>r.ts==='Đang ứng').length} advance pending</div></div>`;
+    <div class="card c-bl"><div class="lbl2">📦 ${isVi?'Tổng Tồn Kho':'Total Stock'}</div><div class="val">${tot}</div><div class="sub">${nhap.length} ${isVi?'mã hàng':'items'}</div></div>
+    <div class="card c-gn"><div class="lbl2">💵 ${isVi?'Doanh Thu':'Revenue'}</div><div class="val">${fn(dt)}₫</div><div class="sub">${ban.length} ${isVi?'đơn bán':'orders'}</div></div>
+    <div class="card c-or"><div class="lbl2">📈 ${isVi?'Lợi Nhuận':'Profit'}</div><div class="val">${fn(ln)}₫</div><div class="sub">${isVi?'Gộp toàn bộ':'All combined'}</div></div>
+    <div class="card c-pu"><div class="lbl2">🏪 ${isVi?'Đại Lý':'Dealers'}</div><div class="val">${dl.length}</div><div class="sub">${tu.filter(r=>r.ts==='Đang ứng'||r.ts==='Advance').length} ${isVi?'đang tạm ứng':'advance pending'}</div></div>`;
   const n5=[...nhap].reverse().slice(0,5);
-  document.getElementById('d-nhap').innerHTML=tbl(['Product','Qty','Cost','Date'],n5.map(r=>[r.ten,r.sl,fn(r.gg)+'₫',fd(r.ngay)]));
+  document.getElementById('d-nhap').innerHTML=tbl(
+    isVi ? ['Sản Phẩm','SL','Giá Gốc','Ngày'] : ['Product','Qty','Cost','Date'],
+    n5.map(r=>[r.ten,r.sl,fn(r.gg)+'₫',fd(r.ngay)])
+  );
   const b5=[...ban].reverse().slice(0,5);
-  document.getElementById('d-ban').innerHTML=tbl(['Product','Qty','Price','Date'],b5.map(r=>{const sp=nhap.find(n=>n.id==r.spId);return[sp?.ten||r.spN||'?',r.sl,fn(r.gia)+'₫',fd(r.ngay)];}));
+  document.getElementById('d-ban').innerHTML=tbl(
+    isVi ? ['Sản Phẩm','SL','Giá Bán','Ngày'] : ['Product','Qty','Price','Date'],
+    b5.map(r=>{const sp=nhap.find(n=>n.id==r.spId);return[sp?.ten||r.spN||'?',r.sl,fn(r.gia)+'₫',fd(r.ngay)];})
+  );
   const warn=tk.filter(r=>r.ton>0&&r.ton<=3);
-  document.getElementById('d-warn').innerHTML=warn.length?tbl(['Product','Stock'],warn.map(r=>[r.ten,`<b style="color:var(--or)">${r.ton}</b>`])):'<p style="color:#94a3b8;font-size:12.5px">No warnings ✅</p>';
-  const tu2=tu.filter(r=>r.ts==='Đang ứng').slice(0,5);
-  document.getElementById('d-tu').innerHTML=tbl(['Staff','Product','Qty','Due'],tu2.map(r=>[r.nv,r.spN||'?',r.sl,fd(r.han)]));
+  document.getElementById('d-warn').innerHTML=warn.length?tbl(
+    isVi ? ['Sản Phẩm','Tồn'] : ['Product','Stock'],
+    warn.map(r=>[r.ten,`<b style="color:var(--or)">${r.ton}</b>`])
+  ):`<p style="color:#94a3b8;font-size:12.5px">${isVi?'Không có cảnh báo ✅':'No warnings ✅'}</p>`;
+  const tu2=tu.filter(r=>r.ts==='Đang ứng'||r.ts==='Advance').slice(0,5);
+  document.getElementById('d-tu').innerHTML=tbl(
+    isVi ? ['NV','SP','SL','Hạn'] : ['Staff','Product','Qty','Due'],
+    tu2.map(r=>[r.nv,r.spN||'?',r.sl,fd(r.han)])
+  );
 }
 
 // ═══════════════════════════════════════════════════
@@ -1638,6 +1651,7 @@ function rNhap(){
 // TỒN KHO
 // ═══════════════════════════════════════════════════
 function renderTK(){
+  const isVi = currentLang === 'vi';
   const q=(v('sk-q')||'').toLowerCase(),dm=v('sk-dm');
   const allData=getTK();
   const data=allData.filter(r=>(!q||(r.ten+r.model).toLowerCase().includes(q))&&(!dm||r.dm===dm));
@@ -1655,21 +1669,23 @@ function renderTK(){
   // Thẻ tổng quan
   const cardsHtml = `
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px">
-      <div class="card c-bl"><div class="lbl2">📦 Đã Nhập</div><div class="val">${totNhap}</div><div class="sub">Toàn bộ kho</div></div>
-      <div class="card c-gn"><div class="lbl2">🛒 Đã Bán</div><div class="val">${totBan}</div><div class="sub">Khách lẻ & DN</div></div>
-      <div class="card c-or"><div class="lbl2">📋 Đang Ký Gởi</div><div class="val">${totKG}</div><div class="sub">Tại các điểm bán</div></div>
-      <div class="card c-pu"><div class="lbl2">🧑‍💼 Đang Tạm Ứng</div><div class="val">${totTU}</div><div class="sub">NV demo / bán</div></div>
-      <div class="card c-yw"><div class="lbl2">🗄️ Tồn Kho Tổng</div><div class="val">${totTon}</div><div class="sub">Nhập - Bán - PP</div></div>
-      <div class="card c-gn"><div class="lbl2">🟢 Tồn Khả Dụng</div><div class="val">${totKD}</div><div class="sub">Sẵn sàng xuất</div></div>
-      <div class="card c-bl"><div class="lbl2">💰 Giá Trị Tồn Gốc</div><div class="val" style="font-size:16px">${fn(totVal)}₫</div><div class="sub">Theo giá vốn (83%)</div></div>
+      <div class="card c-bl"><div class="lbl2">📦 ${isVi?'Đã Nhập':'Total In'}</div><div class="val">${totNhap}</div><div class="sub">${isVi?'Toàn bộ kho':'Total warehouse'}</div></div>
+      <div class="card c-gn"><div class="lbl2">🛒 ${isVi?'Đã Bán':'Sold'}</div><div class="val">${totBan}</div><div class="sub">${isVi?'Khách lẻ & DN':'Retail & B2B'}</div></div>
+      <div class="card c-or"><div class="lbl2">📋 ${isVi?'Đang Ký Gởi':'Consigned'}</div><div class="val">${totKG}</div><div class="sub">${isVi?'Tại các điểm bán':'At POS outlets'}</div></div>
+      <div class="card c-pu"><div class="lbl2">🧑‍💼 ${isVi?'Đang Tạm Ứng':'Advanced'}</div><div class="val">${totTU}</div><div class="sub">${isVi?'NV demo / bán':'Staff demo / sale'}</div></div>
+      <div class="card c-yw"><div class="lbl2">🗄️ ${isVi?'Tồn Kho Tổng':'Total Stock'}</div><div class="val">${totTon}</div><div class="sub">${isVi?'Nhập - Bán - PP':'In - Out - Dist'}</div></div>
+      <div class="card c-gn"><div class="lbl2">🟢 ${isVi?'Tồn Khả Dụng':'Available'}</div><div class="val">${totKD}</div><div class="sub">${isVi?'Sẵn sàng xuất':'Ready to ship'}</div></div>
+      <div class="card c-bl"><div class="lbl2">💰 ${isVi?'Giá Trị Tồn Gốc':'Stock Asset Value'}</div><div class="val" style="font-size:16px">${fn(totVal)}₫</div><div class="sub">${isVi?'Theo giá vốn (83%)':'At base cost (83%)'}</div></div>
     </div>`;
 
   const warn=data.filter(r=>r.ton>0&&r.ton<=3);
-  const warnHtml = warn.length?`<div class="warn">⚠️ Sắp hết hàng: ${warn.map(r=>`<b>${r.ten}</b> (Tồn: ${r.ton} | Khả dụng: ${r.khaDung})`).join(', ')}</div>`:'';
+  const warnHtml = warn.length?`<div class="warn">⚠️ ${isVi?'Sắp hết hàng:':'Low stock:'} ${warn.map(r=>`<b>${r.ten}</b> (${isVi?'Tồn':'Stock'}: ${r.ton} | ${isVi?'Khả dụng':'Available'}: ${r.khaDung})`).join(', ')}</div>`:'';
   
   document.getElementById('tk-warn').innerHTML = cardsHtml + warnHtml;
-  document.getElementById('t-tonkho').innerHTML=tbl(
-    ['Tên SP','Model','DM','Đã Nhập','Đã Bán','Ký Gởi','Tồn Kho','Khả Dụng','Giá Gốc (83%)','LN Cty 17%','Giá Sàn (100%)','Giá Thực Bán','LN Chi Nhánh','Tổng LN Cty','Tổng LN Chi Nhánh','Giá Trị Tồn Gốc','Trạng Thái'],
+  const tkHeaders = isVi ?
+    ['Tên SP','Model','DM','Đã Nhập','Đã Bán','Ký Gởi','Tồn Kho','Khả Dụng','Giá Gốc (83%)','LN Cty 17%','Giá Sàn (100%)','Giá Thực Bán','LN Chi Nhánh','Tổng LN Cty','Tổng LN Chi Nhánh','Giá Trị Tồn Gốc','Trạng Thái'] :
+    ['Product','Model','Category','Intake','Sold','Consigned','Total Stock','Available','Base Cost (83%)','HO Profit 17%','Min Price (100%)','Actual Price','Branch Profit','Total HO Profit','Total Branch Profit','Total Stock Cost','Status'];
+  document.getElementById('t-tonkho').innerHTML=tbl(tkHeaders,
     data.map(r=>{
       const gg = Number(r.giagoc || 0);
       const lnCty = gg > 0 ? Math.round(gg / 83 * 17) : 0;
@@ -2998,29 +3014,96 @@ function renderLeadsCards(){
 }
 
 // ═══════════════════════════════════════════════════
-// 🌐 BILINGUAL SUPPORT (VIỆT - ANH)
+// 🌐 UNIFIED BILINGUAL ENGINE (VIỆT - ANH ĐỒNG BỘ 100%)
 // ═══════════════════════════════════════════════════
 let currentLang = localStorage.getItem('ups_lang') || 'en';
 
+const NAV_TITLES = {
+  en: {
+    overview: 'Overview',
+    warehouse: 'Warehouse',
+    sales: 'Sales & Quotation',
+    clients: 'Clients',
+    marketing: 'Marketing',
+    finance: 'Finance',
+    staff: '👤 Staff Portal',
+    dashboard: '📊 Dashboard',
+    nhap: '📦 Goods Intake',
+    tonkho: '🗄️ Inventory',
+    tamung: '🧑‍💼 Stock Advance',
+    banhang: '🛒 Sales Orders',
+    baogiaups: '📄 Device Quote',
+    baogiasolar: '☀️ Solar Quote <small style="color:#38bdf8;font-size:10.5px;margin-left:auto">VCM</small>',
+    daily: '🏪 Distribution',
+    kygoi: '📋 Consignment',
+    crm: '👥 CRM & Survey',
+    quangcao: '📢 Ads Campaigns',
+    leads: '🎯 Leads & Conv',
+    loinhuan: '💰 Profit & Loss',
+    baocao: '📈 Reports',
+    mystats: '📊 My Performance',
+    myquotes: '📄 My Quotations',
+    mysurvey: '📝 My Surveys'
+  },
+  vi: {
+    overview: 'Tổng Quan',
+    warehouse: 'Kho Hàng',
+    sales: 'Bán Hàng & Báo Giá',
+    clients: 'Khách Hàng',
+    marketing: 'Tiếp Thị / Marketing',
+    finance: 'Tài Chính & Kế Toán',
+    staff: '👤 Cổng Nhân Viên',
+    dashboard: '📊 Tổng Quan',
+    nhap: '📦 Nhập Hàng',
+    tonkho: '🗄️ Tồn Kho',
+    tamung: '🧑‍💼 Tạm Ứng Hàng',
+    banhang: '🛒 Bán Hàng',
+    baogiaups: '📄 Báo Giá Thiết Bị',
+    baogiasolar: '☀️ Báo Giá Solar <small style="color:#38bdf8;font-size:10.5px;margin-left:auto">VCM</small>',
+    daily: '🏪 Đại Lý & Phân Phối',
+    kygoi: '📋 Hàng Ký Gởi',
+    crm: '👥 CRM & Khảo Sát',
+    quangcao: '📢 Chiến Dịch Quảng Cáo',
+    leads: '🎯 Leads & Chuyển Đổi',
+    loinhuan: '💰 Báo Cáo Lợi Nhuận',
+    baocao: '📈 Báo Cáo Kho Hàng',
+    mystats: '📊 Tiến Độ Cá Nhân',
+    myquotes: '📄 Báo Giá Của Tôi',
+    mysurvey: '📝 Khảo Sát Của Tôi'
+  }
+};
+
 const DICT = {
   en: {
-    nhap_title: '➕ Goods Intake & Cost Allocation (Nhập Hàng & Phân Bổ Vốn)',
-    p_name: 'Product Name * (Tên Sản Phẩm)',
-    p_model: 'Model / Item Code (Mã SP)',
-    p_serial: 'Serial Number (Số Serial)',
-    p_category: 'Category (Danh Mục)',
-    p_qty: 'Quantity * (Số Lượng)',
-    cost_price_83: 'Base Cost (Vốn Gốc Đầu Vào) *',
-    actual_selling_price: 'Actual Selling Price (Giá Thực Bán) *',
-    p_supplier: 'Supplier (Nhà Cung Cấp)',
-    p_date: 'Intake Date (Ngày Nhập)',
-    p_warranty: 'Warranty (Months / Bảo Hành)',
-    p_note: 'Notes (Ghi Chú)',
-    lbl_cost_83: '🏷️ Base Cost (Vốn Gốc Chi Nhánh)',
-    lbl_comp_17: '🏢 HO Profit & Tax Obligation (LN & Thuế Cty)',
-    lbl_min_price: '🛡️ Minimum Selling Floor (Giá Sàn Tối Thiểu)',
-    lbl_act_price: '📈 Actual Selling Price (Giá Thực Bán)',
-    lbl_branch_profit: '🏪 Branch Retained Profit (Lợi Nhuận Chi Nhánh)'
+    nhap_title: '➕ Goods Intake & Cost Allocation',
+    p_name: 'Product Name *',
+    p_model: 'Model / Item Code',
+    p_serial: 'Serial Number',
+    p_category: 'Category',
+    p_qty: 'Quantity *',
+    cost_price_83: 'Base Cost (83%) *',
+    actual_selling_price: 'Actual Selling Price *',
+    p_supplier: 'Supplier',
+    p_date: 'Intake Date',
+    p_warranty: 'Warranty (months)',
+    p_note: 'Notes',
+    lbl_cost_83: '🏷️ Base Cost (83%)',
+    lbl_comp_17: '🏢 HO Profit 17%',
+    lbl_min_price: '🛡️ Minimum Selling Floor (100%)',
+    lbl_act_price: '📈 Actual Selling Price',
+    lbl_branch_profit: '🏪 Branch Retained Profit',
+    btn_single_intake: '➕ Single Intake',
+    btn_bulk_intake: '📥 Bulk Import (.CSV / Excel)',
+    btn_download_tpl: '📥 Download CSV Template',
+    btn_choose_csv: '📁 Choose .CSV File',
+    btn_save_intake: '📦 Save Intake',
+    btn_clear: '✕ Clear',
+    tk_title: '🗄️ Real-Time & Available Inventory',
+    tk_search_ph: '🔍 Search product, model, category...',
+    d_recent_nhap: '📦 Recent Intake',
+    d_recent_ban: '🛒 Recent Sales',
+    d_low_stock: '⚠️ Low Stock Alert',
+    d_open_tu: '🧑‍💼 Open Advances'
   },
   vi: {
     nhap_title: '➕ Nhập Hàng & Phân Bổ Lợi Nhuận',
@@ -3029,36 +3112,105 @@ const DICT = {
     p_serial: 'Serial Number',
     p_category: 'Danh Mục',
     p_qty: 'Số Lượng *',
-    cost_price_83: 'Đơn Giá Gốc Đầu Vào *',
+    cost_price_83: 'Đơn Giá Gốc Đầu Vào (83%) *',
     actual_selling_price: 'Giá Thực Bán *',
     p_supplier: 'Nhà Cung Cấp',
     p_date: 'Ngày Nhập',
     p_warranty: 'Bảo Hành (tháng)',
     p_note: 'Ghi Chú',
     lbl_cost_83: '🏷️ Giá Gốc (Chi nhánh tự chi)',
-    lbl_comp_17: '🏢 Lợi Nhuận & Thuế Nộp Cty',
-    lbl_min_price: '🛡️ Mức Giá Bán Thấp Nhất',
+    lbl_comp_17: '🏢 Lợi Nhuận & Thuế Nộp Cty 17%',
+    lbl_min_price: '🛡️ Mức Giá Bán Thấp Nhất (100%)',
     lbl_act_price: '📈 Giá Thực Bán',
-    lbl_branch_profit: '🏪 Lợi Nhuận Chi Nhánh'
+    lbl_branch_profit: '🏪 Lợi Nhuận Chi Nhánh',
+    btn_single_intake: '➕ Nhập Đơn Lẻ (Single)',
+    btn_bulk_intake: '📥 Import Hàng Loạt (.CSV / Excel)',
+    btn_download_tpl: '📥 Tải File Mẫu (.CSV)',
+    btn_choose_csv: '📁 Chọn File .CSV',
+    btn_save_intake: '📦 Lưu Phiếu Nhập',
+    btn_clear: '✕ Xóa Form',
+    tk_title: '🗄️ Tồn Kho Thực Tế & Khả Dụng',
+    tk_search_ph: '🔍 Tìm tên sản phẩm, model, danh mục...',
+    d_recent_nhap: '📦 Nhập gần đây',
+    d_recent_ban: '🛒 Bán gần đây',
+    d_low_stock: '⚠️ Cảnh báo tồn kho',
+    d_open_tu: '🧑‍💼 Tạm ứng đang mở'
   }
 };
 
 function applyLang(lang) {
   currentLang = lang;
   localStorage.setItem('ups_lang', lang);
+  
+  // 1. Update Lang button
   const btn = document.getElementById('lang-btn');
   if (btn) btn.innerHTML = lang === 'vi' ? '🌐 🇻🇳 VN (Click to EN)' : '🌐 🇬🇧 EN (Click to VN)';
   
+  // 2. Update Sidebar labels & nav links
+  const navMap = NAV_TITLES[lang] || NAV_TITLES.en;
+  document.querySelectorAll('[data-nav-lbl]').forEach(el => {
+    const k = el.getAttribute('data-nav-lbl');
+    if (navMap[k]) el.textContent = navMap[k];
+  });
+  document.querySelectorAll('[data-nav-a]').forEach(el => {
+    const k = el.getAttribute('data-nav-a');
+    if (navMap[k]) el.innerHTML = navMap[k];
+  });
+  
+  // 3. Update active page title
+  const activeSec = document.querySelector('.sec.on');
+  if (activeSec) {
+    const secId = activeSec.id.replace('s-', '');
+    const ptitleEl = document.getElementById('ptitle');
+    if (ptitleEl && navMap[secId]) {
+      ptitleEl.innerHTML = navMap[secId];
+    }
+  }
+  
+  // 4. Update topbar labels
+  const ctyEl = document.getElementById('cfg-cty-label');
+  if (ctyEl) ctyEl.textContent = lang === 'vi' ? '🏢 % Cty:' : '🏢 % HO:';
+  
+  // 5. Update dashboard panel headers
+  const dNhapH3 = document.getElementById('d-nhap-h3');
+  if (dNhapH3) dNhapH3.textContent = lang === 'vi' ? '📦 Nhập gần đây' : '📦 Recent Intake';
+  const dBanH3 = document.getElementById('d-ban-h3');
+  if (dBanH3) dBanH3.textContent = lang === 'vi' ? '🛒 Bán gần đây' : '🛒 Recent Sales';
+  const dWarnH3 = document.getElementById('d-warn-h3');
+  if (dWarnH3) dWarnH3.textContent = lang === 'vi' ? '⚠️ Cảnh báo tồn kho' : '⚠️ Low Stock Alert';
+  const dTuH3 = document.getElementById('d-tu-h3');
+  if (dTuH3) dTuH3.textContent = lang === 'vi' ? '🧑‍💼 Tạm ứng đang mở' : '🧑‍💼 Open Advances';
+
+  // 6. Update all [data-lang] elements
   document.querySelectorAll('[data-lang]').forEach(el => {
     const k = el.getAttribute('data-lang');
     if (DICT[lang] && DICT[lang][k]) {
-      el.textContent = DICT[lang][k];
+      el.innerHTML = DICT[lang][k];
     }
   });
+
+  // 7. Update all [data-lang-ph] placeholder elements
+  document.querySelectorAll('[data-lang-ph]').forEach(el => {
+    const k = el.getAttribute('data-lang-ph');
+    if (DICT[lang] && DICT[lang][k]) {
+      el.placeholder = DICT[lang][k];
+    }
+  });
+
+  // 8. Re-render dynamic active section to sync tables and cards
+  if (activeSec) {
+    const secId = activeSec.id.replace('s-', '');
+    if (typeof renders !== 'undefined' && renders[secId]) renders[secId]();
+    if (secId === 'mystats' && typeof renderMyStats === 'function') renderMyStats();
+    if (secId === 'myquotes' && typeof renderMyQuotes === 'function') renderMyQuotes();
+    if (secId === 'mysurvey' && typeof renderSurveys === 'function') renderSurveys();
+  }
 }
 
 function toggleLang() {
-  applyLang(currentLang === 'vi' ? 'en' : 'vi');
+  const next = currentLang === 'vi' ? 'en' : 'vi';
+  applyLang(next);
+  al(next === 'vi' ? '🌐 Đã chuyển sang Tiếng Việt' : '🌐 Switched to English');
 }
 
 setInterval(()=>{document.getElementById('clk').textContent=new Date().toLocaleString(currentLang==='vi'?'vi-VN':'en-US');},1000);
@@ -3090,15 +3242,16 @@ if (sharedQuote) {
 rDash();
 
 // ═══════════════════════════════════════════════════
-// STAFF PORTAL — MY PERFORMANCE
+// STAFF PORTAL — MY PERFORMANCE (BILINGUAL)
 // ═══════════════════════════════════════════════════
 function getStaffName(){
   const p = new URLSearchParams(window.location.search).get('staff');
   return p || localStorage.getItem('my_staff_name') || '';
 }
 function renderMyStats(){
+  const isVi = currentLang === 'vi';
   const raw = v('my-name') || getStaffName();
-  if(!raw){al('Nhập tên nhân viên!','er');return;}
+  if(!raw){al(isVi ? 'Nhập tên nhân viên!' : 'Please enter staff name!','er');return;}
   localStorage.setItem('my_staff_name', raw);
   const name = raw.toLowerCase();
 
@@ -3117,15 +3270,16 @@ function renderMyStats(){
   });
 
   document.getElementById('my-cards').innerHTML=`
-    <div class="card c-bl"><div class="lbl2">🛒 Đơn Bán</div><div class="val">${myBan.length}</div><div class="sub">đơn hàng</div></div>
-    <div class="card c-gn"><div class="lbl2">💰 Doanh Thu</div><div class="val" style="font-size:15px">${fn(rev)}₫</div><div class="sub">tổng bán</div></div>
-    <div class="card c-pu"><div class="lbl2">🏪 LN Chi Nhánh</div><div class="val" style="font-size:15px;color:var(--gn)">${fn(profit)}₫</div><div class="sub">lợi nhuận NV</div></div>
-    <div class="card c-bl"><div class="lbl2">🏢 LN Trả Cty</div><div class="val" style="font-size:15px;color:#1e40af">${fn(ctyProfit)}₫</div><div class="sub">17% trả về cty</div></div>
-    <div class="card c-or"><div class="lbl2">📋 Ký Gởi</div><div class="val">${myKG.length}</div><div class="sub">đang quản lý</div></div>
-    <div class="card c-yw"><div class="lbl2">🧑‍💼 Tạm Ứng</div><div class="val">${myTU.filter(r=>r.ts==='Đang ứng').length}</div><div class="sub">chưa trả</div></div>`;
+    <div class="card c-bl"><div class="lbl2">🛒 ${isVi?'Đơn Bán':'Orders'}</div><div class="val">${myBan.length}</div><div class="sub">${isVi?'đơn hàng':'orders'}</div></div>
+    <div class="card c-gn"><div class="lbl2">💰 ${isVi?'Doanh Thu':'Revenue'}</div><div class="val" style="font-size:15px">${fn(rev)}₫</div><div class="sub">${isVi?'tổng bán':'total sales'}</div></div>
+    <div class="card c-pu"><div class="lbl2">🏪 ${isVi?'LN Chi Nhánh':'Branch Profit'}</div><div class="val" style="font-size:15px;color:var(--gn)">${fn(profit)}₫</div><div class="sub">${isVi?'lợi nhuận NV':'staff profit'}</div></div>
+    <div class="card c-bl"><div class="lbl2">🏢 ${isVi?'LN Trả Cty':'HO Profit'}</div><div class="val" style="font-size:15px;color:#1e40af">${fn(ctyProfit)}₫</div><div class="sub">${isVi?'17% trả về cty':'17% to HO'}</div></div>
+    <div class="card c-or"><div class="lbl2">📋 ${isVi?'Ký Gởi':'Consignment'}</div><div class="val">${myKG.length}</div><div class="sub">${isVi?'đang quản lý':'in management'}</div></div>
+    <div class="card c-yw"><div class="lbl2">🧑‍💼 ${isVi?'Tạm Ứng':'Advance'}</div><div class="val">${myTU.filter(r=>r.ts==='Đang ứng'||r.ts==='Advance').length}</div><div class="sub">${isVi?'chưa trả':'pending'}</div></div>`;
 
   // My Sales table
-  document.getElementById('my-sales').innerHTML=tbl(['#','SP','SL','Giá Bán','Doanh Thu','LN Chi Nhánh','Khách','Kênh','Ngày'],
+  const salesHeaders = isVi ? ['#','SP','SL','Giá Bán','Doanh Thu','LN Chi Nhánh','Khách','Kênh','Ngày'] : ['#','Product','Qty','Price','Revenue','Branch Profit','Customer','Channel','Date'];
+  document.getElementById('my-sales').innerHTML=tbl(salesHeaders,
     myBan.map((r,i)=>{const sp=nhap.find(n=>n.id==r.spId);
       const gg=Number(sp?.gg||0),lnCty=gg>0?Math.round(gg/83*17):0,minSell=gg+lnCty;
       const ln=(r.gia-minSell)*r.sl;
@@ -3137,52 +3291,58 @@ function renderMyStats(){
   document.getElementById('my-profit').innerHTML=`
     <div style="padding:16px;text-align:center">
       <div style="font-size:32px;font-weight:900;color:var(--gn);margin-bottom:8px">${fn(profit)} ₫</div>
-      <div style="font-size:13px;color:#64748b;margin-bottom:16px">Tổng Lợi Nhuận Chi Nhánh (Branch Profit)</div>
+      <div style="font-size:13px;color:#64748b;margin-bottom:16px">${isVi?'Tổng Lợi Nhuận Chi Nhánh (Branch Profit)':'Total Branch Retained Profit'}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center">
-        <div><div style="font-size:11px;color:#0284c7">💰 Doanh Thu</div><div style="font-size:18px;font-weight:700;color:#0284c7">${fn(rev)}₫</div></div>
-        <div><div style="font-size:11px;color:#1e40af">🏢 Trả Cty 17%</div><div style="font-size:18px;font-weight:700;color:#1e40af">${fn(ctyProfit)}₫</div></div>
-        <div><div style="font-size:11px;color:var(--gn)">🏪 NV Giữ Lại</div><div style="font-size:18px;font-weight:700;color:var(--gn)">${fn(profit)}₫</div></div>
+        <div><div style="font-size:11px;color:#0284c7">💰 ${isVi?'Doanh Thu':'Revenue'}</div><div style="font-size:18px;font-weight:700;color:#0284c7">${fn(rev)}₫</div></div>
+        <div><div style="font-size:11px;color:#1e40af">🏢 ${isVi?'Trả Cty 17%':'HO Profit 17%'}</div><div style="font-size:18px;font-weight:700;color:#1e40af">${fn(ctyProfit)}₫</div></div>
+        <div><div style="font-size:11px;color:var(--gn)">🏪 ${isVi?'NV Giữ Lại':'Staff Retained'}</div><div style="font-size:18px;font-weight:700;color:var(--gn)">${fn(profit)}₫</div></div>
       </div>
     </div>`;
 
   // My Consignment table
-  document.getElementById('my-consign').innerHTML=myKG.length?tbl(['#','SP','SL','Điểm Bán','Trạng Thái','Ngày'],
+  const kgHeaders = isVi ? ['#','SP','SL','Điểm Bán','Trạng Thái','Ngày'] : ['#','Product','Qty','Outlet / POS','Status','Date'];
+  document.getElementById('my-consign').innerHTML=myKG.length?tbl(kgHeaders,
     myKG.map((r,i)=>[i+1,r.spN,r.sl,r.ddBan||'-',bk(r.ts,r.ts==='Đang ký gởi'?'or':'gn'),fd(r.ngay)]))
-    :'<div style="color:#94a3b8;padding:20px;text-align:center">Chưa có hàng ký gởi</div>';
+    :`<div style="color:#94a3b8;padding:20px;text-align:center">${isVi?'Chưa có hàng ký gởi':'No consignment items yet'}</div>`;
 
   // My Advance table
-  document.getElementById('my-advance').innerHTML=myTU.length?tbl(['#','Sản Phẩm','SL','Mục Đích','Ngày Lấy','Trạng Thái'],
+  const tuHeaders = isVi ? ['#','Sản Phẩm','SL','Mục Đích','Ngày Lấy','Trạng Thái'] : ['#','Product','Qty','Purpose','Issue Date','Status'];
+  document.getElementById('my-advance').innerHTML=myTU.length?tbl(tuHeaders,
     myTU.map((r,i)=>[i+1,r.spN,r.sl,r.md||'-',fd(r.ngay),bk(r.ts,r.ts==='Đang ứng'?'or':'gn')]))
-    :'<div style="color:#94a3b8;padding:20px;text-align:center">Chưa có tạm ứng</div>';
+    :`<div style="color:#94a3b8;padding:20px;text-align:center">${isVi?'Chưa có tạm ứng':'No advances yet'}</div>`;
 }
 
 // ═══════════════════════════════════════════════════
-// STAFF PORTAL — MY QUOTATIONS
+// STAFF PORTAL — MY QUOTATIONS (BILINGUAL)
 // ═══════════════════════════════════════════════════
 function renderMyQuotes(){
+  const isVi = currentLang === 'vi';
   const q=(v('mq-name')||getStaffName()||'').toLowerCase();
   // Solar quotes
   const solar=DB.g('quotesolar').filter(r=>!q||(r.staff||'').toLowerCase().includes(q)||(r.staffId||'').toLowerCase().includes(q)||(r.kh||'').toLowerCase().includes(q));
-  document.getElementById('mq-solar').innerHTML=solar.length?tbl(['#','Mã BG','Khách Hàng','Công Suất','Tổng Tiền','Ngày','Trạng Thái',''],
+  const sHeaders = isVi ? ['#','Mã BG','Khách Hàng','Công Suất','Tổng Tiền','Ngày','Trạng Thái',''] : ['#','Quote Code','Customer','Capacity','Total','Date','Status','Action'];
+  document.getElementById('mq-solar').innerHTML=solar.length?tbl(sHeaders,
     solar.map((r,i)=>[i+1,`<code>${r.code||'-'}</code>`,`<b>${r.kh||'-'}</b>`,r.power||'-',
-      `<b>${fn(r.total)} ${r.currency||'Kyats'}</b>`,fd(r.date),bk(r.status||'Mới','bl'),
-      `<button class="btn b-xs b-bl" onclick="go('baogiasolar');loadSelectedQuote('${r.id}')">📄 Mở</button>`
-    ])):'<div style="color:#94a3b8;padding:20px;text-align:center">Chưa có báo giá Solar'+(q?' cho "'+q+'"':'')+'</div>';
+      `<b>${fn(r.total)} ${r.currency||'Kyats'}</b>`,fd(r.date),bk(r.status||(isVi?'Mới':'New'),'bl'),
+      `<button class="btn b-xs b-bl" onclick="go('baogiasolar');loadSelectedQuote('${r.id}')">${isVi?'📄 Mở':'📄 Open'}</button>`
+    ])):`<div style="color:#94a3b8;padding:20px;text-align:center">${isVi?'Chưa có báo giá Solar':'No Solar quotes yet'}${q?' ('+q+')':''}</div>`;
 
   // UPS quotes
   const ups=DB.g('quoteups').filter(r=>!q||(r.staff||'').toLowerCase().includes(q)||(r.kh||'').toLowerCase().includes(q));
-  document.getElementById('mq-ups').innerHTML=ups.length?tbl(['#','Khách Hàng','Sản Phẩm','Tổng Tiền','Ngày',''],
+  const uHeaders = isVi ? ['#','Khách Hàng','Sản Phẩm','Tổng Tiền','Ngày',''] : ['#','Customer','Product','Total','Date','Action'];
+  document.getElementById('mq-ups').innerHTML=ups.length?tbl(uHeaders,
     ups.map((r,i)=>[i+1,`<b>${r.kh||'-'}</b>`,r.spN||'-',`<b>${fn(r.total||0)}₫</b>`,fd(r.date),
-      `<button class="btn b-xs b-bl" onclick="go('baogiaups');viewQuote('ups','${r.id}')">📄 Mở</button>`
-    ])):'<div style="color:#94a3b8;padding:20px;text-align:center">Chưa có báo giá UPS'+(q?' cho "'+q+'"':'')+'</div>';
+      `<button class="btn b-xs b-bl" onclick="go('baogiaups');viewQuote('ups','${r.id}')">${isVi?'📄 Mở':'📄 Open'}</button>`
+    ])):`<div style="color:#94a3b8;padding:20px;text-align:center">${isVi?'Chưa có báo giá UPS':'No UPS quotes yet'}${q?' ('+q+')':''}</div>`;
 }
 
 // ═══════════════════════════════════════════════════
-// STAFF PORTAL — SURVEYS (KHẢO SÁT)
+// STAFF PORTAL — SURVEYS (BILINGUAL)
 // ═══════════════════════════════════════════════════
 function addSurvey(){
+  const isVi = currentLang === 'vi';
   const nv=v('sv-nv')||getStaffName(), kh=v('sv-kh');
-  if(!nv||!kh){al('Nhập tên NV và tên KH!','er');return;}
+  if(!nv||!kh){al(isVi ? 'Nhập tên NV và tên KH!' : 'Please enter Staff Name and Customer Name!','er');return;}
   DB.add('surveys',{nv,type:v('sv-type'),kh,dt:v('sv-dt'),dc:v('sv-dc'),sp:v('sv-sp'),ns:v('sv-ns'),md:v('sv-md'),ht:v('sv-ht'),gc:v('sv-gc'),ngay:td()});
   // Sync to Google Sheet
   try{
@@ -3191,35 +3351,40 @@ function addSurvey(){
       body:JSON.stringify({action:"sale_add",col:"khaosat",data:{nv,type:v('sv-type'),kh,dt:v('sv-dt'),dc:v('sv-dc'),sp:v('sv-sp'),ns:v('sv-ns'),md:v('sv-md'),ht:v('sv-ht'),gc:v('sv-gc'),ngay:td()}})
     });
   }catch(e){console.warn('Survey sync:',e);}
-  al('✅ Đã lưu khảo sát!');clrForm('sv-');renderSurveys();
+  al(isVi ? '✅ Đã lưu khảo sát!' : '✅ Survey saved successfully!');clrForm('sv-');renderSurveys();
 }
 
 function renderSurveys(){
+  const isVi = currentLang === 'vi';
   const q=(v('sv-filter')||'').toLowerCase();
   const d=DB.g('surveys').filter(r=>!q||(r.nv||'').toLowerCase().includes(q)||(r.kh||'').toLowerCase().includes(q)||(r.dc||'').toLowerCase().includes(q));
-  document.getElementById('sv-table').innerHTML=d.length?tbl(
-    ['#','NV','Loại','KH / Đối Tác','SĐT','Khu Vực','Sản Phẩm','Ngân Sách','Mức Độ','Hợp Tác','Ngày',''],
+  const svHeaders = isVi ? 
+    ['#','NV','Loại','KH / Đối Tác','SĐT','Khu Vực','Sản Phẩm','Ngân Sách','Mức Độ','Hợp Tác','Ngày',''] : 
+    ['#','Staff','Type','Customer / Partner','Phone','Area','Product','Budget','Interest','Cooperation','Date','Action'];
+  document.getElementById('sv-table').innerHTML=d.length?tbl(svHeaders,
     d.map((r,i)=>[i+1,`<b>${r.nv}</b>`,bk(r.type,'bl'),`<b>${r.kh}</b>`,r.dt||'-',r.dc||'-',
       bk(r.sp,'bl'),r.ns||'-',
       r.md?.includes('🔴')?bk('Hot','rd'):r.md?.includes('🟡')?bk('Warm','or'):r.md?.includes('🔵')?bk('Cool','bl'):bk('Cold','gy'),
       bk(r.ht,'pu'),fd(r.ngay),
       `<button class="btn b-xs b-rd" onclick="del('surveys',${r.id},renderSurveys)">🗑</button>`
-    ])):'<div style="color:#94a3b8;padding:20px;text-align:center">Chưa có khảo sát nào</div>';
+    ])):`<div style="color:#94a3b8;padding:20px;text-align:center">${isVi?'Chưa có khảo sát nào':'No surveys yet'}</div>`;
 }
 
 function exportSurveyCSV(){
+  const isVi = currentLang === 'vi';
   const d=DB.g('surveys');
-  if(!d.length){al('Chưa có dữ liệu khảo sát!','er');return;}
-  const h=['NV','Loại','KH','SĐT','Khu Vực','Sản Phẩm','Ngân Sách','Mức Độ','Hợp Tác','Ghi Chú','Ngày'];
+  if(!d.length){al(isVi ? 'Chưa có dữ liệu khảo sát!' : 'No survey data to export!','er');return;}
+  const h=isVi ? 
+    ['NV','Loại','KH','SĐT','Khu Vực','Sản Phẩm','Ngân Sách','Mức Độ','Hợp Tác','Ghi Chú','Ngày'] :
+    ['Staff','Type','Customer','Phone','Area','Product','Budget','Interest','Cooperation','Notes','Date'];
   const rows=d.map(r=>[r.nv,r.type,r.kh,r.dt,r.dc,r.sp,r.ns,r.md,r.ht,`"${(r.gc||'').replace(/"/g,'""')}"`,r.ngay]);
-  const csv="\uFEFF"+h.join(',')+"\n"+rows.map(r=>r.join(',')).join('\n');
+  const csv="﻿"+h.join(',')+"
+"+rows.map(r=>r.join(',')).join('
+');
   const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
   a.download=`TNI_Survey_${td()}.csv`;a.click();
 }
 
-// ═══════════════════════════════════════════════════
-// STAFF URL AUTO-ROUTING (?staff=XXX&tab=YYY)
-// ═══════════════════════════════════════════════════
 (function initStaffPortal(){
   const params = new URLSearchParams(window.location.search);
   const staffParam = params.get('staff') || params.get('user') || params.get('email');

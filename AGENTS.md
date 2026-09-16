@@ -144,6 +144,7 @@
 > 1. **Mọi Tin Nhắn Bot Gửi Ra Telegram BẮT BUỘC 100% Tiếng Anh (All Bot Replies in English)**: Toàn bộ nội dung mà Bot gửi ra các nhóm Telegram (xác nhận thu thập, menu keyboard, template danh sách, phản hồi lệnh `/refresh`, `/menu`, v.v.) BẮT BUỘC phải viết hoàn toàn bằng **tiếng Anh (English)**. TUYỆT ĐỐI CẤM để lọt bất kỳ câu, từ, cụm từ tiếng Việt nào trong tin nhắn Bot gửi cho người dùng Telegram!
 > 2. **Logger.log Nội Bộ Được Phép Tiếng Việt**: Chỉ có `Logger.log()` (log nội bộ dành cho developer kiểm tra trên Apps Script Execution Log) mới được phép dùng tiếng Việt hoặc song ngữ. Đây là log kỹ thuật KHÔNG hiển thị cho nhân viên!
 > 3. **Kiểm Tra Trước Khi Deploy**: Trước mỗi lần deploy hoặc cập nhật code, BẮT BUỘC phải rà soát 100% các chuỗi `sendSingleTelegramMessage_`, `sendTelegramMessageCollectIds_`, `UrlFetchApp.fetch(... /sendMessage ...)` để đảm bảo không còn bất kỳ ký tự tiếng Việt nào trong nội dung tin nhắn!
+> 4. **Attendance GAS — Toàn Bộ Báo Cáo & Template BẮT BUỘC Tiếng Anh (Attendance English-Only)**: Mọi nội dung Bot gửi vào group 10 (TNI DAILY ADDTENDANCE `-5465634644`) và các group T1-T4/CONTROL bao gồm: daily status template (Working/Take Leave/Not report), báo cáo 09:00, thông báo lỗi (`Error: ...` không phải `Lỗi: ...`), membership summary — BẮT BUỘC 100% tiếng Anh. **Scan bắt buộc trước deploy**: `Select-String -Path "apps_script_attendance\TNI attendance.js" -Pattern "sendTelegramMessage_|sendTgMsg" | % { $_.Line }` — kiểm tra không có ký tự UTF-8 tiếng Việt trong payload.
 
 ---
 
@@ -1425,4 +1426,27 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 > 1. Khi viết chuỗi tiếng Việt hoặc Myanmar trong JavaScript inline (`<script>` block của HTML), **BẮT BUỘC** phải dùng Unicode escape sequences (`\u00E0` cho `à`, `\u1EBFn` cho `ến`, v.v.) thay vì ký tự gốc trực tiếp.
 > 2. File HTML có thể bị thay đổi encoding khi chuyển qua các công cụ edit/copy/paste/Git/PowerShell `Set-Content`, gây corruption ký tự thành dấu `?` (mojibake).
 > 3. **TUYỆT ĐỐI CẤM** viết trực tiếp ký tự tiếng Việt có dấu hoặc tiếng Myanmar vào source code JavaScript — luôn dùng Unicode escape!
+
+# 🌐 POST-MORTEM RULE — 16/09/2026: PHÂN HỆ TNI SALE BẮT BUỘC ĐỒNG BỘ 100% SONG NGỮ ANH - VIỆT KHI THÊM MỚI / SỬA ĐỔI (RULE PM-35)
+
+> ### Nguồn gốc: **Phúc Tra Giao Diện TNI Sale (16/09/2026)**
+> - **Root Cause**: Giao diện `tni_sale.html` khi mới mở hoặc khi chuyển đổi ngôn ngữ bị tình trạng "nửa nạc nửa mỡ" (nút ghi EN nhưng nội dung và sidebar hardcode tiếng Việt; hoặc khi bấm chuyển tiếng Việt thì các bảng/card JS không đồng bộ theo). Nguyên nhân do từ điển `DICT` cũ chỉ có 13 keys của form nhập hàng, các hàm JS render không kiểm tra trạng thái ngôn ngữ `currentLang`, và khi thêm tab/chức năng mới bị hardcode chuỗi một ngôn ngữ duy nhất vào mã nguồn.
+>
+> ### 🔴 RULE PM-35: 5 NGUYÊN TẮC BẮT BUỘC SONG NGỮ ĐỒNG BỘ CHO PHÂN HỆ TNI SALE
+> 1. **Mặc Định Tiếng Anh 100% (English by Default)**: Giao diện Web App TNI Sale (`tni_sale.html`) khi người dùng mở trang BẮT BUỘC hiển thị 100% tiếng Anh (`currentLang = 'en'`). Mọi nhãn sidebar, tiêu đề tab, thẻ cards, form, nút bấm, tiêu đề bảng, thông báo alert, và trạng thái rỗng (empty states) đều phải là tiếng Anh chuẩn.
+> 2. **Đồng Bộ Song Ngữ 100% Khi Chuyển Đổi (Full Synchronous Dual-Language Toggle)**:
+>    - Khi người dùng bấm nút chuyển đổi ngôn ngữ (`🌐 EN (Click to VN)` / `🌐 VN (Click to EN)`), **TOÀN BỘ** giao diện (Sidebar, Page Title, Topbar, Panel Headers, Form Labels, Placeholders, Table Headers, Summary Cards, Alerts) BẮT BUỘC phải chuyển đổi đồng bộ 100% sang ngôn ngữ được chọn.
+>    - Hàm `applyLang(lang)` BẮT BUỘC phải re-render ngay lập tức tab đang mở (`renders[activeSec]()`) để cập nhật toàn bộ bảng biểu và cards sống sang ngôn ngữ mới.
+>    - **TUYỆT ĐỐI CẤM** để sót bất kỳ chuỗi text nào không chuyển đổi (nửa tiếng Anh, nửa tiếng Việt)!
+> 3. **BẮT BUỘC Song Ngữ Khi Thêm Mới / Chỉnh Sửa Bất Kỳ Thành Phần Nào (Mandatory Bilingual on Add/Edit)**:
+>    - Khi thêm bất kỳ tab mới, form mới, trường nhập liệu mới, nút bấm mới, thẻ card mới hoặc cột dữ liệu mới:
+>    - **BẮT BUỘC** phải đăng ký đồng thời cả 2 bộ ngôn ngữ trong `NAV_TITLES` và `DICT` (`en` và `vi`).
+>    - **BẮT BUỘC** gắn thuộc tính `data-lang="key"` cho nhãn text và `data-lang-ph="key"` cho input placeholder.
+>    - Mọi hàm JS render bảng (`tbl`), thẻ tổng hợp (`cardsHtml`), thông báo (`al()`) **BẮT BUỘC** kiểm tra `const isVi = currentLang === 'vi'` để hiển thị chính xác theo ngôn ngữ hiện hành.
+>    - **TUYỆT ĐỐI CẤM** viết chuỗi text hardcode trực tiếp vào HTML hoặc JS mà không qua hệ thống song ngữ!
+> 4. **Bảo Tồn Công Thức & Logic Phân Phối Lợi Nhuận**: Dù ở ngôn ngữ nào, các khái niệm tài chính chuẩn: Base Cost 83% (Giá Gốc), HO Profit 17% (LN Trả Cty), Price Floor 100% (Giá Sàn), Branch Retained Profit (Lợi Nhuận Chi Nhánh) BẮT BUỘC phải giữ nguyên tính chính xác tuyệt đối.
+> 5. **Đồng Bộ 3 Repos & Deploy Vercel Ngay Lập Tức**:
+>    - Sau mọi lần chỉnh sửa `tni_sale.html`, BẮT BUỘC copy đồng bộ sang cả 2 repository: `Task and WO/tni_sale.html` và `tni-search/tni_sale.html`.
+>    - Tiến hành commit và push đồng thời cả 3 repos để Vercel tự động build và deploy phiên bản live mới nhất cho người dùng!
+
 
