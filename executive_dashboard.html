@@ -1,4 +1,4 @@
-<!-- TNI Operations BI Portal v346 - Plan Week Tab + 8 BI Architecture Pillars -->
+﻿<!-- TNI Operations BI Portal v346 - Plan Week Tab + 8 BI Architecture Pillars -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -970,23 +970,27 @@
               var mTgt = rawTgt.match(/(\d+)/);
               var targetPct = mTgt ? parseInt(mTgt[1], 10) : 75;
 
-              var hdr2 = rows[1] || [];
-              var rawJ = hdr2[9] || '17/08';
-              var rawK = hdr2[10] || '16/08';
-              var rawL = hdr2[11] || '15/08';
-              var rawM = hdr2[12] || 'Plan: 18/08/26';
+                            var mExp = csvText.match(/Export\s*time:\s*([^\r\n,"]+)/i);
+              var exportTimeStr = (mExp && mExp[1]) ? mExp[1].trim() : '15/09/2026 14:39:44';
 
-              var mJ = rawJ.match(/(\d{2}\/\d{2})/); var dJStr = mJ ? mJ[1] : '17/08';
-              var mK = rawK.match(/(\d{2}\/\d{2})/); var dKStr = mK ? mK[1] : '16/08';
-              var mL = rawL.match(/(\d{2}\/\d{2})/); var dLStr = mL ? mL[1] : '15/08';
-              var mM = rawM.match(/(\d{2}\/\d{2}(?:\/\d{2,4})?)/); var dMStr = mM ? mM[1] : '18/08/2026';
+              var mDate = exportTimeStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+              var expDate = mDate ? new Date(parseInt(mDate[3], 10), parseInt(mDate[2], 10) - 1, parseInt(mDate[1], 10)) : new Date();
 
-              var fullMDate = dMStr.includes('/') && dMStr.split('/').length === 3 ? dMStr : dMStr + '/2026';
+              function _pad(n) { return (n < 10 ? '0' : '') + n; }
+              function _fmtDM(d) { return _pad(d.getDate()) + '/' + _pad(d.getMonth() + 1); }
+              function _fmtDMY(d) { return _fmtDM(d) + '/' + d.getFullYear(); }
+
+              var d0Date = expDate;
+              var d1Date = new Date(expDate.getTime() - 86400000);
+              var d2Date = new Date(expDate.getTime() - 2 * 86400000);
+              var planDate = new Date(expDate.getTime() + 86400000);
+
+              var dJStr = _fmtDM(d0Date);
+              var dKStr = _fmtDM(d1Date);
+              var dLStr = _fmtDM(d2Date);
+              var fullMDate = _fmtDMY(planDate);
               var planLabel = '🎯 Plan ' + fullMDate + ' (M):';
-
-              var mJDay = dJStr.split('/')[0], mKDay = dKStr.split('/')[0], mLDay = dLStr.split('/')[0];
-              var mMonth = dJStr.split('/')[1] || '08';
-              var dateLabel = mJDay + '/' + mKDay + '/' + mLDay + '-' + mMonth + '-2026';
+              var dateLabel = _pad(d0Date.getDate()) + '/' + _pad(d1Date.getDate()) + '/' + _pad(d2Date.getDate()) + '-' + _pad(expDate.getMonth() + 1) + '-' + expDate.getFullYear();
 
               var datesObj = {
                 d0Str: dJStr,
@@ -1033,10 +1037,18 @@
               var tEngs  = {team1:10, team2:11, team3:4, team4:4};
               var tRanks = [];
 
+              var summaryRows = rows.slice(35);
               for (var idx = 0; idx < 4; idx++) {
                 var tk = tKeys[idx];
                 var targetCode = tCodes[idx];
-                var row = rows.find(function(r) { return (r[4]||'').indexOf(targetCode) !== -1; }) || rows[46 + idx] || rows[52 + idx] || [];
+                var row = summaryRows.find(function(r) {
+                  var c4 = r[4] || '';
+                  var c3 = (r[3] || '').toLowerCase();
+                  return c4.indexOf(targetCode) !== -1 && (c3.indexOf('leader') !== -1 || c3.indexOf('team leader') !== -1);
+                });
+                if (!row) {
+                  row = rows[46 + idx] || rows[52 + idx] || [];
+                }
                 var cdNotYet  = parseInt((row[0]||'0').replace(/[^\d]/g,''), 10) || 0;
                 var waitCD    = parseInt((row[5]||'0').replace(/[^\d]/g,''), 10) || 0;
                 var fotClose  = parseInt((row[6]||'0').replace(/[^\d]/g,''), 10) || 0;
@@ -6999,11 +7011,7 @@ Team04>> 2Box</td>
       renderGmailList();
     });
 
-    /* 🤖 AI VOICE SPEECH SYNTHESIS ENGINE (FULL COMPREHENSIVE AUDIO REPORT WITH SENTENCE CHUNKING QUEUE) */
-    let isSpeaking = false;
-    let synth = window.speechSynthesis;
-
-        /* ?? AI VOICE SPEECH SYNTHESIS ENGINE (DYNAMIC LIVE DATA BRIEFING WITH SENTENCE CHUNKING QUEUE) */
+    /* 🤖 AI VOICE SPEECH SYNTHESIS ENGINE (DYNAMIC LIVE DATA BRIEFING WITH SENTENCE CHUNKING QUEUE) */
     let isSpeaking = false;
     let synth = window.speechSynthesis;
 
@@ -7016,12 +7024,12 @@ Team04>> 2Box</td>
       }
 
       var exportEl = document.getElementById('sheet-export-time');
-      var rawTime = (exportEl && exportEl.textContent && exportEl.textContent.trim()) || '15/09/2026 14:39:44';
+      var rawTime = (exportEl && exportEl.textContent && exportEl.textContent.trim()) || new Date().toLocaleDateString('en-GB') + ' ' + new Date().toLocaleTimeString('en-GB');
       var m = rawTime.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-      var day = m ? m[1] : '15';
-      var month = m ? m[2] : '09';
-      var year = m ? m[3] : '2026';
-      var dateVi = day + " th?ng " + month + " n?m " + year;
+      var day = m ? m[1] : new Date().getDate().toString();
+      var month = m ? m[2] : (new Date().getMonth() + 1).toString();
+      var year = m ? m[3] : new Date().getFullYear().toString();
+      var dateVi = "ng\u00E0y " + day + " th\u00E1ng " + month + " n\u0103m " + year;
       var dateEn = (month.length === 1 ? '0' + month : month) + '/' + (day.length === 1 ? '0' + day : day) + '/' + year;
 
       var td = window.latestTeamData || {};
@@ -7031,13 +7039,12 @@ Team04>> 2Box</td>
       var t4 = td.team4 || { name: 'Team 4 Kawthoung', totalAssigned: parseNum('t4-assigned', 71), fotClose: parseNum('t4-fot', 60), cdNotYet: parseNum('t4-cdnotyet', 1), pct: 83, rank: 1 };
 
       var teams = [
-        { key: 'team1', nameVi: '??i 1 Dawei', nameEn: 'Team 1 Dawei', nameMy: '????? ? ??????', leaderVi: 'Paing Aung Soe', leaderEn: 'Paing Aung Soe', leaderMy: '??????????????', d: t1 },
-        { key: 'team2', nameVi: '??i 2 Myeik', nameEn: 'Team 2 Myeik', nameMy: '????? ? ?????', leaderVi: 'Nay Myo Thu', leaderEn: 'Nay Myo Thu', leaderMy: '?????????', d: t2 },
-        { key: 'team3', nameVi: '??i 3 Bokpyin', nameEn: 'Team 3 Bokpyin', nameMy: '????? ? ?????????', leaderVi: 'Pyae Phyo Zaw', leaderEn: 'Pyae Phyo Zaw', leaderMy: '??????????????', d: t3 },
-        { key: 'team4', nameVi: '??i 4 Kawthoung', nameEn: 'Team 4 Kawthoung', nameMy: '????? ? ??????????', leaderVi: 'Naing Myo Htun', leaderEn: 'Naing Myo Htun', leaderMy: '???????????????', d: t4 }
+        { key: 'team1', nameVi: '\u0110\u1ED9i 1 Dawei', nameEn: 'Team 1 Dawei', leaderEn: 'Paing Aung Soe', d: t1 },
+        { key: 'team2', nameVi: '\u0110\u1ED9i 2 Myeik', nameEn: 'Team 2 Myeik', leaderEn: 'Nay Myo Thu', d: t2 },
+        { key: 'team3', nameVi: '\u0110\u1ED9i 3 Bokpyin', nameEn: 'Team 3 Bokpyin', leaderEn: 'Pyae Phyo Zaw', d: t3 },
+        { key: 'team4', nameVi: '\u0110\u1ED9i 4 Kawthoung', nameEn: 'Team 4 Kawthoung', leaderEn: 'Naing Myo Htun', d: t4 }
       ];
 
-      // Sort according to rank (1 to 4)
       teams.sort(function(a, b) {
         var rA = a.d.rank || 99;
         var rB = b.d.rank || 99;
@@ -7050,24 +7057,15 @@ Team04>> 2Box</td>
       var totalCd = (t1.cdNotYet || 0) + (t2.cdNotYet || 0) + (t3.cdNotYet || 0) + (t4.cdNotYet || 0);
 
       if (selectedLang === 'vi-VN') {
-        return "Ch?o m?ng b?n ??n v?i C?ng th?ng tin B?o c?o V?n h?nh TNI BI. Sau ??y l? b?n tin t?ng h?p chi ti?t t?nh h?nh v?n h?nh to?n m?ng Tanintharyi t?nh ??n ng?y " + dateVi + ". " +
-               "T?ng s? Work Orders ???c giao to?n h? th?ng l? " + totalAssigned + " Work Orders. " +
-               "To?n m?ng ?? ho?n th?nh ??ng " + totalClose + " Work Orders, s? Work Orders ch? ??ng C?t A l? " + totalCd + " Work Orders. " +
-               "Chi ti?t t?nh h?nh 4 ??i khu v?c: " +
-               "V? tr? D?n ??u Rank 1 thu?c v? " + teams[0].nameVi + " do " + teams[0].leaderVi + " l?m ??i tr??ng, ??t t? l? ho?n th?nh " + teams[0].d.pct + " ph?n tr?m v?i " + teams[0].d.fotClose + " Work Orders ho?n th?nh. " +
-               "V? tr? Rank 2 thu?c v? " + teams[1].nameVi + " do " + teams[1].leaderVi + " l?m ??i tr??ng, ??t t? l? ho?n th?nh " + teams[1].d.pct + " ph?n tr?m v?i " + teams[1].d.fotClose + " Work Orders ho?n th?nh. " +
-               "V? tr? Rank 3 thu?c v? " + teams[2].nameVi + " do " + teams[2].leaderVi + " l?m ??i tr??ng, ??t t? l? " + teams[2].d.pct + " ph?n tr?m v?i " + teams[2].d.fotClose + " Work Orders ho?n th?nh. " +
-               "V? tr? Rank 4 thu?c v? " + teams[3].nameVi + " do " + teams[3].leaderVi + " l?m ??i tr??ng, hi?n c? " + teams[3].d.totalAssigned + " Work Orders ???c giao v? " + (teams[3].d.cdNotYet || 0) + " Work Orders ch? ??ng C?t A. " +
-               "Xin c?m ?n b?n ?? l?ng nghe b?n tin ?i?u h?nh BI.";
-      } else if (selectedLang === 'my-MM') {
-        return "????????? TNI ???????????????????? ???????????? ????????????? " +
-               "????????? ????????????? ????? ? ??? " + dateEn + " ??? ?????????? ?????????????? " + totalAssigned + " ?? ???????? " +
-               "?????????? " + totalClose + " ?? ????? ?????????????? " + totalCd + " ?? ????????? " +
-               "????? ? " + teams[0].nameMy + " ??????????? " + teams[0].leaderMy + " ???????? " + teams[0].d.pct + " ????????????? ????????????? " +
-               "????? ? " + teams[1].nameMy + " ??????????? " + teams[1].leaderMy + " ???????? " + teams[1].d.pct + " ????????????? ????????????? " +
-               "????? ? " + teams[2].nameMy + " ??????????? " + teams[2].leaderMy + " ???????? " + teams[2].d.pct + " ????????????? ????????????? " +
-               "????? ? " + teams[3].nameMy + " ??????????? " + teams[3].leaderMy + " ???????? ?????????????? " + teams[3].d.totalAssigned + " ?? ????????? " +
-               "????????????????";
+        return "Ch\u00E0o m\u1EEBng b\u1EA1n \u0111\u1EBFn v\u1EDBi C\u1ED5ng th\u00F4ng tin B\u00E1o c\u00E1o V\u1EADn h\u00E0nh TNI BI. Sau \u0111\u00E2y l\u00E0 b\u1EA3n tin t\u1ED5ng h\u1EE3p chi ti\u1EBFt t\u00ECnh h\u00ECnh v\u1EADn h\u00E0nh to\u00E0n m\u1EA1ng Tanintharyi t\u00EDnh \u0111\u1EBFn " + dateVi + ". " +
+               "T\u1ED5ng s\u1ED1 Work Orders \u0111\u01B0\u1EE3c giao to\u00E0n h\u1EC7 th\u1ED1ng l\u00E0 " + totalAssigned + " Work Orders. " +
+               "To\u00E0n m\u1EA1ng \u0111\u00E3 ho\u00E0n th\u00E0nh \u0111\u00FAng " + totalClose + " Work Orders, s\u1ED1 Work Orders ch\u01B0a \u0111\u00F3ng C\u1ED9t A l\u00E0 " + totalCd + " Work Orders. " +
+               "Chi ti\u1EBFt t\u00ECnh h\u00ECnh 4 \u0111\u1ED9i khu v\u1EF1c: " +
+               "V\u1ECB tr\u00ED D\u1EABn \u0110\u1EA7u Rank 1 thu\u1ED9c v\u1EC1 " + teams[0].nameVi + " do " + teams[0].leaderEn + " l\u00E0m \u0111\u1ED9i tr\u01B0\u1EDFng, \u0111\u1EA1t t\u1EF7 l\u1EC7 ho\u00E0n th\u00E0nh " + teams[0].d.pct + " ph\u1EA7n tr\u0103m v\u1EDBi " + teams[0].d.fotClose + " Work Orders ho\u00E0n th\u00E0nh. " +
+               "V\u1ECB tr\u00ED Rank 2 thu\u1ED9c v\u1EC1 " + teams[1].nameVi + " do " + teams[1].leaderEn + " l\u00E0m \u0111\u1ED9i tr\u01B0\u1EDFng, \u0111\u1EA1t t\u1EF7 l\u1EC7 ho\u00E0n th\u00E0nh " + teams[1].d.pct + " ph\u1EA7n tr\u0103m v\u1EDBi " + teams[1].d.fotClose + " Work Orders ho\u00E0n th\u00E0nh. " +
+               "V\u1ECB tr\u00ED Rank 3 thu\u1ED9c v\u1EC1 " + teams[2].nameVi + " do " + teams[2].leaderEn + " l\u00E0m \u0111\u1ED9i tr\u01B0\u1EDFng, \u0111\u1EA1t t\u1EF7 l\u1EC7 " + teams[2].d.pct + " ph\u1EA7n tr\u0103m v\u1EDBi " + teams[2].d.fotClose + " Work Orders ho\u00E0n th\u00E0nh. " +
+               "V\u1ECB tr\u00ED Rank 4 thu\u1ED9c v\u1EC1 " + teams[3].nameVi + " do " + teams[3].leaderEn + " l\u00E0m \u0111\u1ED9i tr\u01B0\u1EDFng, hi\u1EC7n c\u00F3 " + teams[3].d.totalAssigned + " Work Orders \u0111\u01B0\u1EE3c giao v\u00E0 " + (teams[3].d.cdNotYet || 0) + " Work Orders ch\u01B0a \u0111\u00F3ng C\u1ED9t A. " +
+               "Xin c\u1EA3m \u01A1n b\u1EA1n \u0111\u00E3 l\u1EAFng nghe b\u1EA3n tin \u0111i\u1EC1u h\u00E0nh BI.";
       } else {
         return "Welcome to TNI Operations BI Executive Management Portal. Here is the operational summary for Tanintharyi region as of " + rawTime + ". " +
                "Total assigned Work Orders system wide is " + totalAssigned + " Work Orders, with " + totalClose + " closed and " + totalCd + " pending close in Column A. " +
@@ -7855,3 +7853,4 @@ document.addEventListener("DOMContentLoaded", function() {
 </script>
 </body>
 </html>
+
