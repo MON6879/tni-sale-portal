@@ -135,7 +135,7 @@ tbody tr:hover{background:#fafcff}
     <a onclick="go('tamung')" data-nav-a="tamung">🧑‍💼 Stock Advance</a>
 
     <div class="lbl" data-nav-lbl="sales">Sales &amp; Quotation</div>
-    <a onclick="go('banhang')" data-nav-a="banhang">🛒 Sales Orders</a>
+    <a onclick="go('banhang')" data-nav-a="banhang">🛒 Sales &amp; Dispatch</a>
     <a onclick="go('baogiaups')" data-nav-a="baogiaups">📄 Device Quote</a>
     <a onclick="go('baogiasolar')" data-nav-a="baogiasolar">☀️ Solar Quote <small style="color:#38bdf8;font-size:10.5px;margin-left:auto">VCM</small></a>
     <a onclick="go('daily')" data-nav-a="daily">🏪 Distribution</a>
@@ -149,7 +149,7 @@ tbody tr:hover{background:#fafcff}
     <a onclick="go('leads')" data-nav-a="leads">🎯 Leads &amp; Conv</a>
 
     <div class="lbl" data-nav-lbl="finance">Finance</div>
-    <a onclick="go('loinhuan')" data-nav-a="loinhuan">💰 Profit &amp; Loss</a>
+    <a onclick="go('loinhuan')" data-nav-a="loinhuan">💰 Financial &amp; Cashflow</a>
     <a onclick="go('baocao')" data-nav-a="baocao">📈 Reports</a>
 
     <div class="lbl" data-nav-lbl="staff" style="color:#f59e0b">👤 Staff Portal</div>
@@ -218,21 +218,25 @@ tbody tr:hover{background:#fafcff}
           <div class="f"><label data-lang="p_serial">Serial Number</label><input id="n-serial" placeholder="SN2024001"/></div>
           <div class="f"><label data-lang="p_category">Danh Mục</label><select id="n-dm"><option>UPS</option><option>Solar Panel</option><option>Inverter</option><option>Ắc Quy</option><option>Phụ Kiện Solar</option><option>Cáp &amp; Đầu Nối</option><option>Khác</option></select></div>
           <div class="f"><label data-lang="p_qty">Số Lượng *</label><input id="n-sl" type="number" min="1" placeholder="0" oninput="calcNhapProfit()"/></div>
-          <div class="f"><label data-lang="cost_price_83">Đơn Giá Gốc Đầu Vào (83%) (₫) *</label><input id="n-gg" type="number" placeholder="0" oninput="calcNhapProfit()"/></div>
-          <div class="f"><label data-lang="actual_selling_price">Giá Thực Bán (₫) *</label><input id="n-gb" type="number" placeholder="0" oninput="calcNhapProfit()"/></div>
+          <div class="f"><label data-lang="cost_price_83">Đơn Giá Gốc Vốn (83%) (₫) *</label><input id="n-gg" type="number" placeholder="0" oninput="calcNhapProfit()"/></div>
+          <div class="f"><label data-lang="p_retail_price">🛒 1. Giá Bán Lẻ (Gõ tay) (₫) *</label><input id="n-gb" type="number" placeholder="0" oninput="calcNhapProfit(true)"/></div>
+          <div class="f"><label data-lang="p_dealer_price">🏪 2. Giá Bỏ Đại Lý (₫)</label><input id="n-g-daily" type="number" placeholder="Auto / Gõ tay" oninput="calcNhapProfit(true)"/></div>
+          <div class="f"><label data-lang="p_pos_price">📋 3. Giá Điểm Bán / Ký Gởi (₫)</label><input id="n-g-diemban" type="number" placeholder="Auto / Gõ tay" oninput="calcNhapProfit(true)"/></div>
+          <div class="f"><label data-lang="p_staff_price">🧑‍💼 4. Giá Cho NV (Sàn) (₫)</label><input id="n-g-nv" type="number" placeholder="Auto / Gõ tay" oninput="calcNhapProfit(true)"/></div>
           <div class="f"><label data-lang="p_supplier">Nhà Cung Cấp</label><input id="n-ncc" placeholder="Tên NCC"/></div>
           <div class="f"><label data-lang="p_date">Ngày Nhập</label><input id="n-ngay" type="date"/></div>
           <div class="f"><label data-lang="p_warranty">Bảo Hành (tháng)</label><input id="n-bh" type="number" placeholder="12"/></div>
           <div class="f" style="grid-column:1/-1"><label data-lang="p_note">Ghi Chú</label><textarea id="n-gc" placeholder="..."></textarea></div>
         </div>
 
-        <!-- 💡 LIVE PROFIT & 17% MARGIN PREVIEW (THEO CHUẨN CHI NHÁNH & CTY) -->
-        <div id="nhap-calc-box" style="margin-top:14px;padding:12px 14px;background:#f8fafc;border-radius:8px;border:1px solid #cbd5e1;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+        <!-- 💡 LIVE PROFIT & 4-TIER PRICING PREVIEW -->
+        <div id="nhap-calc-box" style="margin-top:14px;padding:12px 14px;background:#f8fafc;border-radius:8px;border:1px solid #cbd5e1;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
           <div><span style="font-size:11px;color:#0284c7" data-lang="lbl_cost_83">🏷️ Giá Gốc (83%)</span><div id="nc-goc" style="font-size:15px;font-weight:700;color:#0284c7">0 ₫</div></div>
-          <div><span style="font-size:11px;color:#1e40af" data-lang="lbl_comp_17">🏢 LN Trả Về Cty 17%</span><div id="nc-cty17" style="font-size:15px;font-weight:700;color:#1e40af">0 ₫ / SP</div></div>
-          <div><span style="font-size:11px;color:#ea580c" data-lang="lbl_min_price">🛡️ Mức Giá Bán Thấp Nhất (100%)</span><div id="nc-minsell" style="font-size:15px;font-weight:700;color:#ea580c">0 ₫ / SP</div></div>
-          <div><span style="font-size:11px;color:#16a34a" data-lang="lbl_act_price">📈 Giá Thực Bán</span><div id="nc-actsell" style="font-size:15px;font-weight:700;color:#16a34a">0 ₫ / SP</div></div>
-          <div><span style="font-size:11px;color:#7c3aed" data-lang="lbl_branch_profit">🏪 Lợi Nhuận Chi Nhánh</span><div id="nc-branch" style="font-size:15px;font-weight:700;color:#7c3aed">0 ₫ / SP</div></div>
+          <div><span style="font-size:11px;color:#1e40af" data-lang="lbl_comp_17">🏢 LN Nộp Cty (% Cty)</span><div id="nc-cty17" style="font-size:15px;font-weight:700;color:#1e40af">0 ₫ / SP</div></div>
+          <div><span style="font-size:11px;color:#ea580c" data-lang="lbl_min_price">🛡️ Giá Sàn (100%)</span><div id="nc-minsell" style="font-size:15px;font-weight:700;color:#ea580c">0 ₫ / SP</div></div>
+          <div><span style="font-size:11px;color:#16a34a" data-lang="lbl_retail_profit">🛒 LN Bán Lẻ</span><div id="nc-ln-retail" style="font-size:15px;font-weight:700;color:#16a34a">0 ₫ / SP</div></div>
+          <div><span style="font-size:11px;color:#0284c7" data-lang="lbl_dealer_profit">🏪 LN Đại Lý</span><div id="nc-ln-dealer" style="font-size:15px;font-weight:700;color:#0284c7">0 ₫ / SP</div></div>
+          <div><span style="font-size:11px;color:#7c3aed" data-lang="lbl_pos_profit">📋 LN Điểm Bán</span><div id="nc-ln-pos" style="font-size:15px;font-weight:700;color:#7c3aed">0 ₫ / SP</div></div>
         </div>
 
         <div class="fa">
@@ -344,32 +348,76 @@ tbody tr:hover{background:#fafcff}
 <!-- ══ BÁN HÀNG ══ -->
 <div class="sec" id="s-banhang">
   <div class="panel">
-    <div class="ph"><h3>🛒 Tạo Đơn Bán</h3></div>
+    <div class="ph"><h3 data-lang="dispatch_title">🚚 Bán Hàng &amp; Xuất Kho Cho... (Smart Dispatch)</h3></div>
     <div class="pb">
       <div class="fg">
-        <div class="f"><label>Sản Phẩm *</label><select id="b-sp" onchange="autoPrice('b-sp','b-gia')"></select></div>
-        <div class="f"><label>Số Lượng (Quantity) *</label><input id="b-sl" type="number" min="1" placeholder="1"/></div>
-        <div class="f"><label>Serial Number (Số Serial)</label><input id="b-serial" placeholder="SN123456..."/></div>
-        <div class="f"><label>Giá Bán (₫) *</label><input id="b-gia" type="number" placeholder="0"/></div>
-        <div class="f"><label>Khách Hàng (Buyer's Name)</label><input id="b-kh" placeholder="Tên khách hàng"/></div>
-        <div class="f"><label>Điện Thoại KH (Phone Number)</label><input id="b-dt" placeholder="0xxxxxxx"/></div>
-        <div class="f"><label>Hình Ảnh (Drive URL / Link)</label><input id="b-photo" placeholder="https://drive.google.com/..."/></div>
-        <div class="f"><label>Thanh Toán</label><select id="b-tt"><option>Tiền mặt</option><option>Chuyển khoản</option><option>Công nợ</option><option>Quẹt thẻ</option></select></div>
-        <div class="f"><label>Kênh Bán</label><select id="b-kenh"><option>Trực tiếp</option><option>Đại lý</option><option>Online</option><option>Giới thiệu</option><option>Báo giá Solar</option></select></div>
-        <div class="f"><label>Ngày Bán</label><input id="b-ngay" type="date"/></div>
-        <div class="f" style="grid-column:1/-1"><label>Ghi Chú</label><textarea id="b-gc" placeholder="..."></textarea></div>
-      </div>
-
-      <!-- 💡 TELEGRAM SYNTAX BOX -->
-      <div style="margin-top:12px;padding:10px 14px;background:#f1f5f9;border-radius:8px;border:1px solid #cbd5e1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <div style="font-size:12px">
-          <b>📱 Cú pháp Telegram Bot (Sales Record)</b>:
-          <code style="background:#fff;padding:2px 6px;border-radius:4px;border:1px solid #e2e8f0;display:inline-block;margin-top:2px">Sales Record : Product Name | quanlity | Serial | Buyer's Name | Phone Number</code>
+        <div class="f">
+          <label data-lang="dispatch_to">Xuất Cho (Dispatch Target) *</label>
+          <select id="b-type" onchange="onDispatchTargetChange()" style="font-weight:700;color:#0284c7;background:#f0f9ff">
+            <option value="retail">🛒 Khách Hàng Bán Lẻ (Retail Customer)</option>
+            <option value="dealer">🏪 Đại Lý Phân Phối (Dealer Wholesale)</option>
+            <option value="pos">📋 Điểm Bán Ký Gởi (POS / Consignment)</option>
+            <option value="staff">🧑‍💼 Nhân Viên Tạm Ứng / Đi Công Trình (Staff)</option>
+          </select>
         </div>
-        <button class="btn b-bl b-xs" onclick="const opt=document.getElementById('b-sp');const spName=(opt&&opt.options[opt.selectedIndex])?opt.options[opt.selectedIndex].text.split('[')[0].trim():'Product Name';navigator.clipboard.writeText('Sales Record : '+spName+' | '+(v('b-sl')||1)+' | '+(v('b-serial')||'SN123456')+' | '+(v('b-kh')||'Buyer Name')+' | '+(v('b-dt')||'09xxxxxxx'));al('📋 Đã sao chép cú pháp Telegram!')">📋 Sao Chép Mẫu</button>
+        <div class="f">
+          <label data-lang="p_select">Sản Phẩm Xuất *</label>
+          <select id="b-sp" onchange="onDispatchTargetChange()"></select>
+        </div>
+        <div class="f">
+          <label data-lang="p_qty">Số Lượng Xuất *</label>
+          <input id="b-sl" type="number" min="1" value="1" oninput="calcBanProfit()"/>
+        </div>
+        <div class="f">
+          <label data-lang="p_unit_price">Đơn Giá Áp Dụng (₫) *</label>
+          <input id="b-gia" type="number" placeholder="0" oninput="calcBanProfit()"/>
+        </div>
+        <div class="f">
+          <label id="lbl-b-kh" data-lang="recipient_name">Tên Khách Hàng / Đại Lý / Người Nhận *</label>
+          <input id="b-kh" placeholder="Tên đơn vị nhận hàng"/>
+        </div>
+        <div class="f">
+          <label data-lang="phone_number">Số Điện Thoại</label>
+          <input id="b-dt" placeholder="09xx xxx xxx"/>
+        </div>
+        <div class="f">
+          <label data-lang="p_serial">Serial Number / Mã SP</label>
+          <input id="b-serial" placeholder="SN123456..."/>
+        </div>
+        <div class="f">
+          <label data-lang="payment_method">Hình Thức Thanh Toán</label>
+          <select id="b-tt" onchange="onPaymentTypeChange()">
+            <option value="cash">💵 Đã Thu 100% (Tiền mặt / Chuyển khoản)</option>
+            <option value="credit">⏳ Ghi Nợ / Gối Đầu (Chưa thanh toán đủ)</option>
+            <option value="consignment">📋 Ký Gởi / Tạm Ứng (Chưa thu tiền)</option>
+          </select>
+        </div>
+        <div class="f" id="f-credit-deposit" style="display:none">
+          <label data-lang="deposit_paid">Tiền Đã Trả Trước (₫)</label>
+          <input id="b-deposit" type="number" value="0" placeholder="0"/>
+        </div>
+        <div class="f">
+          <label data-lang="dispatch_date">Ngày Xuất Kho</label>
+          <input id="b-ngay" type="date"/>
+        </div>
+        <div class="f" style="grid-column:1/-1">
+          <label data-lang="notes">Ghi Chú Phiếu Xuất</label>
+          <textarea id="b-gc" placeholder="Ghi chú người giao, địa chỉ giao hàng, dự án..."></textarea>
+        </div>
       </div>
 
-      <div class="fa"><button class="btn b-gn" onclick="addBan()">✅ Xác Nhận Bán</button></div>
+      <!-- 💡 LIVE DISPATCH FINANCIAL SUMMARY -->
+      <div id="ban-financial-box" style="margin-top:14px;padding:12px 14px;background:#f8fafc;border-radius:8px;border:1px solid #cbd5e1;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
+        <div><span style="font-size:11px;color:#0284c7">💰 Tổng Tiền Hàng</span><div id="bf-total" style="font-size:15px;font-weight:700;color:#0284c7">0 ₫</div></div>
+        <div><span style="font-size:11px;color:#475569">🏦 Vốn Gốc (83%)</span><div id="bf-cost" style="font-size:15px;font-weight:700;color:#475569">0 ₫</div></div>
+        <div><span style="font-size:11px;color:#1e40af">🏢 Phải Nộp Cty (% Cty)</span><div id="bf-cty" style="font-size:15px;font-weight:700;color:#1e40af">0 ₫</div></div>
+        <div><span style="font-size:11px;color:#16a34a">🏪 LN Chi Nhánh Thuần</span><div id="bf-branch" style="font-size:15px;font-weight:700;color:#16a34a">0 ₫</div></div>
+      </div>
+
+      <div class="fa" style="margin-top:14px">
+        <button class="btn b-gn" onclick="addBan()" data-lang="btn_confirm_dispatch" style="font-weight:700">🚚 Xác Nhận Xuất Kho &amp; Lưu Đơn</button>
+        <button class="btn b-bl" onclick="printDispatchNote()" data-lang="btn_print_dispatch">📄 In Phiếu Xuất Kho</button>
+      </div>
     </div>
   </div>
   <div class="panel"><div class="ph"><h3>📋 Lịch Sử Bán Hàng</h3></div><div class="pb tw" id="t-ban"></div></div>
@@ -895,19 +943,44 @@ tbody tr:hover{background:#fafcff}
   </div>
 </div>
 
-<!-- ══ LỢI NHUẬN ══ -->
+<!-- ══ TÀI CHÍNH & LỢI NHUẬN (FINANCIAL & CASHFLOW CENTER) ══ -->
 <div class="sec" id="s-loinhuan">
+  <!-- 6 Core Financial Cards -->
   <div class="cards" id="ln-cards"></div>
-  <div class="g2">
+
+  <!-- P&L Split & Product Breakdown -->
+  <div class="g2" style="margin-bottom:14px">
     <div class="panel">
-      <div class="ph"><h3>💰 Báo Cáo Lợi Nhuận</h3>
+      <div class="ph">
+        <h3 data-lang="fin_pnl_title">💰 Báo Cáo Phân Bổ 3 Dòng Lợi Nhuận</h3>
         <select id="ln-f" onchange="renderLN()" style="padding:5px 7px;border:1px solid var(--bd);border-radius:5px;font-size:12px">
-          <option value="all">Tất cả</option><option value="month">Tháng này</option><option value="week">7 ngày</option>
+          <option value="all">Tất cả thời gian</option><option value="month">Tháng này</option><option value="week">7 ngày qua</option>
         </select>
       </div>
       <div class="pb" id="ln-detail"></div>
     </div>
-    <div class="panel"><div class="ph"><h3>📊 Theo Sản Phẩm</h3></div><div class="pb tw" id="ln-sp"></div></div>
+    <div class="panel">
+      <div class="ph"><h3 data-lang="fin_by_product">📊 Lợi Nhuận Theo Sản Phẩm</h3></div>
+      <div class="pb tw" id="ln-sp"></div>
+    </div>
+  </div>
+
+  <!-- 2 Financial Ledgers: 17% HO Settlement & Receivables Credit -->
+  <div class="g2">
+    <div class="panel" style="border-top:3px solid #1e40af">
+      <div class="ph">
+        <h3 data-lang="fin_settlement_ho">🏢 Sổ Quyết Toán 17% Nộp Tổng Công Ty</h3>
+        <button class="btn b-bl b-xs" onclick="exportHOSettlementCSV()">⬇ CSV</button>
+      </div>
+      <div class="pb tw" id="t-ho-settlement"></div>
+    </div>
+    <div class="panel" style="border-top:3px solid #ea580c">
+      <div class="ph">
+        <h3 data-lang="fin_credit_ledger">⚠️ Sổ Quản Lý Công Nợ Đại Lý &amp; Khách Hàng</h3>
+        <button class="btn b-or b-xs" onclick="exportCreditCSV()">⬇ CSV</button>
+      </div>
+      <div class="pb tw" id="t-credit-ledger"></div>
+    </div>
   </div>
 </div>
 
@@ -1581,53 +1654,83 @@ function downloadCurrentNhapData() {
   a.click();
 }
 
-function calcNhapProfit(){
+function calcNhapProfit(manualOverride){
+  const isVi = currentLang === 'vi';
   const gg = Number(v('n-gg')) || 0;
-  const lnCty17 = gg > 0 ? Math.round(gg / 83 * 17) : 0;
-  const minSell = gg + lnCty17;
-  const gbInput = v('n-gb');
-  let gb = Number(gbInput) || 0;
-  const lnBranch = Math.max(0, gb - minSell);
+  const rate = Number(v('cfg-cty-rate') || 17);
+  const lnCty = gg > 0 && rate < 100 ? Math.round(gg / (100 - rate) * rate) : 0;
+  const minSell = gg + lnCty;
+
+  let gb = Number(v('n-gb')) || 0;
+  let gDaily = Number(v('n-g-daily')) || 0;
+  let gDiemBan = Number(v('n-g-diemban')) || 0;
+  let gNV = Number(v('n-g-nv')) || 0;
+
+  // Smart Auto-Suggest if user hasn't overridden
+  if (!manualOverride && gg > 0) {
+    if (!v('n-g-nv')) { gNV = minSell; const el = document.getElementById('n-g-nv'); if (el) el.value = gNV; }
+    if (!v('n-gb')) { gb = Math.round(minSell * 1.25); const el = document.getElementById('n-gb'); if (el) el.value = gb; }
+    if (!v('n-g-daily')) { gDaily = Math.round(minSell * 1.08); const el = document.getElementById('n-g-daily'); if (el) el.value = gDaily; }
+    if (!v('n-g-diemban')) { gDiemBan = Math.round((gb || minSell) * 0.90); const el = document.getElementById('n-g-diemban'); if (el) el.value = gDiemBan; }
+  }
+
+  const lnRetail = Math.max(0, gb - minSell);
+  const lnDaily = Math.max(0, gDaily - minSell);
+  const lnDiemBan = Math.max(0, gDiemBan - minSell);
 
   const gocEl = document.getElementById('nc-goc');
   const cty17El = document.getElementById('nc-cty17');
   const minSellEl = document.getElementById('nc-minsell');
-  const actSellEl = document.getElementById('nc-actsell');
-  const branchEl = document.getElementById('nc-branch');
+  const lnRetailEl = document.getElementById('nc-ln-retail');
+  const lnDailyEl = document.getElementById('nc-ln-dealer');
+  const lnPosEl = document.getElementById('nc-ln-pos');
 
-  if (gocEl) gocEl.innerHTML = `${fn(gg)} ₫ <small style="font-weight:normal;color:#0369a1">(83% vốn)</small>`;
-  if (cty17El) cty17El.innerHTML = `${fn(lnCty17)} ₫ / SP <small style="font-weight:normal;color:#1e40af">(17% trả Cty)</small>`;
-  if (minSellEl) minSellEl.innerHTML = `${fn(minSell)} ₫ / SP <small style="font-weight:normal;color:#9a3412">(Giá sàn thấp nhất)</small>`;
-  if (actSellEl) actSellEl.innerHTML = `${fn(gb)} ₫ / SP ${gb >= minSell ? `<small style="color:var(--gn)">✓ Đạt chuẩn</small>` : `<small style="color:var(--rd)">⚠️ Dưới giá sàn</small>`}`;
-  if (branchEl) branchEl.innerHTML = `<span style="color:${lnBranch > 0 ? 'var(--gn)' : '#64748b'};font-weight:700">${fn(lnBranch)} ₫ / SP</span>`;
+  if (gocEl) gocEl.innerHTML = `${fn(gg)} ₫ <small style="font-weight:normal;color:#0369a1">(83% ${isVi?'vốn':'cost'})</small>`;
+  if (cty17El) cty17El.innerHTML = `${fn(lnCty)} ₫ <small style="font-weight:normal;color:#1e40af">(${rate}% Cty)</small>`;
+  if (minSellEl) minSellEl.innerHTML = `${fn(minSell)} ₫ <small style="font-weight:normal;color:#ea580c">(${isVi?'Sàn 100%':'Floor 100%'})</small>`;
+  if (lnRetailEl) lnRetailEl.innerHTML = `<span style="color:${lnRetail > 0 ? 'var(--gn)' : '#64748b'};font-weight:700">+${fn(lnRetail)} ₫</span>`;
+  if (lnDailyEl) lnDailyEl.innerHTML = `<span style="color:${lnDaily > 0 ? '#0284c7' : '#64748b'};font-weight:700">+${fn(lnDaily)} ₫</span>`;
+  if (lnPosEl) lnPosEl.innerHTML = `<span style="color:${lnDiemBan > 0 ? '#7c3aed' : '#64748b'};font-weight:700">+${fn(lnDiemBan)} ₫</span>`;
 }
 
 function addNhap(){
+  const isVi = currentLang === 'vi';
   const ten=v('n-ten'),sl=v('n-sl'),gg=v('n-gg');
-  if(!ten||!sl||!gg){al('Nhập đủ: Tên, SL, Giá gốc','er');return;}
+  if(!ten||!sl||!gg){al(isVi ? 'Nhập đủ: Tên, SL, Giá gốc' : 'Please enter: Product Name, Qty, Base Cost','er');return;}
   const cost = +gg;
-  const lnCty = cost > 0 ? Math.round(cost / 83 * 17) : 0;
+  const rate = Number(v('cfg-cty-rate') || 17);
+  const lnCty = cost > 0 && rate < 100 ? Math.round(cost / (100 - rate) * rate) : 0;
   const minSell = cost + lnCty;
-  const actualSell = +v('n-gb') || minSell;
-  const lnBranch = Math.max(0, actualSell - minSell);
+  const gb = +v('n-gb') || Math.round(minSell * 1.25);
+  const gDaily = +v('n-g-daily') || Math.round(minSell * 1.08);
+  const gDiemBan = +v('n-g-diemban') || Math.round(gb * 0.90);
+  const gNV = +v('n-g-nv') || minSell;
+  const lnBranch = Math.max(0, gb - minSell);
 
   DB.add('nhap',{
     ten,model:v('n-model'),serial:v('n-serial'),dm:v('n-dm'),
-    sl:+sl,gg:cost,lnCty,minSell,gb:actualSell,lnBranch,
+    sl:+sl,gg:cost,rate,lnCty,minSell,gb,gDaily,gDiemBan,gNV,lnBranch,
     ncc:v('n-ncc'),ngay:v('n-ngay')||td(),bh:+v('n-bh')||12,gc:v('n-gc')
   });
-  al('✅ Đã lưu phiếu nhập!'); clrForm('n-'); calcNhapProfit(); rNhap();
+  al(isVi ? '✅ Đã lưu phiếu nhập!' : '✅ Goods intake saved!'); clrForm('n-'); calcNhapProfit(); rNhap();
 }
 
 function rNhap(){
+  const isVi = currentLang === 'vi';
   const d=DB.g('nhap');
-  document.getElementById('t-nhap').innerHTML=tbl(['#','Tên SP','Model','DM','SL','Giá Gốc (83%)','LN Cty 17%','Giá Sàn (100%)','Giá Thực Bán','LN Chi Nhánh','NCC','BH','Ngày',''],
+  const headers = isVi ?
+    ['#','Tên SP','Model','DM','SL','Giá Gốc (83%)','LN Cty','Giá Sàn','Giá Bán Lẻ','Giá Đại Lý','Giá Điểm Bán','Giá Cho NV','NCC','BH','Ngày',''] :
+    ['#','Product','Model','Category','Qty','Base Cost (83%)','HO Profit','Floor Price','Retail Price','Dealer Price','POS Price','Staff Price','Supplier','Warranty','Date',''];
+  document.getElementById('t-nhap').innerHTML=tbl(headers,
     d.map((r,i)=>{
       const gg = Number(r.gg || 0);
-      const lnCty = r.lnCty || (gg > 0 ? Math.round(gg / 83 * 17) : 0);
+      const rate = r.rate || 17;
+      const lnCty = r.lnCty || (gg > 0 ? Math.round(gg / (100 - rate) * rate) : 0);
       const minSell = r.minSell || (gg + lnCty);
-      const gb = Number(r.gb || 0) || minSell;
-      const lnBranch = r.lnBranch !== undefined ? r.lnBranch : Math.max(0, gb - minSell);
+      const gb = Number(r.gb || 0) || Math.round(minSell * 1.25);
+      const gDaily = Number(r.gDaily || 0) || Math.round(minSell * 1.08);
+      const gDiemBan = Number(r.gDiemBan || 0) || Math.round(gb * 0.90);
+      const gNV = Number(r.gNV || 0) || minSell;
       return [
         i+1,
         `<b>${r.ten}</b>`,
@@ -1637,8 +1740,10 @@ function rNhap(){
         fn(gg)+'₫',
         `<span style="color:#1e40af;font-weight:600">${fn(lnCty)}₫</span>`,
         `<span style="color:var(--or);font-weight:600">${fn(minSell)}₫</span>`,
-        `<b>${fn(gb)}₫</b>`,
-        `<b style="color:${lnBranch>0?'var(--gn)':'#64748b'}">${fn(lnBranch)}₫</b>`,
+        `<b style="color:var(--gn)">${fn(gb)}₫</b>`,
+        `<span style="color:#0284c7;font-weight:600">${fn(gDaily)}₫</span>`,
+        `<span style="color:#7c3aed;font-weight:600">${fn(gDiemBan)}₫</span>`,
+        `<span style="color:#d97706;font-weight:600">${fn(gNV)}₫</span>`,
         r.ncc||'-',
         (r.bh||'-')+'th',
         fd(r.ngay),
@@ -1743,45 +1848,212 @@ function updTU(id,ts){let d=DB.g('tamung');d=d.map(r=>r.id==id?{...r,ts}:r);DB.s
 // ═══════════════════════════════════════════════════
 // BÁN HÀNG
 // ═══════════════════════════════════════════════════
-function addBan(){
-  const spId=v('b-sp'),sl=v('b-sl'),gia=v('b-gia');
-  if(!spId||!sl||!gia){al('Chọn SP, nhập SL và giá','er');return;}
-  const sp=getTK().find(r=>r.id==spId);
-  if(+sl>sp.ton){al(`Không đủ hàng! Tồn: ${sp.ton}`,'er');return;}
-  DB.add('ban',{
-    spId:+spId,
-    spN:sp.ten,
-    sl:+sl,
-    serial:v('b-serial')||'',
-    gia:+gia,
-    kh:v('b-kh'),
-    dt:v('b-dt'),
-    photo:v('b-photo')||'',
-    tt:v('b-tt'),
-    ngay:v('b-ngay')||td(),
-    kenh:v('b-kenh'),
-    gc:v('b-gc')
-  });
-  al('✅ Đã ghi nhận đơn bán!'); clrForm('b-'); rBan(); popSP(['b-sp']);
+// ═══════════════════════════════════════════════════
+// 🚚 BÁN HÀNG & XUẤT KHO CHO... (SMART DISPATCH & PRICING)
+// ═══════════════════════════════════════════════════
+function onDispatchTargetChange(){
+  const spId = v('b-sp');
+  const target = v('b-type') || 'retail';
+  const sp = getTK().find(r => r.id == spId);
+  const nhapItem = DB.g('nhap').find(n => n.id == spId);
+
+  const isVi = currentLang === 'vi';
+  const lblKh = document.getElementById('lbl-b-kh');
+  const inpKh = document.getElementById('b-kh');
+
+  // Update label & placeholder
+  if (target === 'dealer') {
+    if (lblKh) lblKh.textContent = isVi ? '🏪 Tên Đại Lý Nhận Hàng *' : '🏪 Dealer Name *';
+    if (inpKh) inpKh.placeholder = isVi ? 'Nhập tên đại lý...' : 'Enter dealer name...';
+  } else if (target === 'pos') {
+    if (lblKh) lblKh.textContent = isVi ? '📋 Tên Điểm Bán Ký Gởi *' : '📋 POS Outlet Name *';
+    if (inpKh) inpKh.placeholder = isVi ? 'Nhập tên cửa hàng / điểm bán...' : 'Enter POS outlet name...';
+  } else if (target === 'staff') {
+    if (lblKh) lblKh.textContent = isVi ? '🧑‍💼 Tên Nhân Viên Nhận Hàng *' : '🧑‍💼 Staff Name *';
+    if (inpKh) inpKh.placeholder = isVi ? 'Nhập tên nhân viên...' : 'Enter staff name...';
+  } else {
+    if (lblKh) lblKh.textContent = isVi ? '🛒 Tên Khách Hàng Bán Lẻ *' : '🛒 Customer Name *';
+    if (inpKh) inpKh.placeholder = isVi ? 'Họ tên khách hàng...' : 'Enter customer name...';
+  }
+
+  // Auto Price Routing
+  if (sp) {
+    const cost = Number(sp.giagoc || nhapItem?.gg || 0);
+    const rate = Number(v('cfg-cty-rate') || 17);
+    const lnCty = cost > 0 && rate < 100 ? Math.round(cost / (100 - rate) * rate) : 0;
+    const minSell = cost + lnCty;
+    const retailPrice = Number(nhapItem?.gb || sp.giaban || Math.round(minSell * 1.25));
+    const dealerPrice = Number(nhapItem?.gDaily || Math.round(minSell * 1.08));
+    const posPrice = Number(nhapItem?.gDiemBan || Math.round(retailPrice * 0.90));
+    const staffPrice = Number(nhapItem?.gNV || minSell);
+
+    let finalPrice = retailPrice;
+    if (target === 'dealer') finalPrice = dealerPrice;
+    else if (target === 'pos') finalPrice = posPrice;
+    else if (target === 'staff') finalPrice = staffPrice;
+
+    const giaEl = document.getElementById('b-gia');
+    if (giaEl) giaEl.value = finalPrice;
+  }
+
+  calcBanProfit();
 }
+
+function calcBanProfit(){
+  const isVi = currentLang === 'vi';
+  const spId = v('b-sp');
+  const sl = Number(v('b-sl')) || 1;
+  const gia = Number(v('b-gia')) || 0;
+
+  const sp = getTK().find(r => r.id == spId);
+  const nhapItem = DB.g('nhap').find(n => n.id == spId);
+
+  const cost = Number(sp?.giagoc || nhapItem?.gg || 0);
+  const rate = Number(v('cfg-cty-rate') || 17);
+  const lnCtyUnit = cost > 0 && rate < 100 ? Math.round(cost / (100 - rate) * rate) : 0;
+
+  const totalAmount = gia * sl;
+  const totalCost83 = cost * sl;
+  const totalHODue17 = lnCtyUnit * sl;
+  const totalBranchProfit = totalAmount - totalCost83 - totalHODue17;
+
+  const totEl = document.getElementById('bf-total');
+  const costEl = document.getElementById('bf-cost');
+  const ctyEl = document.getElementById('bf-cty');
+  const branchEl = document.getElementById('bf-branch');
+
+  if (totEl) totEl.textContent = fn(totalAmount) + ' ₫';
+  if (costEl) costEl.textContent = fn(totalCost83) + ' ₫';
+  if (ctyEl) ctyEl.textContent = fn(totalHODue17) + ' ₫';
+  if (branchEl) {
+    branchEl.innerHTML = `<span style="color:${totalBranchProfit >= 0 ? 'var(--gn)' : 'var(--rd)'}">${fn(totalBranchProfit)} ₫</span>`;
+  }
+}
+
+function onPaymentTypeChange(){
+  const tt = v('b-tt');
+  const depEl = document.getElementById('f-credit-deposit');
+  if (depEl) depEl.style.display = tt === 'credit' ? 'block' : 'none';
+}
+
+function addBan(){
+  const isVi = currentLang === 'vi';
+  const spId = v('b-sp'), sl = Number(v('b-sl')) || 1, gia = Number(v('b-gia')) || 0;
+  if(!spId || !sl || !gia){
+    al(isVi ? 'Chọn SP, nhập SL và Giá xuất!' : 'Please select product, quantity, and price!','er');
+    return;
+  }
+  const sp = getTK().find(r => r.id == spId);
+  if(!sp || sl > sp.khaDung){
+    al(isVi ? `Không đủ tồn khả dụng! Hiện có: ${sp ? sp.khaDung : 0}` : `Insufficient available stock! Available: ${sp ? sp.khaDung : 0}`, 'er');
+    return;
+  }
+
+  const nhapItem = DB.g('nhap').find(n => n.id == spId);
+  const cost = Number(sp.giagoc || nhapItem?.gg || 0);
+  const rate = Number(v('cfg-cty-rate') || 17);
+  const lnCtyUnit = cost > 0 && rate < 100 ? Math.round(cost / (100 - rate) * rate) : 0;
+  const totalAmount = gia * sl;
+  const cost83 = cost * sl;
+  const lnCty = lnCtyUnit * sl;
+  const lnBranch = totalAmount - cost83 - lnCty;
+
+  const target = v('b-type') || 'retail';
+  const tt = v('b-tt') || 'cash';
+  const deposit = tt === 'credit' ? (Number(v('b-deposit')) || 0) : (tt === 'consignment' ? 0 : totalAmount);
+  const debt = Math.max(0, totalAmount - deposit);
+
+  const orderItem = {
+    spId: +spId,
+    spN: sp.ten,
+    sl: +sl,
+    serial: v('b-serial') || '-',
+    gia: +gia,
+    totalAmount,
+    deposit,
+    debt,
+    cost83,
+    lnCty,
+    lnBranch,
+    target,
+    kh: v('b-kh') || (isVi ? 'Khách lẻ' : 'Retail Buyer'),
+    dt: v('b-dt') || '-',
+    tt,
+    hoPaid: false,
+    ngay: v('b-ngay') || td(),
+    gc: v('b-gc') || ''
+  };
+
+  DB.add('ban', orderItem);
+
+  al(isVi ? '✅ Đã xác nhận xuất kho & lưu đơn!' : '✅ Stock dispatch & order confirmed!');
+  clrForm('b-');
+  onDispatchTargetChange();
+  rBan();
+  popSP(['b-sp','pp-sp','kg-sp','tu-sp']);
+  renderLN();
+}
+
+function printDispatchNote(){
+  const isVi = currentLang === 'vi';
+  const spId = v('b-sp');
+  const sp = getTK().find(r => r.id == spId);
+  const kh = v('b-kh') || (isVi ? 'Đơn vị nhận hàng' : 'Recipient');
+  const sl = v('b-sl') || 1;
+  const gia = Number(v('b-gia')) || 0;
+  const target = v('b-type');
+  const targetLabel = target === 'dealer' ? (isVi?'Đại Lý Phân Phối':'Dealer') : (target==='pos'?(isVi?'Điểm Ký Gởi':'POS'):(target==='staff'?(isVi?'Nhân Viên':'Staff'):(isVi?'Khách Lẻ':'Retail')));
+
+  const w = window.open('', '_blank');
+  w.document.write(`
+    <html><head><title>${isVi?'PHIẾU XUẤT KHO':'DISPATCH NOTE'} - TNI</title>
+    <style>body{font-family:Arial,sans-serif;padding:30px;color:#1e293b}table{width:100%;border-collapse:collapse;margin:20px 0}th,td{border:1px solid #cbd5e1;padding:8px 12px;text-align:left}th{background:#f8fafc}</style>
+    </head><body>
+    <div style="display:flex;justify-content:space-between;border-bottom:2px solid #0284c7;padding-bottom:12px">
+      <div><h2>⚡ TNI TECH & ENERGY</h2><p style="font-size:12px;color:#64748b">Hệ Thống Thiết Bị Lưu Điện UPS & Điện Mặt Trời Solar</p></div>
+      <div style="text-align:right"><h3>${isVi?'PHIẾU XUẤT KHO':'DISPATCH NOTE'}</h3><p style="font-size:12px">${isVi?'Ngày':'Date'}: ${fd(td())}</p></div>
+    </div>
+    <div style="margin:20px 0;font-size:13px">
+      <p><b>${isVi?'Xuất Cho':'Issue To'}:</b> ${targetLabel} - <b>${kh}</b></p>
+      <p><b>${isVi?'Số Điện Thoại':'Phone'}:</b> ${v('b-dt')||'-'} | <b>Serial:</b> ${v('b-serial')||'-'}</p>
+    </div>
+    <table>
+      <thead><tr><th>#</th><th>${isVi?'Tên Sản Phẩm':'Product'}</th><th>${isVi?'Số Lượng':'Qty'}</th><th>${isVi?'Đơn Giá':'Unit Price'}</th><th>${isVi?'Thành Tiền':'Total'}</th></tr></thead>
+      <tbody><tr><td>1</td><td><b>${sp ? sp.ten : 'Sản phẩm'}</b></td><td>${sl}</td><td>${fn(gia)}₫</td><td><b>${fn(gia*sl)}₫</b></td></tr></tbody>
+    </table>
+    <div style="display:flex;justify-content:space-between;margin-top:50px;text-align:center">
+      <div><p><b>${isVi?'Người Nhận Hàng':'Receiver'}</b></p><br/><br/><p>(Ký, ghi rõ họ tên)</p></div>
+      <div><p><b>${isVi?'Thủ Kho / Người Giao':'Storekeeper / Dispatcher'}</b></p><br/><br/><p>(Ký, ghi rõ họ tên)</p></div>
+    </div>
+    <script>window.onload=function(){window.print();}<\/script>
+    </body></html>
+  `);
+  w.document.close();
+}
+
 function rBan(){
-  const nhap=DB.g('nhap'),ban=DB.g('ban');
-  document.getElementById('t-ban').innerHTML=tbl(['#','SP','SL','Serial','Giá Bán','Lợi Nhuận','Khách Hàng','SĐT','Ảnh Drive','TT','Kênh','Ngày',''],
-    ban.map((r,i)=>{
-      const sp=nhap.find(n=>n.id==r.spId),ln=(r.gia-Number(sp?.gg||0))*r.sl;
-      const photoHtml = r.photo ? `<a href="${r.photo}" target="_blank" style="color:var(--bl);text-decoration:none">📷 Xem ảnh</a>` : '-';
+  const isVi = currentLang === 'vi';
+  const ban = DB.g('ban');
+  const headers = isVi ?
+    ['#','Loại Xuất','Sản Phẩm','SL','Serial','Đơn Giá','Tổng Tiền','Đã Thu','Còn Nợ','Người Nhận','SĐT','Ngày',''] :
+    ['#','Target','Product','Qty','Serial','Unit Price','Total Amount','Paid','Debt','Recipient','Phone','Date',''];
+
+  document.getElementById('t-ban').innerHTML = tbl(headers,
+    ban.map((r, i) => {
+      const targetBadge = r.target === 'dealer' ? bk('Đại Lý','bl') : (r.target === 'pos' ? bk('Ký Gởi','pu') : (r.target === 'staff' ? bk('NV','or') : bk('Khách Lẻ','gn')));
+      const debtText = r.debt > 0 ? `<b style="color:var(--rd)">${fn(r.debt)}₫</b>` : '<span style="color:var(--gn)">0₫</span>';
       return [
-        i+1,
-        r.spN,
+        i + 1,
+        targetBadge,
+        `<b>${r.spN}</b>`,
         r.sl,
-        r.serial ? `<code style="background:#f1f5f9;padding:1px 4px;border-radius:3px">${r.serial}</code>` : '-',
-        fn(r.gia)+'₫',
-        `<span style="color:${ln>=0?'var(--gn)':'var(--rd)'};font-weight:600">${fn(ln)}₫</span>`,
-        r.kh||'-',
-        r.dt||'-',
-        photoHtml,
-        bk(r.tt,r.tt==='Công nợ'?'or':'gn'),
-        bk(r.kenh,'bl'),
+        r.serial ? `<code>${r.serial}</code>` : '-',
+        fn(r.gia) + '₫',
+        `<b>${fn(r.totalAmount || r.gia * r.sl)}₫</b>`,
+        `<span style="color:var(--gn)">${fn(r.deposit !== undefined ? r.deposit : r.gia * r.sl)}₫</span>`,
+        debtText,
+        r.kh || '-',
+        r.dt || '-',
         fd(r.ngay),
         `<button class="btn b-xs b-rd" onclick="del('ban',${r.id},()=>{rBan();popSP(['b-sp']);})">🗑</button>`
       ];
@@ -2687,10 +2959,10 @@ function rLK(){document.getElementById('t-lk').innerHTML=tbl(['#','Khách/ĐL','
 // LỢI NHUẬN (BÁN TRỰC TIẾP & KÝ GỞI 17%)
 // ═══════════════════════════════════════════════════
 function renderLN(){
-  const nhap=DB.g('nhap'),ban=DB.g('ban'),kg=DB.g('kygoi'),f=v('ln-f')||'all';
-  const now=new Date();
+  const isVi = currentLang === 'vi';
+  const nhap = DB.g('nhap'), ban = DB.g('ban'), kg = DB.g('kygoi'), tu = DB.g('tamung'), f = v('ln-f') || 'all';
+  const now = new Date();
 
-  // Lọc theo thời gian
   const filterDate = (dateStr) => {
     if (f === 'all') return true;
     const d = new Date(dateStr);
@@ -2699,88 +2971,169 @@ function renderLN(){
     return true;
   };
 
-  // 1. Đơn bán trực tiếp
   const fb = ban.filter(r => filterDate(r.ngay));
-  const vonTrucTiep = fb.reduce((s,r)=>{ const sp = nhap.find(n => n.id == r.spId); return s + Number(sp?.gg || 0) * r.sl; }, 0);
-  const dtTrucTiep = fb.reduce((s,r) => s + r.gia * r.sl, 0);
-  const lnTrucTiep = dtTrucTiep - vonTrucTiep;
 
-  // 2. Ký gởi (Đã bán và Đang gởi)
-  const fkg = kg.filter(r => filterDate(r.ngay));
-  const kgDaBan = fkg.filter(r => r.ts === 'Đã bán');
-  const kgDangGoi = fkg.filter(r => r.ts === 'Đang gởi');
+  // 1. Core Financial Aggregates
+  let totalRevenue = 0;
+  let totalCashIn = 0;
+  let totalDebt = 0;
+  let totalCost83 = 0;
+  let totalHODue17 = 0;
+  let totalHOPaid = 0;
+  let totalBranchProfit = 0;
 
-  const dtKGBan = kgDaBan.reduce((s, r) => s + (r.gia * r.sl), 0);
-  const vonKGBan = kgDaBan.reduce((s, r) => { const sp = nhap.find(n => n.id == r.spId); return s + (Number(r.giagoc || sp?.gg || 0) * r.sl); }, 0);
-  const hh17KGBan = kgDaBan.reduce((s, r) => s + (r.tongHH17 || (Math.round(r.gia * 0.17) * r.sl)), 0);
-  const lnCtyKGBan = (dtKGBan - vonKGBan) - hh17KGBan;
+  fb.forEach(r => {
+    const sp = nhap.find(n => n.id == r.spId);
+    const cost = Number(sp?.gg || (r.cost83 && r.sl ? r.cost83 / r.sl : 0));
+    const rate = r.rate || Number(v('cfg-cty-rate') || 17);
+    const lnCtyUnit = cost > 0 && rate < 100 ? Math.round(cost / (100 - rate) * rate) : 0;
 
-  const dtKGDangGoi = kgDangGoi.reduce((s, r) => s + (r.gia * r.sl), 0);
-  const hh17KGDangGoi = kgDangGoi.reduce((s, r) => s + (r.tongHH17 || (Math.round(r.gia * 0.17) * r.sl)), 0);
+    const rowTotal = Number(r.totalAmount || r.gia * r.sl);
+    const rowCash = r.deposit !== undefined ? Number(r.deposit) : (r.tt === 'credit' ? 0 : rowTotal);
+    const rowDebt = r.debt !== undefined ? Number(r.debt) : (r.tt === 'credit' ? rowTotal : 0);
+    const rowCost = cost * r.sl;
+    const rowHODue = lnCtyUnit * r.sl;
+    const rowBranch = rowTotal - rowCost - rowHODue;
 
-  // 3. Tổng hợp toàn diện
-  const tongDoanhThuThuc = dtTrucTiep + dtKGBan;
-  const tongVonThuc = vonTrucTiep + vonKGBan;
-  const tongLNRongCty = lnTrucTiep + lnCtyKGBan;
-  const tsRong = tongDoanhThuThuc > 0 ? ((tongLNRongCty / tongDoanhThuThuc) * 100).toFixed(1) : 0;
+    totalRevenue += rowTotal;
+    totalCashIn += rowCash;
+    totalDebt += rowDebt;
+    totalCost83 += rowCost;
+    totalHODue17 += rowHODue;
+    if (r.hoPaid) totalHOPaid += rowHODue;
+    totalBranchProfit += rowBranch;
+  });
 
+  // Floating stock value (Consignment & Advances)
+  const fkg = kg.filter(r => r.ts === 'Đang gởi');
+  const floatingKgVal = fkg.reduce((s, r) => s + (Number(r.gia || 0) * r.sl), 0);
+  const ftu = tu.filter(r => r.ts === 'Đang ứng');
+  const floatingTuVal = ftu.reduce((s, r) => { const sp = nhap.find(n => n.id == r.spId); return s + (Number(sp?.gg || 0) * r.sl); }, 0);
+  const totalFloating = floatingKgVal + floatingTuVal;
+
+  // 2. Render 6 Financial Cards
   document.getElementById('ln-cards').innerHTML = `
-    <div class="card c-bl"><div class="lbl2">💸 Tổng Vốn Hàng Bán</div><div class="val">${fn(tongVonThuc)}₫</div><div class="sub">Trực tiếp + Ký gởi đã bán</div></div>
-    <div class="card c-gn"><div class="lbl2">💵 Doanh Thu Thực</div><div class="val">${fn(tongDoanhThuThuc)}₫</div><div class="sub">${fb.length} đơn bán + ${kgDaBan.length} ký gởi bán</div></div>
-    <div class="card c-or"><div class="lbl2">🤝 17% Ký Gởi Đã Chia</div><div class="val">${fn(hh17KGBan)}₫</div><div class="sub">Hoa hồng cho điểm bán</div></div>
-    <div class="card c-pu"><div class="lbl2">💎 LN Thuần Còn Lại Cty</div><div class="val">${fn(tongLNRongCty)}₫</div><div class="sub">Tỷ suất ròng: ${tsRong}%</div></div>`;
+    <div class="card c-gn"><div class="lbl2">💵 ${isVi?'Tổng Thu Thực Nhận':'Cash In (Collected)'}</div><div class="val" style="font-size:16px">${fn(totalCashIn)}₫</div><div class="sub">${fb.length} ${isVi?'giao dịch':'transactions'}</div></div>
+    <div class="card c-bl"><div class="lbl2">🏦 ${isVi?'Quỹ Vốn Gốc 83% Hoàn Về':'Capital Recovery (83%)'}</div><div class="val" style="font-size:16px">${fn(totalCost83)}₫</div><div class="sub">${isVi?'Bảo toàn vốn lưu động':'Re-stock fund'}</div></div>
+    <div class="card c-pu"><div class="lbl2">🏢 ${isVi?'Quỹ Nộp Tổng Cty (17%)':'Payable to HO (17%)'}</div><div class="val" style="font-size:16px;color:#1e40af">${fn(totalHODue17)}₫</div><div class="sub">${isVi?'Đã chuyển:':'Settled:'} ${fn(totalHOPaid)}₫</div></div>
+    <div class="card c-gn"><div class="lbl2">🏪 ${isVi?'LN Chi Nhánh Thuần':'Net Branch Profit'}</div><div class="val" style="font-size:16px;color:var(--gn)">${fn(totalBranchProfit)}₫</div><div class="sub">${isVi?'Chi nhánh hưởng trọn':'Retained profit'}</div></div>
+    <div class="card c-or"><div class="lbl2">⚠️ ${isVi?'Công Nợ Phải Thu':'Receivables (Credit)'}</div><div class="val" style="font-size:16px;color:var(--rd)">${fn(totalDebt)}₫</div><div class="sub">${isVi?'Đại lý & Khách nợ':'Uncollected debt'}</div></div>
+    <div class="card c-yw"><div class="lbl2">📋 ${isVi?'Giá Trị Hàng Ngoài Quầy':'Floating Stock Value'}</div><div class="val" style="font-size:16px">${fn(totalFloating)}₫</div><div class="sub">${fkg.length} ${isVi?'ký gởi':'POS'} + ${ftu.length} ${isVi?'ứng':'adv'}</div></div>`;
 
+  // 3. Financial P&L Detailed Breakdown
   document.getElementById('ln-detail').innerHTML = `
-    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd);font-size:13px">
-      <span>1. Bán hàng trực tiếp</span>
-      <span>DT: <b>${fn(dtTrucTiep)}₫</b> | LN: <b style="color:var(--gn)">${fn(lnTrucTiep)}₫</b></span>
+    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bd);font-size:13px">
+      <span>1. ${isVi?'Tổng Doanh Số Xuất Hàng (Gross Revenue)':'Gross Dispatch Revenue'}:</span>
+      <b>${fn(totalRevenue)} ₫</b>
     </div>
-    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd);font-size:13px">
-      <span>2. Ký gởi đã bán (Đại lý/Điểm bán)</span>
-      <span>DT: <b>${fn(dtKGBan)}₫</b> | 17% HH: <b style="color:var(--or)">${fn(hh17KGBan)}₫</b></span>
+    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bd);font-size:13px">
+      <span>2. ${isVi?'Vốn Gốc Hoàn Trả (83% Cost Basis)':'83% Base Cost Recovery'}:</span>
+      <b style="color:#0284c7">-${fn(totalCost83)} ₫</b>
     </div>
-    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd);font-size:13px">
-      <span>3. Lợi nhuận cty từ ký gởi đã bán</span>
-      <span style="color:var(--gn);font-weight:700">${fn(lnCtyKGBan)}₫</span>
+    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bd);font-size:13px">
+      <span>3. ${isVi?'Nghĩa Vụ Trả Về Tổng Công Ty (17% HO Obligation)':'17% HO Due'}:</span>
+      <b style="color:#1e40af">-${fn(totalHODue17)} ₫</b>
     </div>
-    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd);font-size:13px">
-      <span>4. Ký gởi đang chạy (Dự kiến)</span>
-      <span>DT dự kiến: ${fn(dtKGDangGoi)}₫ | 17% HH: ${fn(hh17KGDangGoi)}₫</span>
+    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bd);font-size:13px">
+      <span>4. ${isVi?'Tiền Nợ Chưa Thu (Uncollected Receivables)':'Outstanding Debt'}:</span>
+      <b style="color:var(--rd)">-${fn(totalDebt)} ₫</b>
     </div>
-    <div style="display:flex;justify-content:space-between;padding:12px 0;font-size:15px;font-weight:700">
-      <span style="color:var(--bl)">TỔNG LỢI NHUẬN RÒNG CTY THỰC NHẬN</span>
-      <span style="color:${tongLNRongCty >= 0 ? 'var(--gn)' : 'var(--rd)'}">${fn(tongLNRongCty)}₫ (${tsRong}%)</span>
+    <div style="display:flex;justify-content:space-between;padding:14px 0;font-size:15px;font-weight:900">
+      <span style="color:var(--gn)">${isVi?'LỢI NHUẬN RÒNG CHI NHÁNH THỰC NHẬN':'REALIZED NET BRANCH PROFIT'}</span>
+      <span style="color:var(--gn);font-size:18px">${fn(totalBranchProfit - totalDebt)} ₫</span>
     </div>`;
 
-  const byP={};
-  fb.forEach(r=>{
-    const sp=nhap.find(n=>n.id==r.spId),k=r.spN||sp?.ten||'?';
-    if(!byP[k]) byP[k]={ten:k,sl:0,dt:0,von:0,hh17:0,lnCty:0};
-    byP[k].sl+=r.sl; byP[k].dt+=r.gia*r.sl; byP[k].von+=Number(sp?.gg||0)*r.sl;
-    byP[k].lnCty+=(r.gia-Number(sp?.gg||0))*r.sl;
+  // 4. By Product Table
+  const byP = {};
+  fb.forEach(r => {
+    const sp = nhap.find(n => n.id == r.spId), k = r.spN || sp?.ten || '?';
+    if(!byP[k]) byP[k] = { ten: k, sl: 0, dt: 0, cost: 0, lnCty: 0, lnBranch: 0 };
+    byP[k].sl += r.sl;
+    byP[k].dt += Number(r.totalAmount || r.gia * r.sl);
+    byP[k].cost += Number(r.cost83 || (sp?.gg || 0) * r.sl);
+    byP[k].lnCty += Number(r.lnCty || 0);
+    byP[k].lnBranch += Number(r.lnBranch || 0);
   });
-  kgDaBan.forEach(r=>{
-    const sp=nhap.find(n=>n.id==r.spId),k=r.spN||sp?.ten||'?';
-    if(!byP[k]) byP[k]={ten:k,sl:0,dt:0,von:0,hh17:0,lnCty:0};
-    const v0 = Number(r.giagoc||sp?.gg||0)*r.sl;
-    const dt0 = r.gia*r.sl;
-    const hh0 = r.tongHH17 || (Math.round(r.gia*0.17)*r.sl);
-    byP[k].sl+=r.sl; byP[k].dt+=dt0; byP[k].von+=v0; byP[k].hh17+=hh0;
-    byP[k].lnCty+=((dt0 - v0) - hh0);
-  });
+  const pHeaders = isVi ? ['Sản Phẩm','SL','Doanh Thu','Vốn 83%','Nộp Cty 17%','LN Chi Nhánh'] : ['Product','Qty','Revenue','Cost 83%','HO Due 17%','Branch Profit'];
+  document.getElementById('ln-sp').innerHTML = tbl(pHeaders,
+    Object.values(byP).map(r => [
+      `<b>${r.ten}</b>`, r.sl, fn(r.dt)+'₫', fn(r.cost)+'₫',
+      `<span style="color:#1e40af">${fn(r.lnCty)}₫</span>`,
+      `<b style="color:var(--gn)">${fn(r.lnBranch)}₫</b>`
+    ]));
 
-  document.getElementById('ln-sp').innerHTML=tbl(['Sản Phẩm','SL Bán','Doanh Thu','17% Ký Gởi','LN Thuần Cty','Tỷ Suất'],
-    Object.values(byP).map(r=>{
-      const t=r.dt>0?((r.lnCty/r.dt)*100).toFixed(1):0;
-      return [
-        `<b>${r.ten}</b>`,
-        r.sl,
-        fn(r.dt)+'₫',
-        `<span style="color:var(--or);font-weight:600">${fn(r.hh17)}₫</span>`,
-        `<span style="color:${r.lnCty>=0?'var(--gn)':'var(--rd)'};font-weight:700">${fn(r.lnCty)}₫</span>`,
-        `<span style="color:${r.lnCty>=0?'var(--gn)':'var(--rd)'}">${t}%</span>`
-      ];
-    }));
+  // 5. HO 17% Settlement Ledger
+  const hoHeaders = isVi ? ['#','Ngày','Sản Phẩm','SL','Đơn Giá','17% Nộp Cty','Trạng Thái','Thao Tác'] : ['#','Date','Product','Qty','Price','17% HO Due','Status','Action'];
+  document.getElementById('t-ho-settlement').innerHTML = tbl(hoHeaders,
+    fb.map((r, i) => [
+      i + 1,
+      fd(r.ngay),
+      `<b>${r.spN}</b>`,
+      r.sl,
+      fn(r.gia) + '₫',
+      `<b style="color:#1e40af">${fn(r.lnCty || 0)}₫</b>`,
+      r.hoPaid ? bk(isVi?'Đã nộp Cty':'Settled to HO','gn') : bk(isVi?'Chưa nộp':'Pending','or'),
+      `<button class="btn b-xs ${r.hoPaid?'b-out':'b-bl'}" onclick="toggleHOSettlement(${r.id})">${r.hoPaid?(isVi?'Hủy':'Revert'):(isVi?'Đã Nộp':'Settle')}</button>`
+    ]));
+
+  // 6. Credit & Receivables Ledger
+  const creditOrders = fb.filter(r => (r.debt && r.debt > 0) || r.tt === 'credit');
+  const creditHeaders = isVi ? ['#','Người Nợ','Loại','SĐT','Sản Phẩm','Tổng Tiền','Đã Trả','Còn Nợ','Thao Tác'] : ['#','Debtor','Type','Phone','Product','Total','Paid','Debt Balance','Action'];
+  document.getElementById('t-credit-ledger').innerHTML = creditOrders.length ? tbl(creditHeaders,
+    creditOrders.map((r, i) => [
+      i + 1,
+      `<b>${r.kh}</b>`,
+      r.target === 'dealer' ? bk('Đại Lý','bl') : bk('Khách','gy'),
+      r.dt || '-',
+      r.spN,
+      fn(r.totalAmount || r.gia * r.sl) + '₫',
+      fn(r.deposit || 0) + '₫',
+      `<b style="color:var(--rd)">${fn(r.debt || 0)}₫</b>`,
+      `<button class="btn b-xs b-gn" onclick="payOffDebt(${r.id})">${isVi?'Thu Hết':'Pay Off'}</button>`
+    ])) : `<div style="color:#94a3b8;padding:20px;text-align:center">${isVi?'Không có công nợ nào tồn đọng ✅':'No outstanding credit ✅'}</div>`;
+}
+
+function toggleHOSettlement(id){
+  let d = DB.g('ban');
+  d = d.map(r => r.id == id ? { ...r, hoPaid: !r.hoPaid } : r);
+  DB.s('ban', d);
+  renderLN();
+  al(currentLang === 'vi' ? '✅ Đã cập nhật trạng thái quyết toán Cty!' : '✅ HO settlement status updated!');
+}
+
+function payOffDebt(id){
+  let d = DB.g('ban');
+  d = d.map(r => {
+    if (r.id == id) {
+      const tot = Number(r.totalAmount || r.gia * r.sl);
+      return { ...r, deposit: tot, debt: 0, tt: 'cash' };
+    }
+    return r;
+  });
+  DB.s('ban', d);
+  renderLN();
+  rBan();
+  al(currentLang === 'vi' ? '✅ Đã thu hết nợ và chuyển sang Tiền Mặt!' : '✅ Debt fully collected and converted to Cash!');
+}
+
+function exportHOSettlementCSV(){
+  const isVi = currentLang === 'vi';
+  const ban = DB.g('ban');
+  const h = isVi ? ['Mã Đơn','Ngày','Sản Phẩm','Số Lượng','Đơn Giá','17% Nộp Cty','Trạng Thái'] : ['Order ID','Date','Product','Qty','Price','17% HO Due','Status'];
+  const rows = ban.map(r => [r.id, r.ngay, `"${r.spN}"`, r.sl, r.gia, r.lnCty || 0, r.hoPaid ? 'Đã nộp' : 'Chưa nộp']);
+  const csv = "\uFEFF" + h.join(',') + "\n" + rows.map(r => r.join(',')).join('\n');
+  const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = `Quyet_Toan_17_Cty_${td()}.csv`; a.click();
+}
+
+function exportCreditCSV(){
+  const isVi = currentLang === 'vi';
+  const ban = DB.g('ban').filter(r => (r.debt && r.debt > 0) || r.tt === 'credit');
+  const h = isVi ? ['Mã Đơn','Người Nợ','Loại','SĐT','Sản Phẩm','Tổng Tiền','Đã Trả','Còn Nợ','Ngày'] : ['Order ID','Debtor','Type','Phone','Product','Total','Paid','Debt','Date'];
+  const rows = ban.map(r => [r.id, `"${r.kh}"`, r.target, r.dt, `"${r.spN}"`, r.totalAmount || r.gia * r.sl, r.deposit || 0, r.debt || 0, r.ngay]);
+  const csv = "\uFEFF" + h.join(',') + "\n" + rows.map(r => r.join(',')).join('\n');
+  const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = `So_Cong_No_${td()}.csv`; a.click();
 }
 
 // ═══════════════════════════════════════════════════
@@ -3031,7 +3384,7 @@ const NAV_TITLES = {
     nhap: '📦 Goods Intake',
     tonkho: '🗄️ Inventory',
     tamung: '🧑‍💼 Stock Advance',
-    banhang: '🛒 Sales Orders',
+    banhang: '🛒 Sales & Dispatch',
     baogiaups: '📄 Device Quote',
     baogiasolar: '☀️ Solar Quote <small style="color:#38bdf8;font-size:10.5px;margin-left:auto">VCM</small>',
     daily: '🏪 Distribution',
@@ -3039,7 +3392,7 @@ const NAV_TITLES = {
     crm: '👥 CRM & Survey',
     quangcao: '📢 Ads Campaigns',
     leads: '🎯 Leads & Conv',
-    loinhuan: '💰 Profit & Loss',
+    loinhuan: '💰 Financial & Cashflow',
     baocao: '📈 Reports',
     mystats: '📊 My Performance',
     myquotes: '📄 My Quotations',
@@ -3057,7 +3410,7 @@ const NAV_TITLES = {
     nhap: '📦 Nhập Hàng',
     tonkho: '🗄️ Tồn Kho',
     tamung: '🧑‍💼 Tạm Ứng Hàng',
-    banhang: '🛒 Bán Hàng',
+    banhang: '🛒 Bán Hàng & Xuất Kho',
     baogiaups: '📄 Báo Giá Thiết Bị',
     baogiasolar: '☀️ Báo Giá Solar <small style="color:#38bdf8;font-size:10.5px;margin-left:auto">VCM</small>',
     daily: '🏪 Đại Lý & Phân Phối',
@@ -3065,7 +3418,7 @@ const NAV_TITLES = {
     crm: '👥 CRM & Khảo Sát',
     quangcao: '📢 Chiến Dịch Quảng Cáo',
     leads: '🎯 Leads & Chuyển Đổi',
-    loinhuan: '💰 Báo Cáo Lợi Nhuận',
+    loinhuan: '💰 Tài Chính & Lợi Nhuận',
     baocao: '📈 Báo Cáo Kho Hàng',
     mystats: '📊 Tiến Độ Cá Nhân',
     myquotes: '📄 Báo Giá Của Tôi',
@@ -3082,6 +3435,29 @@ const DICT = {
     p_category: 'Category',
     p_qty: 'Quantity *',
     cost_price_83: 'Base Cost (83%) *',
+    p_retail_price: '🛒 1. Retail Price (Manual) *',
+    p_dealer_price: '🏪 2. Dealer Wholesale Price',
+    p_pos_price: '📋 3. POS / Consignment Price',
+    p_staff_price: '🧑‍💼 4. Staff Floor Price',
+    lbl_retail_profit: '🛒 Retail Profit',
+    lbl_dealer_profit: '🏪 Dealer Profit',
+    lbl_pos_profit: '📋 POS Profit',
+    dispatch_title: '🚚 Sales Orders & Smart Dispatch',
+    dispatch_to: 'Dispatch Target *',
+    p_select: 'Product *',
+    p_unit_price: 'Applied Price *',
+    recipient_name: 'Recipient Name *',
+    phone_number: 'Phone Number',
+    payment_method: 'Payment Method',
+    deposit_paid: 'Prepaid Deposit',
+    dispatch_date: 'Dispatch Date',
+    notes: 'Notes',
+    btn_confirm_dispatch: '🚚 Confirm Dispatch & Save Order',
+    btn_print_dispatch: '📄 Print Dispatch Note',
+    fin_pnl_title: '💰 3-Fund Profit & Loss Breakdown',
+    fin_by_product: '📊 Profit by Product',
+    fin_settlement_ho: '🏢 17% HO Settlement Ledger',
+    fin_credit_ledger: '⚠️ Receivables & Credit Ledger',
     actual_selling_price: 'Actual Selling Price *',
     p_supplier: 'Supplier',
     p_date: 'Intake Date',
@@ -3113,6 +3489,29 @@ const DICT = {
     p_category: 'Danh Mục',
     p_qty: 'Số Lượng *',
     cost_price_83: 'Đơn Giá Gốc Đầu Vào (83%) *',
+    p_retail_price: '🛒 1. Giá Bán Lẻ (Gõ tay) (₫) *',
+    p_dealer_price: '🏪 2. Giá Bỏ Đại Lý (₫)',
+    p_pos_price: '📋 3. Giá Điểm Bán / Ký Gởi (₫)',
+    p_staff_price: '🧑‍💼 4. Giá Cho NV (Sàn) (₫)',
+    lbl_retail_profit: '🛒 LN Bán Lẻ',
+    lbl_dealer_profit: '🏪 LN Đại Lý',
+    lbl_pos_profit: '📋 LN Điểm Bán',
+    dispatch_title: '🚚 Bán Hàng & Xuất Kho Cho... (Smart Dispatch)',
+    dispatch_to: 'Xuất Cho (Đối Tượng) *',
+    p_select: 'Sản Phẩm Xuất *',
+    p_unit_price: 'Đơn Giá Áp Dụng (₫) *',
+    recipient_name: 'Tên Người Nhận / Đơn Vị *',
+    phone_number: 'Số Điện Thoại',
+    payment_method: 'Hình Thức Thanh Toán',
+    deposit_paid: 'Tiền Trả Trước (₫)',
+    dispatch_date: 'Ngày Xuất Kho',
+    notes: 'Ghi Chú',
+    btn_confirm_dispatch: '🚚 Xác Nhận Xuất Kho & Lưu Đơn',
+    btn_print_dispatch: '📄 In Phiếu Xuất Kho',
+    fin_pnl_title: '💰 Báo Cáo Phân Bổ 3 Dòng Lợi Nhuận',
+    fin_by_product: '📊 Lợi Nhuận Theo Sản Phẩm',
+    fin_settlement_ho: '🏢 Sổ Quyết Toán 17% Nộp Tổng Công Ty',
+    fin_credit_ledger: '⚠️ Sổ Quản Lý Công Nợ Đại Lý & Khách Hàng',
     actual_selling_price: 'Giá Thực Bán *',
     p_supplier: 'Nhà Cung Cấp',
     p_date: 'Ngày Nhập',
@@ -3377,10 +3776,7 @@ function exportSurveyCSV(){
   const h=isVi ? 
     ['NV','Loại','KH','SĐT','Khu Vực','Sản Phẩm','Ngân Sách','Mức Độ','Hợp Tác','Ghi Chú','Ngày'] :
     ['Staff','Type','Customer','Phone','Area','Product','Budget','Interest','Cooperation','Notes','Date'];
-  const rows=d.map(r=>[r.nv,r.type,r.kh,r.dt,r.dc,r.sp,r.ns,r.md,r.ht,`"${(r.gc||'').replace(/"/g,'""')}"`,r.ngay]);
-  const csv="﻿"+h.join(',')+"
-"+rows.map(r=>r.join(',')).join('
-');
+  const csv = "\uFEFF" + h.join(',') + "\n" + rows.map(r => r.join(',')).join('\n');
   const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
   a.download=`TNI_Survey_${td()}.csv`;a.click();
 }

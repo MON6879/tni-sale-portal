@@ -1449,4 +1449,22 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 >    - Sau mọi lần chỉnh sửa `tni_sale.html`, BẮT BUỘC copy đồng bộ sang cả 2 repository: `Task and WO/tni_sale.html` và `tni-search/tni_sale.html`.
 >    - Tiến hành commit và push đồng thời cả 3 repos để Vercel tự động build và deploy phiên bản live mới nhất cho người dùng!
 
+# 🛡️ POST-MORTEM RULE — 17/09/2026: ESCAPE SCRIPT TAG INLINE, CHUẨN HÓA NEWLINE JS & CHỐNG TRỪ KHO 2 LẦN (RULE PM-36 & PM-37)
+
+> ### Nguồn gốc: **Nâng Cấp Bảng Giá 4 Tầng, Xuất Kho & Tài Chính TNI Sale (17/09/2026)**
+> - **Root Cause 1**: Chèn thẻ `<script>` bên trong template string `document.write()` trong file HTML khiến trình duyệt và Node.js parse nhầm thẻ đóng `</script>` dẫn đến kết thúc sớm toàn bộ script block, sinh lỗi `SyntaxError: Unexpected end of input`.
+> - **Root Cause 2**: Tạo chuỗi CSV generator bằng multiline string `'''...'''` trong python khiến `\n` biến thành raw newline giữa 2 dấu ngoặc kép `""` trong JS, sinh lỗi `SyntaxError: Invalid or unexpected token`.
+> - **Root Cause 3**: Khi xuất kho (Smart Dispatch) chọn đại lý, nếu vừa ghi vào sổ cái `ban` vừa ghi trùng sang sổ con `pp` mà hàm `getTK()` quét đồng thời cả 2 sổ thì tồn kho bị trừ gấp đôi (`ton = nhap - ban - pp`).
+>
+> ### 🔴 RULE PM-36: ESCAPE SCRIPT TAG & STRING LITERAL INTEGRITY TRONG JAVASCRIPT
+> 1. **BẮT BUỘC Escape Thẻ Đóng Script**: Khi viết mã HTML/JS bên trong template string hoặc chuỗi JS nằm trong file HTML, TUYỆT ĐỐI CẤM viết thẻ `</script>` trần trụi. BẮT BUỘC phải escape thành `<\/script>` hoặc `'</' + 'script>'` để bảo đảm trình duyệt không ngắt sớm thẻ script ngoài cùng.
+> 2. **BẮT BUỘC Chuẩn Hóa Ký Tự Xuống Dòng (\n)**: Mọi chuỗi JavaScript đa dòng hoặc CSV generator BẮT BUỘC phải dùng `\n` đã escape đúng cú pháp (`"\\n"` hoặc template string với backticks `` `...` ``), TUYỆT ĐỐI CẤM để lọt ký tự xuống dòng thô (raw LF/CRLF) vào giữa cặp dấu nháy kép `""` hoặc nháy đơn `''`.
+> 3. **Kiểm Tra Cú Pháp Node.js Tự Động Trước Khi Push**: Sau khi chỉnh sửa bất kỳ file HTML có nhúng JS nào, BẮT BUỘC phải chạy lệnh kiểm tra cú pháp: `node -e "new Function(scriptCode)"` để xác nhận 100% cú pháp JS không có lỗi cú pháp trước khi bàn giao!
+>
+> ### 🔴 RULE PM-37: SỔ CÁI XUẤT KHO TẬP TRUNG & CHỐNG TRỪ TỒN KHO TRÙNG LẶP (DEDUP DISPATCH & INVENTORY)
+> 1. **1 Sổ Cái Xuất Kho Duy Nhất (Single Dispatch Ledger)**: Bảng `ban` trong `tni_sale.html` đóng vai trò là Sổ cái xuất kho tập trung (Central Dispatch Ledger) cho tất cả các đối tượng (Bán lẻ, Đại lý, Ký gởi, Tạm ứng).
+> 2. **TUYỆT ĐỐI CẤM Ghi Trùng Kép (Zero Cross-Table Duplication)**: Khi ghi nhận xuất kho vào `ban`, TUYỆT ĐỐI CẤM tự động ghi thêm 1 bản ghi nữa sang các bảng nghiệp vụ con (`pp`, `kygoi`, `tamung`) nếu các bảng này cũng được trừ trong hàm tính tồn `getTK()`.
+> 3. **Phân Loại Bằng Thuộc Tính `target`**: Phân loại đối tượng xuất kho bằng trường `target: 'retail' | 'dealer' | 'pos' | 'staff'` ngay trong bảng `ban`. Các module con chỉ dùng cho việc quản lý theo dõi nghiệp vụ riêng biệt của từng tab.
+
+
 
