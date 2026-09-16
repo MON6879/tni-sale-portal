@@ -183,12 +183,12 @@ tbody tr:hover{background:#fafcff}
 <div class="sec on" id="s-dashboard">
   <div class="cards" id="dc"></div>
   <div class="g2">
-    <div class="panel"><div class="ph"><h3>📦 Nhập gần đây</h3></div><div class="pb tw" id="d-nhap"></div></div>
-    <div class="panel"><div class="ph"><h3>🛒 Bán gần đây</h3></div><div class="pb tw" id="d-ban"></div></div>
+    <div class="panel"><div class="ph"><h3>📦 Recent Intake</h3></div><div class="pb tw" id="d-nhap"></div></div>
+    <div class="panel"><div class="ph"><h3>🛒 Recent Sales</h3></div><div class="pb tw" id="d-ban"></div></div>
   </div>
   <div class="g2">
-    <div class="panel"><div class="ph"><h3>⚠️ Tồn kho sắp hết</h3></div><div class="pb tw" id="d-warn"></div></div>
-    <div class="panel"><div class="ph"><h3>🧑‍💼 Tạm ứng đang mở</h3></div><div class="pb tw" id="d-tu"></div></div>
+    <div class="panel"><div class="ph"><h3>⚠️ Low Stock Alert</h3></div><div class="pb tw" id="d-warn"></div></div>
+    <div class="panel"><div class="ph"><h3>🧑‍💼 Open Advances</h3></div><div class="pb tw" id="d-tu"></div></div>
   </div>
 </div>
 
@@ -1121,11 +1121,12 @@ function v(id){return document.getElementById(id)?.value?.trim()||'';}
 // ═══════════════════════════════════════════════════
 // NAV
 // ═══════════════════════════════════════════════════
-const ptitles={dashboard:'📊 Dashboard',nhap:'📦 Nhập Hàng',tonkho:'🗄️ Tồn Kho',tamung:'🧑‍💼 Tạm Ứng Hàng',
-  banhang:'🛒 Bán Hàng',baogiaups:'📄 Báo Giá Thiết Bị',baogiasolar:'☀️ Báo Giá Hệ Solar',
-  daily:'🏪 Đại Lý & Phân Phối',kygoi:'📋 Ký Gởi',crm:'👥 CRM & Khảo Sát',
-  quangcao:'📢 Quảng Cáo Facebook & TikTok',leads:'🎯 Leads & Chuyển Đổi',
-  loinhuan:'💰 Lợi Nhuận',baocao:'📈 Báo Cáo'};
+const ptitles={dashboard:'📊 Dashboard',nhap:'📦 Goods Intake',tonkho:'🗄️ Inventory',tamung:'🧑‍💼 Stock Advance',
+  banhang:'🛒 Sales Orders',baogiaups:'📄 Device Quotation',baogiasolar:'☀️ Solar Quotation',
+  daily:'🏪 Distribution & Dealers',kygoi:'📋 Consignment',crm:'👥 CRM & Survey',
+  quangcao:'📢 Ads Campaigns',leads:'🎯 Leads & Conversion',
+  loinhuan:'💰 Profit & Loss',baocao:'📈 Reports',
+  mystats:'📊 My Performance',myquotes:'📄 My Quotations',mysurvey:'📝 My Surveys'};
 
 const renders={
   dashboard:rDash,nhap:rNhap,tonkho:renderTK,tamung:rTU,
@@ -1203,14 +1204,14 @@ function popSP(ids){
   ids.forEach(id=>{
     const el=document.getElementById(id); if(!el) return;
     const val=el.value;
-    el.innerHTML='<option value="">-- Chọn SP --</option>';
-    tk.forEach(r=>el.innerHTML+=`<option value="${r.id}" data-gb="${r.giaban}" data-gg="${r.giagoc}">${r.ten} [${r.dm}|Tồn:${r.ton}]</option>`);
+    el.innerHTML='<option value="">-- Select Product --</option>';
+    tk.forEach(r=>el.innerHTML+=`<option value="${r.id}" data-gb="${r.giaban}" data-gg="${r.giagoc}">${r.ten} [${r.dm}|Stock:${r.ton}]</option>`);
     el.value=val;
   });
 }
 function popDL(){
   const el=document.getElementById('pp-dl'); if(!el) return;
-  el.innerHTML='<option value="">-- Chọn đại lý --</option>';
+  el.innerHTML='<option value="">-- Select Dealer --</option>';
   DB.g('daily').forEach(r=>el.innerHTML+=`<option value="${r.id}">${r.ten}</option>`);
 }
 function autoPrice(spId,giaId){
@@ -1226,11 +1227,11 @@ function autoPrice(spId,giaId){
 // ═══════════════════════════════════════════════════
 function bk(t,c){return `<span class="bk bk-${c}">${t}</span>`;}
 function tbl(hs,rows){
-  if(!rows.length) return '<p style="color:#94a3b8;font-size:12.5px;padding:6px 0">Chưa có dữ liệu</p>';
+  if(!rows.length) return '<p style="color:#94a3b8;font-size:12.5px;padding:6px 0">No data yet</p>';
   return `<table><thead><tr>${hs.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
   <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
 }
-function del(k,id,cb){DB.del(k,id);cb();al('🗑 Đã xóa');}
+function del(k,id,cb){DB.del(k,id);cb();al('🗑 Deleted');}
 function clrForm(prefix){document.querySelectorAll(`[id^="${prefix}"]`).forEach(e=>{if(e.tagName==='SELECT')e.selectedIndex=0;else if(e.type!=='date')e.value='';});}
 
 // ═══════════════════════════════════════════════════
@@ -1242,18 +1243,18 @@ function rDash(){
   const ln=ban.reduce((s,r)=>{const sp=nhap.find(n=>n.id==r.spId);return s+(r.gia-Number(sp?.gg||0))*r.sl;},0);
   const tk=getTK(),tot=tk.reduce((s,r)=>s+r.ton,0);
   document.getElementById('dc').innerHTML=`
-    <div class="card c-bl"><div class="lbl2">📦 Tổng Tồn Kho</div><div class="val">${tot}</div><div class="sub">${nhap.length} mã hàng</div></div>
-    <div class="card c-gn"><div class="lbl2">💵 Doanh Thu</div><div class="val">${fn(dt)}₫</div><div class="sub">${ban.length} đơn bán</div></div>
-    <div class="card c-or"><div class="lbl2">📈 Lợi Nhuận</div><div class="val">${fn(ln)}₫</div><div class="sub">Gộp toàn bộ</div></div>
-    <div class="card c-pu"><div class="lbl2">🏪 Đại Lý</div><div class="val">${dl.length}</div><div class="sub">${tu.filter(r=>r.ts==='Đang ứng').length} đang tạm ứng</div></div>`;
+    <div class="card c-bl"><div class="lbl2">📦 Total Stock</div><div class="val">${tot}</div><div class="sub">${nhap.length} items</div></div>
+    <div class="card c-gn"><div class="lbl2">💵 Revenue</div><div class="val">${fn(dt)}₫</div><div class="sub">${ban.length} orders</div></div>
+    <div class="card c-or"><div class="lbl2">📈 Profit</div><div class="val">${fn(ln)}₫</div><div class="sub">All combined</div></div>
+    <div class="card c-pu"><div class="lbl2">🏪 Dealers</div><div class="val">${dl.length}</div><div class="sub">${tu.filter(r=>r.ts==='Đang ứng').length} advance pending</div></div>`;
   const n5=[...nhap].reverse().slice(0,5);
-  document.getElementById('d-nhap').innerHTML=tbl(['SP','SL','Giá Gốc','Ngày'],n5.map(r=>[r.ten,r.sl,fn(r.gg)+'₫',fd(r.ngay)]));
+  document.getElementById('d-nhap').innerHTML=tbl(['Product','Qty','Cost','Date'],n5.map(r=>[r.ten,r.sl,fn(r.gg)+'₫',fd(r.ngay)]));
   const b5=[...ban].reverse().slice(0,5);
-  document.getElementById('d-ban').innerHTML=tbl(['SP','SL','Giá Bán','Ngày'],b5.map(r=>{const sp=nhap.find(n=>n.id==r.spId);return[sp?.ten||r.spN||'?',r.sl,fn(r.gia)+'₫',fd(r.ngay)];}));
+  document.getElementById('d-ban').innerHTML=tbl(['Product','Qty','Price','Date'],b5.map(r=>{const sp=nhap.find(n=>n.id==r.spId);return[sp?.ten||r.spN||'?',r.sl,fn(r.gia)+'₫',fd(r.ngay)];}));
   const warn=tk.filter(r=>r.ton>0&&r.ton<=3);
-  document.getElementById('d-warn').innerHTML=warn.length?tbl(['SP','Tồn'],warn.map(r=>[r.ten,`<b style="color:var(--or)">${r.ton}</b>`])):'<p style="color:#94a3b8;font-size:12.5px">Không có cảnh báo ✅</p>';
+  document.getElementById('d-warn').innerHTML=warn.length?tbl(['Product','Stock'],warn.map(r=>[r.ten,`<b style="color:var(--or)">${r.ton}</b>`])):'<p style="color:#94a3b8;font-size:12.5px">No warnings ✅</p>';
   const tu2=tu.filter(r=>r.ts==='Đang ứng').slice(0,5);
-  document.getElementById('d-tu').innerHTML=tbl(['NV','SP','SL','Hạn'],tu2.map(r=>[r.nv,r.spN||'?',r.sl,fd(r.han)]));
+  document.getElementById('d-tu').innerHTML=tbl(['Staff','Product','Qty','Due'],tu2.map(r=>[r.nv,r.spN||'?',r.sl,fd(r.han)]));
 }
 
 // ═══════════════════════════════════════════════════
