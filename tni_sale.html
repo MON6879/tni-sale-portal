@@ -151,6 +151,11 @@ tbody tr:hover{background:#fafcff}
     <div class="lbl">Finance / Tài chính</div>
     <a onclick="go('loinhuan')">💰 Profit &amp; Loss <small style="color:#64748b;font-size:10.5px;margin-left:auto">Lợi nhuận</small></a>
     <a onclick="go('baocao')">📈 Reports <small style="color:#64748b;font-size:10.5px;margin-left:auto">Báo cáo</small></a>
+
+    <div class="lbl" style="color:#f59e0b">👤 Staff Portal / Nhân viên</div>
+    <a onclick="go('mystats')">📊 My Performance <small style="color:#f59e0b;font-size:10.5px;margin-left:auto">Cá nhân</small></a>
+    <a onclick="go('myquotes')">📄 My Quotations <small style="color:#f59e0b;font-size:10.5px;margin-left:auto">Báo giá</small></a>
+    <a onclick="go('mysurvey')">📝 My Surveys <small style="color:#f59e0b;font-size:10.5px;margin-left:auto">Khảo sát</small></a>
   </nav>
 </div>
 
@@ -911,6 +916,88 @@ tbody tr:hover{background:#fafcff}
   <div class="cards" id="bc-c"></div>
   <div class="panel"><div class="ph"><h3>📈 Tổng Quan Kho Hàng</h3><button class="btn b-bl b-sm" onclick="exportCSV()">⬇ CSV</button></div>
   <div class="pb tw" id="t-bc"></div></div>
+</div>
+
+<!-- ══ STAFF: MY PERFORMANCE ══ -->
+<div class="sec" id="s-mystats">
+  <div class="panel" style="border-left:4px solid #f59e0b">
+    <div class="ph"><h3>👤 Đăng Nhập Nhân Viên (Staff Login)</h3></div>
+    <div class="pb">
+      <div class="fg">
+        <div class="f"><label>Tên Nhân Viên / Staff Name *</label><input id="my-name" placeholder="VD: Nguyễn Văn A"/></div>
+        <div class="f"><label>Mã NV / Staff ID</label><input id="my-id" placeholder="VD: NV001"/></div>
+      </div>
+      <div class="fa"><button class="btn b-bl" onclick="renderMyStats()" style="font-weight:700">🔍 Xem Tiến Độ Cá Nhân (View My Performance)</button></div>
+    </div>
+  </div>
+  <div id="my-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px"></div>
+  <div class="g2">
+    <div class="panel"><div class="ph"><h3>🛒 Đơn Bán Của Tôi (My Sales)</h3></div><div class="pb tw" id="my-sales"><div style="color:#94a3b8;padding:20px;text-align:center">Nhập tên và bấm "Xem Tiến Độ" để hiển thị</div></div></div>
+    <div class="panel"><div class="ph"><h3>💰 Lợi Nhuận Cá Nhân (My Profit)</h3></div><div class="pb tw" id="my-profit"><div style="color:#94a3b8;padding:20px;text-align:center">Nhập tên và bấm "Xem Tiến Độ" để hiển thị</div></div></div>
+  </div>
+  <div class="g2">
+    <div class="panel"><div class="ph"><h3>📋 Hàng Ký Gởi Đang Quản Lý (My Consignment)</h3></div><div class="pb tw" id="my-consign"><div style="color:#94a3b8;padding:20px;text-align:center">—</div></div></div>
+    <div class="panel"><div class="ph"><h3>🧑‍💼 Hàng Tạm Ứng (My Advance)</h3></div><div class="pb tw" id="my-advance"><div style="color:#94a3b8;padding:20px;text-align:center">—</div></div></div>
+  </div>
+</div>
+
+<!-- ══ STAFF: MY QUOTATIONS ══ -->
+<div class="sec" id="s-myquotes">
+  <div class="panel" style="border-left:4px solid #f59e0b">
+    <div class="ph"><h3>📄 Báo Giá Của Tôi (My Quotations)</h3>
+      <div style="display:flex;gap:6px">
+        <input id="mq-name" placeholder="🔍 Tên NV hoặc Mã NV..." oninput="renderMyQuotes()" style="padding:4px 10px;border:1px solid var(--bd);border-radius:6px;font-size:12px;width:180px"/>
+        <button class="btn b-bl b-sm" onclick="renderMyQuotes()">🔍 Lọc</button>
+      </div>
+    </div>
+    <div class="pb">
+      <div style="background:#fffbeb;padding:10px 14px;border-radius:8px;border:1px solid #fde68a;font-size:12.5px;line-height:1.6;margin-bottom:12px">
+        <b>💡 Chia sẻ cho NV:</b> Gửi link <code>tni-bot.vercel.app/sale?staff=TÊN_NV</code> — NV chỉ xem được báo giá của mình, KHÔNG thấy của người khác.
+      </div>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="panel"><div class="ph"><h3>☀️ Báo Giá Solar</h3></div><div class="pb tw" id="mq-solar"><div style="color:#94a3b8;padding:20px;text-align:center">Nhập tên NV để lọc</div></div></div>
+    <div class="panel"><div class="ph"><h3>📄 Báo Giá UPS / Thiết Bị</h3></div><div class="pb tw" id="mq-ups"><div style="color:#94a3b8;padding:20px;text-align:center">Nhập tên NV để lọc</div></div></div>
+  </div>
+</div>
+
+<!-- ══ STAFF: MY SURVEYS ══ -->
+<div class="sec" id="s-mysurvey">
+  <div class="panel" style="border-left:4px solid #f59e0b">
+    <div class="ph"><h3>📝 Khảo Sát Khách Hàng & Đối Tác (Customer & Partner Survey)</h3></div>
+    <div class="pb">
+      <div style="background:#fffbeb;padding:10px 14px;border-radius:8px;border:1px solid #fde68a;font-size:12.5px;line-height:1.6;margin-bottom:12px">
+        <b>💡 Chia sẻ cho NV:</b> Gửi link <code>tni-bot.vercel.app/sale?staff=TÊN_NV&tab=mysurvey</code> — NV mở ra là vào thẳng trang khảo sát.
+      </div>
+      <div class="fg">
+        <div class="f"><label>👤 NV Khảo Sát *</label><input id="sv-nv" placeholder="Tên NV thực hiện"/></div>
+        <div class="f"><label>📋 Loại Khảo Sát</label><select id="sv-type"><option>Khách hàng tiềm năng</option><option>Đối tác ký gởi</option><option>Đại lý mới</option><option>Khảo sát thị trường</option><option>Chăm sóc sau bán</option></select></div>
+        <div class="f"><label>👤 Tên KH / Đối Tác *</label><input id="sv-kh" placeholder="Tên khách hàng hoặc đối tác"/></div>
+        <div class="f"><label>📞 Số Điện Thoại</label><input id="sv-dt" placeholder="09xx xxx xxx"/></div>
+        <div class="f"><label>📍 Địa Chỉ / Khu Vực</label><input id="sv-dc" placeholder="Quận, Thành phố..."/></div>
+        <div class="f"><label>📦 Quan Tâm Sản Phẩm</label><select id="sv-sp"><option>UPS (Bộ Lưu Điện)</option><option>Solar Panel</option><option>Inverter</option><option>Ắc Quy</option><option>Combo Solar System</option><option>Phụ Kiện</option><option>Khác</option></select></div>
+        <div class="f"><label>💰 Mức Ngân Sách</label><select id="sv-ns"><option>Chưa xác định</option><option>Dưới 5 triệu</option><option>5 - 20 triệu</option><option>20 - 50 triệu</option><option>50 - 200 triệu</option><option>Trên 200 triệu</option></select></div>
+        <div class="f"><label>🔥 Mức Độ Quan Tâm</label><select id="sv-md"><option>🔴 Rất quan tâm (Hot)</option><option>🟡 Quan tâm (Warm)</option><option>🔵 Tìm hiểu (Cool)</option><option>⚪ Chưa quyết (Cold)</option></select></div>
+        <div class="f"><label>🏪 Tiềm Năng Hợp Tác</label><select id="sv-ht"><option>Mua lẻ</option><option>Đại lý cấp 1</option><option>Đại lý cấp 2</option><option>Ký gởi bán</option><option>Đối tác dự án</option></select></div>
+        <div class="f" style="grid-column:1/-1"><label>📝 Ghi Chú Chi Tiết</label><textarea id="sv-gc" rows="3" placeholder="Nhu cầu cụ thể, thời gian dự kiến mua, ghi chú đặc biệt..."></textarea></div>
+      </div>
+      <div class="fa">
+        <button class="btn b-bl" onclick="addSurvey()" style="font-weight:700">📝 Lưu Khảo Sát</button>
+        <button class="btn b-out" onclick="clrForm('sv-')">✕ Xóa Form</button>
+      </div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ph">
+      <h3>📋 Lịch Sử Khảo Sát</h3>
+      <div style="display:flex;gap:6px">
+        <input id="sv-filter" placeholder="🔍 Lọc theo NV / KH..." oninput="renderSurveys()" style="padding:4px 10px;border:1px solid var(--bd);border-radius:6px;font-size:12px;width:180px"/>
+        <button class="btn b-gn b-sm" onclick="exportSurveyCSV()">⬇ CSV</button>
+      </div>
+    </div>
+    <div class="pb tw" id="sv-table"></div>
+  </div>
 </div>
 
 </div><!-- /content -->
@@ -3000,6 +3087,159 @@ if (sharedQuote) {
   loadSelectedQuote(sharedQuote);
 }
 rDash();
+
+// ═══════════════════════════════════════════════════
+// STAFF PORTAL — MY PERFORMANCE
+// ═══════════════════════════════════════════════════
+function getStaffName(){
+  const p = new URLSearchParams(window.location.search).get('staff');
+  return p || localStorage.getItem('my_staff_name') || '';
+}
+function renderMyStats(){
+  const raw = v('my-name') || getStaffName();
+  if(!raw){al('Nhập tên nhân viên!','er');return;}
+  localStorage.setItem('my_staff_name', raw);
+  const name = raw.toLowerCase();
+
+  const nhap=DB.g('nhap'), allBan=DB.g('ban'), allKG=DB.g('kygoi'), allTU=DB.g('tamung');
+  const myBan=allBan.filter(r=>(r.gc||'').toLowerCase().includes(name)||(r.kh||'').toLowerCase().includes(name)||(r.kenh||'').toLowerCase().includes(name));
+  const myKG=allKG.filter(r=>(r.gc||'').toLowerCase().includes(name)||(r.ddBan||'').toLowerCase().includes(name));
+  const myTU=allTU.filter(r=>(r.nv||'').toLowerCase().includes(name));
+
+  let rev=0, profit=0, ctyProfit=0;
+  myBan.forEach(r=>{const sp=nhap.find(n=>n.id==r.spId);
+    rev+=r.gia*r.sl;
+    if(sp){
+      const gg=Number(sp.gg||0), lnCty=gg>0?Math.round(gg/83*17):0, minSell=gg+lnCty;
+      profit+=(r.gia-minSell)*r.sl; ctyProfit+=lnCty*r.sl;
+    }
+  });
+
+  document.getElementById('my-cards').innerHTML=`
+    <div class="card c-bl"><div class="lbl2">🛒 Đơn Bán</div><div class="val">${myBan.length}</div><div class="sub">đơn hàng</div></div>
+    <div class="card c-gn"><div class="lbl2">💰 Doanh Thu</div><div class="val" style="font-size:15px">${fn(rev)}₫</div><div class="sub">tổng bán</div></div>
+    <div class="card c-pu"><div class="lbl2">🏪 LN Chi Nhánh</div><div class="val" style="font-size:15px;color:var(--gn)">${fn(profit)}₫</div><div class="sub">lợi nhuận NV</div></div>
+    <div class="card c-bl"><div class="lbl2">🏢 LN Trả Cty</div><div class="val" style="font-size:15px;color:#1e40af">${fn(ctyProfit)}₫</div><div class="sub">17% trả về cty</div></div>
+    <div class="card c-or"><div class="lbl2">📋 Ký Gởi</div><div class="val">${myKG.length}</div><div class="sub">đang quản lý</div></div>
+    <div class="card c-yw"><div class="lbl2">🧑‍💼 Tạm Ứng</div><div class="val">${myTU.filter(r=>r.ts==='Đang ứng').length}</div><div class="sub">chưa trả</div></div>`;
+
+  // My Sales table
+  document.getElementById('my-sales').innerHTML=tbl(['#','SP','SL','Giá Bán','Doanh Thu','LN Chi Nhánh','Khách','Kênh','Ngày'],
+    myBan.map((r,i)=>{const sp=nhap.find(n=>n.id==r.spId);
+      const gg=Number(sp?.gg||0),lnCty=gg>0?Math.round(gg/83*17):0,minSell=gg+lnCty;
+      const ln=(r.gia-minSell)*r.sl;
+      return [i+1,r.spN,r.sl,fn(r.gia)+'₫',`<b>${fn(r.gia*r.sl)}₫</b>`,
+        `<b style="color:${ln>=0?'var(--gn)':'var(--rd)'}">${fn(ln)}₫</b>`,r.kh||'-',bk(r.kenh,'bl'),fd(r.ngay)];
+    }));
+
+  // My Profit breakdown
+  document.getElementById('my-profit').innerHTML=`
+    <div style="padding:16px;text-align:center">
+      <div style="font-size:32px;font-weight:900;color:var(--gn);margin-bottom:8px">${fn(profit)} ₫</div>
+      <div style="font-size:13px;color:#64748b;margin-bottom:16px">Tổng Lợi Nhuận Chi Nhánh (Branch Profit)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center">
+        <div><div style="font-size:11px;color:#0284c7">💰 Doanh Thu</div><div style="font-size:18px;font-weight:700;color:#0284c7">${fn(rev)}₫</div></div>
+        <div><div style="font-size:11px;color:#1e40af">🏢 Trả Cty 17%</div><div style="font-size:18px;font-weight:700;color:#1e40af">${fn(ctyProfit)}₫</div></div>
+        <div><div style="font-size:11px;color:var(--gn)">🏪 NV Giữ Lại</div><div style="font-size:18px;font-weight:700;color:var(--gn)">${fn(profit)}₫</div></div>
+      </div>
+    </div>`;
+
+  // My Consignment table
+  document.getElementById('my-consign').innerHTML=myKG.length?tbl(['#','SP','SL','Điểm Bán','Trạng Thái','Ngày'],
+    myKG.map((r,i)=>[i+1,r.spN,r.sl,r.ddBan||'-',bk(r.ts,r.ts==='Đang ký gởi'?'or':'gn'),fd(r.ngay)]))
+    :'<div style="color:#94a3b8;padding:20px;text-align:center">Chưa có hàng ký gởi</div>';
+
+  // My Advance table
+  document.getElementById('my-advance').innerHTML=myTU.length?tbl(['#','Sản Phẩm','SL','Mục Đích','Ngày Lấy','Trạng Thái'],
+    myTU.map((r,i)=>[i+1,r.spN,r.sl,r.md||'-',fd(r.ngay),bk(r.ts,r.ts==='Đang ứng'?'or':'gn')]))
+    :'<div style="color:#94a3b8;padding:20px;text-align:center">Chưa có tạm ứng</div>';
+}
+
+// ═══════════════════════════════════════════════════
+// STAFF PORTAL — MY QUOTATIONS
+// ═══════════════════════════════════════════════════
+function renderMyQuotes(){
+  const q=(v('mq-name')||getStaffName()||'').toLowerCase();
+  // Solar quotes
+  const solar=DB.g('quotesolar').filter(r=>!q||(r.staff||'').toLowerCase().includes(q)||(r.staffId||'').toLowerCase().includes(q)||(r.kh||'').toLowerCase().includes(q));
+  document.getElementById('mq-solar').innerHTML=solar.length?tbl(['#','Mã BG','Khách Hàng','Công Suất','Tổng Tiền','Ngày','Trạng Thái',''],
+    solar.map((r,i)=>[i+1,`<code>${r.code||'-'}</code>`,`<b>${r.kh||'-'}</b>`,r.power||'-',
+      `<b>${fn(r.total)} ${r.currency||'Kyats'}</b>`,fd(r.date),bk(r.status||'Mới','bl'),
+      `<button class="btn b-xs b-bl" onclick="go('baogiasolar');loadSelectedQuote('${r.id}')">📄 Mở</button>`
+    ])):'<div style="color:#94a3b8;padding:20px;text-align:center">Chưa có báo giá Solar'+(q?' cho "'+q+'"':'')+'</div>';
+
+  // UPS quotes
+  const ups=DB.g('quoteups').filter(r=>!q||(r.staff||'').toLowerCase().includes(q)||(r.kh||'').toLowerCase().includes(q));
+  document.getElementById('mq-ups').innerHTML=ups.length?tbl(['#','Khách Hàng','Sản Phẩm','Tổng Tiền','Ngày',''],
+    ups.map((r,i)=>[i+1,`<b>${r.kh||'-'}</b>`,r.spN||'-',`<b>${fn(r.total||0)}₫</b>`,fd(r.date),
+      `<button class="btn b-xs b-bl" onclick="go('baogiaups');viewQuote('ups','${r.id}')">📄 Mở</button>`
+    ])):'<div style="color:#94a3b8;padding:20px;text-align:center">Chưa có báo giá UPS'+(q?' cho "'+q+'"':'')+'</div>';
+}
+
+// ═══════════════════════════════════════════════════
+// STAFF PORTAL — SURVEYS (KHẢO SÁT)
+// ═══════════════════════════════════════════════════
+function addSurvey(){
+  const nv=v('sv-nv')||getStaffName(), kh=v('sv-kh');
+  if(!nv||!kh){al('Nhập tên NV và tên KH!','er');return;}
+  DB.add('surveys',{nv,type:v('sv-type'),kh,dt:v('sv-dt'),dc:v('sv-dc'),sp:v('sv-sp'),ns:v('sv-ns'),md:v('sv-md'),ht:v('sv-ht'),gc:v('sv-gc'),ngay:td()});
+  // Sync to Google Sheet
+  try{
+    const gasUrl="https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec";
+    fetch(gasUrl,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({action:"sale_add",col:"khaosat",data:{nv,type:v('sv-type'),kh,dt:v('sv-dt'),dc:v('sv-dc'),sp:v('sv-sp'),ns:v('sv-ns'),md:v('sv-md'),ht:v('sv-ht'),gc:v('sv-gc'),ngay:td()}})
+    });
+  }catch(e){console.warn('Survey sync:',e);}
+  al('✅ Đã lưu khảo sát!');clrForm('sv-');renderSurveys();
+}
+
+function renderSurveys(){
+  const q=(v('sv-filter')||'').toLowerCase();
+  const d=DB.g('surveys').filter(r=>!q||(r.nv||'').toLowerCase().includes(q)||(r.kh||'').toLowerCase().includes(q)||(r.dc||'').toLowerCase().includes(q));
+  document.getElementById('sv-table').innerHTML=d.length?tbl(
+    ['#','NV','Loại','KH / Đối Tác','SĐT','Khu Vực','Sản Phẩm','Ngân Sách','Mức Độ','Hợp Tác','Ngày',''],
+    d.map((r,i)=>[i+1,`<b>${r.nv}</b>`,bk(r.type,'bl'),`<b>${r.kh}</b>`,r.dt||'-',r.dc||'-',
+      bk(r.sp,'bl'),r.ns||'-',
+      r.md?.includes('🔴')?bk('Hot','rd'):r.md?.includes('🟡')?bk('Warm','or'):r.md?.includes('🔵')?bk('Cool','bl'):bk('Cold','gy'),
+      bk(r.ht,'pu'),fd(r.ngay),
+      `<button class="btn b-xs b-rd" onclick="del('surveys',${r.id},renderSurveys)">🗑</button>`
+    ])):'<div style="color:#94a3b8;padding:20px;text-align:center">Chưa có khảo sát nào</div>';
+}
+
+function exportSurveyCSV(){
+  const d=DB.g('surveys');
+  if(!d.length){al('Chưa có dữ liệu khảo sát!','er');return;}
+  const h=['NV','Loại','KH','SĐT','Khu Vực','Sản Phẩm','Ngân Sách','Mức Độ','Hợp Tác','Ghi Chú','Ngày'];
+  const rows=d.map(r=>[r.nv,r.type,r.kh,r.dt,r.dc,r.sp,r.ns,r.md,r.ht,`"${(r.gc||'').replace(/"/g,'""')}"`,r.ngay]);
+  const csv="\uFEFF"+h.join(',')+"\n"+rows.map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`TNI_Survey_${td()}.csv`;a.click();
+}
+
+// ═══════════════════════════════════════════════════
+// STAFF URL AUTO-ROUTING (?staff=XXX&tab=YYY)
+// ═══════════════════════════════════════════════════
+(function initStaffPortal(){
+  const params = new URLSearchParams(window.location.search);
+  const staffParam = params.get('staff') || params.get('user') || params.get('email');
+  const tabParam = params.get('tab');
+
+  if(staffParam){
+    // Auto-fill staff name in all staff inputs
+    const nameEl = document.getElementById('my-name');
+    const mqEl = document.getElementById('mq-name');
+    const svEl = document.getElementById('sv-nv');
+    if(nameEl) nameEl.value = staffParam;
+    if(mqEl) mqEl.value = staffParam;
+    if(svEl) svEl.value = staffParam;
+    localStorage.setItem('my_staff_name', staffParam);
+
+    // Navigate to requested tab or default to mystats
+    if(tabParam === 'mysurvey') { go('mysurvey'); renderSurveys(); }
+    else if(tabParam === 'myquotes') { go('myquotes'); renderMyQuotes(); }
+    else { go('mystats'); renderMyStats(); }
+  }
+})();
 </script>
 </body>
 </html>
