@@ -1413,3 +1413,16 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 >    - Mục tiêu: Chuyển Google Sheet thành SSOT, frontend đọc từ GAS endpoint, localStorage chỉ là cache.
 >    - Khi chuyển đổi, BẮT BUỘC phải giữ nguyên 100% dữ liệu hiện có, TUYỆT ĐỐI CẤM mất dữ liệu!
 
+# 🛡️ POST-MORTEM RULE — 16/09/2026: CẤM DUPLICATE `let`/`const` TRONG CÙNG SCOPE & BẮT BUỘC UNICODE ESCAPE CHO KÝ TỰ ĐẶC BIỆT (RULE PM-33 & PM-34)
+
+> ### Nguồn gốc: **v809 — Fatal SyntaxError giết toàn bộ BI Portal** (`index.html`, `executive_dashboard.html`)
+> #### RULE PM-33: TUYỆT ĐỐI CẤM Khai Báo Lại Biến `let`/`const` Trong Cùng `<script>` Block
+> 1. Khi thêm, di chuyển hoặc merge block JavaScript trong file HTML, **BẮT BUỘC** phải `Select-String` hoặc `grep` kiểm tra tên biến `let`/`const` mới **TRƯỚC KHI commit** để đảm bảo KHÔNG CÓ khai báo trùng lặp trong cùng `<script>` block.
+> 2. Lỗi `SyntaxError: Identifier '...' has already been declared` sẽ **giết chết toàn bộ** `<script>` block — không chỉ phần code bị trùng mà **TẤT CẢ** functions, event handlers, modals, charts trong block đó đều chết theo — gây ảnh hưởng diện rộng (tabs, audio, modals, charts đều chết cùng lúc).
+> 3. **TUYỆT ĐỐI CẤM** copy-paste code JavaScript mới vào file mà không xóa code cũ trước!
+>
+> #### RULE PM-34: BẮT BUỘC Dùng Unicode Escape Cho Ký Tự Đặc Biệt Tiếng Việt/Myanmar Trong JavaScript Inline
+> 1. Khi viết chuỗi tiếng Việt hoặc Myanmar trong JavaScript inline (`<script>` block của HTML), **BẮT BUỘC** phải dùng Unicode escape sequences (`\u00E0` cho `à`, `\u1EBFn` cho `ến`, v.v.) thay vì ký tự gốc trực tiếp.
+> 2. File HTML có thể bị thay đổi encoding khi chuyển qua các công cụ edit/copy/paste/Git/PowerShell `Set-Content`, gây corruption ký tự thành dấu `?` (mojibake).
+> 3. **TUYỆT ĐỐI CẤM** viết trực tiếp ký tự tiếng Việt có dấu hoặc tiếng Myanmar vào source code JavaScript — luôn dùng Unicode escape!
+
