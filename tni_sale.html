@@ -253,25 +253,25 @@ tbody tr:hover{background:#fafcff}
   <div id="nhap-bulk-container" style="display:none">
     <div class="panel">
       <div class="ph">
-        <h3>📥 Import Hàng Loạt Bằng File .CSV Hoặc Dán Trực Tiếp Từ Excel</h3>
-        <span style="font-size:12px;color:#64748b">Cú pháp chuẩn: Tên SP | Model | Serial | Danh Mục | Số Lượng | Giá Gốc (83%) | Giá Bán | NCC | BH | Ghi Chú</span>
+        <h3 data-lang="nhap_bulk_h3">📥 Import Hàng Loạt Bằng File .CSV Hoặc Dán Từ Excel</h3>
+        <span style="font-size:12px;color:#64748b" data-lang="nhap_bulk_syntax">Cú pháp chuẩn: Tên SP | Model | Serial | Danh Mục | Số Lượng | Giá Gốc (83%) | Giá Bán | NCC | BH | Ghi Chú</span>
       </div>
       <div class="pb">
-        <div style="background:#eff6ff;padding:12px 14px;border-radius:8px;border:1px solid #bfdbfe;margin-bottom:12px;font-size:12.5px;line-height:1.6">
+        <div id="nhap-bulk-guide-box" style="background:#eff6ff;padding:12px 14px;border-radius:8px;border:1px solid #bfdbfe;margin-bottom:12px;font-size:12.5px;line-height:1.6" data-lang="nhap_bulk_guide">
           <b>💡 Hướng dẫn 3 bước đơn giản cho nhân viên:</b><br/>
-          <b>1.</b> Bấm nút <button class="btn b-gn b-xs" onclick="downloadNhapTemplate()">📥 Tải File Mẫu (.CSV)</button> để tải file template có sẵn công thức.<br/>
+          <b>1.</b> Bấm nút <button class="btn b-gn b-xs" onclick="downloadNhapTemplate()">📥 Tải File Mẫu (.CSV)</button> để tải file template song ngữ.<br/>
           <b>2.</b> Mở file bằng <b>Excel</b> hoặc <b>Google Sheets</b>, nhập danh sách sản phẩm rồi lưu file.<br/>
           <b>3.</b> Chọn file tải lên bằng nút <button class="btn b-bl b-xs" onclick="document.getElementById('bulk-file-input').click()">📁 Chọn File</button> <b>HOẶC</b> bôi đen bảng trong Excel bấm <code>Ctrl+C</code> rồi <b>dán (Ctrl+V)</b> vào khung bên dưới:
         </div>
 
-        <textarea id="bulk-paste-area" rows="6" style="width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;font-family:monospace;font-size:12px;line-height:1.5" placeholder="Dán (Ctrl+V) bảng dữ liệu từ Excel / Google Sheets vào đây...&#10;Ví dụ:&#10;UPS APC BX1200	APC-BX1200	SN001, SN002	UPS	2	830000	1250000	APC VN	24	Hàng nguyên seal&#10;Pin Longi 450W	LR4-72HPH	LG01, LG02	Solar Panel	10	1660000	2200000	Longi	120	Loại A" oninput="parseBulkInput()"></textarea>
+        <textarea id="bulk-paste-area" rows="6" style="width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;font-family:monospace;font-size:12px;line-height:1.5" data-lang-ph="bulk_paste_ph" placeholder="Dán (Ctrl+V) bảng dữ liệu từ Excel / Google Sheets vào đây...&#10;Ví dụ:&#10;UPS APC BX1200	APC-BX1200	SN001, SN002	UPS	2	830000	1250000	APC VN	24	Hàng nguyên seal&#10;Pin Longi 450W	LR4-72HPH	LG01, LG02	Solar Panel	10	1660000	2200000	Longi	120	Loại A" oninput="parseBulkInput()"></textarea>
 
         <div style="display:flex;gap:8px;margin-top:10px;justify-content:space-between;flex-wrap:wrap">
           <div style="display:flex;gap:8px">
-            <button class="btn b-bl" onclick="parseBulkInput()">🔍 Phân Tích &amp; Xem Trước (Preview)</button>
-            <button class="btn b-out" onclick="document.getElementById('bulk-paste-area').value='';parseBulkInput()">✕ Xóa Khung Dán</button>
+            <button class="btn b-bl" onclick="parseBulkInput()" data-lang="btn_preview_bulk">🔍 Phân Tích &amp; Xem Trước (Preview)</button>
+            <button class="btn b-out" onclick="document.getElementById('bulk-paste-area').value='';parseBulkInput()" data-lang="btn_clear_bulk">✕ Xóa Khung Dán</button>
           </div>
-          <button class="btn b-gn" id="btn-confirm-bulk" onclick="confirmBulkImport()" style="font-weight:700" disabled>🚀 Xác Nhận Import Hàng Loạt Vào Kho (0 Món)</button>
+          <button class="btn b-gn" id="btn-confirm-bulk" onclick="confirmBulkImport()" style="font-weight:700" disabled data-lang="btn_confirm_bulk">🚀 Xác Nhận Import Hàng Loạt Vào Kho (0 Món)</button>
         </div>
 
         <!-- THẺ THỐNG KÊ NHANH BATCH IMPORT -->
@@ -1618,23 +1618,25 @@ function switchNhapMode(mode) {
 }
 
 function downloadNhapTemplate() {
+  const isVi = currentLang === 'vi';
+  // Chuẩn Song Ngữ Anh - Việt trên từng cột tiêu đề (Bilingual Column Headers)
   const headers = [
-    "Tên Sản Phẩm",
-    "Model / Mã SP",
-    "Serial Numbers (ngăn cách dấu phẩy)",
-    "Danh Mục",
-    "Số Lượng",
-    "Giá Gốc Đầu Vào (83%)",
-    "Giá Thực Bán (để trống = lấy giá sàn 100%)",
-    "Nhà Cung Cấp",
-    "Bảo Hành (tháng)",
-    "Ghi Chú"
+    "Tên Sản Phẩm / Product Name",
+    "Model / Mã SP (Item Code)",
+    "Serial Numbers (ngăn cách dấu phẩy / Comma-separated)",
+    "Danh Mục / Category",
+    "Số Lượng / Quantity",
+    "Giá Gốc Đầu Vào (83%) / Base Cost",
+    "Giá Thực Bán (để trống = lấy giá sàn 100%) / Selling Price",
+    "Nhà Cung Cấp / Supplier",
+    "Bảo Hành (tháng) / Warranty (Months)",
+    "Ghi Chú / Notes"
   ];
   const sampleRows = [
-    ["UPS APC BX1200", "APC-BX1200", "SN001, SN002", "UPS", "2", "830000", "1250000", "APC Vietnam", "24", "Hàng mới nguyên seal"],
-    ["Tấm Pin Solar 450W Longi", "LR4-72HPH-450M", "LG450-01, LG450-02", "Solar Panel", "5", "1660000", "2200000", "Longi Solar", "120", "Bảo hành hiệu suất 25 năm"],
-    ["Inverter Hybrid 5kW Deye", "SUN-5K-SG03LP1", "DY5K-8899", "Inverter", "1", "16600000", "22000000", "Deye Solar", "60", "Kèm wifi module"],
-    ["Ắc Quy Vision 12V 100Ah", "6FM100-X", "VS100-01, VS100-02", "Ắc Quy", "4", "2490000", "3200000", "Vision Battery", "12", "Chuyên dụng cho UPS & Solar"]
+    ["UPS APC BX1200", "APC-BX1200", "SN001, SN002", "UPS", "2", "830000", "1250000", "APC Vietnam", "24", "Brand new, original seal / Hàng mới nguyên seal"],
+    ["Tấm Pin Solar Longi 450W / Solar Panel", "LR4-72HPH-450M", "LG450-01, LG450-02", "Solar Panel", "5", "1660000", "2200000", "Longi Solar", "120", "25-year performance warranty / Bảo hành hiệu suất 25 năm"],
+    ["Inverter Hybrid 5kW Deye / Biến Tần Hybrid", "SUN-5K-SG03LP1", "DY5K-8899", "Inverter", "1", "16600000", "22000000", "Deye Solar", "60", "Includes WiFi module / Kèm WiFi module"],
+    ["Ắc Quy Vision 12V 100Ah / Storage Battery", "6FM100-X", "VS100-01, VS100-02", "Ắc Quy / Battery", "4", "2490000", "3200000", "Vision Battery", "12", "Specialized for UPS & Solar / Chuyên dụng cho UPS & Solar"]
   ];
   
   let csvContent = "\uFEFF" + headers.join(",") + "\n" + sampleRows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -1642,12 +1644,12 @@ function downloadNhapTemplate() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `Mau_Nhap_Hang_TNI_Sale_${td()}.csv`;
+  a.download = `Mau_Nhap_Hang_Goods_Intake_${td()}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  al("📥 Đã tải file mẫu: Mau_Nhap_Hang_TNI_Sale.csv");
+  al(isVi ? "📥 Đã tải file mẫu song ngữ: Mau_Nhap_Hang_Goods_Intake.csv" : "📥 Downloaded bilingual template: Mau_Nhap_Hang_Goods_Intake.csv");
 }
 
 function handleBulkFile(event) {
@@ -1772,6 +1774,7 @@ function renderBulkPreview(items) {
   const totMin = items.reduce((s, it) => s + (it.minSell * it.sl), 0);
   const totBranch = items.reduce((s, it) => s + (it.lnBranch * it.sl), 0);
 
+  const isVi = currentLang === 'vi';
   // Hiển thị thống kê
   document.getElementById('bs-items').textContent = `${validItems.length} / ${items.length}`;
   document.getElementById('bs-qty').textContent = totQty;
@@ -1784,13 +1787,17 @@ function renderBulkPreview(items) {
   if (wrap) wrap.style.display = 'block';
   if (btn) {
     btn.disabled = validItems.length === 0;
-    btn.textContent = `🚀 Xác Nhận Import Hàng Loạt (${validItems.length} Sản Phẩm)`;
+    btn.textContent = isVi ? `🚀 Xác Nhận Import Hàng Loạt (${validItems.length} Sản Phẩm)` : `🚀 Confirm Bulk Import (${validItems.length} Products)`;
   }
 
-  // Render bảng preview
-  const headers = ['#', 'Trạng Thái', 'Tên Sản Phẩm', 'Model', 'SL', 'Giá Gốc (83%)', 'LN Cty (17%)', 'Giá Sàn (100%)', 'Giá Thực Bán', 'LN Chi Nhánh', 'NCC', 'BH'];
+  // Render bảng preview song ngữ
+  const headers = isVi ?
+    ['#', 'Trạng Thái', 'Tên Sản Phẩm', 'Model', 'SL', 'Giá Gốc (83%)', 'LN Cty (17%)', 'Giá Sàn (100%)', 'Giá Thực Bán', 'LN Chi Nhánh', 'NCC', 'BH'] :
+    ['#', 'Status', 'Product Name', 'Model', 'Qty', 'Base Cost (83%)', 'HO (17%)', 'Floor Price', 'Selling Price', 'Branch Net', 'Supplier', 'Warranty'];
   const rows = items.map((it, idx) => {
-    const statusHtml = it.valid ? '<span class="badge bk-gn">✓ Hợp lệ</span>' : '<span class="badge bk-rd">⚠️ Lỗi</span>';
+    const statusHtml = it.valid ?
+      `<span class="badge bk-gn">${isVi ? '✓ Hợp lệ' : '✓ Valid'}</span>` :
+      `<span class="badge bk-rd">${isVi ? '⚠️ Lỗi' : '⚠️ Error'}</span>`;
     return [
       idx + 1,
       statusHtml,
@@ -1811,14 +1818,15 @@ function renderBulkPreview(items) {
 }
 
 function confirmBulkImport() {
+  const isVi = currentLang === 'vi';
   const validItems = parsedBulkItems.filter(it => it.valid);
   if (validItems.length === 0) {
-    al('Không có sản phẩm hợp lệ để import!', 'er');
+    al(isVi ? 'Không có sản phẩm hợp lệ để import!' : 'No valid products to import!', 'er');
     return;
   }
 
   const btn = document.getElementById('btn-confirm-bulk');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang lưu vào hệ thống...'; }
+  if (btn) { btn.disabled = true; btn.textContent = isVi ? '⏳ Đang lưu vào hệ thống...' : '⏳ Saving to system...'; }
 
   // 1. Lưu vào Local Database
   validItems.forEach(it => {
@@ -1844,7 +1852,7 @@ function confirmBulkImport() {
   syncBulkToGoogleSheet(validItems);
 
   // 3. Cập nhật giao diện
-  al(`✅ Đã import thành công ${validItems.length} sản phẩm vào kho!`);
+  al(isVi ? `✅ Đã import thành công ${validItems.length} sản phẩm vào kho!` : `✅ Successfully imported ${validItems.length} products to inventory!`);
   document.getElementById('bulk-paste-area').value = '';
   parsedBulkItems = [];
   renderBulkPreview([]);
@@ -1873,9 +1881,12 @@ function syncBulkToGoogleSheet(items) {
 }
 
 function downloadCurrentNhapData() {
+  const isVi = currentLang === 'vi';
   const d = DB.g('nhap');
-  if (!d || d.length === 0) { al('Chưa có dữ liệu nhập hàng!', 'er'); return; }
-  const headers = ['Mã Nhập', 'Tên Sản Phẩm', 'Model', 'Serial', 'Danh Mục', 'Số Lượng', 'Giá Gốc (83%)', 'LN Cty (17%)', 'Giá Sàn (100%)', 'Giá Thực Bán', 'LN Chi Nhánh', 'NCC', 'Bảo Hành', 'Ngày Nhập', 'Ghi Chú'];
+  if (!d || d.length === 0) { al(isVi ? 'Chưa có dữ liệu nhập hàng!' : 'No intake data available!', 'er'); return; }
+  const headers = isVi ?
+    ['Mã Nhập', 'Tên Sản Phẩm', 'Model', 'Serial', 'Danh Mục', 'Số Lượng', 'Giá Gốc (83%)', 'LN Cty (17%)', 'Giá Sàn (100%)', 'Giá Thực Bán', 'LN Chi Nhánh', 'NCC', 'Bảo Hành', 'Ngày Nhập', 'Ghi Chú'] :
+    ['Intake ID', 'Product Name', 'Model', 'Serial Numbers', 'Category', 'Quantity', 'Base Cost (83%)', 'HO Profit (17%)', 'Floor Price', 'Selling Price', 'Branch Profit', 'Supplier', 'Warranty (Months)', 'Intake Date', 'Notes'];
   const rows = d.map(r => [
     'NHAP-' + r.id,
     `"${(r.ten||'').replace(/"/g, '""')}"`,
@@ -4959,7 +4970,14 @@ const DICT = {
     d_recent_nhap: '📦 Recent Intake',
     d_recent_ban: '🛒 Recent Sales',
     d_low_stock: '⚠️ Low Stock Alert',
-    d_open_tu: '🧑‍💼 Open Advances'
+    d_open_tu: '🧑‍💼 Open Advances',
+    nhap_bulk_h3: '📥 Bulk Import via .CSV File or Paste from Excel',
+    nhap_bulk_syntax: 'Standard syntax: Product Name | Model | Serial | Category | Qty | Cost (83%) | Sell Price | Supplier | Warranty | Notes',
+    nhap_bulk_guide: '<b>💡 Simple 3-step guide for staff:</b><br/><b>1.</b> Click <button class="btn b-gn b-xs" onclick="downloadNhapTemplate()">📥 Download CSV Template</button> to get the bilingual template.<br/><b>2.</b> Open in <b>Excel</b> or <b>Google Sheets</b>, enter products and save.<br/><b>3.</b> Upload using <button class="btn b-bl b-xs" onclick="document.getElementById(\'bulk-file-input\').click()">📁 Choose File</button> <b>OR</b> copy cells in Excel (<code>Ctrl+C</code>) and <b>paste (Ctrl+V)</b> below:',
+    bulk_paste_ph: 'Paste (Ctrl+V) tabular data from Excel / Google Sheets here...\nExample:\nUPS APC BX1200\tAPC-BX1200\tSN001, SN002\tUPS\t2\t830000\t1250000\tAPC VN\t24\tBrand new seal\nSolar Longi 450W\tLR4-72HPH\tLG01, LG02\tSolar Panel\t10\t1660000\t2200000\tLongi\t120\tGrade A',
+    btn_preview_bulk: '🔍 Analyze & Preview',
+    btn_clear_bulk: '✕ Clear Paste Area',
+    btn_confirm_bulk: '🚀 Confirm Bulk Import to Inventory (0 Items)'
   },
   vi: {
     nhap_title: '➕ Nhập Hàng & Phân Bổ Lợi Nhuận',
@@ -5013,7 +5031,14 @@ const DICT = {
     d_recent_nhap: '📦 Nhập gần đây',
     d_recent_ban: '🛒 Bán gần đây',
     d_low_stock: '⚠️ Cảnh báo tồn kho',
-    d_open_tu: '🧑‍💼 Tạm ứng đang mở'
+    d_open_tu: '🧑‍💼 Tạm ứng đang mở',
+    nhap_bulk_h3: '📥 Import Hàng Loạt Bằng File .CSV Hoặc Dán Từ Excel',
+    nhap_bulk_syntax: 'Cú pháp chuẩn: Tên SP | Model | Serial | Danh Mục | Số Lượng | Giá Gốc (83%) | Giá Bán | NCC | BH | Ghi Chú',
+    nhap_bulk_guide: '<b>💡 Hướng dẫn 3 bước đơn giản cho nhân viên:</b><br/><b>1.</b> Bấm nút <button class="btn b-gn b-xs" onclick="downloadNhapTemplate()">📥 Tải File Mẫu (.CSV)</button> để tải file template song ngữ.<br/><b>2.</b> Mở file bằng <b>Excel</b> hoặc <b>Google Sheets</b>, nhập danh sách sản phẩm rồi lưu file.<br/><b>3.</b> Chọn file tải lên bằng nút <button class="btn b-bl b-xs" onclick="document.getElementById(\'bulk-file-input\').click()">📁 Chọn File</button> <b>HOẶC</b> bôi đen bảng trong Excel bấm <code>Ctrl+C</code> rồi <b>dán (Ctrl+V)</b> vào khung bên dưới:',
+    bulk_paste_ph: 'Dán (Ctrl+V) bảng dữ liệu từ Excel / Google Sheets vào đây...\nVí dụ:\nUPS APC BX1200\tAPC-BX1200\tSN001, SN002\tUPS\t2\t830000\t1250000\tAPC VN\t24\tHàng nguyên seal\nPin Longi 450W\tLR4-72HPH\tLG01, LG02\tSolar Panel\t10\t1660000\t2200000\tLongi\t120\tLoại A',
+    btn_preview_bulk: '🔍 Phân Tích & Xem Trước (Preview)',
+    btn_clear_bulk: '✕ Xóa Khung Dán',
+    btn_confirm_bulk: '🚀 Xác Nhận Import Hàng Loạt Vào Kho (0 Món)'
   }
 };
 

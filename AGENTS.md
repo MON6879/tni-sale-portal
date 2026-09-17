@@ -1504,3 +1504,21 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 > 2. **Quy Trình Xóa Sạch Trigger Bỏ Không Dùng (Full Lifecycle Trigger Cleanup)**:
 >    - Khi người dùng yêu cầu bỏ một báo cáo định kỳ (như Báo Cáo Hình Ảnh Điểm Danh 4 Khung Giờ), **BẮT BUỘC** phải xóa sạch toàn bộ Cloud Triggers tương ứng trên Google Apps Script (`ScriptApp.deleteTrigger`).
 >    - Thân hàm cũ phải được vô hiệu hóa (`return;`) ngay lập tức và gọi lệnh xóa trigger phòng ngừa nếu trigger cũ vẫn còn kích hoạt trên Cloud.
+
+# 🌐 POST-MORTEM RULE — 17/09/2026: CHUẨN SONG NGỮ BỌC THÉP CHO FILE MẪU CSV & GIAO DIỆN NHẬP KHO HÀNG LOẠT (RULE PM-39)
+
+> ### Nguồn gốc: **Yêu Cầu Song Ngữ Biểu Mẫu Nhập Hàng CSV TNI Sale (17/09/2026)**
+> - **Root Cause**: File mẫu CSV tải về (`Mau_Nhap_Hang_TNI_Sale.csv`) trước đây chỉ có tiêu đề 100% tiếng Việt (`Tên Sản Phẩm`, `Giá Gốc Đầu Vào (83%)`, `Nhà Cung Cấp`, `Bảo Hành (tháng)`), khiến đội ngũ kỹ sư, quản lý và đối tác nước ngoài (Myanmar, Quốc tế) khi tải về mở trên Excel không thể hiểu các cột để điền dữ liệu. Đồng thời, toàn bộ khối hướng dẫn và nút bấm trong tab Nhập Hàng Loạt (Bulk Import) bị hardcode tiếng Việt, không tự động chuyển đổi khi chọn ngôn ngữ tiếng Anh.
+>
+> ### 🔴 RULE PM-39: 3 NGUYÊN TẮC BỌC THÉP CHO FILE MẪU CSV & NHẬP HÀNG LOẠT SONG NGỮ
+> 1. **Tiêu Đề Cột Trong File Mẫu CSV BẮT BUỘC Song Ngữ Anh - Việt (Bilingual CSV Column Headers)**:
+>    - Mọi file mẫu CSV xuất ra để người dùng tải về (nhập kho, đại lý, báo giá, nghiệm thu) BẮT BUỘC phải đặt tiêu đề cột dạng song ngữ: `Tên Cột Tiếng Việt / English Column Name` (hoặc ngược lại).
+>    - Chuẩn 10 cột cho biểu mẫu nhập hàng:
+>      `Tên Sản Phẩm / Product Name`, `Model / Mã SP (Item Code)`, `Serial Numbers (ngăn cách dấu phẩy / Comma-separated)`, `Danh Mục / Category`, `Số Lượng / Quantity`, `Giá Gốc Đầu Vào (83%) / Base Cost`, `Giá Thực Bán (để trống = lấy giá sàn 100%) / Selling Price`, `Nhà Cung Cấp / Supplier`, `Bảo Hành (tháng) / Warranty (Months)`, `Ghi Chú / Notes`.
+>    - TUYỆT ĐỐI CẤM để file mẫu chỉ có 1 thứ tiếng duy nhất gây rào cản ngôn ngữ cho nhân sự địa phương!
+> 2. **Dữ Liệu Mẫu Song Ngữ & Tên File Nhận Diện Kép (Bilingual Sample Data & File Naming)**:
+>    - Các dòng dữ liệu mẫu (sample rows) trong file CSV phải cung cấp diễn giải song ngữ cho phần ghi chú, chủng loại thiết bị và thông báo tải về.
+>    - Tên file tải về BẮT BUỘC chứa cả 2 định danh tiếng Anh và tiếng Việt: `Mau_Nhap_Hang_Goods_Intake_${td()}.csv` kèm mã định dạng UTF-8 BOM (`\uFEFF`) để khi mở bằng Microsoft Excel hiển thị nguyên vẹn tiếng Việt / Myanmar không lỗi font.
+> 3. **Bộ Phân Tích CSV Kháng Header Linh Hoạt & Đồng Bộ Giao Diện Song Ngữ (Resilient Parser & UI Parity)**:
+>    - Hàm phân tích nhập hàng (`parseBulkInput()`) BẮT BUỘC phải nhận diện linh hoạt dòng tiêu đề ở bất kỳ ngôn ngữ nào (`tên`, `product`, `model`, `số lượng`, `qty`, `name`, `serial`) để tự động bỏ qua dòng 1 khi người dùng dán hoặc tải file lên.
+>    - Toàn bộ giao diện Import hàng loạt (tiêu đề, cú pháp, hướng dẫn 3 bước, khung dán textarea, nút phân tích, thẻ thống kê nhanh, bảng preview và nút xác nhận) BẮT BUỘC phải đăng ký đầy đủ thuộc tính `data-lang` trong từ điển `DICT` để chuyển đổi đồng bộ 100% giữa EN và VI.
