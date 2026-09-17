@@ -847,7 +847,7 @@ Bot gửi tin nhắn xác nhận hoàn thành điểm danh về cho người dù
 - **Lịch tự động:**
   - `08:45 MMT` → `sendDailyAttendanceTemplates()` → gửi 8 template live status (Working / Take Leave / Take Leave Not report) + 1 tin tổng hợp kiểm tra thành viên chưa vào Group 10 và người cần xóa (tự xóa tin cũ trước khi gửi mới).
   - `09:00 MMT` → `sendDailyAttendanceReport()` → gửi báo cáo tổng hợp vào CONTROL + T1/T2/T3/T4
-- **Deployment `@90`:** `AKfycbzSz_ISXgertxBDadw4BBQX1JdMjW650_o4He0o4Lh-uf1hV5O3YaE-ohlqI2CHyAcVFg` (Chuẩn 100% tiếng Anh, 3-status system, trigger cố định 08:45 MMT, hỗ trợ action delete_templates_now & list_triggers).
+- **Deployment `@92`:** `AKfycbzSz_ISXgertxBDadw4BBQX1JdMjW650_o4He0o4Lh-uf1hV5O3YaE-ohlqI2CHyAcVFg` (Webhook qua Vercel Proxy https://tni-bot.vercel.app/api/attendance chống 302, fix nhận diện nhân viên qua Cột F Full name, fix duplicate check).
 
 ---
 

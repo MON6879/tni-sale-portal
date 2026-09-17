@@ -138,6 +138,7 @@ tbody tr:hover{background:#fafcff}
     <a onclick="go('banhang')" data-nav-a="banhang">🛒 Sales &amp; Dispatch</a>
     <a onclick="go('baogiaups')" data-nav-a="baogiaups">📄 Device Quote</a>
     <a onclick="go('baogiasolar')" data-nav-a="baogiasolar">☀️ Solar Quote <small style="color:#38bdf8;font-size:10.5px;margin-left:auto">VCM</small></a>
+    <a onclick="go('acceptance')" data-nav-a="acceptance">⚡ Handover &amp; Acceptance</a>
     <a onclick="go('daily')" data-nav-a="daily">🏪 Distribution</a>
     <a onclick="go('kygoi')" data-nav-a="kygoi">📋 Consignment</a>
 
@@ -645,6 +646,156 @@ tbody tr:hover{background:#fafcff}
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BÀN GIAO & NGHIỆM THU HIỆN TRƯỜNG (SITE HANDOVER & ACCEPTANCE) ══ -->
+<div class="sec" id="s-acceptance">
+  <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px 18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;border-bottom:1px solid #f1f5f9;padding-bottom:12px">
+      <div>
+        <div style="font-size:16px;font-weight:900;color:#059669;letter-spacing:0.5px">⚡ BÀN GIAO &amp; NGHIỆM THU HIỆN TRƯỜNG (SITE HANDOVER &amp; ACCEPTANCE)</div>
+        <div style="font-size:12px;color:#475569;margin-top:3px">Đo đạc điện áp 220V/kWp, kiểm soát mét dây Black/Red, Serial thiết bị, ký tay cảm ứng trên điện thoại &amp; chốt sổ cái 1 hàng</div>
+      </div>
+      <div style="text-align:right">
+        <span class="bk bk-gn" style="font-size:12px;padding:4px 10px;font-weight:700">MOBILE DIGITAL ACCEPTANCE</span>
+        <div style="font-size:11px;color:#64748b;margin-top:4px">Ký cảm ứng &bull; Tải ảnh tủ điện/pin &bull; Xuất PDF A4</div>
+      </div>
+    </div>
+
+    <!-- Thanh nạp nhanh từ Báo Giá Solar / Đơn Bán Hàng -->
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px;background:#f8fafc;padding:8px 12px;border-radius:6px;border:1px solid #cbd5e1">
+      <span style="font-size:12px;font-weight:600;color:#059669">⚡ Chọn dự án cần nghiệm thu:</span>
+      <select id="acc-source-select" style="padding:5px 9px;border:1px solid #94a3b8;border-radius:5px;font-size:12px;font-weight:600;max-width:320px" onchange="loadAccFromSource(this.value)">
+        <option value="">-- Nạp từ Báo Giá Solar / Đơn Bán Hàng --</option>
+      </select>
+      <button class="btn b-sm" style="background:#dcfce7;color:#15803d;font-weight:700" onclick="presetSampleAcceptance()">⭐ Mẫu Chuẩn: 16kW Kawthoung</button>
+      <button class="btn b-sm b-out" onclick="resetAccForm()">➕ Tạo Mới Trắng</button>
+    </div>
+  </div>
+
+  <div class="g2">
+    <!-- KHUNG NHẬP LIỆU NGHIỆM THU DI ĐỘNG -->
+    <div class="panel">
+      <div class="ph" style="background:#ecfdf5">
+        <h3 style="color:#047857">📋 Phiếu Nghiệm Thu &amp; Bàn Giao Hiện Trường</h3>
+      </div>
+      <div class="pb">
+        <!-- 1. THÔNG TIN DỰ ÁN & KHÁCH HÀNG -->
+        <b style="font-size:12.5px;color:#065f46">1. Thông Tin Công Trình &amp; Khách Hàng:</b>
+        <div class="fg" style="margin-top:6px">
+          <div class="f"><label>Mã Dự Án / Hợp Đồng *</label><input id="acc-code" value="VCM-26-05" placeholder="VD: VCM-26-05" style="font-weight:bold;color:#047857"/></div>
+          <div class="f"><label>Tên Khách Hàng (Mr/Ms) *</label><input id="acc-kh" value="Kawthoung Hotel &amp; Resort" placeholder="Tên khách hàng"/></div>
+          <div class="f"><label>Số Điện Thoại</label><input id="acc-dt" value="0965 1900 009" placeholder="09xxxxxxx"/></div>
+          <div class="f"><label>Địa Chỉ Công Trình</label><input id="acc-dc" value="Kawthoung, Tanintharyi Region" placeholder="Địa chỉ lắp đặt..."/></div>
+          <div class="f"><label>Ngày Nghiệm Thu</label><input id="acc-date" type="date"/></div>
+          <div class="f"><label>Kỹ Sư Trưởng Phụ Trách</label><input id="acc-eng" value="Zin Ko Ko / Technical Team" placeholder="Kỹ sư thi công"/></div>
+        </div>
+
+        <!-- 2. ĐO ĐẠC THÔNG SỐ KỸ THUẬT HIỆN TRƯỜNG -->
+        <b style="font-size:12.5px;color:#065f46;display:block;margin-top:14px;border-top:1px dashed #cbd5e1;padding-top:10px">
+          2. Đo Đạc Thông Số Bàn Giao Kỹ Thuật (Field Measurements):
+        </b>
+        <div class="fg" style="margin-top:6px">
+          <div class="f"><label>⚡ Điện Áp Đo Bàn Giao (V) *</label><input id="acc-volt" value="220" placeholder="VD: 220 V / 380 V" style="font-weight:700;color:#1e40af"/></div>
+          <div class="f"><label>☀️ Công Suất Đỉnh Đo Đạc (kWp) *</label><input id="acc-kwp" value="15.8" placeholder="VD: 15.8 kWp" style="font-weight:700;color:#d97706"/></div>
+          <div class="f"><label>🔄 Tần Số Lưới (Hz)</label><input id="acc-freq" value="50" placeholder="50 Hz"/></div>
+          <div class="f"><label>🔋 Mức Sạc Pin Lưu Trữ (SOC %)</label><input id="acc-soc" value="98%" placeholder="VD: 98%"/></div>
+          <div class="f"><label>🛡️ Điện Trở Tiếp Địa (Ω)</label><input id="acc-earth" value="3.8 Ω" placeholder="VD: < 4.0 Ω"/></div>
+          <div class="f"><label>Trạng Thái Lưới / Tải</label><select id="acc-grid-status"><option>Bình thường - Đạt chuẩn 100%</option><option>Điện lưới chập chờn - Đã chạy Hybrid</option><option>Mất điện lưới - Đang chạy Backup</option></select></div>
+        </div>
+
+        <!-- 3. CẬP NHẬT SỐ LƯỢNG VẬT TƯ THỰC DÙNG & SERIAL -->
+        <b style="font-size:12.5px;color:#065f46;display:block;margin-top:14px;border-top:1px dashed #cbd5e1;padding-top:10px">
+          3. Số Lượng Vật Tư Thực Tế Sử Dụng &amp; Serial Number:
+        </b>
+        <div class="fg" style="margin-top:6px">
+          <div class="f"><label>🔌 Số mét Dây DC Đen (Black Cable)</label><input id="acc-cable-blk" value="45 m" placeholder="VD: 45 m" style="font-weight:700;background:#f8fafc"/></div>
+          <div class="f"><label>🔴 Số mét Dây DC Đỏ (Red Cable)</label><input id="acc-cable-red" value="45 m" placeholder="VD: 45 m" style="font-weight:700;background:#fef2f2;color:#b91c1c"/></div>
+          <div class="f"><label>⚡ Số mét Dây AC (AC Cable)</label><input id="acc-cable-ac" value="25 m" placeholder="VD: 25 m"/></div>
+          <div class="f"><label>🔗 Số Cặp Đầu Nối MC4 Thực Dùng</label><input id="acc-mc4" value="8 cặp" placeholder="VD: 8 cặp"/></div>
+          <div class="f" style="grid-column:1/-1"><label>🏷️ Serial Number Inverter *</label><input id="acc-sn-inv" value="DEYE-15K-20260501" placeholder="Nhập hoặc quét mã SN Inverter..." style="font-weight:700;color:#1e40af"/></div>
+          <div class="f" style="grid-column:1/-1"><label>🔋 Serial Number Pin Lưu Trữ (Battery)</label><input id="acc-sn-bat" value="CATL-320AH-88912" placeholder="Nhập mã SN Pin..."/></div>
+          <div class="f" style="grid-column:1/-1"><label>☀️ Danh Sách / Dải Serial Tấm Pin Solar</label><input id="acc-sn-pv" value="LR5-72HBD-640M (24 tấm: SN01 - SN24)" placeholder="Dải serial 24 tấm pin..."/></div>
+        </div>
+
+        <!-- 4. KHUNG KÝ TAY CẢM ỨNG TRÊN ĐIỆN THOẠI -->
+        <b style="font-size:12.5px;color:#065f46;display:block;margin-top:14px;border-top:1px dashed #cbd5e1;padding-top:10px">
+          4. Khách Hàng Ký Nghiệm Thu Trực Tiếp Trên Màn Hình (Digital Signature):
+        </b>
+        <div style="margin-top:6px;background:#f8fafc;padding:10px;border-radius:8px;border:1px solid #cbd5e1">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-size:11.5px;color:#475569">✍️ Dùng ngón tay ký vào khung dưới đây:</span>
+            <div>
+              <button class="btn b-out b-xs" onclick="clearAccSignature()">🗑️ Ký Lại</button>
+              <button class="btn b-bl b-xs" onclick="lockAccSignature()">🔒 Khóa Chữ Ký</button>
+            </div>
+          </div>
+          <div style="border:2px dashed #0284c7;border-radius:6px;background:#fff;overflow:hidden;position:relative">
+            <canvas id="acc-sig-canvas" width="480" height="150" style="display:block;width:100%;height:150px;touch-action:none;cursor:crosshair"></canvas>
+            <div id="acc-sig-watermark" style="position:absolute;bottom:6px;right:10px;font-size:11px;color:#94a3b8;pointer-events:none">TNI DIGITAL SIGNATURE PAD</div>
+          </div>
+          <div id="acc-sig-status" style="margin-top:4px;font-size:11.5px;color:#64748b;text-align:right">Trạng thái: <i>Chưa ký</i></div>
+        </div>
+
+        <!-- 5. TẢI ẢNH HIỆN TRƯỜNG LÊN WEB -->
+        <b style="font-size:12.5px;color:#065f46;display:block;margin-top:14px;border-top:1px dashed #cbd5e1;padding-top:10px">
+          5. Hình Ảnh Hiện Trường Nghiệm Thu (Tủ điện, Giàn pin, Đồng hồ 220V):
+        </b>
+        <div style="margin-top:6px;background:#f8fafc;padding:10px;border-radius:8px;border:1px solid #cbd5e1">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input type="file" id="acc-photo-input" accept="image/*" multiple onchange="handleAccPhotoUpload(this)" style="font-size:12px"/>
+            <button class="btn b-out b-xs" onclick="clearAccPhotos()">✕ Xóa Hết Ảnh</button>
+          </div>
+          <div id="acc-photos-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+            <!-- Thumbnail ảnh tải lên -->
+          </div>
+          <div style="margin-top:8px">
+            <label style="font-size:11.5px;color:#64748b">Hoặc link Google Drive lưu trữ ảnh:</label>
+            <input id="acc-drive-link" placeholder="https://drive.google.com/drive/folders/..." style="width:100%;padding:4px 6px;border:1px solid var(--bd);border-radius:4px;font-size:12px;margin-top:2px"/>
+          </div>
+        </div>
+
+        <!-- 6. BÓC TÁCH TÀI CHÍNH 1 HÀNG KHÉP KÍN -->
+        <b style="font-size:12.5px;color:#065f46;display:block;margin-top:14px;border-top:1px dashed #cbd5e1;padding-top:10px">
+          6. Bóc Tách Tài Chính Toàn Diện Từ Báo Giá Đến Lợi Nhuận Chi Nhánh:
+        </b>
+        <div class="fg" style="margin-top:6px">
+          <div class="f"><label>💰 Doanh Thu Hợp Đồng (100%) (Ks) *</label><input id="acc-rev" type="number" value="39684760" oninput="calcAccFinancials()"/></div>
+          <div class="f"><label>🏦 Tổng Giá Gốc Vốn (83%) (Ks) *</label><input id="acc-cost" type="number" value="32938351" oninput="calcAccFinancials()"/></div>
+          <div class="f"><label>💵 Thực Thu Từ Khách (Ks) *</label><input id="acc-paid" type="number" value="35716284" oninput="calcAccFinancials()"/></div>
+          <div class="f"><label>⏳ Còn Nợ / Chưa Thu (Ks)</label><input id="acc-debt" type="number" value="3968476" readonly style="background:#f1f5f9"/></div>
+        </div>
+
+        <!-- LIVE RESULT CARDS -->
+        <div style="margin-top:12px;padding:12px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px">
+          <div><span style="font-size:11px;color:#1e40af">🏢 Phải Nộp Cty (% Cty)</span><div id="accc-cty" style="font-size:15px;font-weight:700;color:#1e40af">6,746,409 Ks</div></div>
+          <div><span style="font-size:11px;color:#059669">🏪 Thực Còn Lại Chi Nhánh</span><div id="accc-branch-net" style="font-size:16px;font-weight:900;color:#059669">0 Ks</div></div>
+        </div>
+
+        <!-- NÚT THAO TÁC -->
+        <div class="fa" style="margin-top:14px;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn b-gn" onclick="saveAcceptanceRecord(false)" style="font-weight:700">💾 Lưu Biên Bản Nghiệm Thu</button>
+            <button class="btn b-bl" onclick="saveAcceptanceRecord(true)" style="font-weight:700">🖨️ In Biên Bản PDF (A4)</button>
+          </div>
+          <button class="btn b-or" onclick="exportAcceptancesCSV()">⬇ Xuất CSV Sổ Cái</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SỔ CÁI NGHIỆM THU & QUYẾT TOÁN 1 HÀNG KHÉP KÍN -->
+    <div class="panel">
+      <div class="ph" style="background:#f8fafc">
+        <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
+          <h3 style="color:#1e293b">📑 Sổ Cái Nghiệm Thu &amp; Quyết Toán 1 Hàng Khép Kín</h3>
+          <span id="acc-count-badge" style="font-size:12px;color:#64748b">0 công trình</span>
+        </div>
+      </div>
+      <div class="pb tw" id="t-acceptances-table" style="max-height:680px;overflow-y:auto">
+        <!-- Bảng hiển thị 1 hàng khép kín từ báo giá đến nghiệm thu -->
       </div>
     </div>
   </div>
@@ -1290,7 +1441,7 @@ function v(id){return document.getElementById(id)?.value?.trim()||'';}
 // NAV
 // ═══════════════════════════════════════════════════
 const ptitles={dashboard:'📊 Dashboard',nhap:'📦 Goods Intake',tonkho:'🗄️ Inventory',tamung:'🧑‍💼 Stock Advance',
-  banhang:'🛒 Sales Orders',baogiaups:'📄 Device Quotation',baogiasolar:'☀️ Solar Quotation',
+  banhang:'🛒 Sales Orders',baogiaups:'📄 Device Quotation',baogiasolar:'☀️ Solar Quotation',acceptance:'⚡ Handover & Acceptance',
   daily:'🏪 Distribution & Dealers',kygoi:'📋 Consignment',crm:'👥 CRM & Survey',
   quangcao:'📢 Ads Campaigns',leads:'🎯 Leads & Conversion',
   loinhuan:'💰 Financial & Cashflow',statement:'📑 VCM Payment Statement',baocao:'📈 Reports',
@@ -1301,6 +1452,7 @@ const renders={
   banhang:()=>{popSP(['b-sp']);rBan();},
   baogiaups:()=>{if(!document.getElementById('qu-items').children.length)addQRow('qu-items');rQuUPS();},
   baogiasolar:()=>{if(!document.getElementById('qs-items').children.length)addQRow('qs-items');rQuSolar();},
+  acceptance:()=>{rAcceptances();populateAccSources();calcAccFinancials();initAccCanvas();},
   daily:()=>{rDL();popSP(['pp-sp']);popDL();},
   kygoi:()=>{popSP(['kg-sp','tu-sp']);rKG();},
   crm:()=>{rKH();rKS();rLK();},
@@ -4013,6 +4165,683 @@ function exportCurrentStatementCSV() {
   exportStatementCSV(currentEditingStatementId);
 }
 
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ⚡ PHÂN HỆ BÀN GIAO & NGHIỆM THU HIỆN TRƯỜNG (SITE HANDOVER & ACCEPTANCE)
+// ✍️ Canvas ký tay cảm ứng trên điện thoại & Sổ cái 1 hàng khép kín
+// ═══════════════════════════════════════════════════════════════════════════════
+let currentEditingAccId = null;
+let accUploadedPhotos = [];
+let accSignatureDataUrl = '';
+let accCanvasInited = false;
+let accIsDrawing = false;
+
+function initAccCanvas() {
+  const canvas = document.getElementById('acc-sig-canvas');
+  if (!canvas || accCanvasInited) return;
+  accCanvasInited = true;
+
+  const ctx = canvas.getContext('2d');
+  ctx.strokeStyle = '#0284c7';
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+      x: (clientX - rect.left) * (canvas.width / rect.width),
+      y: (clientY - rect.top) * (canvas.height / rect.height)
+    };
+  }
+
+  function start(e) {
+    accIsDrawing = true;
+    const p = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+    if (e.type === 'touchstart') e.preventDefault();
+  }
+
+  function move(e) {
+    if (!accIsDrawing) return;
+    const p = getPos(e);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    const st = document.getElementById('acc-sig-status');
+    if (st) st.innerHTML = '<span style="color:#059669;font-weight:bold">✍️ Đang ký...</span>';
+    if (e.type === 'touchmove') e.preventDefault();
+  }
+
+  function end() {
+    if (accIsDrawing) {
+      accIsDrawing = false;
+      accSignatureDataUrl = canvas.toDataURL('image/png');
+      const st = document.getElementById('acc-sig-status');
+      if (st) st.innerHTML = '<span style="color:#059669;font-weight:bold">✅ Đã ký tay</span>';
+    }
+  }
+
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  canvas.addEventListener('mouseup', end);
+  canvas.addEventListener('mouseleave', end);
+
+  canvas.addEventListener('touchstart', start, { passive: false });
+  canvas.addEventListener('touchmove', move, { passive: false });
+  canvas.addEventListener('touchend', end);
+}
+
+function clearAccSignature() {
+  const canvas = document.getElementById('acc-sig-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  accSignatureDataUrl = '';
+  const st = document.getElementById('acc-sig-status');
+  if (st) st.innerHTML = 'Trạng thái: <i>Chưa ký</i>';
+}
+
+function lockAccSignature() {
+  const canvas = document.getElementById('acc-sig-canvas');
+  if (!canvas) return;
+  accSignatureDataUrl = canvas.toDataURL('image/png');
+  al('🔒 Đã khóa chữ ký điện tử của khách hàng!');
+  const st = document.getElementById('acc-sig-status');
+  if (st) st.innerHTML = '<span style="color:#059669;font-weight:bold">🔒 Chữ ký đã khóa an toàn</span>';
+}
+
+function handleAccPhotoUpload(input) {
+  if (!input || !input.files) return;
+  const files = Array.from(input.files);
+  const container = document.getElementById('acc-photos-preview');
+
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const dataUrl = e.target.result;
+      accUploadedPhotos.push(dataUrl);
+
+      if (container) {
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'position:relative;width:80px;height:80px;border-radius:6px;overflow:hidden;border:1px solid #cbd5e1';
+        wrap.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover"/>
+          <button style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;border:none;border-radius:99px;width:18px;height:18px;font-size:10px;cursor:pointer" onclick="this.parentElement.remove();accUploadedPhotos=accUploadedPhotos.filter(u=>u!=='${dataUrl}')">&times;</button>`;
+        container.appendChild(wrap);
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function clearAccPhotos() {
+  accUploadedPhotos = [];
+  const container = document.getElementById('acc-photos-preview');
+  if (container) container.innerHTML = '';
+  const inp = document.getElementById('acc-photo-input');
+  if (inp) inp.value = '';
+}
+
+function calcAccFinancials() {
+  const rev = Number(v('acc-rev')) || 0;
+  const cost = Number(v('acc-cost')) || Math.round(rev * 0.83);
+  const paid = Number(v('acc-paid')) || 0;
+  const debt = Math.max(0, rev - paid);
+
+  const rate = Number(v('cfg-cty-rate') || 17);
+  const cty = cost > 0 && rate < 100 ? Math.round(cost / (100 - rate) * rate) : 0;
+  const branchNet = paid - cost - cty;
+
+  const debtEl = document.getElementById('acc-debt');
+  const ctyEl = document.getElementById('accc-cty');
+  const branchEl = document.getElementById('accc-branch-net');
+
+  if (debtEl) debtEl.value = debt;
+  if (ctyEl) ctyEl.textContent = fn(cty) + ' Ks';
+  if (branchEl) {
+    branchEl.innerHTML = `<span style="color:${branchNet >= 0 ? '#059669' : '#dc2626'}">${fn(branchNet)} Ks</span>`;
+  }
+}
+
+function populateAccSources() {
+  const sel = document.getElementById('acc-source-select');
+  if (!sel) return;
+  const quotes = DB.g('quotesolar') || [];
+  const sales = DB.g('ban') || [];
+
+  sel.innerHTML = '<option value="">-- Nạp từ Báo Giá Solar / Đơn Bán Hàng --</option>';
+  quotes.forEach(q => {
+    const opt = document.createElement('option');
+    opt.value = 'quote_' + q.id;
+    opt.textContent = `☀️ [Solar Quote] ${q.code || 'VCM'} - ${q.kh} (${q.cs || 6}kWp - ${fn(q.total)} Kyats)`;
+    sel.appendChild(opt);
+  });
+  sales.forEach(b => {
+    const opt = document.createElement('option');
+    opt.value = 'sale_' + b.id;
+    opt.textContent = `🛒 [Sales Order] #${b.id} - ${b.kh} (${fn(b.totalAmount || b.gia*b.sl)} Ks)`;
+    sel.appendChild(opt);
+  });
+}
+
+function loadAccFromSource(val) {
+  if (!val) return;
+  const [type, idStr] = val.split('_');
+  const id = Number(idStr);
+
+  if (type === 'quote') {
+    const q = (DB.g('quotesolar') || []).find(item => item.id == id);
+    if (!q) return;
+    document.getElementById('acc-code').value = q.code || 'VCM-26-05';
+    document.getElementById('acc-kh').value = q.kh || '';
+    document.getElementById('acc-dt').value = q.dt || '';
+    document.getElementById('acc-dc').value = q.dc || '';
+    document.getElementById('acc-kwp').value = q.cs || '15.8';
+    const total = Number(q.total) || 0;
+    document.getElementById('acc-rev').value = total;
+    document.getElementById('acc-cost').value = Math.round(total * 0.83);
+    document.getElementById('acc-paid').value = Math.round(total * 0.90);
+    calcAccFinancials();
+    al('📋 Đã nạp dữ liệu từ Báo Giá: ' + (q.code || ''));
+  } else if (type === 'sale') {
+    const b = (DB.g('ban') || []).find(item => item.id == id);
+    if (!b) return;
+    document.getElementById('acc-code').value = 'SO-' + b.id;
+    document.getElementById('acc-kh').value = b.kh || '';
+    document.getElementById('acc-dt').value = b.dt || '';
+    const total = Number(b.totalAmount || b.gia * b.sl);
+    document.getElementById('acc-rev').value = total;
+    document.getElementById('acc-cost').value = Number(b.cost83 || Math.round(total * 0.83));
+    document.getElementById('acc-paid').value = Number(b.deposit || total);
+    calcAccFinancials();
+    al('📋 Đã nạp dữ liệu từ Đơn Bán: #' + b.id);
+  }
+}
+
+function presetSampleAcceptance() {
+  document.getElementById('acc-code').value = "VCM-26-05";
+  document.getElementById('acc-kh').value = "Kawthoung Hotel & Resort";
+  document.getElementById('acc-dt').value = "0965 1900 009";
+  document.getElementById('acc-dc').value = "Kawthoung, Tanintharyi Region, Myanmar";
+  document.getElementById('acc-date').value = td();
+  document.getElementById('acc-eng').value = "Zin Ko Ko / Technical Team";
+  document.getElementById('acc-volt').value = "220";
+  document.getElementById('acc-kwp').value = "15.8";
+  document.getElementById('acc-freq').value = "50";
+  document.getElementById('acc-soc').value = "98%";
+  document.getElementById('acc-earth').value = "3.8 Ω";
+  document.getElementById('acc-cable-blk').value = "45 m";
+  document.getElementById('acc-cable-red').value = "45 m";
+  document.getElementById('acc-cable-ac').value = "25 m";
+  document.getElementById('acc-mc4').value = "8 cặp";
+  document.getElementById('acc-sn-inv').value = "DEYE-15K-20260501";
+  document.getElementById('acc-sn-bat').value = "CATL-320AH-88912";
+  document.getElementById('acc-sn-pv').value = "LR5-72HBD-640M (24 tấm: SN01 - SN24)";
+  document.getElementById('acc-rev').value = 39684760;
+  document.getElementById('acc-cost').value = 32938351;
+  document.getElementById('acc-paid').value = 35716284;
+  calcAccFinancials();
+  al('⭐ Đã tải mẫu chuẩn 16kW Kawthoung!');
+}
+
+function resetAccForm() {
+  currentEditingAccId = null;
+  document.getElementById('acc-code').value = 'VCM-' + UtilitiesDatePrefix() + '-01';
+  document.getElementById('acc-kh').value = '';
+  document.getElementById('acc-dt').value = '';
+  document.getElementById('acc-dc').value = '';
+  document.getElementById('acc-date').value = td();
+  document.getElementById('acc-volt').value = '220';
+  document.getElementById('acc-kwp').value = '6.0';
+  document.getElementById('acc-freq').value = '50';
+  document.getElementById('acc-soc').value = '100%';
+  document.getElementById('acc-earth').value = '< 4.0 Ω';
+  document.getElementById('acc-cable-blk').value = '0 m';
+  document.getElementById('acc-cable-red').value = '0 m';
+  document.getElementById('acc-cable-ac').value = '0 m';
+  document.getElementById('acc-mc4').value = '0 cặp';
+  document.getElementById('acc-sn-inv').value = '';
+  document.getElementById('acc-sn-bat').value = '';
+  document.getElementById('acc-sn-pv').value = '';
+  document.getElementById('acc-rev').value = 0;
+  document.getElementById('acc-cost').value = 0;
+  document.getElementById('acc-paid').value = 0;
+  clearAccSignature();
+  clearAccPhotos();
+  calcAccFinancials();
+}
+
+function saveAcceptanceRecord(andPrint) {
+  const code = (v('acc-code') || '').trim();
+  const kh = (v('acc-kh') || '').trim();
+  if (!code || !kh) {
+    al('Vui lòng nhập Mã Dự Án và Tên Khách Hàng!', 'er');
+    return;
+  }
+
+  const canvas = document.getElementById('acc-sig-canvas');
+  if (canvas && !accSignatureDataUrl) {
+    // try to get from canvas if drawn
+    accSignatureDataUrl = canvas.toDataURL('image/png');
+  }
+
+  const rev = Number(v('acc-rev')) || 0;
+  const cost = Number(v('acc-cost')) || Math.round(rev * 0.83);
+  const paid = Number(v('acc-paid')) || 0;
+  const debt = Math.max(0, rev - paid);
+  const rate = Number(v('cfg-cty-rate') || 17);
+  const cty = cost > 0 && rate < 100 ? Math.round(cost / (100 - rate) * rate) : 0;
+  const branchNet = paid - cost - cty;
+
+  const accObj = {
+    code: code,
+    kh: kh,
+    dt: v('acc-dt') || '',
+    dc: v('acc-dc') || '',
+    dateStr: v('acc-date') || td(),
+    eng: v('acc-eng') || 'Technical Team',
+    volt: v('acc-volt') || '220',
+    kwp: v('acc-kwp') || '0',
+    freq: v('acc-freq') || '50',
+    soc: v('acc-soc') || '100%',
+    earth: v('acc-earth') || '< 4.0 Ω',
+    gridStatus: v('acc-grid-status') || 'Bình thường',
+    cableBlk: v('acc-cable-blk') || '0 m',
+    cableRed: v('acc-cable-red') || '0 m',
+    cableAc: v('acc-cable-ac') || '0 m',
+    mc4: v('acc-mc4') || '0 cặp',
+    snInv: v('acc-sn-inv') || '-',
+    snBat: v('acc-sn-bat') || '-',
+    snPv: v('acc-sn-pv') || '-',
+    signature: accSignatureDataUrl,
+    photos: [...accUploadedPhotos],
+    driveUrl: v('acc-drive-link') || '',
+    rev: rev,
+    cost: cost,
+    paid: paid,
+    debt: debt,
+    cty: cty,
+    branchNet: branchNet,
+    updatedAt: new Date().toISOString()
+  };
+
+  let list = DB.g('acceptances') || [];
+  let targetId = currentEditingAccId;
+  let isUpdate = false;
+
+  if (targetId) {
+    list = list.map(item => item.id == targetId ? { ...accObj, id: targetId } : item);
+    isUpdate = true;
+  } else {
+    targetId = Date.now();
+    accObj.id = targetId;
+    currentEditingAccId = targetId;
+    list.unshift(accObj);
+  }
+
+  DB.s('acceptances', list);
+  al(`✅ Đã ${isUpdate ? 'cập nhật' : 'lưu'} Biên Bản Nghiệm Thu ${code}!`);
+  rAcceptances();
+
+  if (andPrint) {
+    printAcceptanceDoc(targetId);
+  }
+}
+
+function rAcceptances() {
+  const list = DB.g('acceptances') || [];
+  const badge = document.getElementById('acc-count-badge');
+  if (badge) badge.textContent = list.length + ' công trình';
+
+  const container = document.getElementById('t-acceptances-table');
+  if (!container) return;
+
+  const isVi = currentLang === 'vi';
+  const headers = isVi ?
+    ['#', 'Mã Dự Án', 'Khách Hàng', 'Đo Đạc (V/kWp)', 'Vật Tư & Serial', 'Doanh Thu HĐ', 'Vốn 83%', 'Nộp Cty 17%', 'Thực Thu', 'LN Chi Nhánh Còn Lại', 'Ký / Ảnh', 'Thao Tác'] :
+    ['#', 'Project Code', 'Customer', 'Measurements', 'Cables & Serial', 'Revenue', 'Cost 83%', 'HO 17%', 'Collected', 'Branch Retained', 'Sign/Photo', 'Actions'];
+
+  if (list.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:24px;color:#94a3b8">${isVi ? 'Chưa có biên bản nghiệm thu nào. Bấm nút "⭐ Mẫu Chuẩn" để nạp công trình mẫu!' : 'No acceptance records yet. Click sample preset to load!'}</div>`;
+    return;
+  }
+
+  container.innerHTML = tbl(headers, list.map((r, i) => {
+    const hasSign = r.signature ? '<span class="bk bk-gn" title="Đã có chữ ký tay">✍️ Đã ký</span>' : '<span style="color:#94a3b8">Chưa ký</span>';
+    const hasPhoto = (r.photos && r.photos.length) || r.driveUrl ? `<span class="bk bk-bl" title="${r.photos ? r.photos.length : 0} ảnh">📷 ${r.photos ? r.photos.length : 0}</span>` : '';
+
+    return [
+      i + 1,
+      `<b>${r.code}</b>`,
+      `<b>${r.kh}</b><br/><small style="color:#64748b">${r.dc || '-'}</small>`,
+      `<b>${r.volt}V &bull; ${r.kwp}kWp</b><br/><small style="color:#475569">SOC:${r.soc}|${r.earth}</small>`,
+      `<small>🔴${r.cableRed}|🔌${r.cableBlk}<br/>SN:${r.snInv}</small>`,
+      `<b>${fn(r.rev)}</b>`,
+      `<span style="color:#475569">${fn(r.cost)}</span>`,
+      `<span style="color:#1e40af">${fn(r.cty)}</span>`,
+      `<span style="color:#16a34a;font-weight:700">${fn(r.paid)}</span>`,
+      `<b style="color:${r.branchNet >= 0 ? '#059669' : '#dc2626'}">${fn(r.branchNet)} Ks</b>`,
+      `${hasSign} ${hasPhoto}`,
+      `<div style="white-space:nowrap">
+        <button class="btn b-xs b-bl" onclick="loadSelectedAcceptance(${r.id})" title="Xem & Sửa">✏️</button>
+        <button class="btn b-xs b-gn" onclick="printAcceptanceDoc(${r.id})" title="In Biên Bản PDF">🖨️ In</button>
+        <button class="btn b-xs b-rd" onclick="delAcceptance(${r.id})" title="Xóa">🗑</button>
+      </div>`
+    ];
+  }));
+}
+
+function loadSelectedAcceptance(id) {
+  const list = DB.g('acceptances') || [];
+  const r = list.find(item => item.id == id);
+  if (!r) return;
+
+  currentEditingAccId = r.id;
+  document.getElementById('acc-code').value = r.code || '';
+  document.getElementById('acc-kh').value = r.kh || '';
+  document.getElementById('acc-dt').value = r.dt || '';
+  document.getElementById('acc-dc').value = r.dc || '';
+  document.getElementById('acc-date').value = r.dateStr || td();
+  document.getElementById('acc-eng').value = r.eng || '';
+  document.getElementById('acc-volt').value = r.volt || '220';
+  document.getElementById('acc-kwp').value = r.kwp || '0';
+  document.getElementById('acc-freq').value = r.freq || '50';
+  document.getElementById('acc-soc').value = r.soc || '100%';
+  document.getElementById('acc-earth').value = r.earth || '< 4.0 Ω';
+  document.getElementById('acc-cable-blk').value = r.cableBlk || '';
+  document.getElementById('acc-cable-red').value = r.cableRed || '';
+  document.getElementById('acc-cable-ac').value = r.cableAc || '';
+  document.getElementById('acc-mc4').value = r.mc4 || '';
+  document.getElementById('acc-sn-inv').value = r.snInv || '';
+  document.getElementById('acc-sn-bat').value = r.snBat || '';
+  document.getElementById('acc-sn-pv').value = r.snPv || '';
+  document.getElementById('acc-rev').value = r.rev || 0;
+  document.getElementById('acc-cost').value = r.cost || 0;
+  document.getElementById('acc-paid').value = r.paid || 0;
+  document.getElementById('acc-drive-link').value = r.driveUrl || '';
+
+  accUploadedPhotos = [...(r.photos || [])];
+  const container = document.getElementById('acc-photos-preview');
+  if (container) {
+    container.innerHTML = accUploadedPhotos.map(url => `
+      <div style="position:relative;width:80px;height:80px;border-radius:6px;overflow:hidden;border:1px solid #cbd5e1">
+        <img src="${url}" style="width:100%;height:100%;object-fit:cover"/>
+      </div>
+    `).join('');
+  }
+
+  // Chữ ký
+  accSignatureDataUrl = r.signature || '';
+  const canvas = document.getElementById('acc-sig-canvas');
+  if (canvas && accSignatureDataUrl) {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const img = new Image();
+    img.onload = () => ctx.drawImage(img, 0, 0);
+    img.src = accSignatureDataUrl;
+    const st = document.getElementById('acc-sig-status');
+    if (st) st.innerHTML = '<span style="color:#059669;font-weight:bold">🔒 Chữ ký đã lưu trong hồ sơ</span>';
+  }
+
+  calcAccFinancials();
+  al(`📋 Đã mở hồ sơ nghiệm thu "${r.code} - ${r.kh}"!`);
+}
+
+function delAcceptance(id) {
+  if (!confirm('Bạn có chắc muốn xóa hồ sơ nghiệm thu này?')) return;
+  let list = DB.g('acceptances') || [];
+  list = list.filter(item => item.id != id);
+  DB.s('acceptances', list);
+  if (currentEditingAccId == id) resetAccForm();
+  rAcceptances();
+  al('🗑️ Đã xóa hồ sơ nghiệm thu!');
+}
+
+function printAcceptanceDoc(id) {
+  const list = DB.g('acceptances') || [];
+  const r = (id ? list.find(item => item.id == id) : null) || {
+    code: v('acc-code') || 'VCM-26-05',
+    kh: v('acc-kh') || 'Kawthoung Hotel & Resort',
+    dt: v('acc-dt') || '0965 1900 009',
+    dc: v('acc-dc') || 'Kawthoung, Tanintharyi Region',
+    dateStr: v('acc-date') || td(),
+    eng: v('acc-eng') || 'Zin Ko Ko / Technical Team',
+    volt: v('acc-volt') || '220',
+    kwp: v('acc-kwp') || '15.8',
+    freq: v('acc-freq') || '50',
+    soc: v('acc-soc') || '98%',
+    earth: v('acc-earth') || '3.8 Ω',
+    gridStatus: v('acc-grid-status') || 'Bình thường - Đạt chuẩn 100%',
+    cableBlk: v('acc-cable-blk') || '45 m',
+    cableRed: v('acc-cable-red') || '45 m',
+    cableAc: v('acc-cable-ac') || '25 m',
+    mc4: v('acc-mc4') || '8 cặp',
+    snInv: v('acc-sn-inv') || 'DEYE-15K-20260501',
+    snBat: v('acc-sn-bat') || 'CATL-320AH-88912',
+    snPv: v('acc-sn-pv') || 'LR5-72HBD-640M (24 tấm: SN01 - SN24)',
+    rev: Number(v('acc-rev')) || 39684760,
+    cost: Number(v('acc-cost')) || 32938351,
+    paid: Number(v('acc-paid')) || 35716284,
+    debt: Number(v('acc-debt')) || 3968476,
+    cty: Number(document.getElementById('accc-cty')?.textContent?.replace(/[^0-9]/g,'') || 6746409),
+    branchNet: Number(document.getElementById('accc-branch-net')?.textContent?.replace(/[^0-9]/g,'') || 0),
+    signature: accSignatureDataUrl,
+    photos: [...accUploadedPhotos],
+    driveUrl: v('acc-drive-link') || ''
+  };
+
+  const photosHtml = (r.photos && r.photos.length) ? `
+    <div style="margin-top:14px">
+      <b style="font-size:11.5pt;color:#1e3a8a">4. HÌNH ẢNH HIỆN TRƯỜNG NGHIỆM THU (FIELD SITE PHOTOS):</b>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px">
+        ${r.photos.map(url => `<div style="width:130px;height:95px;border:1px solid #cbd5e1;border-radius:4px;overflow:hidden"><img src="${url}" style="width:100%;height:100%;object-fit:cover"/></div>`).join('')}
+      </div>
+    </div>` : '';
+
+  const sigImgHtml = r.signature ? `<img src="${r.signature}" style="max-height:65px;max-width:180px;display:block;margin:0 auto"/>` : '<div style="height:60px"></div>';
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Acceptance_Certificate_${r.code}_${r.kh}</title>
+  <style>
+    @page { size: A4 portrait; margin: 12mm 15mm; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; color: #0f172a; line-height: 1.35; padding: 10px; font-size: 10.5pt; }
+    .header-box { border-bottom: 2px solid #dc2626; padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start; }
+    .co-name { font-size: 14pt; font-weight: 900; color: #dc2626; }
+    .co-info { font-size: 8.5pt; color: #475569; margin-top: 2px; }
+    .cert-title { text-align: center; margin: 12px 0 6px; }
+    .cert-title h1 { margin: 0; font-size: 15pt; font-weight: 800; color: #1e3a8a; letter-spacing: 0.5px; }
+    .cert-title p { margin: 2px 0 0; font-size: 9.5pt; color: #64748b; font-style: italic; }
+    
+    table.grid-tbl { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 9.5pt; }
+    table.grid-tbl th, table.grid-tbl td { border: 1px solid #cbd5e1; padding: 5px 8px; }
+    table.grid-tbl th { background: #f8fafc; font-weight: 700; text-align: left; color: #334155; }
+    .badge-ok { background: #dcfce7; color: #166534; padding: 1px 6px; border-radius: 4px; font-weight: 600; font-size: 8.5pt; }
+    .sig-section { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 24px; text-align: center; page-break-inside: avoid; }
+    @media print { body { padding: 0; } .no-print { display: none !important; } }
+  </style>
+</head>
+<body>
+  <!-- HEADER CÔNG TY -->
+  <div class="header-box">
+    <div>
+      <div class="co-name">VIETTEL CONSTRUCTION MYANMAR &bull; TNI TECH &amp; ENERGY</div>
+      <div class="co-info">No 1237 Waizanyantar Street, South Okkalapa, Yangon, Myanmar | Hotline: 0965 1900 009</div>
+      <div class="co-info">Website: www.viettelconstructionmyanmar.com &bull; Tanintharyi Energy Center</div>
+    </div>
+    <div style="text-align:right">
+      <span class="badge-ok">OFFICIAL ACCEPTANCE</span><br/>
+      <small style="font-size:8.5pt;color:#64748b">Ref: ${r.code}</small>
+    </div>
+  </div>
+
+  <div class="cert-title">
+    <h1>BIÊN BẢN NGHIỆM THU &amp; BÀN GIAO CÔNG TRÌNH</h1>
+    <p>SITE HANDOVER &amp; TECHNICAL ACCEPTANCE CERTIFICATE</p>
+  </div>
+
+  <!-- 1. THÔNG TIN CÔNG TRÌNH -->
+  <table class="grid-tbl">
+    <tr>
+      <th style="width:22%">Dự Án / Hợp Đồng:</th>
+      <td style="width:28%;font-weight:bold;color:#1e3a8a">${r.code}</td>
+      <th style="width:22%">Ngày Nghiệm Thu:</th>
+      <td style="width:28%">${fd(r.dateStr)}</td>
+    </tr>
+    <tr>
+      <th>Khách Hàng (Mr/Ms):</th>
+      <td style="font-weight:bold">${r.kh}</td>
+      <th>Số Điện Thoại:</th>
+      <td>${r.dt || '-'}</td>
+    </tr>
+    <tr>
+      <th>Địa Chỉ Lắp Đặt:</th>
+      <td colspan="3">${r.dc || '-'}</td>
+    </tr>
+    <tr>
+      <th>Kỹ Sư Trưởng Thi Công:</th>
+      <td colspan="3">${r.eng}</td>
+    </tr>
+  </table>
+
+  <!-- 2. ĐO ĐẠC THÔNG SỐ KỸ THUẬT HIỆN TRƯỜNG -->
+  <div style="margin-top:10px">
+    <b style="font-size:10.5pt;color:#1e3a8a">1. THÔNG SỐ ĐO ĐẠC KỸ THUẬT BÀN GIAO (TECHNICAL MEASUREMENTS):</b>
+    <table class="grid-tbl">
+      <tr style="background:#f1f5f9">
+        <th style="text-align:center">Điện Áp Bàn Giao (V)</th>
+        <th style="text-align:center">Công Suất Phát Đỉnh (kWp)</th>
+        <th style="text-align:center">Tần Số Lưới (Hz)</th>
+        <th style="text-align:center">Mức Sạc Pin (SOC)</th>
+        <th style="text-align:center">Tiếp Địa (Earthing)</th>
+      </tr>
+      <tr style="text-align:center;font-weight:bold">
+        <td style="color:#0284c7">${r.volt} V</td>
+        <td style="color:#16a34a">${r.kwp} kWp</td>
+        <td>${r.freq} Hz</td>
+        <td style="color:#7c3aed">${r.soc}</td>
+        <td>${r.earth}</td>
+      </tr>
+      <tr>
+        <td colspan="5" style="font-size:9pt;color:#475569">
+          <b>Trạng thái vận hành:</b> ${r.gridStatus} &bull; Hệ thống vận hành ổn định, bảo vệ chống sét và ngắt mạch tự động đã được kiểm định đạt chuẩn 100%.
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- 3. SỐ LƯỢNG VẬT TƯ THỰC DÙNG & SERIAL NUMBER -->
+  <div style="margin-top:10px">
+    <b style="font-size:10.5pt;color:#1e3a8a">2. VẬT TƯ THỰC TẾ SỬ DỤNG &amp; SERIAL NUMBER THIẾT BỊ:</b>
+    <table class="grid-tbl">
+      <tr>
+        <th style="width:25%">Dây DC Đen (Black):</th>
+        <td style="width:25%;font-weight:bold">${r.cableBlk}</td>
+        <th style="width:25%">Dây DC Đỏ (Red):</th>
+        <td style="width:25%;font-weight:bold;color:#dc2626">${r.cableRed}</td>
+      </tr>
+      <tr>
+        <th>Dây AC:</th>
+        <td>${r.cableAc}</td>
+        <th>Đầu Nối MC4:</th>
+        <td>${r.mc4}</td>
+      </tr>
+      <tr>
+        <th>Serial Inverter:</th>
+        <td colspan="3" style="font-weight:bold;font-family:monospace;color:#1e40af">${r.snInv}</td>
+      </tr>
+      <tr>
+        <th>Serial Battery (Pin):</th>
+        <td colspan="3" style="font-weight:bold;font-family:monospace">${r.snBat}</td>
+      </tr>
+      <tr>
+        <th>Dải Serial Tấm Pin:</th>
+        <td colspan="3" style="font-size:9pt">${r.snPv}</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- 4. TÀI CHÍNH & THANH TOÁN -->
+  <div style="margin-top:10px">
+    <b style="font-size:10.5pt;color:#1e3a8a">3. QUYẾT TOÁN TÀI CHÍNH BÀN GIAO:</b>
+    <table class="grid-tbl">
+      <tr>
+        <th style="width:33%">Tổng Doanh Thu Hợp Đồng:</th>
+        <th style="width:33%">Đã Thanh Toán (Thực Thu):</th>
+        <th style="width:34%">Số Tiền Còn Lại (Công Nợ):</th>
+      </tr>
+      <tr style="font-weight:bold">
+        <td>${fn(r.rev)} Ks</td>
+        <td style="color:#16a34a">${fn(r.paid)} Ks</td>
+        <td style="color:${r.debt > 0 ? '#dc2626' : '#16a34a'}">${fn(r.debt)} Ks</td>
+      </tr>
+    </table>
+  </div>
+
+  ${photosHtml}
+
+  <!-- CHỮ KÝ XÁC NHẬN CẢM ỨNG CỦA KHÁCH HÀNG & KỸ SƯ TRƯỞNG -->
+  <div class="sig-section">
+    <div>
+      <b>ĐẠI DIỆN KHÁCH HÀNG (CUSTOMER)</b><br/>
+      <small style="color:#64748b">Xác nhận nghiệm thu &amp; nhận bàn giao thiết bị</small>
+      <div style="margin:10px 0;height:70px;display:flex;align-items:center;justify-content:center">
+        ${sigImgHtml}
+      </div>
+      <b>${r.kh}</b>
+    </div>
+    <div>
+      <b>KỸ SƯ TRƯỞNG THI CÔNG (LEAD ENGINEER)</b><br/>
+      <small style="color:#64748b">Cam kết thông số đo đạc &amp; vật tư chính xác</small>
+      <div style="margin:10px 0;height:70px;display:flex;align-items:center;justify-content:center">
+        <div style="font-family:'Brush Script MT',cursive;font-size:24pt;color:#0369a1">${r.eng.split('/')[0].trim()}</div>
+      </div>
+      <b>${r.eng}</b>
+    </div>
+  </div>
+
+  <script>window.onload=function(){window.print();}<\/script>
+</body>
+</html>`;
+
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+}
+
+function exportAcceptancesCSV() {
+  const list = DB.g('acceptances') || [];
+  if (!list.length) {
+    al('Chưa có hồ sơ nghiệm thu nào để xuất!', 'er');
+    return;
+  }
+
+  const headers = [
+    'Mã Dự Án', 'Khách Hàng', 'SĐT', 'Địa Chỉ', 'Ngày Bàn Giao', 'Kỹ Sư',
+    'Điện Áp (V)', 'Công Suất (kWp)', 'Tần Số (Hz)', 'Pin SOC', 'Tiếp Địa',
+    'Dây DC Đen', 'Dây DC Đỏ', 'Dây AC', 'Đầu MC4', 'SN Inverter', 'SN Pin', 'SN Tấm Pin',
+    'Doanh Thu HĐ', 'Giá Vốn 83%', 'Nộp Cty 17%', 'Thực Thu', 'Còn Nợ', 'LN Chi Nhánh Còn Lại', 'Link Drive'
+  ];
+
+  const rows = list.map(r => [
+    `"${r.code}"`, `"${r.kh}"`, `"${r.dt}"`, `"${r.dc}"`, r.dateStr, `"${r.eng}"`,
+    r.volt, r.kwp, r.freq, `"${r.soc}"`, `"${r.earth}"`,
+    `"${r.cableBlk}"`, `"${r.cableRed}"`, `"${r.cableAc}"`, `"${r.mc4}"`,
+    `"${r.snInv}"`, `"${r.snBat}"`, `"${r.snPv}"`,
+    r.rev, r.cost, r.cty, r.paid, r.debt, r.branchNet, `"${r.driveUrl || ''}"`
+  ]);
+
+  const csv = "\uFEFF" + headers.join(',') + '\n' + rows.map(r => r.join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = `So_Cai_Nghiem_Thu_${td()}.csv`;
+  a.click();
+}
+
 // ═══════════════════════════════════════════════════
 // 🌐 UNIFIED BILINGUAL ENGINE (VIỆT - ANH ĐỒNG BỘ 100%)
 // ═══════════════════════════════════════════════════
@@ -4034,6 +4863,7 @@ const NAV_TITLES = {
     banhang: '🛒 Sales & Dispatch',
     baogiaups: '📄 Device Quote',
     baogiasolar: '☀️ Solar Quote <small style="color:#38bdf8;font-size:10.5px;margin-left:auto">VCM</small>',
+    acceptance: '⚡ Handover & Acceptance',
     daily: '🏪 Distribution',
     kygoi: '📋 Consignment',
     crm: '👥 CRM & Survey',
@@ -4061,6 +4891,7 @@ const NAV_TITLES = {
     banhang: '🛒 Bán Hàng & Xuất Kho',
     baogiaups: '📄 Báo Giá Thiết Bị',
     baogiasolar: '☀️ Báo Giá Solar <small style="color:#38bdf8;font-size:10.5px;margin-left:auto">VCM</small>',
+    acceptance: '⚡ Nghiệm Thu Hiện Trường',
     daily: '🏪 Đại Lý & Phân Phối',
     kygoi: '📋 Hàng Ký Gởi',
     crm: '👥 CRM & Khảo Sát',

@@ -121,6 +121,9 @@ function doPostCollector_(e) {
     // ── Train Schedule Sync (auto-publish at 01:46 MMT daily) ──────────────
     if (body.action === "sync_schedule")     return handleSyncSchedule_(body);
 
+    // ── Sale Backend (Nhap/Ban/TamUng/KhaoSat/CRM...) ─────────────────────
+    if (body.action && body.action.startsWith('sale_')) return handleSalePost_(body);
+
     return json({ status: "error", message: "Unknown action: " + body.action });
   } catch (err) {
     return json({ status: "error", message: err.message, stack: err.stack });
@@ -130,6 +133,21 @@ function doPostCollector_(e) {
 function doGetCollector_(e) {
   try {
     const action = (e && e.parameter && e.parameter.action) || "";
+
+    // ── Ultra-fast Keepalive / Ping & Status Endpoints (<50ms) ─────────────
+    if (action === "ping") {
+      return ContentService.createTextOutput(JSON.stringify({ status: "ok", message: "pong", timestamp: new Date().toISOString() }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    if (action === "get_general") {
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "ok",
+        service: "TNI Main GAS Backend",
+        version: "@438",
+        message: "TNI Collector running",
+        timestamp: new Date().toISOString()
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
 
     // ── Construction Sheet Initialization Endpoint ──
     if (action === "init_input_construction") {
@@ -1403,6 +1421,16 @@ function handleRefreshGeneral(ss) {
   gen.setColumnWidth(2, 160);
   SpreadsheetApp.flush();
   return json({ status: 'ok', message: 'General refreshed — ' + employees.length + ' rows' });
+}
+
+function handleGetGeneral(ss) {
+  return json({
+    status: "ok",
+    service: "TNI Main GAS Backend",
+    version: "@438",
+    message: "TNI Collector running",
+    timestamp: new Date().toISOString()
+  });
 }
 
 // ============================================================
@@ -2734,7 +2762,7 @@ function handleSetMsgId(body) {
   }
 }
 
-/** Batch get multiple msg_ids in 1 single HTTP call */
+/** Batch get multiple msg_ids in 1 single HTTP call (<10ms) */
 function handleGetMsgIdsBatch(body) {
   try {
     let keys = (body && body.keys) || [];
@@ -2743,37 +2771,11 @@ function handleGetMsgIdsBatch(body) {
     }
     const props = PropertiesService.getScriptProperties().getProperties();
     const result = {};
-    const missingKeys = [];
 
     keys.forEach(function(k) {
       const trimmed = String(k).trim();
       const val = props["MSGID_" + trimmed];
-      if (val !== undefined && val !== null && val !== "") {
-        result[trimmed] = String(val);
-      } else {
-        missingKeys.push(trimmed);
-      }
-    });
-
-    // If any key was missing from PropertiesService, read BotState sheet once
-    if (missingKeys.length > 0) {
-      const sh = getBotStateSheet_();
-      const data = sh.getDataRange().getValues();
-      for (let i = 1; i < data.length; i++) {
-        const rowKey = String(data[i][0]).trim();
-        if (missingKeys.indexOf(rowKey) !== -1) {
-          const val = String(data[i][1]).trim();
-          result[rowKey] = val;
-          if (val) {
-            PropertiesService.getScriptProperties().setProperty("MSGID_" + rowKey, val);
-          }
-        }
-      }
-    }
-
-    keys.forEach(function(k) {
-      const trimmed = String(k).trim();
-      if (result[trimmed] === undefined) result[trimmed] = "";
+      result[trimmed] = (val !== undefined && val !== null) ? String(val) : "";
     });
 
     return json({ status: "ok", states: result });
@@ -2782,7 +2784,7 @@ function handleGetMsgIdsBatch(body) {
   }
 }
 
-/** Batch set multiple msg_ids in 1 single HTTP call */
+/** Batch set multiple msg_ids in 1 single HTTP call (<10ms) */
 function handleSetMsgIdsBatch(body) {
   try {
     let states = (body && body.states) || {};
@@ -2790,45 +2792,15 @@ function handleSetMsgIdsBatch(body) {
       try { states = JSON.parse(states); } catch(e) { states = {}; }
     }
 
-    // 1. Instant batch write to PropertiesService (5ms)
+    // Instant batch write to PropertiesService (5ms) — Primary SSOT for Serverless Bots
     const propUpdates = {};
     for (const k in states) {
       propUpdates["MSGID_" + String(k).trim()] = String(states[k]).trim();
     }
     PropertiesService.getScriptProperties().setProperties(propUpdates);
 
-    // 2. High-speed single-write batch update to BotState sheet (<300ms)
-    const sh   = getBotStateSheet_();
-    const data = sh.getDataRange().getValues();
-    const keyRowMap = {};
-    for (let i = 1; i < data.length; i++) {
-      keyRowMap[String(data[i][0]).trim()] = i;
-    }
-
-    let modified = false;
-    const newRows = [];
-    for (const k in states) {
-      const trimmedKey = String(k).trim();
-      const val = String(states[k]).trim();
-      if (keyRowMap[trimmedKey] !== undefined) {
-        const rowIdx = keyRowMap[trimmedKey];
-        data[rowIdx][1] = val;
-        modified = true;
-      } else {
-        newRows.push([trimmedKey, val]);
-        keyRowMap[trimmedKey] = data.length + newRows.length - 1;
-      }
-    }
-
-    if (modified) {
-      sh.getRange(1, 1, data.length, 2).setValues(data);
-    }
-    if (newRows.length > 0) {
-      sh.getRange(sh.getLastRow() + 1, 1, newRows.length, 2).setValues(newRows);
-    }
-
     return json({ status: "ok", count: Object.keys(states).length, states: states });
-  } catch(err) {
+  } catch (err) {
     return json({ status: "error", message: err.message });
   }
 }

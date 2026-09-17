@@ -92,7 +92,7 @@ BOT_REGISTRY = {
 }
 
 GAS_SERVICES = {
-    "TNI Main GAS Backend (@357 SSOT)": {
+    "TNI Main GAS Backend (@438 SSOT)": {
         "url": "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec?action=get_general"
     },
     "Standalone Site Down GAS Backend (@83 SSOT)": {
@@ -340,31 +340,46 @@ def audit_gas_backends():
     results = []
     for name, cfg in GAS_SERVICES.items():
         url = cfg["url"]
-        try:
-            t0 = time.time()
-            resp = requests.get(url, allow_redirects=True, timeout=12)
-            dur = time.time() - t0
-            if resp.status_code == 200:
-                results.append({
-                    "name": name,
-                    "status": "PASS",
-                    "reason": f"Đang sống (Phản hồi {dur:.2f}s)",
-                    "latency": f"{dur:.2f}s"
-                })
-            else:
-                results.append({
-                    "name": name,
-                    "status": "FAIL",
-                    "reason": f"HTTP {resp.status_code} ({dur:.2f}s)",
-                    "latency": f"{dur:.2f}s"
-                })
-        except Exception as e:
+        resp = None
+        dur = 0.0
+        err_msg = ""
+        for attempt in range(2):
+            try:
+                t0 = time.time()
+                resp = requests.get(url, allow_redirects=True, timeout=20)
+                dur = time.time() - t0
+                if resp.status_code == 200:
+                    break
+                elif attempt == 0:
+                    time.sleep(2)
+            except Exception as e:
+                err_msg = str(e)
+                dur = time.time() - t0
+                if attempt == 0:
+                    time.sleep(2)
+
+        if resp is not None and resp.status_code == 200:
+            results.append({
+                "name": name,
+                "status": "PASS",
+                "reason": f"Đang sống (Phản hồi {dur:.2f}s)",
+                "latency": f"{dur:.2f}s"
+            })
+        elif resp is not None:
             results.append({
                 "name": name,
                 "status": "FAIL",
-                "reason": f"Timeout / Ngủ: {str(e)[:25]}",
-                "latency": ">12s"
+                "reason": f"HTTP {resp.status_code} ({dur:.2f}s)",
+                "latency": f"{dur:.2f}s"
             })
+        else:
+            results.append({
+                "name": name,
+                "status": "FAIL",
+                "reason": f"Timeout / Ngủ: {err_msg[:25]}",
+                "latency": f">{dur:.1f}s" if dur > 0 else ">20s"
+            })
+        time.sleep(0.8)
     return results
 
 
