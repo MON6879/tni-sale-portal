@@ -189,6 +189,9 @@
 > 1. **Khóa Chặt Mốc Giờ Giữa Đoàn Tàu & Kiểm Toán (Auditor-Train 100% Schedule Parity)**: Mọi mốc giờ báo cáo được khai báo trong `SCHEDULE_RULES` của Sentinel Auditor (`system_auditor.py`) BẮT BUỘC phải đồng bộ 100% với điều kiện kích hoạt trong đoàn tàu cron (`train_5min.yml`). TUYỆT ĐỐI CẤM để cờ kích hoạt bị `false` (như Toa 8 `REFUEL_REQ=false` hoặc thiếu mốc Catch-up 07:06, 13:06), gây tình trạng script không bao giờ được chạy tự động dẫn đến báo lỗi bỏ sót ảo (`MISSED`)!
 > 2. **Kiểm Tra Trùng Lặp Bắt Buộc Đúng Ngày Hiện Tại (Strict Active-Date Dedup Scope)**: Khi thực hiện kiểm toán nhân đôi tin nhắn (Deduplication Check), BẮT BUỘC phải lọc đúng phạm vi tin nhắn gửi trong ngày hôm nay (`m.get("date_str") == today_start`). TUYỆT ĐỐI KHÔNG ĐƯỢC quét tràn sang tin nhắn của ngày hôm trước khiến hệ thống liên tục cảnh báo lại các sự cố cũ đã được khắc phục triệt để!
 > 3. **Tối Ưu Tra Cứu Dữ Liệu Hàng Loạt Vào RAM (In-Memory Batch Lookup Only)**: Mọi hàm xử lý dữ liệu hàng loạt trên Google Sheets (như `handleBackfillDailyReportEmployeeNames`) BẮT BUỘC phải nạp toàn bộ danh mục tra cứu (ví dụ: tab `ID Telegram`) vào mảng RAM 1 lần duy nhất trước vòng lặp và tự động thay thế triệt để các mã lỗi công thức (`#REF!`, `#VALUE!`) bằng giá trị dữ liệu thực. TUYỆT ĐỐI CẤM gọi `getRange()` hay đọc Sheet lặp đi lặp lại bên trong từng vòng lặp gây timeout 30s của Google Apps Script!
+> 4. **RULE PM-28 — Bộ Đệm Kháng Lỗi Timeout Khởi Động Nguội GAS & Điểm Cuối Keepalive Siêu Tốc (GAS Cold-Start Resilience & Ultra-Fast Ping Keepalive Policy)**:
+>    - **Điểm Cuối Keepalive & Status Siêu Tốc Trên GAS (<100ms)**: Trong Google Apps Script Hub (`apps_script_collector.gs` / Ghế `GAS-OPS-1`), tại đầu hàm `doGetCollector_` BẮT BUỘC phải xử lý trực tiếp `action === "ping"` và `action === "get_general"` bằng chuỗi JSON nhẹ trả về ngay lập tức (<50ms). TUYỆT ĐỐI CẤM để `action=ping` hoặc `action=get_general` rơi vào nhánh mặc định mở toàn bộ bảng tính Google Sheets khổng lồ (`SpreadsheetApp.openById`), gây tiêu tốn quota, nghẽn hàng đợi thực thi và làm sập timeout các kết nối khác!
+>    - **Bộ Đệm Kháng Lỗi Timeout Khởi Động Nguội Trong Auditor (20s Timeout + 2-Attempt Retry Buffer)**: Trong `system_auditor.py` (Ghế `AUDITOR-9.1`), hàm `audit_gas_backends()` BẮT BUỘC phải đặt `timeout=20` giây (thay vì 12s) và triển khai cơ chế thử lại 2 lần (`for attempt in range(2)`) kèm độ trễ nghỉ 2 giây nếu lần đầu gặp lỗi/timeout. Cơ chế này đảm bảo khi máy chủ Google Apps Script đang ở trạng thái ngủ sâu (cold start container loading ~8-15s), lượt thử đầu tiên sẽ đánh thức container và lượt thử thứ hai sẽ thành công 100%, chấm dứt hoàn toàn hiện tượng báo động giả (False System Alert: `Timeout / Ngủ: HTTPSConnectionPool`). Đồng thời phải có giãn cách `time.sleep(0.8)` giữa các cuộc gọi kiểm tra GAS liên tiếp để tránh bị Google API rate limit.
 
 ---
 
@@ -1465,6 +1468,31 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 > 1. **1 Sổ Cái Xuất Kho Duy Nhất (Single Dispatch Ledger)**: Bảng `ban` trong `tni_sale.html` đóng vai trò là Sổ cái xuất kho tập trung (Central Dispatch Ledger) cho tất cả các đối tượng (Bán lẻ, Đại lý, Ký gởi, Tạm ứng).
 > 2. **TUYỆT ĐỐI CẤM Ghi Trùng Kép (Zero Cross-Table Duplication)**: Khi ghi nhận xuất kho vào `ban`, TUYỆT ĐỐI CẤM tự động ghi thêm 1 bản ghi nữa sang các bảng nghiệp vụ con (`pp`, `kygoi`, `tamung`) nếu các bảng này cũng được trừ trong hàm tính tồn `getTK()`.
 > 3. **Phân Loại Bằng Thuộc Tính `target`**: Phân loại đối tượng xuất kho bằng trường `target: 'retail' | 'dealer' | 'pos' | 'staff'` ngay trong bảng `ban`. Các module con chỉ dùng cho việc quản lý theo dõi nghiệp vụ riêng biệt của từng tab.
+
+# ⚡ POST-MORTEM RULE — 17/09/2026: BỌC THÉP PHÂN HỆ NGHIỆM THU HIỆN TRƯỜNG, KÝ CẢM ỨNG DI ĐỘNG & KHÉP KÍN SỔ CÁI 1 HÀNG (RULE PM-38)
+
+> ### Nguồn gốc: **Triển Khai Bước 4 Bàn Giao & Nghiệm Thu Hiện Trường (Site Handover & Acceptance v1.4)**
+> - **Root Cause 1**: Chữ ký HTML5 Canvas trên điện thoại di động nếu không xử lý cảm ứng đa điểm (`touchstart`, `touchmove` kèm `passive: false` và `e.preventDefault()`) sẽ bị xung đột với hành vi cuộn trang của trình duyệt, khiến người dùng không thể ký mượt hoặc nét vẽ bị biến dạng.
+> - **Root Cause 2**: Tọa độ nét vẽ chuột/chạm trên canvas màn hình nhỏ bị lệch nếu không scale tỷ lệ theo kích thước hiển thị thật: `(clientX - rect.left) * (canvas.width / rect.width)`.
+> - **Root Cause 3**: Dữ liệu nghiệm thu nếu lưu rải rác ở nhiều tab sẽ gây đứt gãy mạch truy xuất từ Báo giá $\rightarrow$ Đơn hàng $\rightarrow$ Nghiệm thu hiện trường $\rightarrow$ Quyết toán tài chính 83% - 17% - Lợi nhuận chi nhánh.
+>
+> ### 🔴 RULE PM-38: 4 NGUYÊN TẮC BỌC THÉP CHO PHÂN HỆ BÀN GIAO & NGHIỆM THU HIỆN TRƯỜNG
+> 1. **Khóa Cứng Cảm Ứng Di Động & Tự Động Co Giãn Tọa Độ (Mobile Touch Lock & Responsive Scaling)**:
+>    - Canvas ký tay (`#acc-sig-canvas`) BẮT BUỘC đặt `touch-action: none; cursor: crosshair`.
+>    - Lắng nghe sự kiện cảm ứng: `canvas.addEventListener('touchstart', start, { passive: false });` và `canvas.addEventListener('touchmove', move, { passive: false });`.
+>    - Gọi `e.preventDefault()` trong `start` và `move` để khóa triệt để hành vi scroll trang của điện thoại khi đang ký tay.
+>    - BẮT BUỘC chuẩn hóa tọa độ: `x = (clientX - rect.left) * (canvas.width / rect.width)`, `y = (clientY - rect.top) * (canvas.height / rect.height)`.
+> 2. **Sổ Cái Khép Kín 1 Hàng Duy Nhất (End-to-End Master Row Continuous Ledger)**:
+>    - Mỗi công trình nghiệm thu BẮT BUỘC lưu thành 1 hàng dữ liệu duy nhất trong bảng `acceptances`:
+>      `Mã DA | Khách Hàng | Đo Đạc (220V/380V, kWp, 50Hz, SOC, Tiếp Địa) | Vật Tư & Serial (Dây Đen, Đỏ, AC, MC4, SN Inverter, SN Pin, SN PV) | Doanh Thu 100% | Vốn Gốc 83% | Nộp Cty 17% | Thực Thu | Còn Nợ | Lợi Nhuận Ròng Chi Nhánh | Chữ Ký Base64 | Ảnh Hiện Trường | Link Drive`.
+>    - Tự động nạp thông tin từ Báo Giá Solar (`quotesolar`) hoặc Đơn Bán Hàng (`ban`) để kế thừa số liệu tài chính không nhập lại.
+> 3. **Xuất Bản In PDF A4 Kèm Chữ Ký Điện Tử & Ảnh Hiện Trường Nhúng Trực Tiếp (A4 Certificate with Embedded Signature)**:
+>    - Biên bản nghiệm thu sử dụng template in A4 Portrait chuẩn quốc tế Viettel Construction Myanmar / TNI.
+>    - Nhúng trực tiếp ảnh chữ ký khách hàng dạng PNG Data URL và hình ảnh chụp hiện trường tủ điện / giàn pin.
+>    - Tự động gọi `window.print()` với thẻ đóng đã escape `<\\/script>` theo đúng RULE PM-36.
+> 4. **Đồng Bộ Song Ngữ 100% & Xuất File CSV Chuẩn UTF-8 BOM**:
+>    - Toàn bộ giao diện tab Nghiệm thu hỗ trợ đầy đủ EN mặc định và chuyển sang VI tức thì qua `NAV_TITLES` và bảng hiển thị `rAcceptances()`.
+>    - Xuất CSV sổ cái nghiệm thu BẮT BUỘC chèn ký tự `\uFEFF` ở đầu file để mở đúng trên Excel không bị lỗi font tiếng Việt/Myanmar.
 
 
 
