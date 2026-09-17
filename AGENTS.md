@@ -1494,5 +1494,13 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 >    - Toàn bộ giao diện tab Nghiệm thu hỗ trợ đầy đủ EN mặc định và chuyển sang VI tức thì qua `NAV_TITLES` và bảng hiển thị `rAcceptances()`.
 >    - Xuất CSV sổ cái nghiệm thu BẮT BUỘC chèn ký tự `\uFEFF` ở đầu file để mở đúng trên Excel không bị lỗi font tiếng Việt/Myanmar.
 
+# 📋 POST-MORTEM RULE — 17/09/2026: CHUẨN HÓA ROSTER TỪ GOOGLE SHEETS TRƯỚC KHI TẠO BÁO CÁO & XÓA TRIGGER ĐỊNH KỲ KHÔNG DÙNG (RULE PM-37)
 
-
+> ### Nguồn gốc: **Phân hệ Attendance (GAS-ATTENDANCE-4) v812**
+> 1. **Chuẩn Hóa Dữ Liệu Roster Từ Google Sheets (Roster Parsing Normalization)**:
+>    - Khi đọc danh sách nhân viên từ Google Sheet (như tab `Template Attendance`), **BẮT BUỘC** phải đọc từ dòng 2 trở đi (`tplSheet.getRange(2, ...)`) để bỏ qua dòng tiêu đề nhóm/ngày (Row 1).
+>    - **BẮT BUỘC** dùng Regex làm sạch (`replace(/^\d+[\.\:\-\s]+/, '').replace(/[\:\-]+$/, '').trim()`) nhằm triệt tiêu số thứ tự và dấu hai chấm có sẵn trong ô, ngăn chặn triệt để lỗi double numbering (`2. 1. Tin Maung Win::`).
+>    - Luôn lọc bỏ các dòng tiêu đề phụ (`report`, `attendan`), dòng tổng cộng (`total:`) trước khi đưa vào danh sách render.
+> 2. **Quy Trình Xóa Sạch Trigger Bỏ Không Dùng (Full Lifecycle Trigger Cleanup)**:
+>    - Khi người dùng yêu cầu bỏ một báo cáo định kỳ (như Báo Cáo Hình Ảnh Điểm Danh 4 Khung Giờ), **BẮT BUỘC** phải xóa sạch toàn bộ Cloud Triggers tương ứng trên Google Apps Script (`ScriptApp.deleteTrigger`).
+>    - Thân hàm cũ phải được vô hiệu hóa (`return;`) ngay lập tức và gọi lệnh xóa trigger phòng ngừa nếu trigger cũ vẫn còn kích hoạt trên Cloud.
