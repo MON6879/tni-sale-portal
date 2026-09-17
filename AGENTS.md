@@ -1522,3 +1522,23 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 > 3. **Bộ Phân Tích CSV Kháng Header Linh Hoạt & Đồng Bộ Giao Diện Song Ngữ (Resilient Parser & UI Parity)**:
 >    - Hàm phân tích nhập hàng (`parseBulkInput()`) BẮT BUỘC phải nhận diện linh hoạt dòng tiêu đề ở bất kỳ ngôn ngữ nào (`tên`, `product`, `model`, `số lượng`, `qty`, `name`, `serial`) để tự động bỏ qua dòng 1 khi người dùng dán hoặc tải file lên.
 >    - Toàn bộ giao diện Import hàng loạt (tiêu đề, cú pháp, hướng dẫn 3 bước, khung dán textarea, nút phân tích, thẻ thống kê nhanh, bảng preview và nút xác nhận) BẮT BUỘC phải đăng ký đầy đủ thuộc tính `data-lang` trong từ điển `DICT` để chuyển đổi đồng bộ 100% giữa EN và VI.
+
+# 👥 POST-MORTEM RULE — 17/09/2026: ĐỒNG BỘ DỮ LIỆU THÀNH VIÊN VÀO TAB CHECKJOINT, SIÊU TỐC PONG KEEPALIVE & GIÁM SÁT TOÀN DIỆN AUDITOR-9.1 (RULE PM-40)
+
+> ### Nguồn gốc: **Phân hệ Attendance (GAS-ATTENDANCE-4) v813 & Toa 0 Keepalive**
+> - **Bối cảnh & Yêu cầu**: Người dùng yêu cầu đưa kết quả kiểm tra thành viên tham gia Group 10 vào tab `CheckJoint` trong Google Sheets và đưa phân hệ Attendance vào Ghế Giám Sát AUDITOR-9.1 cùng Toa 0 Làm Ấm (Keepalive).
+>
+> ### 🔴 RULE PM-40: 3 NGUYÊN TẮC BỌC THÉP CHO KIỂM TRA THÀNH VIÊN & LÀM ẤM HỆ THỐNG
+> 1. **Đồng Bộ Dữ Liệu Kiểm Tra Thành Viên Vào Tab `CheckJoint` (Dedicated CheckJoint Tab Sync)**:
+>    - Mọi lần chạy kiểm tra thành viên nhóm Telegram (như Group 10 Daily Attendance) qua `sendGroup10MembershipSummary()` (hoặc lệnh `/check_join`), bot **BẮT BUỘC** cập nhật trực tiếp bảng kết quả sống vào tab `CheckJoint` trong Google Sheets (`updateCheckJointSheet_`).
+>    - Cấu trúc tab `CheckJoint` chuẩn gồm:
+>      - Dòng 1: Banner tổng hợp (`📊 Group 10 Membership: XX/YY Joined (ZZ%) | Missing ID: N | Unknown: M | Last Checked: dd/MM/yyyy HH:mm:ss MMT`), nền xanh đậm `#1A237E`, chữ trắng đậm.
+>      - Dòng 2: Tiêu đề cột chuẩn (`STT`, `Team / Dept`, `Full Name`, `Telegram ID`, `Group 10 Status`, `Telegram Role`, `Telegram Username`, `Last Checked (MMT)`, `Notes`), nền `#283593`.
+>      - Dòng 3 trở đi: Danh sách nhân viên phân loại màu sắc trực quan: Xanh lá (`✅ Joined`), Đỏ nhạt (`❌ Not Joined`), Vàng nhạt (`❓ Missing TG ID`), Cam nhạt (`🚫 Not in Staff List` — tài khoản lạ cần rà soát xóa khỏi nhóm).
+> 2. **Siêu Tốc Ping PONG Cho Apps Script (<50ms) Tránh Timeout Keepalive (Ultra-Fast Keepalive Ping Endpoint)**:
+>    - Trong `doGet(e)`, kiểm tra `action === "ping"` ngay đầu hàm và trả về `ContentService.createTextOutput("PONG")` lập tức, **TUYỆT ĐỐI CẤM** mở SpreadsheetApp (`openById`) khi chỉ nhận lệnh ping kiểm tra liveness per Rule PM-28.
+>    - Nhờ đó, Toa 0 Keepalive trong `train_5min.yml` và Ghế Giám Sát `system_auditor.py` (AUDITOR-9.1) có thể sưởi ấm Apps Script runner 24/7 mà không tiêu tốn hạn ngạch mở bảng tính và không gây timeout cold-start.
+> 3. **Giám Sát Bọc Thép Hai Đầu Trong AUDITOR-9.1 & Single Train Toa 0 (Dual-End Sentinel & Warmup Parity)**:
+>    - **Đầu Làm Ấm (Warmup)**: Toa 0 trong `train_5min.yml` luôn ping đầy đủ cả 3 tầng của phân hệ Attendance: (a) Telegram API `getWebhookInfo`, (b) Vercel Serverless `/api/attendance`, (c) Apps Script Backend `?action=ping`.
+>    - **Đầu Giám Sát (Auditor)**: Ghế `AUDITOR-9.1` (`system_auditor.py`) kiểm tra định kỳ trạng thái sống của `Attendance GAS Backend (@99 SSOT)` qua `?action=ping` và kiểm tra tính toàn vẹn dữ liệu của `Sheet CheckJoint (Attendance)` qua URL CSV gviz (`min_rows: 2`).
+

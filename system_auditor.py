@@ -101,8 +101,8 @@ GAS_SERVICES = {
     "BI Portal Backend (Plan Dep)": {
         "url": "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec?action=get_plan_dep"
     },
-    "Attendance GAS Backend (@72 SSOT)": {
-        "url": "https://script.google.com/macros/s/AKfycbyFIDGDS5k7wy-hNp2p1PNvte0CQ6cSiNYLyBmNc00Yi1b6IueOob9bKmu4zoQ1A6Cs/exec?action=get_headers"
+    "Attendance GAS Backend (@99 SSOT)": {
+        "url": "https://script.google.com/macros/s/AKfycbyFIDGDS5k7wy-hNp2p1PNvte0CQ6cSiNYLyBmNc00Yi1b6IueOob9bKmu4zoQ1A6Cs/exec?action=ping"
     }
 }
 
@@ -161,6 +161,10 @@ SHEET_CONNECTORS = {
     },
     "Sheet Template Attendance (GID=1366655674)": {
         "url": "https://docs.google.com/spreadsheets/d/18zQB4i0Fu4QfKKkkUZUd6SKWIEbdWDiwdpgNSaL9v54/gviz/tq?tqx=out:csv&gid=1366655674",
+        "min_rows": 2
+    },
+    "Sheet CheckJoint (Attendance)": {
+        "url": "https://docs.google.com/spreadsheets/d/18zQB4i0Fu4QfKKkkUZUd6SKWIEbdWDiwdpgNSaL9v54/gviz/tq?tqx=out:csv&sheet=CheckJoint",
         "min_rows": 2
     }
 }

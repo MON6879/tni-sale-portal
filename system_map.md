@@ -314,7 +314,7 @@ grep -c 'continue-on-error: true' train_5min.yml                # Phải = tổn
 | **Refuel & Site Down GAS** | `@98` | `AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-` | `TNI_Refuel` (`1JxrA4pJo92Xx_SpwLnOQxphVYwE2iFhLrCOHmyVVuuM`) | `REFUEL_PLAN_GAS_URL` / `SD_APPS_SCRIPT_URL` |
 | **Site Down GAS** | `@latest` | `AKfycbxVi0BGDW7B_KBxcSEdw3yuHB9Rs2BemQEYeKDwsybJQdmQv-_0HqyGHjpZI6jupxll` | `TNI SITE DOWN` (standalone) | `SD_APPS_SCRIPT_URL` (secret) |
 | **Construction Keepalive GAS** | `@302` (merged into Main GAS) | `AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA` | `13_TNI_CONSTRUCTION.gs` | `keepalive_construction.yml` |
-| **Attendance Bot GAS** | `@72` | `AKfycbyFIDGDS5k7wy-hNp2p1PNvte0CQ6cSiNYLyBmNc00Yi1b6IueOob9bKmu4zoQ1A6Cs` | `TNI attendance.js` | Direct deploy (Clasp) |
+| **Attendance Bot GAS** | `@99` | `AKfycbyFIDGDS5k7wy-hNp2p1PNvte0CQ6cSiNYLyBmNc00Yi1b6IueOob9bKmu4zoQ1A6Cs` | `TNI attendance.js` | CheckJoint tab sync, ultra-fast ping, Toa 0 Keepalive & AUDITOR-9.1 |
 
 ---
 

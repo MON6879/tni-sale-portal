@@ -1546,10 +1546,14 @@ function autoPrice(spId,giaId){
 // TABLE HELPER
 // ═══════════════════════════════════════════════════
 function bk(t,c){return `<span class="bk bk-${c}">${t}</span>`;}
-function tbl(hs,rows){
-  if(!rows.length) return '<p style="color:#94a3b8;font-size:12.5px;padding:6px 0">No data yet</p>';
-  return `<table><thead><tr>${hs.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
-  <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+function tbl(hs, rows) {
+  if (!rows.length) return `<p style="color:#94a3b8;font-size:12.5px;padding:6px 0">${currentLang === 'vi' ? 'Chưa có dữ liệu' : 'No data yet'}</p>`;
+  const translatedHs = hs.map(h => {
+    if (!h || typeof h !== 'string') return h;
+    return typeof t === 'function' ? t(h.trim(), currentLang) : h;
+  });
+  return `<table><thead><tr>${translatedHs.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+  <tbody>${rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
 }
 function del(k,id,cb){DB.del(k,id);cb();al('🗑 Deleted');}
 function clrForm(prefix){document.querySelectorAll(`[id^="${prefix}"]`).forEach(e=>{if(e.tagName==='SELECT')e.selectedIndex=0;else if(e.type!=='date')e.value='';});}
@@ -2321,13 +2325,15 @@ function rBan(){
 // ═══════════════════════════════════════════════════
 // BÁO GIÁ — QUOTATION ROWS
 // ═══════════════════════════════════════════════════
-function addQRow(containerId){
-  const c=document.getElementById(containerId);
-  const d=document.createElement('div');d.className='qrow';
-  d.innerHTML=`<input placeholder="Tên thiết bị / hạng mục" style="flex:2;min-width:150px" oninput="calcQ('${containerId}')"/>
-    <input placeholder="Đơn vị" style="width:60px" oninput="calcQ('${containerId}')"/>
-    <input type="number" placeholder="SL" style="width:55px" oninput="calcQ('${containerId}')"/>
-    <input type="number" placeholder="Đơn giá (₫)" style="width:120px" oninput="calcQ('${containerId}')"/>
+function addQRow(containerId) {
+  const isVi = currentLang === 'vi';
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  const d = document.createElement('div'); d.className = 'qrow';
+  d.innerHTML = `<input placeholder="${isVi ? 'Tên thiết bị / hạng mục' : 'Item description / equipment'}" style="flex:2;min-width:150px" oninput="calcQ('${containerId}')"/>
+    <input placeholder="${isVi ? 'Đơn vị' : 'Unit'}" style="width:60px" oninput="calcQ('${containerId}')"/>
+    <input type="number" placeholder="${isVi ? 'SL' : 'Qty'}" style="width:55px" oninput="calcQ('${containerId}')"/>
+    <input type="number" placeholder="${isVi ? 'Đơn giá (₫)' : 'Unit Price ($/₫)'}" style="width:120px" oninput="calcQ('${containerId}')"/>
     <span style="min-width:90px;text-align:right;font-weight:600;color:var(--bl)">0 ₫</span>
     <button class="btn b-xs b-rd" onclick="this.parentNode.remove();calcQ('${containerId}')">✕</button>`;
   c.appendChild(d);
@@ -2812,6 +2818,109 @@ function copyShareQuoteLink() {
 }
 
 // HÀM IN BÁO GIÁ CHUẨN ĐẦY ĐỦ: HEADER ĐỎ VIETTEL, WATERMARK CHỮ CHÌM, 9 CỘT THEO SHEET GID 1879621220
+
+// ═══════════════════════════════════════════════════
+// 📄 DEVICE QUOTATION LOGIC & BILINGUAL RENDER
+// ═══════════════════════════════════════════════════
+function saveQuote(type) {
+  const isVi = currentLang === 'vi';
+  if (type === 'ups') {
+    const kh = v('qu-kh');
+    if (!kh) { al(isVi ? 'Nhập tên khách hàng / công ty!' : 'Please enter customer / company name!', 'er'); return; }
+    const items = [];
+    const container = document.getElementById('qu-items');
+    if (container) {
+      for (let r of container.children) {
+        const ten = (r.children[0]?.value || '').trim();
+        const dv = (r.children[1]?.value || '').trim() || (isVi ? 'Cái' : 'Nos');
+        const sl = +(r.children[2]?.value || 0);
+        const dg = +(r.children[3]?.value || 0);
+        if (ten) items.push({ ten, dv, sl, dg, tt: sl * dg });
+      }
+    }
+    if (!items.length) { al(isVi ? 'Thêm ít nhất 1 thiết bị vào danh sách!' : 'Please add at least 1 item to the list!', 'er'); return; }
+    const total = items.reduce((s, x) => s + x.tt, 0);
+    const quote = {
+      id: Date.now(),
+      code: 'QU-' + Math.floor(1000 + Math.random() * 9000),
+      kh: kh,
+      dt: v('qu-dt') || '-',
+      dc: v('qu-dc') || '-',
+      nlbg: v('qu-nlbg') || '-',
+      ngay: v('qu-ngay') || td(),
+      hl: v('qu-hl') || 7,
+      items: items,
+      total: total,
+      type: 'ups'
+    };
+    DB.add('quoteups', quote);
+    al(isVi ? '✅ Đã lưu báo giá thiết bị!' : '✅ Device quotation saved successfully!');
+    rQuUPS();
+  }
+}
+
+function printQuote(type) {
+  const isVi = currentLang === 'vi';
+  if (type === 'ups') {
+    const kh = v('qu-kh') || (isVi ? 'Khách Hàng' : 'Valued Customer');
+    const dt = v('qu-dt') || '-';
+    const dc = v('qu-dc') || '-';
+    const nlbg = v('qu-nlbg') || '-';
+    const ngay = v('qu-ngay') || td();
+    const hl = v('qu-hl') || 7;
+    const items = [];
+    const container = document.getElementById('qu-items');
+    if (container) {
+      for (let r of container.children) {
+        const ten = (r.children[0]?.value || '').trim();
+        const dv = (r.children[1]?.value || '').trim() || (isVi ? 'Cái' : 'Nos');
+        const sl = +(r.children[2]?.value || 0);
+        const dg = +(r.children[3]?.value || 0);
+        if (ten) items.push({ ten, dv, sl, dg, tt: sl * dg });
+      }
+    }
+    if (!items.length) { al(isVi ? 'Chưa có thiết bị nào để in!' : 'No items to print!', 'er'); return; }
+    const total = items.reduce((s, x) => s + x.tt, 0);
+    const rows = items.map(r => `<tr><td>${r.ten}</td><td style="text-align:center">${r.dv}</td><td style="text-align:center">${r.sl}</td><td style="text-align:right">${fn(r.dg)}</td><td style="text-align:right;font-weight:600">${fn(r.tt)}</td></tr>`).join('');
+    const html = `<html><head><meta charset="UTF-8"><title>${isVi ? 'Báo Giá Thiết Bị' : 'Device Quotation'}</title>
+    <style>body{font-family:'Segoe UI',sans-serif;padding:30px;color:#1e293b}h2{color:#1d4ed8}table{width:100%;border-collapse:collapse;margin-top:16px}th{background:#f1f5f9;padding:8px;font-size:13px;text-align:left}td{padding:8px;border-bottom:1px solid #e2e8f0;font-size:13px}.total{font-size:18px;font-weight:700;color:#16a34a;text-align:right;margin-top:10px;padding:10px 0}</style></head>
+    <body><h2>📄 ${isVi ? 'BÁO GIÁ THIẾT BỊ' : 'DEVICE QUOTATION'}</h2>
+    <p><b>${isVi ? 'Khách hàng' : 'Customer'}:</b> ${kh} &nbsp;|&nbsp; <b>${isVi ? 'ĐT' : 'Phone'}:</b> ${dt}</p>
+    <p><b>${isVi ? 'Địa chỉ' : 'Address'}:</b> ${dc}</p>
+    <p><b>${isVi ? 'Ngày' : 'Date'}:</b> ${fd(ngay)} &nbsp;|&nbsp; <b>${isVi ? 'Hiệu lực' : 'Validity'}:</b> ${hl} ${isVi ? 'ngày' : 'days'} &nbsp;|&nbsp; <b>${isVi ? 'Người lập' : 'Prepared by'}:</b> ${nlbg}</p>
+    <table><thead><tr><th>${isVi ? 'Hạng Mục / Thiết Bị' : 'Item Description / Equipment'}</th><th style="text-align:center">${isVi ? 'ĐVT' : 'Unit'}</th><th style="text-align:center">${isVi ? 'SL' : 'Qty'}</th><th style="text-align:right">${isVi ? 'Đơn Giá' : 'Unit Price'}</th><th style="text-align:right">${isVi ? 'Thành Tiền' : 'Subtotal'}</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="total">${isVi ? 'TỔNG CỘNG' : 'TOTAL'}: ${fn(total)} ₫</div>
+    <p style="font-size:12px;color:#64748b;margin-top:20px">* ${isVi ? 'Báo giá có hiệu lực ' + hl + ' ngày kể từ ngày lập. Giá chưa bao gồm VAT.' : 'Quotation valid for ' + hl + ' days from issue date. Price excludes VAT.'}</p>
+    </body></html>`;
+    const w = window.open('', '_blank'); w.document.write(html); w.document.close(); w.print();
+  }
+}
+
+function rQuUPS() {
+  const isVi = currentLang === 'vi';
+  const list = DB.g('quoteups') || [];
+  const el = document.getElementById('t-quups');
+  if (!el) return;
+  if (!list.length) {
+    el.innerHTML = `<div style="text-align:center;color:#94a3b8;padding:24px">${isVi ? 'Chưa có báo giá thiết bị nào' : 'No device quotations recorded yet'}</div>`;
+    return;
+  }
+  el.innerHTML = tbl(
+    ['#', isVi ? 'Mã BG' : 'Quote ID', isVi ? 'Khách Hàng' : 'Customer', isVi ? 'Điện Thoại' : 'Phone', isVi ? 'Ngày Lập' : 'Date', isVi ? 'Tổng Tiền' : 'Total Amount', isVi ? 'Người Lập' : 'Prepared By', ''],
+    list.map((r, i) => [
+      i + 1,
+      `<b>${r.code || r.id}</b>`,
+      r.kh || '-',
+      r.dt || '-',
+      fd(r.ngay),
+      `<b style="color:var(--bl)">${fn(r.total)} ₫</b>`,
+      r.nlbg || '-',
+      `<button class="btn b-xs b-bl" onclick="viewQuote('ups', ${r.id})">${isVi ? '🖨️ In' : '🖨️ Print'}</button>
+       <button class="btn b-xs b-rd" onclick="del('quoteups', ${r.id}, rQuUPS)">🗑</button>`
+    ])
+  );
+}
+
 function viewQuote(type, id) {
   if (type !== 'solar') {
     // Thiết bị chung
@@ -5042,6 +5151,331 @@ const DICT = {
   }
 };
 
+const BILINGUAL_PAIRS = [
+  ['TNI Sale — Quản Lý Bán Hàng & Phân Bổ Lợi Nhuận', 'TNI Sale — Sales & Profit Distribution'],
+  ['Google Sheet', 'Google Sheet'],
+  ['Xóa sạch dữ liệu', 'Clear All Data'],
+  ['% Cty:', '% HO:'],
+  ['Đơn Vị Tiền Tệ:', 'Currency:'],
+  ['📄 Tạo Báo Giá Thiết Bị', '📄 Create Device Quotation'],
+  ['📋 Danh Sách Báo Giá Thiết Bị', '📋 Device Quotation List'],
+  ['Khách Hàng / Công Ty *', 'Customer / Company *'],
+  ['Khách Hàng / Công Ty', 'Customer / Company'],
+  ['Tên KH / Công ty', 'Customer / Company Name'],
+  ['Điện Thoại', 'Phone Number'],
+  ['Địa Chỉ', 'Address'],
+  ['Địa chỉ', 'Address'],
+  ['Người Lập BG', 'Prepared By'],
+  ['Tên nhân viên', 'Staff Name'],
+  ['Ngày', 'Date'],
+  ['Hiệu Lực (ngày)', 'Validity (Days)'],
+  ['📦 Danh sách thiết bị', '📦 Equipment / Item List'],
+  ['+ Thêm dòng', '+ Add Item Row'],
+  ['Tổng Báo Giá', 'Total Quotation'],
+  ['💾 Lưu Báo Giá', '💾 Save Quotation'],
+  ['🖨 In / PDF', '🖨 Print / PDF'],
+  ['Tên thiết bị / hạng mục', 'Item Description / Equipment'],
+  ['Đơn vị', 'Unit'],
+  ['SL', 'Qty'],
+  ['Đơn giá (₫)', 'Unit Price ($/₫)'],
+  ['Đơn giá', 'Unit Price'],
+  ['Thành Tiền', 'Subtotal'],
+  ['Thành tiền', 'Subtotal'],
+  ['Tạo / Chỉnh Sửa Báo Giá Solar', 'Create / Edit Solar Quotation'],
+  ['👤 Đang xem với tư cách (Staff / Gmail):', '👤 Viewing as (Staff / Gmail):'],
+  ['🔍 Lọc Báo Giá', '🔍 Filter Quotations'],
+  ['👥 Xem Tất Cả (Admin)', '👥 View All (Admin)'],
+  ['📋 Chọn Báo Giá Cũ:', '📋 Select Past Quote:'],
+  ['👁️ Xem & Sửa', '👁️ View & Edit'],
+  ['➕ Tạo Báo Giá Mới', '➕ New Solar Quotation'],
+  ['⭐ Mẫu Chuẩn 6kW (Zin Ko Ko)', '⭐ 6kW Standard (Zin Ko Ko)'],
+  ['Mã Báo Giá (Quote Ref)', 'Quote Ref Code'],
+  ['Tên Khách Hàng (Mr/Ms) *', 'Customer Name (Mr/Ms) *'],
+  ['Điện Thoại Khách', 'Customer Phone'],
+  ['Gmail / Email Khách', 'Customer Email'],
+  ['Dự Án / Địa Chỉ Lắp Đặt', 'Project / Installation Address'],
+  ['Tên Hệ Thống / Hạng Mục', 'System Name / Description'],
+  ['Phân Loại Hệ', 'System Category'],
+  ['Công Suất (kW)', 'Capacity (kW)'],
+  ['Kỹ Sư / Người Lập', 'Engineer / Prepared By'],
+  ['📦 Bảng Vật Tư & Giá Cả (Có thể chỉnh sửa giá trực tiếp):', '📦 Equipment & Materials Price Schedule (Directly Editable):'],
+  ['💾 Lưu / Cập Nhật Báo Giá', '💾 Save / Update Quotation'],
+  ['🖨️ In / In Lại Báo Giá', '🖨️ Print Quotation'],
+  ['📧 Gửi Qua Gmail', '📧 Send via Gmail'],
+  ['🔗 Copy Link Chia Sẻ', '🔗 Copy Share Link'],
+  ['📋 Lịch Sử Báo Giá Solar', '📋 Solar Quotation History'],
+  ['⚡ BÀN GIAO & NGHIỆM THU HIỆN TRƯỜNG (SITE HANDOVER & ACCEPTANCE)', '⚡ SITE HANDOVER & ACCEPTANCE (VCM STANDARD)'],
+  ['Mã Dự Án / Hợp Đồng *', 'Project / Contract Code *'],
+  ['Số Điện Thoại', 'Phone Number'],
+  ['Địa Chỉ Công Trình', 'Site Address'],
+  ['Ngày Nghiệm Thu', 'Acceptance Date'],
+  ['Kỹ Sư Trưởng Thi Công *', 'Chief Project Engineer *'],
+  ['Đại Diện Nghiệm Thu Của Khách Hàng *', 'Customer Acceptance Representative *'],
+  ['⭐ Mẫu Chuẩn: 16kW Kawthoung', '⭐ 16kW Standard (Kawthoung)'],
+  ['➕ Tạo Mới Trắng', '➕ Blank Record'],
+  ['🗑️ Ký Lại', '🗑️ Re-sign'],
+  ['🔒 Khóa Chữ Ký', '🔒 Lock Signature'],
+  ['✕ Xóa Hết Ảnh', '✕ Clear All Photos'],
+  ['💾 Lưu Biên Bản Nghiệm Thu', '💾 Save Acceptance Record'],
+  ['🖨️ In Biên Bản PDF (A4)', '🖨️ Print Acceptance (A4 PDF)'],
+  ['📋 Phiếu Nghiệm Thu & Bàn Giao Hiện Trường', '📋 Field Acceptance & Handover Record'],
+  ['🗄️ Tồn Kho Hiện Tại', '🗄️ Current Inventory'],
+  ['🗄️ Tồn Kho Thực Tế & Khả Dụng', '🗄️ Real & Available Stock'],
+  ['🔍 Tìm sản phẩm...', '🔍 Search product, model...'],
+  ['📋 Danh Sách Nhập Hàng', '📋 Stock Intake List'],
+  ['➕ Thêm Phiếu Nhập & Phân Bổ Lợi Nhuận', '➕ Goods Intake & Profit Allocation'],
+  ['Tên Sản Phẩm *', 'Product Name *'],
+  ['Model / Mã SP', 'Model / Item Code'],
+  ['Serial Number', 'Serial Number'],
+  ['Danh Mục', 'Category'],
+  ['Số Lượng *', 'Quantity *'],
+  ['Đơn Giá Gốc Đầu Vào (83%) (₫) *', 'Base Cost Price (83%) ($/₫) *'],
+  ['Giá Thực Bán (₫) *', 'Actual Selling Price ($/₫) *'],
+  ['Nhà Cung Cấp', 'Supplier'],
+  ['Ngày Nhập', 'Intake Date'],
+  ['Bảo Hành (tháng)', 'Warranty (Months)'],
+  ['Ghi Chú', 'Notes'],
+  ['📦 Lưu Phiếu Nhập', '📦 Save Intake Record'],
+  ['✕ Xóa Form', '✕ Clear Form'],
+  ['➕ Single Intake', '➕ Single Intake'],
+  ['📥 Bulk Import (.CSV / Excel)', '📥 Bulk Import (.CSV / Excel)'],
+  ['📥 Download CSV Template', '📥 Download CSV Template'],
+  ['📁 Choose .CSV File', '📁 Choose .CSV File'],
+  ['🧑‍💼 Tạo Phiếu Tạm Ứng Hàng', '🧑‍💼 Create Staff Goods Advance'],
+  ['📋 Danh Sách Tạm Ứng', '📋 Staff Advances List'],
+  ['Nhân Viên *', 'Staff Name *'],
+  ['Mã NV / Phòng Ban', 'Staff ID / Department'],
+  ['Sản Phẩm *', 'Selected Product *'],
+  ['Mục Đích', 'Purpose'],
+  ['Ngày Lấy', 'Date Issued'],
+  ['Hạn Hoàn Trả (ngày)', 'Due Days'],
+  ['🧑‍💼 Xác Nhận Tạm Ứng', '🧑‍💼 Confirm Advance'],
+  ['🚚 Bán Hàng & Xuất Kho Cho... (Smart Dispatch)', '🚚 Sales & Smart Dispatch'],
+  ['📋 Lịch Sử Bán Hàng', '📋 Sales & Dispatch History'],
+  ['Xuất Cho (Dispatch Target) *', 'Dispatch Target *'],
+  ['Sản Phẩm Xuất *', 'Dispatched Product *'],
+  ['Số Lượng Xuất *', 'Dispatched Quantity *'],
+  ['Đơn Giá Áp Dụng (₫) *', 'Applied Unit Price ($/₫) *'],
+  ['Tên Khách Hàng / Đại Lý / Người Nhận *', 'Customer / Dealer / Recipient Name *'],
+  ['Serial Thiết Bị Xuất Kho', 'Dispatched Serial Numbers'],
+  ['Kênh Bán Hàng', 'Sales Channel'],
+  ['Hình Thức Thanh Toán', 'Payment Method'],
+  ['Ngày Bán / Xuất', 'Date of Sale / Dispatch'],
+  ['Link Ảnh Bàn Giao / Serial (Google Drive)', 'Handover Photo Link (Google Drive)'],
+  ['Ghi Chú Xuất Kho', 'Dispatch Notes'],
+  ['🚚 Xác Nhận Xuất Kho & Lưu Đơn', '🚚 Confirm Dispatch & Save Order'],
+  ['📄 In Phiếu Xuất Kho', '📄 Print Delivery Note'],
+  ['Danh Sách Đại Lý', 'Dealer Directory'],
+  ['🏪 Đại Lý', '🏪 Dealers'],
+  ['🚚 Phân Phối Hàng', '🚚 Wholesale Distribution'],
+  ['📋 Lịch Sử Phân Phối', '📋 Distribution History'],
+  ['Tên Đại Lý *', 'Dealer Store Name *'],
+  ['Chủ / Liên Hệ', 'Owner / Contact Person'],
+  ['Khu Vực', 'Region / Area'],
+  ['Loại', 'Tier'],
+  ['Chiết Khấu (%)', 'Discount (%)'],
+  ['+ Thêm', '+ Add New'],
+  ['💾 Lưu Đại Lý', '💾 Save Dealer'],
+  ['🚚 Xác Nhận Phân Phối', '🚚 Confirm Distribution'],
+  ['📋 Tạo Phiếu Ký Gởi', '📋 Create Consignment Sheet'],
+  ['📦 Danh Sách Ký Gởi', '📦 Consignment Registry'],
+  ['Điểm Bán *', 'Point of Sale (POS) *'],
+  ['Người Nhận', 'Recipient Name'],
+  ['Giá Bán Tại Điểm (₫)', 'POS Retail Price ($/₫)'],
+  ['Ngày Gởi', 'Consignment Date'],
+  ['Hạn (ngày)', 'Period (Days)'],
+  ['📋 Xác Nhận Ký Gởi', '📋 Confirm Consignment'],
+  ['✕ Xóa', '✕ Reset'],
+  ['👤 Khách Hàng', '👤 Customers'],
+  ['👥 Danh Sách', '👥 Customer Directory'],
+  ['📝 Phiếu Khảo Sát Đại Lý', '📝 Dealer Survey Form'],
+  ['📊 Danh Sách Khảo Sát', '📊 Survey Registry'],
+  ['📞 Ghi Nhận Tiếp Xúc', '📞 Contact Log Form'],
+  ['📞 Lịch Tiếp Xúc', '📞 Contact History'],
+  ['Họ Tên *', 'Full Name *'],
+  ['Email', 'Email'],
+  ['Công Ty', 'Company'],
+  ['Loại KH', 'Customer Type'],
+  ['Quan Tâm', 'Interested In'],
+  ['Người Khảo Sát', 'Surveyor'],
+  ['Địa Điểm', 'Location'],
+  ['Nhu Cầu/tháng (cái)', 'Monthly Demand (Pcs)'],
+  ['Thương Hiệu Đang Bán', 'Brands Currently Sold'],
+  ['Mức Giá Phù Hợp (₫)', 'Target Price Range ($/₫)'],
+  ['Tiềm Năng', 'Potential Level'],
+  ['Nhận Xét', 'Remarks'],
+  ['Khách / Đại Lý *', 'Customer / Dealer *'],
+  ['Hình Thức', 'Contact Method'],
+  ['Nội Dung', 'Conversation Summary'],
+  ['Hành Động Tiếp Theo', 'Next Action'],
+  ['Follow-up', 'Follow-up Date'],
+  ['💾 Lưu', '💾 Save'],
+  ['📝 Lưu Khảo Sát', '📝 Save Survey'],
+  ['📞 Lưu', '📞 Save Contact'],
+  ['📢 Tạo Chiến Dịch Quảng Cáo', '📢 Create Ads Campaign'],
+  ['📊 Cập Nhật Kết Quả Chạy Ads', '📊 Update Ads Performance'],
+  ['📋 Danh Sách Chiến Dịch', '📋 Campaign Registry'],
+  ['📈 Chi Tiết Hiệu Quả Ads', '📈 Ads Performance Details'],
+  ['Nền Tảng *', 'Platform *'],
+  ['Tên Chiến Dịch *', 'Campaign Name *'],
+  ['Mục Tiêu', 'Objective'],
+  ['Ngân Sách (₫) *', 'Budget ($/₫) *'],
+  ['Ngày Bắt Đầu', 'Start Date'],
+  ['Ngày Kết Thúc', 'End Date'],
+  ['Sản Phẩm Quảng Cáo', 'Advertised Product'],
+  ['Người Phụ Trách', 'Person in Charge'],
+  ['Nội Dung / Thông Điệp', 'Ad Copy / Message'],
+  ['🚀 Tạo Chiến Dịch', '🚀 Launch Campaign'],
+  ['Chọn Chiến Dịch *', 'Select Campaign *'],
+  ['Ngày Cập Nhật', 'Update Date'],
+  ['Chi Phí Thực Tế (₫)', 'Actual Spend ($/₫)'],
+  ['Lượt Hiển Thị (Impressions)', 'Impressions'],
+  ['Lượt Click', 'Clicks'],
+  ['Số Leads (tin nhắn/form)', 'Leads (Messages/Forms)'],
+  ['Số Chuyển Đổi (đã mua)', 'Conversions (Purchases)'],
+  ['Doanh Thu Từ Ads (₫)', 'Ads Revenue ($/₫)'],
+  ['📊 Lưu Kết Quả', '📊 Save Results'],
+  ['🎯 Ghi Nhận Lead Mới', '🎯 Record New Lead'],
+  ['🔄 Cập Nhật Trạng Thái Lead', '🔄 Update Lead Status'],
+  ['📊 Sales Funnel — Chuyển Đổi Lead → Đơn', '📊 Sales Funnel — Lead Conversion'],
+  ['📋 Danh Sách Leads', '📋 Lead Directory'],
+  ['Tên Khách *', 'Customer Name *'],
+  ['Điện Thoại *', 'Phone Number *'],
+  ['Nguồn Lead', 'Lead Source'],
+  ['Chiến Dịch', 'Campaign'],
+  ['Mức Độ Nóng', 'Lead Temperature'],
+  ['Ngày Vào Lead', 'Acquisition Date'],
+  ['Địa Chỉ / Khu Vực', 'Location / Area'],
+  ['Ghi Chú / Nhu Cầu', 'Notes / Customer Requirements'],
+  ['🎯 Lưu Lead', '🎯 Save Lead'],
+  ['Chọn Lead', 'Select Lead'],
+  ['Trạng Thái Mới', 'New Status'],
+  ['Ghi Chú Cập Nhật', 'Update Remarks'],
+  ['🔄 Cập Nhật', '🔄 Update'],
+  ['📝 Lập Tờ Trình Đề Nghị Quyết Toán VCM', '📝 Create VCM Settlement Proposal'],
+  ['📑 Sổ Cái Nghiệm Thu & Quyết Toán 1 Hàng Khép Kín', '📑 Unified Closed-Loop Settlement Ledger'],
+  ['Tên Chi Nhánh (Branch)', 'Branch Name'],
+  ['Số Tờ Trình (Proposal No)', 'Proposal Number'],
+  ['Ngày Tờ Trình (Date)', 'Proposal Date'],
+  ['Mã Hợp Đồng (Contract Code) *', 'Contract Code *'],
+  ['Tên Khách Hàng (Customer) *', 'Customer Name *'],
+  ['Số Điện Thoại (Phone)', 'Phone Number'],
+  ['Địa Điểm Lắp Đặt (Location)', 'Site Location'],
+  ['Tên Dự Án (Project Name)', 'Project Description'],
+  ['Công Suất Lắp Đặt (Capacity)', 'Installed Capacity'],
+  ['Số Hóa Đơn Thu Tiền (Receipt No)', 'Receipt Number'],
+  ['Ngày Thu Tiền (Payment Date)', 'Payment Received Date'],
+  ['Kỹ Sư Giám Sát Thi Công (Engineer)', 'Supervising Engineer'],
+  ['Giám Đốc Chi Nhánh (Branch Manager)', 'Branch Manager'],
+  ['Tổng Giá Trị Hợp Đồng (Contract Value)', 'Contract Value (100%)'],
+  ['Giá Vốn Gốc (Base Cost 83%)', 'Base Equipment Cost (83%)'],
+  ['Quỹ Nộp Về Cty (HO Return 17%)', 'Payable to HO (17%)'],
+  ['Lợi Nhuận Chi Nhánh Hưởng', 'Retained Branch Profit'],
+  ['⭐ Mẫu Chuẩn: Mr.Hla Phone Min (15.699.600 Ks)', '⭐ Standard: Mr.Hla Phone Min (15,699,600 Ks)'],
+  ['💾 Lưu Tờ Trình', '💾 Save Proposal'],
+  ['🖨️ In Tờ Trình (A4 Landscape)', '🖨️ Print Proposal (A4 Landscape)'],
+  ['⬇ Xuất CSV Chuẩn Sheet', '⬇ Export Standard CSV'],
+  ['📋 Danh Sách Tờ Trình Quyết Toán Đã Lập', '📋 Recorded Settlement Proposals'],
+  ['💰 Báo Cáo Phân Bổ 3 Dòng Lợi Nhuận', '💰 3-Tier Profit Allocation Report'],
+  ['📊 Lợi Nhuận Theo Sản Phẩm', '📊 Profit Breakdown By Product'],
+  ['🏢 Sổ Quyết Toán 17% Nộp Tổng Công Ty', '🏢 17% HO Settlement Ledger'],
+  ['⚠️ Sổ Quản Lý Công Nợ Đại Lý & Khách Hàng', '⚠️ Credit & Receivables Ledger'],
+  ['📈 Tổng Quan Kho Hàng', '📈 Warehouse & Stock Overview'],
+  ['⬇ CSV', '⬇ CSV'],
+  ['👤 Staff Login', '👤 Staff Portal Login'],
+  ['🛒 My Sales', '🛒 My Sales Orders'],
+  ['💰 My Profit', '💰 My Earned Profit'],
+  ['📋 My Consignment', '📋 My Consignments'],
+  ['📄 My Quotations', '📄 My Quotations'],
+  ['☀️ Solar Quotations', '☀️ Solar Quotations'],
+  ['📄 UPS / Device Quotations', '📄 UPS / Device Quotations'],
+  ['📝 Customer & Partner Survey', '📝 Customer & Partner Survey'],
+  ['📋 Lịch Sử Khảo Sát', '📋 Survey History'],
+];
+
+const MAP_VI_TO_EN = {};
+const MAP_EN_TO_VI = {};
+const MAP_VI_TO_EN_LOWER = {};
+const MAP_EN_TO_VI_LOWER = {};
+
+BILINGUAL_PAIRS.forEach(([vi, en]) => {
+  const v = vi.trim();
+  const e = en.trim();
+  MAP_VI_TO_EN[v] = e;
+  MAP_EN_TO_VI[e] = v;
+  MAP_VI_TO_EN_LOWER[v.toLowerCase()] = e;
+  MAP_EN_TO_VI_LOWER[e.toLowerCase()] = v;
+
+  // Also strip leading emojis/icons for fuzzy matching
+  const vClean = v.replace(/^[^\w\s\u00C0-\u1EF9]+/, '').trim();
+  const eClean = e.replace(/^[^\w\s\u00C0-\u1EF9]+/, '').trim();
+  if (vClean && eClean) {
+    if (!MAP_VI_TO_EN[vClean]) MAP_VI_TO_EN[vClean] = eClean;
+    if (!MAP_EN_TO_VI[eClean]) MAP_EN_TO_VI[eClean] = vClean;
+    MAP_VI_TO_EN_LOWER[vClean.toLowerCase()] = eClean;
+    MAP_EN_TO_VI_LOWER[eClean.toLowerCase()] = vClean;
+  }
+});
+
+function t(str, lang) {
+  if (!str || typeof str !== 'string') return str;
+  const target = lang || currentLang;
+  const trimmed = str.trim();
+  const map = target === 'vi' ? MAP_EN_TO_VI : MAP_VI_TO_EN;
+  if (map[trimmed]) return map[trimmed];
+  const mapLower = target === 'vi' ? MAP_EN_TO_VI_LOWER : MAP_VI_TO_EN_LOWER;
+  const lower = trimmed.toLowerCase();
+  if (mapLower[lower]) return mapLower[lower];
+  return str;
+}
+
+function translateDOM(lang) {
+  const isVi = lang === 'vi';
+  const map = isVi ? MAP_EN_TO_VI : MAP_VI_TO_EN;
+  const mapLower = isVi ? MAP_EN_TO_VI_LOWER : MAP_VI_TO_EN_LOWER;
+
+  // 1. Text elements: labels, headings, buttons, th, options, spans, paragraphs, summary boxes
+  const selectors = 'label, h1, h2, h3, h4, h5, h6, button, th, option, b, span, p, div.qtotal div, div.lbl2, div.sub';
+  document.querySelectorAll(selectors).forEach(el => {
+    if (el.closest('.tabs') && el.classList.contains('tab')) return;
+    if (el.children.length === 0) {
+      const orig = el.textContent.trim();
+      if (map[orig]) {
+        el.textContent = map[orig];
+      } else if (mapLower[orig.toLowerCase()]) {
+        el.textContent = mapLower[orig.toLowerCase()];
+      }
+    } else {
+      for (let node of el.childNodes) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const orig = node.textContent.trim();
+          if (orig) {
+            const match = map[orig] || mapLower[orig.toLowerCase()];
+            if (match) {
+              node.textContent = node.textContent.replace(orig, match);
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // 2. Input and Textarea placeholders
+  document.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => {
+    const ph = el.getAttribute('placeholder');
+    if (ph) {
+      const trimmed = ph.trim();
+      const match = map[trimmed] || mapLower[trimmed.toLowerCase()];
+      if (match) {
+        el.setAttribute('placeholder', match);
+      }
+    }
+  });
+
+  // 3. Document Title
+  document.title = isVi ? 'TNI Sale — Quản Lý Bán Hàng & Phân Bổ Lợi Nhuận' : 'TNI Sale — Sales & Profit Distribution';
+}
+
 function applyLang(lang) {
   currentLang = lang;
   localStorage.setItem('ups_lang', lang);
@@ -5077,13 +5511,13 @@ function applyLang(lang) {
   
   // 5. Update dashboard panel headers
   const dNhapH3 = document.getElementById('d-nhap-h3');
-  if (dNhapH3) dNhapH3.textContent = lang === 'vi' ? '📦 Nhập gần đây' : '📦 Recent Intake';
+  if (dNhapH3) dNhapH3.textContent = lang === 'vi' ? '📦 Nhập gần đây' : '📦 Recent Stock Intake';
   const dBanH3 = document.getElementById('d-ban-h3');
   if (dBanH3) dBanH3.textContent = lang === 'vi' ? '🛒 Bán gần đây' : '🛒 Recent Sales';
   const dWarnH3 = document.getElementById('d-warn-h3');
   if (dWarnH3) dWarnH3.textContent = lang === 'vi' ? '⚠️ Cảnh báo tồn kho' : '⚠️ Low Stock Alert';
   const dTuH3 = document.getElementById('d-tu-h3');
-  if (dTuH3) dTuH3.textContent = lang === 'vi' ? '🧑‍💼 Tạm ứng đang mở' : '🧑‍💼 Open Advances';
+  if (dTuH3) dTuH3.textContent = lang === 'vi' ? '🧑‍💼 Tạm ứng đang mở' : '🧑‍💼 Active Staff Advances';
 
   // 6. Update all [data-lang] elements
   document.querySelectorAll('[data-lang]').forEach(el => {
@@ -5101,13 +5535,19 @@ function applyLang(lang) {
     }
   });
 
-  // 8. Re-render dynamic active section to sync tables and cards
+  // 8. Translate all DOM labels, headings, buttons, and placeholders
+  if (typeof translateDOM === 'function') {
+    translateDOM(lang);
+  }
+
+  // 9. Re-render dynamic active section to sync tables and cards
   if (activeSec) {
     const secId = activeSec.id.replace('s-', '');
     if (typeof renders !== 'undefined' && renders[secId]) renders[secId]();
     if (secId === 'mystats' && typeof renderMyStats === 'function') renderMyStats();
     if (secId === 'myquotes' && typeof renderMyQuotes === 'function') renderMyQuotes();
     if (secId === 'mysurvey' && typeof renderSurveys === 'function') renderSurveys();
+    if (secId === 'baogiaups' && typeof rQuUPS === 'function') rQuUPS();
   }
 }
 
