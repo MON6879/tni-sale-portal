@@ -92,7 +92,7 @@ BOT_REGISTRY = {
 }
 
 GAS_SERVICES = {
-    "TNI Main GAS Backend (@438 SSOT)": {
+    "TNI Main GAS Backend (@439 SSOT)": {
         "url": "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec?action=get_general"
     },
     "Standalone Site Down GAS Backend (@83 SSOT)": {
@@ -101,8 +101,8 @@ GAS_SERVICES = {
     "BI Portal Backend (Plan Dep)": {
         "url": "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec?action=get_plan_dep"
     },
-    "Attendance GAS Backend (@99 SSOT)": {
-        "url": "https://script.google.com/macros/s/AKfycbyFIDGDS5k7wy-hNp2p1PNvte0CQ6cSiNYLyBmNc00Yi1b6IueOob9bKmu4zoQ1A6Cs/exec?action=ping"
+    "Attendance GAS Backend (@98 SSOT)": {
+        "url": "https://script.google.com/macros/s/AKfycbzSz_ISXgertxBDadw4BBQX1JdMjW650_o4He0o4Lh-uf1hV5O3YaE-ohlqI2CHyAcVFg/exec?action=get_headers"
     }
 }
 
@@ -270,9 +270,25 @@ def audit_telegram_webhooks():
                         if set_resp.status_code == 200 and set_resp.json().get("ok"):
                             curr_url = expected_url
                             pending = 0
+                            last_err = None
                             logger.info(f"✅ Đã {action_name} thành công cho {name}!")
                     except Exception as rec_err:
                         logger.error(f"❌ {action_name} thất bại: {rec_err}")
+                elif last_err and pending == 0 and curr_url.lower() == expected_url.lower():
+                    # Telegram giữ last_error_message vĩnh viễn dù sau đó đã gửi thành công.
+                    # Tự động clear lỗi cũ bằng deleteWebhook(drop=False) + setWebhook để tránh báo động giả
+                    try:
+                        requests.post(f"https://api.telegram.org/bot{token}/deleteWebhook", json={"drop_pending_updates": False}, timeout=8)
+                        time.sleep(0.5)
+                        set_resp = requests.post(f"https://api.telegram.org/bot{token}/setWebhook", json={
+                            "url": expected_url,
+                            "allowed_updates": ["message", "edited_message", "channel_post"]
+                        }, timeout=8)
+                        if set_resp.status_code == 200 and set_resp.json().get("ok"):
+                            last_err = None
+                            logger.info(f"✅ Đã tự động xóa stale webhook error thành công cho {name}!")
+                    except Exception as rec_err:
+                        logger.error(f"❌ Không thể clear stale webhook error: {rec_err}")
 
                 if not curr_url:
                     results.append({
@@ -905,6 +921,14 @@ async def audit_telegram_messages_telethon():
 
                             # Nếu 2 tin cùng loại và cùng nội dung gửi cách nhau < 180s -> NHÂN ĐÔI THỰC SỰ
                             if diff_sec <= 180 and is_same_content:
+                                auto_del_str = ""
+                                try:
+                                    await client.delete_messages(chat_id, [m2["id"]])
+                                    auto_del_str = " (Đã auto-delete ✅)"
+                                    logger.info(f"🗑️ Đã tự động xóa tin nhân đôi ID {m2['id']} trong nhóm {gkey}")
+                                except Exception as del_err:
+                                    logger.warning(f"Không thể xóa tin nhân đôi ID {m2['id']}: {del_err}")
+
                                 duplicate_results.append({
                                     "group": gkey,
                                     "title": m1["first_line"][:35],
@@ -913,7 +937,7 @@ async def audit_telegram_messages_telethon():
                                     "diff_sec": int(diff_sec),
                                     "id1": m1["id"],
                                     "id2": m2["id"],
-                                    "detail": f"Nhân đôi trong nhóm {gkey}: {m1['time_str']} & {m2['time_str']} (Cách {int(diff_sec)}s | ID {m1['id']},{m2['id']})"
+                                    "detail": f"Nhân đôi trong nhóm {gkey}: {m1['time_str']} & {m2['time_str']} (Cách {int(diff_sec)}s | ID {m1['id']},{m2['id']}{auto_del_str})"
                                 })
 
             # ── C. KIỂM TRA CHẤT LƯỢNG NỘI DUNG & QUÂN SỐ (Data Quality & Roster Audit) ──
