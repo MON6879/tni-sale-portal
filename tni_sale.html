@@ -150,6 +150,7 @@ tbody tr:hover{background:#fafcff}
 
     <div class="lbl" data-nav-lbl="finance">Finance</div>
     <a onclick="go('loinhuan')" data-nav-a="loinhuan">💰 Financial &amp; Cashflow</a>
+    <a onclick="go('statement')" data-nav-a="statement">📑 VCM Payment Statement</a>
     <a onclick="go('baocao')" data-nav-a="baocao">📈 Reports</a>
 
     <div class="lbl" data-nav-lbl="staff" style="color:#f59e0b">👤 Staff Portal</div>
@@ -544,8 +545,9 @@ tbody tr:hover{background:#fafcff}
         <div style="margin-top:16px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">
             <b style="font-size:13px;color:#1e3a8a">📦 Bảng Vật Tư &amp; Giá Cả (Có thể chỉnh sửa giá trực tiếp):</b>
-            <div style="display:flex;gap:6px">
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
               <button class="btn b-bl b-xs" onclick="addSolarItemRow()">+ Thêm dòng vật tư</button>
+              <button class="btn b-sm" style="background:#dcfce7;color:#15803d;font-size:11px;font-weight:700" onclick="presetSolar('kawthoung16k')">⭐ Mẫu 16kW (Kawthoung)</button>
               <button class="btn b-sm" style="background:#fef9c3;color:#854d0e;font-size:11px" onclick="presetSolar('ongrid5k')">Bộ 5kW OnGrid</button>
               <button class="btn b-sm" style="background:#fef9c3;color:#854d0e;font-size:11px" onclick="presetSolar('hybrid5k')">Bộ Hybrid 5kW</button>
             </div>
@@ -580,12 +582,17 @@ tbody tr:hover{background:#fafcff}
                 <div class="big" id="qs-big-total" style="font-size:24px;color:#38bdf8">0 Kyats</div>
                 <div style="font-size:11.5px;color:#cbd5e1;margin-top:3px">* Chi phí vận chuyển: Shipping costs are not included (Depends on Site).</div>
               </div>
-              <!-- Điều khoản thanh toán 50% - 40% - 10% -->
-              <div style="background:rgba(255,255,255,0.08);padding:8px 12px;border-radius:6px;font-size:11.5px;line-height:1.6;border-left:3px solid #38bdf8">
-                <b>Tiến độ thanh toán:</b><br/>
-                &bull; Đợt 1 (Tạm ứng 50% khi ký HĐ): <b id="qs-pay-50" style="color:#fde047">0</b><br/>
-                &bull; Đợt 2 (Giao hàng 40%): <b id="qs-pay-40" style="color:#6ee7b7">0</b><br/>
-                &bull; Đợt 3 (Nghiệm thu &amp; Bàn giao 10%): <b id="qs-pay-10" style="color:#93c5fd">0</b>
+              <!-- Điều khoản thanh toán & Remark chuẩn Viettel Construction Myanmar -->
+              <div style="background:rgba(255,255,255,0.08);padding:10px 14px;border-radius:6px;font-size:11.5px;line-height:1.65;border-left:3px solid #22c55e">
+                <b style="color:#4ade80">Remark &amp; Payment Term (Chuẩn VCM):</b><br/>
+                * Some Material can be changed as per actual site condition<br/>
+                * Structure Mounting System Installation ( Depends On Site)<br/>
+                * Quotation Validity - 1 Week<br/>
+                <div style="padding-left:8px;margin-top:2px">
+                  *Payment Term : 50% downpayment after agreement: <b id="qs-pay-50" style="color:#fde047">0 Kyat</b><br/>
+                  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 40% payment after installation: <b id="qs-pay-40" style="color:#6ee7b7">0 Kyat</b><br/>
+                  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 10% payment after testing &amp; commissioning: <b id="qs-pay-10" style="color:#93c5fd">0 Kyat</b>
+                </div>
               </div>
             </div>
           </div>
@@ -984,6 +991,94 @@ tbody tr:hover{background:#fafcff}
   </div>
 </div>
 
+<!-- ══ TỜ TRÌNH QUYẾT TOÁN VCM (PAYMENT PROPOSAL FOR INTEGRATED BUSINESS - GID 1792914236) ══ -->
+<div class="sec" id="s-statement">
+  <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px 18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;border-bottom:1px solid #f1f5f9;padding-bottom:12px">
+      <div>
+        <div style="font-size:16px;font-weight:900;color:#1e40af;letter-spacing:0.5px">📑 VCM PAYMENT STATEMENT &amp; SETTLEMENT PROPOSAL</div>
+        <div style="font-size:12px;color:#475569;margin-top:3px">Tờ trình đề nghị thanh toán hoạt động kinh doanh tích hợp (Integrated Business) gửi Ban Giám Đốc Tổng Công Ty VCM</div>
+      </div>
+      <div style="text-align:right">
+        <span class="bk bk-bl" style="font-size:12px;padding:4px 10px;font-weight:700">GOOGLE SHEET GID: 1792914236</span>
+        <div style="font-size:11px;color:#64748b;margin-top:4px">Khổ in chuẩn A4 Landscape (Ngang) &bull; 4 Chữ ký thẩm định</div>
+      </div>
+    </div>
+
+    <!-- Chọn nguồn nạp dữ liệu nhanh -->
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px;background:#f8fafc;padding:8px 12px;border-radius:6px;border:1px solid #cbd5e1">
+      <span style="font-size:12px;font-weight:600;color:#1e40af">⚡ Nạp nhanh từ:</span>
+      <select id="stm-source-select" style="padding:4px 8px;border:1px solid #94a3b8;border-radius:5px;font-size:12px;font-weight:600" onchange="loadStatementFromSource(this.value)">
+        <option value="">-- Chọn Hợp Đồng / Báo Giá Solar / Đơn Bán Hàng --</option>
+      </select>
+      <button class="btn b-sm b-yw" onclick="presetSampleStatement()">⭐ Mẫu Chuẩn: Mr.Hla Phone Min (15.699.600 Ks)</button>
+      <button class="btn b-sm b-out" onclick="resetStatementForm()">➕ Tạo Mới Trắng</button>
+    </div>
+  </div>
+
+  <div class="g2">
+    <!-- FORM NHẬP TỜ TRÌNH -->
+    <div class="panel">
+      <div class="ph" style="background:#f0f9ff">
+        <h3 style="color:#0369a1">📝 Lập Tờ Trình Đề Nghị Quyết Toán VCM</h3>
+      </div>
+      <div class="pb">
+        <div class="fg">
+          <div class="f"><label>Tên Chi Nhánh (Branch)</label><input id="stm-branch" value="WESTBAGO BRANCH" placeholder="WESTBAGO BRANCH / TANINTHARYI BRANCH"/></div>
+          <div class="f"><label>Số Tờ Trình (Proposal No)</label><input id="stm-no" value="17/TH -VCM-WBG" placeholder="17/TH -VCM-WBG"/></div>
+          <div class="f"><label>Ngày Tờ Trình (Date)</label><input id="stm-date" value="TNI, date 19, May, 2026" placeholder="TNI, date 19, May, 2026"/></div>
+          <div class="f"><label>Mã Hợp Đồng (Contract Code) *</label><input id="stm-code" value="VCM – TNI -04/2026 - 17" placeholder="VCM – TNI -04/2026 - 17" style="font-weight:bold;color:#1e40af"/></div>
+          <div class="f"><label>Tên Khách Hàng (Customer) *</label><input id="stm-kh" value="Mr. Hla Phone Min" placeholder="Mr. Hla Phone Min"/></div>
+          <div class="f"><label>Địa Chỉ / Điểm Thực Hiện</label><input id="stm-addr" value="Tanintharyi Branch" placeholder="Địa chỉ công trình..."/></div>
+          <div class="f"><label>Giá Trị HĐ Sau Thuế 100% (Ks) *</label><input id="stm-after-tax" type="number" value="15699600" oninput="calcStatementFields()"/></div>
+          <div class="f"><label>Giá Trị HĐ Trước Thuế 95% (Ks) *</label><input id="stm-before-tax" type="number" value="14952000" oninput="calcStatementFields(true)"/></div>
+
+          <div class="f" style="grid-column:1/-1;margin-top:6px;border-top:1px dashed #cbd5e1;padding-top:8px">
+            <b style="font-size:12.5px;color:#0f172a">🛠️ Bóc Tách Chi Phí Thực Hiện (Cost of Construction):</b>
+          </div>
+
+          <div class="f"><label>5. Chi Phí Vật Tư (Material Cost)</label><input id="stm-c-mat" type="number" value="12403260" oninput="calcStatementFields()"/></div>
+          <div class="f"><label>6. Chi Phí Nhân Công (Labor Cost)</label><input id="stm-c-lab" type="number" value="360000" oninput="calcStatementFields()"/></div>
+          <div class="f"><label>7. Phí Tem / Công Chứng (Doc Stamp)</label><input id="stm-c-stamp" type="number" value="150000" oninput="calcStatementFields()"/></div>
+          <div class="f"><label>8. Chi Phí Vận Chuyển (Transport)</label><input id="stm-c-trans" type="number" value="830000" oninput="calcStatementFields()"/></div>
+          <div class="f"><label>9. Hoa Hồng Bán Hàng (Commission 1%)</label><input id="stm-c-comm" type="number" value="156996" oninput="calcStatementFields()"/></div>
+          <div class="f"><label>10. Chi Phí Khác (Other Cost)</label><input id="stm-c-other" type="number" value="0" oninput="calcStatementFields()"/></div>
+          <div class="f" style="grid-column:1/-1"><label>Ghi Chú Tờ Trình (Note)</label><textarea id="stm-note" placeholder="Ghi chú trình Ban Giám Đốc..."></textarea></div>
+        </div>
+
+        <!-- LIVE STATEMENT RESULT BOX -->
+        <div style="margin-top:14px;padding:12px 14px;background:#f8fafc;border-radius:8px;border:1px solid #cbd5e1;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
+          <div><span style="font-size:11px;color:#0284c7">📊 11. Tổng Chi Phí (Sub Total)</span><div id="stmc-subtotal" style="font-size:15px;font-weight:700;color:#0284c7">13,900,256 Ks</div></div>
+          <div><span style="font-size:11px;color:#16a34a">💎 12. Chênh Lệch / LN (Diff)</span><div id="stmc-diff" style="font-size:15px;font-weight:700;color:#16a34a">1,051,744 Ks</div></div>
+          <div><span style="font-size:11px;color:#ea580c">📈 13. Tỷ Lệ Chi Phí (Ratio)</span><div id="stmc-ratio" style="font-size:15px;font-weight:700;color:#ea580c">93.0%</div></div>
+        </div>
+        <div style="margin-top:8px;font-size:12px;color:#334155;background:#f1f5f9;padding:6px 10px;border-radius:6px;border:1px solid #e2e8f0">
+          <b>Bằng chữ:</b> <span id="stmc-words" style="font-style:italic">Four million three hundred eighty thousand nine hundred fifty two kyats/.</span>
+        </div>
+
+        <div class="fa" style="margin-top:14px">
+          <button class="btn b-bl" onclick="saveVCMStatement(false)" style="font-weight:700">💾 Lưu Tờ Trình</button>
+          <button class="btn b-gn" onclick="saveVCMStatement(true)" style="font-weight:700">🖨️ In Tờ Trình (A4 Landscape)</button>
+          <button class="btn b-or" onclick="exportCurrentStatementCSV()">⬇ Xuất CSV Chuẩn Sheet</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DANH SÁCH CÁC TỜ TRÌNH ĐÃ LẬP -->
+    <div class="panel">
+      <div class="ph" style="background:#f8fafc">
+        <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
+          <h3 style="color:#1e293b">📋 Danh Sách Tờ Trình Quyết Toán Đã Lập</h3>
+          <span id="stm-count-badge" style="font-size:12px;color:#64748b">0 tờ trình</span>
+        </div>
+      </div>
+      <div class="pb tw" id="t-statements-table">
+        <!-- Bảng danh sách tờ trình -->
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ BÁO CÁO ══ -->
 <div class="sec" id="s-baocao">
   <div class="cards" id="bc-c"></div>
@@ -1198,7 +1293,7 @@ const ptitles={dashboard:'📊 Dashboard',nhap:'📦 Goods Intake',tonkho:'🗄�
   banhang:'🛒 Sales Orders',baogiaups:'📄 Device Quotation',baogiasolar:'☀️ Solar Quotation',
   daily:'🏪 Distribution & Dealers',kygoi:'📋 Consignment',crm:'👥 CRM & Survey',
   quangcao:'📢 Ads Campaigns',leads:'🎯 Leads & Conversion',
-  loinhuan:'💰 Profit & Loss',baocao:'📈 Reports',
+  loinhuan:'💰 Financial & Cashflow',statement:'📑 VCM Payment Statement',baocao:'📈 Reports',
   mystats:'📊 My Performance',myquotes:'📄 My Quotations',mysurvey:'📝 My Surveys'};
 
 const renders={
@@ -1211,7 +1306,7 @@ const renders={
   crm:()=>{rKH();rKS();rLK();},
   quangcao:()=>{rCampaigns();popCamps(['adr-camp']);rAdsResults();renderAdsSummary();},
   leads:()=>{popCamps(['ld-camp']);rLeads();popLeadSel();renderFunnel();renderLeadsCards();},
-  loinhuan:renderLN,baocao:rBC
+  loinhuan:renderLN,statement:()=>{rVCMStatements();populateStatementSources();calcStatementFields();},baocao:rBC
 };
 
 
@@ -2197,7 +2292,28 @@ function presetSolar(type) {
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  if (type === 'zinkoko') {
+  if (type === 'kawthoung16k') {
+    document.getElementById('qs-code').value = 'VCM-26-05';
+    document.getElementById('qs-kh').value = 'Kawthoung';
+    document.getElementById('qs-subj').value = '16 kW Solar System';
+    document.getElementById('qs-cs').value = '16';
+    document.getElementById('qs-loai').value = 'Hybrid (Hòa lưới + Dự trữ)';
+    document.getElementById('qs-curr').value = 'Kyats';
+    const kawthoungItems = [
+      { ten: "15kW Inverter Hygrid (3 Phase)", brand: "Deye", dv: "Nos", sl: 1, dg: 9976000, remark: "5 Years" },
+      { ten: "640W (bifacial ) Solar Panel", brand: "Longi", dv: "Nos", sl: 24, dg: 545200, remark: "12Year Warranty" },
+      { ten: "LiFePO4 Battery (51.2V ,320Ah)", brand: "CATL", dv: "Nos", sl: 1, dg: 8584000, remark: "2 Year Warranty" },
+      { ten: "Battery Breaker & Cable", brand: "-", dv: "Lot", sl: 1, dg: 1103160, remark: "" },
+      { ten: "Installation Fees 6 Kw solar panel", brand: "-", dv: "set", sl: 15, dg: 139200, remark: "" },
+      { ten: "DC Breaker & Accessories", brand: "-", dv: "Lot", sl: 1, dg: 1392000, remark: "" },
+      { ten: "Solar Mounting Bracket", brand: "-", dv: "Lot", sl: 1, dg: 788800, remark: "" },
+      { ten: "AC In/Out Materials", brand: "-", dv: "Lot", sl: 1, dg: 232000, remark: "" },
+      { ten: "Estimated Earthing System Cost", brand: "-", dv: "Lot", sl: 1, dg: 696000, remark: "Varies On Site" },
+      { ten: "Estimated AC In/Out Cable(10mmsq)", brand: "-", dv: "Lot", sl: 1, dg: 580000, remark: "Varies On Site" },
+      { ten: "Delivery", brand: "-", dv: "Lot", sl: 1, dg: 1160000, remark: "Depends on Site" }
+    ];
+    kawthoungItems.forEach(it => addSolarItemRow(it));
+  } else if (type === 'zinkoko') {
     document.getElementById('qs-code').value = 'VCM-07-02';
     document.getElementById('qs-kh').value = 'Zin Ko Ko';
     document.getElementById('qs-subj').value = '6kW Solar System';
@@ -2578,14 +2694,16 @@ function viewQuote(type, id) {
   const curr = d.currency || 'Kyats';
   const rows = (d.rows || []).map((r, i) => `
     <tr>
-      <td style="text-align:center;padding:8px 6px;border:1px solid #cbd5e1">${i + 1}</td>
-      <td style="padding:8px;border:1px solid #cbd5e1;font-weight:600">${r.ten}</td>
-      <td style="text-align:center;padding:8px;border:1px solid #cbd5e1">${r.brand || '-'}</td>
-      <td style="text-align:center;padding:8px;border:1px solid #cbd5e1">${r.dv || 'Nos'}</td>
-      <td style="text-align:center;padding:8px;border:1px solid #cbd5e1;font-weight:600">${r.sl}</td>
-      <td style="text-align:right;padding:8px;border:1px solid #cbd5e1">${fn(r.dg)}</td>
-      <td style="text-align:right;padding:8px;border:1px solid #cbd5e1;font-weight:700;color:#0f172a">${fn(r.sl * r.dg)}</td>
-      <td style="padding:8px;border:1px solid #cbd5e1;color:#475569;font-size:11.5px">${r.remark || '-'}</td>
+      <td style="text-align:center;padding:6px 4px;border:1px solid #cbd5e1">${i + 1}</td>
+      <td style="padding:6px 8px;border:1px solid #cbd5e1;font-weight:600">${r.ten}</td>
+      <td style="text-align:center;padding:6px;border:1px solid #cbd5e1">${r.brand || '-'}</td>
+      <td style="text-align:center;padding:6px;border:1px solid #cbd5e1;color:#94a3b8">-</td>
+      <td style="text-align:center;padding:6px;border:1px solid #cbd5e1">${r.dv || 'Nos'}</td>
+      <td style="text-align:center;padding:6px;border:1px solid #cbd5e1;font-weight:600">${r.sl}</td>
+      <td style="text-align:right;padding:6px 8px;border:1px solid #cbd5e1">${fn(r.dg)}</td>
+      <td style="text-align:right;padding:6px 8px;border:1px solid #cbd5e1;font-weight:700;color:#0f172a">${fn(r.sl * r.dg)}</td>
+      <td style="padding:6px 8px;border:1px solid #cbd5e1;color:#475569;font-size:11px">${r.remark || ''}</td>
+      <td style="text-align:center;padding:6px;border:1px solid #cbd5e1;color:#94a3b8"></td>
     </tr>
   `).join('');
 
@@ -2732,54 +2850,44 @@ function viewQuote(type, id) {
     <div class="info-item" style="grid-column:1/-1"><b>Subject:</b> <span style="font-weight:600">${d.subj || (d.cs ? d.cs + 'kW Solar System' : 'Solar System')}</span></div>
   </div>
 
-  <!-- BẢNG VẬT TƯ ĐẦY ĐỦ 9 CỘT THEO MẪU SHEET -->
-  <table>
+  <!-- BẢNG BÁO GIÁ CHUẨN XANH VIETTEL CONSTRUCTION MYANMAR (THEO ẢNH BÁO GIÁ GỐC) -->
+  <table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:11.5px">
     <thead>
-      <tr>
-        <th style="width:30px">No.</th>
-        <th>Material Specifications</th>
-        <th style="width:90px">Brand</th>
-        <th style="width:50px">Unit</th>
-        <th style="width:45px">Qty</th>
-        <th style="width:110px;text-align:right">Unit Price (${curr})</th>
-        <th style="width:120px;text-align:right">Total Amount (${curr})</th>
-        <th style="width:130px">Remark / Warranty</th>
+      <tr style="background:#22c55e;color:#fff">
+        <th style="width:30px;border:1px solid #16a34a;padding:7px 4px;text-align:center">No</th>
+        <th style="border:1px solid #16a34a;padding:7px 8px;text-align:center">Material Specifications</th>
+        <th style="width:80px;border:1px solid #16a34a;padding:7px 6px;text-align:center">Brand</th>
+        <th style="width:55px;border:1px solid #16a34a;padding:7px 4px;text-align:center">Picture</th>
+        <th style="width:45px;border:1px solid #16a34a;padding:7px 4px;text-align:center">Unit</th>
+        <th style="width:40px;border:1px solid #16a34a;padding:7px 4px;text-align:center">Qty</th>
+        <th style="width:105px;border:1px solid #16a34a;padding:7px 6px;text-align:center">Unit Price(Kyats)</th>
+        <th style="width:115px;border:1px solid #16a34a;padding:7px 6px;text-align:center">Total Amount (Kyats)</th>
+        <th style="width:110px;border:1px solid #16a34a;padding:7px 6px;text-align:center">Remark</th>
+        <th style="width:85px;border:1px solid #16a34a;padding:7px 6px;text-align:center">Customer using</th>
       </tr>
     </thead>
     <tbody>
       ${rows}
+      <tr style="font-weight:bold;background:#f8fafc">
+        <td colspan="7" style="text-align:center;padding:8px;border:1px solid #cbd5e1;font-size:12.5px">Total Amount (Kyats)</td>
+        <td style="text-align:right;padding:8px;border:1px solid #cbd5e1;font-size:13px;color:#0f172a">${fn(total)}</td>
+        <td style="border:1px solid #cbd5e1"></td>
+        <td style="border:1px solid #cbd5e1"></td>
+      </tr>
     </tbody>
   </table>
 
-  <!-- TỔNG CỘNG & TIẾN ĐỘ THANH TOÁN (50% - 40% - 10%) -->
-  <div class="total-box">
-    <div class="total-row">
-      <span>TOTAL AMOUNT (${curr.toUpperCase()}):</span>
-      <span class="total-val">${fn(total)} ${curr}</span>
+  <!-- KHỐI REMARK & CÔNG THỨC PAYMENT TERM CHUẨN 100% THEO ẢNH BÁO GIÁ -->
+  <div style="margin-top:14px;font-size:12px;line-height:1.65;font-family:Arial,sans-serif;color:#0f172a">
+    <div style="font-weight:bold;font-size:12.5px;margin-bottom:3px">Remark</div>
+    <div>* Some Material can be changed as per actual site condition</div>
+    <div>* Structure Mounting System Installation ( Depends On Site)</div>
+    <div>*Quotation Validity - ${d.hl || 1} Week</div>
+    <div style="padding-left:22px;margin-top:2px">
+      *Payment Term : 50% downpayment after agreement: &nbsp;<b>${fn(p50)} Kyat</b><br/>
+      <span style="display:inline-block;width:100px">&nbsp;</span>: 40% payment after installation: &nbsp;<b>${fn(p40)} Kyat</b><br/>
+      <span style="display:inline-block;width:100px">&nbsp;</span>: 10% payment after testing &amp; commissioning: &nbsp;<b>${fn(p10)} Kyat</b>
     </div>
-    <div class="pay-schedule">
-      <div class="pay-item">
-        <b style="color:#ca8a04">1st Payment (50% Advance):</b><br/>
-        <span style="font-size:13px;font-weight:700;color:#1e293b">${fn(p50)} ${curr}</span><br/>
-        <small style="color:#64748b">Upon Contract Signing</small>
-      </div>
-      <div class="pay-item">
-        <b style="color:#16a34a">2nd Payment (40% Delivery):</b><br/>
-        <span style="font-size:13px;font-weight:700;color:#1e293b">${fn(p40)} ${curr}</span><br/>
-        <small style="color:#64748b">Upon Equipment Arrival</small>
-      </div>
-      <div class="pay-item">
-        <b style="color:#2563eb">3rd Payment (10% Handover):</b><br/>
-        <span style="font-size:13px;font-weight:700;color:#1e293b">${fn(p10)} ${curr}</span><br/>
-        <small style="color:#64748b">Upon Commissioning</small>
-      </div>
-    </div>
-  </div>
-
-  <div style="font-size:11.5px;color:#64748b;margin-top:10px;line-height:1.5">
-    * <b>Notice:</b> Shipping costs are not included (Depends on Site).<br/>
-    * Quotation is valid for <b>${d.hl || 15} days</b> from the date of issue.<br/>
-    * All warranty terms are provided per manufacturer specifications and Viettel Construction Myanmar standards.
   </div>
 
   <!-- CHỮ KÝ XÁC NHẬN 2 BÊN -->
@@ -3366,6 +3474,545 @@ function renderLeadsCards(){
     <div class="card c-rd"><div class="lbl2">🔥 Lead Hot Đang Mở</div><div class="val">${hot}</div><div class="sub">cần chăm sóc ngay</div></div>`;
 }
 
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 📑 PHÂN HỆ TỜ TRÌNH QUYẾT TOÁN VCM (PAYMENT STATEMENT & PROPOSAL - GID 1792914236)
+// ═══════════════════════════════════════════════════════════════════════════════
+let currentEditingStatementId = null;
+
+function numberToWordsKyats(num) {
+  num = Math.round(Number(num) || 0);
+  if (num === 0) return "Zero kyats/.";
+  const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+    "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
+  const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+
+  function convertChunk(n) {
+    let s = "";
+    if (n >= 100) {
+      s += ones[Math.floor(n / 100)] + " hundred ";
+      n %= 100;
+    }
+    if (n >= 20) {
+      s += tens[Math.floor(n / 10)] + " ";
+      n %= 10;
+    }
+    if (n > 0) {
+      s += ones[n] + " ";
+    }
+    return s.trim();
+  }
+
+  let words = "";
+  if (num >= 1000000000) {
+    words += convertChunk(Math.floor(num / 1000000000)) + " billion ";
+    num %= 1000000000;
+  }
+  if (num >= 1000000) {
+    words += convertChunk(Math.floor(num / 1000000)) + " million ";
+    num %= 1000000;
+  }
+  if (num >= 1000) {
+    words += convertChunk(Math.floor(num / 1000)) + " thousand ";
+    num %= 1000;
+  }
+  if (num > 0) {
+    words += convertChunk(num) + " ";
+  }
+  words = words.trim();
+  return words.charAt(0).toUpperCase() + words.slice(1) + " kyats/.";
+}
+
+function calcStatementFields(manualBeforeTax) {
+  const afterTax = Number(v('stm-after-tax')) || 0;
+  let beforeTax = Number(v('stm-before-tax')) || 0;
+
+  if (!manualBeforeTax) {
+    beforeTax = Math.round(afterTax * 0.95238095); // hoặc afterTax * 0.95
+    const bEl = document.getElementById('stm-before-tax');
+    if (bEl) bEl.value = beforeTax;
+  }
+
+  const cMat = Number(v('stm-c-mat')) || 0;
+  const cLab = Number(v('stm-c-lab')) || 0;
+  const cStamp = Number(v('stm-c-stamp')) || 0;
+  const cTrans = Number(v('stm-c-trans')) || 0;
+  const cComm = Number(v('stm-c-comm')) || 0;
+  const cOther = Number(v('stm-c-other')) || 0;
+
+  const subTotal = cMat + cLab + cStamp + cTrans + cComm + cOther;
+  const diff = beforeTax - subTotal;
+  const ratio = beforeTax > 0 ? ((subTotal / beforeTax) * 100).toFixed(1) : "0.0";
+
+  const subEl = document.getElementById('stmc-subtotal');
+  const diffEl = document.getElementById('stmc-diff');
+  const ratioEl = document.getElementById('stmc-ratio');
+  const wordsEl = document.getElementById('stmc-words');
+
+  if (subEl) subEl.textContent = fn(subTotal) + " Ks";
+  if (diffEl) {
+    diffEl.innerHTML = `<span style="color:${diff >= 0 ? '#16a34a' : '#dc2626'}">${fn(diff)} Ks</span>`;
+  }
+  if (ratioEl) ratioEl.textContent = ratio + "%";
+  if (wordsEl) wordsEl.textContent = numberToWordsKyats(diff > 0 ? diff : subTotal);
+}
+
+function populateStatementSources() {
+  const sel = document.getElementById('stm-source-select');
+  if (!sel) return;
+  const quotes = DB.g('quotesolar');
+  const sales = DB.g('ban');
+
+  sel.innerHTML = '<option value="">-- Nạp nhanh từ Báo Giá Solar / Đơn Bán Hàng --</option>';
+  quotes.forEach(q => {
+    const opt = document.createElement('option');
+    opt.value = 'quote_' + q.id;
+    opt.textContent = `☀️ [Solar Quote] ${q.code || 'VCM'} - ${q.kh} (${fn(q.total)} Kyats)`;
+    sel.appendChild(opt);
+  });
+  sales.forEach(b => {
+    const opt = document.createElement('option');
+    opt.value = 'sale_' + b.id;
+    opt.textContent = `🛒 [Sales Order] #${b.id} - ${b.kh} - ${b.spN} (${fn(b.totalAmount || b.gia*b.sl)} Ks)`;
+    sel.appendChild(opt);
+  });
+}
+
+function loadStatementFromSource(val) {
+  if (!val) return;
+  const [type, idStr] = val.split('_');
+  const id = Number(idStr);
+
+  if (type === 'quote') {
+    const q = DB.g('quotesolar').find(item => item.id == id);
+    if (!q) return;
+    document.getElementById('stm-code').value = q.code || 'VCM-TNI-01';
+    document.getElementById('stm-kh').value = q.kh || '';
+    document.getElementById('stm-addr').value = q.dc || 'Tanintharyi Branch';
+    const totalVal = Number(q.total) || 0;
+    document.getElementById('stm-after-tax').value = totalVal;
+    // Tự động tính vật tư từ 83% hoặc tổng dòng vật tư
+    const matCost = Math.round(totalVal * 0.79);
+    document.getElementById('stm-c-mat').value = matCost;
+    document.getElementById('stm-c-comm').value = Math.round(totalVal * 0.01);
+    calcStatementFields();
+    al('📋 Đã nạp dữ liệu từ Báo Giá: ' + (q.code || ''));
+  } else if (type === 'sale') {
+    const b = DB.g('ban').find(item => item.id == id);
+    if (!b) return;
+    document.getElementById('stm-code').value = 'SO-' + b.id;
+    document.getElementById('stm-kh').value = b.kh || '';
+    const totalVal = Number(b.totalAmount || b.gia * b.sl);
+    document.getElementById('stm-after-tax').value = totalVal;
+    document.getElementById('stm-c-mat').value = Number(b.cost83 || Math.round(totalVal * 0.83));
+    document.getElementById('stm-c-comm').value = Math.round(totalVal * 0.01);
+    calcStatementFields();
+    al('📋 Đã nạp dữ liệu từ Đơn Hàng: #' + b.id);
+  }
+}
+
+function presetSampleStatement() {
+  document.getElementById('stm-branch').value = "WESTBAGO BRANCH";
+  document.getElementById('stm-no').value = "17/TH -VCM-WBG";
+  document.getElementById('stm-date').value = "TNI, date 19, May, 2026";
+  document.getElementById('stm-code').value = "VCM – TNI -04/2026 - 17";
+  document.getElementById('stm-kh').value = "Mr. Hla Phone Min";
+  document.getElementById('stm-addr').value = "Tanintharyi Branch";
+  document.getElementById('stm-after-tax').value = 15699600;
+  document.getElementById('stm-before-tax').value = 14952000;
+  document.getElementById('stm-c-mat').value = 12403260;
+  document.getElementById('stm-c-lab').value = 360000;
+  document.getElementById('stm-c-stamp').value = 150000;
+  document.getElementById('stm-c-trans').value = 830000;
+  document.getElementById('stm-c-comm').value = 156996;
+  document.getElementById('stm-c-other').value = 0;
+  document.getElementById('stm-note').value = "Báo cáo quyết toán hoàn thành lắp đặt hệ thống Solar.";
+  calcStatementFields(true);
+  al('⭐ Đã tải mẫu chuẩn Mr. Hla Phone Min (15.699.600 Ks)!');
+}
+
+function resetStatementForm() {
+  currentEditingStatementId = null;
+  document.getElementById('stm-code').value = 'VCM-TNI-' + UtilitiesDatePrefix() + '-01';
+  document.getElementById('stm-kh').value = '';
+  document.getElementById('stm-after-tax').value = 0;
+  document.getElementById('stm-before-tax').value = 0;
+  document.getElementById('stm-c-mat').value = 0;
+  document.getElementById('stm-c-lab').value = 0;
+  document.getElementById('stm-c-stamp').value = 0;
+  document.getElementById('stm-c-trans').value = 0;
+  document.getElementById('stm-c-comm').value = 0;
+  document.getElementById('stm-c-other').value = 0;
+  document.getElementById('stm-note').value = '';
+  calcStatementFields();
+}
+
+function saveVCMStatement(andPrint) {
+  const code = (v('stm-code') || '').trim();
+  const kh = (v('stm-kh') || '').trim();
+  if (!code || !kh) {
+    al('Vui lòng nhập Mã Hợp Đồng và Tên Khách Hàng!', 'er');
+    return;
+  }
+
+  const afterTax = Number(v('stm-after-tax')) || 0;
+  const beforeTax = Number(v('stm-before-tax')) || Math.round(afterTax * 0.95);
+  const cMat = Number(v('stm-c-mat')) || 0;
+  const cLab = Number(v('stm-c-lab')) || 0;
+  const cStamp = Number(v('stm-c-stamp')) || 0;
+  const cTrans = Number(v('stm-c-trans')) || 0;
+  const cComm = Number(v('stm-c-comm')) || 0;
+  const cOther = Number(v('stm-c-other')) || 0;
+
+  const subTotal = cMat + cLab + cStamp + cTrans + cComm + cOther;
+  const diff = beforeTax - subTotal;
+  const ratio = beforeTax > 0 ? Number(((subTotal / beforeTax) * 100).toFixed(1)) : 0;
+  const words = numberToWordsKyats(diff > 0 ? diff : subTotal);
+
+  const stmtObj = {
+    branch: v('stm-branch') || 'WESTBAGO BRANCH',
+    no: v('stm-no') || '17/TH -VCM-WBG',
+    dateStr: v('stm-date') || 'TNI, date ' + fd(td()),
+    code: code,
+    kh: kh,
+    addr: v('stm-addr') || 'Tanintharyi Branch',
+    afterTax: afterTax,
+    beforeTax: beforeTax,
+    cMat: cMat,
+    cLab: cLab,
+    cStamp: cStamp,
+    cTrans: cTrans,
+    cComm: cComm,
+    cOther: cOther,
+    subTotal: subTotal,
+    diff: diff,
+    ratio: ratio,
+    words: words,
+    note: v('stm-note') || '',
+    updatedAt: new Date().toISOString()
+  };
+
+  let list = DB.g('vcm_statements') || [];
+  let isUpdate = false;
+  let targetId = currentEditingStatementId;
+
+  if (targetId) {
+    list = list.map(item => item.id == targetId ? { ...stmtObj, id: targetId } : item);
+    isUpdate = true;
+  } else {
+    targetId = Date.now();
+    stmtObj.id = targetId;
+    currentEditingStatementId = targetId;
+    list.unshift(stmtObj);
+  }
+
+  DB.s('vcm_statements', list);
+  al(`✅ Đã ${isUpdate ? 'cập nhật' : 'lưu'} Tờ Trình ${code}!`);
+  rVCMStatements();
+
+  if (andPrint) {
+    printVCMStatement(targetId);
+  }
+}
+
+function rVCMStatements() {
+  const list = DB.g('vcm_statements') || [];
+  const countBadge = document.getElementById('stm-count-badge');
+  if (countBadge) countBadge.textContent = list.length + ' tờ trình';
+
+  const isVi = currentLang === 'vi';
+  const headers = isVi ?
+    ['#', 'Mã HĐ', 'Khách Hàng', 'HĐ Sau Thuế', 'Tổng Chi Phí', 'Lợi Nhuận', 'Tỷ Lệ', 'Ngày', 'Thao Tác'] :
+    ['#', 'Contract Code', 'Customer', 'After Tax', 'Sub Total', 'Difference', 'Ratio', 'Date', 'Actions'];
+
+  const container = document.getElementById('t-statements-table');
+  if (!container) return;
+
+  if (list.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:24px;color:#94a3b8">${isVi ? 'Chưa có tờ trình nào. Bấm nút "⭐ Mẫu Chuẩn" hoặc nạp từ Báo Giá để tạo!' : 'No statements yet. Click sample preset or load from solar quotes!'}</div>`;
+    return;
+  }
+
+  container.innerHTML = tbl(headers, list.map((r, i) => [
+    i + 1,
+    `<b>${r.code}</b>`,
+    `<b>${r.kh}</b><br/><small style="color:#64748b">${r.branch}</small>`,
+    `<span style="font-weight:700">${fn(r.afterTax)} Ks</span>`,
+    `<span style="color:#0284c7;font-weight:600">${fn(r.subTotal)} Ks</span>`,
+    `<b style="color:${r.diff >= 0 ? 'var(--gn)' : 'var(--rd)'}">${fn(r.diff)} Ks</b>`,
+    `<span class="bk ${r.ratio <= 95 ? 'bk-gn' : 'bk-or'}">${r.ratio}%</span>`,
+    r.dateStr ? `<small>${r.dateStr}</small>` : '-',
+    `<div style="white-space:nowrap">
+      <button class="btn b-xs b-bl" onclick="loadSelectedStatement(${r.id})" title="Xem & sửa">✏️</button>
+      <button class="btn b-xs b-gn" onclick="printVCMStatement(${r.id})" title="In tờ trình A4">🖨️ In</button>
+      <button class="btn b-xs b-or" onclick="exportStatementCSV(${r.id})" title="Xuất CSV">⬇</button>
+      <button class="btn b-xs b-rd" onclick="delVCMStatement(${r.id})" title="Xóa">🗑</button>
+    </div>`
+  ]));
+}
+
+function loadSelectedStatement(id) {
+  const list = DB.g('vcm_statements') || [];
+  const r = list.find(item => item.id == id);
+  if (!r) return;
+
+  currentEditingStatementId = r.id;
+  document.getElementById('stm-branch').value = r.branch || '';
+  document.getElementById('stm-no').value = r.no || '';
+  document.getElementById('stm-date').value = r.dateStr || '';
+  document.getElementById('stm-code').value = r.code || '';
+  document.getElementById('stm-kh').value = r.kh || '';
+  document.getElementById('stm-addr').value = r.addr || '';
+  document.getElementById('stm-after-tax').value = r.afterTax || 0;
+  document.getElementById('stm-before-tax').value = r.beforeTax || 0;
+  document.getElementById('stm-c-mat').value = r.cMat || 0;
+  document.getElementById('stm-c-lab').value = r.cLab || 0;
+  document.getElementById('stm-c-stamp').value = r.cStamp || 0;
+  document.getElementById('stm-c-trans').value = r.cTrans || 0;
+  document.getElementById('stm-c-comm').value = r.cComm || 0;
+  document.getElementById('stm-c-other').value = r.cOther || 0;
+  document.getElementById('stm-note').value = r.note || '';
+
+  calcStatementFields(true);
+  al(`📋 Đã mở Tờ Trình "${r.code} - ${r.kh}"!`);
+}
+
+function delVCMStatement(id) {
+  if (!confirm('Bạn có chắc muốn xóa tờ trình này?')) return;
+  let list = DB.g('vcm_statements') || [];
+  list = list.filter(item => item.id != id);
+  DB.s('vcm_statements', list);
+  if (currentEditingStatementId == id) resetStatementForm();
+  rVCMStatements();
+  al('🗑️ Đã xóa tờ trình!');
+}
+
+function printVCMStatement(id) {
+  const list = DB.g('vcm_statements') || [];
+  const r = (id ? list.find(item => item.id == id) : null) || {
+    branch: v('stm-branch') || 'WESTBAGO BRANCH',
+    no: v('stm-no') || '17/TH -VCM-WBG',
+    dateStr: v('stm-date') || 'TNI, date 19, May, 2026',
+    code: v('stm-code') || 'VCM – TNI -04/2026 - 17',
+    kh: v('stm-kh') || 'Mr. Hla Phone Min',
+    addr: v('stm-addr') || 'Tanintharyi Branch',
+    afterTax: Number(v('stm-after-tax')) || 15699600,
+    beforeTax: Number(v('stm-before-tax')) || 14952000,
+    cMat: Number(v('stm-c-mat')) || 12403260,
+    cLab: Number(v('stm-c-lab')) || 360000,
+    cStamp: Number(v('stm-c-stamp')) || 150000,
+    cTrans: Number(v('stm-c-trans')) || 830000,
+    cComm: Number(v('stm-c-comm')) || 156996,
+    cOther: Number(v('stm-c-other')) || 0,
+    subTotal: Number(document.getElementById('stmc-subtotal')?.textContent?.replace(/[^0-9]/g,'') || 13900256),
+    diff: Number(document.getElementById('stmc-diff')?.textContent?.replace(/[^0-9]/g,'') || 1051744),
+    ratio: document.getElementById('stmc-ratio')?.textContent || '93.0%',
+    words: document.getElementById('stmc-words')?.textContent || 'Four million three hundred eighty thousand nine hundred fifty two kyats/.'
+  };
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Payment_Proposal_${r.code}</title>
+  <style>
+    @page { size: A4 landscape; margin: 8mm 10mm; }
+    body { font-family: 'Times New Roman', Times, serif; color: #000; margin: 0; padding: 15px; font-size: 11pt; line-height: 1.3; }
+    .top-tbl { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+    .top-tbl td { vertical-align: top; border: none; padding: 2px 4px; }
+    .prop-title { text-align: center; margin: 10px 0 6px; font-weight: bold; font-size: 13pt; }
+    .prop-sub { text-align: center; margin-bottom: 12px; font-weight: bold; font-size: 11.5pt; text-decoration: underline; }
+    .lead-text { margin-bottom: 4px; font-size: 10.5pt; }
+    
+    table.data-tbl { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 9.5pt; text-align: center; }
+    table.data-tbl th, table.data-tbl td { border: 1px solid #000; padding: 4px 3px; }
+    table.data-tbl th { background: #f2f2f2; font-weight: bold; }
+    .sig-tbl { width: 100%; border-collapse: collapse; margin-top: 25px; text-align: center; font-size: 10pt; font-weight: bold; }
+    .sig-tbl td { border: none; padding: 0 4px; }
+    .sig-space { height: 60px; }
+    @media print { body { padding: 0; } .no-print { display: none !important; } }
+  </style>
+</head>
+<body>
+  <!-- HEADER 2 BÊN -->
+  <table class="top-tbl">
+    <tr>
+      <td style="width:50%;font-weight:bold;">
+        VIETTELCONSTRUCTIONMYANMAR<br/>
+        <u>${r.branch.toUpperCase()}</u><br/>
+        No: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/TH -VCM-WBG
+      </td>
+      <td style="width:50%;text-align:right;">
+        <b>REPUBLIC OF THE UNION OF MYANMAR</b><br/>
+        <i>${r.dateStr}</i>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top:10px;">
+        <b><u>APPROVAL</u></b><br/>
+        Date ... month ... year 2026<br/>
+        <b>CHIEF EXECUTIVE OFFICER</b>
+      </td>
+      <td></td>
+    </tr>
+  </table>
+
+  <div class="prop-title">PROPOSAL</div>
+  <div class="prop-sub">ABOUT OF PAYMENT FOR INTEGRATED BUSSINESS</div>
+
+  <div class="lead-text">Depends on the contract No: &nbsp;&nbsp;&nbsp;&nbsp;<b>${r.code}</b></div>
+  <div class="lead-text">TNI branch propose to approve the payment, as following:</div>
+  <div class="lead-text">Contents: Construction following the Contract No: &nbsp;&nbsp;&nbsp;&nbsp;<b>${r.code}</b> (Customer: <b>${r.kh}</b>)</div>
+  <div class="lead-text">Address: ${r.addr}</div>
+  <div class="lead-text" style="margin-top:6px;">Detail of payment TNI Branch propose to approve the payment:</div>
+
+  <!-- BẢNG 14 CỘT CHUẨN GID 1792914236 -->
+  <table class="data-tbl">
+    <thead>
+      <tr>
+        <th rowspan="2" style="width:30px">STT<br/>No</th>
+        <th rowspan="2" style="width:130px">Contract Code</th>
+        <th rowspan="2" style="width:90px">Contract value<br/>(before tax)</th>
+        <th rowspan="2" style="width:90px">Contract value<br/>(after tax)</th>
+        <th colspan="7">Cost of construction</th>
+        <th rowspan="2" style="width:80px">Difference</th>
+        <th rowspan="2" style="width:55px">Ratio</th>
+        <th rowspan="2" style="width:60px">Note</th>
+      </tr>
+      <tr>
+        <th style="width:85px">Material Cost</th>
+        <th style="width:70px">Labor cost</th>
+        <th style="width:75px">Documentation<br/>stamp cost</th>
+        <th style="width:75px">Transportation<br/>cost</th>
+        <th style="width:75px">Sales commission<br/>cost</th>
+        <th style="width:60px">Other cost</th>
+        <th style="width:85px">Sub Total</th>
+      </tr>
+      <tr style="font-size:8.5pt;background:#fafafa">
+        <td></td><td></td>
+        <td>95%</td><td>100%</td>
+        <td>89.0%</td><td></td><td></td><td></td><td></td><td></td><td>89.0%</td>
+        <td></td><td></td><td>89.0%</td>
+      </tr>
+      <tr style="font-size:8pt;color:#444">
+        <td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11=5+6…+10</td><td>12=3-11</td><td>14</td><td>15</td>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td style="font-weight:bold">${r.code}</td>
+        <td style="text-align:right">${fn(r.beforeTax)}</td>
+        <td style="text-align:right;font-weight:bold">${fn(r.afterTax)}</td>
+        <td style="text-align:right">${fn(r.cMat)}</td>
+        <td style="text-align:right">${fn(r.cLab)}</td>
+        <td style="text-align:right">${fn(r.cStamp)}</td>
+        <td style="text-align:right">${fn(r.cTrans)}</td>
+        <td style="text-align:right">${fn(r.cComm)}</td>
+        <td style="text-align:right">${r.cOther ? fn(r.cOther) : '-'}</td>
+        <td style="text-align:right;font-weight:bold">${fn(r.subTotal)}</td>
+        <td style="text-align:right;font-weight:bold">${fn(r.diff)}</td>
+        <td>${r.ratio}%</td>
+        <td>${r.note || ''}</td>
+      </tr>
+      <tr style="font-weight:bold;background:#f5f5f5">
+        <td colspan="2">Tổng cộng</td>
+        <td style="text-align:right">${fn(r.beforeTax)}</td>
+        <td style="text-align:right">${fn(r.afterTax)}</td>
+        <td style="text-align:right">${fn(r.cMat)}</td>
+        <td style="text-align:right">${fn(r.cLab)}</td>
+        <td style="text-align:right">${fn(r.cStamp)}</td>
+        <td style="text-align:right">${fn(r.cTrans)}</td>
+        <td style="text-align:right">${fn(r.cComm)}</td>
+        <td style="text-align:right">${r.cOther ? fn(r.cOther) : '-'}</td>
+        <td style="text-align:right">${fn(r.subTotal)}</td>
+        <td style="text-align:right">${fn(r.diff)}</td>
+        <td>${r.ratio}%</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="margin-top:8px;font-size:10pt;">
+    <b>Bằng chữ:</b> <i>${r.words}</i>
+  </div>
+
+  <!-- 4 CHỮ KÝ THẨM ĐỊNH -->
+  <table class="sig-tbl">
+    <tr>
+      <td style="width:25%">CHIEF TECHNOLOGY OFFICER</td>
+      <td style="width:25%">FINANCE DEPARTMENT</td>
+      <td style="width:25%">INTEGRATED DEPARTMENT</td>
+      <td style="width:25%">BRANCH DIRECTOR</td>
+    </tr>
+    <tr class="sig-space">
+      <td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>(Ký, ghi rõ họ tên)</td>
+      <td>(Ký, ghi rõ họ tên)</td>
+      <td>(Ký, ghi rõ họ tên)</td>
+      <td>(Ký, ghi rõ họ tên)</td>
+    </tr>
+  </table>
+
+  <script>window.onload=function(){window.print();}<\/script>
+</body>
+</html>`;
+
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+}
+
+function exportStatementCSV(id) {
+  const list = DB.g('vcm_statements') || [];
+  const r = (id ? list.find(item => item.id == id) : null) || (list.length ? list[0] : null);
+  if (!r) {
+    al('Chưa có tờ trình để xuất CSV!', 'er');
+    return;
+  }
+
+  const lines = [
+    `"VIETTELCONSTRUCTIONMYANMAR",,,,,,,,,"REPUBLIC OF THE UNION OF MYANMAR",,,,`,
+    `"${r.branch}",,,,,,,,,"${r.dateStr}",,,,`,
+    `"No:       ${r.no}",,,,,,,,,,,,,`,
+    `"APPROVAL",,,,,,,,,,,,,`,
+    `"Date ... month ... year 2026",,,,,,,,,,,,,`,
+    `"CHIEF EXECUTIVE OFFICER",,,,,,,,,,,,,`,
+    `,,,,,,,,,,,,,`,
+    `,,,,,,,,,,,,,`,
+    `"PROPOSAL",,,,,,,,,,,,,`,
+    `"ABOUT OF PAYMENT FOR INTEGRATED BUSSINESS",,,,,,,,,,,,,`,
+    `,,,,,,,,,,,,,`,
+    `"Depends on the contract No: ",,,"${r.code}",,,,,,,,,,`,
+    `"TNI branch propose to approve the payment, as following:",,,,,,,,,,,,,`,
+    `"Contents: Construction following the Contract No: ",,,,"${r.code}",,,,,,,,,`,
+    `"Address: ${r.addr}",,,,,,,,,,,,,`,
+    `"Detail of payment TNI Branch propose to approve the payment:",,,,,,,,,,,,,`,
+    `"STT\nNo","Contract Code","Contract value (before tax)","Contract value\n(after tax)","Cost of construction",,,,,,,"Difference","Ratio","Note"`,
+    `,,,,"Material Cost","Labor cost","Documentation stamp cost","Transportation cost","Sales commission cost","Other cost","Sub Total",,,`,
+    `,,"95%","100%","89.0%",,,,,,"89.0%",,,"89.0%"`,
+    `1,2,3,4,5,6,7,8,9,10,11=5+6…+10, 12=3-11 ,  14 ,15`,
+    `1,"${r.code}","${r.beforeTax}","${r.afterTax}","${r.cMat}","${r.cLab}","${r.cStamp}","${r.cTrans}","${r.cComm}","${r.cOther || ''}","${r.subTotal}","${r.diff}","${r.ratio}%","${(r.note || '').replace(/"/g,'""')}"`,
+    `"Tổng cộng",,"${r.beforeTax}","${r.afterTax}","${r.cMat}","${r.cLab}","${r.cStamp}","${r.cTrans}","${r.cComm}","${r.cOther || ''}","${r.subTotal}","${r.diff}","${r.ratio}%",`,
+    `" Bằng chữ: ${r.words}",,,,,,,,,,,,,`,
+    `,,,,,,,,,,,,,`,
+    `,"CHIEF TECHNOLOGY OFFICER",,"FINANCE DEPARTMENT",,,"INTEGRATED DEPARTMENT",,,,"BRANCH DIRECTOR",,,`
+  ];
+
+  const csv = "\uFEFF" + lines.join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = `VCM_Statement_${r.code.replace(/[^a-zA-Z0-9_-]/g,'_')}.csv`;
+  a.click();
+}
+
+function exportCurrentStatementCSV() {
+  saveVCMStatement(false);
+  exportStatementCSV(currentEditingStatementId);
+}
+
 // ═══════════════════════════════════════════════════
 // 🌐 UNIFIED BILINGUAL ENGINE (VIỆT - ANH ĐỒNG BỘ 100%)
 // ═══════════════════════════════════════════════════
@@ -3393,6 +4040,7 @@ const NAV_TITLES = {
     quangcao: '📢 Ads Campaigns',
     leads: '🎯 Leads & Conv',
     loinhuan: '💰 Financial & Cashflow',
+    statement: '📑 VCM Payment Statement',
     baocao: '📈 Reports',
     mystats: '📊 My Performance',
     myquotes: '📄 My Quotations',
@@ -3419,6 +4067,7 @@ const NAV_TITLES = {
     quangcao: '📢 Chiến Dịch Quảng Cáo',
     leads: '🎯 Leads & Chuyển Đổi',
     loinhuan: '💰 Tài Chính & Lợi Nhuận',
+    statement: '📑 Tờ Trình Quyết Toán VCM',
     baocao: '📈 Báo Cáo Kho Hàng',
     mystats: '📊 Tiến Độ Cá Nhân',
     myquotes: '📄 Báo Giá Của Tôi',
