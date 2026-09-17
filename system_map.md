@@ -847,7 +847,7 @@ Bot gửi tin nhắn xác nhận hoàn thành điểm danh về cho người dù
 - **Lịch tự động:**
   - `08:45 MMT` & `09:15 MMT` → `sendDailyAttendanceTemplates()` → Trigger kép: 08:45 MMT gửi đợt 1 sau cutoff 8:40; 09:15 MMT chốt đợt 2 (ai gửi 8:40-9:15 là Late ⚠️, ai không báo chốt thành Take leave Not report ❌; tự xóa sạch tin cũ của đợt trước).
   - `09:00 MMT` → `sendDailyAttendanceReport()` → gửi báo cáo tổng hợp vào CONTROL + T1/T2/T3/T4
-- **Deployment `@97`:** `AKfycbzSz_ISXgertxBDadw4BBQX1JdMjW650_o4He0o4Lh-uf1hV5O3YaE-ohlqI2CHyAcVFg` (Trigger kép 08:45 và 09:15 MMT, chuẩn hóa thông số Late ⚠️ và Take leave Not report ❌).
+- **Deployment `@98`:** `AKfycbzSz_ISXgertxBDadw4BBQX1JdMjW650_o4He0o4Lh-uf1hV5O3YaE-ohlqI2CHyAcVFg` (Hỗ trợ trực tiếp lệnh /take_leave và /half_leave: tự động nhận diện Telegram ID nhân viên, ghi vào tab Sum report và phản hồi xác nhận ngay lập tức).
 
 ---
 
