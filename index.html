@@ -1,4 +1,4 @@
-﻿<!-- TNI Operations BI Portal v347 - Plan - Result Dep Tab + 8 BI Architecture Pillars -->
+<!-- TNI Operations BI Portal v347 - Plan - Result Dep Tab + 8 BI Architecture Pillars -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -715,6 +715,17 @@
   color: #38BDF8;
   border-color: rgba(56, 189, 248, 0.3);
 }
+.chat-action-btn.speaking-pulse {
+  background: rgba(239, 68, 68, 0.18) !important;
+  color: #F87171 !important;
+  border-color: rgba(239, 68, 68, 0.45) !important;
+  animation: pulse-speak 1.5s infinite;
+}
+@keyframes pulse-speak {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
 .chat-input-wrapper {
   padding: 1rem 1.2rem;
   background: rgba(15, 23, 42, 0.98);
@@ -1376,6 +1387,8 @@
                 applyTeam(k, teamData[k], dateLabel, planLabel, targetPct);
               });
 
+              window.allEngineers = allEngineers;
+              window.deptPointsMap = deptPointsMap;
               window.latestTeamData = teamData;
               window.latestDates = datesObj;
               window.latestExportTime = exportTimeStr;
@@ -7515,6 +7528,10 @@ Team04>> 2Box</td>
         return;
       }
 
+      if (window.ChiefSecretaryAgent && typeof window.ChiefSecretaryAgent.stopSpeaking === 'function') {
+        window.ChiefSecretaryAgent.stopSpeaking();
+      }
+
       const scriptText = getDynamicBriefingScript(selectedLang);
       
       // Split full text into sentence chunks to bypass Chrome/Windows 15-second cutoff bug
@@ -8253,6 +8270,26 @@ document.addEventListener("DOMContentLoaded", function() {
     getTeams: function() {
       return window.latestTeamData || {};
     },
+    getTeamDetails: function(targetTeam) {
+      const teams = this.getTeams();
+      const allEngs = this.getEngineers();
+      let key = 'team4', codeMatch = 'TEAM04', teamTitle = 'Team 4 (Kawthoung - Naing Myo Htun)', badgeColor = 'var(--amber)';
+      const t = (targetTeam || 'team4').toLowerCase();
+      if (t.includes('1') || t.includes('dawei')) {
+        key = 'team1'; codeMatch = 'TEAM01'; teamTitle = 'Team 1 (Dawei - Paing Aung Soe)'; badgeColor = 'var(--rose)';
+      } else if (t.includes('2') || t.includes('myeik')) {
+        key = 'team2'; codeMatch = 'TEAM02'; teamTitle = 'Team 2 (Myeik - Nay Myo Thu)'; badgeColor = 'var(--cyan)';
+      } else if (t.includes('3') || t.includes('bokpyin')) {
+        key = 'team3'; codeMatch = 'TEAM03'; teamTitle = 'Team 3 (Bokpyin - Pyae Phyo Zaw)'; badgeColor = 'var(--emerald)';
+      } else {
+        key = 'team4'; codeMatch = 'TEAM04'; teamTitle = 'Team 4 (Kawthoung - Naing Myo Htun)'; badgeColor = 'var(--amber)';
+      }
+      const teamInfo = teams[key] || {
+        name: teamTitle, totalAssigned: 0, fotClose: 0, overdueF: 0, remain: 0, waitCD: 0, cdNotYet: 0, pct: 0, rank: '-'
+      };
+      const teamEngs = allEngs.filter(e => ((e.team_code || '') + (e.real_name || '')).toUpperCase().includes(codeMatch));
+      return { key, teamInfo, teamTitle, badgeColor, teamEngs };
+    },
     evaluateTopBottom: function() {
       const engs = this.getEngineers();
       if (!engs || engs.length === 0) {
@@ -8264,7 +8301,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
       // Clone and compute score
       const scored = engs.map(e => {
-        const rateNum = parseFloat((e.rate || "0").replace("%", "")) || 0;
+        const rateNum = parseFloat((e.rate || "0").toString().replace("%", "")) || 0;
         const completedNum = parseInt(e.completed || 0, 10) || 0;
         const overdueNum = parseInt(e.overdue || 0, 10) || 0;
         const remainNum = parseInt(e.sum_remain || 0, 10) || 0;
@@ -8398,6 +8435,7 @@ document.addEventListener("DOMContentLoaded", function() {
   window.ChiefSecretaryAgent = {
     initialized: false,
     isSpeaking: false,
+    activeSpeakBtn: null,
 
     init: function() {
       if (this.initialized) return;
@@ -8413,6 +8451,14 @@ document.addEventListener("DOMContentLoaded", function() {
         const countEl = document.getElementById('audit-log-count');
         if (countEl) countEl.textContent = logs.length;
       } catch(e) {}
+    },
+
+    clearHistory: function() {
+      this.stopSpeaking();
+      const container = document.getElementById('secretary-chat-messages');
+      if (container) {
+        this.renderWelcome();
+      }
     },
 
     renderWelcome: function() {
@@ -8438,7 +8484,7 @@ document.addEventListener("DOMContentLoaded", function() {
               Sếp có thể gõ câu hỏi tự do hoặc bấm các nút lệnh nhanh phía trên để em báo cáo ngay lập tức ạ!
             </div>
             <div class="chat-actions-strip">
-              <button class="chat-action-btn" onclick="window.ChiefSecretaryAgent.speakText(this.closest('.chat-bubble').innerText)"><i class="fa-solid fa-volume-high"></i> Đọc Báo Cáo</button>
+              <button class="chat-action-btn" onclick="window.ChiefSecretaryAgent.speakText(this.closest('.chat-bubble').innerText, this)"><i class="fa-solid fa-volume-high"></i> <span>Đọc Báo Cáo</span></button>
             </div>
           </div>
         </div>
@@ -8518,13 +8564,13 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
             <div>${htmlContent}</div>
             <div class="chat-actions-strip">
-              <button class="chat-action-btn" onclick="window.ChiefSecretaryAgent.speakText(this.closest('.chat-bubble').innerText)"><i class="fa-solid fa-volume-high"></i> Đọc Báo Cáo</button>
+              <button class="chat-action-btn" onclick="window.ChiefSecretaryAgent.speakText(this.closest('.chat-bubble').innerText, this)"><i class="fa-solid fa-volume-high"></i> <span>Đọc Báo Cáo</span></button>
               <button class="chat-action-btn" onclick="navigator.clipboard.writeText(this.closest('.chat-bubble').innerText); alert('Đã copy báo cáo!');"><i class="fa-solid fa-copy"></i> Sao chép</button>
             </div>
           </div>
         </div>
       `;
-      container.insertAdjacentHTML('beforeend', html);
+      container.insertAdjacentHTML('beforeend', botHtml);
       container.scrollTop = container.scrollHeight;
     },
 
@@ -8572,16 +8618,224 @@ document.addEventListener("DOMContentLoaded", function() {
       container.scrollTop = container.scrollHeight;
 
       setTimeout(() => {
-        document.getElementById(tempId)?.remove();
-        this.dispatchAndAnswer(query);
+        try {
+          document.getElementById(tempId)?.remove();
+          this.dispatchAndAnswer(query);
+        } catch (err) {
+          console.error("❌ [ChiefSecretaryAgent] Dispatch error:", err);
+          document.getElementById(tempId)?.remove();
+          this.appendBotMessage(`⚠️ <b>THƯ KÝ TRƯỞNG GHI NHẬN LỖI XỬ LÝ:</b><br/>Đã xảy ra sự cố khi truy vấn dữ liệu: <code>${this.escapeHtml(err.message)}</code>.<br/>Sếp vui lòng thử lại hoặc bấm các nút tác vụ nhanh phía trên!`, '👑 AI-CHIEF-EXEC');
+        }
       }, 600);
     },
 
     dispatchAndAnswer: function(query) {
-      const q = query.toLowerCase();
+      const q = (query || "").toLowerCase().trim();
+
+      // Check Team Intent
+      const isT4 = /\b(t4|team\s*4|kawthoung|kaw\s*thoung)\b/i.test(q);
+      const isT1 = /\b(t1|team\s*1|dawei)\b/i.test(q);
+      const isT2 = /\b(t2|team\s*2|myeik)\b/i.test(q);
+      const isT3 = /\b(t3|team\s*3|bokpyin)\b/i.test(q);
+      const targetTeam = isT4 ? 'team4' : (isT1 ? 'team1' : (isT2 ? 'team2' : (isT3 ? 'team3' : null)));
+
+      // Check Bad Engineers / Overdue / Unclosed intent
+      const isAskingBadEngs = /không\s*đóng|tồn\s*đọng|kém|chậm|overdue|quá\s*hạn|đôn\s*đốc|gỗ/i.test(q);
+
+      // CASE A: SPECIFIC TEAM + BAD ENGINEERS / BACKLOG (Exact match for user prompt)
+      if (targetTeam && isAskingBadEngs) {
+        const teamData = WOAgent.getTeamDetails(targetTeam);
+        const evalRes = WOAgent.evaluateTopBottom();
+        const tInfo = teamData.teamInfo;
+
+        let teamEngsRows = teamData.teamEngs.map((e, idx) => `
+          <tr>
+            <td>${idx + 1}</td>
+            <td><b>${this.escapeHtml(e.real_name || e.nsys || 'Kỹ sư')}</b></td>
+            <td><strong style="color:${(parseInt(e.rate||0)>=75)?'#10B981':'#EF4444'};">&bull; ${e.rate || '0%'}</strong></td>
+            <td><b style="color:#10B981;">${e.completed || 0}</b></td>
+            <td><span class="kpi-pill ${(parseInt(e.overdue||0)>0)?'kpi-red':'kpi-green'}">${e.overdue || 0}</span></td>
+            <td>${e.wait_cd || 0}</td>
+            <td><b>${e.sum_remain || 0}</b></td>
+          </tr>
+        `).join('');
+
+        let underperformingSection = '';
+        if (evalRes.status === 'ok') {
+          underperformingSection = `
+            <div style="margin-top:0.9rem; background:rgba(239,68,68,0.08); border-left:4px solid #EF4444; padding:0.8rem; border-radius:8px;">
+              <div style="font-weight:800; color:#EF4444; font-size:0.88rem; margin-bottom:0.4rem;">
+                ⚠️ TOP KỸ SƯ TOÀN MẠNG CHƯA ĐÓNG WO / QUÁ HẠN CAO (CẦN ĐÔN ĐỐC):
+              </div>
+              ${evalRes.bottom3.map((e, i) => `
+                <div style="margin-bottom:0.35rem; padding-bottom:0.35rem; border-bottom:1px dashed rgba(255,255,255,0.08); font-size:0.78rem;">
+                  <b>#${i+1}. ${this.escapeHtml(e.real_name || e.nsys || 'Kỹ sư')}</b> &bull; <span class="kpi-pill kpi-amber">${this.escapeHtml((e.team_code || '').replace('MYT_TNI_',''))}</span>
+                  <div style="color:#E2E8F0; margin-top:0.15rem;">
+                    &bull; Tỷ lệ: <strong style="color:#EF4444;">${e.rate || '0%'}</strong> &bull; Quá hạn: <span class="kpi-pill kpi-red">${e.overdue || 0} WOs</span> &bull; Tồn đọng (P): <b>${e.sum_remain || 0} WOs</b> &bull; Chờ CD: ${e.wait_cd || 0} WOs
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+
+        const html = `
+          <h3 style="color:#38BDF8; font-size:1.05rem; margin-bottom:0.6rem;">
+            🎯 BÁO CÁO NHIỆM VỤ ${teamData.teamTitle.toUpperCase()} & ĐÔN ĐỐC WO
+          </h3>
+          <p style="font-size:0.8rem; color:#94A3B8; margin-bottom:0.8rem;">
+            Dữ liệu sống từ Sheet SSOT GID 159298579 &bull; Phân tích bởi <b>AI-AGENT-WO</b>.
+          </p>
+
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:0.5rem; margin-bottom:0.8rem;">
+            <div style="background:rgba(255,255,255,0.04); padding:0.5rem; border-radius:6px; text-align:center;">
+              <div style="font-size:0.7rem; color:#94A3B8;">Tổng Giao</div>
+              <div style="font-size:1.1rem; font-weight:800; color:#38BDF8;">${tInfo.totalAssigned || 0}</div>
+            </div>
+            <div style="background:rgba(16,185,129,0.1); padding:0.5rem; border-radius:6px; text-align:center;">
+              <div style="font-size:0.7rem; color:#10B981;">Đã Đóng (G)</div>
+              <div style="font-size:1.1rem; font-weight:800; color:#10B981;">${tInfo.fotClose || 0}</div>
+            </div>
+            <div style="background:rgba(239,68,68,0.1); padding:0.5rem; border-radius:6px; text-align:center;">
+              <div style="font-size:0.7rem; color:#EF4444;">Quá Hạn (N)</div>
+              <div style="font-size:1.1rem; font-weight:800; color:#EF4444;">${tInfo.overdueF || tInfo.overdue || 0}</div>
+            </div>
+            <div style="background:rgba(245,158,11,0.1); padding:0.5rem; border-radius:6px; text-align:center;">
+              <div style="font-size:0.7rem; color:#F59E0B;">Tồn Đọng (P)</div>
+              <div style="font-size:1.1rem; font-weight:800; color:#F59E0B;">${tInfo.remain || 0}</div>
+            </div>
+            <div style="background:rgba(56,189,248,0.1); padding:0.5rem; border-radius:6px; text-align:center;">
+              <div style="font-size:0.7rem; color:#38BDF8;">Tỷ Lệ / Hạng</div>
+              <div style="font-size:1.1rem; font-weight:800; color:#38BDF8;">${tInfo.pct || 0}% (#${tInfo.rank || '-'})</div>
+            </div>
+          </div>
+
+          <div style="font-weight:700; color:#F8FAFC; font-size:0.85rem; margin-bottom:0.4rem;">
+            📋 Danh Sách & Tiến Độ Chi Tiết Kỹ Sư ${teamData.teamTitle}:
+          </div>
+          <table class="data-table" style="font-size:0.75rem; width:100%;">
+            <thead>
+              <tr><th>#</th><th>Kỹ Sư</th><th>Tỷ Lệ</th><th>Close (G)</th><th>Overdue (N)</th><th>Wait CD</th><th>Remain (P)</th></tr>
+            </thead>
+            <tbody>
+              ${teamEngsRows || '<tr><td colspan="7">Đang nạp dữ liệu kỹ sư khu vực...</td></tr>'}
+            </tbody>
+          </table>
+
+          ${underperformingSection}
+        `;
+        this.appendBotMessage(html, 'AI-AGENT-WO & 👑 AI-CHIEF-EXEC');
+        return;
+      }
+
+      // CASE B: SPECIFIC REGIONAL TEAM DEEP-DIVE (T1, T2, T3, T4)
+      if (targetTeam) {
+        const teamData = WOAgent.getTeamDetails(targetTeam);
+        const tInfo = teamData.teamInfo;
+
+        let teamEngsRows = teamData.teamEngs.map((e, idx) => `
+          <tr>
+            <td>${idx + 1}</td>
+            <td><b>${this.escapeHtml(e.real_name || e.nsys || 'Kỹ sư')}</b></td>
+            <td><strong style="color:${(parseInt(e.rate||0)>=75)?'#10B981':'#EF4444'};">&bull; ${e.rate || '0%'}</strong></td>
+            <td><b style="color:#10B981;">${e.completed || 0}</b></td>
+            <td><span class="kpi-pill ${(parseInt(e.overdue||0)>0)?'kpi-red':'kpi-green'}">${e.overdue || 0}</span></td>
+            <td>${e.wait_cd || 0}</td>
+            <td><b>${e.sum_remain || 0}</b></td>
+          </tr>
+        `).join('');
+
+        const html = `
+          <h3 style="color:#38BDF8; font-size:1.05rem; margin-bottom:0.6rem;">
+            🗺️ BÁO CÁO TIẾN ĐỘ & NHIỆM VỤ ${teamData.teamTitle.toUpperCase()}
+          </h3>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:0.5rem; margin-bottom:0.8rem;">
+            <div style="background:rgba(255,255,255,0.04); padding:0.5rem; border-radius:6px; text-align:center;">
+              <div style="font-size:0.7rem; color:#94A3B8;">Tổng Giao</div>
+              <div style="font-size:1.1rem; font-weight:800; color:#38BDF8;">${tInfo.totalAssigned || 0}</div>
+            </div>
+            <div style="background:rgba(16,185,129,0.1); padding:0.5rem; border-radius:6px; text-align:center;">
+              <div style="font-size:0.7rem; color:#10B981;">Đã Đóng (G)</div>
+              <div style="font-size:1.1rem; font-weight:800; color:#10B981;">${tInfo.fotClose || 0}</div>
+            </div>
+            <div style="background:rgba(239,68,68,0.1); padding:0.5rem; border-radius:6px; text-align:center;">
+              <div style="font-size:0.7rem; color:#EF4444;">Quá Hạn (N)</div>
+              <div style="font-size:1.1rem; font-weight:800; color:#EF4444;">${tInfo.overdueF || tInfo.overdue || 0}</div>
+            </div>
+            <div style="background:rgba(245,158,11,0.1); padding:0.5rem; border-radius:6px; text-align:center;">
+              <div style="font-size:0.7rem; color:#F59E0B;">Tồn Đọng (P)</div>
+              <div style="font-size:1.1rem; font-weight:800; color:#F59E0B;">${tInfo.remain || 0}</div>
+            </div>
+            <div style="background:rgba(56,189,248,0.1); padding:0.5rem; border-radius:6px; text-align:center;">
+              <div style="font-size:0.7rem; color:#38BDF8;">Tỷ Lệ / Hạng</div>
+              <div style="font-size:1.1rem; font-weight:800; color:#38BDF8;">${tInfo.pct || 0}% (#${tInfo.rank || '-'})</div>
+            </div>
+          </div>
+
+          <table class="data-table" style="font-size:0.75rem; width:100%;">
+            <thead>
+              <tr><th>#</th><th>Kỹ Sư</th><th>Tỷ Lệ</th><th>Close (G)</th><th>Overdue (N)</th><th>Wait CD</th><th>Remain (P)</th></tr>
+            </thead>
+            <tbody>
+              ${teamEngsRows || '<tr><td colspan="7">Đang nạp dữ liệu kỹ sư...</td></tr>'}
+            </tbody>
+          </table>
+        `;
+        this.appendBotMessage(html, 'AI-AGENT-WO');
+        return;
+      }
+
+      // CASE C: WORK ORDERS OVERVIEW ("WO" / "Work Order")
+      if (q === 'wo' || /^(wo|work\s*order|báo\s*cáo\s*wo|tổng\s*quan\s*wo)$/i.test(q)) {
+        const teams = window.latestTeamData || {};
+        const tKeys = ['team1', 'team2', 'team3', 'team4'];
+        const tNames = { team1: 'Team 1 (Dawei)', team2: 'Team 2 (Myeik)', team3: 'Team 3 (Bokpyin)', team4: 'Team 4 (Kawthoung)' };
+        let rowsHtml = '';
+        let sumTotal = 0, sumClose = 0, sumOverdue = 0, sumRemain = 0;
+
+        tKeys.forEach(k => {
+          const t = teams[k] || {};
+          sumTotal += (t.totalAssigned || 0);
+          sumClose += (t.fotClose || 0);
+          sumOverdue += (t.overdueF || t.overdue || 0);
+          sumRemain += (t.remain || 0);
+          rowsHtml += `
+            <tr>
+              <td><b>${tNames[k]}</b></td>
+              <td>${t.totalAssigned || 0}</td>
+              <td><b style="color:#10B981;">${t.fotClose || 0}</b></td>
+              <td><b style="color:#EF4444;">${t.overdueF || t.overdue || 0}</b></td>
+              <td>${t.remain || 0}</td>
+              <td>${t.waitCD || t.wait_cd || 0}</td>
+              <td><span class="kpi-pill kpi-blue">Rank #${t.rank || '-'} (${t.pct || 0}%)</span></td>
+            </tr>
+          `;
+        });
+
+        const overallPct = sumTotal > 0 ? Math.round((sumClose / sumTotal) * 100) : 0;
+        const html = `
+          <h3 style="color:#10B981; font-size:1.05rem; margin-bottom:0.6rem;">
+            📋 BÁO CÁO TIẾN ĐỘ WORK ORDER (WO) — TOÀN MẠNG 4 KHU VỰC
+          </h3>
+          <p style="font-size:0.8rem; color:#94A3B8; margin-bottom:0.8rem;">
+            Tổng giao: <b>${sumTotal} WOs</b> &bull; Đã đóng: <b style="color:#10B981;">${sumClose} WOs</b> (${overallPct}%) &bull; Quá hạn: <b style="color:#EF4444;">${sumOverdue} WOs</b> &bull; Tồn đọng: <b>${sumRemain} WOs</b>.
+          </p>
+          <table class="data-table" style="font-size:0.8rem; width:100%;">
+            <thead>
+              <tr><th>Đội Khu Vực</th><th>Giao</th><th>Close (G)</th><th>Overdue (N)</th><th>Remain (P)</th><th>Wait CD</th><th>Xếp Hạng</th></tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+          <p style="font-size:0.75rem; color:#94A3B8; margin-top:0.6rem;">
+            💡 <i>Gợi ý: Sếp có thể gõ <b>"T4"</b>, <b>"T1"</b>, hoặc <b>"Đánh giá kỹ sư"</b> để xem danh sách chi tiết từng nhân sự!</i>
+          </p>
+        `;
+        this.appendBotMessage(html, 'AI-AGENT-WO');
+        return;
+      }
 
       // 1. EVALUATION: Top 3 & Bottom 3 Performers
-      if (q.includes('tốt') || q.includes('kém') || q.includes('nhân viên') || q.includes('kỹ sư') || q.includes('top') || q.includes('đánh giá')) {
+      if (q.includes('tốt') || q.includes('kém') || q.includes('nhân viên') || q.includes('kỹ sư') || q.includes('top') || q.includes('đánh giá') || q.includes('đóng')) {
         const res = WOAgent.evaluateTopBottom();
         if (res.status !== 'ok') {
           this.appendBotMessage(res.message, 'AI-AGENT-WO');
@@ -8602,9 +8856,9 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
             ${res.top3.map((e, i) => `
               <div style="margin-bottom:0.4rem; padding-bottom:0.4rem; border-bottom:1px dashed rgba(255,255,255,0.08);">
-                <b>#${i+1}. ${this.escapeHtml(e.real_name || e.nsys)}</b> &bull; <span class="kpi-pill kpi-blue">${this.escapeHtml(e.team_code.replace('MYT_TNI_',''))}</span>
+                <b>#${i+1}. ${this.escapeHtml(e.real_name || e.nsys || 'Kỹ sư')}</b> &bull; <span class="kpi-pill kpi-blue">${this.escapeHtml((e.team_code || '').replace('MYT_TNI_',''))}</span>
                 <div style="font-size:0.78rem; margin-top:0.2rem; color:#E2E8F0;">
-                  &bull; Tỷ lệ: <strong style="color:#10B981;">${e.rate}</strong> &bull; Đã đóng: <b>${e.completed} WOs</b> &bull; Quá hạn: <span class="kpi-pill kpi-green">${e.overdue} WOs</span> &bull; Chờ CD: ${e.wait_cd} WOs
+                  &bull; Tỷ lệ: <strong style="color:#10B981;">${e.rate || '0%'}</strong> &bull; Đã đóng: <b>${e.completed || 0} WOs</b> &bull; Quá hạn: <span class="kpi-pill kpi-green">${e.overdue || 0} WOs</span> &bull; Chờ CD: ${e.wait_cd || 0} WOs
                 </div>
               </div>
             `).join('')}
@@ -8616,9 +8870,9 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
             ${res.bottom3.map((e, i) => `
               <div style="margin-bottom:0.4rem; padding-bottom:0.4rem; border-bottom:1px dashed rgba(255,255,255,0.08);">
-                <b>#${i+1}. ${this.escapeHtml(e.real_name || e.nsys)}</b> &bull; <span class="kpi-pill kpi-amber">${this.escapeHtml(e.team_code.replace('MYT_TNI_',''))}</span>
+                <b>#${i+1}. ${this.escapeHtml(e.real_name || e.nsys || 'Kỹ sư')}</b> &bull; <span class="kpi-pill kpi-amber">${this.escapeHtml((e.team_code || '').replace('MYT_TNI_',''))}</span>
                 <div style="font-size:0.78rem; margin-top:0.2rem; color:#E2E8F0;">
-                  &bull; Tỷ lệ: <strong style="color:#EF4444;">${e.rate}</strong> &bull; Quá hạn FOT: <span class="kpi-pill kpi-red">${e.overdue} WOs</span> &bull; Tồn đọng (Cột P): <b>${e.sum_remain} WOs</b> &bull; Treo CD: ${e.wait_cd} WOs
+                  &bull; Tỷ lệ: <strong style="color:#EF4444;">${e.rate || '0%'}</strong> &bull; Quá hạn FOT: <span class="kpi-pill kpi-red">${e.overdue || 0} WOs</span> &bull; Tồn đọng (Cột P): <b>${e.sum_remain || 0} WOs</b> &bull; Treo CD: ${e.wait_cd || 0} WOs
                 </div>
                 <div style="font-size:0.72rem; color:#FCA5A5; margin-top:0.2rem;">
                   <i>Khuyến nghị: Cần Đội Trưởng kiểm tra việc hoàn tất nghiệm thu và chi viện nguồn lực xử lý quá hạn.</i>
@@ -8675,7 +8929,7 @@ document.addEventListener("DOMContentLoaded", function() {
       }
 
       // 3. 4 TEAMS COMPARISON
-      if (q.includes('team') || q.includes('đội') || q.includes('dawei') || q.includes('myeik') || q.includes('bokpyin') || q.includes('kawthoung')) {
+      if (q.includes('team') || q.includes('đội') || q.includes('so sánh')) {
         const teams = window.latestTeamData || {};
         const tKeys = ['team1', 'team2', 'team3', 'team4'];
         const tNames = { team1: 'Team 1 (Dawei)', team2: 'Team 2 (Myeik)', team3: 'Team 3 (Bokpyin)', team4: 'Team 4 (Kawthoung)' };
@@ -8688,9 +8942,9 @@ document.addEventListener("DOMContentLoaded", function() {
               <td><b>${tNames[k]}</b></td>
               <td>${t.totalAssigned || 0}</td>
               <td><b style="color:#10B981;">${t.fotClose || 0}</b></td>
-              <td><b style="color:#EF4444;">${t.overdue || 0}</b></td>
+              <td><b style="color:#EF4444;">${t.overdueF || t.overdue || 0}</b></td>
               <td>${t.remain || 0}</td>
-              <td>${t.cdNotYet || 0}</td>
+              <td>${t.waitCD || t.wait_cd || 0}</td>
               <td><span class="kpi-pill kpi-blue">Rank #${t.rank || '-'} (${t.pct || 0}%)</span></td>
             </tr>
           `;
@@ -8744,7 +8998,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
       let topEngSummary = "Đang nạp";
       if (evalRes.status === 'ok') {
-        topEngSummary = `Xuất sắc: <b>${evalRes.top3[0]?.real_name}</b> (${evalRes.top3[0]?.rate}) | Cần đôn đốc: <b>${evalRes.bottom3[0]?.real_name}</b> (${evalRes.bottom3[0]?.overdue} WOs quá hạn)`;
+        topEngSummary = `Xuất sắc: <b>${evalRes.top3[0]?.real_name || 'N/A'}</b> (${evalRes.top3[0]?.rate || '0%'}) | Cần đôn đốc: <b>${evalRes.bottom3[0]?.real_name || 'N/A'}</b> (${evalRes.bottom3[0]?.overdue || 0} WOs quá hạn)`;
       }
 
       const html = `
@@ -8827,17 +9081,72 @@ document.addEventListener("DOMContentLoaded", function() {
       this.appendBotMessage("🔄 <b>ĐÃ ĐỒNG BỘ DỮ LIỆU SỐNG THÀNH CÔNG:</b><br/>Cả 6 Trợ lý chuyên mảng đã làm mới số liệu 29 Kỹ sư, 4 Đội khu vực và 9 Phòng ban từ Google Sheets!", '👑 AI-CHIEF-EXEC');
     },
 
-    speakText: function(text) {
+    stopSpeaking: function() {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      this.isSpeaking = false;
+      if (this.activeSpeakBtn) {
+        this.activeSpeakBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i> <span>Đọc Báo Cáo</span>';
+        this.activeSpeakBtn.classList.remove('speaking-pulse');
+        this.activeSpeakBtn = null;
+      }
+    },
+
+    speakText: function(text, btn) {
       if (!window.speechSynthesis) {
         alert("Trình duyệt không hỗ trợ Web Speech Synthesis.");
         return;
       }
-      window.speechSynthesis.cancel();
-      const clean = text.replace(/[#*`&bull;]/g, ' ').replace(/\s+/g, ' ').trim();
+
+      // TẮT LOA KHI BẤM LẦN 2 (Speaker Button Toggle)
+      if (window.speechSynthesis.speaking || this.isSpeaking) {
+        const wasSameBtn = (btn && this.activeSpeakBtn === btn);
+        this.stopSpeaking();
+        if (wasSameBtn) {
+          return; // Toggle off completely!
+        }
+      }
+
+      // Đồng thời dừng loa top-bar nếu đang nói
+      if (typeof isSpeaking !== 'undefined' && isSpeaking) {
+        if (typeof synth !== 'undefined' && synth.cancel) synth.cancel();
+        isSpeaking = false;
+        const playBtn = document.getElementById('playVoiceBtn');
+        const voiceIcon = document.getElementById('voiceIcon');
+        const voiceText = document.getElementById('voiceText');
+        if (playBtn) playBtn.classList.remove('speaking');
+        if (voiceIcon) voiceIcon.className = "fa-solid fa-volume-high";
+        if (voiceText) voiceText.textContent = "AI Audio Briefing";
+      }
+
+      const clean = (text || '').replace(/[#*`&bull;]/g, ' ').replace(/\s+/g, ' ').trim();
+      if (!clean) return;
+
       const utter = new SpeechSynthesisUtterance(clean);
       const langSelect = document.getElementById('secVoiceLang');
       utter.lang = langSelect?.value || 'vi-VN';
       utter.rate = 0.95;
+
+      this.isSpeaking = true;
+      this.activeSpeakBtn = btn || null;
+      if (btn) {
+        btn.innerHTML = '<i class="fa-solid fa-circle-stop" style="color:#EF4444;"></i> <span style="color:#EF4444; font-weight:700;">Dừng Đọc</span>';
+        btn.classList.add('speaking-pulse');
+      }
+
+      const handleDone = () => {
+        this.isSpeaking = false;
+        if (this.activeSpeakBtn) {
+          this.activeSpeakBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i> <span>Đọc Báo Cáo</span>';
+          this.activeSpeakBtn.classList.remove('speaking-pulse');
+          this.activeSpeakBtn = null;
+        }
+      };
+
+      utter.onend = handleDone;
+      utter.onerror = handleDone;
+
       window.speechSynthesis.speak(utter);
     },
 

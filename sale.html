@@ -143,6 +143,7 @@ tbody tr:hover{background:#fafcff}
     <a onclick="go('banhang')" data-nav-a="banhang">🛒 Sales &amp; Dispatch</a>
     <a onclick="go('baogiaups')" data-nav-a="baogiaups">📄 Device Quote</a>
     <a onclick="go('baogiasolar')" data-nav-a="baogiasolar">☀️ Solar Quote <small style="color:#38bdf8;font-size:10.5px;margin-left:auto">VCM</small></a>
+    <a onclick="go('thucthi')" data-nav-a="thucthi" style="color:#059669;font-weight:700">🚀 Team Thực Thi <small style="background:#dcfce7;color:#15803d;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:auto;font-weight:700">HUB</small></a>
     <a onclick="go('acceptance')" data-nav-a="acceptance">⚡ Handover &amp; Acceptance</a>
     <a onclick="go('daily')" data-nav-a="daily">🏪 Distribution</a>
     <a onclick="go('kygoi')" data-nav-a="kygoi">📋 Consignment</a>
@@ -737,24 +738,58 @@ tbody tr:hover{background:#fafcff}
         <div class="fg" style="margin-top:6px">
           <div class="f"><label>⚡ Điện Áp Đo Bàn Giao (V) *</label><input id="acc-volt" value="220" placeholder="VD: 220 V / 380 V" style="font-weight:700;color:#1e40af"/></div>
           <div class="f"><label>☀️ Công Suất Đỉnh Đo Đạc (kWp) *</label><input id="acc-kwp" value="15.8" placeholder="VD: 15.8 kWp" style="font-weight:700;color:#d97706"/></div>
-          <div class="f"><label>🔄 Tần Số Lưới (Hz)</label><input id="acc-freq" value="50" placeholder="50 Hz"/></div>
           <div class="f"><label>🔋 Mức Sạc Pin Lưu Trữ (SOC %)</label><input id="acc-soc" value="98%" placeholder="VD: 98%"/></div>
-          <div class="f"><label>🛡️ Điện Trở Tiếp Địa (Ω)</label><input id="acc-earth" value="3.8 Ω" placeholder="VD: < 4.0 Ω"/></div>
-          <div class="f"><label>Trạng Thái Lưới / Tải</label><select id="acc-grid-status"><option>Bình thường - Đạt chuẩn 100%</option><option>Điện lưới chập chờn - Đã chạy Hybrid</option><option>Mất điện lưới - Đang chạy Backup</option></select></div>
         </div>
 
-        <!-- 3. CẬP NHẬT SỐ LƯỢNG VẬT TƯ THỰC DÙNG & SERIAL -->
-        <b style="font-size:12.5px;color:#065f46;display:block;margin-top:14px;border-top:1px dashed #cbd5e1;padding-top:10px">
-          3. Số Lượng Vật Tư Thực Tế Sử Dụng &amp; Serial Number:
-        </b>
-        <div class="fg" style="margin-top:6px">
-          <div class="f"><label>🔌 Số mét Dây DC Đen (Black Cable)</label><input id="acc-cable-blk" value="45 m" placeholder="VD: 45 m" style="font-weight:700;background:#f8fafc"/></div>
-          <div class="f"><label>🔴 Số mét Dây DC Đỏ (Red Cable)</label><input id="acc-cable-red" value="45 m" placeholder="VD: 45 m" style="font-weight:700;background:#fef2f2;color:#b91c1c"/></div>
-          <div class="f"><label>⚡ Số mét Dây AC (AC Cable)</label><input id="acc-cable-ac" value="25 m" placeholder="VD: 25 m"/></div>
-          <div class="f"><label>🔗 Số Cặp Đầu Nối MC4 Thực Dùng</label><input id="acc-mc4" value="8 cặp" placeholder="VD: 8 cặp"/></div>
-          <div class="f" style="grid-column:1/-1"><label>🏷️ Serial Number Inverter *</label><input id="acc-sn-inv" value="DEYE-15K-20260501" placeholder="Nhập hoặc quét mã SN Inverter..." style="font-weight:700;color:#1e40af"/></div>
-          <div class="f" style="grid-column:1/-1"><label>🔋 Serial Number Pin Lưu Trữ (Battery)</label><input id="acc-sn-bat" value="CATL-320AH-88912" placeholder="Nhập mã SN Pin..."/></div>
-          <div class="f" style="grid-column:1/-1"><label>☀️ Danh Sách / Dải Serial Tấm Pin Solar</label><input id="acc-sn-pv" value="LR5-72HBD-640M (24 tấm: SN01 - SN24)" placeholder="Dải serial 24 tấm pin..."/></div>
+        <!-- 3. BẢNG THỐNG KÊ VẬT TƯ THỰC DÙNG & THỪA QUY RA TIỀN -->
+        <div style="margin-top:14px;border-top:1px dashed #cbd5e1;padding-top:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+            <b style="font-size:12.5px;color:#065f46">
+              3. Thống Kê Vật Tư Sử Dụng &amp; Vật Tư Thừa Quy Ra Tiền (Chuyển KH Khác):
+            </b>
+            <div style="display:flex;gap:6px">
+              <button type="button" class="btn b-xs b-gn" onclick="addAccMatRow()">➕ Thêm Vật Tư</button>
+              <button type="button" class="btn b-xs b-out" onclick="loadDefaultAccMaterials()">🔄 Mẫu Chuẩn</button>
+            </div>
+          </div>
+          <div style="font-size:11px;color:#64748b;margin-top:3px;font-style:italic">
+            * Đối soát vật tư mang đi vs thực dùng. <b>Tiền vật tư thừa thu hồi được đem sang KH khác dùng, không tính vào giá trị sử dụng công trình này.</b>
+          </div>
+
+          <div style="margin-top:8px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;padding:8px;overflow-x:auto">
+            <div style="display:grid;grid-template-columns:minmax(140px,2fr) 45px 65px 65px 60px 80px 90px 105px 28px;gap:5px;font-size:10.5px;font-weight:700;color:#475569;border-bottom:1px solid #cbd5e1;padding-bottom:5px;margin-bottom:5px;min-width:680px">
+              <div>Tên Vật Tư</div>
+              <div style="text-align:center">ĐVT</div>
+              <div style="text-align:center">Mang Đi</div>
+              <div style="text-align:center;color:#047857">Dùng</div>
+              <div style="text-align:center;color:#b45309">Thừa</div>
+              <div style="text-align:right">Đơn Giá</div>
+              <div style="text-align:right;color:#059669">Tiền Dùng</div>
+              <div style="text-align:right;color:#b45309">Tiền Thừa (Thu Hồi)</div>
+              <div></div>
+            </div>
+            <div id="acc-mat-items" style="min-width:680px">
+              <!-- Dynamic material rows -->
+            </div>
+          </div>
+
+          <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:6px;padding:6px 10px">
+              <span style="font-size:10.5px;color:#065f46;font-weight:600">⚡ Tiền Vật Tư Thực Dùng (Tính Công Trình):</span>
+              <div id="acc-mat-used-total" style="font-size:15px;font-weight:900;color:#059669">0 Ks</div>
+            </div>
+            <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:6px 10px">
+              <span style="font-size:10.5px;color:#92400e;font-weight:600">🔄 Tiền Thừa Thu Hồi (Chuyển KH Khác):</span>
+              <div id="acc-mat-rem-total" style="font-size:15px;font-weight:900;color:#b45309">0 Ks</div>
+              <small style="font-size:9.5px;color:#78350f;display:block">✓ Không tính vào giá trị sử dụng công trình này</small>
+            </div>
+          </div>
+
+          <div class="fg" style="margin-top:10px">
+            <div class="f" style="grid-column:1/-1"><label>🏷️ Serial Number Inverter *</label><input id="acc-sn-inv" value="DEYE-15K-20260501" placeholder="Nhập hoặc quét mã SN Inverter..." style="font-weight:700;color:#1e40af"/></div>
+            <div class="f" style="grid-column:1/-1"><label>🔋 Serial Number Pin Lưu Trữ (Battery)</label><input id="acc-sn-bat" value="CATL-320AH-88912" placeholder="Nhập mã SN Pin..."/></div>
+            <div class="f" style="grid-column:1/-1"><label>☀️ Danh Sách / Dải Serial Tấm Pin Solar</label><input id="acc-sn-pv" value="LR5-72HBD-640M (24 tấm: SN01 - SN24)" placeholder="Dải serial 24 tấm pin..."/></div>
+          </div>
         </div>
 
         <!-- 4. KHUNG KÝ TAY CẢM ỨNG TRÊN ĐIỆN THOẠI -->
@@ -794,30 +829,41 @@ tbody tr:hover{background:#fafcff}
           </div>
         </div>
 
-        <!-- 6. BÓC TÁCH TÀI CHÍNH 1 HÀNG KHÉP KÍN -->
+        <!-- 6. THANH TOÁN & QUYẾT TOÁN HIỆN TRƯỜNG -->
         <b style="font-size:12.5px;color:#065f46;display:block;margin-top:14px;border-top:1px dashed #cbd5e1;padding-top:10px">
-          6. Bóc Tách Tài Chính Toàn Diện Từ Báo Giá Đến Lợi Nhuận Chi Nhánh:
+          6. Thu Tiền &amp; Quyết Toán Bàn Giao Hiện Trường (Customer Payment):
         </b>
         <div class="fg" style="margin-top:6px">
           <div class="f"><label>💰 Doanh Thu Hợp Đồng (100%) (Ks) *</label><input id="acc-rev" type="number" value="39684760" oninput="calcAccFinancials()"/></div>
-          <div class="f"><label>🏦 Tổng Giá Gốc Vốn (83%) (Ks) *</label><input id="acc-cost" type="number" value="32938351" oninput="calcAccFinancials()"/></div>
-          <div class="f"><label>💵 Thực Thu Từ Khách (Ks) *</label><input id="acc-paid" type="number" value="35716284" oninput="calcAccFinancials()"/></div>
-          <div class="f"><label>⏳ Còn Nợ / Chưa Thu (Ks)</label><input id="acc-debt" type="number" value="3968476" readonly style="background:#f1f5f9"/></div>
+          <div class="f"><label>💵 Thực Thu Từ Khách Tại Hiện Trường (Ks) *</label><input id="acc-paid" type="number" value="35716284" oninput="calcAccFinancials()"/></div>
+          <div class="f"><label>⏳ Khách Còn Nợ / Cần Thu Thêm (Ks)</label><input id="acc-debt" type="number" value="3968476" readonly style="background:#f1f5f9;color:#b91c1c;font-weight:700"/></div>
         </div>
 
-        <!-- LIVE RESULT CARDS -->
-        <div style="margin-top:12px;padding:12px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px">
-          <div><span style="font-size:11px;color:#1e40af">🏢 Phải Nộp Cty (% Cty)</span><div id="accc-cty" style="font-size:15px;font-weight:700;color:#1e40af">6,746,409 Ks</div></div>
-          <div><span style="font-size:11px;color:#059669">🏪 Thực Còn Lại Chi Nhánh</span><div id="accc-branch-net" style="font-size:16px;font-weight:900;color:#059669">0 Ks</div></div>
+        <!-- BẢO MẬT: BÓC TÁCH NỘI BỘ (HÌNH 2) — NHÂN VIÊN NGHIỆM THU KHÔNG ĐƯỢC NHÌN VÀO -->
+        <div id="acc-admin-fin-box" style="display:none;margin-top:10px;padding:12px;background:#f8fafc;border-radius:8px;border:1px solid #cbd5e1">
+          <div style="font-size:12px;font-weight:700;color:#1e3a8a;margin-bottom:8px">🏢 Bóc Tách Giá Vốn &amp; Lợi Nhuận Công Ty (Chỉ Dành Cho Quản Lý):</div>
+          <div class="fg">
+            <div class="f"><label>🏦 Tổng Giá Gốc Vốn (83%) (Ks) *</label><input id="acc-cost" type="number" value="32938351" oninput="calcAccFinancials()"/></div>
+          </div>
+          <!-- LIVE RESULT CARDS -->
+          <div style="margin-top:10px;padding:10px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px">
+            <div><span style="font-size:11px;color:#1e40af">🏢 Phải Nộp Cty (% Cty)</span><div id="accc-cty" style="font-size:15px;font-weight:700;color:#1e40af">6,746,409 Ks</div></div>
+            <div><span style="font-size:11px;color:#059669">🏪 Thực Còn Lại Chi Nhánh</span><div id="accc-branch-net" style="font-size:16px;font-weight:900;color:#059669">0 Ks</div></div>
+          </div>
+          <div style="text-align:right;margin-top:8px">
+            <button class="btn b-or b-xs" onclick="exportAcceptancesCSV()">⬇ Xuất CSV Sổ Cái (Quản Lý)</button>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;background:#fef3c7;padding:8px 12px;border-radius:6px;border:1px solid #fde68a;flex-wrap:wrap;gap:6px">
+          <span style="font-size:11.5px;color:#92400e">🛡️ <b>Bảo Mật Kinh Doanh:</b> Nhân viên nghiệm thu chỉ thu tiền khách. Giá vốn 83% &amp; Lợi nhuận cty được khóa bảo mật 100%.</span>
+          <button type="button" class="btn b-xs b-out" id="btn-toggle-acc-admin" onclick="toggleAccAdminFin()">👁️ Mở Khóa Quản Lý</button>
         </div>
 
         <!-- NÚT THAO TÁC -->
-        <div class="fa" style="margin-top:14px;justify-content:space-between;flex-wrap:wrap;gap:8px">
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn b-gn" onclick="saveAcceptanceRecord(false)" style="font-weight:700">💾 Lưu Biên Bản Nghiệm Thu</button>
-            <button class="btn b-bl" onclick="saveAcceptanceRecord(true)" style="font-weight:700">🖨️ In Biên Bản PDF (A4)</button>
-          </div>
-          <button class="btn b-or" onclick="exportAcceptancesCSV()">⬇ Xuất CSV Sổ Cái</button>
+        <div class="fa" style="margin-top:14px;justify-content:flex-start;flex-wrap:wrap;gap:8px">
+          <button class="btn b-gn" onclick="saveAcceptanceRecord(false)" style="font-weight:700">💾 Lưu Biên Bản Nghiệm Thu</button>
+          <button class="btn b-bl" onclick="saveAcceptanceRecord(true)" style="font-weight:700">🖨️ In Biên Bản PDF (A4)</button>
         </div>
       </div>
     </div>
@@ -836,6 +882,315 @@ tbody tr:hover{background:#fafcff}
     </div>
   </div>
 </div>
+
+<!-- ══ CỔNG ĐIỀU HÀNH TEAM THỰC THI (FIELD OPERATIONS HUB) ══ -->
+<div class="sec" id="s-thucthi">
+  <!-- Top Banner & Direct Sharing Link -->
+  <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px 18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;border-bottom:1px solid #f1f5f9;padding-bottom:12px">
+      <div>
+        <div style="font-size:16px;font-weight:900;color:#059669;letter-spacing:0.5px">🚀 CỔNG ĐIỀU HÀNH TEAM THỰC THI (FIELD OPERATIONS HUB)</div>
+        <div style="font-size:12px;color:#475569;margin-top:3px">Khảo Sát Hiện Trường &bull; Bỏ Hàng Đại Lý / Ký Gởi Trưởng Thôn &bull; Tồn Kho Serial &bull; Nghiệm Thu Bàn Giao &bull; Lịch Sử Khách Hàng</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span class="bk bk-gn" style="font-size:11px;font-weight:700">🛡️ BẢO MẬT: ẨN 100% GIÁ VỐN &amp; LỢI NHUẬN CTY</span>
+        <button class="btn b-xs b-bl" onclick="copyStaffShareLink()" style="font-weight:700">📋 Copy Link Gửi Nhân Viên</button>
+      </div>
+    </div>
+
+    <!-- Thanh chọn nhân viên và tạo link riêng -->
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px;background:#f0fdf4;padding:8px 12px;border-radius:6px;border:1px solid #bbf7d0">
+      <span style="font-size:12px;font-weight:700;color:#166534">👤 Nhân Viên Phụ Trách:</span>
+      <select id="tt-staff-sel" style="padding:5px 10px;border:1px solid #86efac;border-radius:5px;font-size:12px;font-weight:700;color:#166534" onchange="handleStaffChange(this.value)">
+        <option value="Zin Ko Ko">Zin Ko Ko (Kỹ Sư Trưởng Thi Công)</option>
+        <option value="Min Paing">Min Paing (Kỹ Thuật Hiện Trường)</option>
+        <option value="Aung Thu">Aung Thu (Kỹ Thuật Lắp Đặt)</option>
+        <option value="Kyaw Swar">Kyaw Swar (Sale Thị Trường)</option>
+        <option value="Zaw Win">Zaw Win (Khảo Sát &amp; Điểm Bán)</option>
+      </select>
+      <input id="tt-staff-custom" placeholder="Hoặc gõ tên nhân viên..." style="padding:5px 9px;border:1px solid #cbd5e1;border-radius:5px;font-size:12px;width:170px" oninput="handleStaffCustomInput(this.value)"/>
+      <span id="tt-link-display" style="font-size:11px;color:#475569;font-family:monospace;background:#fff;padding:4px 8px;border-radius:4px;border:1px solid #cbd5e1">...</span>
+    </div>
+  </div>
+
+  <!-- 5 SUB-TABS NAVIGATION -->
+  <div class="tabs" id="tabs-tt" style="margin-bottom:14px">
+    <div class="tab on" onclick="sw(this,'tt-ks')">📝 1. Khảo Sát Hiện Trường</div>
+    <div class="tab" onclick="sw(this,'tt-pp')">🚚 2. Bỏ Hàng Đại Lý / Ký Gởi Trưởng Thôn</div>
+    <div class="tab" onclick="sw(this,'tt-sn')">🏷️ 3. Tồn Kho Chi Tiết Serial</div>
+    <div class="tab" onclick="sw(this,'tt-nt')">⚡ 4. Nghiệm Thu &amp; Hoàn Vật Tư</div>
+    <div class="tab" onclick="sw(this,'tt-ls')">👥 5. Lịch Sử Khách Hàng Của Tôi</div>
+  </div>
+
+  <!-- ════ SUB-TAB 1: KHẢO SÁT HIỆN TRƯỜNG (SITE SURVEY) ════ -->
+  <div id="tt-ks">
+    <div class="g2">
+      <!-- FORM KHẢO SÁT -->
+      <div class="panel">
+        <div class="ph" style="background:#f0fdf4">
+          <h3 style="color:#166534">📝 Phiếu Khảo Sát Địa Hình &amp; Phụ Tải Hiện Trường</h3>
+        </div>
+        <div class="pb">
+          <div class="fg">
+            <div class="f"><label>Tên Khách Hàng (Mr/Ms) *</label><input id="surv-kh" placeholder="Tên khách hàng / Chủ nhà"/></div>
+            <div class="f"><label>Số Điện Thoại *</label><input id="surv-dt" placeholder="09xxxxxxx"/></div>
+            <div class="f"><label>Địa Chỉ / Thôn Bản / Khu Vực *</label><input id="surv-dc" placeholder="Thôn, Xã, Township..."/></div>
+            <div class="f"><label>Tọa Độ GPS / Google Maps Link</label><input id="surv-gps" placeholder="10.0241, 98.5420 hoặc link Maps"/></div>
+            <div class="f"><label>Ngày Khảo Sát</label><input id="surv-date" type="date"/></div>
+            <div class="f"><label>Kỹ Sư Khảo Sát</label><input id="surv-eng" placeholder="Họ tên kỹ sư"/></div>
+            <div class="f"><label>Loại Kiến Trúc Mái</label>
+              <select id="surv-roof">
+                <option value="Mái Tôn (Tin Roof)">Mái Tôn (Tin Roof)</option>
+                <option value="Mái Ngói (Tile Roof)">Mái Ngói (Tile Roof)</option>
+                <option value="Mái Bằng Bê Tông (Flat Concrete)">Mái Bằng Bê Tông (Flat Concrete)</option>
+                <option value="Sân Vườn / Mặt Đất (Ground Mount)">Sân Vườn / Mặt Đất (Ground Mount)</option>
+              </select>
+            </div>
+            <div class="f"><label>Hướng Đón Nắng Chính &amp; Góc Nghiêng</label>
+              <select id="surv-orient">
+                <option value="Hướng Nam (180°) - Tối Ưu">Hướng Nam (180°) - Tối Ưu</option>
+                <option value="Hướng Đông Nam (135°)">Hướng Đông Nam (135°)</option>
+                <option value="Hướng Tây Nam (225°)">Hướng Tây Nam (225°)</option>
+                <option value="Hướng Đông (90°)">Hướng Đông (90°)</option>
+                <option value="Hướng Tây (270°)">Hướng Tây (270°)</option>
+              </select>
+            </div>
+            <div class="f"><label>Hiện Trạng Nguồn Điện</label>
+              <select id="surv-grid">
+                <option value="Chưa có điện lưới (100% Off-grid / Hybrid)">Chưa có điện lưới (100% Off-grid / Hybrid)</option>
+                <option value="Điện lưới chập chờn / Cúp thường xuyên">Điện lưới chập chờn / Cúp thường xuyên</option>
+                <option value="Điện lưới tương đối ổn định">Điện lưới tương đối ổn định</option>
+              </select>
+            </div>
+            <div class="f"><label>Phụ Tải Thiết Bị Chính</label>
+              <input id="surv-load" placeholder="VD: 2 Máy lạnh, 1 Tủ đông, 1 Bơm nước 1.5HP..."/>
+            </div>
+            <div class="f"><label>Công Suất Inverter Đề Xuất (kW)</label>
+              <select id="surv-inv">
+                <option value="3kW Hybrid">3kW Hybrid</option>
+                <option value="5kW Hybrid">5kW Hybrid (1 Pha)</option>
+                <option value="6kW Hybrid">6kW Hybrid</option>
+                <option value="8kW Hybrid" selected>8kW Hybrid (Phổ Biến)</option>
+                <option value="12kW Hybrid">12kW Hybrid (3 Pha)</option>
+                <option value="15kW Hybrid">15kW Hybrid (Công Suất Lớn)</option>
+                <option value="20kW+ Commercial">20kW+ Dự Án Lớn</option>
+              </select>
+            </div>
+            <div class="f"><label>Dung Lượng Pin Lưu Trữ Đề Xuất</label>
+              <select id="surv-bat">
+                <option value="5.12 kWh Lithium">5.12 kWh Lithium</option>
+                <option value="10.24 kWh Lithium" selected>10.24 kWh (Khuyên Dùng)</option>
+                <option value="15.36 kWh (320Ah CATL)">15.36 kWh (320Ah CATL)</option>
+                <option value="20 kWh+ High Voltage">20 kWh+ High Voltage</option>
+                <option value="Chưa cần pin (Hòa lưới bám tải)">Chưa cần pin (Hòa lưới bám tải)</option>
+              </select>
+            </div>
+            <div class="f"><label>Số Lượng Tấm Pin Đề Xuất</label>
+              <input id="surv-pv" value="16 tấm Longi 620W (9.92 kWp)" placeholder="VD: 16 tấm Longi 620W"/>
+            </div>
+            <div class="f"><label>Khoảng Cách Dây DC Dự Kiến (m)</label>
+              <input id="surv-cable" value="45 m" placeholder="VD: 45 m"/>
+            </div>
+            <div class="f" style="grid-column:1/-1"><label>Đặc Điểm Thi Công &amp; Ghi Chú Kỹ Thuật</label>
+              <textarea id="surv-notes" rows="2" placeholder="Vị trí đặt inverter mát mẻ, lối đi lên mái thuận tiện, che bóng cây buổi chiều..."></textarea>
+            </div>
+          </div>
+          <div class="fa" style="margin-top:12px;justify-content:flex-start;gap:8px">
+            <button class="btn b-gn" onclick="saveSurveySite()" style="font-weight:700">💾 Lưu Khảo Sát Hiện Trường</button>
+            <button class="btn b-out" onclick="resetSurveyForm()">✕ Tạo Mới</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- BẢNG LỊCH SỬ KHẢO SÁT -->
+      <div class="panel">
+        <div class="ph" style="background:#f8fafc">
+          <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
+            <h3 style="color:#1e293b">📋 Danh Sách Khảo Sát Hiện Trường</h3>
+            <input id="surv-filter" placeholder="🔍 Tìm kiếm KH, khu vực..." oninput="renderSurveySites()" style="padding:4px 8px;border:1px solid var(--bd);border-radius:5px;font-size:11.5px;width:160px"/>
+          </div>
+        </div>
+        <div class="pb tw" id="t-surveys-table" style="max-height:600px;overflow-y:auto">
+          <!-- Rendered survey table -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ SUB-TAB 2: BỎ HÀNG ĐẠI LÝ & KÝ GỞI TRƯỞNG THÔN (DISTRIBUTION & CONSIGNMENT) ════ -->
+  <div id="tt-pp" style="display:none">
+    <div class="g2">
+      <!-- FORM PHÂN PHỐI & KÝ GỞI -->
+      <div class="panel">
+        <div class="ph" style="background:#fff7ed">
+          <h3 style="color:#9a3412">🚚 Bỏ Hàng Cho Đại Lý, Điểm Bán &amp; Ký Gởi Trưởng Thôn</h3>
+        </div>
+        <div class="pb">
+          <div class="fg">
+            <div class="f"><label>Kênh Tiếp Nhận Hàng *</label>
+              <select id="vcon-channel" onchange="handleVconChannelChange(this.value)">
+                <option value="Ký Gởi Trưởng Thôn / Già Làng (Village Headman)">👑 Ký Gởi Trưởng Thôn / Già Làng (Village Headman)</option>
+                <option value="Đại Lý Phân Phối (Authorized Dealer)">🏪 Đại Lý Phân Phối (Authorized Dealer)</option>
+                <option value="Điểm Bán Lẻ / Cửa Hàng (Retail POS)">🛒 Điểm Bán Lẻ / Cửa Hàng (Retail POS)</option>
+              </select>
+            </div>
+            <div class="f"><label>Tên Trưởng Thôn / Đại Lý / Điểm Bán *</label>
+              <input id="vcon-name" placeholder="VD: U Kyaw Swar (Trưởng Thôn Palaw North)"/>
+            </div>
+            <div class="f"><label>Người Ký Nhận Hàng</label><input id="vcon-contact" placeholder="Họ tên người nhận"/></div>
+            <div class="f"><label>Số Điện Thoại Liên Hệ *</label><input id="vcon-phone" placeholder="09xxxxxxx"/></div>
+            <div class="f"><label>Thôn / Bản / Địa Bàn</label><input id="vcon-village" placeholder="Tên thôn bản, Township..."/></div>
+            <div class="f"><label>Nhân Viên Phụ Trách</label><input id="vcon-staff" placeholder="Nhân viên TNI"/></div>
+            <div class="f"><label>Sản Phẩm Bàn Giao Ký Gởi *</label>
+              <select id="vcon-product">
+                <option value="Inverter Hybrid Deye 5kW">Inverter Hybrid Deye 5kW</option>
+                <option value="Inverter Hybrid Deye 8kW">Inverter Hybrid Deye 8kW</option>
+                <option value="Quạt Năng Lượng Mặt Trời 12V">Quạt Năng Lượng Mặt Trời 12V (Solar Fan)</option>
+                <option value="Đèn Năng Lượng Mặt Trời 300W Rời">Đèn Năng Lượng Mặt Trời 300W (Solar Light)</option>
+                <option value="Bộ Lưu Điện Mini DC Solar Kit">Bộ Lưu Điện Mini DC Solar Kit</option>
+                <option value="Pin Lưu Trữ Lithium 100Ah">Pin Lưu Trữ Lithium 100Ah</option>
+              </select>
+            </div>
+            <div class="f"><label>Số Lượng Bàn Giao *</label><input id="vcon-qty" type="number" min="1" value="2" oninput="calcVconTotal()"/></div>
+            <div class="f" style="grid-column:1/-1"><label>Dải Số Serial (SN) Chi Tiết Từng Chiếc *</label>
+              <input id="vcon-serials" placeholder="VD: DEYE-5K-001, DEYE-5K-002 (Nhập phân cách bằng dấu phẩy)"/>
+            </div>
+            <div class="f"><label>Giá Bán Tại Điểm (Ks) *</label><input id="vcon-price" type="number" value="3850000" oninput="calcVconTotal()"/></div>
+            <div class="f"><label>Tỷ Lệ Hoa Hồng / Thù Lao (%)</label><input id="vcon-comm" type="number" value="10" oninput="calcVconTotal()"/></div>
+            <div class="f"><label>Ngày Bàn Giao</label><input id="vcon-date" type="date"/></div>
+            <div class="f"><label>Hạn Đối Soát / Thu Tiền</label><input id="vcon-due" type="date"/></div>
+            <div class="f" style="grid-column:1/-1"><label>Ghi Chú &amp; Điều Kiện Bảo Quản</label>
+              <textarea id="vcon-notes" rows="2" placeholder="Hàng trưng bày mẫu tại nhà trưởng thôn, cam kết bảo quản nơi khô ráo, đổi trả nếu lỗi kỹ thuật..."></textarea>
+            </div>
+          </div>
+
+          <!-- SUMMARY CARD -->
+          <div style="margin-top:10px;padding:10px 12px;background:#fffbeb;border:1px solid #fed7aa;border-radius:6px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+            <div><span style="font-size:11px;color:#9a3412">Tổng Tiền Ký Gởi:</span><div id="vcon-total-val" style="font-size:15px;font-weight:900;color:#c2410c">0 Ks</div></div>
+            <div><span style="font-size:11px;color:#15803d">Thù Lao Trưởng Thôn / ĐL:</span><div id="vcon-comm-val" style="font-size:15px;font-weight:900;color:#15803d">0 Ks</div></div>
+            <div><span style="font-size:11px;color:#1e40af">Thu Hồi Về Cty:</span><div id="vcon-net-val" style="font-size:15px;font-weight:900;color:#1e40af">0 Ks</div></div>
+          </div>
+
+          <div class="fa" style="margin-top:12px;justify-content:flex-start;gap:8px">
+            <button class="btn b-or" onclick="saveVillageConsignment()" style="font-weight:700">🚚 Xác Nhận Bàn Giao &amp; Ký Gởi Hàng</button>
+            <button class="btn b-out" onclick="resetVconForm()">✕ Làm Mới</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- BẢNG THEO DÕI HÀNG KÝ GỞI & ĐẠI LÝ -->
+      <div class="panel">
+        <div class="ph" style="background:#f8fafc">
+          <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
+            <h3 style="color:#1e293b">📋 Theo Dõi Hàng Ký Gởi Trưởng Thôn &amp; Điểm Bán</h3>
+            <span id="vcon-count-badge" style="font-size:11.5px;color:#64748b">0 điểm</span>
+          </div>
+        </div>
+        <div class="pb tw" id="t-vcon-table" style="max-height:600px;overflow-y:auto">
+          <!-- Rendered consignment table -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ SUB-TAB 3: TỒN KHO CHI TIẾT ĐẾN SERIAL (SERIAL TRACKING) ════ -->
+  <div id="tt-sn" style="display:none">
+    <div class="panel" style="margin-bottom:14px">
+      <div class="ph" style="background:#f8fafc">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;width:100%">
+          <h3 style="color:#1e293b">🔍 Quét &amp; Tra Cứu Nhanh Số Serial (SN Tracking)</h3>
+          <div style="display:flex;gap:6px">
+            <input id="sn-lookup-input" placeholder="🔍 Nhập hoặc quét mã Serial..." oninput="searchSerialLookup(this.value)" style="padding:6px 12px;border:1px solid #38bdf8;border-radius:6px;font-size:12px;font-weight:700;width:260px"/>
+            <button class="btn b-bl b-sm" onclick="tog('f-add-serial')">➕ Thêm Serial Mới</button>
+          </div>
+        </div>
+      </div>
+      <div class="pb" id="f-add-serial" style="display:none;background:#f0f9ff;border-bottom:1px solid #bae6fd">
+        <div class="fg">
+          <div class="f"><label>Số Serial Number (SN) *</label><input id="new-sn-code" placeholder="VD: DEYE-15K-20260901" style="font-weight:700;color:#0284c7"/></div>
+          <div class="f"><label>Tên Thiết Bị / Model *</label><input id="new-sn-name" placeholder="VD: Inverter Hybrid Deye 15kW"/></div>
+          <div class="f"><label>Danh Mục</label>
+            <select id="new-sn-cat">
+              <option value="Inverter">Inverter</option>
+              <option value="Pin Lưu Trữ (Battery)">Pin Lưu Trữ (Battery)</option>
+              <option value="Tấm Pin Solar (PV Panel)">Tấm Pin Solar (PV Panel)</option>
+              <option value="Quạt Solar / Đèn Solar">Quạt Solar / Đèn Solar</option>
+              <option value="Phụ Kiện Kỹ Thuật">Phụ Kiện Kỹ Thuật</option>
+            </select>
+          </div>
+          <div class="f"><label>Trạng Thái Vòng Đời Hiện Tại</label>
+            <select id="new-sn-status">
+              <option value="Trong Kho Chi Nhánh">🟢 Trong Kho Chi Nhánh</option>
+              <option value="Xuất Xe Kỹ Thuật / Đi Lắp">🟡 Xuất Xe Kỹ Thuật / Đi Lắp</option>
+              <option value="Ký Gởi Trưởng Thôn / Điểm Bán">🟣 Ký Gởi Trưởng Thôn / Điểm Bán</option>
+              <option value="Đã Lắp Cho Khách Hàng">🔵 Đã Lắp Cho Khách Hàng</option>
+              <option value="Bảo Hành / Lỗi Kỹ Thuật">🔴 Bảo Hành / Lỗi Kỹ Thuật</option>
+            </select>
+          </div>
+          <div class="f"><label>Vị Trí / Người Giữ / Tên Khách Hàng</label><input id="new-sn-holder" placeholder="Kho Kawthoung / Zin Ko Ko / Tên KH"/></div>
+          <div class="f"><label>Mã Dự Án / Báo Giá Kèm Theo</label><input id="new-sn-ref" placeholder="VCM-26-05 / QU-xxxx"/></div>
+        </div>
+        <div class="fa" style="margin-top:10px">
+          <button class="btn b-bl" onclick="addSerialRecord()">💾 Lưu Serial Vào Kho</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- THẺ THỐNG KÊ TRẠNG THÁI SERIAL -->
+    <div id="sn-status-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px">
+      <!-- Dynamic summary cards -->
+    </div>
+
+    <!-- BẢNG TỒN KHO SERIAL -->
+    <div class="panel">
+      <div class="ph" style="background:#f8fafc">
+        <h3 style="color:#1e293b">🏷️ Sổ Theo Dõi Chi Tiết Từng Số Serial (Serial Master List)</h3>
+      </div>
+      <div class="pb tw" id="t-serials-table" style="max-height:600px;overflow-y:auto">
+        <!-- Rendered serial list -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ SUB-TAB 4: NGHIỆM THU HIỆN TRƯỜNG AN TOÀN (FIELD ACCEPTANCE) ════ -->
+  <div id="tt-nt" style="display:none">
+    <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div>
+        <b style="color:#065f46;font-size:13px">⚡ Form Nghiệm Thu Hiện Trường Chuyên Biệt Cho Mobile:</b>
+        <div style="font-size:11.5px;color:#047857;margin-top:2px">Đo đạc 220V/kWp/SOC &bull; Bảng vật tư thừa thu hồi quy ra tiền &bull; Ký cảm ứng &bull; 100% Khóa bảo mật giá vốn</div>
+      </div>
+      <button class="btn b-gn b-sm" onclick="go('acceptance')" style="font-weight:700">Mở Màn Hình Nghiệm Thu Đầy Đủ ➔</button>
+    </div>
+    <div class="panel">
+      <div class="ph"><h3 style="color:#047857">📋 Lịch Sử Các Công Trình Đã Nghiệm Thu Hoàn Tất</h3></div>
+      <div class="pb tw" id="tt-acc-table" style="max-height:550px;overflow-y:auto">
+        <!-- Table mirroring acceptances list -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ SUB-TAB 5: LỊCH SỬ KHÁCH HÀNG CỦA TỪNG NHÂN VIÊN ════ -->
+  <div id="tt-ls" style="display:none">
+    <!-- Năng suất nhân viên -->
+    <div id="tt-staff-kpi-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px">
+      <!-- Rendered KPI cards -->
+    </div>
+
+    <!-- Bảng Hành Trình Khách Hàng -->
+    <div class="panel">
+      <div class="ph" style="background:#f8fafc">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;width:100%">
+          <h3 style="color:#1e293b">👥 Hành Trình Khách Hàng Toàn Diện Của Nhân Viên</h3>
+          <span id="tt-customer-count-badge" style="font-size:12px;color:#64748b">0 khách hàng</span>
+        </div>
+      </div>
+      <div class="pb tw" id="t-staff-customers-table" style="max-height:600px;overflow-y:auto">
+        <!-- Rendered customer lifecycle history -->
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <!-- ══ ĐẠI LÝ ══ -->
 <div class="sec" id="s-daily">
@@ -1477,7 +1832,7 @@ function v(id){return document.getElementById(id)?.value?.trim()||'';}
 // NAV
 // ═══════════════════════════════════════════════════
 const ptitles={dashboard:'📊 Dashboard',nhap:'📦 Goods Intake',tonkho:'🗄️ Inventory',tamung:'🧑‍💼 Stock Advance',
-  banhang:'🛒 Sales Orders',baogiaups:'📄 Device Quotation',baogiasolar:'☀️ Solar Quotation',acceptance:'⚡ Handover & Acceptance',
+  banhang:'🛒 Sales Orders',baogiaups:'📄 Device Quotation',baogiasolar:'☀️ Solar Quotation',thucthi:'🚀 Team Thực Thi (Field Operations Hub)',acceptance:'⚡ Handover & Acceptance',
   daily:'🏪 Distribution & Dealers',kygoi:'📋 Consignment',crm:'👥 CRM & Survey',
   quangcao:'📢 Ads Campaigns',leads:'🎯 Leads & Conversion',
   loinhuan:'💰 Financial & Cashflow',statement:'📑 VCM Payment Statement',baocao:'📈 Reports',
@@ -1488,7 +1843,8 @@ const renders={
   banhang:()=>{popSP(['b-sp']);rBan();},
   baogiaups:()=>{if(!document.getElementById('qu-items').children.length)addQRow('qu-items');rQuUPS();populateOldQuoteSelectUPS();},
   baogiasolar:()=>{if(!document.getElementById('qs-table-body')?.children.length)addSolarItemRow();if(typeof rQuSolar==='function')rQuSolar();},
-  acceptance:()=>{rAcceptances();populateAccSources();calcAccFinancials();initAccCanvas();},
+  thucthi:()=>{initFieldOps();},
+  acceptance:()=>{rAcceptances();populateAccSources();calcAccFinancials();initAccCanvas();if(!document.getElementById('acc-mat-items')?.children.length)loadDefaultAccMaterials();},
   daily:()=>{rDL();popSP(['pp-sp']);popDL();},
   kygoi:()=>{popSP(['kg-sp','tu-sp']);rKG();},
   crm:()=>{rKH();rKS();rLK();},
@@ -5092,6 +5448,109 @@ function loadAccFromSource(val) {
   }
 }
 
+﻿// ═══════════════════════════════════════════════════════════════════════════════
+// ⚡ VẬT TƯ THỰC DÙNG & THỪA QUY RA TIỀN — BẢO MẬT NGHIỆM THU (RULE PM-42)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function addAccMatRow(itemData) {
+  const isVi = currentLang === 'vi';
+  const c = document.getElementById('acc-mat-items');
+  if (!c) return;
+  const it = itemData || {};
+  const d = document.createElement('div');
+  d.className = 'acc-mat-row';
+  d.style.cssText = 'display:grid;grid-template-columns:minmax(140px,2fr) 45px 65px 65px 60px 80px 90px 105px 28px;gap:5px;align-items:center;padding:5px 0;border-bottom:1px dashed #e2e8f0';
+
+  const alloc = Number(it.alloc || 0);
+  const used = Number(it.used || 0);
+  const rem = Math.max(0, alloc - used);
+  const price = Number(it.price || 0);
+  const usedCost = used * price;
+  const remCost = rem * price;
+
+  d.innerHTML = `
+    <input class="m-name" value="${it.name || ''}" placeholder="${isVi ? 'Tên vật tư (VD: Dây DC Đen)' : 'Item name'}" style="font-size:11.5px;font-weight:600;padding:3px 6px" oninput="calcAccMaterials()"/>
+    <input class="m-unit" value="${it.unit || 'm'}" placeholder="ĐVT" style="font-size:11.5px;text-align:center;padding:3px 2px" oninput="calcAccMaterials()"/>
+    <input class="m-alloc" type="number" min="0" value="${alloc}" placeholder="0" style="font-size:11.5px;text-align:center;background:#f8fafc;padding:3px 2px" oninput="calcAccMaterials()"/>
+    <input class="m-used" type="number" min="0" value="${used}" placeholder="0" style="font-size:11.5px;text-align:center;font-weight:700;color:#047857;padding:3px 2px" oninput="calcAccMaterials()"/>
+    <span class="m-rem" style="font-size:11.5px;font-weight:800;color:#b45309;background:#fef3c7;padding:3px 2px;border-radius:4px;text-align:center">${rem}</span>
+    <input class="m-price" type="number" min="0" value="${price}" placeholder="0" style="font-size:11.5px;text-align:right;padding:3px 4px" oninput="calcAccMaterials()"/>
+    <span class="m-used-cost" style="font-size:11.5px;font-weight:700;color:#059669;text-align:right">${fn(usedCost)} Ks</span>
+    <span class="m-rem-cost" style="font-size:11.5px;font-weight:800;color:#b45309;background:#fffbeb;padding:2px 4px;border-radius:3px;text-align:right">${fn(remCost)} Ks</span>
+    <button type="button" class="btn b-xs b-rd" style="padding:1px 4px;font-size:10px" onclick="this.closest('.acc-mat-row').remove();calcAccMaterials()">✕</button>
+  `;
+  c.appendChild(d);
+  calcAccMaterials();
+}
+
+function calcAccMaterials() {
+  const c = document.getElementById('acc-mat-items');
+  if (!c) return;
+  const rows = c.querySelectorAll('.acc-mat-row');
+  let totalUsed = 0;
+  let totalRem = 0;
+
+  rows.forEach(r => {
+    const alloc = Number(r.querySelector('.m-alloc')?.value || 0);
+    const used = Number(r.querySelector('.m-used')?.value || 0);
+    const price = Number(r.querySelector('.m-price')?.value || 0);
+    const rem = Math.max(0, alloc - used);
+
+    const remEl = r.querySelector('.m-rem');
+    if (remEl) remEl.textContent = rem;
+
+    const usedCost = used * price;
+    const remCost = rem * price;
+
+    const ucEl = r.querySelector('.m-used-cost');
+    if (ucEl) ucEl.textContent = fn(usedCost) + ' Ks';
+
+    const rcEl = r.querySelector('.m-rem-cost');
+    if (rcEl) rcEl.textContent = fn(remCost) + ' Ks';
+
+    totalUsed += usedCost;
+    totalRem += remCost;
+  });
+
+  const uEl = document.getElementById('acc-mat-used-total');
+  const rEl = document.getElementById('acc-mat-rem-total');
+  if (uEl) uEl.textContent = fn(totalUsed) + ' Ks';
+  if (rEl) rEl.textContent = fn(totalRem) + ' Ks';
+}
+
+function loadDefaultAccMaterials() {
+  const c = document.getElementById('acc-mat-items');
+  if (!c) return;
+  c.innerHTML = '';
+  const defaultItems = [
+    { name: 'Dây DC Đen 4.0mm² (Black Cable)', unit: 'm', alloc: 60, used: 45, price: 3500 },
+    { name: 'Dây DC Đỏ 4.0mm² (Red Cable)', unit: 'm', alloc: 60, used: 45, price: 3500 },
+    { name: 'Dây AC 4x6mm² (AC Main Cable)', unit: 'm', alloc: 35, used: 25, price: 9500 },
+    { name: 'Cặp Đầu Nối MC4 (MC4 Connectors)', unit: 'cặp', alloc: 12, used: 8, price: 4500 },
+    { name: 'Aptomat DC 600V 32A (DC MCB)', unit: 'cái', alloc: 4, used: 2, price: 28000 },
+    { name: 'Kẹp Giữa & Kẹp Biên Tấm Pin', unit: 'bộ', alloc: 48, used: 40, price: 2200 },
+    { name: 'Ống Luồn Dây Chống Cháy (Conduit)', unit: 'm', alloc: 40, used: 30, price: 2000 }
+  ];
+  defaultItems.forEach(it => addAccMatRow(it));
+  al('🔄 Đã nạp mẫu vật tư chuẩn công trình!');
+}
+
+function toggleAccAdminFin() {
+  const box = document.getElementById('acc-admin-fin-box');
+  const btn = document.getElementById('btn-toggle-acc-admin');
+  if (!box) return;
+  const isHidden = box.style.display === 'none' || !box.style.display;
+  if (isHidden) {
+    box.style.display = 'block';
+    if (btn) btn.textContent = '🔒 Đóng Chế Độ Quản Lý';
+    al('👁️ Đã mở bóc tách tài chính nội bộ (Chế độ Quản lý)');
+  } else {
+    box.style.display = 'none';
+    if (btn) btn.textContent = '👁️ Mở Khóa Quản Lý';
+    al('🔒 Đã khóa bảo mật giá vốn và lợi nhuận công ty!');
+  }
+}
+
 function presetSampleAcceptance() {
   document.getElementById('acc-code').value = "VCM-26-05";
   document.getElementById('acc-kh').value = "Kawthoung Hotel & Resort";
@@ -5101,13 +5560,8 @@ function presetSampleAcceptance() {
   document.getElementById('acc-eng').value = "Zin Ko Ko / Technical Team";
   document.getElementById('acc-volt').value = "220";
   document.getElementById('acc-kwp').value = "15.8";
-  document.getElementById('acc-freq').value = "50";
   document.getElementById('acc-soc').value = "98%";
-  document.getElementById('acc-earth').value = "3.8 Ω";
-  document.getElementById('acc-cable-blk').value = "45 m";
-  document.getElementById('acc-cable-red').value = "45 m";
-  document.getElementById('acc-cable-ac').value = "25 m";
-  document.getElementById('acc-mc4').value = "8 cặp";
+  loadDefaultAccMaterials();
   document.getElementById('acc-sn-inv').value = "DEYE-15K-20260501";
   document.getElementById('acc-sn-bat').value = "CATL-320AH-88912";
   document.getElementById('acc-sn-pv').value = "LR5-72HBD-640M (24 tấm: SN01 - SN24)";
@@ -5127,13 +5581,13 @@ function resetAccForm() {
   document.getElementById('acc-date').value = td();
   document.getElementById('acc-volt').value = '220';
   document.getElementById('acc-kwp').value = '6.0';
-  document.getElementById('acc-freq').value = '50';
   document.getElementById('acc-soc').value = '100%';
-  document.getElementById('acc-earth').value = '< 4.0 Ω';
-  document.getElementById('acc-cable-blk').value = '0 m';
-  document.getElementById('acc-cable-red').value = '0 m';
-  document.getElementById('acc-cable-ac').value = '0 m';
-  document.getElementById('acc-mc4').value = '0 cặp';
+  const mBox = document.getElementById('acc-mat-items');
+  if (mBox) mBox.innerHTML = '';
+  addAccMatRow({ name: 'Dây DC Đen 4.0mm²', unit: 'm', alloc: 50, used: 0, price: 3500 });
+  addAccMatRow({ name: 'Dây DC Đỏ 4.0mm²', unit: 'm', alloc: 50, used: 0, price: 3500 });
+  addAccMatRow({ name: 'Dây AC 4x6mm²', unit: 'm', alloc: 30, used: 0, price: 9500 });
+  addAccMatRow({ name: 'Cặp Đầu Nối MC4', unit: 'cặp', alloc: 10, used: 0, price: 4500 });
   document.getElementById('acc-sn-inv').value = '';
   document.getElementById('acc-sn-bat').value = '';
   document.getElementById('acc-sn-pv').value = '';
@@ -5143,6 +5597,7 @@ function resetAccForm() {
   clearAccSignature();
   clearAccPhotos();
   calcAccFinancials();
+  calcAccMaterials();
 }
 
 function saveAcceptanceRecord(andPrint) {
@@ -5155,7 +5610,6 @@ function saveAcceptanceRecord(andPrint) {
 
   const canvas = document.getElementById('acc-sig-canvas');
   if (canvas && !accSignatureDataUrl) {
-    // try to get from canvas if drawn
     accSignatureDataUrl = canvas.toDataURL('image/png');
   }
 
@@ -5167,6 +5621,28 @@ function saveAcceptanceRecord(andPrint) {
   const cty = cost > 0 && rate < 100 ? Math.round(cost / (100 - rate) * rate) : 0;
   const branchNet = paid - cost - cty;
 
+  const materials = [];
+  const mRows = document.querySelectorAll('#acc-mat-items .acc-mat-row');
+  mRows.forEach(r => {
+    const alloc = Number(r.querySelector('.m-alloc')?.value || 0);
+    const used = Number(r.querySelector('.m-used')?.value || 0);
+    const price = Number(r.querySelector('.m-price')?.value || 0);
+    const rem = Math.max(0, alloc - used);
+    materials.push({
+      name: r.querySelector('.m-name')?.value || '',
+      unit: r.querySelector('.m-unit')?.value || '',
+      alloc: alloc,
+      used: used,
+      rem: rem,
+      price: price,
+      usedCost: used * price,
+      remCost: rem * price
+    });
+  });
+
+  const totalUsedMatCost = materials.reduce((s, m) => s + m.usedCost, 0);
+  const totalRemMatCost = materials.reduce((s, m) => s + m.remCost, 0);
+
   const accObj = {
     code: code,
     kh: kh,
@@ -5176,14 +5652,14 @@ function saveAcceptanceRecord(andPrint) {
     eng: v('acc-eng') || 'Technical Team',
     volt: v('acc-volt') || '220',
     kwp: v('acc-kwp') || '0',
-    freq: v('acc-freq') || '50',
     soc: v('acc-soc') || '100%',
-    earth: v('acc-earth') || '< 4.0 Ω',
-    gridStatus: v('acc-grid-status') || 'Bình thường',
-    cableBlk: v('acc-cable-blk') || '0 m',
-    cableRed: v('acc-cable-red') || '0 m',
-    cableAc: v('acc-cable-ac') || '0 m',
-    mc4: v('acc-mc4') || '0 cặp',
+    materials: materials,
+    totalUsedMatCost: totalUsedMatCost,
+    totalRemMatCost: totalRemMatCost,
+    cableBlk: (materials.find(m => m.name.toLowerCase().includes('đen') || m.name.toLowerCase().includes('black'))?.used || 0) + ' m',
+    cableRed: (materials.find(m => m.name.toLowerCase().includes('đỏ') || m.name.toLowerCase().includes('red'))?.used || 0) + ' m',
+    cableAc: (materials.find(m => m.name.toLowerCase().includes('ac'))?.used || 0) + ' m',
+    mc4: (materials.find(m => m.name.toLowerCase().includes('mc4'))?.used || 0) + ' cặp',
     snInv: v('acc-sn-inv') || '-',
     snBat: v('acc-sn-bat') || '-',
     snPv: v('acc-sn-pv') || '-',
@@ -5216,54 +5692,18 @@ function saveAcceptanceRecord(andPrint) {
   DB.s('acceptances', list);
   al(`✅ Đã ${isUpdate ? 'cập nhật' : 'lưu'} Biên Bản Nghiệm Thu ${code}!`);
   rAcceptances();
+  if (typeof renderFieldAcceptancesList === 'function') renderFieldAcceptancesList();
+  if (typeof renderStaffCustomerHistory === 'function') renderStaffCustomerHistory();
 
   if (andPrint) {
     printAcceptanceDoc(targetId);
   }
 }
 
-function rAcceptances() {
-  const list = DB.g('acceptances') || [];
-  const badge = document.getElementById('acc-count-badge');
-  if (badge) badge.textContent = list.length + ' công trình';
 
-  const container = document.getElementById('t-acceptances-table');
-  if (!container) return;
-
-  const isVi = currentLang === 'vi';
-  const headers = isVi ?
-    ['#', 'Mã Dự Án', 'Khách Hàng', 'Đo Đạc (V/kWp)', 'Vật Tư & Serial', 'Doanh Thu HĐ', 'Vốn 83%', 'Nộp Cty 17%', 'Thực Thu', 'LN Chi Nhánh Còn Lại', 'Ký / Ảnh', 'Thao Tác'] :
-    ['#', 'Project Code', 'Customer', 'Measurements', 'Cables & Serial', 'Revenue', 'Cost 83%', 'HO 17%', 'Collected', 'Branch Retained', 'Sign/Photo', 'Actions'];
-
-  if (list.length === 0) {
-    container.innerHTML = `<div style="text-align:center;padding:24px;color:#94a3b8">${isVi ? 'Chưa có biên bản nghiệm thu nào. Bấm nút "⭐ Mẫu Chuẩn" để nạp công trình mẫu!' : 'No acceptance records yet. Click sample preset to load!'}</div>`;
-    return;
-  }
-
-  container.innerHTML = tbl(headers, list.map((r, i) => {
-    const hasSign = r.signature ? '<span class="bk bk-gn" title="Đã có chữ ký tay">✍️ Đã ký</span>' : '<span style="color:#94a3b8">Chưa ký</span>';
-    const hasPhoto = (r.photos && r.photos.length) || r.driveUrl ? `<span class="bk bk-bl" title="${r.photos ? r.photos.length : 0} ảnh">📷 ${r.photos ? r.photos.length : 0}</span>` : '';
-
-    return [
-      i + 1,
-      `<b>${r.code}</b>`,
-      `<b>${r.kh}</b><br/><small style="color:#64748b">${r.dc || '-'}</small>`,
-      `<b>${r.volt}V &bull; ${r.kwp}kWp</b><br/><small style="color:#475569">SOC:${r.soc}|${r.earth}</small>`,
-      `<small>🔴${r.cableRed}|🔌${r.cableBlk}<br/>SN:${r.snInv}</small>`,
-      `<b>${fn(r.rev)}</b>`,
-      `<span style="color:#475569">${fn(r.cost)}</span>`,
-      `<span style="color:#1e40af">${fn(r.cty)}</span>`,
-      `<span style="color:#16a34a;font-weight:700">${fn(r.paid)}</span>`,
-      `<b style="color:${r.branchNet >= 0 ? '#059669' : '#dc2626'}">${fn(r.branchNet)} Ks</b>`,
-      `${hasSign} ${hasPhoto}`,
-      `<div style="white-space:nowrap">
-        <button class="btn b-xs b-bl" onclick="loadSelectedAcceptance(${r.id})" title="Xem & Sửa">✏️</button>
-        <button class="btn b-xs b-gn" onclick="printAcceptanceDoc(${r.id})" title="In Biên Bản PDF">🖨️ In</button>
-        <button class="btn b-xs b-rd" onclick="delAcceptance(${r.id})" title="Xóa">🗑</button>
-      </div>`
-    ];
-  }));
-}
+// ═══════════════════════════════════════════════════════════════════════════════
+// 📋 ACCEPTANCE LOAD, RENDER & CLEAN PRINT CERTIFICATE (RULE PM-42)
+// ═══════════════════════════════════════════════════════════════════════════════
 
 function loadSelectedAcceptance(id) {
   const list = DB.g('acceptances') || [];
@@ -5271,40 +5711,63 @@ function loadSelectedAcceptance(id) {
   if (!r) return;
 
   currentEditingAccId = r.id;
-  document.getElementById('acc-code').value = r.code || '';
-  document.getElementById('acc-kh').value = r.kh || '';
-  document.getElementById('acc-dt').value = r.dt || '';
-  document.getElementById('acc-dc').value = r.dc || '';
-  document.getElementById('acc-date').value = r.dateStr || td();
-  document.getElementById('acc-eng').value = r.eng || '';
-  document.getElementById('acc-volt').value = r.volt || '220';
-  document.getElementById('acc-kwp').value = r.kwp || '0';
-  document.getElementById('acc-freq').value = r.freq || '50';
-  document.getElementById('acc-soc').value = r.soc || '100%';
-  document.getElementById('acc-earth').value = r.earth || '< 4.0 Ω';
-  document.getElementById('acc-cable-blk').value = r.cableBlk || '';
-  document.getElementById('acc-cable-red').value = r.cableRed || '';
-  document.getElementById('acc-cable-ac').value = r.cableAc || '';
-  document.getElementById('acc-mc4').value = r.mc4 || '';
-  document.getElementById('acc-sn-inv').value = r.snInv || '';
-  document.getElementById('acc-sn-bat').value = r.snBat || '';
-  document.getElementById('acc-sn-pv').value = r.snPv || '';
-  document.getElementById('acc-rev').value = r.rev || 0;
-  document.getElementById('acc-cost').value = r.cost || 0;
-  document.getElementById('acc-paid').value = r.paid || 0;
-  document.getElementById('acc-drive-link').value = r.driveUrl || '';
+  const setV = (elemId, val) => {
+    const el = document.getElementById(elemId);
+    if (el) el.value = (val !== undefined && val !== null) ? val : '';
+  };
 
+  setV('acc-code', r.code);
+  setV('acc-kh', r.kh);
+  setV('acc-dt', r.dt);
+  setV('acc-dc', r.dc);
+  setV('acc-date', r.dateStr || td());
+  setV('acc-eng', r.eng);
+  setV('acc-volt', r.volt || '220');
+  setV('acc-kwp', r.kwp || '0');
+  setV('acc-soc', r.soc || '100%');
+
+  // Dynamic materials table
+  const matContainer = document.getElementById('acc-mat-items');
+  if (matContainer) {
+    matContainer.innerHTML = '';
+    if (r.materials && r.materials.length > 0) {
+      r.materials.forEach(m => addAccMatRow(m));
+    } else {
+      // Fallback from legacy cable strings
+      const blkUsed = parseInt(r.cableBlk) || 0;
+      const redUsed = parseInt(r.cableRed) || 0;
+      const acUsed = parseInt(r.cableAc) || 0;
+      const mc4Used = parseInt(r.mc4) || 0;
+      addAccMatRow({ name: 'Dây DC Đen 1x4mm2 (Black)', unit: 'm', alloc: blkUsed ? blkUsed + 10 : 50, used: blkUsed, price: 4200 });
+      addAccMatRow({ name: 'Dây DC Đỏ 1x4mm2 (Red)', unit: 'm', alloc: redUsed ? redUsed + 10 : 50, used: redUsed, price: 4200 });
+      addAccMatRow({ name: 'Dây AC Cadivi 2x6mm2', unit: 'm', alloc: acUsed ? acUsed + 5 : 30, used: acUsed, price: 9500 });
+      addAccMatRow({ name: 'Đầu Jack MC4 Đôi', unit: 'cặp', alloc: mc4Used ? mc4Used + 2 : 10, used: mc4Used, price: 3500 });
+    }
+  }
+
+  setV('acc-sn-inv', r.snInv);
+  setV('acc-sn-bat', r.snBat);
+  setV('acc-sn-pv', r.snPv);
+
+  // Financials
+  setV('acc-rev', r.rev || 0);
+  setV('acc-cost', r.cost || 0);
+  setV('acc-paid', r.paid || 0);
+  setV('acc-debt', r.debt !== undefined ? r.debt : Math.max(0, (r.rev || 0) - (r.paid || 0)));
+  setV('acc-drive-link', r.driveUrl || '');
+
+  // Photos
   accUploadedPhotos = [...(r.photos || [])];
-  const container = document.getElementById('acc-photos-preview');
-  if (container) {
-    container.innerHTML = accUploadedPhotos.map(url => `
+  const photoContainer = document.getElementById('acc-photos-preview');
+  if (photoContainer) {
+    photoContainer.innerHTML = accUploadedPhotos.map(url => `
       <div style="position:relative;width:80px;height:80px;border-radius:6px;overflow:hidden;border:1px solid #cbd5e1">
         <img src="${url}" style="width:100%;height:100%;object-fit:cover"/>
       </div>
     `).join('');
   }
 
-  // Chữ ký
+  // Signature
   accSignatureDataUrl = r.signature || '';
   const canvas = document.getElementById('acc-sig-canvas');
   if (canvas && accSignatureDataUrl) {
@@ -5317,6 +5780,7 @@ function loadSelectedAcceptance(id) {
     if (st) st.innerHTML = '<span style="color:#059669;font-weight:bold">🔒 Chữ ký đã lưu trong hồ sơ</span>';
   }
 
+  calcAccMaterials();
   calcAccFinancials();
   al(`📋 Đã mở hồ sơ nghiệm thu "${r.code} - ${r.kh}"!`);
 }
@@ -5328,7 +5792,60 @@ function delAcceptance(id) {
   DB.s('acceptances', list);
   if (currentEditingAccId == id) resetAccForm();
   rAcceptances();
+  if (typeof renderFieldAcceptancesList === 'function') renderFieldAcceptancesList();
+  if (typeof renderStaffCustomerHistory === 'function') renderStaffCustomerHistory();
   al('🗑️ Đã xóa hồ sơ nghiệm thu!');
+}
+
+function rAcceptances() {
+  const list = DB.g('acceptances') || [];
+  const badge = document.getElementById('acc-count-badge');
+  if (badge) badge.textContent = list.length + ' công trình';
+
+  const container = document.getElementById('t-acceptances-table');
+  if (!container) return;
+
+  const isVi = currentLang === 'vi';
+  const headers = isVi ?
+    ['#', 'Mã Dự Án', 'Khách Hàng', 'Đo Đạc (V/kWp)', 'Vật Tư Đã Dùng / Thừa Thu Hồi', 'Doanh Thu HĐ', 'Thực Thu', 'Còn Nợ', 'Vốn 83% & Cty', 'Ký / Ảnh', 'Thao Tác'] :
+    ['#', 'Project Code', 'Customer', 'Measurements', 'Materials Used / Credited', 'Revenue', 'Collected', 'Balance', 'Cost 83% & HQ', 'Sign/Photo', 'Actions'];
+
+  if (list.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:24px;color:#94a3b8">${isVi ? 'Chưa có biên bản nghiệm thu nào. Bấm nút "⭐ Mẫu Chuẩn" để nạp công trình mẫu!' : 'No acceptance records yet. Click sample preset to load!'}</div>`;
+    return;
+  }
+
+  container.innerHTML = tbl(headers, list.map((r, i) => {
+    const hasSign = r.signature ? '<span class="bk bk-gn" title="Đã có chữ ký tay">✍️ Đã ký</span>' : '<span style="color:#94a3b8">Chưa ký</span>';
+    const hasPhoto = (r.photos && r.photos.length) || r.driveUrl ? `<span class="bk bk-bl" title="${r.photos ? r.photos.length : 0} ảnh">📷 ${r.photos ? r.photos.length : 0}</span>` : '';
+
+    const matSummary = r.materials && r.materials.length > 0 ?
+      `<span style="color:#047857;font-weight:700">Dùng: ${fn(r.totalUsedMatCost || 0)} Ks</span><br/><span style="color:#b45309;font-size:10px;font-weight:600">Thừa: ${fn(r.totalRemMatCost || 0)} Ks</span>` :
+      `<small>🔴${r.cableRed || '0m'} | 🔌${r.cableBlk || '0m'}<br/>SN:${r.snInv || '-'}</small>`;
+
+    // Internal fin (masked if locked)
+    const finInternal = accAdminUnlocked ?
+      `<small style="color:#475569">Vốn: ${fn(r.cost)}</small><br/><b style="color:#059669;font-size:11px">LN: ${fn(r.branchNet || 0)} Ks</b>` :
+      `<span style="color:#94a3b8;font-size:11px;font-style:italic">🔒 Quản lý</span>`;
+
+    return [
+      i + 1,
+      `<b>${r.code}</b>`,
+      `<b>${r.kh}</b><br/><small style="color:#64748b">${r.dc || '-'}</small>`,
+      `<b>${r.volt || 220}V &bull; ${r.kwp || 0}kWp</b><br/><small style="color:#475569">SOC:${r.soc || '100%'}</small>`,
+      matSummary,
+      `<b>${fn(r.rev)}</b>`,
+      `<span style="color:#16a34a;font-weight:700">${fn(r.paid)}</span>`,
+      `<b style="color:${(r.debt || 0) > 0 ? '#dc2626' : '#16a34a'}">${fn(r.debt || 0)}</b>`,
+      finInternal,
+      `${hasSign} ${hasPhoto}`,
+      `<div style="white-space:nowrap">
+        <button class="btn b-xs b-bl" onclick="loadSelectedAcceptance(${r.id})" title="Xem & Sửa">✏️</button>
+        <button class="btn b-xs b-gn" onclick="printAcceptanceDoc(${r.id})" title="In Biên Bản PDF">🖨️ In</button>
+        <button class="btn b-xs b-rd" onclick="delAcceptance(${r.id})" title="Xóa">🗑</button>
+      </div>`
+    ];
+  }));
 }
 
 function printAcceptanceDoc(id) {
@@ -5342,31 +5859,51 @@ function printAcceptanceDoc(id) {
     eng: v('acc-eng') || 'Zin Ko Ko / Technical Team',
     volt: v('acc-volt') || '220',
     kwp: v('acc-kwp') || '15.8',
-    freq: v('acc-freq') || '50',
     soc: v('acc-soc') || '98%',
-    earth: v('acc-earth') || '3.8 Ω',
-    gridStatus: v('acc-grid-status') || 'Bình thường - Đạt chuẩn 100%',
-    cableBlk: v('acc-cable-blk') || '45 m',
-    cableRed: v('acc-cable-red') || '45 m',
-    cableAc: v('acc-cable-ac') || '25 m',
-    mc4: v('acc-mc4') || '8 cặp',
+    materials: getAccMaterialsData(),
+    totalUsedMatCost: 0,
+    totalRemMatCost: 0,
     snInv: v('acc-sn-inv') || 'DEYE-15K-20260501',
     snBat: v('acc-sn-bat') || 'CATL-320AH-88912',
     snPv: v('acc-sn-pv') || 'LR5-72HBD-640M (24 tấm: SN01 - SN24)',
     rev: Number(v('acc-rev')) || 39684760,
-    cost: Number(v('acc-cost')) || 32938351,
     paid: Number(v('acc-paid')) || 35716284,
     debt: Number(v('acc-debt')) || 3968476,
-    cty: Number(document.getElementById('accc-cty')?.textContent?.replace(/[^0-9]/g,'') || 6746409),
-    branchNet: Number(document.getElementById('accc-branch-net')?.textContent?.replace(/[^0-9]/g,'') || 0),
     signature: accSignatureDataUrl,
     photos: [...accUploadedPhotos],
     driveUrl: v('acc-drive-link') || ''
   };
 
+  const materials = (r.materials && r.materials.length > 0) ? r.materials : getAccMaterialsData();
+  let totalUsedCost = 0;
+  let totalRemCost = 0;
+
+  const matRowsHtml = materials.map((m, idx) => {
+    const alloc = Number(m.alloc || 0);
+    const used = Number(m.used || 0);
+    const rem = Math.max(0, alloc - used);
+    const price = Number(m.price || 0);
+    const usedCost = used * price;
+    const remCost = rem * price;
+    totalUsedCost += usedCost;
+    totalRemCost += remCost;
+
+    return `<tr>
+      <td style="text-align:center">${idx + 1}</td>
+      <td style="font-weight:600">${m.name}</td>
+      <td style="text-align:center">${m.unit || 'm'}</td>
+      <td style="text-align:center">${alloc}</td>
+      <td style="text-align:center;font-weight:bold;color:#047857">${used}</td>
+      <td style="text-align:center;font-weight:bold;color:#b45309;background:#fffbeb">${rem}</td>
+      <td style="text-align:right">${fn(price)} Ks</td>
+      <td style="text-align:right;font-weight:bold;color:#047857">${fn(usedCost)} Ks</td>
+      <td style="text-align:right;font-weight:bold;color:#b45309;background:#fffbeb">${fn(remCost)} Ks</td>
+    </tr>`;
+  }).join('');
+
   const photosHtml = (r.photos && r.photos.length) ? `
     <div style="margin-top:14px">
-      <b style="font-size:11.5pt;color:#1e3a8a">4. HÌNH ẢNH HIỆN TRƯỜNG NGHIỆM THU (FIELD SITE PHOTOS):</b>
+      <b style="font-size:10.5pt;color:#1e3a8a">4. HÌNH ẢNH HIỆN TRƯỜNG NGHIỆM THU (FIELD SITE PHOTOS):</b>
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px">
         ${r.photos.map(url => `<div style="width:130px;height:95px;border:1px solid #cbd5e1;border-radius:4px;overflow:hidden"><img src="${url}" style="width:100%;height:100%;object-fit:cover"/></div>`).join('')}
       </div>
@@ -5380,20 +5917,20 @@ function printAcceptanceDoc(id) {
   <meta charset="UTF-8">
   <title>Acceptance_Certificate_${r.code}_${r.kh}</title>
   <style>
-    @page { size: A4 portrait; margin: 12mm 15mm; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; color: #0f172a; line-height: 1.35; padding: 10px; font-size: 10.5pt; }
-    .header-box { border-bottom: 2px solid #dc2626; padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start; }
-    .co-name { font-size: 14pt; font-weight: 900; color: #dc2626; }
-    .co-info { font-size: 8.5pt; color: #475569; margin-top: 2px; }
-    .cert-title { text-align: center; margin: 12px 0 6px; }
-    .cert-title h1 { margin: 0; font-size: 15pt; font-weight: 800; color: #1e3a8a; letter-spacing: 0.5px; }
-    .cert-title p { margin: 2px 0 0; font-size: 9.5pt; color: #64748b; font-style: italic; }
+    @page { size: A4 portrait; margin: 10mm 12mm; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; color: #0f172a; line-height: 1.35; padding: 10px; font-size: 10pt; }
+    .header-box { border-bottom: 2px solid #dc2626; padding-bottom: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-start; }
+    .co-name { font-size: 13pt; font-weight: 900; color: #dc2626; }
+    .co-info { font-size: 8pt; color: #475569; margin-top: 2px; }
+    .cert-title { text-align: center; margin: 10px 0 6px; }
+    .cert-title h1 { margin: 0; font-size: 14pt; font-weight: 800; color: #1e3a8a; letter-spacing: 0.5px; }
+    .cert-title p { margin: 2px 0 0; font-size: 9pt; color: #64748b; font-style: italic; }
     
-    table.grid-tbl { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 9.5pt; }
-    table.grid-tbl th, table.grid-tbl td { border: 1px solid #cbd5e1; padding: 5px 8px; }
+    table.grid-tbl { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 9pt; }
+    table.grid-tbl th, table.grid-tbl td { border: 1px solid #cbd5e1; padding: 4px 6px; }
     table.grid-tbl th { background: #f8fafc; font-weight: 700; text-align: left; color: #334155; }
-    .badge-ok { background: #dcfce7; color: #166534; padding: 1px 6px; border-radius: 4px; font-weight: 600; font-size: 8.5pt; }
-    .sig-section { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 24px; text-align: center; page-break-inside: avoid; }
+    .badge-ok { background: #dcfce7; color: #166534; padding: 1px 6px; border-radius: 4px; font-weight: 600; font-size: 8pt; }
+    .sig-section { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 18px; text-align: center; page-break-inside: avoid; }
     @media print { body { padding: 0; } .no-print { display: none !important; } }
   </style>
 </head>
@@ -5407,7 +5944,7 @@ function printAcceptanceDoc(id) {
     </div>
     <div style="text-align:right">
       <span class="badge-ok">OFFICIAL ACCEPTANCE</span><br/>
-      <small style="font-size:8.5pt;color:#64748b">Ref: ${r.code}</small>
+      <small style="font-size:8pt;color:#64748b">Ref: ${r.code}</small>
     </div>
   </div>
 
@@ -5441,96 +5978,106 @@ function printAcceptanceDoc(id) {
   </table>
 
   <!-- 2. ĐO ĐẠC THÔNG SỐ KỸ THUẬT HIỆN TRƯỜNG -->
-  <div style="margin-top:10px">
-    <b style="font-size:10.5pt;color:#1e3a8a">1. THÔNG SỐ ĐO ĐẠC KỸ THUẬT BÀN GIAO (TECHNICAL MEASUREMENTS):</b>
+  <div style="margin-top:8px">
+    <b style="font-size:10pt;color:#1e3a8a">1. THÔNG SỐ ĐO ĐẠC KỸ THUẬT BÀN GIAO (TECHNICAL MEASUREMENTS):</b>
     <table class="grid-tbl">
       <tr style="background:#f1f5f9">
-        <th style="text-align:center">Điện Áp Bàn Giao (V)</th>
-        <th style="text-align:center">Công Suất Phát Đỉnh (kWp)</th>
-        <th style="text-align:center">Tần Số Lưới (Hz)</th>
-        <th style="text-align:center">Mức Sạc Pin (SOC)</th>
-        <th style="text-align:center">Tiếp Địa (Earthing)</th>
+        <th style="text-align:center;width:33%">Điện Áp Bàn Giao (V)</th>
+        <th style="text-align:center;width:33%">Công Suất Phát Đỉnh Đo Đạc (kWp)</th>
+        <th style="text-align:center;width:34%">Mức Sạc Pin Lưu Trữ (SOC %)</th>
       </tr>
-      <tr style="text-align:center;font-weight:bold">
-        <td style="color:#0284c7">${r.volt} V</td>
-        <td style="color:#16a34a">${r.kwp} kWp</td>
-        <td>${r.freq} Hz</td>
-        <td style="color:#7c3aed">${r.soc}</td>
-        <td>${r.earth}</td>
+      <tr style="text-align:center;font-weight:bold;font-size:10.5pt">
+        <td style="color:#0284c7">${r.volt || '220'} V</td>
+        <td style="color:#16a34a">${r.kwp || '0'} kWp</td>
+        <td style="color:#7c3aed">${r.soc || '100%'}</td>
       </tr>
       <tr>
-        <td colspan="5" style="font-size:9pt;color:#475569">
-          <b>Trạng thái vận hành:</b> ${r.gridStatus} &bull; Hệ thống vận hành ổn định, bảo vệ chống sét và ngắt mạch tự động đã được kiểm định đạt chuẩn 100%.
+        <td colspan="3" style="font-size:8.5pt;color:#475569">
+          ✓ Hệ thống điện mặt trời đã được hòa đồng bộ, bảo vệ chống sét lan truyền và ngắt mạch tự động kiểm tra đạt tiêu chuẩn an toàn kỹ thuật 100%.
         </td>
       </tr>
     </table>
   </div>
 
-  <!-- 3. SỐ LƯỢNG VẬT TƯ THỰC DÙNG & SERIAL NUMBER -->
-  <div style="margin-top:10px">
-    <b style="font-size:10.5pt;color:#1e3a8a">2. VẬT TƯ THỰC TẾ SỬ DỤNG &amp; SERIAL NUMBER THIẾT BỊ:</b>
+  <!-- 3. BẢNG THỐNG KÊ VẬT TƯ THỰC DÙNG & VẬT TƯ THỪA QUY RA TIỀN -->
+  <div style="margin-top:8px">
+    <b style="font-size:10pt;color:#1e3a8a">2. ĐỐI SOÁT VẬT TƯ SỬ DỤNG &amp; VẬT TƯ THỪA THU HỒI (CHUYỂN KH KHÁC):</b>
     <table class="grid-tbl">
+      <thead>
+        <tr style="background:#f8fafc;font-size:8.5pt">
+          <th style="width:25px;text-align:center">#</th>
+          <th>Tên Vật Tư &amp; Quy Cách</th>
+          <th style="width:35px;text-align:center">ĐVT</th>
+          <th style="width:55px;text-align:center">Cấp Ra</th>
+          <th style="width:55px;text-align:center;color:#047857">Thực Dùng</th>
+          <th style="width:55px;text-align:center;color:#b45309;background:#fffbeb">Thừa</th>
+          <th style="width:75px;text-align:right">Đơn Giá</th>
+          <th style="width:90px;text-align:right;color:#047857">Tiền Thực Dùng</th>
+          <th style="width:105px;text-align:right;color:#b45309;background:#fffbeb">Tiền Thừa Thu Hồi</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${matRowsHtml}
+        <tr style="font-weight:bold;background:#f1f5f9;border-top:2px solid #cbd5e1">
+          <td colspan="7" style="text-align:right">TỔNG CỘNG ĐỐI SOÁT VẬT TƯ:</td>
+          <td style="text-align:right;color:#047857;font-size:9.5pt">${fn(totalUsedCost)} Ks</td>
+          <td style="text-align:right;color:#b45309;font-size:9.5pt;background:#fef3c7">${fn(totalRemCost)} Ks</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="font-size:8pt;color:#64748b;margin-top:3px;font-style:italic">
+      * Ghi chú: Số vật tư thừa trị giá <b>${fn(totalRemCost)} Ks</b> đã được đội kỹ thuật thu hồi để mang sang công trình khác sử dụng, <b>hoàn toàn không tính vào chi phí nghiệm thu của khách hàng</b>.
+    </div>
+
+    <!-- SERIAL NUMBERS -->
+    <table class="grid-tbl" style="margin-top:6px">
       <tr>
-        <th style="width:25%">Dây DC Đen (Black):</th>
-        <td style="width:25%;font-weight:bold">${r.cableBlk}</td>
-        <th style="width:25%">Dây DC Đỏ (Red):</th>
-        <td style="width:25%;font-weight:bold;color:#dc2626">${r.cableRed}</td>
-      </tr>
-      <tr>
-        <th>Dây AC:</th>
-        <td>${r.cableAc}</td>
-        <th>Đầu Nối MC4:</th>
-        <td>${r.mc4}</td>
-      </tr>
-      <tr>
-        <th>Serial Inverter:</th>
-        <td colspan="3" style="font-weight:bold;font-family:monospace;color:#1e40af">${r.snInv}</td>
-      </tr>
-      <tr>
-        <th>Serial Battery (Pin):</th>
-        <td colspan="3" style="font-weight:bold;font-family:monospace">${r.snBat}</td>
+        <th style="width:22%">Serial Inverter:</th>
+        <td style="font-weight:bold;font-family:monospace;color:#1e40af">${r.snInv || '-'}</td>
+        <th style="width:22%">Serial Battery:</th>
+        <td style="font-weight:bold;font-family:monospace">${r.snBat || '-'}</td>
       </tr>
       <tr>
         <th>Dải Serial Tấm Pin:</th>
-        <td colspan="3" style="font-size:9pt">${r.snPv}</td>
+        <td colspan="3" style="font-size:8.5pt">${r.snPv || '-'}</td>
       </tr>
     </table>
   </div>
 
-  <!-- 4. TÀI CHÍNH & THANH TOÁN -->
-  <div style="margin-top:10px">
-    <b style="font-size:10.5pt;color:#1e3a8a">3. QUYẾT TOÁN TÀI CHÍNH BÀN GIAO:</b>
+  <!-- 4. TÀI CHÍNH & THANH TOÁN (100% BẢO MẬT GIÁ VỐN) -->
+  <div style="margin-top:8px">
+    <b style="font-size:10pt;color:#1e3a8a">3. QUYẾT TOÁN TÀI CHÍNH BÀN GIAO (SETTLEMENT):</b>
     <table class="grid-tbl">
       <tr>
         <th style="width:33%">Tổng Doanh Thu Hợp Đồng:</th>
         <th style="width:33%">Đã Thanh Toán (Thực Thu):</th>
         <th style="width:34%">Số Tiền Còn Lại (Công Nợ):</th>
       </tr>
-      <tr style="font-weight:bold">
+      <tr style="font-weight:bold;font-size:10.5pt">
         <td>${fn(r.rev)} Ks</td>
         <td style="color:#16a34a">${fn(r.paid)} Ks</td>
-        <td style="color:${r.debt > 0 ? '#dc2626' : '#16a34a'}">${fn(r.debt)} Ks</td>
+        <td style="color:${(r.debt || 0) > 0 ? '#dc2626' : '#16a34a'}">${fn(r.debt || 0)} Ks</td>
       </tr>
     </table>
   </div>
 
   ${photosHtml}
 
-  <!-- CHỮ KÝ XÁC NHẬN CẢM ỨNG CỦA KHÁCH HÀNG & KỸ SƯ TRƯỞNG -->
+  <!-- CHỮ KÝ XÁC NHẬN CẢM ỨNG -->
   <div class="sig-section">
     <div>
       <b>ĐẠI DIỆN KHÁCH HÀNG (CUSTOMER)</b><br/>
-      <small style="color:#64748b">Xác nhận nghiệm thu &amp; nhận bàn giao thiết bị</small>
-      <div style="margin:10px 0;height:70px;display:flex;align-items:center;justify-content:center">
+      <small style="color:#64748b">Xác nhận nghiệm thu &amp; nhận bàn giao thiết bị đầy đủ</small>
+      <div style="margin:8px 0;height:65px;display:flex;align-items:center;justify-content:center">
         ${sigImgHtml}
       </div>
       <b>${r.kh}</b>
     </div>
     <div>
       <b>KỸ SƯ TRƯỞNG THI CÔNG (LEAD ENGINEER)</b><br/>
-      <small style="color:#64748b">Cam kết thông số đo đạc &amp; vật tư chính xác</small>
-      <div style="margin:10px 0;height:70px;display:flex;align-items:center;justify-content:center">
-        <div style="font-family:'Brush Script MT',cursive;font-size:24pt;color:#0369a1">${r.eng.split('/')[0].trim()}</div>
+      <small style="color:#64748b">Cam kết số liệu đo đạc &amp; vật tư thực tế chuẩn xác 100%</small>
+      <div style="margin:8px 0;height:65px;display:flex;align-items:center;justify-content:center">
+        <div style="font-family:'Brush Script MT',cursive;font-size:22pt;color:#0369a1">${(r.eng || 'Lead Eng').split('/')[0].trim()}</div>
       </div>
       <b>${r.eng}</b>
     </div>
@@ -5545,6 +6092,920 @@ function printAcceptanceDoc(id) {
   w.document.close();
 }
 
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🚀 FIELD OPERATIONS HUB ENGINE (CỔNG ĐIỀU HÀNH TEAM THỰC THI) — RULE PM-42
+// ═══════════════════════════════════════════════════════════════════════════════
+
+let currentFieldStaff = 'Zin Ko Ko';
+
+function getCurrentStaff() {
+  const custom = (document.getElementById('tt-staff-custom')?.value || '').trim();
+  if (custom) return custom;
+  const sel = document.getElementById('tt-staff-sel')?.value;
+  return sel || currentFieldStaff || 'Zin Ko Ko';
+}
+
+function updateStaffLinkDisplay() {
+  const staff = getCurrentStaff();
+  const el = document.getElementById('tt-link-display');
+  const origin = window.location.origin || '';
+  const path = window.location.pathname || '/sale';
+  const url = `${origin}${path}?tab=thucthi&staff=${encodeURIComponent(staff)}`;
+  if (el) el.textContent = `Link: ?tab=thucthi&staff=${staff}`;
+  return url;
+}
+
+function copyStaffShareLink() {
+  const url = updateStaffLinkDisplay();
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(() => {
+      al(`📋 Đã copy link chia sẻ cho nhân viên "${getCurrentStaff()}"!`);
+    }).catch(() => {
+      prompt('Copy link chia sẻ cho nhân viên:', url);
+    });
+  } else {
+    prompt('Copy link chia sẻ cho nhân viên:', url);
+  }
+}
+
+function handleStaffChange(val) {
+  currentFieldStaff = val;
+  const customIn = document.getElementById('tt-staff-custom');
+  if (customIn) customIn.value = '';
+  updateStaffLinkDisplay();
+  renderStaffCustomerHistory();
+  al(`👤 Đã chọn nhân viên phụ trách: ${val}`);
+}
+
+function handleStaffCustomInput(val) {
+  if (val.trim()) {
+    currentFieldStaff = val.trim();
+  } else {
+    const sel = document.getElementById('tt-staff-sel');
+    currentFieldStaff = sel ? sel.value : 'Zin Ko Ko';
+  }
+  updateStaffLinkDisplay();
+  renderStaffCustomerHistory();
+}
+
+function initStaffPortal() {
+  seedSampleFieldOpsDataIfEmpty();
+  const params = new URLSearchParams(window.location.search);
+  const staffParam = params.get('staff');
+  const tabParam = params.get('tab');
+
+  if (staffParam) {
+    currentFieldStaff = decodeURIComponent(staffParam);
+    const sel = document.getElementById('tt-staff-sel');
+    const customIn = document.getElementById('tt-staff-custom');
+    let matched = false;
+    if (sel) {
+      for (let i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value.toLowerCase() === currentFieldStaff.toLowerCase()) {
+          sel.selectedIndex = i;
+          matched = true;
+          break;
+        }
+      }
+    }
+    if (!matched && customIn) {
+      customIn.value = currentFieldStaff;
+    }
+    updateStaffLinkDisplay();
+  }
+
+  if (tabParam === 'thucthi') {
+    setTimeout(() => {
+      go('thucthi');
+    }, 150);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 📝 SUB-TAB 1: KHẢO SÁT HIỆN TRƯỜNG (SITE SURVEY)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+let currentEditingSurveyId = null;
+
+function saveSurveySite() {
+  const kh = (v('surv-kh') || '').trim();
+  const dt = (v('surv-dt') || '').trim();
+  const dc = (v('surv-dc') || '').trim();
+
+  if (!kh) {
+    al('Vui lòng nhập Tên Khách Hàng khảo sát!', 'er');
+    return;
+  }
+
+  const survey = {
+    kh: kh,
+    dt: dt,
+    dc: dc,
+    gps: v('surv-gps') || '',
+    dateStr: v('surv-date') || td(),
+    eng: v('surv-eng') || getCurrentStaff(),
+    roof: v('surv-roof') || 'Mái Tôn (Tin Roof)',
+    orient: v('surv-orient') || 'Hướng Nam (180°)',
+    grid: v('surv-grid') || 'Chưa có điện lưới',
+    load: v('surv-load') || '',
+    inv: v('surv-inv') || '8kW Hybrid',
+    bat: v('surv-bat') || '10.24 kWh Lithium',
+    pv: v('surv-pv') || '16 tấm Longi 620W',
+    cable: v('surv-cable') || '45 m',
+    notes: v('surv-notes') || '',
+    status: 'Đã Khảo Sát',
+    updatedAt: new Date().toISOString()
+  };
+
+  let list = DB.g('surveys') || [];
+  let isUpdate = false;
+  if (currentEditingSurveyId) {
+    list = list.map(item => item.id == currentEditingSurveyId ? { ...survey, id: currentEditingSurveyId } : item);
+    isUpdate = true;
+  } else {
+    survey.id = Date.now();
+    currentEditingSurveyId = survey.id;
+    list.unshift(survey);
+  }
+
+  DB.s('surveys', list);
+  al(`✅ Đã ${isUpdate ? 'cập nhật' : 'lưu'} phiếu khảo sát "${kh}"!`);
+  renderSurveySites();
+  renderStaffCustomerHistory();
+}
+
+function resetSurveyForm() {
+  currentEditingSurveyId = null;
+  const setV = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  setV('surv-kh', '');
+  setV('surv-dt', '');
+  setV('surv-dc', '');
+  setV('surv-gps', '');
+  setV('surv-date', td());
+  setV('surv-eng', getCurrentStaff());
+  setV('surv-load', '');
+  setV('surv-pv', '16 tấm Longi 620W (9.92 kWp)');
+  setV('surv-cable', '45 m');
+  setV('surv-notes', '');
+}
+
+function renderSurveySites() {
+  const container = document.getElementById('t-surveys-table');
+  if (!container) return;
+
+  const list = DB.g('surveys') || [];
+  const filter = (document.getElementById('surv-filter')?.value || '').toLowerCase().trim();
+
+  const filtered = filter ? list.filter(r =>
+    (r.kh && r.kh.toLowerCase().includes(filter)) ||
+    (r.dc && r.dc.toLowerCase().includes(filter)) ||
+    (r.eng && r.eng.toLowerCase().includes(filter)) ||
+    (r.inv && r.inv.toLowerCase().includes(filter))
+  ) : list;
+
+  const isVi = currentLang === 'vi';
+  const headers = isVi ?
+    ['#', 'Khách Hàng', 'Địa Chỉ / Tọa Độ', 'Kỹ Sư', 'Mái & Nắng', 'Đề Xuất Cấu Hình (Inv/Pin)', 'Phụ Tải & Ghi Chú', 'Thao Tác'] :
+    ['#', 'Customer', 'Location / GPS', 'Engineer', 'Roof & Solar', 'Proposed Specs (Inv/Bat)', 'Loads & Notes', 'Actions'];
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:20px;color:#94a3b8">${isVi ? 'Chưa có phiếu khảo sát nào. Nhập form bên trái và bấm Lưu!' : 'No site survey records found.'}</div>`;
+    return;
+  }
+
+  container.innerHTML = tbl(headers, filtered.map((r, i) => {
+    const locHtml = `<b>${r.dc || '-'}</b>` + (r.gps ? `<br/><a href="https://maps.google.com/?q=${encodeURIComponent(r.gps)}" target="_blank" style="font-size:10px;color:#0284c7">📍 ${r.gps}</a>` : '');
+    const specsHtml = `<b style="color:#1e40af">⚡ ${r.inv}</b><br/><span style="color:#7c3aed;font-size:11px">🔋 ${r.bat}</span><br/><small style="color:#059669">☀️ ${r.pv}</small>`;
+
+    return [
+      i + 1,
+      `<b>${r.kh}</b><br/><small style="color:#64748b">📞 ${r.dt || '-'}</small>`,
+      locHtml,
+      `<b>${r.eng || '-'}</b><br/><small style="color:#64748b">${fd(r.dateStr)}</small>`,
+      `<span style="font-size:11px">🏠 ${r.roof}</span><br/><span style="font-size:10.5px;color:#d97706">☀️ ${r.orient}</span>`,
+      specsHtml,
+      `<small style="color:#334155">${r.load || '-'}</small>${r.notes ? `<br/><small style="color:#64748b;font-style:italic">${r.notes}</small>` : ''}`,
+      `<div style="white-space:nowrap">
+        <button class="btn b-xs b-bl" onclick="loadSelectedSurvey(${r.id})" title="Xem & Sửa">✏️</button>
+        <button class="btn b-xs b-rd" onclick="delSurveySite(${r.id})" title="Xóa">🗑</button>
+      </div>`
+    ];
+  }));
+}
+
+function loadSelectedSurvey(id) {
+  const list = DB.g('surveys') || [];
+  const r = list.find(item => item.id == id);
+  if (!r) return;
+
+  currentEditingSurveyId = r.id;
+  const setV = (elemId, val) => { const el = document.getElementById(elemId); if (el) el.value = val || ''; };
+
+  setV('surv-kh', r.kh);
+  setV('surv-dt', r.dt);
+  setV('surv-dc', r.dc);
+  setV('surv-gps', r.gps);
+  setV('surv-date', r.dateStr || td());
+  setV('surv-eng', r.eng);
+  setV('surv-roof', r.roof);
+  setV('surv-orient', r.orient);
+  setV('surv-grid', r.grid);
+  setV('surv-load', r.load);
+  setV('surv-inv', r.inv);
+  setV('surv-bat', r.bat);
+  setV('surv-pv', r.pv);
+  setV('surv-cable', r.cable);
+  setV('surv-notes', r.notes);
+
+  al(`📝 Đã mở phiếu khảo sát của "${r.kh}"!`);
+}
+
+function delSurveySite(id) {
+  if (!confirm('Bạn có chắc muốn xóa phiếu khảo sát này?')) return;
+  let list = DB.g('surveys') || [];
+  list = list.filter(item => item.id != id);
+  DB.s('surveys', list);
+  if (currentEditingSurveyId == id) resetSurveyForm();
+  renderSurveySites();
+  renderStaffCustomerHistory();
+  al('🗑️ Đã xóa phiếu khảo sát!');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🚚 SUB-TAB 2: BỎ HÀNG ĐẠI LÝ & KÝ GỞI TRƯỞNG THÔN (CONSIGNMENT)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+let currentEditingVconId = null;
+
+function handleVconChannelChange(val) {
+  const nameEl = document.getElementById('vcon-name');
+  if (nameEl) {
+    if (val.includes('Trưởng Thôn')) nameEl.placeholder = 'VD: U Kyaw Swar (Trưởng Thôn Palaw North)';
+    else if (val.includes('Đại Lý')) nameEl.placeholder = 'VD: Đại Lý Điện Nước Dawei Solar Hub';
+    else nameEl.placeholder = 'VD: Cửa Hàng Tạp Hóa Bokpyin Central';
+  }
+}
+
+function calcVconTotal() {
+  const qty = Number(v('vcon-qty')) || 0;
+  const price = Number(v('vcon-price')) || 0;
+  const commRate = Number(v('vcon-comm')) || 0;
+
+  const total = qty * price;
+  const commVal = Math.round(total * (commRate / 100));
+  const netVal = total - commVal;
+
+  const setT = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+  setT('vcon-total-val', fn(total) + ' Ks');
+  setT('vcon-comm-val', fn(commVal) + ' Ks');
+  setT('vcon-net-val', fn(netVal) + ' Ks');
+
+  return { total, commVal, netVal };
+}
+
+function saveVillageConsignment() {
+  const name = (v('vcon-name') || '').trim();
+  const phone = (v('vcon-phone') || '').trim();
+  const product = v('vcon-product') || 'Inverter';
+  const qty = Number(v('vcon-qty')) || 1;
+  const serials = (v('vcon-serials') || '').trim();
+
+  if (!name || !serials) {
+    al('Vui lòng nhập Tên Điểm Nhận Hàng và Số Serial sản phẩm!', 'er');
+    return;
+  }
+
+  const fin = calcVconTotal();
+  const record = {
+    channel: v('vcon-channel') || 'Ký Gởi Trưởng Thôn / Già Làng (Village Headman)',
+    name: name,
+    contact: v('vcon-contact') || '',
+    phone: phone,
+    village: v('vcon-village') || '',
+    staff: v('vcon-staff') || getCurrentStaff(),
+    product: product,
+    qty: qty,
+    serials: serials,
+    price: Number(v('vcon-price')) || 0,
+    commRate: Number(v('vcon-comm')) || 0,
+    totalVal: fin.total,
+    commVal: fin.commVal,
+    netVal: fin.netVal,
+    dateStr: v('vcon-date') || td(),
+    dueStr: v('vcon-due') || '',
+    notes: v('vcon-notes') || '',
+    status: 'Đang Trưng Bày / Ký Gởi',
+    updatedAt: new Date().toISOString()
+  };
+
+  let list = DB.g('village_consignments') || [];
+  let isUpdate = false;
+  if (currentEditingVconId) {
+    list = list.map(item => item.id == currentEditingVconId ? { ...record, id: currentEditingVconId } : item);
+    isUpdate = true;
+  } else {
+    record.id = Date.now();
+    currentEditingVconId = record.id;
+    list.unshift(record);
+  }
+
+  // Tự động đồng bộ số Serial vào Tồn Kho Serial
+  syncConsignmentSerialsToInventory(record);
+
+  DB.s('village_consignments', list);
+  al(`✅ Đã ${isUpdate ? 'cập nhật' : 'lưu'} hồ sơ bàn giao ký gởi "${name}"!`);
+  renderVillageConsignments();
+  renderSerialInventory();
+  renderStaffCustomerHistory();
+}
+
+function syncConsignmentSerialsToInventory(record) {
+  const rawSerials = (record.serials || '').split(',').map(s => s.trim()).filter(Boolean);
+  if (!rawSerials.length) return;
+
+  let snList = DB.g('serial_inventory') || [];
+  rawSerials.forEach(sn => {
+    const existing = snList.find(item => item.sn.toLowerCase() === sn.toLowerCase());
+    if (existing) {
+      existing.status = 'Ký Gởi Trưởng Thôn / Điểm Bán';
+      existing.holder = `${record.name} (${record.village || 'Thôn Bản'})`;
+      existing.ref = `KÝ GỞI: ${record.product}`;
+      existing.updatedAt = new Date().toISOString();
+    } else {
+      snList.unshift({
+        id: Date.now() + Math.floor(Math.random() * 1000),
+        sn: sn,
+        name: record.product,
+        cat: record.product.toLowerCase().includes('inverter') ? 'Inverter' : (record.product.toLowerCase().includes('pin') ? 'Pin Lưu Trữ (Battery)' : 'Quạt Solar / Đèn Solar'),
+        status: 'Ký Gởi Trưởng Thôn / Điểm Bán',
+        holder: `${record.name} (${record.village || 'Thôn Bản'})`,
+        ref: `KÝ GỞI: ${record.product}`,
+        updatedAt: new Date().toISOString()
+      });
+    }
+  });
+  DB.s('serial_inventory', snList);
+}
+
+function resetVconForm() {
+  currentEditingVconId = null;
+  const setV = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  setV('vcon-name', '');
+  setV('vcon-contact', '');
+  setV('vcon-phone', '');
+  setV('vcon-village', '');
+  setV('vcon-staff', getCurrentStaff());
+  setV('vcon-qty', 2);
+  setV('vcon-serials', '');
+  setV('vcon-notes', '');
+  calcVconTotal();
+}
+
+function renderVillageConsignments() {
+  const container = document.getElementById('t-vcon-table');
+  if (!container) return;
+
+  const list = DB.g('village_consignments') || [];
+  const badge = document.getElementById('vcon-count-badge');
+  if (badge) badge.textContent = `${list.length} điểm bàn giao`;
+
+  const isVi = currentLang === 'vi';
+  const headers = isVi ?
+    ['#', 'Kênh & Điểm Nhận Hàng', 'Địa Bàn & Liên Hệ', 'Sản Phẩm & SL', 'Serial Number Bàn Giao', 'Giá Trị Ký Gởi', 'Thù Lao Điểm', 'Thu Về Cty', 'Ngày / Hạn Thu', 'Thao Tác'] :
+    ['#', 'Channel & Recipient', 'Village & Phone', 'Product & Qty', 'Serial Numbers', 'Consigned Value', 'Commission', 'Net Return', 'Dates / Due', 'Actions'];
+
+  if (list.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:20px;color:#94a3b8">${isVi ? 'Chưa có điểm ký gởi nào. Nhập form bên trái để ghi nhận bàn giao!' : 'No consignment records found.'}</div>`;
+    return;
+  }
+
+  container.innerHTML = tbl(headers, list.map((r, i) => {
+    const channelTag = r.channel.includes('Trưởng Thôn') ?
+      '<span class="bk bk-or" style="font-size:10px">👑 Trưởng Thôn</span>' :
+      '<span class="bk bk-bl" style="font-size:10px">🏪 Đại Lý/POS</span>';
+
+    return [
+      i + 1,
+      `${channelTag} <b>${r.name}</b><br/><small style="color:#64748b">Ký nhận: ${r.contact || '-'}</small>`,
+      `<b>${r.village || '-'}</b><br/><small style="color:#0284c7">📞 ${r.phone}</small>`,
+      `<b>${r.product}</b><br/><span class="bk bk-gn" style="font-size:10.5px">SL: ${r.qty} cái</span>`,
+      `<code style="font-size:10.5px;color:#1e40af">${r.serials}</code>`,
+      `<b>${fn(r.totalVal)} Ks</b>`,
+      `<span style="color:#15803d;font-weight:700">${fn(r.commVal)} Ks (${r.commRate}%)</span>`,
+      `<b style="color:#1e40af">${fn(r.netVal)} Ks</b>`,
+      `<small>Giao: ${fd(r.dateStr)}</small><br/><small style="color:${r.dueStr ? '#dc2626' : '#64748b'}">Hạn: ${r.dueStr ? fd(r.dueStr) : '-'}</small>`,
+      `<div style="white-space:nowrap">
+        <button class="btn b-xs b-bl" onclick="loadSelectedVcon(${r.id})" title="Xem & Sửa">✏️</button>
+        <button class="btn b-xs b-rd" onclick="delVillageConsignment(${r.id})" title="Xóa">🗑</button>
+      </div>`
+    ];
+  }));
+}
+
+function loadSelectedVcon(id) {
+  const list = DB.g('village_consignments') || [];
+  const r = list.find(item => item.id == id);
+  if (!r) return;
+
+  currentEditingVconId = r.id;
+  const setV = (elemId, val) => { const el = document.getElementById(elemId); if (el) el.value = val || ''; };
+
+  setV('vcon-channel', r.channel);
+  setV('vcon-name', r.name);
+  setV('vcon-contact', r.contact);
+  setV('vcon-phone', r.phone);
+  setV('vcon-village', r.village);
+  setV('vcon-staff', r.staff);
+  setV('vcon-product', r.product);
+  setV('vcon-qty', r.qty);
+  setV('vcon-serials', r.serials);
+  setV('vcon-price', r.price);
+  setV('vcon-comm', r.commRate);
+  setV('vcon-date', r.dateStr || td());
+  setV('vcon-due', r.dueStr || '');
+  setV('vcon-notes', r.notes);
+
+  calcVconTotal();
+  al(`🚚 Đã mở hồ sơ ký gởi "${r.name}"!`);
+}
+
+function delVillageConsignment(id) {
+  if (!confirm('Bạn có chắc muốn xóa hồ sơ ký gởi này?')) return;
+  let list = DB.g('village_consignments') || [];
+  list = list.filter(item => item.id != id);
+  DB.s('village_consignments', list);
+  if (currentEditingVconId == id) resetVconForm();
+  renderVillageConsignments();
+  renderStaffCustomerHistory();
+  al('🗑️ Đã xóa hồ sơ ký gởi!');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🏷️ SUB-TAB 3: TỒN KHO CHI TIẾT SERIAL (SERIAL TRACKING)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function addSerialRecord() {
+  const sn = (v('new-sn-code') || '').trim();
+  const name = (v('new-sn-name') || '').trim();
+  if (!sn || !name) {
+    al('Vui lòng nhập Số Serial (SN) và Tên Thiết Bị!', 'er');
+    return;
+  }
+
+  let list = DB.g('serial_inventory') || [];
+  const existing = list.find(item => item.sn.toLowerCase() === sn.toLowerCase());
+  if (existing) {
+    al(`Mã Serial "${sn}" đã tồn tại trong kho!`, 'er');
+    return;
+  }
+
+  const record = {
+    id: Date.now(),
+    sn: sn,
+    name: name,
+    cat: v('new-sn-cat') || 'Inverter',
+    status: v('new-sn-status') || 'Trong Kho Chi Nhánh',
+    holder: v('new-sn-holder') || 'Kho Chi Nhánh',
+    ref: v('new-sn-ref') || '',
+    updatedAt: new Date().toISOString()
+  };
+
+  list.unshift(record);
+  DB.s('serial_inventory', list);
+  al(`✅ Đã thêm thiết bị SN "${sn}" vào kho!`);
+
+  // Clear form & toggle
+  const codeIn = document.getElementById('new-sn-code');
+  if (codeIn) codeIn.value = '';
+  tog('f-add-serial');
+  renderSerialInventory();
+}
+
+function searchSerialLookup(query) {
+  renderSerialInventory(query);
+}
+
+function renderSerialInventory(searchQuery) {
+  const container = document.getElementById('t-serials-table');
+  if (!container) return;
+
+  const list = DB.g('serial_inventory') || [];
+  const q = (searchQuery !== undefined ? searchQuery : (document.getElementById('sn-lookup-input')?.value || '')).toLowerCase().trim();
+
+  const filtered = q ? list.filter(r =>
+    (r.sn && r.sn.toLowerCase().includes(q)) ||
+    (r.name && r.name.toLowerCase().includes(q)) ||
+    (r.holder && r.holder.toLowerCase().includes(q)) ||
+    (r.status && r.status.toLowerCase().includes(q)) ||
+    (r.ref && r.ref.toLowerCase().includes(q))
+  ) : list;
+
+  // Render Status Cards
+  renderSerialStatusCards(list);
+
+  const isVi = currentLang === 'vi';
+  const headers = isVi ?
+    ['#', 'Số Serial Number (SN)', 'Tên Thiết Bị / Model', 'Danh Mục', 'Trạng Thái Vòng Đời', 'Vị Trí / Người Giữ', 'Mã Dự Án / Báo Giá', 'Thao Tác'] :
+    ['#', 'Serial Number (SN)', 'Device / Model', 'Category', 'Lifecycle Status', 'Holder / Location', 'Project / Quote Ref', 'Actions'];
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:20px;color:#94a3b8">${isVi ? 'Không tìm thấy mã Serial nào khớp!' : 'No matching serial numbers found.'}</div>`;
+    return;
+  }
+
+  container.innerHTML = tbl(headers, filtered.map((r, i) => {
+    let statusClass = 'bk-gn';
+    if (r.status.includes('Xe Kỹ Thuật')) statusClass = 'bk-or';
+    else if (r.status.includes('Trưởng Thôn') || r.status.includes('Ký Gởi')) statusClass = 'bk-bl';
+    else if (r.status.includes('Đã Lắp')) statusClass = 'bk-bl';
+    else if (r.status.includes('Bảo Hành') || r.status.includes('Lỗi')) statusClass = 'bk-rd';
+
+    return [
+      i + 1,
+      `<b style="font-family:monospace;color:#1e40af;font-size:12px">${r.sn}</b>`,
+      `<b>${r.name}</b>`,
+      `<small style="color:#64748b">${r.cat || 'Thiết bị'}</small>`,
+      `<span class="bk ${statusClass}" style="font-size:10.5px">${r.status}</span>`,
+      `<b>${r.holder || '-'}</b>`,
+      `<small style="color:#0284c7;font-weight:600">${r.ref || '-'}</small>`,
+      `<div style="white-space:nowrap">
+        <select style="font-size:10.5px;padding:2px 4px;border:1px solid #cbd5e1;border-radius:4px" onchange="updateSerialStatus(${r.id}, this.value)">
+          <option value="">Chuyển trạng thái...</option>
+          <option value="Trong Kho Chi Nhánh">🟢 Trong Kho</option>
+          <option value="Xuất Xe Kỹ Thuật / Đi Lắp">🟡 Xuất Xe Đi Lắp</option>
+          <option value="Ký Gởi Trưởng Thôn / Điểm Bán">🟣 Ký Gởi Trưởng Thôn</option>
+          <option value="Đã Lắp Cho Khách Hàng">🔵 Đã Lắp Cho KH</option>
+          <option value="Bảo Hành / Lỗi Kỹ Thuật">🔴 Bảo Hành / Lỗi</option>
+        </select>
+        <button class="btn b-xs b-rd" onclick="delSerialRecord(${r.id})" title="Xóa">🗑</button>
+      </div>`
+    ];
+  }));
+}
+
+function updateSerialStatus(id, newStatus) {
+  if (!newStatus) return;
+  let list = DB.g('serial_inventory') || [];
+  const r = list.find(item => item.id == id);
+  if (r) {
+    r.status = newStatus;
+    r.updatedAt = new Date().toISOString();
+    DB.s('serial_inventory', list);
+    al(`🔄 Đã chuyển trạng thái Serial "${r.sn}" sang: ${newStatus}`);
+    renderSerialInventory();
+  }
+}
+
+function delSerialRecord(id) {
+  if (!confirm('Bạn có chắc muốn xóa mã Serial này khỏi kho?')) return;
+  let list = DB.g('serial_inventory') || [];
+  list = list.filter(item => item.id != id);
+  DB.s('serial_inventory', list);
+  renderSerialInventory();
+  al('🗑️ Đã xóa mã Serial!');
+}
+
+function renderSerialStatusCards(list) {
+  const cardsEl = document.getElementById('sn-status-cards');
+  if (!cardsEl) return;
+
+  const total = list.length;
+  const inStock = list.filter(r => r.status.includes('Kho')).length;
+  const onTruck = list.filter(r => r.status.includes('Xe Kỹ Thuật')).length;
+  const consigned = list.filter(r => r.status.includes('Trưởng Thôn') || r.status.includes('Ký Gởi')).length;
+  const installed = list.filter(r => r.status.includes('Đã Lắp')).length;
+  const warranty = list.filter(r => r.status.includes('Bảo Hành') || r.status.includes('Lỗi')).length;
+
+  cardsEl.innerHTML = `
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px">
+      <div style="font-size:11px;color:#166534;font-weight:700">🟢 TRONG KHO CHI NHÁNH</div>
+      <div style="font-size:18px;font-weight:900;color:#15803d">${inStock} <small style="font-size:11px;color:#64748b">/ ${total}</small></div>
+    </div>
+    <div style="background:#fffbeb;border:1px solid #fed7aa;border-radius:8px;padding:10px 14px">
+      <div style="font-size:11px;color:#9a3412;font-weight:700">🟡 XE KỸ THUẬT / ĐI LẮP</div>
+      <div style="font-size:18px;font-weight:900;color:#c2410c">${onTruck}</div>
+    </div>
+    <div style="background:#faf5ff;border:1px solid #e9d5ff;border-radius:8px;padding:10px 14px">
+      <div style="font-size:11px;color:#6b21a8;font-weight:700">🟣 KÝ GỞI TRƯỞNG THÔN / ĐL</div>
+      <div style="font-size:18px;font-weight:900;color:#7e22ce">${consigned}</div>
+    </div>
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px">
+      <div style="font-size:11px;color:#1e40af;font-weight:700">🔵 ĐÃ LẮP CHO KHÁCH</div>
+      <div style="font-size:18px;font-weight:900;color:#2563eb">${installed}</div>
+    </div>
+    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px">
+      <div style="font-size:11px;color:#991b1b;font-weight:700">🔴 BẢO HÀNH / LỖI</div>
+      <div style="font-size:18px;font-weight:900;color:#dc2626">${warranty}</div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ⚡ SUB-TAB 4: NGHIỆM THU HIỆN TRƯỜNG AN TOÀN (FIELD ACCEPTANCE MIRROR)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function renderFieldAcceptancesList() {
+  const container = document.getElementById('tt-acc-table');
+  if (!container) return;
+
+  const list = DB.g('acceptances') || [];
+  const isVi = currentLang === 'vi';
+  const headers = isVi ?
+    ['#', 'Mã Dự Án', 'Khách Hàng & Địa Chỉ', 'Đo Đạc (V / kWp / SOC)', 'Vật Tư Đã Dùng', 'Vật Tư Thừa Thu Hồi', 'Số Tiền Thực Thu', 'Khách Còn Nợ', 'Chữ Ký & Ảnh', 'Thao Tác'] :
+    ['#', 'Project Code', 'Customer & Address', 'Measurements (V / kWp / SOC)', 'Materials Used', 'Materials Credited', 'Collected Amount', 'Balance Due', 'Sign & Photo', 'Actions'];
+
+  if (list.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:24px;color:#94a3b8">${isVi ? 'Chưa có công trình nghiệm thu nào.' : 'No acceptance records found.'}</div>`;
+    return;
+  }
+
+  container.innerHTML = tbl(headers, list.map((r, i) => {
+    const hasSign = r.signature ? '<span class="bk bk-gn" title="Đã có chữ ký tay">✍️ Đã ký</span>' : '<span style="color:#94a3b8">Chưa ký</span>';
+    const hasPhoto = (r.photos && r.photos.length) || r.driveUrl ? `<span class="bk bk-bl">📷 ${r.photos ? r.photos.length : 0}</span>` : '';
+
+    return [
+      i + 1,
+      `<b>${r.code}</b>`,
+      `<b>${r.kh}</b><br/><small style="color:#64748b">${r.dc || '-'}</small>`,
+      `<b>${r.volt || 220}V &bull; ${r.kwp || 0}kWp</b><br/><span style="color:#7c3aed;font-size:10.5px">🔋 SOC: ${r.soc || '100%'}</span>`,
+      `<b style="color:#047857">${fn(r.totalUsedMatCost || 0)} Ks</b>`,
+      `<b style="color:#b45309;background:#fef3c7;padding:2px 4px;border-radius:4px">${fn(r.totalRemMatCost || 0)} Ks</b>`,
+      `<b style="color:#15803d">${fn(r.paid || 0)} Ks</b>`,
+      `<b style="color:${(r.debt || 0) > 0 ? '#dc2626' : '#15803d'}">${fn(r.debt || 0)} Ks</b>`,
+      `${hasSign} ${hasPhoto}`,
+      `<div style="white-space:nowrap">
+        <button class="btn b-xs b-bl" onclick="go('acceptance');loadSelectedAcceptance(${r.id})" title="Xem Chi Tiết">🔍 Mở</button>
+        <button class="btn b-xs b-gn" onclick="printAcceptanceDoc(${r.id})" title="In Biên Bản PDF">🖨️ In</button>
+      </div>`
+    ];
+  }));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 👥 SUB-TAB 5: LỊCH SỬ KHÁCH HÀNG CỦA TỪNG NHÂN VIÊN (STAFF CUSTOMER JOURNEY)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function renderStaffCustomerHistory() {
+  const staff = getCurrentStaff();
+  const staffShort = staff.split('(')[0].trim().toLowerCase();
+
+  const surveys = DB.g('surveys') || [];
+  const quotes = DB.g('quotations') || [];
+  const consignments = DB.g('village_consignments') || [];
+  const acceptances = DB.g('acceptances') || [];
+
+  // Filter records by staff
+  const staffSurveys = surveys.filter(s => (s.eng || '').toLowerCase().includes(staffShort));
+  const staffQuotes = quotes.filter(q => (q.saleStaff || q.nv || '').toLowerCase().includes(staffShort));
+  const staffConsignments = consignments.filter(c => (c.staff || '').toLowerCase().includes(staffShort));
+  const staffAcceptances = acceptances.filter(a => (a.eng || '').toLowerCase().includes(staffShort));
+
+  // Render KPI Cards
+  const kpiEl = document.getElementById('tt-staff-kpi-cards');
+  if (kpiEl) {
+    kpiEl.innerHTML = `
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px">
+        <div style="font-size:11px;color:#166534;font-weight:700">📝 KHẢO SÁT HIỆN TRƯỜNG</div>
+        <div style="font-size:18px;font-weight:900;color:#15803d">${staffSurveys.length} <small style="font-size:11px">công trình</small></div>
+      </div>
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px">
+        <div style="font-size:11px;color:#1e40af;font-weight:700">💼 BÁO GIÁ ĐÃ LẬP</div>
+        <div style="font-size:18px;font-weight:900;color:#2563eb">${staffQuotes.length} <small style="font-size:11px">báo giá</small></div>
+      </div>
+      <div style="background:#fffbeb;border:1px solid #fed7aa;border-radius:8px;padding:10px 14px">
+        <div style="font-size:11px;color:#9a3412;font-weight:700">👑 KÝ GỞI TRƯỞNG THÔN / ĐL</div>
+        <div style="font-size:18px;font-weight:900;color:#c2410c">${staffConsignments.length} <small style="font-size:11px">điểm bàn giao</small></div>
+      </div>
+      <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:10px 14px">
+        <div style="font-size:11px;color:#065f46;font-weight:700">⚡ NGHIỆM THU HOÀN TẤT</div>
+        <div style="font-size:18px;font-weight:900;color:#059669">${staffAcceptances.length} <small style="font-size:11px">dự án hoàn thành</small></div>
+      </div>
+    `;
+  }
+
+  // Aggregate journey list
+  const journey = [];
+  staffSurveys.forEach(s => journey.push({
+    type: 'Khảo Sát Hiện Trường',
+    icon: '📝',
+    kh: s.kh,
+    phone: s.dt,
+    location: s.dc,
+    date: s.dateStr,
+    detail: `Mái ${s.roof} &bull; Đề xuất ${s.inv} + ${s.bat}`,
+    status: 'Đã khảo sát'
+  }));
+
+  staffQuotes.forEach(q => journey.push({
+    type: 'Báo Giá Dự Án',
+    icon: '💼',
+    kh: q.kh || q.customer || 'Khách hàng',
+    phone: q.phone || q.dt || '-',
+    location: q.address || q.dc || '-',
+    date: q.dateStr || q.date || td(),
+    detail: `Doanh thu: ${fn(q.finalPrice || q.total || 0)} Ks &bull; Mã: ${q.code || '-'}`,
+    status: 'Đã gửi báo giá'
+  }));
+
+  staffConsignments.forEach(c => journey.push({
+    type: 'Bàn Giao Ký Gởi',
+    icon: '🚚',
+    kh: c.name,
+    phone: c.phone,
+    location: c.village,
+    date: c.dateStr,
+    detail: `${c.product} (SL: ${c.qty}) &bull; Trị giá: ${fn(c.totalVal)} Ks`,
+    status: 'Đang ký gởi'
+  }));
+
+  staffAcceptances.forEach(a => journey.push({
+    type: 'Nghiệm Thu Bàn Giao',
+    icon: '⚡',
+    kh: a.kh,
+    phone: a.dt,
+    location: a.dc,
+    date: a.dateStr,
+    detail: `${a.volt}V &bull; ${a.kwp}kWp &bull; Thu: ${fn(a.paid)} Ks`,
+    status: 'Hoàn tất nghiệm thu'
+  }));
+
+  journey.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+  const badge = document.getElementById('tt-customer-count-badge');
+  if (badge) badge.textContent = `${journey.length} hoạt động ghi nhận`;
+
+  const container = document.getElementById('t-staff-customers-table');
+  if (!container) return;
+
+  const isVi = currentLang === 'vi';
+  const headers = isVi ?
+    ['#', 'Giai Đoạn Hành Trình', 'Khách Hàng / Đối Tác', 'Địa Bàn & Điện Thoại', 'Chi Tiết Kỹ Thuật / Bàn Giao', 'Ngày Thực Hiện', 'Trạng Thái'] :
+    ['#', 'Stage', 'Customer / Partner', 'Location & Phone', 'Details & Specs', 'Date', 'Status'];
+
+  if (journey.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:24px;color:#94a3b8">${isVi ? `Chưa có dữ liệu ghi nhận cho nhân viên "${staff}".` : 'No history found for this staff member.'}</div>`;
+    return;
+  }
+
+  container.innerHTML = tbl(headers, journey.map((r, i) => {
+    return [
+      i + 1,
+      `<b style="font-size:11.5px">${r.icon} ${r.type}</b>`,
+      `<b>${r.kh}</b>`,
+      `<b>${r.location || '-'}</b><br/><small style="color:#0284c7">📞 ${r.phone || '-'}</small>`,
+      `<span style="font-size:11px">${r.detail}</span>`,
+      `<b>${fd(r.date)}</b>`,
+      `<span class="bk bk-gn" style="font-size:10.5px">${r.status}</span>`
+    ];
+  }));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🌟 SEED SAMPLE FIELD OPS DATA (KHO SỐ LIỆU MẪU THỰC TẾ MYANMAR)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function seedSampleFieldOpsDataIfEmpty() {
+  // 1. Seed Surveys
+  let surveys = DB.g('surveys') || [];
+  if (!surveys.length) {
+    surveys = [
+      {
+        id: 1726000001001,
+        kh: 'U Aung San (Xưởng May Kawthoung)',
+        dt: '0945 112 334',
+        dc: 'Khu Công Nghiệp Cảng Kawthoung, Tanintharyi',
+        gps: '9.9832, 98.5491',
+        dateStr: td(),
+        eng: 'Zin Ko Ko',
+        roof: 'Mái Tôn (Tin Roof)',
+        orient: 'Hướng Nam (180°) - Tối Ưu',
+        grid: 'Điện lưới chập chờn / Cúp thường xuyên',
+        load: '10 Máy may công nghiệp, 3 Quạt trần lớn, 1 Máy nén khí',
+        inv: '15kW Hybrid (Công Suất Lớn)',
+        bat: '15.36 kWh (320Ah CATL)',
+        pv: '24 tấm Longi 640W (15.36 kWp)',
+        cable: '50 m',
+        notes: 'Mái tôn kiên cố mới lợp, dầm xà gồ thép C100 chịu tải tốt, lối lên mái an toàn.',
+        status: 'Đã Khảo Sát'
+      },
+      {
+        id: 1726000001002,
+        kh: 'Daw Than Than Nu (Nhà Vườn Bokpyin)',
+        dt: '0979 889 123',
+        dc: 'Thôn Thabawleik, Bokpyin Township',
+        gps: '11.1645, 98.7712',
+        dateStr: td(),
+        eng: 'Min Paing',
+        roof: 'Mái Ngói (Tile Roof)',
+        orient: 'Hướng Đông Nam (135°)',
+        grid: 'Chưa có điện lưới (100% Off-grid / Hybrid)',
+        load: '2 Máy lạnh inverter, 1 Tủ đông hải sản, 1 Bơm chìm 2HP',
+        inv: '8kW Hybrid (Phổ Biến)',
+        bat: '10.24 kWh (Khuyên Dùng)',
+        pv: '16 tấm Longi 620W (9.92 kWp)',
+        cable: '40 m',
+        notes: 'Cần khung nâng hướng chính Nam 15 độ để đón nắng đỉnh tối đa.',
+        status: 'Đã Khảo Sát'
+      }
+    ];
+    DB.s('surveys', surveys);
+  }
+
+  // 2. Seed Village Consignments
+  let vcons = DB.g('village_consignments') || [];
+  if (!vcons.length) {
+    vcons = [
+      {
+        id: 1726000002001,
+        channel: 'Ký Gởi Trưởng Thôn / Già Làng (Village Headman)',
+        name: 'U Kyaw Swar (Trưởng Thôn Palaw North)',
+        contact: 'U Kyaw Swar',
+        phone: '0978 223 991',
+        village: 'Thôn Palaw North, Tanintharyi',
+        staff: 'Zin Ko Ko',
+        product: 'Quạt Năng Lượng Mặt Trời 12V (Solar Fan)',
+        qty: 6,
+        serials: 'FAN-SOLAR-001, FAN-SOLAR-002, FAN-SOLAR-003, FAN-SOLAR-004, FAN-SOLAR-005, FAN-SOLAR-006',
+        price: 185000,
+        commRate: 10,
+        totalVal: 1110000,
+        commVal: 111000,
+        netVal: 999000,
+        dateStr: td(),
+        dueStr: '',
+        notes: 'Hàng mẫu trưng bày tại nhà văn hóa thôn, trưởng thôn bảo quản và thu tiền hộ.',
+        status: 'Đang Trưng Bày / Ký Gởi'
+      },
+      {
+        id: 1726000002002,
+        channel: 'Đại Lý Phân Phối (Authorized Dealer)',
+        name: 'Đại Lý Điện Nước Dawei Solar Hub',
+        contact: 'Ko Aung Thu',
+        phone: '0965 334 112',
+        village: 'Thị Xã Dawei, Tanintharyi',
+        staff: 'Kyaw Swar',
+        product: 'Inverter Hybrid Deye 5kW',
+        qty: 2,
+        serials: 'DEYE-5K-2026-091, DEYE-5K-2026-092',
+        price: 3650000,
+        commRate: 8,
+        totalVal: 7300000,
+        commVal: 584000,
+        netVal: 6716000,
+        dateStr: td(),
+        dueStr: '',
+        notes: 'Bỏ hàng đại lý bán lẻ, thanh toán gối đầu 15 ngày.',
+        status: 'Đang Trưng Bày / Ký Gởi'
+      }
+    ];
+    DB.s('village_consignments', vcons);
+  }
+
+  // 3. Seed Serial Inventory
+  let serials = DB.g('serial_inventory') || [];
+  if (!serials.length) {
+    serials = [
+      { id: 101, sn: 'DEYE-15K-20260501', name: 'Inverter Hybrid Deye 15kW 3P', cat: 'Inverter', status: 'Đã Lắp Cho Khách Hàng', holder: 'Kawthoung Hotel & Resort', ref: 'VCM-26-05' },
+      { id: 102, sn: 'CATL-320AH-88912', name: 'Pin Lưu Trữ Lithium 15.36kWh', cat: 'Pin Lưu Trữ (Battery)', status: 'Đã Lắp Cho Khách Hàng', holder: 'Kawthoung Hotel & Resort', ref: 'VCM-26-05' },
+      { id: 103, sn: 'DEYE-8K-20260810', name: 'Inverter Hybrid Deye 8kW 1P', cat: 'Inverter', status: 'Trong Kho Chi Nhánh', holder: 'Kho Kawthoung', ref: 'NHẬP KHO LÔ 2' },
+      { id: 104, sn: 'DEYE-8K-20260811', name: 'Inverter Hybrid Deye 8kW 1P', cat: 'Inverter', status: 'Xuất Xe Kỹ Thuật / Đi Lắp', holder: 'Zin Ko Ko (Xe Ford Ranger)', ref: 'LẮP ĐẶT THABAWLEIK' },
+      { id: 105, sn: 'CATL-280AH-99104', name: 'Pin Lưu Trữ Lithium 14.33kWh', cat: 'Pin Lưu Trữ (Battery)', status: 'Trong Kho Chi Nhánh', holder: 'Kho Dawei', ref: 'NHẬP KHO LÔ 2' },
+      { id: 106, sn: 'FAN-SOLAR-001', name: 'Quạt Năng Lượng Mặt Trời 12V', cat: 'Quạt Solar / Đèn Solar', status: 'Ký Gởi Trưởng Thôn / Điểm Bán', holder: 'U Kyaw Swar (Trưởng Thôn Palaw North)', ref: 'KÝ GỞI TRƯỞNG THÔN' },
+      { id: 107, sn: 'FAN-SOLAR-002', name: 'Quạt Năng Lượng Mặt Trời 12V', cat: 'Quạt Solar / Đèn Solar', status: 'Ký Gởi Trưởng Thôn / Điểm Bán', holder: 'U Kyaw Swar (Trưởng Thôn Palaw North)', ref: 'KÝ GỞI TRƯỞNG THÔN' },
+      { id: 108, sn: 'DEYE-5K-2026-091', name: 'Inverter Hybrid Deye 5kW', cat: 'Inverter', status: 'Ký Gởi Trưởng Thôn / Điểm Bán', holder: 'Đại Lý Điện Nước Dawei Solar Hub', ref: 'BỎ HÀNG ĐẠI LÝ' },
+      { id: 109, sn: 'INV-DEYE-ERR-009', name: 'Inverter Hybrid Deye 5kW Cũ', cat: 'Inverter', status: 'Bảo Hành / Lỗi Kỹ Thuật', holder: 'Khu Kỹ Thuật Bảo Hành', ref: 'LỖI BOARD MẠCH' }
+    ];
+    DB.s('serial_inventory', serials);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🌐 MASTER RENDERER FOR FIELD OPERATIONS HUB
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function rThucthi() {
+  seedSampleFieldOpsDataIfEmpty();
+  updateStaffLinkDisplay();
+  renderSurveySites();
+  renderVillageConsignments();
+  renderSerialInventory();
+  renderFieldAcceptancesList();
+  renderStaffCustomerHistory();
+}
+
+// Auto register router hook
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initStaffPortal);
+} else {
+  initStaffPortal();
+}
+
+
+// Alias for renderer hook
+const initFieldOps = rThucthi;
+
+
 function exportAcceptancesCSV() {
   const list = DB.g('acceptances') || [];
   if (!list.length) {
@@ -5554,16 +7015,17 @@ function exportAcceptancesCSV() {
 
   const headers = [
     'Mã Dự Án', 'Khách Hàng', 'SĐT', 'Địa Chỉ', 'Ngày Bàn Giao', 'Kỹ Sư',
-    'Điện Áp (V)', 'Công Suất (kWp)', 'Tần Số (Hz)', 'Pin SOC', 'Tiếp Địa',
-    'Dây DC Đen', 'Dây DC Đỏ', 'Dây AC', 'Đầu MC4', 'SN Inverter', 'SN Pin', 'SN Tấm Pin',
+    'Điện Áp (V)', 'Công Suất (kWp)', 'Pin SOC',
+    'Tiền Vật Tư Thực Dùng', 'Tiền Vật Tư Thừa Thu Hồi',
+    'SN Inverter', 'SN Pin', 'SN Tấm Pin',
     'Doanh Thu HĐ', 'Giá Vốn 83%', 'Nộp Cty 17%', 'Thực Thu', 'Còn Nợ', 'LN Chi Nhánh Còn Lại', 'Link Drive'
   ];
 
   const rows = list.map(r => [
-    `"${r.code}"`, `"${r.kh}"`, `"${r.dt}"`, `"${r.dc}"`, r.dateStr, `"${r.eng}"`,
-    r.volt, r.kwp, r.freq, `"${r.soc}"`, `"${r.earth}"`,
-    `"${r.cableBlk}"`, `"${r.cableRed}"`, `"${r.cableAc}"`, `"${r.mc4}"`,
-    `"${r.snInv}"`, `"${r.snBat}"`, `"${r.snPv}"`,
+    `"${r.code || ''}"`, `"${r.kh || ''}"`, `"${r.dt || ''}"`, `"${r.dc || ''}"`, r.dateStr, `"${r.eng || ''}"`,
+    r.volt, r.kwp, `"${r.soc || '100%'}"`,
+    r.totalUsedMatCost || 0, r.totalRemMatCost || 0,
+    `"${r.snInv || '-'}"`, `"${r.snBat || '-'}"`, `"${r.snPv || '-'}"`,
     r.rev, r.cost, r.cty, r.paid, r.debt, r.branchNet, `"${r.driveUrl || ''}"`
   ]);
 
@@ -5595,6 +7057,7 @@ const NAV_TITLES = {
     banhang: '🛒 Sales & Dispatch',
     baogiaups: '📄 Device Quote',
     baogiasolar: '☀️ Solar Quote <small style="color:#38bdf8;font-size:10.5px;margin-left:auto">VCM</small>',
+    thucthi: '🚀 Field Operations <small style="background:#dcfce7;color:#15803d;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:auto;font-weight:700">HUB</small>',
     acceptance: '⚡ Handover & Acceptance',
     daily: '🏪 Distribution',
     kygoi: '📋 Consignment',
@@ -5623,6 +7086,7 @@ const NAV_TITLES = {
     banhang: '🛒 Bán Hàng & Xuất Kho',
     baogiaups: '📄 Báo Giá Thiết Bị',
     baogiasolar: '☀️ Báo Giá Solar <small style="color:#38bdf8;font-size:10.5px;margin-left:auto">VCM</small>',
+    thucthi: '🚀 Team Thực Thi <small style="background:#dcfce7;color:#15803d;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:auto;font-weight:700">HUB</small>',
     acceptance: '⚡ Nghiệm Thu Hiện Trường',
     daily: '🏪 Đại Lý & Phân Phối',
     kygoi: '📋 Hàng Ký Gởi',

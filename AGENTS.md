@@ -1614,3 +1614,33 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 >      - `50% downpayment after agreement: [50% Total] Kyat`
 >      - `: 40% payment after installation: [40% Total] Kyat`
 >      - `: 10% payment after testing & commissioning: [10% Total] Kyat`.
+
+# ⚡ POST-MORTEM RULE — 18/09/2026: QUY TRÌNH BÀN GIAO NGHIỆM THU HIỆN TRƯỜNG THỰC DÙNG, THỪA THU HỒI QUY TIỀN & CỔNG ĐIỀU HÀNH TEAM THỰC THI (FIELD OPS HUB & ZERO INTERNAL FINANCIAL LEAK POLICY)
+
+> ### Nguồn gốc: **Nâng Cấp Nghiệm Thu Vật Tư Thừa Quy Ra Tiền, Tinh Gọn Đo Đạc & Cổng Điều Hành Team Thực Thi (18/09/2026)**
+> - **Root Cause**:
+>   1. Khi nghiệm thu ngoài hiện trường, thợ kỹ thuật mang theo vật tư dự phòng (dây DC đen/đỏ, dây AC, đầu nối MC4...) luôn có chênh lệch giữa số lượng xuất xe mang đi và số lượng thực lắp vào nhà khách. Trước đây, hệ thống chưa có bảng đối soát vật tư thừa quy ra tiền dẫn đến nguy cơ tính cả vật tư thừa vào công trình của khách hoặc không theo dõi được vật tư thừa đã thu hồi để chuyển sang công trình khác.
+>   2. Các thông số đo kiểm kỹ thuật chuyên sâu (Điện trở tiếp địa $\Omega$, Tần số lưới Hz, Trạng thái lưới/tải) làm nặng nề biểu mẫu và mất thời gian đo đạc phức tạp ngoài hiện trường bằng thiết bị đắt tiền, trong khi chỉ cần nghiệm thu 3 chỉ số cốt lõi: Điện áp bàn giao (220V/380V), Công suất phát đỉnh (kWp), và Mức sạc pin (SOC %).
+>   3. Dữ liệu tài chính nội bộ (giá gốc vốn 83%, lợi nhuận nộp công ty 17%, lợi nhuận chi nhánh) nếu hiển thị cho nhân viên nghiệm thu hoặc in trên biên bản khách hàng sẽ gây lộ bí mật kinh doanh và mâu thuẫn nội bộ.
+>   4. Đội ngũ kỹ thuật và thị trường tại Myanmar (khảo sát hiện trường mái/nắng, bỏ hàng đại lý, ký gởi trưởng thôn/già làng, theo dõi số serial từng máy inverter/pin, lịch sử từng khách hàng theo nhân viên) bị phân mảnh nếu không có 1 Hub thực thi tập trung chia sẻ qua link URL trực tiếp.
+>
+> ### 🔴 RULE PM-44: 5 NGUYÊN TẮC BỌC THÉP CHO BÀN GIAO NGHIỆM THU & CỔNG ĐIỀU HÀNH TEAM THỰC THI
+> 1. **Bảng Đối Soát Vật Tư Thực Dùng & Thừa Thu Hồi Chuyển KH Khác**:
+>    - Biểu mẫu nghiệm thu hiện trường (`s-acceptance`) và bản in PDF/A4 BẮT BUỘC hiển thị rõ ràng 2 cột tiền: (1) Tiền vật tư thực dùng (tính vào công trình) và (2) Tiền vật tư thừa thu hồi (mang sang KH khác dùng).
+>    - TUYỆT ĐỐI CẤM tính giá trị vật tư thừa vào chi phí nghiệm thu của khách hàng hiện tại.
+> 2. **Đo Đạc Hiện Trường Tinh Gọn 3 Thông Số Cốt Lõi**:
+>    - Biểu mẫu nghiệm thu bàn giao CHỈ ĐƯỢC PHÉP giữ lại 3 thông số đo đạc thực tế: Điện áp bàn giao (220V), Công suất phát đỉnh (kWp), Mức sạc pin lưu trữ (SOC %).
+>    - TUYỆT ĐỐI CẤM đưa các trường đo kiểm phức tạp (Điện trở tiếp địa $\Omega$, Tần số lưới Hz, Trạng thái tải) vào form hiện trường gây rối rắm và chậm tiến độ.
+> 3. **Khóa Bảo Mật 100% Giá Vốn & Lợi Nhuận Nội Bộ (Zero Financial Leak)**:
+>    - Nhân viên nghiệm thu hiện trường và bản in PDF/A4 gửi khách hàng TUYỆT ĐỐI KHÔNG ĐƯỢC nhìn thấy hoặc chứa các thông số tài chính nội bộ: Tổng giá gốc vốn 83%, Tiền nộp công ty 17%, Lợi nhuận còn lại của chi nhánh.
+>    - Toàn bộ mục này BẮT BUỘC phải được đóng băng, ẩn mặc định (`display:none`) và chỉ mở khi Quản lý/Giám đốc mở khóa (`👁️ Mở Khóa Quản Lý`).
+> 4. **Cổng Điều Hành Team Thực Thi (`s-thucthi` / Field Ops Hub)**:
+>    - BẮT BUỘC cung cấp link chia sẻ trực tiếp độc lập (`?tab=thucthi&staff=TÊN_NV`) hỗ trợ 5 phân hệ thực tế:
+>      - (a) `tt-ks`: Khảo sát hiện trường (kiến trúc mái, hướng nắng đón đỉnh, phụ tải thiết bị, đề xuất Inverter/Pin/PV, ảnh & tọa độ GPS).
+>      - (b) `tt-pp`: Bỏ hàng cho đại lý, điểm bán lẻ & ký gởi trưởng thôn / già làng (tính toán thù lao hoa hồng, hạn thu hồi tiền về cty).
+>      - (c) `tt-sn`: Tồn kho chi tiết đến từng số Serial thiết bị (quản lý vòng đời Inverter, Pin, PV: Trong kho, Xe kỹ thuật đi lắp, Ký gởi trưởng thôn, Đã lắp cho KH, Bảo hành/Lỗi).
+>      - (d) `tt-nt`: Nghiệm thu hiện trường sạch, tối ưu cho mobile, chữ ký cảm ứng & 100% bảo mật giá vốn.
+>      - (e) `tt-ls`: Lịch sử hành trình khách hàng xuyên suốt của từng nhân viên (Khảo sát ➔ Báo giá ➔ Giao hàng ký gởi ➔ Nghiệm thu hoàn tất).
+> 5. **Tự Động Đồng Bộ Serial Ký Gởi Vào Sổ Kho & Router Khởi Tạo Tự Động**:
+>    - Khi nhân viên lưu phiếu ký gởi hàng cho trưởng thôn hoặc đại lý, hệ thống BẮT BUỘC tự động tách dải số Serial và cập nhật trạng thái `"Ký Gởi Trưởng Thôn / Điểm Bán"` vào bảng Tồn Kho Serial (`serial_inventory`).
+>    - Khi người dùng truy cập qua URL param `?tab=thucthi&staff=...`, hệ thống BẮT BUỘC tự động chuyển hướng vào tab Thực Thi và chọn đúng nhân viên phụ trách mà không cần thao tác bấm chuột thủ công.
