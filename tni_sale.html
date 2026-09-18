@@ -81,7 +81,12 @@ tbody tr:hover{background:#fafcff}
 .al-ok{background:#dcfce7;color:#166534;border:1px solid #bbf7d0}
 .al-er{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
 /* QUOTATION */
-.qrow{display:flex;gap:8px;align-items:center;margin-bottom:6px;padding:6px 8px;background:#f8fafc;border-radius:6px;font-size:12.5px}
+.qrow{display:flex;gap:8px;align-items:center;margin-bottom:6px;padding:6px 8px;background:#f8fafc;border-radius:6px;font-size:12.5px;transition:background-color .15s,border-color .15s;border:1px solid transparent}
+.qrow:hover{background:#f1f5f9}
+.qrow.qrow-dragging{opacity:.45;background:#e0f2fe!important;border:1.5px dashed #0284c7!important}
+.qrow.qrow-dragover{border-top:2px solid #2563eb!important}
+.q-drag-handle{cursor:grab;user-select:none;display:inline-flex;align-items:center;justify-content:center}
+.q-drag-handle:active{cursor:grabbing}
 .qrow input{padding:5px 7px;border:1px solid var(--bd);border-radius:5px;font-size:12px}
 .qrow input:focus{outline:none;border-color:var(--bl)}
 .qtotal{background:var(--dark);color:#fff;border-radius:8px;padding:14px 16px;margin-top:10px;font-size:14px}
@@ -457,6 +462,7 @@ tbody tr:hover{background:#fafcff}
             <button class="btn b-bl b-sm" onclick="addQRow('qu-items')" data-lang="qu_add_row">+ Thêm dòng</button>
           </div>
           <div style="display:flex;gap:8px;align-items:center;padding:5px 8px;font-size:11px;font-weight:700;color:#64748b;background:#f1f5f9;border-radius:6px;margin-bottom:6px">
+            <span style="width:65px;text-align:center" data-lang="qu_col_order">Sắp xếp</span>
             <span style="flex:2;min-width:140px" data-lang="qu_col_desc">Hạng Mục / Thiết Bị</span>
             <span style="width:100px" data-lang="qu_col_brand">Brand</span>
             <span style="width:65px;text-align:center" data-lang="qu_col_unit">ĐVT</span>
@@ -2355,20 +2361,83 @@ function rBan(){
 // ═══════════════════════════════════════════════════
 // BÁO GIÁ — QUOTATION ROWS
 // ═══════════════════════════════════════════════════
+let draggedQRow = null;
+
+function initQRowDrag(d, containerId) {
+  d.setAttribute('draggable', 'true');
+  d.addEventListener('dragstart', (e) => {
+    draggedQRow = d;
+    d.classList.add('qrow-dragging');
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', '');
+    }
+  });
+  d.addEventListener('dragend', () => {
+    d.classList.remove('qrow-dragging');
+    draggedQRow = null;
+    document.querySelectorAll('.qrow-dragover').forEach(el => el.classList.remove('qrow-dragover'));
+    calcQ(containerId);
+  });
+  d.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    if (draggedQRow && draggedQRow !== d) {
+      d.classList.add('qrow-dragover');
+    }
+  });
+  d.addEventListener('dragleave', () => {
+    d.classList.remove('qrow-dragover');
+  });
+  d.addEventListener('drop', (e) => {
+    e.preventDefault();
+    d.classList.remove('qrow-dragover');
+    if (draggedQRow && draggedQRow !== d) {
+      const parent = d.parentNode;
+      const rect = d.getBoundingClientRect();
+      const next = (e.clientY - rect.top) > (rect.height / 2);
+      parent.insertBefore(draggedQRow, next ? d.nextSibling : d);
+      calcQ(containerId);
+    }
+  });
+}
+
+function moveQRow(btn, dir, cid) {
+  const row = btn.closest('.qrow');
+  if (!row) return;
+  const parent = row.parentNode;
+  if (!parent) return;
+  if (dir === -1) {
+    const prev = row.previousElementSibling;
+    if (prev) parent.insertBefore(row, prev);
+  } else if (dir === 1) {
+    const next = row.nextElementSibling;
+    if (next) parent.insertBefore(next, row);
+  }
+  calcQ(cid);
+}
+
 function addQRow(containerId, itemData) {
   const isVi = currentLang === 'vi';
   const c = document.getElementById(containerId);
   if (!c) return;
   const item = itemData || {};
   const d = document.createElement('div'); d.className = 'qrow';
-  d.innerHTML = `<input class="q-ten" value="${item.ten || ''}" placeholder="${isVi ? 'Tên thiết bị / hạng mục' : 'Item description / equipment'}" style="flex:2;min-width:140px" oninput="calcQ('${containerId}')"/>
+  d.innerHTML = `
+    <div style="display:flex;align-items:center;gap:3px;user-select:none;flex-shrink:0;width:65px;justify-content:center">
+      <span class="q-drag-handle" title="${isVi ? 'Kéo chuột để đổi vị trí' : 'Drag to reorder'}" style="font-size:15px;color:#94a3b8;padding:2px 3px">☰</span>
+      <button type="button" class="btn b-xs" style="padding:1px 3px;font-size:9px;line-height:1;background:#fff;border:1px solid #cbd5e1;color:#475569;border-radius:3px" title="${isVi ? 'Chuyển lên trên' : 'Move up'}" onclick="moveQRow(this, -1, '${containerId}')">▲</button>
+      <button type="button" class="btn b-xs" style="padding:1px 3px;font-size:9px;line-height:1;background:#fff;border:1px solid #cbd5e1;color:#475569;border-radius:3px" title="${isVi ? 'Chuyển xuống dưới' : 'Move down'}" onclick="moveQRow(this, 1, '${containerId}')">▼</button>
+    </div>
+    <input class="q-ten" value="${item.ten || ''}" placeholder="${isVi ? 'Tên thiết bị / hạng mục' : 'Item description / equipment'}" style="flex:2;min-width:140px" oninput="calcQ('${containerId}')"/>
     <input class="q-brand" value="${item.brand || ''}" placeholder="${isVi ? 'Hãng / Brand' : 'Brand'}" style="width:100px" oninput="calcQ('${containerId}')"/>
     <input class="q-dv" value="${item.dv || (isVi ? 'Cái' : 'Nos')}" placeholder="${isVi ? 'Đơn vị' : 'Unit'}" style="width:65px;text-align:center" oninput="calcQ('${containerId}')"/>
     <input class="q-sl" type="number" min="1" value="${item.sl || 1}" placeholder="${isVi ? 'SL' : 'Qty'}" style="width:60px;text-align:center" oninput="calcQ('${containerId}')"/>
     <input class="q-dg" type="number" min="0" value="${item.dg || 0}" placeholder="${isVi ? 'Đơn giá (₫)' : 'Unit Price ($/₫)'}" style="width:120px;text-align:right" oninput="calcQ('${containerId}')"/>
     <span class="q-tt" style="min-width:95px;text-align:right;font-weight:600;color:var(--bl)">0 ₫</span>
-    <button class="btn b-xs b-rd" onclick="this.parentNode.remove();calcQ('${containerId}')">✕</button>`;
+    <button class="btn b-xs b-rd" onclick="this.closest('.qrow').remove();calcQ('${containerId}')">✕</button>`;
   c.appendChild(d);
+  initQRowDrag(d, containerId);
   calcQ(containerId);
 }
 function calcQ(cid){
@@ -2440,6 +2509,22 @@ const DEFAULT_6KW_PRESET = TNI_6KW_SEPT17_PRESET;
 
 let currentEditingSolarId = null;
 
+function moveSolarRow(btn, dir) {
+  const tr = btn.closest('tr');
+  if (!tr) return;
+  const tbody = tr.parentNode;
+  if (!tbody) return;
+  if (dir === -1) {
+    const prev = tr.previousElementSibling;
+    if (prev) tbody.insertBefore(tr, prev);
+  } else if (dir === 1) {
+    const next = tr.nextElementSibling;
+    if (next) tbody.insertBefore(next, tr);
+  }
+  reindexSolarTable();
+  calcSolarTable();
+}
+
 function addSolarItemRow(data) {
   const tbody = document.getElementById('qs-table-body');
   if (!tbody) return;
@@ -2448,7 +2533,11 @@ function addSolarItemRow(data) {
 
   const tr = document.createElement('tr');
   tr.innerHTML = `
-    <td style="text-align:center;font-weight:600;color:#64748b" class="row-num">${idx}</td>
+    <td style="text-align:center;font-weight:600;color:#64748b;white-space:nowrap" class="row-num">
+      <span>${idx}</span>
+      <button type="button" class="btn b-xs" style="padding:1px 3px;font-size:8px;background:#fff;border:1px solid #cbd5e1;color:#475569;margin-left:2px" title="Lên trên" onclick="moveSolarRow(this, -1)">▲</button>
+      <button type="button" class="btn b-xs" style="padding:1px 3px;font-size:8px;background:#fff;border:1px solid #cbd5e1;color:#475569" title="Xuống dưới" onclick="moveSolarRow(this, 1)">▼</button>
+    </td>
     <td><input class="r-ten" value="${item.ten || ''}" placeholder="Tên vật tư / Thiết bị" style="width:100%;padding:4px 6px;border:1px solid var(--bd);border-radius:4px;font-size:12px"/></td>
     <td><input class="r-brand" value="${item.brand || ''}" placeholder="Hãng / Brand" style="width:100%;padding:4px 6px;border:1px solid var(--bd);border-radius:4px;font-size:12px"/></td>
     <td><input class="r-dv" value="${item.dv || 'Nos'}" placeholder="ĐVT" style="width:100%;padding:4px 6px;border:1px solid var(--bd);border-radius:4px;font-size:12px;text-align:center"/></td>
@@ -5624,7 +5713,8 @@ const DICT = {
     qu_validity: 'Validity (days)',
     qu_items_label: '📦 Equipment / Item List',
     qu_add_row: '+ Add Item Row',
-    qu_col_desc: 'Item Description / Equipment',
+    qu_col_order: 'Order',
+      qu_col_desc: 'Item Description / Equipment',
     qu_col_brand: 'Brand',
     qu_col_unit: 'Unit',
     qu_col_qty: 'Qty',
@@ -5709,7 +5799,8 @@ const DICT = {
     qu_validity: 'Hiệu Lực (ngày)',
     qu_items_label: '📦 Danh sách thiết bị',
     qu_add_row: '+ Thêm dòng',
-    qu_col_desc: 'Hạng Mục / Thiết Bị',
+    qu_col_order: 'Sắp xếp',
+      qu_col_desc: 'Hạng Mục / Thiết Bị',
     qu_col_brand: 'Brand',
     qu_col_unit: 'ĐVT',
     qu_col_qty: 'SL',
