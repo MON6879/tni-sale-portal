@@ -3183,11 +3183,11 @@ function renderQuotationPrintHtml(d) {
       title += ' ' + brand;
     }
     return `<tr>
-      <td style="padding:7px 8px 7px 2px;border-bottom:1px solid #e2e8f0;font-size:12.5px;color:#1e293b">${title}</td>
-      <td style="padding:7px 6px;border-bottom:1px solid #e2e8f0;font-size:12px;text-align:center;color:#334155">${r.dv || 'Set'}</td>
-      <td style="padding:7px 6px;border-bottom:1px solid #e2e8f0;font-size:12px;text-align:center;color:#334155">${sl}</td>
-      <td style="padding:7px 8px;border-bottom:1px solid #e2e8f0;font-size:12px;text-align:right;color:#334155">${fn(dg)}</td>
-      <td style="padding:7px 2px 7px 8px;border-bottom:1px solid #e2e8f0;font-size:12px;text-align:right;font-weight:700;color:#0f172a">${fn(tt)}</td>
+      <td style="padding:7px 8px;border:1px solid #cbd5e1;font-size:12.5px;color:#1e293b">${title}</td>
+      <td style="padding:7px 6px;border:1px solid #cbd5e1;font-size:12px;text-align:center;color:#334155">${r.dv || 'Set'}</td>
+      <td style="padding:7px 6px;border:1px solid #cbd5e1;font-size:12px;text-align:center;color:#334155">${sl}</td>
+      <td style="padding:7px 8px;border:1px solid #cbd5e1;font-size:12px;text-align:right;color:#334155">${fn(dg)}</td>
+      <td style="padding:7px 8px;border:1px solid #cbd5e1;font-size:12px;text-align:right;font-weight:700;color:#0f172a">${fn(tt)}</td>
     </tr>`;
   }).join('');
 
@@ -3246,15 +3246,20 @@ function renderQuotationPrintHtml(d) {
       border-collapse: collapse;
       font-size: 12.5px;
       margin-top: 6px;
+      border: 1px solid #94a3b8;
     }
     table.q-table th {
-      border-bottom: 1.5px solid #cbd5e1;
-      padding: 8px 6px;
+      border: 1px solid #94a3b8;
+      background: #f8fafc;
+      padding: 8px 8px;
       font-size: 12px;
       font-weight: 700;
       color: #1e293b;
     }
     table.q-table td {
+      border: 1px solid #cbd5e1;
+      padding: 7px 8px;
+      font-size: 12px;
       vertical-align: middle;
     }
     .total-box {
@@ -3325,11 +3330,11 @@ function renderQuotationPrintHtml(d) {
   <table class="q-table">
     <thead>
       <tr>
-        <th style="text-align:left;padding-left:2px">${isVi ? 'Hạng Mục / Thiết Bị' : 'Item Description / Equipment'}</th>
-        <th style="text-align:center;width:60px">${isVi ? 'ĐVT' : 'Unit'}</th>
-        <th style="text-align:center;width:45px">${isVi ? 'SL' : 'Qty'}</th>
-        <th style="text-align:right;width:105px">${isVi ? 'Đơn Giá' : 'Unit Price'}</th>
-        <th style="text-align:right;width:115px;padding-right:2px">${isVi ? 'Thành Tiền' : 'Subtotal'}</th>
+        <th style="border:1px solid #94a3b8;background:#f8fafc;text-align:left;padding:8px 8px">${isVi ? 'Hạng Mục / Thiết Bị' : 'Item Description / Equipment'}</th>
+        <th style="border:1px solid #94a3b8;background:#f8fafc;text-align:center;width:60px;padding:8px 6px">${isVi ? 'ĐVT' : 'Unit'}</th>
+        <th style="border:1px solid #94a3b8;background:#f8fafc;text-align:center;width:50px;padding:8px 6px">${isVi ? 'SL' : 'Qty'}</th>
+        <th style="border:1px solid #94a3b8;background:#f8fafc;text-align:right;width:115px;padding:8px 8px">${isVi ? 'Đơn Giá' : 'Unit Price'}</th>
+        <th style="border:1px solid #94a3b8;background:#f8fafc;text-align:right;width:125px;padding:8px 8px">${isVi ? 'Thành Tiền' : 'Subtotal'}</th>
       </tr>
     </thead>
     <tbody>

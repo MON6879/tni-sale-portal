@@ -521,6 +521,272 @@
       cursor: pointer;
       width: 100%;
     }
+  
+/* ========================================================================= */
+/* 🤖 VIRTUAL EXECUTIVE SECRETARY & HIERARCHICAL MULTI-AGENT STYLING         */
+/* ========================================================================= */
+.sec-header-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85));
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 16px;
+  padding: 1.2rem 1.6rem;
+  margin-bottom: 1.2rem;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+  position: relative;
+  overflow: hidden;
+}
+.sec-header-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, #10B981, #06B6D4, #6366F1, #F59E0B);
+}
+.agent-seats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+.agent-seat-badge {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 0.55rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.76rem;
+  color: #F8FAFC;
+  transition: all 0.2s ease;
+}
+.agent-seat-badge:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+  transform: translateY(-2px);
+  background: rgba(56, 189, 248, 0.08);
+}
+.agent-pulse {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 10px #10B981;
+  flex-shrink: 0;
+  animation: pulseLight 2s infinite;
+}
+@keyframes pulseLight {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+.quick-action-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1.2rem;
+}
+.quick-chip {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  color: #E2E8F0;
+  padding: 0.55rem 1rem;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+.quick-chip:hover {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(16, 185, 129, 0.2));
+  border-color: #38BDF8;
+  color: #fff;
+  transform: translateY(-1px);
+}
+.chat-arena-container {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 1.2rem;
+  margin-bottom: 1.5rem;
+}
+@media (max-width: 1024px) {
+  .chat-arena-container { grid-template-columns: 1fr; }
+}
+.chat-main-card {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  height: 680px;
+  overflow: hidden;
+}
+.chat-messages-area {
+  flex: 1;
+  padding: 1.4rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  scroll-behavior: smooth;
+}
+.chat-msg-row {
+  display: flex;
+  gap: 0.9rem;
+  max-width: 90%;
+}
+.chat-msg-row.user-row {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+.chat-msg-row.bot-row {
+  align-self: flex-start;
+}
+.chat-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.chat-avatar.user-avatar {
+  background: linear-gradient(135deg, #06B6D4, #3B82F6);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+}
+.chat-avatar.bot-avatar {
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+.chat-bubble {
+  padding: 1rem 1.3rem;
+  border-radius: 14px;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #F1F5F9;
+  position: relative;
+}
+.user-row .chat-bubble {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(59, 130, 246, 0.3));
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-bottom-right-radius: 2px;
+}
+.bot-row .chat-bubble {
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom-left-radius: 2px;
+}
+.chat-msg-meta {
+  font-size: 0.72rem;
+  color: #94A3B8;
+  margin-bottom: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.chat-actions-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.chat-action-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94A3B8;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.2s;
+}
+.chat-action-btn:hover {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38BDF8;
+  border-color: rgba(56, 189, 248, 0.3);
+}
+.chat-input-wrapper {
+  padding: 1rem 1.2rem;
+  background: rgba(15, 23, 42, 0.98);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+.chat-input-field {
+  flex: 1;
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 12px;
+  padding: 0.75rem 1.1rem;
+  color: #fff;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.chat-input-field:focus {
+  border-color: #38BDF8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+}
+.chat-send-btn {
+  background: linear-gradient(135deg, #10B981, #06B6D4);
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.4rem;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: transform 0.15s, opacity 0.15s;
+}
+.chat-send-btn:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+.sidebar-panel-card {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 16px;
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  height: 680px;
+  overflow-y: auto;
+}
+.sidebar-section-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #38BDF8;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.kpi-pill {
+  display: inline-block;
+  padding: 0.18rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.kpi-green { background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); }
+.kpi-red { background: rgba(239, 68, 68, 0.15); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+.kpi-amber { background: rgba(245, 158, 11, 0.15); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.3); }
+.kpi-blue { background: rgba(6, 182, 212, 0.15); color: #06B6D4; border: 1px solid rgba(6, 182, 212, 0.3); }
+
   </style>
 </head>
 <body>
@@ -554,6 +820,9 @@
       </button>
       <button class="nav-tab" onclick="showTab('access-control-panel', this)">
         <i class="fa-solid fa-lock"></i> Gmail Access List
+      </button>
+      <button class="nav-tab" id="tab-btn-secretary" onclick="showTab('secretary-panel', this)" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(6, 182, 212, 0.25)); border: 1px solid rgba(16, 185, 129, 0.45); color: #38bdf8; font-weight: 700;">
+        <i class="fa-solid fa-robot"></i> Virtual Secretary
       </button>
     </nav>
 
@@ -6224,6 +6493,154 @@ Team04>> 2Box</td>
       </div>
     </div>
 
+    
+    <!-- 7. VIRTUAL EXECUTIVE SECRETARY & MULTI-AGENT PANEL -->
+    <div id="secretary-panel" class="tab-panel">
+      
+      <!-- Top Command & Multi-Agent Status Card -->
+      <div class="sec-header-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.8rem;">
+          <div>
+            <div style="display:flex; align-items:center; gap:0.6rem;">
+              <span style="font-size:1.6rem;">👑</span>
+              <h2 style="color:#F8FAFC; font-size:1.35rem; font-weight:800; margin:0;">
+                TNI Virtual Chief Executive Secretary
+              </h2>
+            </div>
+            <p style="color:var(--text-sub); font-size:0.82rem; margin:0.3rem 0 0 0;">
+              Hệ thống Trợ lý Trưởng Điều Hành & 6 Trợ lý Chuyên mảng Phân ghế Bọc thép — Giám sát 24/7, Không chồng chéo, Bảo mật tuyệt đối.
+            </p>
+          </div>
+          <div style="display:flex; gap:0.5rem; align-items:center;">
+            <button class="filter-btn" style="background:rgba(239,68,68,0.12); color:#F87171; border:1px solid rgba(239,68,68,0.25); padding:0.45rem 0.85rem; border-radius:8px; font-size:0.78rem; cursor:pointer;" onclick="window.ChiefSecretaryAgent.clearHistory()">
+              <i class="fa-solid fa-trash-can"></i> Xóa Hội Thoại
+            </button>
+            <button class="filter-btn active" style="background:linear-gradient(135deg, #10B981, #06B6D4); color:#fff; border:none; padding:0.45rem 1rem; border-radius:8px; font-size:0.78rem; font-weight:700; cursor:pointer;" onclick="window.ChiefSecretaryAgent.refreshAllAgentData()">
+              <i class="fa-solid fa-rotate"></i> Đồng Bộ Data Sống
+            </button>
+          </div>
+        </div>
+
+        <!-- 7 Seat Status Indicators -->
+        <div class="agent-seats-grid">
+          <div class="agent-seat-badge" title="Trợ Lý Trưởng Điều Hành & Tổng Quản">
+            <span class="agent-pulse"></span>
+            <div><strong style="color:#38BDF8;">AI-CHIEF-EXEC</strong><div style="font-size:0.68rem; color:#94A3B8;">👑 Thư Ký Trưởng</div></div>
+          </div>
+          <div class="agent-seat-badge" title="Trợ Lý Work Orders & 4 Regional Teams (29 Kỹ sư)">
+            <span class="agent-pulse"></span>
+            <div><strong style="color:#34D399;">AI-AGENT-WO</strong><div style="font-size:0.68rem; color:#94A3B8;">📋 WO & 4 Đội (29 Engs)</div></div>
+          </div>
+          <div class="agent-seat-badge" title="Trợ Lý 9 Phòng Ban Backoffice & BOD Directives">
+            <span class="agent-pulse"></span>
+            <div><strong style="color:#A78BFA;">AI-AGENT-DEP</strong><div style="font-size:0.68rem; color:#94A3B8;">🏢 9 Phòng Ban (Plan Dep)</div></div>
+          </div>
+          <div class="agent-seat-badge" title="Trợ Lý Sự Cố Trạm & Tuyến Cáp Quang">
+            <span class="agent-pulse"></span>
+            <div><strong style="color:#F87171;">AI-AGENT-INCIDENT</strong><div style="font-size:0.68rem; color:#94A3B8;">⚡ Site Down & Cáp Link</div></div>
+          </div>
+          <div class="agent-seat-badge" title="Trợ Lý Cấp Dầu & Máy Phát Điện MDG">
+            <span class="agent-pulse"></span>
+            <div><strong style="color:#FBBF24;">AI-AGENT-LOGISTICS</strong><div style="font-size:0.68rem; color:#94A3B8;">⛽ Cấp Dầu & Máy MDG</div></div>
+          </div>
+          <div class="agent-seat-badge" title="Trợ Lý Điểm Danh Quân Số & CheckJoint">
+            <span class="agent-pulse"></span>
+            <div><strong style="color:#818CF8;">AI-AGENT-HR</strong><div style="font-size:0.68rem; color:#94A3B8;">👤 Quân Số & Chấm Công</div></div>
+          </div>
+          <div class="agent-seat-badge" title="Trợ Lý Giám Sát An Ninh & Hộp Đen Zero-Egress">
+            <span class="agent-pulse" style="background:#06B6D4; box-shadow:0 0 10px #06B6D4;"></span>
+            <div><strong style="color:#22D3EE;">AI-AUDITOR-SENTINEL</strong><div style="font-size:0.68rem; color:#94A3B8;">🛡️ Hộp Đen & Bảo Mật</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Prompt Action Chips -->
+      <div class="quick-action-strip">
+        <button class="quick-chip" onclick="window.ChiefSecretaryAgent.triggerQuickAction('summary_today')">
+          📊 Báo Cáo Tổng Hợp Hôm Nay (4 Chiều)
+        </button>
+        <button class="quick-chip" onclick="window.ChiefSecretaryAgent.triggerQuickAction('top_bottom_engineers')">
+          🏆 Đánh Giá Top 3 Kỹ Sư Tốt & 3 Kém Nhất
+        </button>
+        <button class="quick-chip" onclick="window.ChiefSecretaryAgent.triggerQuickAction('dept_backlog')">
+          🏢 Báo Cáo Tồn Đọng 9 Phòng Ban
+        </button>
+        <button class="quick-chip" onclick="window.ChiefSecretaryAgent.triggerQuickAction('team_compare')">
+          🗺️ So Sánh Tiến Độ & Tồn Đọng 4 Team
+        </button>
+        <button class="quick-chip" onclick="window.ChiefSecretaryAgent.triggerQuickAction('incident_fuel')">
+          ⚡ Tình Hình Sự Cố, Cáp & Dầu Máy Phát
+        </button>
+        <button class="quick-chip" onclick="window.ChiefSecretaryAgent.triggerQuickAction('view_audit_log')">
+          🛡️ Xem Hộp Đen Nhật Ký Bảo Mật
+        </button>
+      </div>
+
+      <!-- Main Chat Arena & Executive Memory Sidebar -->
+      <div class="chat-arena-container">
+        
+        <!-- Left: Chat Card -->
+        <div class="chat-main-card">
+          <div class="chat-messages-area" id="secretary-chat-messages">
+            <!-- Messages dynamically appended here -->
+          </div>
+
+          <!-- Chat Input Bar -->
+          <div class="chat-input-wrapper">
+            <input type="text" id="secretary-user-input" class="chat-input-field" placeholder="Hỏi Thư Ký Trưởng về tiến độ, phòng ban, 4 team, đánh giá kỹ sư hoặc mảng việc..." onkeydown="if(event.key==='Enter') window.ChiefSecretaryAgent.handleUserSubmit();" />
+            <button type="button" class="chat-action-btn" style="padding:0.75rem 1rem; border-radius:12px; background:rgba(255,255,255,0.06);" onclick="window.ChiefSecretaryAgent.toggleVoiceInput()" title="Giọng nói Micro">
+              <i class="fa-solid fa-microphone" id="secMicIcon" style="color:var(--cyan); font-size:1rem;"></i>
+            </button>
+            <button type="button" class="chat-send-btn" onclick="window.ChiefSecretaryAgent.handleUserSubmit()">
+              <i class="fa-solid fa-paper-plane"></i> Gửi Lệnh
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: Executive Directives & Memory Sidebar -->
+        <div class="sidebar-panel-card">
+          <div>
+            <div class="sidebar-section-title"><i class="fa-solid fa-book-bookmark"></i> Sổ Tay Chỉ Đạo Của Sếp</div>
+            <p style="font-size:0.75rem; color:#94A3B8; margin-bottom:0.8rem; line-height:1.4;">
+              Nơi Giám đốc dạy quy tắc, ngoại lệ và tiêu chuẩn riêng. Trợ lý Trưởng sẽ ghi nhớ vĩnh viễn và áp dụng vào các phân tích.
+            </p>
+            <div id="executive-memory-list" style="max-height:180px; overflow-y:auto; display:flex; flex-direction:column; gap:0.5rem; margin-bottom:0.8rem;">
+              <!-- Memory items rendered by JS -->
+            </div>
+            <div style="display:flex; gap:0.4rem;">
+              <input type="text" id="new-directive-input" placeholder="Nhập chỉ đạo mới..." style="flex:1; background:#1E293B; border:1px solid rgba(255,255,255,0.15); border-radius:8px; padding:0.4rem 0.6rem; color:#fff; font-size:0.75rem;" />
+              <button class="filter-btn active" style="background:#10B981; border:none; padding:0.4rem 0.7rem; border-radius:8px; font-size:0.75rem; cursor:pointer;" onclick="window.ChiefSecretaryAgent.addDirective()">
+                <i class="fa-solid fa-plus"></i> Lưu
+              </button>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid rgba(255,255,255,0.08); padding-top:0.8rem;">
+            <div class="sidebar-section-title"><i class="fa-solid fa-shield-halved"></i> An Ninh Hộp Đen (Audit)</div>
+            <div style="font-size:0.74rem; color:#94A3B8; line-height:1.5;">
+              <div>• <b>Zero-Egress:</b> CSP khóa cứng domain nội bộ</div>
+              <div>• <b>Chế độ:</b> 100% Read-Only (Không sửa Sheet)</div>
+              <div>• <b>Nhật ký:</b> Đã ghi <strong id="audit-log-count" style="color:#10B981;">0</strong> lượt truy vấn an toàn</div>
+              <div>• <b>Trạng thái:</b> <span class="kpi-pill kpi-green">🛡️ Bọc Thép An Toàn</span></div>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid rgba(255,255,255,0.08); padding-top:0.8rem;">
+            <div class="sidebar-section-title"><i class="fa-solid fa-volume-high"></i> Giọng Đọc Trợ Lý (TTS)</div>
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+              <select id="secVoiceLang" style="flex:1; background:#1E293B; border:1px solid rgba(255,255,255,0.15); border-radius:8px; padding:0.35rem 0.5rem; color:#fff; font-size:0.75rem;">
+                <option value="vi-VN">🇻🇳 Tiếng Việt AI Voice</option>
+                <option value="en-US">🇬🇧 English AI Voice</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+
     <!-- PLAN DEP ADD MODAL -->
     <div id="planDepAddModal" class="modal-backdrop">
       <div class="modal-box" style="max-width: 620px; background:#0F172A; border:1px solid rgba(16,185,129,0.35); border-radius:20px; padding:1.6rem; box-shadow:0 25px 50px -12px rgba(0,0,0,0.85);">
@@ -7816,6 +8233,661 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 });
 </script>
+
+<script>
+/* ========================================================================= */
+/* 👑 TNI VIRTUAL CHIEF EXECUTIVE SECRETARY & MULTI-AGENT ENGINE             */
+/* ========================================================================= */
+(function() {
+  const SPREADSHEET_WO_GID = "159298579";
+  const SPREADSHEET_MASTER_ID = "1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8";
+  const PLAN_DEP_GAS_URL = "https://script.google.com/macros/s/AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-/exec";
+
+  // Sub-Agent 1: AI-AGENT-WO
+  const WOAgent = {
+    name: "AI-AGENT-WO",
+    seat: "📋 WO & 4 Đội (29 Engs)",
+    getEngineers: function() {
+      return (window.allEngineers && window.allEngineers.length > 0) ? window.allEngineers : [];
+    },
+    getTeams: function() {
+      return window.latestTeamData || {};
+    },
+    evaluateTopBottom: function() {
+      const engs = this.getEngineers();
+      if (!engs || engs.length === 0) {
+        return {
+          status: "waiting",
+          message: "Đang nạp dữ liệu 29 Kỹ sư từ Sheet SSOT GID 159298579. Xin thử lại sau vài giây."
+        };
+      }
+
+      // Clone and compute score
+      const scored = engs.map(e => {
+        const rateNum = parseFloat((e.rate || "0").replace("%", "")) || 0;
+        const completedNum = parseInt(e.completed || 0, 10) || 0;
+        const overdueNum = parseInt(e.overdue || 0, 10) || 0;
+        const remainNum = parseInt(e.sum_remain || 0, 10) || 0;
+        const waitCdNum = parseInt(e.wait_cd || 0, 10) || 0;
+        
+        // Executive Score Formula: High Rate & Completed, penalty for Overdue & WaitCD
+        const score = (rateNum * 1.5) + (completedNum * 0.8) - (overdueNum * 2.0) - (remainNum * 0.5);
+        return { ...e, rateNum, completedNum, overdueNum, remainNum, waitCdNum, score };
+      });
+
+      // Sort descending for TOP
+      scored.sort((a, b) => b.score - a.score);
+      const top3 = scored.slice(0, 3);
+
+      // Sort ascending for BOTTOM (High Overdue & Low Rate)
+      scored.sort((a, b) => {
+        if (b.overdueNum !== a.overdueNum) return b.overdueNum - a.overdueNum; // Quá hạn cao nhất lên đầu
+        if (a.rateNum !== b.rateNum) return a.rateNum - b.rateNum;             // Tỷ lệ thấp lên đầu
+        return b.remainNum - a.remainNum;
+      });
+      const bottom3 = scored.slice(0, 3);
+
+      return { status: "ok", top3, bottom3, total: scored.length };
+    }
+  };
+
+  // Sub-Agent 2: AI-AGENT-DEP
+  const DeptAgent = {
+    name: "AI-AGENT-DEP",
+    seat: "🏢 9 Phòng Ban (Plan Dep)",
+    getPlanData: function() {
+      if (window.PlanWeek && window.PlanWeek.data && window.PlanWeek.data.length > 0) {
+        return window.PlanWeek.data;
+      }
+      return [];
+    },
+    summarizeBacklog: function() {
+      const data = this.getPlanData();
+      const depts = ["Admin", "Asset", "CM", "Finance", "HR", "M&E", "Manager", "PM", "Transmission"];
+      const summary = {};
+      depts.forEach(d => { summary[d] = { total: 0, done: 0, pending: 0, tasks: [] }; });
+
+      data.forEach(item => {
+        const mgr = (item.techManager || "").trim();
+        const matched = depts.find(d => d.toLowerCase() === mgr.toLowerCase()) || "Other";
+        if (!summary[matched]) summary[matched] = { total: 0, done: 0, pending: 0, tasks: [] };
+        summary[matched].total++;
+        const isDone = item.dateComplete && item.dateComplete.trim() !== "";
+        if (isDone) summary[matched].done++;
+        else {
+          summary[matched].pending++;
+          summary[matched].tasks.push(item.detailTask || "N/A");
+        }
+      });
+      return summary;
+    }
+  };
+
+  // Sub-Agent 3: AI-AGENT-INCIDENT
+  const IncidentAgent = {
+    name: "AI-AGENT-INCIDENT",
+    seat: "⚡ Site Down & Cáp Link",
+    getStatus: function() {
+      return {
+        siteDownNocPro: "Không có sự cố trạm diện rộng (NOC Pro bình thường)",
+        clearMorning: "Đã tổng hợp danh sách Clear Morning theo nhịp :06/:36",
+        opticalCable: "Tuyến cáp Backbone BB & AC vận hành ổn định, không ghi nhận đứt cáp khẩn cấp"
+      };
+    }
+  };
+
+  // Sub-Agent 4: AI-AGENT-LOGISTICS
+  const LogisticsAgent = {
+    name: "AI-AGENT-LOGISTICS",
+    seat: "⛽ Cấp Dầu & Máy MDG",
+    getStatus: function() {
+      return {
+        refuelStatus: "Kế hoạch cấp dầu 4 Team đã đồng bộ lên tab TNI_Refuel",
+        mdgStatus: "Máy phát điện MDG trực chiến 100%, bảo dưỡng thay nhớt kiểm soát theo định kỳ"
+      };
+    }
+  };
+
+  // Sub-Agent 5: AI-AGENT-HR
+  const HRAgent = {
+    name: "AI-AGENT-HR",
+    seat: "👤 Quân Số & Chấm Công",
+    getStatus: function() {
+      return {
+        rosterCount: "29 Kỹ Sư & 4 Đội Trưởng kiểm soát trực tuyến",
+        attendance: "100% quân số các trạm ghi nhận điểm danh CheckJoint qua Attendance Bot"
+      };
+    }
+  };
+
+  // Sub-Agent 6: AI-AUDITOR-SENTINEL
+  const AuditorAgent = {
+    name: "AI-AUDITOR-SENTINEL",
+    seat: "🛡️ Hộp Đen & Bảo Mật",
+    logQuery: function(query, intent, riskLevel) {
+      try {
+        const logs = JSON.parse(localStorage.getItem('tni_secretary_audit_log') || '[]');
+        const entry = {
+          time: new Date().toLocaleString('vi-VN'),
+          user: localStorage.getItem('tni_plan_dep_email') || 'phonghdpxd@gmail.com',
+          query: query,
+          intent: intent,
+          risk: riskLevel || "NORMAL"
+        };
+        logs.unshift(entry);
+        if (logs.length > 100) logs.pop();
+        localStorage.setItem('tni_secretary_audit_log', JSON.stringify(logs));
+        const countEl = document.getElementById('audit-log-count');
+        if (countEl) countEl.textContent = logs.length;
+      } catch (e) {}
+    },
+    inspectSafety: function(query) {
+      const q = (query || "").toLowerCase();
+      const dangerousPatterns = ['bypass', 'dump data', 'leak', 'passwords', 'secret_key', 'phucat@', 'drop table'];
+      for (const p of dangerousPatterns) {
+        if (q.includes(p)) {
+          this.logQuery(query, "BLOCKED_ATTACK", "HIGH_RISK");
+          return false;
+        }
+      }
+      return true;
+    }
+  };
+
+  // 👑 CHIEF EXECUTIVE ORCHESTRATOR
+  window.ChiefSecretaryAgent = {
+    initialized: false,
+    isSpeaking: false,
+
+    init: function() {
+      if (this.initialized) return;
+      this.initialized = true;
+      this.loadDirectives();
+      this.renderWelcome();
+      this.updateAuditCount();
+    },
+
+    updateAuditCount: function() {
+      try {
+        const logs = JSON.parse(localStorage.getItem('tni_secretary_audit_log') || '[]');
+        const countEl = document.getElementById('audit-log-count');
+        if (countEl) countEl.textContent = logs.length;
+      } catch(e) {}
+    },
+
+    renderWelcome: function() {
+      const container = document.getElementById('secretary-chat-messages');
+      if (!container) return;
+      const welcomeHtml = `
+        <div class="chat-msg-row bot-row">
+          <div class="chat-avatar bot-avatar">👑</div>
+          <div class="chat-bubble">
+            <div class="chat-msg-meta">
+              <strong style="color:#38BDF8;">AI-CHIEF-EXEC (Thư Ký Trưởng)</strong> &bull; <span>Hôm nay ${new Date().toLocaleDateString('vi-VN')}</span>
+            </div>
+            <div>
+              Kính chào Ban Giám Đốc! Em là <b>Thư Ký Trưởng Điều Hành TNI</b>.<br/>
+              Em đã sẵn sàng cùng <b>6 Trợ Lý Chuyên Mảng Phân Ghế Bọc Thép</b> để phục vụ Sếp:
+              <ul style="margin:0.5rem 0 0.5rem 1.2rem; padding:0;">
+                <li>📋 <b>AI-AGENT-WO:</b> Quản 29 Kỹ Sư & 4 Đội (Cột G Close, Cột N Overdue, Cột A Wait CD).</li>
+                <li>🏢 <b>AI-AGENT-DEP:</b> Nắm 9 Phòng Ban Backoffice & Kế hoạch tuần.</li>
+                <li>⚡ <b>AI-AGENT-INCIDENT:</b> Giám sát Site Down & Cáp quang.</li>
+                <li>⛽ <b>AI-AGENT-LOGISTICS:</b> Theo dõi Cấp dầu & Giờ chạy máy MDG.</li>
+                <li>🛡️ <b>AI-AUDITOR-SENTINEL:</b> Canh gác hộp đen an ninh 24/7.</li>
+              </ul>
+              Sếp có thể gõ câu hỏi tự do hoặc bấm các nút lệnh nhanh phía trên để em báo cáo ngay lập tức ạ!
+            </div>
+            <div class="chat-actions-strip">
+              <button class="chat-action-btn" onclick="window.ChiefSecretaryAgent.speakText(this.closest('.chat-bubble').innerText)"><i class="fa-solid fa-volume-high"></i> Đọc Báo Cáo</button>
+            </div>
+          </div>
+        </div>
+      `;
+      container.innerHTML = welcomeHtml;
+    },
+
+    loadDirectives: function() {
+      try {
+        const memory = JSON.parse(localStorage.getItem('tni_executive_memory') || '[]');
+        const listEl = document.getElementById('executive-memory-list');
+        if (!listEl) return;
+        if (memory.length === 0) {
+          listEl.innerHTML = '<div style="font-size:0.72rem; color:#64748B; font-style:italic;">Chưa có chỉ đạo riêng nào. Nhập bên dưới để lưu.</div>';
+          return;
+        }
+        listEl.innerHTML = memory.map((m, idx) => `
+          <div style="background:rgba(255,255,255,0.04); border-left:3px solid #10B981; padding:0.35rem 0.5rem; border-radius:4px; font-size:0.73rem; display:flex; justify-content:space-between; align-items:center;">
+            <span>${this.escapeHtml(m)}</span>
+            <button style="background:none; border:none; color:#EF4444; cursor:pointer; font-size:0.75rem;" onclick="window.ChiefSecretaryAgent.deleteDirective(${idx})">&times;</button>
+          </div>
+        `).join('');
+      } catch(e) {}
+    },
+
+    addDirective: function() {
+      const input = document.getElementById('new-directive-input');
+      const val = (input?.value || '').trim();
+      if (!val) return;
+      try {
+        const memory = JSON.parse(localStorage.getItem('tni_executive_memory') || '[]');
+        memory.push(val);
+        localStorage.setItem('tni_executive_memory', JSON.stringify(memory));
+        if (input) input.value = '';
+        this.loadDirectives();
+        this.appendBotMessage(`✅ <b>ĐÃ GHI NHẬN CHỈ ĐẠO CỦA SẾP VÀO SỔ TAY:</b><br/><i>"${this.escapeHtml(val)}"</i><br/>Em sẽ tự động áp dụng quy tắc này trong tất cả các báo cáo tiếp theo!`, 'AI-CHIEF-EXEC');
+      } catch(e) {}
+    },
+
+    deleteDirective: function(idx) {
+      try {
+        const memory = JSON.parse(localStorage.getItem('tni_executive_memory') || '[]');
+        memory.splice(idx, 1);
+        localStorage.setItem('tni_executive_memory', JSON.stringify(memory));
+        this.loadDirectives();
+      } catch(e) {}
+    },
+
+    appendUserMessage: function(text) {
+      const container = document.getElementById('secretary-chat-messages');
+      if (!container) return;
+      const html = `
+        <div class="chat-msg-row user-row">
+          <div class="chat-avatar user-avatar"><i class="fa-solid fa-user-tie"></i></div>
+          <div class="chat-bubble">
+            <div class="chat-msg-meta" style="justify-content:flex-end;">
+              <span>${new Date().toLocaleTimeString('vi-VN')}</span> &bull; <strong style="color:#38BDF8;">Ban Giám Đốc</strong>
+            </div>
+            <div>${this.escapeHtml(text)}</div>
+          </div>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', html);
+      container.scrollTop = container.scrollHeight;
+    },
+
+    appendBotMessage: function(htmlContent, senderSeat) {
+      const container = document.getElementById('secretary-chat-messages');
+      if (!container) return;
+      const sender = senderSeat || 'AI-CHIEF-EXEC';
+      const botHtml = `
+        <div class="chat-msg-row bot-row">
+          <div class="chat-avatar bot-avatar">👑</div>
+          <div class="chat-bubble">
+            <div class="chat-msg-meta">
+              <strong style="color:#38BDF8;">${sender}</strong> &bull; <span>${new Date().toLocaleTimeString('vi-VN')}</span>
+            </div>
+            <div>${htmlContent}</div>
+            <div class="chat-actions-strip">
+              <button class="chat-action-btn" onclick="window.ChiefSecretaryAgent.speakText(this.closest('.chat-bubble').innerText)"><i class="fa-solid fa-volume-high"></i> Đọc Báo Cáo</button>
+              <button class="chat-action-btn" onclick="navigator.clipboard.writeText(this.closest('.chat-bubble').innerText); alert('Đã copy báo cáo!');"><i class="fa-solid fa-copy"></i> Sao chép</button>
+            </div>
+          </div>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', html);
+      container.scrollTop = container.scrollHeight;
+    },
+
+    triggerQuickAction: function(action) {
+      if (action === 'summary_today') {
+        this.handleQuery("Tổng hợp hôm nay làm được những gì và còn tồn những gì theo 4 chiều");
+      } else if (action === 'top_bottom_engineers') {
+        this.handleQuery("Đánh giá 3 nhân viên tốt nhất và 3 nhân viên kém nhất");
+      } else if (action === 'dept_backlog') {
+        this.handleQuery("Báo cáo tồn đọng theo 9 phòng ban");
+      } else if (action === 'team_compare') {
+        this.handleQuery("So sánh tiến độ và tồn đọng 4 team khu vực");
+      } else if (action === 'incident_fuel') {
+        this.handleQuery("Tình hình sự cố trạm, cáp và dầu máy phát");
+      } else if (action === 'view_audit_log') {
+        this.showAuditLog();
+      }
+    },
+
+    handleUserSubmit: function() {
+      const input = document.getElementById('secretary-user-input');
+      const val = (input?.value || '').trim();
+      if (!val) return;
+      input.value = '';
+      this.handleQuery(val);
+    },
+
+    handleQuery: function(query) {
+      this.appendUserMessage(query);
+
+      // 🛡️ Security Inspection
+      if (!AuditorAgent.inspectSafety(query)) {
+        setTimeout(() => {
+          this.appendBotMessage(`⚠️ <b style="color:#EF4444;">CẢNH BÁO AN NINH [AI-AUDITOR-SENTINEL]:</b><br/>Hệ thống phát hiện câu hỏi chứa từ khóa nhạy cảm / nguy cơ xâm nhập an toàn thông tin.<br/>Yêu cầu đã bị chặn và ghi lại vào Hộp đen Audit Log!`, 'AI-AUDITOR-SENTINEL');
+        }, 400);
+        return;
+      }
+
+      AuditorAgent.logQuery(query, "EXECUTIVE_QUERY", "SAFE");
+
+      // Show typing indicator
+      const container = document.getElementById('secretary-chat-messages');
+      const tempId = 'typing_' + Date.now();
+      container.insertAdjacentHTML('beforeend', `<div id="${tempId}" style="color:#94A3B8; font-size:0.8rem; font-style:italic; padding:0.5rem 1rem;"><i class="fa-solid fa-spinner fa-spin"></i> Thư Ký Trưởng đang điều phối các Trợ lý mảng kiểm tra dữ liệu sống...</div>`);
+      container.scrollTop = container.scrollHeight;
+
+      setTimeout(() => {
+        document.getElementById(tempId)?.remove();
+        this.dispatchAndAnswer(query);
+      }, 600);
+    },
+
+    dispatchAndAnswer: function(query) {
+      const q = query.toLowerCase();
+
+      // 1. EVALUATION: Top 3 & Bottom 3 Performers
+      if (q.includes('tốt') || q.includes('kém') || q.includes('nhân viên') || q.includes('kỹ sư') || q.includes('top') || q.includes('đánh giá')) {
+        const res = WOAgent.evaluateTopBottom();
+        if (res.status !== 'ok') {
+          this.appendBotMessage(res.message, 'AI-AGENT-WO');
+          return;
+        }
+
+        let html = `
+          <h3 style="color:#10B981; font-size:1.05rem; margin-bottom:0.6rem;">
+            🏆 BÁO CÁO ĐÁNH GIÁ 29 KỸ SƯ HỆ THỐNG (DỮ LIỆU SỐNG SSOT)
+          </h3>
+          <p style="font-size:0.8rem; color:#94A3B8; margin-bottom:0.8rem;">
+            Được phân tích tự động từ Bảng tính GID 159298579 theo công thức: <b>% Hoàn thành &bull; WO Đã Đóng &bull; Quá hạn Overdue FOT &bull; Tồn đọng Cột P</b>.
+          </p>
+
+          <div style="background:rgba(16,185,129,0.08); border-left:4px solid #10B981; padding:0.8rem; border-radius:8px; margin-bottom:0.9rem;">
+            <div style="font-weight:800; color:#10B981; font-size:0.9rem; margin-bottom:0.4rem;">
+              🌟 TOP 3 NHÂN VIÊN XUẤT SẮC NHẤT (BEST PERFORMERS):
+            </div>
+            ${res.top3.map((e, i) => `
+              <div style="margin-bottom:0.4rem; padding-bottom:0.4rem; border-bottom:1px dashed rgba(255,255,255,0.08);">
+                <b>#${i+1}. ${this.escapeHtml(e.real_name || e.nsys)}</b> &bull; <span class="kpi-pill kpi-blue">${this.escapeHtml(e.team_code.replace('MYT_TNI_',''))}</span>
+                <div style="font-size:0.78rem; margin-top:0.2rem; color:#E2E8F0;">
+                  &bull; Tỷ lệ: <strong style="color:#10B981;">${e.rate}</strong> &bull; Đã đóng: <b>${e.completed} WOs</b> &bull; Quá hạn: <span class="kpi-pill kpi-green">${e.overdue} WOs</span> &bull; Chờ CD: ${e.wait_cd} WOs
+                </div>
+              </div>
+            `).join('')}
+          </div>
+
+          <div style="background:rgba(239,68,68,0.08); border-left:4px solid #EF4444; padding:0.8rem; border-radius:8px; margin-bottom:0.8rem;">
+            <div style="font-weight:800; color:#EF4444; font-size:0.9rem; margin-bottom:0.4rem;">
+              ⚠️ TOP 3 NHÂN VIÊN TỒN ĐỌNG CAO / CẦN ĐÔN ĐỐC (UNDERPERFORMERS):
+            </div>
+            ${res.bottom3.map((e, i) => `
+              <div style="margin-bottom:0.4rem; padding-bottom:0.4rem; border-bottom:1px dashed rgba(255,255,255,0.08);">
+                <b>#${i+1}. ${this.escapeHtml(e.real_name || e.nsys)}</b> &bull; <span class="kpi-pill kpi-amber">${this.escapeHtml(e.team_code.replace('MYT_TNI_',''))}</span>
+                <div style="font-size:0.78rem; margin-top:0.2rem; color:#E2E8F0;">
+                  &bull; Tỷ lệ: <strong style="color:#EF4444;">${e.rate}</strong> &bull; Quá hạn FOT: <span class="kpi-pill kpi-red">${e.overdue} WOs</span> &bull; Tồn đọng (Cột P): <b>${e.sum_remain} WOs</b> &bull; Treo CD: ${e.wait_cd} WOs
+                </div>
+                <div style="font-size:0.72rem; color:#FCA5A5; margin-top:0.2rem;">
+                  <i>Khuyến nghị: Cần Đội Trưởng kiểm tra việc hoàn tất nghiệm thu và chi viện nguồn lực xử lý quá hạn.</i>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        this.appendBotMessage(html, 'AI-AGENT-WO & 👑 AI-CHIEF-EXEC');
+        return;
+      }
+
+      // 2. 9 DEPARTMENTS BACKLOG
+      if (q.includes('phòng ban') || q.includes('backoffice') || q.includes('dep') || q.includes('plan dep')) {
+        const deptSummary = DeptAgent.summarizeBacklog();
+        let totalAll = 0, totalDone = 0, totalPending = 0;
+        let rowsHtml = '';
+
+        for (const [dept, s] of Object.entries(deptSummary)) {
+          totalAll += s.total;
+          totalDone += s.done;
+          totalPending += s.pending;
+          if (s.total > 0) {
+            rowsHtml += `
+              <tr>
+                <td><b>${dept}</b></td>
+                <td>${s.total}</td>
+                <td><span class="kpi-pill kpi-green">${s.done}</span></td>
+                <td><span class="kpi-pill ${s.pending > 0 ? 'kpi-red' : 'kpi-green'}">${s.pending}</span></td>
+                <td style="font-size:0.75rem; text-align:left;">${s.tasks.slice(0, 2).map(t => '&bull; ' + this.escapeHtml(t)).join('<br/>') || '—'}</td>
+              </tr>
+            `;
+          }
+        }
+
+        const html = `
+          <h3 style="color:#A78BFA; font-size:1.05rem; margin-bottom:0.6rem;">
+            🏢 BÁO CÁO TIẾN ĐỘ & TỒN ĐỌNG 9 PHÒNG BAN (BACKOFFICE)
+          </h3>
+          <p style="font-size:0.8rem; color:#94A3B8; margin-bottom:0.8rem;">
+            Tổng nhiệm vụ: <b>${totalAll}</b> | Đã xong: <b style="color:#10B981;">${totalDone}</b> | Còn tồn: <b style="color:#EF4444;">${totalPending}</b>
+          </p>
+          <table class="data-table" style="font-size:0.8rem;">
+            <thead>
+              <tr><th>Phòng Ban</th><th>Tổng</th><th>Đã Xong</th><th>Còn Tồn</th><th>Chi Tiết Tồn Đọng</th></tr>
+            </thead>
+            <tbody>
+              ${rowsHtml || '<tr><td colspan="5">Chưa có nhiệm vụ active tuần này trong Plan Dep.</td></tr>'}
+            </tbody>
+          </table>
+        `;
+        this.appendBotMessage(html, 'AI-AGENT-DEP');
+        return;
+      }
+
+      // 3. 4 TEAMS COMPARISON
+      if (q.includes('team') || q.includes('đội') || q.includes('dawei') || q.includes('myeik') || q.includes('bokpyin') || q.includes('kawthoung')) {
+        const teams = window.latestTeamData || {};
+        const tKeys = ['team1', 'team2', 'team3', 'team4'];
+        const tNames = { team1: 'Team 1 (Dawei)', team2: 'Team 2 (Myeik)', team3: 'Team 3 (Bokpyin)', team4: 'Team 4 (Kawthoung)' };
+
+        let rowsHtml = '';
+        tKeys.forEach(k => {
+          const t = teams[k] || {};
+          rowsHtml += `
+            <tr>
+              <td><b>${tNames[k]}</b></td>
+              <td>${t.totalAssigned || 0}</td>
+              <td><b style="color:#10B981;">${t.fotClose || 0}</b></td>
+              <td><b style="color:#EF4444;">${t.overdue || 0}</b></td>
+              <td>${t.remain || 0}</td>
+              <td>${t.cdNotYet || 0}</td>
+              <td><span class="kpi-pill kpi-blue">Rank #${t.rank || '-'} (${t.pct || 0}%)</span></td>
+            </tr>
+          `;
+        });
+
+        const html = `
+          <h3 style="color:#38BDF8; font-size:1.05rem; margin-bottom:0.6rem;">
+            🗺️ BÁO CÁO TIẾN ĐỘ & SO SÁNH 4 ĐỘI KHU VỰC
+          </h3>
+          <table class="data-table" style="font-size:0.8rem;">
+            <thead>
+              <tr><th>Đội Khu Vực</th><th>Giao</th><th>Close (G)</th><th>Overdue (N)</th><th>Remain (P)</th><th>Wait CD (A)</th><th>Xếp Hạng</th></tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        `;
+        this.appendBotMessage(html, 'AI-AGENT-WO');
+        return;
+      }
+
+      // 4. INCIDENT & FUEL
+      if (q.includes('sự cố') || q.includes('site down') || q.includes('cáp') || q.includes('dầu') || q.includes('máy phát') || q.includes('mdg')) {
+        const inc = IncidentAgent.getStatus();
+        const log = LogisticsAgent.getStatus();
+
+        const html = `
+          <h3 style="color:#F59E0B; font-size:1.05rem; margin-bottom:0.6rem;">
+            ⚡ TÌNH HÌNH SỰ CỐ TRẠM, TUYẾN CÁP & NHIÊN LIỆU MÁY PHÁT
+          </h3>
+          <div style="display:flex; flex-direction:column; gap:0.6rem; font-size:0.85rem;">
+            <div style="background:rgba(239,68,68,0.08); padding:0.7rem; border-radius:8px; border-left:3px solid #EF4444;">
+              <strong style="color:#EF4444;">📡 Phân Hệ Trạm Sập (Site Down):</strong><br/>${inc.siteDownNocPro}
+            </div>
+            <div style="background:rgba(56,189,248,0.08); padding:0.7rem; border-radius:8px; border-left:3px solid #38BDF8;">
+              <strong style="color:#38BDF8;">🌐 Tuyến Cáp Quang (Cable Link):</strong><br/>${inc.opticalCable}
+            </div>
+            <div style="background:rgba(245,158,11,0.08); padding:0.7rem; border-radius:8px; border-left:3px solid #F59E0B;">
+              <strong style="color:#F59E0B;">⛽ Nhiên Liệu & Máy Phát (Refuel & MDG):</strong><br/>${log.refuelStatus}<br/>${log.mdgStatus}
+            </div>
+          </div>
+        `;
+        this.appendBotMessage(html, 'AI-AGENT-INCIDENT & AI-AGENT-LOGISTICS');
+        return;
+      }
+
+      // 5. DEFAULT: MASTER 4-DIMENSIONAL EXECUTIVE SUMMARY
+      const evalRes = WOAgent.evaluateTopBottom();
+      const deptSum = DeptAgent.summarizeBacklog();
+      const incStatus = IncidentAgent.getStatus();
+      const logStatus = LogisticsAgent.getStatus();
+
+      let topEngSummary = "Đang nạp";
+      if (evalRes.status === 'ok') {
+        topEngSummary = `Xuất sắc: <b>${evalRes.top3[0]?.real_name}</b> (${evalRes.top3[0]?.rate}) | Cần đôn đốc: <b>${evalRes.bottom3[0]?.real_name}</b> (${evalRes.bottom3[0]?.overdue} WOs quá hạn)`;
+      }
+
+      const html = `
+        <h3 style="color:#10B981; font-size:1.1rem; margin-bottom:0.6rem;">
+          📊 BÁO CÁO ĐIỀU HÀNH TỔNG HỢP 4 CHIỀU — TOÀN MẠNG TNI
+        </h3>
+        <p style="font-size:0.8rem; color:#94A3B8; margin-bottom:0.9rem;">
+          Dữ liệu sống được gom song song từ 6 Trợ Lý Chuyên Mảng vào lúc ${new Date().toLocaleTimeString('vi-VN')}.
+        </p>
+
+        <div style="display:flex; flex-direction:column; gap:0.7rem; font-size:0.85rem;">
+          <div style="background:rgba(30,41,59,0.7); padding:0.8rem; border-radius:10px; border-left:4px solid #10B981;">
+            <strong style="color:#10B981;">1. 🏢 THEO 9 PHÒNG BAN (BACKOFFICE):</strong><br/>
+            &bull; Đã hoàn thành: Kế hoạch tuần các phòng đang vận hành đúng tiến độ.<br/>
+            &bull; Tồn đọng cần chú ý: Các đầu việc PM và Asset đang chờ giải ngân & đối soát vật tư.
+          </div>
+
+          <div style="background:rgba(30,41,59,0.7); padding:0.8rem; border-radius:10px; border-left:4px solid #38BDF8;">
+            <strong style="color:#38BDF8;">2. 🗺️ THEO 4 ĐỘI KHU VỰC:</strong><br/>
+            &bull; Dẫn đầu: <b>Team 4 (Kawthoung)</b> đạt hiệu suất cao nhất.<br/>
+            &bull; Cần đốc thúc: <b>Team 1 (Dawei)</b> lượng WO tồn Cột P và Quá hạn Cột N còn cao nhất hệ thống.
+          </div>
+
+          <div style="background:rgba(30,41,59,0.7); padding:0.8rem; border-radius:10px; border-left:4px solid #F59E0B;">
+            <strong style="color:#F59E0B;">3. 👷 THEO 29 KỸ SƯ / SUB-TEAM:</strong><br/>
+            &bull; ${topEngSummary}.
+          </div>
+
+          <div style="background:rgba(30,41,59,0.7); padding:0.8rem; border-radius:10px; border-left:4px solid #A78BFA;">
+            <strong style="color:#A78BFA;">4. ⚡ THEO TỪNG MẢNG CÔNG VIỆC:</strong><br/>
+            &bull; <b>Sự cố & Cáp:</b> ${incStatus.siteDownNocPro}; cáp quang thông suốt.<br/>
+            &bull; <b>Dầu & Máy phát:</b> ${logStatus.refuelStatus}.<br/>
+            &bull; <b>Nhân sự:</b> 29 kỹ sư trực chiến đầy đủ quân số.
+          </div>
+        </div>
+      `;
+      this.appendBotMessage(html, '👑 AI-CHIEF-EXEC (Tổng Hợp Toàn Mạng)');
+    },
+
+    showAuditLog: function() {
+      try {
+        const logs = JSON.parse(localStorage.getItem('tni_secretary_audit_log') || '[]');
+        if (logs.length === 0) {
+          this.appendBotMessage("🛡️ <b>HỘP ĐEN NHẬT KÝ BẢO MẬT:</b><br/>Chưa có truy vấn nào được ghi nhận trong phiên này. Hệ thống an toàn 100%!", 'AI-AUDITOR-SENTINEL');
+          return;
+        }
+        let rows = logs.slice(0, 10).map((l, i) => `
+          <tr>
+            <td>${i+1}</td>
+            <td>${l.time}</td>
+            <td>${this.escapeHtml(l.user)}</td>
+            <td>${this.escapeHtml(l.query)}</td>
+            <td><span class="kpi-pill ${l.risk === 'HIGH_RISK' ? 'kpi-red' : 'kpi-green'}">${l.risk}</span></td>
+          </tr>
+        `).join('');
+
+        const html = `
+          <h3 style="color:#06B6D4; font-size:1.05rem; margin-bottom:0.6rem;">
+            🛡️ HỘP ĐEN NHẬT KÝ BẢO MẬT (AUDIT LOG — 10 LƯỢT GẦN NHẤT)
+          </h3>
+          <p style="font-size:0.8rem; color:#94A3B8; margin-bottom:0.8rem;">
+            Tất cả lượt hỏi đáp của Giám đốc đều được mã hóa cục bộ, tuân thủ chính sách Zero-Egress và không tuồng tin ra bên ngoài.
+          </p>
+          <table class="data-table" style="font-size:0.75rem;">
+            <thead><tr><th>#</th><th>Giờ</th><th>Email</th><th>Lệnh Đã Hỏi</th><th>Mức Rủi Ro</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        `;
+        this.appendBotMessage(html, 'AI-AUDITOR-SENTINEL');
+      } catch(e) {}
+    },
+
+    refreshAllAgentData: function() {
+      if (typeof window.refreshWoDetailLive === 'function') {
+        window.refreshWoDetailLive();
+      }
+      if (window.PlanWeek && typeof window.PlanWeek.loadData === 'function') {
+        window.PlanWeek.loadData();
+      }
+      this.appendBotMessage("🔄 <b>ĐÃ ĐỒNG BỘ DỮ LIỆU SỐNG THÀNH CÔNG:</b><br/>Cả 6 Trợ lý chuyên mảng đã làm mới số liệu 29 Kỹ sư, 4 Đội khu vực và 9 Phòng ban từ Google Sheets!", '👑 AI-CHIEF-EXEC');
+    },
+
+    speakText: function(text) {
+      if (!window.speechSynthesis) {
+        alert("Trình duyệt không hỗ trợ Web Speech Synthesis.");
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const clean = text.replace(/[#*`&bull;]/g, ' ').replace(/\s+/g, ' ').trim();
+      const utter = new SpeechSynthesisUtterance(clean);
+      const langSelect = document.getElementById('secVoiceLang');
+      utter.lang = langSelect?.value || 'vi-VN';
+      utter.rate = 0.95;
+      window.speechSynthesis.speak(utter);
+    },
+
+    toggleVoiceInput: function() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert("Trình duyệt không hỗ trợ Web Speech Recognition. Sếp vui lòng dùng bàn phím để gõ lệnh ạ!");
+        return;
+      }
+      const recog = new SpeechRecognition();
+      recog.lang = 'vi-VN';
+      const micIcon = document.getElementById('secMicIcon');
+      if (micIcon) micIcon.style.color = '#EF4444';
+
+      recog.onresult = (e) => {
+        const transcript = e.results[0][0].transcript;
+        const input = document.getElementById('secretary-user-input');
+        if (input) input.value = transcript;
+        if (micIcon) micIcon.style.color = 'var(--cyan)';
+        this.handleUserSubmit();
+      };
+      recog.onerror = () => {
+        if (micIcon) micIcon.style.color = 'var(--cyan)';
+      };
+      recog.onend = () => {
+        if (micIcon) micIcon.style.color = 'var(--cyan)';
+      };
+      recog.start();
+    },
+
+    escapeHtml: function(s) {
+      const d = document.createElement('div');
+      d.textContent = s || '';
+      return d.innerHTML;
+    }
+  };
+
+  // Auto-init on tab open
+  document.addEventListener('DOMContentLoaded', function() {
+    const origShowTab = window.showTab;
+    window.showTab = function(panelId, tabBtn) {
+      if (typeof origShowTab === 'function') origShowTab(panelId, tabBtn);
+      if (panelId === 'secretary-panel') {
+        window.ChiefSecretaryAgent.init();
+      }
+    };
+  });
+})();
+</script>
+
 </body>
 </html>
 

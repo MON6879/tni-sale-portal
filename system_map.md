@@ -1414,3 +1414,18 @@ KHÔNG ĐỤNG:
 
 
 
+
+
+---
+
+### 👑 9. Hệ Thống Trợ Lý Ảo Điều Hành & Đa Tác Tử Phân Ghế Bọc Thép (Multi-Agent System - v817):
+
+| Mã Ghế | Tên Trợ Lý | Phân Hệ Phụ Trách | Nguồn Dữ Liệu | Quyền Hạn |
+|---|---|---|---|---|
+| `AI-CHIEF-EXEC` | Thư Ký Trưởng Điều Hành | Toàn mạng TNI | Điều phối 6 trợ lý cấp dưới | Tổng hợp 4 Chiều, Đánh giá Top/Bottom, Voice TTS |
+| `AI-AGENT-WO` | Trợ Lý Work Orders & 4 Đội | 29 Kỹ sư & 4 Team | Sheet GID `159298579` | Read-Only: Cột G, N, P, A, Phân tích hiệu suất kỹ sư |
+| `AI-AGENT-DEP` | Trợ Lý 9 Phòng Ban Backoffice | Tiến độ Backoffice | Sheet `Plan Dep` (`BI_GAS`) | Read-Only: Admin, Asset, CM, Finance, HR, M&E, PM... |
+| `AI-AGENT-INCIDENT` | Trợ Lý Sự Cố Trạm & Cáp | NOC Pro & Cáp Quang | Site Down & Cable Link Down | Read-Only: Cảnh báo sự cố trạm & đứt cáp |
+| `AI-AGENT-LOGISTICS` | Trợ Lý Cấp Dầu & Máy Phát | Nhiên liệu & Máy nổ | Tab `TNI_Refuel` & Log MDG | Read-Only: Số lít dầu, giờ chạy MDG, thay nhớt |
+| `AI-AGENT-HR` | Trợ Lý Quân Số & Chấm Công | Điểm danh toàn mạng | Attendance & CheckJoint | Read-Only: 29 Kỹ sư trực ca, ai nghỉ phép |
+| `AI-AUDITOR-SENTINEL` | Trợ Lý Giám Sát An Ninh | Hộp đen an ninh 24/7 | `tni_secretary_audit_log` | Zero-Egress CSP, Chặn Prompt Injection, Canary Alert |

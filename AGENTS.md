@@ -228,6 +228,24 @@
 
 ---
 
+
+# 👑 STRICT MULTI-AGENT ISOLATION & ZERO-EGRESS VIRTUAL SECRETARY RULE: HỆ THỐNG ĐA TÁC TỬ PHÂN CẤP BỌC THÉP, KHÓA CHẶT READ-ONLY & HỘP ĐEN AUDIT LOG (RULE PM-43)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (VIRTUAL EXECUTIVE SECRETARY & MULTI-AGENT ISOLATION POLICY)**:
+> 1. **Kiến Trúc Phân Cấp Hub-and-Spoke (Hierarchical Multi-Agent Architecture)**: Toàn bộ hệ thống Trợ lý Ảo trên BI Portal (`index.html`) BẮT BUỘC phải tổ chức theo mô hình: **1 Thư Ký Trưởng (`AI-CHIEF-EXEC`)** tiếp nhận chỉ đạo từ Giám đốc, phân tích ý định (Intent Routing), điều phối lệnh song song xuống **6 Trợ lý Chuyên Mảng Phân Ghế Độc Lập**:
+>    - `AI-AGENT-WO`: Quản lý 29 Kỹ sư & 4 Đội khu vực (Cột G, Cột N Overdue, Cột P, Cột A Wait CD).
+>    - `AI-AGENT-DEP`: Quản lý 9 Phòng ban Backoffice & Plan Dep (`BI_GAS`).
+>    - `AI-AGENT-INCIDENT`: Giám sát Sự cố Trạm (Site Down NOC Pro) & Cáp quang (Link Down).
+>    - `AI-AGENT-LOGISTICS`: Theo dõi Cấp dầu (Refuel) & Giờ chạy máy phát (MDG).
+>    - `AI-AGENT-HR`: Quân số trực chiến & Điểm danh CheckJoint.
+>    - `AI-AGENT-CONSTRUCT`: Tiến độ thi công & Hồ sơ nghiệm thu QLTC.
+> 2. **Chế Độ 100% Read-Only (Zero Data Corruption Guard)**: Các Trợ lý ảo CHỈ CÓ QUYỀN ĐỌC (Read-Only) dữ liệu sống từ Sheet SSOT và GAS Endpoint. TUYỆT ĐỐI CẤM cấp quyền ghi đè, sửa đổi hay xóa dữ liệu Sheet cho Trợ lý ảo để loại trừ 100% nguy cơ ngộ độc câu lệnh (Prompt Injection Data Tampering).
+> 3. **Bọc Thép Zero-Egress & Chặn Đứng Tuồng Tin (Content Security Policy Egress Lock)**: Tường lửa CSP và mã lệnh trên Web chỉ cho phép giao tiếp với máy chủ nội bộ (`tni-bot.vercel.app`, `script.google.com`). TUYỆT ĐỐI CẤM truyền tin hoặc mở kết nối sang bất kỳ server lạ nào bên ngoài.
+> 4. **Hộp Đen Giám Sát Thời Gian Thực (Mandatory Audit Logging)**: Toàn bộ câu hỏi và tương tác với Trợ lý ảo BẮT BUỘC phải được ghi lại vào nhật ký Hộp đen (`tni_secretary_audit_log`) gồm: Thời gian, Email người dùng, Nội dung câu hỏi, Mức độ rủi ro (Normal/High Risk). Nếu phát hiện câu hỏi độc hại nhằm khai thác token/mật khẩu, hệ thống BẮT BUỘC chặn đứng ngay sau 0.1 giây!
+> 5. **Sổ Tay Chỉ Đạo Giám Đốc (Executive Directives Memory)**: Tiêu chuẩn và ngoại lệ do Giám đốc thiết lập được lưu trữ cô lập (`tni_executive_memory`) và được ưu tiên cao hơn mọi prompt mặc định trong các phân tích hiệu suất nhân sự.
+
+---
+
 # 🎯 STRICT RULE: SỬA CÁI NÀO TÌM ĐÚNG CÁI ĐÓ ĐỂ SỬA — TIN NÀO XÓA TIN NẤY (STRICT SCOPE ISOLATION & ZERO-COLLATERAL-DAMAGE)
 
 
