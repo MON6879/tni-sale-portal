@@ -1568,4 +1568,31 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 > 3. **Cung Cấp Kép Thao Tác: Trên Từng Hàng Bảng Lịch Sử & Dropdown Đầu Form**:
 >    - Cung cấp nút `📋 Copy` và `✏️ Sửa` trực tiếp trên từng hàng của bảng danh sách báo giá bên phải.
 >    - Đồng thời cung cấp Dropdown danh sách báo giá cũ ngay trên đầu Form bên trái (`#qu-history-select`) kèm nút `📋 Copy & Sửa`, `✏️ Sửa Đè` và `🔄 Tạo Mới / Reset` để người dùng trên máy tính hay điện thoại di động đều thao tác thuận tiện nhất.
+# 🖨️ POST-MORTEM RULE — 18/09/2026: CHUẨN MẪU BÁO GIÁ VCM & KHOẢNG ĐỆM AN TOÀN TÊN KHÁCH HÀNG DƯỚI BANNER (RULE PM-42)
 
+> ### Nguồn gốc: **Sửa Báo Giá Theo Mẫu Chuẩn VCM Đưa Tên KH Xuống Dưới (18/09/2026)**
+> - **Root Cause**: Trước đây, hàm in và xuất PDF báo giá thiết bị (`printQuote('ups')`, `viewQuote('ups')`) chỉ sử dụng text header đơn giản `<h2>📄 BÁO GIÁ THIẾT BỊ</h2>` với bảng 7 cột rời rạc (#, Hạng Mục, Brand, ĐVT, SL, Đơn Giá, Thành Tiền). Khi người dùng chụp ảnh mẫu in thực tế của Viettel Construction Myanmar (`media_1789693644341.png`), họ yêu cầu sửa báo giá theo đúng mẫu chuẩn công ty có Banner đồ họa VCM ở đầu trang và lưu ý: *"đưa tên KH xuống dưới tí"*. Nguyên nhân là do đường cong lượn sóng (swoosh) màu đỏ-đen ở mép dưới bên trái của Banner chiếm không gian; nếu không có khoảng đệm (`margin-top: 18px-20px`), tên khách hàng sẽ bị đè lấn hoặc che khuất bởi phần chân banner, khiến bản in mất thông tin người nhận.
+>
+> ### 🔴 RULE PM-42: 4 NGUYÊN TẮC BỌC THÉP CHO BẢN IN BÁO GIÁ CHUẨN VCM
+> 1. **Nhúng Banner Trực Tiếp Bằng Base64 Tự Thân (Zero Broken Links in `about:blank`)**:
+>    - Banner công ty (`VCM_HEADER_BANNER`) BẮT BUỘC được nhúng trực tiếp dưới dạng Base64 PNG (`data:image/png;base64,...`) ngay trong mã nguồn JavaScript.
+>    - TUYỆT ĐỐI CẤM dùng đường dẫn tương đối (e.g. `assets/banner.png`) cho cửa sổ in popup `window.open('', '_blank')` vì trang `about:blank` không phân giải được đường dẫn tương đối, gây lỗi vỡ ảnh khi in offline hoặc trên trình duyệt di động!
+> 2. **Khoảng Đệm An Toàn Tên Khách Hàng Dưới Banner (`margin-top: 18px-20px`)**:
+>    - Khối thông tin khách hàng (`.quote-meta-box`) BẮT BUỘC phải có khoảng đệm tối thiểu `margin-top: 18px` đến `20px` phía dưới ảnh banner để tên khách hàng và số điện thoại nằm hoàn toàn tách biệt, rõ ràng và không bao giờ bị đè lấn bởi đường cong chân banner.
+>    - Cấu trúc thông tin 3 dòng chuẩn gọn:
+>      - Dòng 1: `Customer: [Tên KH] | Phone: [SĐT]`
+>      - Dòng 2: `Address: [Địa chỉ]`
+>      - Dòng 3: `Date: [Ngày] | Validity: [Hiệu lực] | Prepared by: [Người lập]`
+> 3. **Bảng Danh Mục Chuẩn 5 Cột & Tự Động Gộp Brand Vào Item Description**:
+>    - Bảng vật tư thiết bị BẮT BUỘC chuẩn đúng 5 cột:
+>      `Item Description / Equipment` | `Unit` | `Qty` | `Unit Price` | `Subtotal`.
+>    - TUYỆT ĐỐI KHÔNG để cột số thứ tự `#` và KHÔNG tách cột `Brand` riêng rẽ trong bản in khách hàng.
+>    - Tên hãng (Brand) nếu có và chưa nằm trong tên thiết bị BẮT BUỘC phải tự động gộp vào đuôi tên thiết bị (ví dụ: `Inverter 6 kW` + `Growatt` ➔ `Inverter 6 kW Growatt`).
+>    - Đơn giá và Thành tiền căn lề phải, định dạng phân cách hàng nghìn (`fn(...)`), không chèn ký hiệu tiền tệ rườm rà trong từng ô dữ liệu.
+> 4. **Khối Tổng Tiền Xanh Lá, Đường Phân Cách & Bảng Payment Term 50%-40%-10%**:
+>    - Tổng tiền BẮT BUỘC hiển thị căn lề phải, màu xanh lá nổi bật (`#16a34a`), cỡ chữ 18px in đậm (`font-weight: 800`): `TOTAL: [Tổng tiền] [Tiền tệ]`.
+>    - Ngay dưới Tổng tiền BẮT BUỘC có đường kẻ phân cách ngang đậm nét: `<hr style="border:none;border-top:1px solid #334155;margin:8px 0 10px 0" />`.
+>    - Mục `Remark` in đậm các điều khoản thực địa và hiệu lực báo giá, kèm bảng `*Payment Term` không viền căn lề chuẩn xác:
+>      - `50% downpayment after agreement: [50% Total] Kyat`
+>      - `: 40% payment after installation: [40% Total] Kyat`
+>      - `: 10% payment after testing & commissioning: [10% Total] Kyat`.
