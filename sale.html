@@ -166,12 +166,8 @@ tbody tr:hover{background:#fafcff}
 <div id="topbar">
   <h2 id="ptitle">📊 Dashboard</h2>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-    <!-- Cài đặt % Lợi Nhuận & Thuế Nộp Tổng Công Ty (Nhập tay linh hoạt) -->
-    <div style="display:flex;align-items:center;gap:5px;background:#eff6ff;padding:4px 9px;border-radius:7px;border:1px solid #bfdbfe">
-      <span id="cfg-cty-label" style="font-size:11px;font-weight:600;color:#1e40af">🏢 % HO:</span>
-      <input id="cfg-cty-rate" type="number" value="17" min="0" max="100" step="0.5" style="width:48px;padding:2px 4px;border:1px solid #3b82f6;border-radius:4px;font-size:12px;font-weight:bold;color:#1e40af;text-align:center" oninput="setCompanyRate(this.value)" title="Tỷ lệ % Lợi nhuận và Thuế nộp về Tổng Công Ty"/>
-      <span style="font-size:11px;color:#1e40af">%</span>
-    </div>
+    <!-- Cài đặt % Lợi Nhuận & Thuế Nộp Tổng Công Ty (Ẩn UI theo yêu cầu người dùng) -->
+    <input id="cfg-cty-rate" type="hidden" value="17"/>
     <a href="https://docs.google.com/spreadsheets/d/1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA" target="_blank" class="btn b-bl b-sm" style="text-decoration:none">📊 Google Sheet</a>
     <button class="btn b-sm" id="lang-btn" onclick="toggleLang()" style="background:#e0f2fe;color:#0369a1;font-weight:600">🌐 EN / VN</button>
     <span id="clk" style="font-size:11.5px;color:#94a3b8"></span>
@@ -444,6 +440,15 @@ tbody tr:hover{background:#fafcff}
             <b style="font-size:13px">📦 Danh sách thiết bị</b>
             <button class="btn b-bl b-sm" onclick="addQRow('qu-items')">+ Thêm dòng</button>
           </div>
+          <div style="display:flex;gap:8px;align-items:center;padding:5px 8px;font-size:11px;font-weight:700;color:#64748b;background:#f1f5f9;border-radius:6px;margin-bottom:6px">
+            <span style="flex:2;min-width:140px">Hạng Mục / Thiết Bị</span>
+            <span style="width:100px">Brand</span>
+            <span style="width:65px;text-align:center">ĐVT</span>
+            <span style="width:60px;text-align:center">SL</span>
+            <span style="width:120px;text-align:right">Đơn Giá (₫)</span>
+            <span style="min-width:95px;text-align:right">Thành Tiền</span>
+            <span style="width:24px"></span>
+          </div>
           <div id="qu-items"></div>
           <div class="qtotal" id="qu-total">
             <div style="font-size:12px;color:#94a3b8;margin-bottom:4px">Tổng Báo Giá</div>
@@ -548,6 +553,7 @@ tbody tr:hover{background:#fafcff}
             <b style="font-size:13px;color:#1e3a8a">📦 Bảng Vật Tư &amp; Giá Cả (Có thể chỉnh sửa giá trực tiếp):</b>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               <button class="btn b-bl b-xs" onclick="addSolarItemRow()">+ Thêm dòng vật tư</button>
+              <button class="btn b-sm" style="background:#fef08a;color:#854d0e;font-size:11px;font-weight:700" onclick="presetSolar('zinkoko')">⭐ Mẫu 6kW TNI (Sept.17)</button>
               <button class="btn b-sm" style="background:#dcfce7;color:#15803d;font-size:11px;font-weight:700" onclick="presetSolar('kawthoung16k')">⭐ Mẫu 16kW (Kawthoung)</button>
               <button class="btn b-sm" style="background:#fef9c3;color:#854d0e;font-size:11px" onclick="presetSolar('ongrid5k')">Bộ 5kW OnGrid</button>
               <button class="btn b-sm" style="background:#fef9c3;color:#854d0e;font-size:11px" onclick="presetSolar('hybrid5k')">Bộ Hybrid 5kW</button>
@@ -1451,7 +1457,7 @@ const renders={
   dashboard:rDash,nhap:rNhap,tonkho:renderTK,tamung:rTU,
   banhang:()=>{popSP(['b-sp']);rBan();},
   baogiaups:()=>{if(!document.getElementById('qu-items').children.length)addQRow('qu-items');rQuUPS();},
-  baogiasolar:()=>{if(!document.getElementById('qs-items').children.length)addQRow('qs-items');rQuSolar();},
+  baogiasolar:()=>{if(!document.getElementById('qs-table-body')?.children.length)addSolarItemRow();if(typeof rQuSolar==='function')rQuSolar();},
   acceptance:()=>{rAcceptances();populateAccSources();calcAccFinancials();initAccCanvas();},
   daily:()=>{rDL();popSP(['pp-sp']);popDL();},
   kygoi:()=>{popSP(['kg-sp','tu-sp']);rKG();},
@@ -2325,32 +2331,43 @@ function rBan(){
 // ═══════════════════════════════════════════════════
 // BÁO GIÁ — QUOTATION ROWS
 // ═══════════════════════════════════════════════════
-function addQRow(containerId) {
+function addQRow(containerId, itemData) {
   const isVi = currentLang === 'vi';
   const c = document.getElementById(containerId);
   if (!c) return;
+  const item = itemData || {};
   const d = document.createElement('div'); d.className = 'qrow';
-  d.innerHTML = `<input placeholder="${isVi ? 'Tên thiết bị / hạng mục' : 'Item description / equipment'}" style="flex:2;min-width:150px" oninput="calcQ('${containerId}')"/>
-    <input placeholder="${isVi ? 'Đơn vị' : 'Unit'}" style="width:60px" oninput="calcQ('${containerId}')"/>
-    <input type="number" placeholder="${isVi ? 'SL' : 'Qty'}" style="width:55px" oninput="calcQ('${containerId}')"/>
-    <input type="number" placeholder="${isVi ? 'Đơn giá (₫)' : 'Unit Price ($/₫)'}" style="width:120px" oninput="calcQ('${containerId}')"/>
-    <span style="min-width:90px;text-align:right;font-weight:600;color:var(--bl)">0 ₫</span>
+  d.innerHTML = `<input class="q-ten" value="${item.ten || ''}" placeholder="${isVi ? 'Tên thiết bị / hạng mục' : 'Item description / equipment'}" style="flex:2;min-width:140px" oninput="calcQ('${containerId}')"/>
+    <input class="q-brand" value="${item.brand || ''}" placeholder="${isVi ? 'Hãng / Brand' : 'Brand'}" style="width:100px" oninput="calcQ('${containerId}')"/>
+    <input class="q-dv" value="${item.dv || (isVi ? 'Cái' : 'Nos')}" placeholder="${isVi ? 'Đơn vị' : 'Unit'}" style="width:65px;text-align:center" oninput="calcQ('${containerId}')"/>
+    <input class="q-sl" type="number" min="1" value="${item.sl || 1}" placeholder="${isVi ? 'SL' : 'Qty'}" style="width:60px;text-align:center" oninput="calcQ('${containerId}')"/>
+    <input class="q-dg" type="number" min="0" value="${item.dg || 0}" placeholder="${isVi ? 'Đơn giá (₫)' : 'Unit Price ($/₫)'}" style="width:120px;text-align:right" oninput="calcQ('${containerId}')"/>
+    <span class="q-tt" style="min-width:95px;text-align:right;font-weight:600;color:var(--bl)">0 ₫</span>
     <button class="btn b-xs b-rd" onclick="this.parentNode.remove();calcQ('${containerId}')">✕</button>`;
   c.appendChild(d);
+  calcQ(containerId);
 }
 function calcQ(cid){
-  const rows=document.getElementById(cid).children;
-  let total=0;
-  for(let r of rows){
-    const sl=+r.children[2].value||0,dg=+r.children[3].value||0,tt=sl*dg;
-    r.children[4].textContent=fn(tt)+' ₫';total+=tt;
+  const c = document.getElementById(cid);
+  if (!c) return;
+  const rows = c.children;
+  let total = 0;
+  for (let r of rows) {
+    const sl = Number(r.querySelector('.q-sl')?.value || r.children[3]?.value || 0);
+    const dg = Number(r.querySelector('.q-dg')?.value || r.children[4]?.value || 0);
+    const tt = sl * dg;
+    const ttEl = r.querySelector('.q-tt') || r.children[5];
+    if (ttEl) ttEl.textContent = fn(tt) + ' ₫';
+    total += tt;
   }
-  const tid=cid.replace('items','total');
-  const el=document.getElementById(tid);
-  if(el){
-    el.querySelector('.big').textContent=fn(total)+' ₫';
-    const note=el.querySelector('#qs-note');
-    if(note&&total>0){note.textContent=`≈ ${fn(Math.round(total/1000000))} triệu | Thu hồi vốn ~${Math.round(60/((total/1000000)*0.15))} năm (giả định)`;}
+  const tid = cid.replace('items', 'total');
+  const el = document.getElementById(tid);
+  if (el) {
+    el.querySelector('.big').textContent = fn(total) + ' ₫';
+    const note = el.querySelector('#qs-note');
+    if (note && total > 0) {
+      note.textContent = `≈ ${fn(Math.round(total / 1000000))} triệu | Thu hồi vốn ~${Math.round(60 / ((total / 1000000) * 0.15))} năm (giả định)`;
+    }
   }
 }
 
@@ -2377,19 +2394,25 @@ function setCompanyRate(val) {
 // 🖨️ IN LẠI & SỬA GIÁ: Cho phép sửa bất kỳ giá/SL nào và in lại ngay lập tức
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const DEFAULT_6KW_PRESET = [
-  { ten: "6kW Inverter (Single Phase)", brand: "Growatt", dv: "Nos", sl: 1, dg: 2842000, remark: "1 Year Warranty" },
-  { ten: "610W (bifacial) Solar Panel", brand: "Longi", dv: "Nos", sl: 10, dg: 522000, remark: "12 Year Warranty" },
-  { ten: "LiFePO4 Battery (51.2V, 320Ah)", brand: "CATL", dv: "Nos", sl: 1, dg: 8352000, remark: "2 Year Warranty" },
-  { ten: "Battery Breaker & Cable", brand: "Schneider/Chint", dv: "Lot", sl: 1, dg: 350000, remark: "Dành cho SP 6kW" },
-  { ten: "Installation Fees 10 Kw", brand: "Viettel", dv: "set", sl: 6, dg: 120000, remark: "Tiêu chuẩn kỹ thuật" },
-  { ten: "DC Breaker & Accessories", brand: "Chint", dv: "Lot", sl: 1, dg: 500000, remark: "Bảo vệ hệ thống" },
-  { ten: "Solar Mounting Bracket", brand: "Alloy", dv: "Lot", sl: 1, dg: 200000, remark: "Khung nhôm định hình" },
-  { ten: "AC In\Out Materials", brand: "TNI", dv: "Lot", sl: 1, dg: 50000, remark: "Vật tư phụ AC" },
-  { ten: "Estimated Earthing System Cost", brand: "Viettel", dv: "Lot", sl: 1, dg: 500000, remark: "Varies On Site" },
-  { ten: "Estimated AC In\Out Cable (10mmsq)", brand: "Cadivi", dv: "Lot", sl: 1, dg: 50000, remark: "Varies On Site" },
-  { ten: "Delivery", brand: "Logistics", dv: "Lot", sl: 1, dg: 800000, remark: "Depends on Site" }
+// MẪU 6kW TNI CHUẨN CẬP NHẬT 17/09/2026 (Update_Quotation_TNI.xlsx)
+const TNI_6KW_SEPT17_PRESET = [
+  { ten: "Inverter 6 kW", brand: "Growatt", dv: "kW", sl: 1, dg: 2000000, remark: "Main Materials" },
+  { ten: "CATL Battery 51.2 V, 320 Ah", brand: "CATL", dv: "Ah", sl: 1, dg: 7500000, remark: "Main Materials" },
+  { ten: "Solar Panel 620 W Bifacial", brand: "Jinko", dv: "W", sl: 8, dg: 720000, remark: "Main Materials" },
+  { ten: "2P 63A VA Protector Safeguard 6 in 1", brand: "Chint", dv: "Nos.", sl: 2, dg: 0, remark: "AC In|Out Materials" },
+  { ten: "ATS 2 pole, 125A", brand: "Chint", dv: "Nos.", sl: 1, dg: 0, remark: "AC In|Out Materials" },
+  { ten: "AC 2P 63A MCB Breaker", brand: "Chint", dv: "Nos.", sl: 2, dg: 0, remark: "AC In|Out Materials" },
+  { ten: "Battery Cable (DC) 35 mmsq", brand: "Cadivi", dv: "M", sl: 2, dg: 0, remark: "AC In|Out Materials" },
+  { ten: "25 mm adapter", brand: "TNI", dv: "Nos.", sl: 6, dg: 0, remark: "AC In|Out Materials" },
+  { ten: "Cable Lugs (35 - 10)", brand: "TNI", dv: "Nos.", sl: 8, dg: 0, remark: "AC In|Out Materials" },
+  { ten: "Trunking & Other Accessories", brand: "TNI", dv: "Lot", sl: 1, dg: 0, remark: "AC In|Out Materials" },
+  { ten: "DB Box 24 Way", brand: "Schneider", dv: "Nos.", sl: 1, dg: 0, remark: "AC In|Out Materials" },
+  { ten: "Insulation Tape", brand: "3M", dv: "Nos.", sl: 4, dg: 0, remark: "AC In|Out Materials" },
+  { ten: "JZD DC 6mm Solar Cable (Red, Black)", brand: "JZD", dv: "M", sl: 70, dg: 0, remark: "DC Breaker & Accessories" },
+  { ten: "AC 6mm Cable", brand: "Cadivi", dv: "M", sl: 20, dg: 0, remark: "DC Breaker & Accessories" }
 ];
+
+const DEFAULT_6KW_PRESET = TNI_6KW_SEPT17_PRESET;
 
 let currentEditingSolarId = null;
 
@@ -2831,11 +2854,12 @@ function saveQuote(type) {
     const container = document.getElementById('qu-items');
     if (container) {
       for (let r of container.children) {
-        const ten = (r.children[0]?.value || '').trim();
-        const dv = (r.children[1]?.value || '').trim() || (isVi ? 'Cái' : 'Nos');
-        const sl = +(r.children[2]?.value || 0);
-        const dg = +(r.children[3]?.value || 0);
-        if (ten) items.push({ ten, dv, sl, dg, tt: sl * dg });
+        const ten = (r.querySelector('.q-ten')?.value || r.children[0]?.value || '').trim();
+        const brand = (r.querySelector('.q-brand')?.value || r.children[1]?.value || '').trim();
+        const dv = (r.querySelector('.q-dv')?.value || r.children[2]?.value || '').trim() || (isVi ? 'Cái' : 'Nos');
+        const sl = +(r.querySelector('.q-sl')?.value || r.children[3]?.value || 0);
+        const dg = +(r.querySelector('.q-dg')?.value || r.children[4]?.value || 0);
+        if (ten) items.push({ ten, brand, dv, sl, dg, tt: sl * dg });
       }
     }
     if (!items.length) { al(isVi ? 'Thêm ít nhất 1 thiết bị vào danh sách!' : 'Please add at least 1 item to the list!', 'er'); return; }
@@ -2850,6 +2874,7 @@ function saveQuote(type) {
       ngay: v('qu-ngay') || td(),
       hl: v('qu-hl') || 7,
       items: items,
+      rows: items,
       total: total,
       type: 'ups'
     };
@@ -2872,23 +2897,32 @@ function printQuote(type) {
     const container = document.getElementById('qu-items');
     if (container) {
       for (let r of container.children) {
-        const ten = (r.children[0]?.value || '').trim();
-        const dv = (r.children[1]?.value || '').trim() || (isVi ? 'Cái' : 'Nos');
-        const sl = +(r.children[2]?.value || 0);
-        const dg = +(r.children[3]?.value || 0);
-        if (ten) items.push({ ten, dv, sl, dg, tt: sl * dg });
+        const ten = (r.querySelector('.q-ten')?.value || r.children[0]?.value || '').trim();
+        const brand = (r.querySelector('.q-brand')?.value || r.children[1]?.value || '').trim();
+        const dv = (r.querySelector('.q-dv')?.value || r.children[2]?.value || '').trim() || (isVi ? 'Cái' : 'Nos');
+        const sl = +(r.querySelector('.q-sl')?.value || r.children[3]?.value || 0);
+        const dg = +(r.querySelector('.q-dg')?.value || r.children[4]?.value || 0);
+        if (ten) items.push({ ten, brand, dv, sl, dg, tt: sl * dg });
       }
     }
     if (!items.length) { al(isVi ? 'Chưa có thiết bị nào để in!' : 'No items to print!', 'er'); return; }
     const total = items.reduce((s, x) => s + x.tt, 0);
-    const rows = items.map(r => `<tr><td>${r.ten}</td><td style="text-align:center">${r.dv}</td><td style="text-align:center">${r.sl}</td><td style="text-align:right">${fn(r.dg)}</td><td style="text-align:right;font-weight:600">${fn(r.tt)}</td></tr>`).join('');
+    const rows = items.map((r, i) => `<tr>
+      <td style="text-align:center">${i + 1}</td>
+      <td><b>${r.ten}</b></td>
+      <td style="text-align:center">${r.brand || '-'}</td>
+      <td style="text-align:center">${r.dv}</td>
+      <td style="text-align:center">${r.sl}</td>
+      <td style="text-align:right">${fn(r.dg)} ₫</td>
+      <td style="text-align:right;font-weight:600">${fn(r.tt)} ₫</td>
+    </tr>`).join('');
     const html = `<html><head><meta charset="UTF-8"><title>${isVi ? 'Báo Giá Thiết Bị' : 'Device Quotation'}</title>
-    <style>body{font-family:'Segoe UI',sans-serif;padding:30px;color:#1e293b}h2{color:#1d4ed8}table{width:100%;border-collapse:collapse;margin-top:16px}th{background:#f1f5f9;padding:8px;font-size:13px;text-align:left}td{padding:8px;border-bottom:1px solid #e2e8f0;font-size:13px}.total{font-size:18px;font-weight:700;color:#16a34a;text-align:right;margin-top:10px;padding:10px 0}</style></head>
+    <style>body{font-family:'Segoe UI',sans-serif;padding:30px;color:#1e293b}h2{color:#1d4ed8}table{width:100%;border-collapse:collapse;margin-top:16px}th{background:#f1f5f9;padding:8px;font-size:13px;border:1px solid #cbd5e1;text-align:left}td{padding:8px;border-bottom:1px solid #e2e8f0;font-size:13px}.total{font-size:18px;font-weight:700;color:#16a34a;text-align:right;margin-top:10px;padding:10px 0}</style></head>
     <body><h2>📄 ${isVi ? 'BÁO GIÁ THIẾT BỊ' : 'DEVICE QUOTATION'}</h2>
     <p><b>${isVi ? 'Khách hàng' : 'Customer'}:</b> ${kh} &nbsp;|&nbsp; <b>${isVi ? 'ĐT' : 'Phone'}:</b> ${dt}</p>
     <p><b>${isVi ? 'Địa chỉ' : 'Address'}:</b> ${dc}</p>
     <p><b>${isVi ? 'Ngày' : 'Date'}:</b> ${fd(ngay)} &nbsp;|&nbsp; <b>${isVi ? 'Hiệu lực' : 'Validity'}:</b> ${hl} ${isVi ? 'ngày' : 'days'} &nbsp;|&nbsp; <b>${isVi ? 'Người lập' : 'Prepared by'}:</b> ${nlbg}</p>
-    <table><thead><tr><th>${isVi ? 'Hạng Mục / Thiết Bị' : 'Item Description / Equipment'}</th><th style="text-align:center">${isVi ? 'ĐVT' : 'Unit'}</th><th style="text-align:center">${isVi ? 'SL' : 'Qty'}</th><th style="text-align:right">${isVi ? 'Đơn Giá' : 'Unit Price'}</th><th style="text-align:right">${isVi ? 'Thành Tiền' : 'Subtotal'}</th></tr></thead><tbody>${rows}</tbody></table>
+    <table><thead><tr><th style="text-align:center">#</th><th>${isVi ? 'Hạng Mục / Thiết Bị' : 'Item Description / Equipment'}</th><th style="text-align:center">Brand</th><th style="text-align:center">${isVi ? 'ĐVT' : 'Unit'}</th><th style="text-align:center">${isVi ? 'SL' : 'Qty'}</th><th style="text-align:right">${isVi ? 'Đơn Giá' : 'Unit Price'}</th><th style="text-align:right">${isVi ? 'Thành Tiền' : 'Subtotal'}</th></tr></thead><tbody>${rows}</tbody></table>
     <div class="total">${isVi ? 'TỔNG CỘNG' : 'TOTAL'}: ${fn(total)} ₫</div>
     <p style="font-size:12px;color:#64748b;margin-top:20px">* ${isVi ? 'Báo giá có hiệu lực ' + hl + ' ngày kể từ ngày lập. Giá chưa bao gồm VAT.' : 'Quotation valid for ' + hl + ' days from issue date. Price excludes VAT.'}</p>
     </body></html>`;
@@ -2922,19 +2956,29 @@ function rQuUPS() {
 }
 
 function viewQuote(type, id) {
+  const isVi = currentLang === 'vi';
   if (type !== 'solar') {
     // Thiết bị chung
     const d = DB.g('quoteups').find(r => r.id == id); if (!d) return;
-    const rows = d.rows.map(r => `<tr><td>${r.ten}</td><td style="text-align:center">${r.dv}</td><td style="text-align:center">${r.sl}</td><td style="text-align:right">${fn(r.dg)}</td><td style="text-align:right;font-weight:600">${fn(r.sl * r.dg)}</td></tr>`).join('');
-    const html = `<html><head><meta charset="UTF-8"><title>Báo Giá Thiết Bị</title>
-    <style>body{font-family:'Segoe UI',sans-serif;padding:30px;color:#1e293b}h2{color:#1d4ed8}table{width:100%;border-collapse:collapse;margin-top:16px}th{background:#f1f5f9;padding:8px;font-size:13px}td{padding:8px;border-bottom:1px solid #e2e8f0;font-size:13px}.total{font-size:18px;font-weight:700;color:#16a34a;text-align:right;margin-top:10px;padding:10px 0}</style></head>
-    <body><h2>📄 BÁO GIÁ THIẾT BỊ</h2>
-    <p><b>Khách hàng:</b> ${d.kh} &nbsp;|&nbsp; <b>ĐT:</b> ${d.dt||'-'}</p>
-    <p><b>Địa chỉ:</b> ${d.dc||'-'}</p>
-    <p><b>Ngày:</b> ${fd(d.ngay)} &nbsp;|&nbsp; <b>Hiệu lực:</b> ${d.hl} ngày &nbsp;|&nbsp; <b>Người lập:</b> ${d.nlbg||'-'}</p>
-    <table><thead><tr><th>Hạng Mục / Thiết Bị</th><th>ĐV</th><th>SL</th><th>Đơn Giá</th><th>Thành Tiền</th></tr></thead><tbody>${rows}</tbody></table>
-    <div class="total">TỔNG: ${fn(d.total)} ₫</div>
-    <p style="font-size:12px;color:#64748b;margin-top:20px">* Báo giá có hiệu lực ${d.hl} ngày kể từ ngày lập. Giá chưa bao gồm VAT.</p>
+    const itemList = d.items || d.rows || [];
+    const rows = itemList.map((r, i) => `<tr>
+      <td style="text-align:center">${i + 1}</td>
+      <td><b>${r.ten}</b></td>
+      <td style="text-align:center">${r.brand || '-'}</td>
+      <td style="text-align:center">${r.dv}</td>
+      <td style="text-align:center">${r.sl}</td>
+      <td style="text-align:right">${fn(r.dg)} ₫</td>
+      <td style="text-align:right;font-weight:600">${fn(r.tt || (r.sl * r.dg))} ₫</td>
+    </tr>`).join('');
+    const html = `<html><head><meta charset="UTF-8"><title>${isVi ? 'Báo Giá Thiết Bị' : 'Device Quotation'}</title>
+    <style>body{font-family:'Segoe UI',sans-serif;padding:30px;color:#1e293b}h2{color:#1d4ed8}table{width:100%;border-collapse:collapse;margin-top:16px}th{background:#f1f5f9;padding:8px;font-size:13px;border:1px solid #cbd5e1;text-align:left}td{padding:8px;border-bottom:1px solid #e2e8f0;font-size:13px}.total{font-size:18px;font-weight:700;color:#16a34a;text-align:right;margin-top:10px;padding:10px 0}</style></head>
+    <body><h2>📄 ${isVi ? 'BÁO GIÁ THIẾT BỊ' : 'DEVICE QUOTATION'}</h2>
+    <p><b>${isVi ? 'Khách hàng' : 'Customer'}:</b> ${d.kh} &nbsp;|&nbsp; <b>${isVi ? 'ĐT' : 'Phone'}:</b> ${d.dt||'-'}</p>
+    <p><b>${isVi ? 'Địa chỉ' : 'Address'}:</b> ${d.dc||'-'}</p>
+    <p><b>${isVi ? 'Ngày' : 'Date'}:</b> ${fd(d.ngay)} &nbsp;|&nbsp; <b>${isVi ? 'Hiệu lực' : 'Validity'}:</b> ${d.hl} ${isVi ? 'ngày' : 'days'} &nbsp;|&nbsp; <b>${isVi ? 'Người lập' : 'Prepared by'}:</b> ${d.nlbg||'-'}</p>
+    <table><thead><tr><th style="text-align:center">#</th><th>${isVi ? 'Hạng Mục / Thiết Bị' : 'Item Description / Equipment'}</th><th style="text-align:center">Brand</th><th style="text-align:center">${isVi ? 'ĐVT' : 'Unit'}</th><th style="text-align:center">${isVi ? 'SL' : 'Qty'}</th><th style="text-align:right">${isVi ? 'Đơn Giá' : 'Unit Price'}</th><th style="text-align:right">${isVi ? 'Thành Tiền' : 'Subtotal'}</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="total">${isVi ? 'TỔNG' : 'TOTAL'}: ${fn(d.total)} ₫</div>
+    <p style="font-size:12px;color:#64748b;margin-top:20px">* ${isVi ? 'Báo giá có hiệu lực ' + d.hl + ' ngày kể từ ngày lập. Giá chưa bao gồm VAT.' : 'Quotation valid for ' + d.hl + ' days from issue date. Price excludes VAT.'}</p>
     </body></html>`;
     const w = window.open('', '_blank'); w.document.write(html); w.document.close(); w.print();
     return;
@@ -5157,6 +5201,10 @@ const BILINGUAL_PAIRS = [
   ['Xóa sạch dữ liệu', 'Clear All Data'],
   ['09xxxxxxx', '09xxxxxxx'],
   ['0xxxxxxx', '09xx xxx xxx'],
+  ['Hãng / Brand', 'Brand'],
+  ['Hãng', 'Brand'],
+  ['Brand / Hãng', 'Brand'],
+  ['⭐ Mẫu 6kW TNI (Sept.17)', '⭐ 6kW TNI Standard (Sept.17)'],
   ['% Cty:', '% HO:'],
   ['Đơn Vị Tiền Tệ:', 'Currency:'],
   ['📄 Tạo Báo Giá Thiết Bị', '📄 Create Device Quotation'],

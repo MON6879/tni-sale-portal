@@ -166,12 +166,8 @@ tbody tr:hover{background:#fafcff}
 <div id="topbar">
   <h2 id="ptitle">📊 Dashboard</h2>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-    <!-- Cài đặt % Lợi Nhuận & Thuế Nộp Tổng Công Ty (Nhập tay linh hoạt) -->
-    <div style="display:flex;align-items:center;gap:5px;background:#eff6ff;padding:4px 9px;border-radius:7px;border:1px solid #bfdbfe">
-      <span id="cfg-cty-label" style="font-size:11px;font-weight:600;color:#1e40af">🏢 % HO:</span>
-      <input id="cfg-cty-rate" type="number" value="17" min="0" max="100" step="0.5" style="width:48px;padding:2px 4px;border:1px solid #3b82f6;border-radius:4px;font-size:12px;font-weight:bold;color:#1e40af;text-align:center" oninput="setCompanyRate(this.value)" title="Tỷ lệ % Lợi nhuận và Thuế nộp về Tổng Công Ty"/>
-      <span style="font-size:11px;color:#1e40af">%</span>
-    </div>
+    <!-- Cài đặt % Lợi Nhuận & Thuế Nộp Tổng Công Ty (Ẩn UI theo yêu cầu người dùng) -->
+    <input id="cfg-cty-rate" type="hidden" value="17"/>
     <a href="https://docs.google.com/spreadsheets/d/1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA" target="_blank" class="btn b-bl b-sm" style="text-decoration:none">📊 Google Sheet</a>
     <button class="btn b-sm" id="lang-btn" onclick="toggleLang()" style="background:#e0f2fe;color:#0369a1;font-weight:600">🌐 EN / VN</button>
     <span id="clk" style="font-size:11.5px;color:#94a3b8"></span>
@@ -429,34 +425,67 @@ tbody tr:hover{background:#fafcff}
 <div class="sec" id="s-baogiaups">
   <div class="g2">
     <div class="panel">
-      <div class="ph"><h3>📄 Tạo Báo Giá Thiết Bị</h3></div>
+      <div class="ph" style="display:flex;justify-content:space-between;align-items:center">
+        <h3 data-lang="qu_title">📄 Tạo Báo Giá Thiết Bị</h3>
+        <button class="btn b-out b-xs" onclick="resetQuoteUPS()" data-lang="btn_new_quote">🔄 Tạo Mới / Reset</button>
+      </div>
       <div class="pb">
+        <!-- 💡 THANH CHỌN BÁO GIÁ CŨ ĐỂ COPY & SỬA -->
+        <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#f0f9ff;padding:8px 12px;border-radius:8px;border:1px solid #bae6fd">
+          <span style="font-size:12px;font-weight:700;color:#0369a1;white-space:nowrap" data-lang="lbl_old_quote_select">📋 Copy / Sửa Báo Giá Cũ:</span>
+          <select id="qu-history-select" onchange="handleSelectOldQuoteUPS(this.value)" style="flex:1;min-width:220px;padding:5px 9px;border:1px solid #7dd3fc;border-radius:6px;font-size:12px;font-weight:600;background:#fff">
+            <option value="">-- Chọn báo giá cũ để Copy / Sửa --</option>
+          </select>
+          <button class="btn b-xs b-gn" onclick="const sel=document.getElementById('qu-history-select');if(sel.value)copyQuoteUPS(sel.value);" title="Sao chép toàn bộ dữ liệu báo giá đã chọn sang form để chỉnh sửa thành bản mới" data-lang="btn_copy_edit">📋 Copy &amp; Sửa</button>
+          <button class="btn b-xs b-bl" onclick="const sel=document.getElementById('qu-history-select');if(sel.value)loadQuoteUPS(sel.value);" title="Mở để sửa và ghi đè báo giá đã chọn">✏️ Sửa Đè</button>
+        </div>
+
+        <!-- STATUS BADGE KHI ĐANG COPY HOẶC ĐANG SỬA -->
+        <div id="qu-mode-badge" style="display:none;margin-bottom:12px;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600"></div>
+
         <div class="fg">
-          <div class="f"><label>Khách Hàng / Công Ty *</label><input id="qu-kh" placeholder="Tên KH / Công ty"/></div>
-          <div class="f"><label>Điện Thoại</label><input id="qu-dt" placeholder="0xxxxxxx"/></div>
-          <div class="f"><label>Địa Chỉ</label><input id="qu-dc" placeholder="Địa chỉ"/></div>
-          <div class="f"><label>Người Lập BG</label><input id="qu-nlbg" placeholder="Tên nhân viên"/></div>
-          <div class="f"><label>Ngày</label><input id="qu-ngay" type="date"/></div>
-          <div class="f"><label>Hiệu Lực (ngày)</label><input id="qu-hl" type="number" value="7" min="1"/></div>
+          <div class="f"><label data-lang="qu_customer">Khách Hàng / Công Ty *</label><input id="qu-kh" placeholder="Tên KH / Công ty"/></div>
+          <div class="f"><label data-lang="qu_phone">Điện Thoại</label><input id="qu-dt" placeholder="0xxxxxxx"/></div>
+          <div class="f"><label data-lang="qu_address">Địa Chỉ</label><input id="qu-dc" placeholder="Địa chỉ"/></div>
+          <div class="f"><label data-lang="qu_creator">Người Lập BG</label><input id="qu-nlbg" placeholder="Tên nhân viên"/></div>
+          <div class="f"><label data-lang="qu_date">Ngày</label><input id="qu-ngay" type="date"/></div>
+          <div class="f"><label data-lang="qu_validity">Hiệu Lực (ngày)</label><input id="qu-hl" type="number" value="7" min="1"/></div>
         </div>
         <div style="margin-top:12px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <b style="font-size:13px">📦 Danh sách thiết bị</b>
-            <button class="btn b-bl b-sm" onclick="addQRow('qu-items')">+ Thêm dòng</button>
+            <b style="font-size:13px" data-lang="qu_items_label">📦 Danh sách thiết bị</b>
+            <button class="btn b-bl b-sm" onclick="addQRow('qu-items')" data-lang="qu_add_row">+ Thêm dòng</button>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;padding:5px 8px;font-size:11px;font-weight:700;color:#64748b;background:#f1f5f9;border-radius:6px;margin-bottom:6px">
+            <span style="flex:2;min-width:140px" data-lang="qu_col_desc">Hạng Mục / Thiết Bị</span>
+            <span style="width:100px" data-lang="qu_col_brand">Brand</span>
+            <span style="width:65px;text-align:center" data-lang="qu_col_unit">ĐVT</span>
+            <span style="width:60px;text-align:center" data-lang="qu_col_qty">SL</span>
+            <span style="width:120px;text-align:right" data-lang="qu_col_price">Đơn Giá (₫)</span>
+            <span style="min-width:95px;text-align:right" data-lang="qu_col_total">Thành Tiền</span>
+            <span style="width:24px"></span>
           </div>
           <div id="qu-items"></div>
           <div class="qtotal" id="qu-total">
-            <div style="font-size:12px;color:#94a3b8;margin-bottom:4px">Tổng Báo Giá</div>
+            <div style="font-size:12px;color:#94a3b8;margin-bottom:4px" data-lang="qu_total_label">Tổng Báo Giá</div>
             <div class="big">0 ₫</div>
           </div>
         </div>
-        <div class="fa">
-          <button class="btn b-bl" onclick="saveQuote('ups')">💾 Lưu Báo Giá</button>
-          <button class="btn b-out" onclick="printQuote('ups')">🖨 In / PDF</button>
+        <div class="fa" style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn b-bl" onclick="saveQuote('ups')" data-lang="qu_save_btn">💾 Lưu Báo Giá</button>
+          <button class="btn b-gn" onclick="saveQuote('ups', true)" title="Lưu thành bản báo giá mới độc lập (mã số mới, không ghi đè bản cũ)" data-lang="btn_save_as_new">📋 Lưu Thành Bản Mới (Copy)</button>
+          <button class="btn b-out" onclick="printQuote('ups')" data-lang="qu_print_btn">🖨 In / PDF</button>
+          <button class="btn b-out" onclick="resetQuoteUPS()" data-lang="btn_clear">🔄 Mới</button>
         </div>
       </div>
     </div>
-    <div class="panel"><div class="ph"><h3>📋 Danh Sách Báo Giá Thiết Bị</h3></div><div class="pb tw" id="t-quups"></div></div>
+    <div class="panel">
+      <div class="ph" style="display:flex;justify-content:space-between;align-items:center">
+        <h3 data-lang="qu_list_title">📋 Danh Sách Báo Giá Thiết Bị</h3>
+        <span id="qu-count-badge" style="font-size:12px;color:#64748b;font-weight:600">0 báo giá</span>
+      </div>
+      <div class="pb tw" id="t-quups"></div>
+    </div>
   </div>
 </div>
 
@@ -548,6 +577,7 @@ tbody tr:hover{background:#fafcff}
             <b style="font-size:13px;color:#1e3a8a">📦 Bảng Vật Tư &amp; Giá Cả (Có thể chỉnh sửa giá trực tiếp):</b>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               <button class="btn b-bl b-xs" onclick="addSolarItemRow()">+ Thêm dòng vật tư</button>
+              <button class="btn b-sm" style="background:#fef08a;color:#854d0e;font-size:11px;font-weight:700" onclick="presetSolar('zinkoko')">⭐ Mẫu 6kW TNI (Sept.17)</button>
               <button class="btn b-sm" style="background:#dcfce7;color:#15803d;font-size:11px;font-weight:700" onclick="presetSolar('kawthoung16k')">⭐ Mẫu 16kW (Kawthoung)</button>
               <button class="btn b-sm" style="background:#fef9c3;color:#854d0e;font-size:11px" onclick="presetSolar('ongrid5k')">Bộ 5kW OnGrid</button>
               <button class="btn b-sm" style="background:#fef9c3;color:#854d0e;font-size:11px" onclick="presetSolar('hybrid5k')">Bộ Hybrid 5kW</button>
@@ -1450,8 +1480,8 @@ const ptitles={dashboard:'📊 Dashboard',nhap:'📦 Goods Intake',tonkho:'🗄�
 const renders={
   dashboard:rDash,nhap:rNhap,tonkho:renderTK,tamung:rTU,
   banhang:()=>{popSP(['b-sp']);rBan();},
-  baogiaups:()=>{if(!document.getElementById('qu-items').children.length)addQRow('qu-items');rQuUPS();},
-  baogiasolar:()=>{if(!document.getElementById('qs-items').children.length)addQRow('qs-items');rQuSolar();},
+  baogiaups:()=>{if(!document.getElementById('qu-items').children.length)addQRow('qu-items');rQuUPS();populateOldQuoteSelectUPS();},
+  baogiasolar:()=>{if(!document.getElementById('qs-table-body')?.children.length)addSolarItemRow();if(typeof rQuSolar==='function')rQuSolar();},
   acceptance:()=>{rAcceptances();populateAccSources();calcAccFinancials();initAccCanvas();},
   daily:()=>{rDL();popSP(['pp-sp']);popDL();},
   kygoi:()=>{popSP(['kg-sp','tu-sp']);rKG();},
@@ -2325,32 +2355,43 @@ function rBan(){
 // ═══════════════════════════════════════════════════
 // BÁO GIÁ — QUOTATION ROWS
 // ═══════════════════════════════════════════════════
-function addQRow(containerId) {
+function addQRow(containerId, itemData) {
   const isVi = currentLang === 'vi';
   const c = document.getElementById(containerId);
   if (!c) return;
+  const item = itemData || {};
   const d = document.createElement('div'); d.className = 'qrow';
-  d.innerHTML = `<input placeholder="${isVi ? 'Tên thiết bị / hạng mục' : 'Item description / equipment'}" style="flex:2;min-width:150px" oninput="calcQ('${containerId}')"/>
-    <input placeholder="${isVi ? 'Đơn vị' : 'Unit'}" style="width:60px" oninput="calcQ('${containerId}')"/>
-    <input type="number" placeholder="${isVi ? 'SL' : 'Qty'}" style="width:55px" oninput="calcQ('${containerId}')"/>
-    <input type="number" placeholder="${isVi ? 'Đơn giá (₫)' : 'Unit Price ($/₫)'}" style="width:120px" oninput="calcQ('${containerId}')"/>
-    <span style="min-width:90px;text-align:right;font-weight:600;color:var(--bl)">0 ₫</span>
+  d.innerHTML = `<input class="q-ten" value="${item.ten || ''}" placeholder="${isVi ? 'Tên thiết bị / hạng mục' : 'Item description / equipment'}" style="flex:2;min-width:140px" oninput="calcQ('${containerId}')"/>
+    <input class="q-brand" value="${item.brand || ''}" placeholder="${isVi ? 'Hãng / Brand' : 'Brand'}" style="width:100px" oninput="calcQ('${containerId}')"/>
+    <input class="q-dv" value="${item.dv || (isVi ? 'Cái' : 'Nos')}" placeholder="${isVi ? 'Đơn vị' : 'Unit'}" style="width:65px;text-align:center" oninput="calcQ('${containerId}')"/>
+    <input class="q-sl" type="number" min="1" value="${item.sl || 1}" placeholder="${isVi ? 'SL' : 'Qty'}" style="width:60px;text-align:center" oninput="calcQ('${containerId}')"/>
+    <input class="q-dg" type="number" min="0" value="${item.dg || 0}" placeholder="${isVi ? 'Đơn giá (₫)' : 'Unit Price ($/₫)'}" style="width:120px;text-align:right" oninput="calcQ('${containerId}')"/>
+    <span class="q-tt" style="min-width:95px;text-align:right;font-weight:600;color:var(--bl)">0 ₫</span>
     <button class="btn b-xs b-rd" onclick="this.parentNode.remove();calcQ('${containerId}')">✕</button>`;
   c.appendChild(d);
+  calcQ(containerId);
 }
 function calcQ(cid){
-  const rows=document.getElementById(cid).children;
-  let total=0;
-  for(let r of rows){
-    const sl=+r.children[2].value||0,dg=+r.children[3].value||0,tt=sl*dg;
-    r.children[4].textContent=fn(tt)+' ₫';total+=tt;
+  const c = document.getElementById(cid);
+  if (!c) return;
+  const rows = c.children;
+  let total = 0;
+  for (let r of rows) {
+    const sl = Number(r.querySelector('.q-sl')?.value || r.children[3]?.value || 0);
+    const dg = Number(r.querySelector('.q-dg')?.value || r.children[4]?.value || 0);
+    const tt = sl * dg;
+    const ttEl = r.querySelector('.q-tt') || r.children[5];
+    if (ttEl) ttEl.textContent = fn(tt) + ' ₫';
+    total += tt;
   }
-  const tid=cid.replace('items','total');
-  const el=document.getElementById(tid);
-  if(el){
-    el.querySelector('.big').textContent=fn(total)+' ₫';
-    const note=el.querySelector('#qs-note');
-    if(note&&total>0){note.textContent=`≈ ${fn(Math.round(total/1000000))} triệu | Thu hồi vốn ~${Math.round(60/((total/1000000)*0.15))} năm (giả định)`;}
+  const tid = cid.replace('items', 'total');
+  const el = document.getElementById(tid);
+  if (el) {
+    el.querySelector('.big').textContent = fn(total) + ' ₫';
+    const note = el.querySelector('#qs-note');
+    if (note && total > 0) {
+      note.textContent = `≈ ${fn(Math.round(total / 1000000))} triệu | Thu hồi vốn ~${Math.round(60 / ((total / 1000000) * 0.15))} năm (giả định)`;
+    }
   }
 }
 
@@ -2377,19 +2418,25 @@ function setCompanyRate(val) {
 // 🖨️ IN LẠI & SỬA GIÁ: Cho phép sửa bất kỳ giá/SL nào và in lại ngay lập tức
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const DEFAULT_6KW_PRESET = [
-  { ten: "6kW Inverter (Single Phase)", brand: "Growatt", dv: "Nos", sl: 1, dg: 2842000, remark: "1 Year Warranty" },
-  { ten: "610W (bifacial) Solar Panel", brand: "Longi", dv: "Nos", sl: 10, dg: 522000, remark: "12 Year Warranty" },
-  { ten: "LiFePO4 Battery (51.2V, 320Ah)", brand: "CATL", dv: "Nos", sl: 1, dg: 8352000, remark: "2 Year Warranty" },
-  { ten: "Battery Breaker & Cable", brand: "Schneider/Chint", dv: "Lot", sl: 1, dg: 350000, remark: "Dành cho SP 6kW" },
-  { ten: "Installation Fees 10 Kw", brand: "Viettel", dv: "set", sl: 6, dg: 120000, remark: "Tiêu chuẩn kỹ thuật" },
-  { ten: "DC Breaker & Accessories", brand: "Chint", dv: "Lot", sl: 1, dg: 500000, remark: "Bảo vệ hệ thống" },
-  { ten: "Solar Mounting Bracket", brand: "Alloy", dv: "Lot", sl: 1, dg: 200000, remark: "Khung nhôm định hình" },
-  { ten: "AC In\Out Materials", brand: "TNI", dv: "Lot", sl: 1, dg: 50000, remark: "Vật tư phụ AC" },
-  { ten: "Estimated Earthing System Cost", brand: "Viettel", dv: "Lot", sl: 1, dg: 500000, remark: "Varies On Site" },
-  { ten: "Estimated AC In\Out Cable (10mmsq)", brand: "Cadivi", dv: "Lot", sl: 1, dg: 50000, remark: "Varies On Site" },
-  { ten: "Delivery", brand: "Logistics", dv: "Lot", sl: 1, dg: 800000, remark: "Depends on Site" }
+// MẪU 6kW TNI CHUẨN CẬP NHẬT 17/09/2026 (Update_Quotation_TNI.xlsx)
+const TNI_6KW_SEPT17_PRESET = [
+  { ten: "Inverter 6 kW", brand: "Growatt", dv: "kW", sl: 1, dg: 2000000, remark: "Main Materials" },
+  { ten: "CATL Battery 51.2 V, 320 Ah", brand: "CATL", dv: "Ah", sl: 1, dg: 7500000, remark: "Main Materials" },
+  { ten: "Solar Panel 620 W Bifacial", brand: "Jinko", dv: "W", sl: 8, dg: 720000, remark: "Main Materials" },
+  { ten: "2P 63A VA Protector Safeguard 6 in 1", brand: "Chint", dv: "Nos.", sl: 2, dg: 0, remark: "AC In|Out Materials" },
+  { ten: "ATS 2 pole, 125A", brand: "Chint", dv: "Nos.", sl: 1, dg: 0, remark: "AC In|Out Materials" },
+  { ten: "AC 2P 63A MCB Breaker", brand: "Chint", dv: "Nos.", sl: 2, dg: 0, remark: "AC In|Out Materials" },
+  { ten: "Battery Cable (DC) 35 mmsq", brand: "Cadivi", dv: "M", sl: 2, dg: 0, remark: "AC In|Out Materials" },
+  { ten: "25 mm adapter", brand: "TNI", dv: "Nos.", sl: 6, dg: 0, remark: "AC In|Out Materials" },
+  { ten: "Cable Lugs (35 - 10)", brand: "TNI", dv: "Nos.", sl: 8, dg: 0, remark: "AC In|Out Materials" },
+  { ten: "Trunking & Other Accessories", brand: "TNI", dv: "Lot", sl: 1, dg: 0, remark: "AC In|Out Materials" },
+  { ten: "DB Box 24 Way", brand: "Schneider", dv: "Nos.", sl: 1, dg: 0, remark: "AC In|Out Materials" },
+  { ten: "Insulation Tape", brand: "3M", dv: "Nos.", sl: 4, dg: 0, remark: "AC In|Out Materials" },
+  { ten: "JZD DC 6mm Solar Cable (Red, Black)", brand: "JZD", dv: "M", sl: 70, dg: 0, remark: "DC Breaker & Accessories" },
+  { ten: "AC 6mm Cable", brand: "Cadivi", dv: "M", sl: 20, dg: 0, remark: "DC Breaker & Accessories" }
 ];
+
+const DEFAULT_6KW_PRESET = TNI_6KW_SEPT17_PRESET;
 
 let currentEditingSolarId = null;
 
@@ -2703,8 +2750,9 @@ function filterQuotesByUser() {
           <td><small style="color:#2563eb">${q.sharedTo || q.email || 'Nội bộ'}</small></td>
           <td>${fd(q.ngay)}</td>
           <td style="text-align:center;white-space:nowrap">
+            <button class="btn b-xs b-gn" onclick="copySolarQuote(${q.id})" title="Copy báo giá này để tạo báo giá mới">📋 Copy</button>
             <button class="btn b-xs b-bl" onclick="loadSelectedQuote(${q.id})" title="Chỉnh sửa giá & thông tin">✏️ Sửa</button>
-            <button class="btn b-xs b-gn" onclick="viewQuote('solar', ${q.id})" title="In lại báo giá chính thức">🖨️ In Lại</button>
+            <button class="btn b-xs b-out" onclick="viewQuote('solar', ${q.id})" title="In lại báo giá chính thức">🖨️ In Lại</button>
             <button class="btn b-xs b-pu" onclick="shareQuoteViaGmail(${q.id})" title="Gửi Gmail cho khách">📧</button>
             <button class="btn b-xs b-rd" onclick="delSolarQuote(${q.id})">🗑</button>
           </td>
@@ -2712,6 +2760,32 @@ function filterQuotesByUser() {
       `).join('');
     }
   }
+}
+
+function copySolarQuote(id) {
+  const isVi = currentLang === 'vi';
+  const q = DB.g('quotesolar').find(item => item.id == id);
+  if (!q) return;
+
+  loadSelectedQuote(id);
+
+  // Chuyển sang chế độ COPY: Không ghi đè ID cũ, sinh mã số báo giá mới
+  currentEditingSolarId = null;
+  const prefix = (q.code || 'VCM-26').replace(/-\d+$/, '');
+  const newCode = `${prefix}-${Math.floor(10 + Math.random() * 89)}`;
+  document.getElementById('qs-code').value = newCode;
+  document.getElementById('qs-ngay').value = td();
+
+  const badge = document.getElementById('qs-current-badge');
+  if (badge) {
+    badge.textContent = isVi ? `📋 Đang Copy từ: ${q.code || 'Báo Giá'} (Lưu sẽ tạo BG mới)` : `📋 Copied from: ${q.code || 'Quote'} (Will save as new)`;
+    badge.style.display = 'inline-block';
+    badge.style.background = '#ecfdf5';
+    badge.style.color = '#047857';
+    badge.style.border = '1px solid #a7f3d0';
+  }
+
+  al(isVi ? `📋 Đã sao chép báo giá Solar "${q.code}"! Bạn có thể chỉnh sửa giá/vật tư rồi bấm Lưu.` : `📋 Copied Solar quote "${q.code}"! You can edit items and save.`);
 }
 
 function loadSelectedQuote(quoteId) {
@@ -2822,41 +2896,258 @@ function copyShareQuoteLink() {
 // ═══════════════════════════════════════════════════
 // 📄 DEVICE QUOTATION LOGIC & BILINGUAL RENDER
 // ═══════════════════════════════════════════════════
-function saveQuote(type) {
+let currentEditingQuoteUPSId = null;
+
+function saveQuote(type, asNewCopy) {
   const isVi = currentLang === 'vi';
   if (type === 'ups') {
-    const kh = v('qu-kh');
+    const kh = (v('qu-kh') || '').trim();
     if (!kh) { al(isVi ? 'Nhập tên khách hàng / công ty!' : 'Please enter customer / company name!', 'er'); return; }
     const items = [];
     const container = document.getElementById('qu-items');
     if (container) {
       for (let r of container.children) {
-        const ten = (r.children[0]?.value || '').trim();
-        const dv = (r.children[1]?.value || '').trim() || (isVi ? 'Cái' : 'Nos');
-        const sl = +(r.children[2]?.value || 0);
-        const dg = +(r.children[3]?.value || 0);
-        if (ten) items.push({ ten, dv, sl, dg, tt: sl * dg });
+        const ten = (r.querySelector('.q-ten')?.value || r.children[0]?.value || '').trim();
+        const brand = (r.querySelector('.q-brand')?.value || r.children[1]?.value || '').trim();
+        const dv = (r.querySelector('.q-dv')?.value || r.children[2]?.value || '').trim() || (isVi ? 'Cái' : 'Nos');
+        const sl = +(r.querySelector('.q-sl')?.value || r.children[3]?.value || 0);
+        const dg = +(r.querySelector('.q-dg')?.value || r.children[4]?.value || 0);
+        if (ten) items.push({ ten, brand, dv, sl, dg, tt: sl * dg });
       }
     }
     if (!items.length) { al(isVi ? 'Thêm ít nhất 1 thiết bị vào danh sách!' : 'Please add at least 1 item to the list!', 'er'); return; }
     const total = items.reduce((s, x) => s + x.tt, 0);
-    const quote = {
-      id: Date.now(),
-      code: 'QU-' + Math.floor(1000 + Math.random() * 9000),
-      kh: kh,
-      dt: v('qu-dt') || '-',
-      dc: v('qu-dc') || '-',
-      nlbg: v('qu-nlbg') || '-',
-      ngay: v('qu-ngay') || td(),
-      hl: v('qu-hl') || 7,
-      items: items,
-      total: total,
-      type: 'ups'
-    };
-    DB.add('quoteups', quote);
-    al(isVi ? '✅ Đã lưu báo giá thiết bị!' : '✅ Device quotation saved successfully!');
+
+    let list = DB.g('quoteups') || [];
+    let isUpdate = false;
+    let quoteCode = '';
+
+    if (currentEditingQuoteUPSId && !asNewCopy) {
+      // Chế độ sửa: Cập nhật đè lên báo giá đang chỉnh sửa
+      const existIdx = list.findIndex(r => r.id == currentEditingQuoteUPSId);
+      if (existIdx >= 0) {
+        quoteCode = list[existIdx].code || ('QU-' + Math.floor(1000 + Math.random() * 9000));
+        list[existIdx] = {
+          ...list[existIdx],
+          kh: kh,
+          dt: v('qu-dt') || '-',
+          dc: v('qu-dc') || '-',
+          nlbg: v('qu-nlbg') || '-',
+          ngay: v('qu-ngay') || td(),
+          hl: +(v('qu-hl') || 7),
+          items: items,
+          rows: items,
+          total: total,
+          updatedAt: new Date().toISOString()
+        };
+        isUpdate = true;
+      }
+    }
+
+    if (!isUpdate) {
+      // Chế độ tạo mới hoặc Lưu thành bản copy mới độc lập
+      quoteCode = 'QU-' + Math.floor(1000 + Math.random() * 9000);
+      const newQuote = {
+        id: Date.now(),
+        code: quoteCode,
+        kh: kh,
+        dt: v('qu-dt') || '-',
+        dc: v('qu-dc') || '-',
+        nlbg: v('qu-nlbg') || '-',
+        ngay: v('qu-ngay') || td(),
+        hl: +(v('qu-hl') || 7),
+        items: items,
+        rows: items,
+        total: total,
+        type: 'ups',
+        createdAt: new Date().toISOString()
+      };
+      list.unshift(newQuote);
+      currentEditingQuoteUPSId = newQuote.id;
+    }
+
+    DB.s('quoteups', list);
+    al(isVi ? `✅ Đã ${isUpdate ? 'cập nhật' : 'lưu'} báo giá ${quoteCode} (${fn(total)} ₫)!` : `✅ Successfully ${isUpdate ? 'updated' : 'saved'} quote ${quoteCode} (${fn(total)} ₫)!`);
+
+    // Cập nhật status badge
+    const badge = document.getElementById('qu-mode-badge');
+    if (badge) {
+      badge.style.display = 'block';
+      badge.style.background = '#f0fdf4';
+      badge.style.color = '#15803d';
+      badge.style.border = '1px solid #bbf7d0';
+      badge.innerHTML = `✅ <b>${isVi ? 'Đã lưu' : 'Saved'}: ${quoteCode} - ${kh}</b> (${fn(total)} ₫)`;
+    }
+
     rQuUPS();
+    populateOldQuoteSelectUPS();
   }
+}
+
+function copyQuoteUPS(id) {
+  const isVi = currentLang === 'vi';
+  const list = DB.g('quoteups') || [];
+  const q = list.find(r => r.id == id);
+  if (!q) return;
+
+  // 1. Nạp thông tin chung sang form
+  const khInput = document.getElementById('qu-kh');
+  if (khInput) khInput.value = q.kh || '';
+  const dtInput = document.getElementById('qu-dt');
+  if (dtInput) dtInput.value = (q.dt && q.dt !== '-') ? q.dt : '';
+  const dcInput = document.getElementById('qu-dc');
+  if (dcInput) dcInput.value = (q.dc && q.dc !== '-') ? q.dc : '';
+  const nlbgInput = document.getElementById('qu-nlbg');
+  if (nlbgInput) nlbgInput.value = (q.nlbg && q.nlbg !== '-') ? q.nlbg : '';
+  const ngayInput = document.getElementById('qu-ngay');
+  if (ngayInput) ngayInput.value = td(); // Báo giá copy nhận ngày hôm nay
+  const hlInput = document.getElementById('qu-hl');
+  if (hlInput) hlInput.value = q.hl || 7;
+
+  // 2. Nạp danh sách thiết bị
+  const container = document.getElementById('qu-items');
+  if (container) {
+    container.innerHTML = '';
+    const items = q.items || q.rows || [];
+    if (items.length > 0) {
+      items.forEach(it => {
+        addQRow('qu-items', {
+          ten: it.ten || '',
+          brand: it.brand || '',
+          dv: it.dv || '',
+          sl: it.sl || 1,
+          dg: it.dg || 0
+        });
+      });
+    } else {
+      addQRow('qu-items');
+    }
+  }
+
+  calcQ('qu-items');
+
+  // Chế độ COPY: currentEditingQuoteUPSId = null (khi bấm lưu sẽ tạo bản ghi mới với mã số mới)
+  currentEditingQuoteUPSId = null;
+
+  // 3. Hiển thị badge thông báo
+  const badge = document.getElementById('qu-mode-badge');
+  if (badge) {
+    badge.style.display = 'block';
+    badge.style.background = '#ecfdf5';
+    badge.style.color = '#047857';
+    badge.style.border = '1px solid #a7f3d0';
+    badge.innerHTML = `📋 <b>${isVi ? 'Đang Copy từ' : 'Copied from'}: ${q.code || q.id} - ${q.kh}</b> (${isVi ? 'Bạn có thể chỉnh sửa giá/số lượng/thiết bị rồi bấm Lưu Báo Giá để tạo báo giá mới' : 'Edit prices/items and click Save to create new quote'})`;
+  }
+
+  const sel = document.getElementById('qu-history-select');
+  if (sel) sel.value = q.id;
+
+  const formEl = document.getElementById('s-baogiaups');
+  if (formEl) formEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  al(isVi ? `📋 Đã sao chép báo giá "${q.code || q.id} - ${q.kh}"! Hãy sửa thông tin/giá rồi bấm Lưu.` : `📋 Copied quote "${q.code || q.id} - ${q.kh}"! You can now edit and save.`);
+}
+
+function loadQuoteUPS(id) {
+  const isVi = currentLang === 'vi';
+  const list = DB.g('quoteups') || [];
+  const q = list.find(r => r.id == id);
+  if (!q) return;
+
+  const khInput = document.getElementById('qu-kh');
+  if (khInput) khInput.value = q.kh || '';
+  const dtInput = document.getElementById('qu-dt');
+  if (dtInput) dtInput.value = (q.dt && q.dt !== '-') ? q.dt : '';
+  const dcInput = document.getElementById('qu-dc');
+  if (dcInput) dcInput.value = (q.dc && q.dc !== '-') ? q.dc : '';
+  const nlbgInput = document.getElementById('qu-nlbg');
+  if (nlbgInput) nlbgInput.value = (q.nlbg && q.nlbg !== '-') ? q.nlbg : '';
+  const ngayInput = document.getElementById('qu-ngay');
+  if (ngayInput) ngayInput.value = q.ngay || td();
+  const hlInput = document.getElementById('qu-hl');
+  if (hlInput) hlInput.value = q.hl || 7;
+
+  const container = document.getElementById('qu-items');
+  if (container) {
+    container.innerHTML = '';
+    const items = q.items || q.rows || [];
+    if (items.length > 0) {
+      items.forEach(it => {
+        addQRow('qu-items', {
+          ten: it.ten || '',
+          brand: it.brand || '',
+          dv: it.dv || '',
+          sl: it.sl || 1,
+          dg: it.dg || 0
+        });
+      });
+    } else {
+      addQRow('qu-items');
+    }
+  }
+
+  calcQ('qu-items');
+
+  // Chế độ SỬA ĐÈ: Gán ID cũ
+  currentEditingQuoteUPSId = q.id;
+
+  const badge = document.getElementById('qu-mode-badge');
+  if (badge) {
+    badge.style.display = 'block';
+    badge.style.background = '#eff6ff';
+    badge.style.color = '#1d4ed8';
+    badge.style.border = '1px solid #bfdbfe';
+    badge.innerHTML = `✏️ <b>${isVi ? 'Đang sửa đè' : 'Editing'}: ${q.code || q.id} - ${q.kh}</b> (${isVi ? 'Bấm Lưu để ghi đè, hoặc bấm "Lưu Thành Bản Mới" để tạo bản copy mới' : 'Save will overwrite this quote, or click "Save As New" to duplicate'})`;
+  }
+
+  const sel = document.getElementById('qu-history-select');
+  if (sel) sel.value = q.id;
+
+  const formEl = document.getElementById('s-baogiaups');
+  if (formEl) formEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  al(isVi ? `✏️ Đã mở báo giá "${q.code || q.id} - ${q.kh}" để chỉnh sửa!` : `✏️ Loaded quote "${q.code || q.id} - ${q.kh}" for editing!`);
+}
+
+function resetQuoteUPS() {
+  currentEditingQuoteUPSId = null;
+  document.getElementById('qu-kh').value = '';
+  document.getElementById('qu-dt').value = '';
+  document.getElementById('qu-dc').value = '';
+  document.getElementById('qu-ngay').value = td();
+  document.getElementById('qu-hl').value = 7;
+  const c = document.getElementById('qu-items');
+  if (c) {
+    c.innerHTML = '';
+    addQRow('qu-items');
+  }
+  calcQ('qu-items');
+  const badge = document.getElementById('qu-mode-badge');
+  if (badge) badge.style.display = 'none';
+  const sel = document.getElementById('qu-history-select');
+  if (sel) sel.value = '';
+  const isVi = currentLang === 'vi';
+  al(isVi ? '🔄 Đã làm mới form tạo báo giá!' : '🔄 Reset quotation form!');
+}
+
+function populateOldQuoteSelectUPS() {
+  const sel = document.getElementById('qu-history-select');
+  if (!sel) return;
+  const isVi = currentLang === 'vi';
+  const list = DB.g('quoteups') || [];
+  sel.innerHTML = `<option value="">-- ${isVi ? 'Chọn báo giá cũ để Copy / Sửa' : 'Select previous quote to Copy / Edit'} --</option>`;
+  list.forEach(q => {
+    const opt = document.createElement('option');
+    opt.value = q.id;
+    opt.textContent = `📄 ${q.code || q.id} - ${q.kh} (${fn(q.total)} ₫) [${fd(q.ngay)}]`;
+    if (currentEditingQuoteUPSId && q.id == currentEditingQuoteUPSId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function handleSelectOldQuoteUPS(val) {
+  if (!val) return;
+  copyQuoteUPS(val);
 }
 
 function printQuote(type) {
@@ -2872,23 +3163,32 @@ function printQuote(type) {
     const container = document.getElementById('qu-items');
     if (container) {
       for (let r of container.children) {
-        const ten = (r.children[0]?.value || '').trim();
-        const dv = (r.children[1]?.value || '').trim() || (isVi ? 'Cái' : 'Nos');
-        const sl = +(r.children[2]?.value || 0);
-        const dg = +(r.children[3]?.value || 0);
-        if (ten) items.push({ ten, dv, sl, dg, tt: sl * dg });
+        const ten = (r.querySelector('.q-ten')?.value || r.children[0]?.value || '').trim();
+        const brand = (r.querySelector('.q-brand')?.value || r.children[1]?.value || '').trim();
+        const dv = (r.querySelector('.q-dv')?.value || r.children[2]?.value || '').trim() || (isVi ? 'Cái' : 'Nos');
+        const sl = +(r.querySelector('.q-sl')?.value || r.children[3]?.value || 0);
+        const dg = +(r.querySelector('.q-dg')?.value || r.children[4]?.value || 0);
+        if (ten) items.push({ ten, brand, dv, sl, dg, tt: sl * dg });
       }
     }
     if (!items.length) { al(isVi ? 'Chưa có thiết bị nào để in!' : 'No items to print!', 'er'); return; }
     const total = items.reduce((s, x) => s + x.tt, 0);
-    const rows = items.map(r => `<tr><td>${r.ten}</td><td style="text-align:center">${r.dv}</td><td style="text-align:center">${r.sl}</td><td style="text-align:right">${fn(r.dg)}</td><td style="text-align:right;font-weight:600">${fn(r.tt)}</td></tr>`).join('');
+    const rows = items.map((r, i) => `<tr>
+      <td style="text-align:center">${i + 1}</td>
+      <td><b>${r.ten}</b></td>
+      <td style="text-align:center">${r.brand || '-'}</td>
+      <td style="text-align:center">${r.dv}</td>
+      <td style="text-align:center">${r.sl}</td>
+      <td style="text-align:right">${fn(r.dg)} ₫</td>
+      <td style="text-align:right;font-weight:600">${fn(r.tt)} ₫</td>
+    </tr>`).join('');
     const html = `<html><head><meta charset="UTF-8"><title>${isVi ? 'Báo Giá Thiết Bị' : 'Device Quotation'}</title>
-    <style>body{font-family:'Segoe UI',sans-serif;padding:30px;color:#1e293b}h2{color:#1d4ed8}table{width:100%;border-collapse:collapse;margin-top:16px}th{background:#f1f5f9;padding:8px;font-size:13px;text-align:left}td{padding:8px;border-bottom:1px solid #e2e8f0;font-size:13px}.total{font-size:18px;font-weight:700;color:#16a34a;text-align:right;margin-top:10px;padding:10px 0}</style></head>
+    <style>body{font-family:'Segoe UI',sans-serif;padding:30px;color:#1e293b}h2{color:#1d4ed8}table{width:100%;border-collapse:collapse;margin-top:16px}th{background:#f1f5f9;padding:8px;font-size:13px;border:1px solid #cbd5e1;text-align:left}td{padding:8px;border-bottom:1px solid #e2e8f0;font-size:13px}.total{font-size:18px;font-weight:700;color:#16a34a;text-align:right;margin-top:10px;padding:10px 0}</style></head>
     <body><h2>📄 ${isVi ? 'BÁO GIÁ THIẾT BỊ' : 'DEVICE QUOTATION'}</h2>
     <p><b>${isVi ? 'Khách hàng' : 'Customer'}:</b> ${kh} &nbsp;|&nbsp; <b>${isVi ? 'ĐT' : 'Phone'}:</b> ${dt}</p>
     <p><b>${isVi ? 'Địa chỉ' : 'Address'}:</b> ${dc}</p>
     <p><b>${isVi ? 'Ngày' : 'Date'}:</b> ${fd(ngay)} &nbsp;|&nbsp; <b>${isVi ? 'Hiệu lực' : 'Validity'}:</b> ${hl} ${isVi ? 'ngày' : 'days'} &nbsp;|&nbsp; <b>${isVi ? 'Người lập' : 'Prepared by'}:</b> ${nlbg}</p>
-    <table><thead><tr><th>${isVi ? 'Hạng Mục / Thiết Bị' : 'Item Description / Equipment'}</th><th style="text-align:center">${isVi ? 'ĐVT' : 'Unit'}</th><th style="text-align:center">${isVi ? 'SL' : 'Qty'}</th><th style="text-align:right">${isVi ? 'Đơn Giá' : 'Unit Price'}</th><th style="text-align:right">${isVi ? 'Thành Tiền' : 'Subtotal'}</th></tr></thead><tbody>${rows}</tbody></table>
+    <table><thead><tr><th style="text-align:center">#</th><th>${isVi ? 'Hạng Mục / Thiết Bị' : 'Item Description / Equipment'}</th><th style="text-align:center">Brand</th><th style="text-align:center">${isVi ? 'ĐVT' : 'Unit'}</th><th style="text-align:center">${isVi ? 'SL' : 'Qty'}</th><th style="text-align:right">${isVi ? 'Đơn Giá' : 'Unit Price'}</th><th style="text-align:right">${isVi ? 'Thành Tiền' : 'Subtotal'}</th></tr></thead><tbody>${rows}</tbody></table>
     <div class="total">${isVi ? 'TỔNG CỘNG' : 'TOTAL'}: ${fn(total)} ₫</div>
     <p style="font-size:12px;color:#64748b;margin-top:20px">* ${isVi ? 'Báo giá có hiệu lực ' + hl + ' ngày kể từ ngày lập. Giá chưa bao gồm VAT.' : 'Quotation valid for ' + hl + ' days from issue date. Price excludes VAT.'}</p>
     </body></html>`;
@@ -2901,12 +3201,21 @@ function rQuUPS() {
   const list = DB.g('quoteups') || [];
   const el = document.getElementById('t-quups');
   if (!el) return;
+
+  // Cập nhật số lượng báo giá
+  const badge = document.getElementById('qu-count-badge');
+  if (badge) badge.textContent = `${list.length} ${isVi ? 'báo giá' : 'quotes'}`;
+
+  // Cập nhật dropdown chọn báo giá cũ
+  populateOldQuoteSelectUPS();
+
   if (!list.length) {
     el.innerHTML = `<div style="text-align:center;color:#94a3b8;padding:24px">${isVi ? 'Chưa có báo giá thiết bị nào' : 'No device quotations recorded yet'}</div>`;
     return;
   }
+
   el.innerHTML = tbl(
-    ['#', isVi ? 'Mã BG' : 'Quote ID', isVi ? 'Khách Hàng' : 'Customer', isVi ? 'Điện Thoại' : 'Phone', isVi ? 'Ngày Lập' : 'Date', isVi ? 'Tổng Tiền' : 'Total Amount', isVi ? 'Người Lập' : 'Prepared By', ''],
+    ['#', isVi ? 'Mã BG' : 'Quote ID', isVi ? 'Khách Hàng' : 'Customer', isVi ? 'Điện Thoại' : 'Phone', isVi ? 'Ngày Lập' : 'Date', isVi ? 'Tổng Tiền' : 'Total Amount', isVi ? 'Người Lập' : 'Prepared By', isVi ? 'Thao Tác' : 'Actions'],
     list.map((r, i) => [
       i + 1,
       `<b>${r.code || r.id}</b>`,
@@ -2915,26 +3224,40 @@ function rQuUPS() {
       fd(r.ngay),
       `<b style="color:var(--bl)">${fn(r.total)} ₫</b>`,
       r.nlbg || '-',
-      `<button class="btn b-xs b-bl" onclick="viewQuote('ups', ${r.id})">${isVi ? '🖨️ In' : '🖨️ Print'}</button>
-       <button class="btn b-xs b-rd" onclick="del('quoteups', ${r.id}, rQuUPS)">🗑</button>`
+      `<div style="display:flex;gap:4px;justify-content:center;white-space:nowrap">
+        <button class="btn b-xs b-gn" onclick="copyQuoteUPS(${r.id})" title="${isVi ? 'Copy báo giá này để tạo báo giá mới' : 'Copy this quote to create new quote'}">📋 Copy</button>
+        <button class="btn b-xs b-bl" onclick="loadQuoteUPS(${r.id})" title="${isVi ? 'Sửa báo giá này' : 'Edit this quote'}">✏️ ${isVi ? 'Sửa' : 'Edit'}</button>
+        <button class="btn b-xs b-out" onclick="viewQuote('ups', ${r.id})" title="${isVi ? 'In / Xuất PDF' : 'Print / PDF'}">🖨️</button>
+        <button class="btn b-xs b-rd" onclick="del('quoteups', ${r.id}, rQuUPS)" title="${isVi ? 'Xóa' : 'Delete'}">🗑</button>
+       </div>`
     ])
   );
 }
 
 function viewQuote(type, id) {
+  const isVi = currentLang === 'vi';
   if (type !== 'solar') {
     // Thiết bị chung
     const d = DB.g('quoteups').find(r => r.id == id); if (!d) return;
-    const rows = d.rows.map(r => `<tr><td>${r.ten}</td><td style="text-align:center">${r.dv}</td><td style="text-align:center">${r.sl}</td><td style="text-align:right">${fn(r.dg)}</td><td style="text-align:right;font-weight:600">${fn(r.sl * r.dg)}</td></tr>`).join('');
-    const html = `<html><head><meta charset="UTF-8"><title>Báo Giá Thiết Bị</title>
-    <style>body{font-family:'Segoe UI',sans-serif;padding:30px;color:#1e293b}h2{color:#1d4ed8}table{width:100%;border-collapse:collapse;margin-top:16px}th{background:#f1f5f9;padding:8px;font-size:13px}td{padding:8px;border-bottom:1px solid #e2e8f0;font-size:13px}.total{font-size:18px;font-weight:700;color:#16a34a;text-align:right;margin-top:10px;padding:10px 0}</style></head>
-    <body><h2>📄 BÁO GIÁ THIẾT BỊ</h2>
-    <p><b>Khách hàng:</b> ${d.kh} &nbsp;|&nbsp; <b>ĐT:</b> ${d.dt||'-'}</p>
-    <p><b>Địa chỉ:</b> ${d.dc||'-'}</p>
-    <p><b>Ngày:</b> ${fd(d.ngay)} &nbsp;|&nbsp; <b>Hiệu lực:</b> ${d.hl} ngày &nbsp;|&nbsp; <b>Người lập:</b> ${d.nlbg||'-'}</p>
-    <table><thead><tr><th>Hạng Mục / Thiết Bị</th><th>ĐV</th><th>SL</th><th>Đơn Giá</th><th>Thành Tiền</th></tr></thead><tbody>${rows}</tbody></table>
-    <div class="total">TỔNG: ${fn(d.total)} ₫</div>
-    <p style="font-size:12px;color:#64748b;margin-top:20px">* Báo giá có hiệu lực ${d.hl} ngày kể từ ngày lập. Giá chưa bao gồm VAT.</p>
+    const itemList = d.items || d.rows || [];
+    const rows = itemList.map((r, i) => `<tr>
+      <td style="text-align:center">${i + 1}</td>
+      <td><b>${r.ten}</b></td>
+      <td style="text-align:center">${r.brand || '-'}</td>
+      <td style="text-align:center">${r.dv}</td>
+      <td style="text-align:center">${r.sl}</td>
+      <td style="text-align:right">${fn(r.dg)} ₫</td>
+      <td style="text-align:right;font-weight:600">${fn(r.tt || (r.sl * r.dg))} ₫</td>
+    </tr>`).join('');
+    const html = `<html><head><meta charset="UTF-8"><title>${isVi ? 'Báo Giá Thiết Bị' : 'Device Quotation'}</title>
+    <style>body{font-family:'Segoe UI',sans-serif;padding:30px;color:#1e293b}h2{color:#1d4ed8}table{width:100%;border-collapse:collapse;margin-top:16px}th{background:#f1f5f9;padding:8px;font-size:13px;border:1px solid #cbd5e1;text-align:left}td{padding:8px;border-bottom:1px solid #e2e8f0;font-size:13px}.total{font-size:18px;font-weight:700;color:#16a34a;text-align:right;margin-top:10px;padding:10px 0}</style></head>
+    <body><h2>📄 ${isVi ? 'BÁO GIÁ THIẾT BỊ' : 'DEVICE QUOTATION'}</h2>
+    <p><b>${isVi ? 'Khách hàng' : 'Customer'}:</b> ${d.kh} &nbsp;|&nbsp; <b>${isVi ? 'ĐT' : 'Phone'}:</b> ${d.dt||'-'}</p>
+    <p><b>${isVi ? 'Địa chỉ' : 'Address'}:</b> ${d.dc||'-'}</p>
+    <p><b>${isVi ? 'Ngày' : 'Date'}:</b> ${fd(d.ngay)} &nbsp;|&nbsp; <b>${isVi ? 'Hiệu lực' : 'Validity'}:</b> ${d.hl} ${isVi ? 'ngày' : 'days'} &nbsp;|&nbsp; <b>${isVi ? 'Người lập' : 'Prepared by'}:</b> ${d.nlbg||'-'}</p>
+    <table><thead><tr><th style="text-align:center">#</th><th>${isVi ? 'Hạng Mục / Thiết Bị' : 'Item Description / Equipment'}</th><th style="text-align:center">Brand</th><th style="text-align:center">${isVi ? 'ĐVT' : 'Unit'}</th><th style="text-align:center">${isVi ? 'SL' : 'Qty'}</th><th style="text-align:right">${isVi ? 'Đơn Giá' : 'Unit Price'}</th><th style="text-align:right">${isVi ? 'Thành Tiền' : 'Subtotal'}</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="total">${isVi ? 'TỔNG' : 'TOTAL'}: ${fn(d.total)} ₫</div>
+    <p style="font-size:12px;color:#64748b;margin-top:20px">* ${isVi ? 'Báo giá có hiệu lực ' + d.hl + ' ngày kể từ ngày lập. Giá chưa bao gồm VAT.' : 'Quotation valid for ' + d.hl + ' days from issue date. Price excludes VAT.'}</p>
     </body></html>`;
     const w = window.open('', '_blank'); w.document.write(html); w.document.close(); w.print();
     return;
@@ -5086,7 +5409,31 @@ const DICT = {
     bulk_paste_ph: 'Paste (Ctrl+V) tabular data from Excel / Google Sheets here...\nExample:\nUPS APC BX1200\tAPC-BX1200\tSN001, SN002\tUPS\t2\t830000\t1250000\tAPC VN\t24\tBrand new seal\nSolar Longi 450W\tLR4-72HPH\tLG01, LG02\tSolar Panel\t10\t1660000\t2200000\tLongi\t120\tGrade A',
     btn_preview_bulk: '🔍 Analyze & Preview',
     btn_clear_bulk: '✕ Clear Paste Area',
-    btn_confirm_bulk: '🚀 Confirm Bulk Import to Inventory (0 Items)'
+    btn_confirm_bulk: '🚀 Confirm Bulk Import to Inventory (0 Items)',
+    qu_title: '📄 Device Quotation',
+    lbl_old_quote_select: '📋 Copy / Edit Previous Quote:',
+    opt_old_quote_select: '-- Select previous quote to Copy / Edit --',
+    btn_copy_edit: '📋 Copy & Edit',
+    btn_save_as_new: '📋 Save As New Quote',
+    btn_new_quote: '🔄 New Quote',
+    qu_customer: 'Customer / Company *',
+    qu_phone: 'Phone Number',
+    qu_address: 'Address',
+    qu_creator: 'Prepared By',
+    qu_date: 'Date',
+    qu_validity: 'Validity (days)',
+    qu_items_label: '📦 Equipment / Item List',
+    qu_add_row: '+ Add Item Row',
+    qu_col_desc: 'Item Description / Equipment',
+    qu_col_brand: 'Brand',
+    qu_col_unit: 'Unit',
+    qu_col_qty: 'Qty',
+    qu_col_price: 'Unit Price (₫)',
+    qu_col_total: 'Subtotal',
+    qu_total_label: 'Total Quotation',
+    qu_save_btn: '💾 Save Quotation',
+    qu_print_btn: '🖨 Print / PDF',
+    qu_list_title: '📋 Device Quotations List'
   },
   vi: {
     nhap_title: '➕ Nhập Hàng & Phân Bổ Lợi Nhuận',
@@ -5147,7 +5494,31 @@ const DICT = {
     bulk_paste_ph: 'Dán (Ctrl+V) bảng dữ liệu từ Excel / Google Sheets vào đây...\nVí dụ:\nUPS APC BX1200\tAPC-BX1200\tSN001, SN002\tUPS\t2\t830000\t1250000\tAPC VN\t24\tHàng nguyên seal\nPin Longi 450W\tLR4-72HPH\tLG01, LG02\tSolar Panel\t10\t1660000\t2200000\tLongi\t120\tLoại A',
     btn_preview_bulk: '🔍 Phân Tích & Xem Trước (Preview)',
     btn_clear_bulk: '✕ Xóa Khung Dán',
-    btn_confirm_bulk: '🚀 Xác Nhận Import Hàng Loạt Vào Kho (0 Món)'
+    btn_confirm_bulk: '🚀 Xác Nhận Import Hàng Loạt Vào Kho (0 Món)',
+    qu_title: '📄 Tạo Báo Giá Thiết Bị',
+    lbl_old_quote_select: '📋 Copy / Sửa Báo Giá Cũ:',
+    opt_old_quote_select: '-- Chọn báo giá cũ để Copy / Sửa --',
+    btn_copy_edit: '📋 Copy & Sửa',
+    btn_save_as_new: '📋 Lưu Thành Bản Mới (Copy)',
+    btn_new_quote: '🔄 Tạo Mới',
+    qu_customer: 'Khách Hàng / Công Ty *',
+    qu_phone: 'Điện Thoại',
+    qu_address: 'Địa Chỉ',
+    qu_creator: 'Người Lập BG',
+    qu_date: 'Ngày',
+    qu_validity: 'Hiệu Lực (ngày)',
+    qu_items_label: '📦 Danh sách thiết bị',
+    qu_add_row: '+ Thêm dòng',
+    qu_col_desc: 'Hạng Mục / Thiết Bị',
+    qu_col_brand: 'Brand',
+    qu_col_unit: 'ĐVT',
+    qu_col_qty: 'SL',
+    qu_col_price: 'Đơn Giá (₫)',
+    qu_col_total: 'Thành Tiền',
+    qu_total_label: 'Tổng Báo Giá',
+    qu_save_btn: '💾 Lưu Báo Giá',
+    qu_print_btn: '🖨 In / PDF',
+    qu_list_title: '📋 Danh Sách Báo Giá Thiết Bị'
   }
 };
 
@@ -5157,6 +5528,10 @@ const BILINGUAL_PAIRS = [
   ['Xóa sạch dữ liệu', 'Clear All Data'],
   ['09xxxxxxx', '09xxxxxxx'],
   ['0xxxxxxx', '09xx xxx xxx'],
+  ['Hãng / Brand', 'Brand'],
+  ['Hãng', 'Brand'],
+  ['Brand / Hãng', 'Brand'],
+  ['⭐ Mẫu 6kW TNI (Sept.17)', '⭐ 6kW TNI Standard (Sept.17)'],
   ['% Cty:', '% HO:'],
   ['Đơn Vị Tiền Tệ:', 'Currency:'],
   ['📄 Tạo Báo Giá Thiết Bị', '📄 Create Device Quotation'],
@@ -5678,7 +6053,11 @@ function renderMyQuotes(){
   const uHeaders = isVi ? ['#','Khách Hàng','Sản Phẩm','Tổng Tiền','Ngày',''] : ['#','Customer','Product','Total','Date','Action'];
   document.getElementById('mq-ups').innerHTML=ups.length?tbl(uHeaders,
     ups.map((r,i)=>[i+1,`<b>${r.kh||'-'}</b>`,r.spN||'-',`<b>${fn(r.total||0)}₫</b>`,fd(r.date),
-      `<button class="btn b-xs b-bl" onclick="go('baogiaups');viewQuote('ups','${r.id}')">${isVi?'📄 Mở':'📄 Open'}</button>`
+      `<div style="display:flex;gap:4px;white-space:nowrap">
+        <button class="btn b-xs b-gn" onclick="go('baogiaups');copyQuoteUPS('${r.id}')">📋 Copy</button>
+        <button class="btn b-xs b-bl" onclick="go('baogiaups');loadQuoteUPS('${r.id}')">✏️ ${isVi?'Sửa':'Edit'}</button>
+        <button class="btn b-xs b-out" onclick="go('baogiaups');viewQuote('ups','${r.id}')">🖨️</button>
+      </div>`
     ])):`<div style="color:#94a3b8;padding:20px;text-align:center">${isVi?'Chưa có báo giá UPS':'No UPS quotes yet'}${q?' ('+q+')':''}</div>`;
 }
 
