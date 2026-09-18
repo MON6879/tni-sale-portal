@@ -1658,3 +1658,19 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 > 5. **Tự Động Đồng Bộ Serial Ký Gởi Vào Sổ Kho & Router Khởi Tạo Tự Động**:
 >    - Khi nhân viên lưu phiếu ký gởi hàng cho trưởng thôn hoặc đại lý, hệ thống BẮT BUỘC tự động tách dải số Serial và cập nhật trạng thái `"Ký Gởi Trưởng Thôn / Điểm Bán"` vào bảng Tồn Kho Serial (`serial_inventory`).
 >    - Khi người dùng truy cập qua URL param `?tab=thucthi&staff=...`, hệ thống BẮT BUỘC tự động chuyển hướng vào tab Thực Thi và chọn đúng nhân viên phụ trách mà không cần thao tác bấm chuột thủ công.
+
+# ⛽ POST-MORTEM RULE — 18/09/2026: BỌC THÉP ĐỒNG BỘ CỘT V & Y TRÊN TAB REQUEST PARTNER AUTO (REFUEL) (RULE PM-45)
+
+> ### Nguồn gốc: **Khắc Phục Sự Cố Ô Màu Cam Cột V 'Request Partner Auto' (18/09/2026)**
+> - **Root Cause**:
+>   1. Khi trạm cạn dầu (`S=1`), nếu Cột Y (`Date Partner refuel`) vô tình chứa chuỗi ghi chú rác hoặc ngày cũ/tương lai (ví dụ: `14/02/2027 < + > 91` trên dòng 70 `TNI0351_1`), logic cũ trong `runPartnerAutoRefuelUpdate` (Tác vụ 1) vội vàng gọi `clearContent()` xóa Cột V và W, đồng thời đánh dấu `clearedInThisRun = true` khiến Tác vụ 2 bỏ qua dòng này.
+>   2. Hậu quả: Cột V bị xóa rỗng trong khi Cột S vẫn là `1`, khiến Conditional Formatting trong Google Sheets lập tức bôi cam ô V, tạo vòng lặp xóa - bôi cam và khiến AUDITOR-9.1 liên tục phát cảnh báo mất đồng bộ đỏ!
+>
+> ### 🔴 RULE PM-45: 3 NGUYÊN TẮC BỌC THÉP CHO BẢNG REQUEST PARTNER AUTO
+> 1. **Bảo Vệ Cột V và W Khi Trạm Đang Cạn Dầu (`S=1`)**:
+>    - TUYỆT ĐỐI KHÔNG xóa dữ liệu Cột V (Date request) và Cột W (Littel request) của bất kỳ trạm nào đang có trạng thái `S === 1` (hoặc `"1"`).
+>    - Chỉ cho phép xóa Cột V và W khi và chỉ khi: (1) Cột Y có giá trị khác `"-"` VÀ (2) Trạm đã thực sự hoàn thành chu kỳ đổ dầu (`S !== "1"`, tức lượng dầu trong bồn đã được bổ sung và cờ S tắt về 0).
+> 2. **Tự Động Làm Sạch Cột Y Khi Phát Hiện Chuỗi Rác / Lệch Trạng Thái**:
+>    - Nếu trạm đang ở trạng thái cần dầu (`S === 1`) mà Cột Y lại chứa giá trị khác `"-"` (ghi chú nhầm, ngày cũ hoặc ngày tương lai), hệ thống BẮT BUỘC phải tự động ghi đè reset Cột Y về `"-"` (`sheet.getRange(sheetRow, 25).setValue("-")`) để chuẩn hóa trạng thái chờ đối tác đổ dầu.
+> 3. **Hậu Kiểm Zero-Orange Của AUDITOR-9.1 Sau Mỗi Lượt Cập Nhật**:
+>    - Sau khi hoàn thành Tác vụ 1 và Tác vụ 2, AUDITOR-9.1 quét lại toàn bộ Cột V (row 4 đến row 300). Nếu còn bất kỳ ô nào thuộc diện màu cam (`isManual` hoặc `isCF`), hệ thống gửi cảnh báo kèm danh sách trạm vi phạm; nếu bằng 0, ghi nhận trạng thái PASS hoàn hảo.
