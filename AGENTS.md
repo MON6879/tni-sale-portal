@@ -276,6 +276,22 @@
 
 ---
 
+
+# 🛡️ STRICT RULE: BẢO ĐẢM HIỂN THỊ EMOJI BẰNG JS UNICODE ESCAPES TRÊN APPS SCRIPT & CƠ CHẾ XÓA TIN CŨ BỌC THÉP TRƯỚC KHI GỬI (MANDATORY JS UNICODE ESCAPES FOR GAS EMOJIS & DELETION-FIRST DISPATCH - RULE PM-46)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (JS UNICODE ESCAPE & CLEANUP-FIRST POLICY)**:
+> 1. **Bảo Đảm Hiển Thị 100% Emoji Bằng JavaScript Unicode Escapes (Mandatory Unicode Escapes in GAS)**:
+>    - Khi viết code Google Apps Script (`.gs`) chứa các emoji (như `🟠` `\uD83D\uDFE0`, `📊` `\uD83D\uDCCA`, `📅` `\uD83D\uDCC5`, `🛡️` `\uD83D\uDEE1\uFE0F`, `🚩` `\uD83D\uDEA9`, `🔹` `\uD83D\uDD39`, `👤` `\uD83D\uDC64`, `🚨` `\uD83D\uDEA8`, `📑` `\uD83D\uDCD1`, `•` `\u2022`, `🏆` `\uD83C\uDFC6`), BẮT BUỘC phải dùng định dạng chuỗi escape chuẩn của JavaScript (`\uXXXX` hoặc surrogate pairs `\uD83D\uXXXX`).
+>    - **TUYỆT ĐỐI CẤM** gõ trực tiếp ký tự emoji 4-byte vào code nếu công cụ ghi file trên môi trường Windows không đảm bảo encoding UTF-8, vì sẽ biến ký tự thành dấu chấm hỏi `?` hoặc `??` làm mất thẩm mỹ và mất ký hiệu nhận diện trực quan của người dùng!
+> 2. **Kỷ Luật "Xóa Tin Cũ Trước Khi Gửi Tin Mới" ("Tin Nào Xóa Tin Nấy" - Rule PM-27)**:
+>    - Trước MỌI lần gửi báo cáo định kỳ (như Team Progress Report lúc 11:46 MMT & 17:06 MMT), script BẮT BUỘC phải đọc danh sách Message IDs đã gửi ở phiên trước từ `ScriptProperties` (key `TPR_MSG_IDS_<groupKey>`) và gọi `deleteMessage` qua Telegram Bot API để dọn dẹp sạch sẽ toàn bộ tin cũ của phiên trước TRƯỚC KHI gửi các tin mới.
+>    - Sau khi gửi xong, BẮT BUỘC phải lưu lại mảng Message IDs mới vào `ScriptProperties` để làm cơ sở dọn dẹp cho phiên tiếp theo.
+>    - Áp dụng cơ chế bọc lỗi `muteHttpExceptions: true` và discard an toàn khi Telegram từ chối xóa (quá giới hạn 48h hoặc đã bị xóa trước đó) theo đúng chuẩn Rule PM-27.
+> 3. **Kiểm Tra Định Dạng Date Object Từ Google Sheets (Mandatory Date Formatting)**:
+>    - Khi đọc giá trị từ các ô chứa ngày tháng (như ô `T1` của sheet `WO Close progress`), `getValues()` sẽ trả về JavaScript `Date` object. BẮT BUỘC phải kiểm tra `val instanceof Date` và định dạng bằng `Utilities.formatDate(val, "Asia/Rangoon", "dd/MM/yyyy")` — TUYỆT ĐỐI CẤM gọi `String(val)` trực tiếp vì sẽ làm hiển thị chuỗi dài loằng ngoằng kèm múi giờ gây rối mắt người dùng!
+
+---
+
 # 🎯 STRICT RULE: SỬA CÁI NÀO TÌM ĐÚNG CÁI ĐÓ ĐỂ SỬA — TIN NÀO XÓA TIN NẤY (STRICT SCOPE ISOLATION & ZERO-COLLATERAL-DAMAGE)
 
 
