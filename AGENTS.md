@@ -246,6 +246,20 @@
 
 ---
 
+# 👑 STRICT VIRTUAL ASSISTANT & AUDIO TOGGLE RULE: BỌC THÉP VIRTUAL SECRETARY & CƠ CHẾ TOGGLE NÚT LOA 2-CHIỀU (RULE PM-44)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (VIRTUAL ASSISTANT ROBUSTNESS & SPEAKER TOGGLE POLICY)**:
+> 1. **Khớp Biến DOM Bubble Tuyệt Đối (Exact Bot Bubble DOM Matching)**: Biến chứa template HTML của bot (`botHtml`) BẮT BUỘC phải khớp chính xác 100% với tham số gọi trong phương thức chèn DOM (`container.insertAdjacentHTML('beforeend', botHtml)`). TUYỆT ĐỐI CẤM dùng nhầm tên biến (`html`), gây lỗi `ReferenceError: html is not defined` làm nuốt chửng toàn bộ tin nhắn phản hồi của Bot!
+> 2. **Bọc Lưới An Toàn `try...catch` Mọi Luồng Trợ Lý (Zero Silent Exception Drop)**: Mọi phương thức điều phối và tổng hợp câu trả lời (`handleQuery`, `dispatchAndAnswer`) BẮT BUỘC phải được bọc trong khối `try...catch(err)`. Nếu có lỗi bất ngờ, hệ thống BẮT BUỘC phải gỡ bỏ typing indicator và xuất thông báo phản hồi lịch thiệp cho người dùng kèm mã lỗi, TUYỆT ĐỐI CẤM để lỗi nuốt chửng làm người dùng nhìn khung chat trống rỗng!
+> 3. **Phơi Bày Toàn Bộ Dữ Liệu Phụ Thuộc Lên `window.*` (Mandatory Global State Exposure)**: Mọi dữ liệu phân tích từ CSV/Google Sheets như `allEngineers`, `teamData`, `deptPointsMap` BẮT BUỘC phải được gán toàn cục lên `window.*` (`window.allEngineers = allEngineers;`) ngay tại thời điểm hoàn tất parse, kèm giá trị dự phòng rỗng (`[]` hoặc `{}`) và null-guards an toàn `(e.team_code || '').replace(...)`, `(e.real_name || e.nsys || 'Kỹ sư')` để loại trừ 100% rủi ro đọc thuộc tính của `undefined`.
+> 4. **Cơ Chế Bấm Lần 2 Tắt Loa Bọc Thép (2-Click Speaker Toggle & Visual Feedback)**: MỌI nút đọc báo cáo (Audio Briefing, Đọc Báo Cáo) BẮT BUỘC phải hỗ trợ chuyển đổi trạng thái 2 chiều:
+>    - **Bấm lần 1 (Kích hoạt)**: Bắt đầu đọc qua Web Speech API, chuyển nhãn nút sang `⏹️ Dừng Đọc`, đổi màu/icon sang đỏ (`#EF4444`) và gắn hiệu ứng nhấp nháy `.speaking-pulse`.
+>    - **Bấm lần 2 (Tắt loa)**: Gọi ngay `window.speechSynthesis.cancel()`, hoàn nguyên nhãn nút về `🔊 Đọc Báo Cáo` và tắt hoàn toàn tiến trình đọc.
+>    - **Khi đọc xong hoặc gặp lỗi (`utter.onend`, `utter.onerror`)**: Tự động khôi phục giao diện nút về trạng thái ban đầu (`Đọc Báo Cáo`).
+> 5. **Điều Hướng Ý Định Đa Chiều (Multi-Intent Composite Routing)**: Khi người dùng hỏi kết hợp (ví dụ: *"kiểm tra cho tôi các nhân viên nào không nên không đóng gỗ để và các nhiệm vụ T4"*), hệ thống BẮT BUỘC phải nhận diện đa ý định để trả về đồng thời: (a) Tiến độ & nhiệm vụ sâu của Đội được chỉ định (Team 4 Kawthoung + danh sách 4 kỹ sư) VÀ (b) Báo cáo đôn đốc các kỹ sư có tỷ lệ tồn đọng/quá hạn cao trên toàn mạng!
+
+---
+
 # 🎯 STRICT RULE: SỬA CÁI NÀO TÌM ĐÚNG CÁI ĐÓ ĐỂ SỬA — TIN NÀO XÓA TIN NẤY (STRICT SCOPE ISOLATION & ZERO-COLLATERAL-DAMAGE)
 
 
