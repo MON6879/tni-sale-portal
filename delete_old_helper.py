@@ -28,13 +28,13 @@ def get_old_msgids(gas_url: str, key: str) -> list[int]:
     if not key:
         return []
     import time as _time
-    for attempt in range(3):
+    for attempt in range(2):
         for u in urls:
             try:
                 resp = requests.get(
                     u,
                     params={"action": "get_msgids", "key": key},
-                    timeout=45,
+                    timeout=15,
                     allow_redirects=True
                 )
                 if resp.status_code == 200:
@@ -42,13 +42,14 @@ def get_old_msgids(gas_url: str, key: str) -> list[int]:
                     raw = data.get("msgids", [])
                     if raw:
                         return [int(x) for x in raw]
-                    # GAS trả OK nhưng rỗng → tin chưa được lưu, không cần retry
+                    return []
+                else:
+                    print(f"[delete_old] ⚠️ get_msgids({key}) HTTP {resp.status_code} at {u[:45]}...")
                     return []
             except Exception as ex:
                 print(f"[delete_old] ⚠️ get_msgids({key}) attempt {attempt+1} lỗi: {ex}")
-        if attempt < 2:
-            print(f"[delete_old] 🔄 Retry get_msgids sau 8s (attempt {attempt+2}/3)...")
-            _time.sleep(8)
+        if attempt < 1:
+            _time.sleep(3)
     return []
 
 

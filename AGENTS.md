@@ -1706,3 +1706,22 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 >    - Nếu trạm đang ở trạng thái cần dầu (`S === 1`) mà Cột Y lại chứa giá trị khác `"-"` (ghi chú nhầm, ngày cũ hoặc ngày tương lai), hệ thống BẮT BUỘC phải tự động ghi đè reset Cột Y về `"-"` (`sheet.getRange(sheetRow, 25).setValue("-")`) để chuẩn hóa trạng thái chờ đối tác đổ dầu.
 > 3. **Hậu Kiểm Zero-Orange Của AUDITOR-9.1 Sau Mỗi Lượt Cập Nhật**:
 >    - Sau khi hoàn thành Tác vụ 1 và Tác vụ 2, AUDITOR-9.1 quét lại toàn bộ Cột V (row 4 đến row 300). Nếu còn bất kỳ ô nào thuộc diện màu cam (`isManual` hoặc `isCF`), hệ thống gửi cảnh báo kèm danh sách trạm vi phạm; nếu bằng 0, ghi nhận trạng thái PASS hoàn hảo.
+
+
+# 🛡️ POST-MORTEM RULE — 18/09/2026: ASYNC-SAFE THREADPOOLEXECUTOR CHO TELETHON PURGE & FAST-FAIL HTTP TRONG HELPER (RULE PM-47)
+
+> ### Nguồn gốc: **Lỗi Event Loop Khóa Chặt Telethon & Treo 5 Phút Khi GAS Lỗi (18/09/2026)**
+> - **Root Cause**:
+>   1. 	g_delete_by_title trong 	g_utils.py là hàm đồng bộ (synchronous) gọi syncio.run(asyncio.wait_for(_run(), timeout=60)). Khi được gọi từ bên trong một async coroutine (
+un_morning(), 
+un_eod_or_update()), Python ném ngoại lệ RuntimeError: asyncio.run() cannot be called from a running event loop, khiến Telethon bị vô hiệu hóa âm thầm 100%!
+>   2. get_old_msgids trong delete_old_helper.py có timeout 45s và retry 3 lần khi nhận mã non-200 (như HTTP 404 từ Google), khiến mỗi trạm/nhóm bị treo nghẽn 5-6 phút.
+>
+> ### 🔴 RULE PM-47: 2 NGUYÊN TẮC BỌC THÉP CHO TELETHON PURGE & HELPER HTTP
+> 1. **Khóa An Toàn Async Event Loop Cho Telethon Wrapper (Async-Safe ThreadPoolExecutor)**:
+>    - Mọi hàm wrapper đồng bộ gọi Telethon coroutine (như 	g_delete_by_title) BẮT BUỘC phải kiểm tra syncio.get_running_loop().
+>    - Nếu đang nằm trong một event loop đang chạy (loop and loop.is_running()), BẮT BUỘC phải ủy quyền thực thi sang luồng phụ qua concurrent.futures.ThreadPoolExecutor(max_workers=1) để syncio.run() có event loop riêng biệt sạch sẽ.
+>    - TUYỆT ĐỐI CẤM gọi syncio.run() trực tiếp trên main thread khi loop đang chạy, tránh ném lỗi syncio.run() cannot be called from a running event loop.
+> 2. **Fast-Fail HTTP Trong Helper & Rút Ngắn Timeout**:
+>    - Khi đọc/ghi msgids qua GAS API (get_old_msgids, save_msgids), timeout tối đa <= 15 giây.
+>    - Nếu nhận mã HTTP không phải 200 (như 404, 500, 503), BẮT BUỘC ghi log cảnh báo và lập tức trả về [], TUYỆT ĐỐI CẤM lặp retry 3 lần gây nghẽn tiến trình hàng chục phút.

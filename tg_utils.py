@@ -260,8 +260,19 @@ def tg_delete_by_title(chat_id: str, title_prefix: str, search_limit: int = 300,
         return deleted
 
     try:
-        # Timeout 60s — tránh hang vô thời hạn nếu Telegram FloodWait
-        deleted = asyncio.run(asyncio.wait_for(_run(), timeout=60))
+        # Kiểm tra nếu đang chạy bên trong một asyncio event loop đã active
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+
+        if loop and loop.is_running():
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                deleted = pool.submit(lambda: asyncio.run(asyncio.wait_for(_run(), timeout=60))).result()
+        else:
+            deleted = asyncio.run(asyncio.wait_for(_run(), timeout=60))
+
         logger.info(f"[del_title] Tổng xóa {deleted} tin '{title_prefix[:40]}' tại {chat_id}")
         return deleted
     except asyncio.TimeoutError:
