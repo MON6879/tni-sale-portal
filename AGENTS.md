@@ -1547,3 +1547,25 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 >    - **Đầu Làm Ấm (Warmup)**: Toa 0 trong `train_5min.yml` luôn ping đầy đủ cả 3 tầng của phân hệ Attendance: (a) Telegram API `getWebhookInfo`, (b) Vercel Serverless `/api/attendance`, (c) Apps Script Backend `?action=ping`.
 >    - **Đầu Giám Sát (Auditor)**: Ghế `AUDITOR-9.1` (`system_auditor.py`) kiểm tra định kỳ trạng thái sống của `Attendance GAS Backend (@99 SSOT)` qua `?action=ping` và kiểm tra tính toàn vẹn dữ liệu của `Sheet CheckJoint (Attendance)` qua URL CSV gviz (`min_rows: 2`).
 
+# 📋 POST-MORTEM RULE — 18/09/2026: QUY TRÌNH COPY / NHÂN BẢN BÁO GIÁ CŨ & CHẾ ĐỘ SỬA ĐÈ BỌC THÉP (RULE PM-41)
+
+> ### Nguồn gốc: **Yêu Cầu Thêm Chức Năng Copy Báo Giá Cũ Để Sửa (18/09/2026)**
+> - **Root Cause**: Bảng quản lý Báo Giá Thiết Bị (`baogiaups`) trước đây chỉ có hai nút `🖨️ In` và `🗑 Xóa`, không có nút Copy hay Sửa. Khi nhân viên muốn làm báo giá tương tự cho một khách hàng mới hoặc chỉnh sửa giá từ một báo giá đã lập, họ phải gõ lại toàn bộ danh sách thiết bị từ đầu, gây mất thời gian và dễ sai sót đơn giá.
+>
+> ### 🔴 RULE PM-41: 3 NGUYÊN TẮC BỌC THÉP CHO QUY TRÌNH COPY / SỬA BÁO GIÁ
+> 1. **Phân Định Rõ Ràng Giữa Chế Độ Copy (Nhân Bản Mới) Và Sửa Đè (Overwrite Edit)**:
+>    - **Chế độ Copy (`copyQuoteUPS` / `copySolarQuote`)**:
+>      - BẮT BUỘC gán `currentEditingId = null` để khi bấm "Lưu Báo Giá", hệ thống tự động sinh mã số báo giá mới (`QU-xxxx` hoặc `VCM-xx-xx`) và lưu thành bản ghi mới độc lập.
+>      - TUYỆT ĐỐI CẤM ghi đè lên báo giá cũ khi người dùng chọn lệnh Copy!
+>      - Ngày lập báo giá copy BẮT BUỘC tự động đặt thành ngày hôm nay (`td()`).
+>      - Hiển thị badge trạng thái màu xanh lá: `📋 Đang Copy từ [Mã BG] - [Khách Hàng] (Sẽ lưu thành báo giá mới)`.
+>    - **Chế độ Sửa Đè (`loadQuoteUPS` / `loadSelectedQuote`)**:
+>      - Gán `currentEditingId = id` của báo giá đang chọn. Khi bấm "Lưu Báo Giá", hệ thống cập nhật đè lên bản ghi cũ có cùng ID.
+>      - Cung cấp thêm nút dự phòng `📋 Lưu Thành Bản Mới (Copy)` ngay cạnh nút lưu để người dùng có thể đổi ý và lưu thành bản ghi mới bất cứ lúc nào!
+> 2. **Nạp Đầy Đủ & Nguyên Vẹn Danh Mục Hàng Hóa & Tự Động Tính Lại Tổng Tiền**:
+>    - Khi nạp dữ liệu báo giá cũ vào form, BẮT BUỘC phải đọc linh hoạt cả hai trường `items` hoặc `rows` (`q.items || q.rows || []`) để tương thích ngược với mọi định dạng dữ liệu cũ trong `DB`.
+>    - Tái lập đầy đủ từng dòng sản phẩm với Tên thiết bị, Hãng (Brand), Đơn vị tính (ĐVT), Số lượng, Đơn giá và gọi ngay hàm tính tổng (`calcQ` / `calcSolarTable`) để hiển thị thành tiền chính xác 100%.
+> 3. **Cung Cấp Kép Thao Tác: Trên Từng Hàng Bảng Lịch Sử & Dropdown Đầu Form**:
+>    - Cung cấp nút `📋 Copy` và `✏️ Sửa` trực tiếp trên từng hàng của bảng danh sách báo giá bên phải.
+>    - Đồng thời cung cấp Dropdown danh sách báo giá cũ ngay trên đầu Form bên trái (`#qu-history-select`) kèm nút `📋 Copy & Sửa`, `✏️ Sửa Đè` và `🔄 Tạo Mới / Reset` để người dùng trên máy tính hay điện thoại di động đều thao tác thuận tiện nhất.
+
