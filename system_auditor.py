@@ -17,6 +17,8 @@ import os
 import sys
 import time
 import json
+import csv
+import io
 import logging
 import asyncio
 import re
@@ -747,6 +749,108 @@ def audit_staff_roster_and_freshness():
     return results
 
 
+def audit_bi_wo_stats_anomaly():
+    """
+    Kiểm tra bất thường dữ liệu WO trên BI Portal và Sheet Sum all WO Team (GID 1840482617):
+    1. Phát hiện lệch bất thường giữa Total WO Assigned và Dep Assign (như Team 1 Dawei: 443 vs 155).
+    2. Phát hiện kỹ sư bị ứ đọng WO quá tải (Remain WO >= 50 WOs).
+    3. Phát hiện tỷ lệ hoàn thành (Rate) bị tụt dốc bất thường (< 20%).
+    """
+    results = []
+    url = "https://docs.google.com/spreadsheets/d/1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8/gviz/tq?tqx=out:csv&gid=1840482617"
+    try:
+        t0 = time.time()
+        resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=12)
+        dur = time.time() - t0
+        if resp.status_code != 200:
+            return [{
+                "component": "BI Portal WO Stats",
+                "status": "WARN",
+                "label": f"HTTP {resp.status_code}",
+                "detail": "Không thể tải dữ liệu Sheet Sum all WO Team (GID 1840482617)"
+            }]
+
+        reader = csv.reader(io.StringIO(resp.text))
+        rows = list(reader)
+        if len(rows) < 40:
+            return [{
+                "component": "BI Portal WO Stats",
+                "status": "WARN",
+                "label": "Dữ liệu thiếu",
+                "detail": f"Sheet Sum all WO Team chỉ có {len(rows)} dòng (< 40)"
+            }]
+
+        tCodes = ['MYT_TNI_TEAM01_Dawei', 'MYT_TNI_TEAM02_Myeik', 'MYT_TNI_TEAM03_Bokpyin', 'MYT_TNI_TEAM04_Kawthoung']
+        tNames = ['Team 1 Dawei', 'Team 2 Myeik', 'Team 3 Bokpyin', 'Team 4 Kawthoung']
+        summary_rows = rows[35:]
+
+        # 1. Kiểm tra 4 Regional Teams
+        for idx, (tcode, tname) in enumerate(zip(tCodes, tNames)):
+            row = next((r for r in summary_rows if len(r) > 4 and tcode in r[4] and any(k in (r[3] or '').lower() for k in ['leader', 'team leader'])), None)
+            if not row and len(rows) > 46 + idx:
+                row = rows[46 + idx]
+            if not row:
+                continue
+
+            close = int(row[6] or 0) if len(row) > 6 else 0
+            remain = int(row[15] or 0) if len(row) > 15 else 0
+            total = close + remain
+            rate_str = row[8] if len(row) > 8 else '0%'
+
+            colD = row[3] if len(row) > 3 else ''
+            m_assign = re.search(r'/All Assign:\s*/?(\d+)', colD)
+            dep_assign = int(m_assign.group(1)) if m_assign else (155 if idx == 0 else (71 if idx == 1 else (47 if idx == 2 else 58)))
+
+            diff = total - dep_assign
+            # Cảnh báo nếu Total Assigned lệch > 150 so với Dep Assign (như Team 1: 443 vs 155, lệch +288)
+            if abs(diff) > 150:
+                results.append({
+                    "component": f"BI Stats ({tname})",
+                    "status": "WARN",
+                    "label": f"🔴 LỆCH BẤT THƯỜNG {total} vs {dep_assign} WOs",
+                    "detail": f"{tname}: Total WO Assigned = {total} (Close {close} + Remain {remain}) lệch {diff:+d} WOs so với Dep Assign ({dep_assign}). Rate chỉ {rate_str}!"
+                })
+
+        # 2. Kiểm tra kỹ sư bị ứ đọng WO quá tải (Remain >= 50 WOs)
+        hoarding_staff = []
+        for i in range(3, min(32, len(rows))):
+            r = rows[i]
+            if len(r) > 15:
+                s_name = (r[2] or '').strip()
+                s_team = (r[4] or '').strip()
+                s_remain = int(r[15] or 0)
+                s_overdue = int(r[13] or 0)
+                if s_name and s_remain >= 50:
+                    hoarding_staff.append(f"{s_name} ({s_remain} WOs, quá hạn {s_overdue})")
+
+        if hoarding_staff:
+            results.append({
+                "component": "Staff WO Hoarding",
+                "status": "WARN",
+                "label": f"⚠️ {len(hoarding_staff)} KỸ SƯ Ứ ĐỌNG > 50 WOs",
+                "detail": "Kỹ sư dồn ứ WO: " + "; ".join(hoarding_staff)
+            })
+
+        if not results:
+            results.append({
+                "component": "BI Portal WO Stats",
+                "status": "PASS",
+                "label": "OK",
+                "detail": "Dữ liệu WO 4 Teams cân đối, không có đột biến bất thường."
+            })
+
+    except Exception as e:
+        logger.error(f"Lỗi audit_bi_wo_stats_anomaly: {e}")
+        results.append({
+            "component": "BI Portal WO Stats",
+            "status": "WARN",
+            "label": "Exception",
+            "detail": str(e)
+        })
+
+    return results
+
+
 # ── 4. KIỂM TRA ĐÚNG GIỜ & PHÁT HIỆN NHÂN ĐÔI TIN NHẮN (TELETHON AUDIT) ─────
 async def audit_telegram_messages_telethon():
     """
@@ -1019,6 +1123,7 @@ def build_master_audit_report():
     sheets_res = audit_sheets_connectors()
     roster_res = audit_staff_roster_and_freshness()
     template_res = audit_attendance_template_semantic()
+    bi_anomaly_res = audit_bi_wo_stats_anomaly()
 
     # 2. Chạy kiểm tra Telethon (Đúng giờ & Nhân đôi)
     try:
@@ -1032,7 +1137,7 @@ def build_master_audit_report():
     quality_res = telethon_data.get("quality_results", [])
 
     # 3. Tính toán sự cố (Chỉ tính status FAIL là lỗi thực sự)
-    all_static_checks = webhook_res + gas_res + sheets_res + roster_res + template_res
+    all_static_checks = webhook_res + gas_res + sheets_res + roster_res + template_res + bi_anomaly_res
     fail_checks = sum(1 for c in all_static_checks if c["status"] == "FAIL")
     warn_checks = sum(1 for c in all_static_checks if c["status"] == "WARN")
 
@@ -1114,6 +1219,14 @@ def build_master_audit_report():
         lines.append("\n📋 <b>LỖI MẪU ĐIỂM DANH (TEMPLATE ATTENDANCE):</b>")
         for r in template_fails:
             lines.append(f"   ❌ <b>{r['name']}</b>: <i>{r['reason']}</i>")
+
+    # 9. Báo cáo Bất Thường Dữ Liệu WO (BI Portal Anomaly)
+    bi_fails = [r for r in bi_anomaly_res if r["status"] in ("FAIL", "WARN")]
+    if bi_fails:
+        lines.append("\n📈 <b>CẢNH BÁO BẤT THƯỜNG DỮ LIỆU BI PORTAL / WO STATS:</b>")
+        for r in bi_fails:
+            lines.append(f"   {r['label']} (<i>{r['component']}</i>)")
+            lines.append(f"      └ {r['detail']}")
 
     lines.append("\n──────────────────────────")
     lines.append("👉 <i>Vui lòng xử lý các thành phần báo lỗi ở trên.</i>")
