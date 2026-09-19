@@ -1725,3 +1725,23 @@ un_eod_or_update()), Python ném ngoại lệ RuntimeError: asyncio.run() cannot
 > 2. **Fast-Fail HTTP Trong Helper & Rút Ngắn Timeout**:
 >    - Khi đọc/ghi msgids qua GAS API (get_old_msgids, save_msgids), timeout tối đa <= 15 giây.
 >    - Nếu nhận mã HTTP không phải 200 (như 404, 500, 503), BẮT BUỘC ghi log cảnh báo và lập tức trả về [], TUYỆT ĐỐI CẤM lặp retry 3 lần gây nghẽn tiến trình hàng chục phút.
+
+
+# 🛡️ POST-MORTEM RULE — 19/09/2026: LỆNH TRA CỨU MẪU / TEMPLATE TUYỆT ĐỐI CHỈ TRẢ VỀ FORM COPY — CẤM TỰ ĐỘNG GHI NHẬN VÀO SHEET (RULE PM-48)
+
+> ### Nguồn gốc: **Lỗi Lệnh /take_leave Tự Động Chèn Dòng Nghỉ Phép Fake Vào Sheet (19/09/2026)**
+> - **Root Cause**:
+>   - Trong phiên cập nhật @98, phân hệ Điểm danh (GAS-ATTENDANCE-4) đã cấu hình lệnh /take_leave và /half_leave tự động lấy tên Telegram của người gửi rồi gọi sumSheet.insertRowsBefore(2, 1) ghi nhận ngày nghỉ cho nhân viên đó.
+>   - Khi quản trị viên hoặc nhân sự bấm vào menu lệnh Telegram để lấy mẫu cú pháp xin nghỉ, Bot lập tức ghi nhận người bấm (ví dụ "TNI") đang nghỉ phép cả ngày / nửa ngày và chèn 2 dòng fake (ATT-0035, ATT-0036) vào bảng tính, gây sai lệch dữ liệu điểm danh thực tế.
+>
+> ### 🔴 RULE PM-48: 3 NGUYÊN TẮC BỌC THÉP CHO TOÀN BỘ LỆNH TRA CỨU TEMPLATE / MENU
+> 1. **Quy Tắc Read-Only Cho Mọi Lệnh Template / Menu (Zero-Mutation Template Policy)**:
+>    - Mọi lệnh điều khiển, tra cứu và lấy mẫu (bắt đầu bằng /take_leave, /half_leave, /leave, /template_, /attendance, /menu, /help, v.v.) CHỈ ĐƯỢC PHÉP trả về nội dung hướng dẫn hoặc bản mẫu định dạng Markdown code block để nhân viên chạm vào copy.
+>    - TUYỆT ĐỐI CẤM bất kỳ hành vi chèn dòng (insertRows), sửa đổi, cập nhật hoặc xóa dữ liệu trên Google Sheets trong các nhánh xử lý lệnh tra cứu mẫu!
+> 2. **Ghi Nhận Nghỉ Phép BẮT BUỘC Phải Qua Tin Nhắn Điền Mẫu Chuẩn (Strict Syntax Submission Only)**:
+>    - Dữ liệu nghỉ phép (Take leave, Half day) CHỈ ĐƯỢC PHÉP ghi nhận vào Sheet khi người dùng gửi tin nhắn báo cáo có cấu trúc chuẩn đầy đủ:
+>      `[Họ và tên]: Take leave / take leave half day
+Reason: [Lý do]`
+>      được xác thực qua hàm kiểm tra cú pháp isAttendanceReportText_() và bóc tách dữ liệu bằng processAttendanceReportText_().
+> 3. **Rà Soát & Xóa Dữ Liệu Fake Triệt Để (Post-Incident Data Hygiene)**:
+>    - Sau khi sửa logic lệnh tra cứu, AI BẮT BUỘC phải kiểm tra trực tiếp dữ liệu sống trên Google Sheet (qua live CSV/JSON) và xóa sạch toàn bộ các dòng test / fake do lệnh cũ tạo ra, đồng thời gọi hàm tái tổng hợp thống kê (buildSumWorkTab()) để trả lại trạng thái nguyên vẹn cho bảng tính.
