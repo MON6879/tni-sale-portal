@@ -1783,3 +1783,22 @@ Reason: [Lý do]`
 > 3. **Cá Nhân Hóa Qua URL Link & Bảo Vệ Mã PIN Quản Trị**:
 >    - Quản trị viên có thể tạo đường dẫn phân quyền trực tiếp (dạng `?staff=Name&role=sales`) để gửi cho từng nhân sự. Khi mở link, hệ thống tự động khóa đúng vai trò và ẩn các số liệu tuyệt mật.
 >    - Việc thăng cấp hoặc đổi về vai trò Ban Giám Đốc trên thiết bị dùng chung BẨT BUỘC phải được bảo vệ bằng mã PIN Quản Trị (`adminPinCode`), ngăn chặn nhân viên tự ý đổi vai trò để xem trộm số liệu tài chính.
+
+---
+
+# 🏗️ POST-MORTEM RULE — 22/09/2026: SỬA LỖI API ENDPOINT setTelegramMenuCommands VÀ GIÁM SÁT ĐỒNG BỘ MENU CONSTRUCTION BOT 10 (RULE PM-51)
+
+> ### Nguồn gốc: **Bot 10 Construction (@TNI_SITE_BOT) — Thiếu 5G template trong Telegram Menu (22/09/2026)**
+> - **Lỗi thực tế**: Người dùng thêm template "5G installation completed" vào Sheet `Template Cons` (Cột A, Hàng 14) nhưng template KHÔNG xuất hiện trong danh sách lệnh `/` của Bot 10 trên Telegram.
+> - **Root Cause**: Hàm `setTelegramMenuCommands()` trong `13_TNI_CONSTRUCTION.gs` gọi SAI API endpoint — gọi `/setWebhook` thay vì `/setMyCommands`. API `/setWebhook` KHÔNG có tham số `commands` nên payload bị bỏ qua hoàn toàn. Menu bot chưa BAO GIỜ được đồng bộ tự động từ Sheet!
+> - **Bổ sung**: Ghế AUDITOR-9.1 (`system_auditor.py`) không có bài kiểm tra nào giám sát sự khác biệt giữa Sheet template và commands đã đăng ký trên Bot 10.
+>
+> ### 🔴 RULE PM-51: 2 NGUYÊN TẮC BỌC THÉP CHO ĐỒNG BỘ MENU TELEGRAM BOT TỪ GOOGLE SHEET
+> 1. **API Endpoint Chính Xác Cho Từng Thao Tác (Strict API Endpoint Targeting)**:
+>    - Khi **đăng ký/cập nhật danh sách lệnh** trên menu bot: BẮT BUỘC dùng `/setMyCommands` (NOT `/setWebhook`, NOT `/sendMessage`).
+>    - Khi **đặt/thay đổi Webhook URL**: BẮT BUỘC dùng `/setWebhook`.
+>    - Khi **xóa lệnh cũ**: BẮT BUỘC dùng `/deleteMyCommands`.
+>    - TUYỆT ĐỐI CẤM nhầm lẫn giữa 3 endpoint này — mỗi endpoint có chức năng hoàn toàn khác nhau!
+> 2. **Ghế AUDITOR-9.1 Giám Sát Đồng Bộ Menu Mọi Chu Kỳ (Mandatory Menu Sync Audit)**:
+>    - AUDITOR-9.1 BẮT BUỘC phải có bài kiểm tra `audit_construction_menu_sync()` chạy mỗi chu kỳ: Đọc Sheet `Template Cons` → So sánh với `getMyCommands` → Nếu lệch thì tự động gọi `setMyCommands` để đồng bộ.
+>    - Khi thêm Bot mới vào hệ thống, BẮT BUỘC phải bổ sung bài kiểm tra tương tự cho Bot đó vào AUDITOR-9.1.
