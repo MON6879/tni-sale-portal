@@ -1107,6 +1107,98 @@ async def audit_telegram_messages_telethon():
         }
 
 
+# ── 4B. GIÁM SÁT ĐỒNG BỘ MENU CONSTRUCTION BOT 10 ──────────────────────────
+def audit_construction_menu_sync():
+    """
+    So sánh danh sách template từ Sheet 'Template Cons' (Cột A, từ hàng 3)
+    với danh sách commands đã đăng ký trên Telegram Bot 10 (@TNI_SITE_BOT).
+    Nếu lệch → Tự động đồng bộ lại bằng setMyCommands API.
+    """
+    results = []
+    CONS_TOKEN = "8903841312:AAHQ_LeI19gs2nrqBSInTsgzJXOuv6H8LmE"
+    CONS_SHEET_ID = "1ViXXv5P8jSgx5heBqEP419ZkSR77C3OsflK0xpHMoi8"
+
+    try:
+        # 1. Đọc Sheet Template Cons (Cột A từ hàng 3 trở đi)
+        import csv as csv_mod
+        sheet_url = f"https://docs.google.com/spreadsheets/d/{CONS_SHEET_ID}/export?format=csv&gid=0"
+        sheet_resp = requests.get(sheet_url, timeout=15)
+        if sheet_resp.status_code != 200:
+            results.append({"name": "Construction Menu Sync", "status": "FAIL",
+                            "reason": f"Không đọc được Sheet Template Cons (HTTP {sheet_resp.status_code})"})
+            return results
+
+        reader = csv_mod.reader(io.StringIO(sheet_resp.text))
+        rows = list(reader)
+
+        # Lấy danh sách key từ Cột A, bắt đầu từ hàng 3 (index 2)
+        sheet_keys = []
+        for i, row in enumerate(rows):
+            if i < 2:
+                continue  # Bỏ qua hàng 1-2 (header)
+            if row and row[0] and row[0].strip():
+                key_name = row[0].strip()
+                clean_cmd = re.sub(r'[^a-z0-9_]', '_', key_name.lower())
+                clean_cmd = re.sub(r'_+', '_', clean_cmd)[:32]
+                if clean_cmd:
+                    sheet_keys.append({"command": clean_cmd, "description": key_name})
+
+        # Thêm lệnh /template mặc định
+        expected_commands = [{"command": "template", "description": "All Templates"}]
+        seen = {"template"}
+        for sk in sheet_keys:
+            if sk["command"] not in seen:
+                expected_commands.append(sk)
+                seen.add(sk["command"])
+
+        # 2. Lấy danh sách commands hiện tại trên Bot
+        cmd_resp = requests.get(f"https://api.telegram.org/bot{CONS_TOKEN}/getMyCommands", timeout=10)
+        if cmd_resp.status_code != 200 or not cmd_resp.json().get("ok"):
+            results.append({"name": "Construction Menu Sync", "status": "FAIL",
+                            "reason": "Không lấy được getMyCommands từ Bot 10"})
+            return results
+
+        current_commands = cmd_resp.json().get("result", [])
+        current_set = {c["command"] for c in current_commands}
+        expected_set = {c["command"] for c in expected_commands}
+
+        # 3. So sánh
+        missing = expected_set - current_set
+        extra = current_set - expected_set
+
+        if not missing and not extra:
+            results.append({"name": "Construction Menu Sync", "status": "PASS",
+                            "reason": f"Đồng bộ OK ({len(expected_commands)} lệnh)"})
+            return results
+
+        # 4. Tự động đồng bộ
+        logger.warning(f"🔄 Construction Menu lệch! Thiếu: {missing}, Thừa: {extra}. Auto-sync...")
+        sync_resp = requests.post(
+            f"https://api.telegram.org/bot{CONS_TOKEN}/setMyCommands",
+            json={"commands": expected_commands},
+            timeout=10
+        )
+        if sync_resp.status_code == 200 and sync_resp.json().get("ok"):
+            detail = []
+            if missing:
+                detail.append(f"Thêm: {', '.join(missing)}")
+            if extra:
+                detail.append(f"Bỏ: {', '.join(extra)}")
+            results.append({"name": "Construction Menu Sync", "status": "PASS",
+                            "reason": f"Auto-sync OK ({' | '.join(detail)})"})
+            logger.info(f"✅ Construction Menu auto-sync thành công: {len(expected_commands)} lệnh")
+        else:
+            results.append({"name": "Construction Menu Sync", "status": "FAIL",
+                            "reason": f"Auto-sync thất bại: {sync_resp.text[:80]}"})
+
+    except Exception as e:
+        logger.error(f"❌ audit_construction_menu_sync error: {e}")
+        results.append({"name": "Construction Menu Sync", "status": "FAIL",
+                        "reason": f"Exception: {str(e)[:60]}"})
+
+    return results
+
+
 # ── 5. TỔNG HỢP BÁO CÁO & PHÁT CẢNH BÁO ĐỎ ──────────────────────────────────
 def build_master_audit_report():
     """
@@ -1124,6 +1216,7 @@ def build_master_audit_report():
     roster_res = audit_staff_roster_and_freshness()
     template_res = audit_attendance_template_semantic()
     bi_anomaly_res = audit_bi_wo_stats_anomaly()
+    cons_menu_res = audit_construction_menu_sync()
 
     # 2. Chạy kiểm tra Telethon (Đúng giờ & Nhân đôi)
     try:
@@ -1137,7 +1230,7 @@ def build_master_audit_report():
     quality_res = telethon_data.get("quality_results", [])
 
     # 3. Tính toán sự cố (Chỉ tính status FAIL là lỗi thực sự)
-    all_static_checks = webhook_res + gas_res + sheets_res + roster_res + template_res + bi_anomaly_res
+    all_static_checks = webhook_res + gas_res + sheets_res + roster_res + template_res + bi_anomaly_res + cons_menu_res
     fail_checks = sum(1 for c in all_static_checks if c["status"] == "FAIL")
     warn_checks = sum(1 for c in all_static_checks if c["status"] == "WARN")
 
@@ -1227,6 +1320,13 @@ def build_master_audit_report():
         for r in bi_fails:
             lines.append(f"   {r['label']} (<i>{r['component']}</i>)")
             lines.append(f"      └ {r['detail']}")
+
+    # 10. Báo cáo lỗi Đồng Bộ Menu Construction Bot 10
+    cons_fails = [r for r in cons_menu_res if r["status"] != "PASS"]
+    if cons_fails:
+        lines.append("\n🏗️ <b>LỖI ĐỒNG BỘ MENU CONSTRUCTION BOT 10:</b>")
+        for r in cons_fails:
+            lines.append(f"   ❌ <b>{r['name']}</b>: <i>{r['reason']}</i>")
 
     lines.append("\n──────────────────────────")
     lines.append("👉 <i>Vui lòng xử lý các thành phần báo lỗi ở trên.</i>")

@@ -1745,3 +1745,41 @@ Reason: [Lý do]`
 >      được xác thực qua hàm kiểm tra cú pháp isAttendanceReportText_() và bóc tách dữ liệu bằng processAttendanceReportText_().
 > 3. **Rà Soát & Xóa Dữ Liệu Fake Triệt Để (Post-Incident Data Hygiene)**:
 >    - Sau khi sửa logic lệnh tra cứu, AI BẮT BUỘC phải kiểm tra trực tiếp dữ liệu sống trên Google Sheet (qua live CSV/JSON) và xóa sạch toàn bộ các dòng test / fake do lệnh cũ tạo ra, đồng thời gọi hàm tái tổng hợp thống kê (buildSumWorkTab()) để trả lại trạng thái nguyên vẹn cho bảng tính.
+
+
+# 🛡️ POST-MORTEM RULE — 19/09/2026: KỶ LUẬT ĐỊNH GIỜ KHÔNG VA CHẠM VÀ QUẢN LÝ XÓA SẠCH MULTI-MESSAGE (RULE PM-49)
+
+> ### Nguồn gốc: **Lỗi Va Chạm Giờ Gửi TPR Với Site Down / ETA & QuẢn Lý Xóa Tin Cũ (19/09/2026)**
+> - **Root Cause**:
+>   1. Khi cấu hình lịch gửi báo cáo vận hành mới (Team Operation Progress Report - TPR), việc đặt giờ chạy chiều vào 17:06 MMT đã vi phạm nghiêm trọng Mục 0.3 và Mục 9.1 của `system_map.md`. Khung giờ :06 và :36 MMT mỗi giờ là vùng cấm tuyệt đối, dành riêng cho Toa Site Down Relay và Toa ETA Update. Hậu quẢ: Báo cáo TPR (Bot 2D) gửi lúc 17:07, chỉ 2 phút sau Site Down (Bot 5T) gửi lúc 17:09 và ETA Update (Bot 2D) gửi ngay sau đó, gây nên hiện tượng "tin nhắn chồng chéo" và làm trôi tin vận hành của nhau.
+>   2. QuẢn lý danh sách ID tin cũ dạng mảng (`TPR_MSG_IDS_<groupKey>`): Sau khi gọi xóa từng `mid` trong danh sách, nếu không reset mảng về `[]` ngay lập tức, lần quét tiếp theo có thể tiếp tục lặp lại các ID đã xóa hoặc xỗ trí sót nếu tin gửi bị ngắt nhiều phần.
+>   3. Về tin nhắn cũ Site Down lúc 16:39 chưa được xóa: Phân hệ Site Down thuộc quyền quản lý của Script riêng biệt (`apps_script_sitedown`), hiện được bảo vệ bởi STRICT STEEL-LOCK RULE. AI tuyệt đối tuân thủ không tự ý can thiệp khi chưa có mật khẩu mở khóa `UNLOCK STEEL: Phucat@7979`.
+>
+> ### 🔴 RULE PM-49: 3 NGUYÊN TẮC BỌC THÉP CHO ĐỊNH GIỜ BÁO CÁO VÀ PURGE MULTI-MESSAGE
+> 1. **Cấm Tuyệt Đối Đặt Lịch Báo Cáo Tại Phút :06 Và :36 MMT (Zero Collision on Site Down Windows)**:
+>    - Mọi báo cáo định kỳ (GAS Scheduler, GitHub Actions Train, v.v.) TUYỆT ĐỐI CẤM đặt giờ vào các phút :04-:14 và :34-:44 của mọi khung giờ MMT. Khung này là vùng độc quyền của Toa Site Down Relay (:06 MMT) và Toa ETA Update (~:09 MMT).
+>    - Các Toa/lịch báo cáo chiều mới BẨT BUỘC phải lùi sang các khung giờ an toàn (ví dụ **17:21 MMT**, cửa sổ kiểm tra 17:19 - 17:29 MMT) nhằm cách xa Site Down/ETA ít nhất 12 phút và sau Toa 6.1 (17:18 MMT).
+> 2. **Quản Lý Xóa Sạch Multi-Message Tận Gốc (Atomic Multi-ID Tracking & Reset)**:
+>    - Khi một phân hệ gửi báo cáo có khả năng chia tách nhiều phần (multi-part / chunked messages), toàn bộ `message_id` trả về BẨT BUỘC phải được lưu trữ dưới dạng mảng JSON trong `ScriptProperties`.
+>    - Hàm dọn tin cũ (`deleteOldMessages_`) BẨT BUỘC phải duyệt qua từng ID trong mảng để gọi `deleteMessage`, và NGAY SAU KHI duyệt xong PHẢI gán lại `props.setProperty(key, "[]")` một cách nguyên tử (atomic) để tránh tồn đọng ID cũ.
+> 3. **Ranh Giới Bất Xâm Phạm Của Khóa Thép Site Down (Strict Steel-Lock Boundary Respect)**:
+>    - Nếu phát hiện tin nhắn cũ chưa xóa thuộc về bot Site Down (`5 TNI_SITE_DOWN_CELL_ALARM`), AI BẨT BUỘC phải tôn trọng Khóa Thép, báo cáo rõ ranh giới cho người dùng và CHỈ ĐƯỢC PHÉP xỗ trí khi người dùng cung cấp đúng mật khẩu: `UNLOCK STEEL: Phucat@7979`.
+
+
+# 🛡️ POST-MORTEM RULE — 21/09/2026: BỌC THÉP HỆ THỐNG PHÂN QUYỀN VAI TRÒ (RBAC) — TUYỆT ĐỐI KHÓA SỐ LIỆU TÀI CHÍNH Với NHÂN VIÊN (RULE PM-50)
+
+> ### Nguồn gốc: **Thiếu Hệ Thống Phân Quyền Nhân Viên & Rủi Ro Lộ Dữ Liệu Tài Chính (21/09/2026)**
+> - **Root Cause**:
+>   - Giao diện TNI Sale Web App (`tni_sale.html` / `sale.html`) trước đây mở tự do 100% tất cả các tab cho mọi người dùng truy cập. Khi nhân viên kinh doanh hoặc kỹ thuật mở trang, họ có thể tự do bấm vào tab **"Tài Chính & Lợi Nhuận"** và **"Tờ Trình Quyết Toán VCM"**, nhìn thấy toàn bộ số liệu nhạy cảm: Tỷ lệ 17% nộp Tổng Công Ty VCM, Giá vốn gốc 83%, Lợi nhuận ròng chi nhánh và sổ quản lý công nợ.
+>   - Hệ thống thiếu Bảng Ma Trận Phân Quyền minh bạch thể hiện: **"Ai được xem gì"**, không có cơ chế chặn điều hướng (navigation interceptor) và không có màn hình bảo mật hạn chế truy cập.
+>
+> ### 🔴 RULE PM-50: 3 NGUYÊN TẮC BỌC THÉP CHO PHÂN QUYỀN VAI TRÒ (RBAC) TRÊN WEB APP
+> 1. **Ma Trận Phân Quyền Minh Bạch 100% ("Ai Được Xem Gì")**:
+>    - Hệ thống Web App BẨT BUỘC phải có một Bảng Ma Trận Phân Quyền trực quan (`s-rbac`), liệt kê đầy đủ từng vai trò (👑 Ban Giám Đốc, 💰 Kế Toán, 🧑‍💼 Kinh Doanh, 🚀 Kỹ Thuật, 📦 Thủ Kho, 🏪 Đại Lý) đối chiếu với từng phân hệ của phần mềm.
+>    - Các phân hệ thuộc **Bảo Mật Cấp 1** (Tài Chính & Lợi Nhuận, Tờ Trình Quyết Toán VCM, Giá Vốn Gốc 83%) TUYỆT ĐỐI CHỈ CẤP QUYỀN CHO: **Ban Giám Đốc (Admin/BOD)** và **Kế Toán Trưởng (Finance)**. Mọi chức danh nhân viên khác BẨT BUỘC phải ở trạng thái ❌ Bị Khóa.
+> 2. **Chặn Đứng Tại Bộ Điều Hướng (Navigation Interceptor & Access Denied Shield)**:
+>    - Hàm chuyển tab (`go(id)`) BẨT BUỘC phải kiểm tra quyền (`isTabAllowedForRole(id, currentAppRole)`). Nếu vai trò hiện tại không được cấp quyền, TUYỆT ĐỐI CẤM hiển thị nội dung tài chính sống, đồng thời BẨT BUỘC kích hoạt ngay màn hình báo lỗi bảo mật (`s-access-denied`) giải thích lý do hạn chế và hiển thị các vai trò được phép truy cập.
+>    - Thanh điều hướng (Sidebar) BẨT BUỘC phải hiển thị biểu tượng ổ khóa 🔒 và làm mờ (opacity) các tab bị hạn chế, giúp người dùng nhận biết ngay lập tức phạm vi quyền hạn của mình.
+> 3. **Cá Nhân Hóa Qua URL Link & Bảo Vệ Mã PIN Quản Trị**:
+>    - Quản trị viên có thể tạo đường dẫn phân quyền trực tiếp (dạng `?staff=Name&role=sales`) để gửi cho từng nhân sự. Khi mở link, hệ thống tự động khóa đúng vai trò và ẩn các số liệu tuyệt mật.
+>    - Việc thăng cấp hoặc đổi về vai trò Ban Giám Đốc trên thiết bị dùng chung BẨT BUỘC phải được bảo vệ bằng mã PIN Quản Trị (`adminPinCode`), ngăn chặn nhân viên tự ý đổi vai trò để xem trộm số liệu tài chính.

@@ -164,6 +164,9 @@ tbody tr:hover{background:#fafcff}
     <a onclick="go('mystats')" data-nav-a="mystats">📊 My Performance</a>
     <a onclick="go('myquotes')" data-nav-a="myquotes">📄 My Quotations</a>
     <a onclick="go('mysurvey')" data-nav-a="mysurvey">📝 My Surveys</a>
+
+    <div class="lbl" data-nav-lbl="system" style="color:#7c3aed">⚙️ Hệ Thống &amp; Phân Quyền</div>
+    <a onclick="go('rbac')" data-nav-a="rbac" style="color:#6d28d9;font-weight:700">🛡️ Phân Quyền Vai Trò <small style="background:#ede9fe;color:#6d28d9;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:auto;font-weight:700">RBAC</small></a>
   </nav>
 </div>
 
@@ -172,6 +175,19 @@ tbody tr:hover{background:#fafcff}
 <div id="topbar">
   <h2 id="ptitle">📊 Dashboard</h2>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <!-- 🛡️ BỘ CHUYỂN ĐỔI & HIỂN THỊ VAI TRÒ (RBAC ROLE SELECTOR) -->
+    <div id="role-selector-box" style="display:flex;align-items:center;gap:6px;background:#f8fafc;border:1.5px solid #cbd5e1;padding:4px 10px;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,0.04)">
+      <span style="font-size:11.5px;font-weight:700;color:#334155;white-space:nowrap">👤 <span data-lang="lbl_active_role">Vai Trò:</span></span>
+      <select id="app-role-select" onchange="changeAppRole(this.value)" style="border:none;background:transparent;font-size:12px;font-weight:800;color:#1e40af;cursor:pointer;outline:none;padding:2px 4px">
+        <option value="admin">👑 Ban Giám Đốc (BOD / Admin)</option>
+        <option value="finance">💰 Kế Toán / Tài Chính (Finance)</option>
+        <option value="sales">🧑‍💼 Nhân Viên Kinh Doanh (Sales)</option>
+        <option value="tech">🚀 Kỹ Thuật / Hiện Trường (Field Ops)</option>
+        <option value="warehouse">📦 Thủ Kho / Quản Lý Kho (Warehouse)</option>
+        <option value="dealer">🏪 Đại Lý Phân Phối (Dealer)</option>
+      </select>
+      <span id="role-badge-pill" style="font-size:10px;padding:2px 8px;border-radius:12px;font-weight:800;background:#dcfce7;color:#15803d;white-space:nowrap">Toàn Quyền</span>
+    </div>
     <!-- Cài đặt % Lợi Nhuận & Thuế Nộp Tổng Công Ty (Ẩn UI theo yêu cầu người dùng) -->
     <input id="cfg-cty-rate" type="hidden" value="17"/>
     <a href="https://docs.google.com/spreadsheets/d/1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA" target="_blank" class="btn b-bl b-sm" style="text-decoration:none">📊 Google Sheet</a>
@@ -1494,6 +1510,21 @@ tbody tr:hover{background:#fafcff}
 
 <!-- ══ TÀI CHÍNH & LỢI NHUẬN (FINANCIAL & CASHFLOW CENTER) ══ -->
 <div class="sec" id="s-loinhuan">
+  <!-- 🔒 THÔNG BÁO BẢO MẬT PHÂN HỆ TÀI CHÍNH & LỢI NHUẬN -->
+  <div style="background:linear-gradient(135deg, #eff6ff, #f8fafc);border:1.5px solid #3b82f6;border-left:5px solid #1d4ed8;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+    <div style="display:flex;align-items:center;gap:12px">
+      <span style="font-size:24px">🔒</span>
+      <div>
+        <div style="font-size:13px;font-weight:800;color:#1e40af">PHÂN HỆ BẢO MẬT CẤP 1: TÀI CHÍNH, DÒNG TIỀN &amp; LỢI NHUẬN NỘI BỘ</div>
+        <div style="font-size:12px;color:#475569;margin-top:2px">Dữ liệu phân bổ 3 dòng lợi nhuận (17% Tổng Cty, vốn 83%, quỹ chi nhánh) <b>CHỈ DÀNH RIÊNG CHO BAN GIÁM ĐỐC &amp; KẾ TOÁN</b>. Đã khóa đối với nhân viên kinh doanh, kỹ thuật và thủ kho.</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <span style="font-size:11px;background:#dbeafe;color:#1e40af;padding:3px 8px;border-radius:6px;font-weight:700">Chế độ xem: Ban Giám Đốc / Kế Toán</span>
+      <button class="btn b-bl b-xs" onclick="go('rbac')">🛡️ Bảng Phân Quyền</button>
+    </div>
+  </div>
+
   <!-- 6 Core Financial Cards -->
   <div class="cards" id="ln-cards"></div>
 
@@ -1535,6 +1566,18 @@ tbody tr:hover{background:#fafcff}
 
 <!-- ══ TỜ TRÌNH QUYẾT TOÁN VCM (PAYMENT PROPOSAL FOR INTEGRATED BUSINESS - GID 1792914236) ══ -->
 <div class="sec" id="s-statement">
+  <!-- 🔒 THÔNG BÁO BẢO MẬT PHÂN HỆ TỜ TRÌNH QUYẾT TOÁN VCM -->
+  <div style="background:linear-gradient(135deg, #fef2f2, #f8fafc);border:1.5px solid #ef4444;border-left:5px solid #b91c1c;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+    <div style="display:flex;align-items:center;gap:12px">
+      <span style="font-size:24px">🔒</span>
+      <div>
+        <div style="font-size:13px;font-weight:800;color:#991b1b">PHÂN HỆ BẢO MẬT CẤP 1: TỜ TRÌNH QUYẾT TOÁN 17% NỘP TỔNG CÔNG TY</div>
+        <div style="font-size:12px;color:#475569;margin-top:2px">Sổ cái quyết toán hợp đồng tích hợp và phân chia 17% nộp về Tổng Công Ty VCM. <b>CHỈ DÀNH CHO BAN GIÁM ĐỐC &amp; KẾ TOÁN</b>.</div>
+      </div>
+    </div>
+    <button class="btn b-bl b-xs" onclick="go('rbac')">🛡️ Bảng Phân Quyền</button>
+  </div>
+
   <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px 18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;border-bottom:1px solid #f1f5f9;padding-bottom:12px">
       <div>
@@ -1710,6 +1753,214 @@ tbody tr:hover{background:#fafcff}
   </div>
 </div>
 
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- 🛡️ PHÂN QUYỀN VAI TRÒ NHÂN VIÊN: AI ĐƯỢC XEM GÌ (RBAC PANEL) -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="sec" id="s-rbac">
+  <!-- BANNER GIỚI THIỆU HỆ THỐNG PHÂN QUYỀN -->
+  <div style="background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-radius:12px;padding:20px 24px;margin-bottom:16px;box-shadow:0 4px 12px rgba(99,102,241,0.25)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
+      <div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:28px">🛡️</span>
+          <div>
+            <h2 style="font-size:20px;font-weight:900;margin:0;letter-spacing:0.5px">HỆ THỐNG PHÂN QUYỀN TRUY CẬP NHÂN VIÊN (RBAC)</h2>
+            <div style="font-size:13px;opacity:0.9;margin-top:4px">Xác định minh bạch và bọc thép 100%: <b>Ai Được Xem Gì</b> — Tuyệt đối bảo mật dữ liệu Tài Chính, Lợi Nhuận, Tỷ Lệ 17% Nộp Tổng Cty &amp; Giá Vốn.</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn b-sm" onclick="exportRBACMatrixCSV()" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3);font-weight:700">⬇ Xuất CSV Ma Trận</button>
+        <button class="btn b-sm" onclick="promptAdminUnlock()" style="background:#fff;color:#4f46e5;font-weight:800;border:none;box-shadow:0 2px 4px rgba(0,0,0,0.1)">🔑 Đổi PIN Quản Trị</button>
+      </div>
+    </div>
+
+    <!-- 6 THẺ VAI TRÒ CHUẨN TRONG HỆ THỐNG -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:18px">
+      <div onclick="changeAppRole('admin')" style="background:rgba(255,255,255,0.12);backdrop-filter:blur(4px);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);cursor:pointer;transition:all 0.2s" class="role-quick-card" id="rqc-admin">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:18px">👑</span>
+          <span style="font-size:10px;background:#dc2626;color:#fff;padding:2px 6px;border-radius:10px;font-weight:800">Toàn Quyền</span>
+        </div>
+        <div style="font-weight:800;font-size:13px;margin-top:6px">Ban Giám Đốc (BOD)</div>
+        <div style="font-size:11px;opacity:0.85;margin-top:2px">Toàn quyền 100% tất cả các tab &amp; xem tài chính</div>
+      </div>
+
+      <div onclick="changeAppRole('finance')" style="background:rgba(255,255,255,0.12);backdrop-filter:blur(4px);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);cursor:pointer;transition:all 0.2s" class="role-quick-card" id="rqc-finance">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:18px">💰</span>
+          <span style="font-size:10px;background:#0284c7;color:#fff;padding:2px 6px;border-radius:10px;font-weight:800">Tài Chính</span>
+        </div>
+        <div style="font-weight:800;font-size:13px;margin-top:6px">Kế Toán &amp; Tài Chính</div>
+        <div style="font-size:11px;opacity:0.85;margin-top:2px">Xem quỹ 17%, vốn 83%, tờ trình &amp; công nợ</div>
+      </div>
+
+      <div onclick="changeAppRole('sales')" style="background:rgba(255,255,255,0.12);backdrop-filter:blur(4px);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);cursor:pointer;transition:all 0.2s" class="role-quick-card" id="rqc-sales">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:18px">🧑‍💼</span>
+          <span style="font-size:10px;background:#16a34a;color:#fff;padding:2px 6px;border-radius:10px;font-weight:800">Bán Hàng</span>
+        </div>
+        <div style="font-weight:800;font-size:13px;margin-top:6px">Kinh Doanh (Sales)</div>
+        <div style="font-size:11px;opacity:0.85;margin-top:2px">Bán hàng, báo giá, CRM. <b>Khóa Tài Chính</b></div>
+      </div>
+
+      <div onclick="changeAppRole('tech')" style="background:rgba(255,255,255,0.12);backdrop-filter:blur(4px);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);cursor:pointer;transition:all 0.2s" class="role-quick-card" id="rqc-tech">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:18px">🚀</span>
+          <span style="font-size:10px;background:#059669;color:#fff;padding:2px 6px;border-radius:10px;font-weight:800">Hiện Trường</span>
+        </div>
+        <div style="font-weight:800;font-size:13px;margin-top:6px">Kỹ Thuật (Field Ops)</div>
+        <div style="font-size:11px;opacity:0.85;margin-top:2px">Nghiệm thu, khảo sát, HUB. <b>Khóa Tài Chính</b></div>
+      </div>
+
+      <div onclick="changeAppRole('warehouse')" style="background:rgba(255,255,255,0.12);backdrop-filter:blur(4px);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);cursor:pointer;transition:all 0.2s" class="role-quick-card" id="rqc-warehouse">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:18px">📦</span>
+          <span style="font-size:10px;background:#d97706;color:#fff;padding:2px 6px;border-radius:10px;font-weight:800">Thủ Kho</span>
+        </div>
+        <div style="font-weight:800;font-size:13px;margin-top:6px">Thủ Kho / Vận Hành</div>
+        <div style="font-size:11px;opacity:0.85;margin-top:2px">Tồn kho, nhập xuất, tạm ứng. <b>Khóa Tài Chính</b></div>
+      </div>
+
+      <div onclick="changeAppRole('dealer')" style="background:rgba(255,255,255,0.12);backdrop-filter:blur(4px);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);cursor:pointer;transition:all 0.2s" class="role-quick-card" id="rqc-dealer">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:18px">🏪</span>
+          <span style="font-size:10px;background:#9333ea;color:#fff;padding:2px 6px;border-radius:10px;font-weight:800">Đại Lý</span>
+        </div>
+        <div style="font-weight:800;font-size:13px;margin-top:6px">Đại Lý Phân Phối</div>
+        <div style="font-size:11px;opacity:0.85;margin-top:2px">Báo giá sỉ, ký gởi. <b>Khóa Nội Bộ</b></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MA TRẬN PHÂN QUYỀN TOÀN DIỆN (ROLE & PERMISSION MATRIX) -->
+  <div class="panel" style="margin-bottom:16px">
+    <div class="ph" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div>
+        <h3 style="margin:0;font-size:15px;color:#1e293b">📊 BẢNG MA TRẬN PHÂN QUYỀN CHI TIẾT ("AI ĐƯỢC XEM GÌ")</h3>
+        <div style="font-size:11.5px;color:#64748b;margin-top:2px">Rà soát chi tiết 20 phân hệ phần mềm và quyền xem / thao tác tương ứng của từng chức danh.</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select id="rbac-cat-filter" onchange="renderRBACMatrix()" style="padding:5px 8px;border:1px solid var(--bd);border-radius:6px;font-size:12px">
+          <option value="all">-- Tất cả danh mục phân hệ --</option>
+          <option value="Tổng Quan">📊 Tổng Quan</option>
+          <option value="Kho Hàng">📦 Kho Hàng</option>
+          <option value="Bán Hàng & Báo Giá">🛒 Bán Hàng & Báo Giá</option>
+          <option value="Kỹ Thuật & Hiện Trường">🚀 Kỹ Thuật & Hiện Trường</option>
+          <option value="Khách Hàng">👥 Khách Hàng</option>
+          <option value="Marketing">📢 Marketing</option>
+          <option value="Tài Chính & Kế Toán">💰 Tài Chính & Kế Toán (Bảo mật)</option>
+          <option value="Cổng Nhân Viên">👤 Cổng Nhân Viên</option>
+        </select>
+        <input id="rbac-search-kw" placeholder="🔍 Tìm kiếm phân hệ..." oninput="renderRBACMatrix()" style="padding:5px 10px;border:1px solid var(--bd);border-radius:6px;font-size:12px;width:180px"/>
+      </div>
+    </div>
+
+    <div class="pb tw" id="rbac-matrix-container" style="overflow-x:auto;padding:0">
+      <!-- Generated by renderRBACMatrix() -->
+    </div>
+  </div>
+
+  <!-- 2 CỘT: CÔNG CỤ TẠO LINK CHIA SẺ VÀ DANH SÁCH NHÂN VIÊN GÁN QUYỀN -->
+  <div class="g2">
+    <!-- CỘT 1: CÔNG CỤ TẠO LINK CHIA SẺ THEO VAI TRÒ -->
+    <div class="panel">
+      <div class="ph">
+        <h3 style="margin:0;font-size:14px">🔗 Tạo Link Phân Quyền Trực Tiếp Cho Nhân Viên</h3>
+      </div>
+      <div class="pb">
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:12px;line-height:1.6;color:#334155">
+          <b>💡 Hướng dẫn gửi link cho nhân viên:</b><br/>
+          Quản trị viên chọn tên nhân viên và vai trò tương ứng bên dưới, sau đó bấm <b>"📋 Copy Link"</b> và gửi qua <b>Telegram / Zalo / Email</b>. Khi nhân viên nhấp vào link, hệ thống sẽ <b>tự động khóa đúng vai trò và ẩn các mục bảo mật</b>!
+        </div>
+
+        <div class="fg">
+          <div class="f">
+            <label>👤 Chọn Nhân Viên *</label>
+            <select id="gen-staff-sel" onchange="updateGeneratedStaffLink()">
+              <!-- Generated by populateStaffUserSelect() -->
+            </select>
+          </div>
+          <div class="f">
+            <label>🏷️ Gán Vai Trò *</label>
+            <select id="gen-role-sel" onchange="updateGeneratedStaffLink()">
+              <option value="sales">🧑‍💼 Nhân Viên Kinh Doanh (Sales)</option>
+              <option value="tech">🚀 Kỹ Thuật / Hiện Trường (Field Ops)</option>
+              <option value="warehouse">📦 Thủ Kho (Warehouse)</option>
+              <option value="finance">💰 Kế Toán &amp; Tài Chính (Finance)</option>
+              <option value="dealer">🏪 Đại Lý Phân Phối (Dealer)</option>
+              <option value="admin">👑 Ban Giám Đốc (BOD / Admin)</option>
+            </select>
+          </div>
+          <div class="f" style="grid-column:1/-1">
+            <label>🌐 Đường Link Cá Nhân Hóa Chuẩn:</label>
+            <input id="gen-link-output" readonly style="background:#f1f5f9;font-weight:700;color:#1e3a8a;cursor:text" value="https://tni-bot.vercel.app/sale?staff=Zin+Ko+Ko&role=sales"/>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+          <button class="btn b-bl" onclick="copyGeneratedStaffLink()" style="font-weight:700">📋 Copy Link Gửi Nhân Viên</button>
+          <button class="btn b-out" onclick="testGeneratedStaffLink()">🚀 Thử Nghiệm Link Này</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CỘT 2: DANH SÁCH NHÂN VIÊN & VAI TRÒ HỆ THỐNG -->
+    <div class="panel">
+      <div class="ph" style="display:flex;justify-content:space-between;align-items:center">
+        <h3 style="margin:0;font-size:14px">👥 Danh Sách Nhân Sự &amp; Vai Trò Đã Gán</h3>
+        <button class="btn b-gn b-xs" onclick="openAddStaffModal()">+ Thêm Nhân Sự</button>
+      </div>
+      <div class="pb tw" id="rbac-staff-table-container" style="padding:0">
+        <!-- Generated by renderStaffUsersTable() -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- 🛡️ TRANG BÁO LỖI HẠN CHẾ QUYỀN TRUY CẬP (ACCESS DENIED) -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="sec" id="s-access-denied">
+  <div style="max-width:680px;margin:35px auto;background:#fff;border-radius:14px;border:1px solid #e2e8f0;box-shadow:0 10px 30px -5px rgba(0,0,0,0.08);overflow:hidden;text-align:center">
+    <div style="background:linear-gradient(135deg, #fef2f2, #fff1f2);padding:32px 24px 20px;border-bottom:1px solid #fee2e2">
+      <div style="width:68px;height:68px;margin:0 auto 14px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34px;box-shadow:0 0 0 8px #fef2f2">
+        🛡️
+      </div>
+      <h2 style="font-size:20px;font-weight:900;color:#991b1b;margin:0 0 6px">TRUY CẬP BỊ HẠN CHẾ (ACCESS RESTRICTED)</h2>
+      <p style="font-size:13px;color:#b91c1c;margin:0">Bạn không có quyền truy cập vào phân hệ này theo chính sách bảo mật nội bộ TNI.</p>
+    </div>
+    
+    <div style="padding:24px 24px;text-align:left">
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:18px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #e2e8f0">
+          <span style="font-size:12.5px;color:#64748b;font-weight:600">Phân hệ bạn đang muốn mở:</span>
+          <span id="denied-target-name" style="font-size:13px;font-weight:800;color:#0f172a">💰 Tài Chính &amp; Lợi Nhuận</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #e2e8f0">
+          <span style="font-size:12.5px;color:#64748b;font-weight:600">Vai trò hiện tại của bạn:</span>
+          <span id="denied-current-role" style="font-size:13px;font-weight:800;color:#dc2626">🧑‍💼 Nhân Viên Kinh Doanh (Sales)</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12.5px;color:#64748b;font-weight:600">Các vai trò có quyền xem:</span>
+          <span id="denied-allowed-roles" style="font-size:12.5px;font-weight:700;color:#059669">👑 Ban Giám Đốc, 💰 Kế Toán</span>
+        </div>
+      </div>
+
+      <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 14px;font-size:12.5px;color:#92400e;line-height:1.6;margin-bottom:22px">
+        <b>💡 Quy định bảo mật hệ thống:</b> Phân hệ này chứa số liệu tài chính sống nhạy cảm (Bao gồm Tỷ lệ 17% nộp Tổng Công Ty VCM, Vốn gốc 83%, lợi nhuận ròng chi nhánh và sổ cái quyết toán tiền nộp). Theo quy định, chỉ <b>Ban Giám Đốc</b> và <b>Kế Toán Trưởng</b> mới được cấp quyền xem dữ liệu này.
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn b-bl" onclick="go('dashboard')" style="padding:8px 18px;font-weight:700">🏠 Về Trang Tổng Quan</button>
+        <button class="btn b-out" onclick="go('rbac')" style="padding:8px 18px;font-weight:700">🛡️ Xem Bảng Phân Quyền (RBAC)</button>
+        <button class="btn b-gn" onclick="promptAdminUnlock()" style="padding:8px 18px;font-weight:700">🔑 Mở Khóa Bằng Mã PIN Admin</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div><!-- /content -->
 </div><!-- /main -->
 
@@ -1836,7 +2087,7 @@ const ptitles={dashboard:'📊 Dashboard',nhap:'📦 Goods Intake',tonkho:'🗄�
   daily:'🏪 Distribution & Dealers',kygoi:'📋 Consignment',crm:'👥 CRM & Survey',
   quangcao:'📢 Ads Campaigns',leads:'🎯 Leads & Conversion',
   loinhuan:'💰 Financial & Cashflow',statement:'📑 VCM Payment Statement',baocao:'📈 Reports',
-  mystats:'📊 My Performance',myquotes:'📄 My Quotations',mysurvey:'📝 My Surveys'};
+  mystats:'📊 My Performance',myquotes:'📄 My Quotations',mysurvey:'📝 My Surveys',rbac:'🛡️ Phân Quyền Vai Trò (RBAC)','access-denied':'🛡️ Truy Cập Bị Hạn Chế'};
 
 const renders={
   dashboard:rDash,nhap:rNhap,tonkho:renderTK,tamung:rTU,
@@ -1850,16 +2101,31 @@ const renders={
   crm:()=>{rKH();rKS();rLK();},
   quangcao:()=>{rCampaigns();popCamps(['adr-camp']);rAdsResults();renderAdsSummary();},
   leads:()=>{popCamps(['ld-camp']);rLeads();popLeadSel();renderFunnel();renderLeadsCards();},
-  loinhuan:renderLN,statement:()=>{rVCMStatements();populateStatementSources();calcStatementFields();},baocao:rBC
+  loinhuan:renderLN,statement:()=>{rVCMStatements();populateStatementSources();calcStatementFields();},baocao:rBC,
+  rbac:()=>{renderRBACMatrix();renderStaffUsersTable();populateStaffUserSelect();}
 };
 
 
 function go(id){
+  // 🛡️ RBAC INTERCEPTOR: Kiểm tra phân quyền vai trò trước khi chuyển tab
+  if (id !== 'access-denied' && id !== 'rbac') {
+    const allowed = isTabAllowedForRole(id, currentAppRole);
+    if (!allowed) {
+      showAccessDenied(id, currentAppRole);
+      return;
+    }
+  }
+
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
   document.querySelectorAll('#sb nav a').forEach(a=>a.classList.remove('active'));
   const s=document.getElementById('s-'+id); if(s) s.classList.add('on');
   document.getElementById('ptitle').textContent=ptitles[id]||id;
-  if(event?.target?.closest('a')) event.target.closest('a').classList.add('active');
+
+  // Highlight navigation item
+  const activeLink = document.querySelector(`#sb nav a[data-nav-a="${id}"]`);
+  if (activeLink) activeLink.classList.add('active');
+  else if(event?.target?.closest('a')) event.target.closest('a').classList.add('active');
+
   if(renders[id]) renders[id]();
 }
 function sw(el,tid){
@@ -7069,7 +7335,9 @@ const NAV_TITLES = {
     baocao: '📈 Reports',
     mystats: '📊 My Performance',
     myquotes: '📄 My Quotations',
-    mysurvey: '📝 My Surveys'
+    mysurvey: '📝 My Surveys',
+    system: 'System & Security',
+    rbac: '🛡️ Role Permissions <small style=\"background:#ede9fe;color:#6d28d9;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:auto;font-weight:700\">RBAC</small>'
   },
   vi: {
     overview: 'Tổng Quan',
@@ -7098,7 +7366,9 @@ const NAV_TITLES = {
     baocao: '📈 Báo Cáo Kho Hàng',
     mystats: '📊 Tiến Độ Cá Nhân',
     myquotes: '📄 Báo Giá Của Tôi',
-    mysurvey: '📝 Khảo Sát Của Tôi'
+    mysurvey: '📝 Khảo Sát Của Tôi',
+    system: 'Hệ Thống & Phân Quyền',
+    rbac: '🛡️ Phân Quyền Vai Trò <small style=\"background:#ede9fe;color:#6d28d9;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:auto;font-weight:700\">RBAC</small>'
   }
 };
 
@@ -7883,6 +8153,538 @@ function exportSurveyCSV(){
     else { go('mystats'); renderMyStats(); }
   }
 })();
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🛡️ UNIFIED RBAC ENGINE: ROLE-BASED ACCESS CONTROL & PERMISSION MATRIX
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const ROLES = {
+  admin: {
+    id: 'admin',
+    name: 'Ban Giám Đốc (BOD / Admin)',
+    shortName: 'Ban Giám Đốc',
+    icon: '👑',
+    color: '#dc2626',
+    badgeClass: 'b-rd',
+    desc: 'Toàn quyền 100% tất cả các phân hệ, quản lý tài chính, quỹ nộp 17% Tổng Cty, vốn gốc 83%, duyệt quyết toán và phân quyền nhân viên.',
+    canViewFinance: true,
+    canViewCostPrice: true,
+    allowedTabs: [
+      'dashboard', 'nhap', 'tonkho', 'tamung',
+      'banhang', 'baogiaups', 'baogiasolar', 'thucthi', 'acceptance', 'daily', 'kygoi',
+      'crm', 'quangcao', 'leads',
+      'loinhuan', 'statement', 'baocao',
+      'mystats', 'myquotes', 'mysurvey', 'rbac'
+    ]
+  },
+  finance: {
+    id: 'finance',
+    name: 'Kế Toán & Tài Chính (Finance)',
+    shortName: 'Kế Toán Trưởng',
+    icon: '💰',
+    color: '#0284c7',
+    badgeClass: 'b-bl',
+    desc: 'Xem và quản lý số liệu thu chi, doanh thu, lợi nhuận, quỹ nộp 17% Tổng Cty, sổ nộp tiền, công nợ và tờ trình quyết toán VCM.',
+    canViewFinance: true,
+    canViewCostPrice: true,
+    allowedTabs: [
+      'dashboard', 'nhap', 'tonkho', 'tamung',
+      'banhang', 'baogiaups', 'baogiasolar', 'thucthi', 'acceptance', 'daily', 'kygoi',
+      'crm',
+      'loinhuan', 'statement', 'baocao',
+      'mystats', 'myquotes', 'rbac'
+    ]
+  },
+  sales: {
+    id: 'sales',
+    name: 'Nhân Viên Kinh Doanh (Sales)',
+    shortName: 'Kinh Doanh (Sales)',
+    icon: '🧑‍💼',
+    color: '#16a34a',
+    badgeClass: 'b-gn',
+    desc: 'Bán hàng, lập báo giá thiết bị & solar, chăm sóc khách hàng CRM, theo dõi tiến độ cá nhân. BỊ KHÓA các mục Tài chính & Giá vốn gốc 83%.',
+    canViewFinance: false,
+    canViewCostPrice: false,
+    allowedTabs: [
+      'dashboard',
+      'banhang', 'baogiaups', 'baogiasolar', 'daily', 'kygoi',
+      'crm', 'quangcao', 'leads',
+      'mystats', 'myquotes', 'mysurvey', 'rbac'
+    ]
+  },
+  tech: {
+    id: 'tech',
+    name: 'Kỹ Thuật & Hiện Trường (Field Ops)',
+    shortName: 'Kỹ Thuật Hiện Trường',
+    icon: '🚀',
+    color: '#059669',
+    badgeClass: 'b-gn',
+    desc: 'Thi công hiện trường, nghiệm thu bàn giao dự án, khảo sát kỹ thuật, xem báo giá solar cấu hình và cổng cá nhân. BỊ KHÓA mục Tài chính & Giá vốn.',
+    canViewFinance: false,
+    canViewCostPrice: false,
+    allowedTabs: [
+      'dashboard',
+      'baogiasolar', 'thucthi', 'acceptance',
+      'crm',
+      'mystats', 'myquotes', 'mysurvey', 'rbac'
+    ]
+  },
+  warehouse: {
+    id: 'warehouse',
+    name: 'Thủ Kho & Quản Lý Kho (Warehouse)',
+    shortName: 'Thủ Kho',
+    icon: '📦',
+    color: '#d97706',
+    badgeClass: 'b-or',
+    desc: 'Quản lý tồn kho thực tế, nhập kho (số lượng, serial - ẩn giá vốn), cấp phát tạm ứng, xuất kho giao hàng. BỊ KHÓA mục Tài chính & Lợi nhuận.',
+    canViewFinance: false,
+    canViewCostPrice: false,
+    allowedTabs: [
+      'dashboard', 'nhap', 'tonkho', 'tamung',
+      'banhang', 'kygoi',
+      'mystats', 'rbac'
+    ]
+  },
+  dealer: {
+    id: 'dealer',
+    name: 'Đại Lý Phân Phối (Dealer / Partner)',
+    shortName: 'Đại Lý Cấp 1',
+    icon: '🏪',
+    color: '#9333ea',
+    badgeClass: 'b-pu',
+    desc: 'Xem báo giá thiết bị theo giá sỉ đại lý, báo giá solar tiêu chuẩn, theo dõi hàng ký gởi và đặt hàng. BỊ KHÓA toàn bộ dữ liệu nội bộ khác.',
+    canViewFinance: false,
+    canViewCostPrice: false,
+    allowedTabs: [
+      'dashboard',
+      'baogiaups', 'baogiasolar', 'daily', 'kygoi',
+      'rbac'
+    ]
+  }
+};
+
+const SYSTEM_MODULES = [
+  { id: 'dashboard', name: '📊 Dashboard (Tổng Quan)', cat: 'Tổng Quan', secLevel: 'Cấp 4 - Công Khai', desc: 'Bảng tổng hợp hoạt động chung của chi nhánh' },
+  { id: 'nhap', name: '📦 Nhập Hàng (Goods Intake)', cat: 'Kho Hàng', secLevel: 'Cấp 2 - Vốn Gốc 83%', desc: 'Phiếu nhập kho, quản lý serial và giá vốn gốc' },
+  { id: 'tonkho', name: '🗄️ Tồn Kho Thực Tế (Inventory)', cat: 'Kho Hàng', secLevel: 'Cấp 3 - Quản Lý Kho', desc: 'Số lượng tồn thực tế, khả dụng và cảnh báo hết hàng' },
+  { id: 'tamung', name: '🧑‍💼 Tạm Ứng Hàng (Stock Advance)', cat: 'Kho Hàng', secLevel: 'Cấp 3 - Quản Lý Kho', desc: 'Thiết bị nhân viên mượn đi lắp đặt công trình' },
+  { id: 'banhang', name: '🛒 Bán Hàng & Xuất Kho', cat: 'Bán Hàng & Báo Giá', secLevel: 'Cấp 3 - Bán Hàng', desc: 'Đơn xuất kho, người nhận, hình thức thanh toán' },
+  { id: 'baogiaups', name: '📄 Báo Giá Thiết Bị / UPS', cat: 'Bán Hàng & Báo Giá', secLevel: 'Cấp 4 - Bán Hàng', desc: 'Lập và in báo giá thiết bị đơn lẻ' },
+  { id: 'baogiasolar', name: '☀️ Báo Giá Solar (Chuẩn VCM)', cat: 'Bán Hàng & Báo Giá', secLevel: 'Cấp 4 - Bán Hàng', desc: 'Lập báo giá hệ thống điện mặt trời trọn gói' },
+  { id: 'thucthi', name: '🚀 Team Thực Thi (HUB)', cat: 'Kỹ Thuật & Hiện Trường', secLevel: 'Cấp 3 - Kỹ Thuật', desc: 'Điều phối nhân sự thi công & quản lý thiết bị hiện trường' },
+  { id: 'acceptance', name: '⚡ Nghiệm Thu Hiện Trường', cat: 'Kỹ Thuật & Hiện Trường', secLevel: 'Cấp 3 - Kỹ Thuật', desc: 'Biên bản nghiệm thu kỹ thuật & bàn giao đưa vào sử dụng' },
+  { id: 'daily', name: '🏪 Đại Lý & Phân Phối', cat: 'Bán Hàng & Báo Giá', secLevel: 'Cấp 3 - Kênh Bán', desc: 'Danh sách đại lý, mức chiết khấu và chính sách giá' },
+  { id: 'kygoi', name: '📋 Hàng Ký Gởi', cat: 'Bán Hàng & Báo Giá', secLevel: 'Cấp 3 - Kênh Bán', desc: 'Theo dõi thiết bị gửi bán tại điểm bán & trưởng thôn' },
+  { id: 'crm', name: '👥 CRM & Khảo Sát', cat: 'Khách Hàng', secLevel: 'Cấp 3 - Khách Hàng', desc: 'Quản lý thông tin khách hàng & nhu cầu lắp đặt' },
+  { id: 'quangcao', name: '📢 Chiến Dịch Quảng Cáo', cat: 'Marketing', secLevel: 'Cấp 3 - Tiếp Thị', desc: 'Ngân sách và hiệu quả chiến dịch Facebook, Tiktok' },
+  { id: 'leads', name: '🎯 Leads & Chuyển Đổi', cat: 'Marketing', secLevel: 'Cấp 3 - Tiếp Thị', desc: 'Theo dõi phễu bán hàng và tỷ lệ chốt đơn' },
+  { id: 'loinhuan', name: '💰 Tài Chính & Lợi Nhuận', cat: 'Tài Chính & Kế Toán', secLevel: '🔴 CẤP 1 - TUYỆT MẬT', desc: 'Tỷ lệ 17% Tổng Cty, vốn gốc 83%, lợi nhuận ròng chi nhánh', isSensitive: true },
+  { id: 'statement', name: '📑 Tờ Trình Quyết Toán VCM', cat: 'Tài Chính & Kế Toán', secLevel: '🔴 CẤP 1 - TUYỆT MẬT', desc: 'Sổ cái quyết toán 17% nộp về Tổng Công Ty VCM', isSensitive: true },
+  { id: 'baocao', name: '📈 Báo Cáo Kho Hàng (Tài Chính)', cat: 'Tài Chính & Kế Toán', secLevel: '🔴 CẤP 1 - TUYỆT MẬT', desc: 'Tổng kết giá trị tài sản vốn hàng tồn kho chi nhánh', isSensitive: true },
+  { id: 'mystats', name: '📊 Tiến Độ Cá Nhân', cat: 'Cổng Nhân Viên', secLevel: 'Cấp 4 - Cá Nhân', desc: 'Báo cáo KPI, doanh số và hoa hồng của từng nhân viên' },
+  { id: 'myquotes', name: '📄 Báo Giá Của Tôi', cat: 'Cổng Nhân Viên', secLevel: 'Cấp 4 - Cá Nhân', desc: 'Danh sách các báo giá do nhân viên tự lập' },
+  { id: 'mysurvey', name: '📝 Khảo Sát Của Tôi', cat: 'Cổng Nhân Viên', secLevel: 'Cấp 4 - Cá Nhân', desc: 'Phiếu khảo sát khách hàng do nhân viên thực hiện' },
+  { id: 'rbac', name: '🛡️ Phân Quyền Vai Trò (RBAC)', cat: 'Hệ Thống & Phân Quyền', secLevel: 'Cấp 1 - Quản Trị', desc: 'Ma trận phân quyền & phân vai trò nhân viên' }
+];
+
+const DEFAULT_STAFF_USERS = [
+  { id: 'ST001', name: 'Nguyễn Văn A', email: 'director@tni.com', role: 'admin', title: 'Giám Đốc Chi Nhánh', phone: '0965 1900 001' },
+  { id: 'ST002', name: 'Trần Thị B', email: 'accountant@tni.com', role: 'finance', title: 'Kế Toán Trưởng', phone: '0965 1900 002' },
+  { id: 'ST003', name: 'Zin Ko Ko', email: 'zinkoko@gmail.com', role: 'sales', title: 'Chuyên Viên Kinh Doanh Solar', phone: '0965 1900 009' },
+  { id: 'ST004', name: 'Min Min', email: 'minmin@gmail.com', role: 'tech', title: 'Kỹ Sư Trưởng Hiện Trường', phone: '0965 332 110' },
+  { id: 'ST005', name: 'Aung Thu', email: 'aungthu@gmail.com', role: 'warehouse', title: 'Thủ Kho Chi Nhánh', phone: '0965 889 004' },
+  { id: 'ST006', name: 'Kyaw Swar', email: 'kyawswar@gmail.com', role: 'sales', title: 'Nhân Viên Kinh Doanh', phone: '0965 776 223' },
+  { id: 'ST007', name: 'Đại Lý Dawei Solar Hub', email: 'daweisolar@hub.mm', role: 'dealer', title: 'Đại Lý Ủy Quyền Cấp 1', phone: '0965 334 112' }
+];
+
+let currentAppRole = localStorage.getItem('tni_sale_role') || 'admin';
+let currentStaffUser = localStorage.getItem('tni_sale_staff') || '';
+let adminPinCode = localStorage.getItem('tni_sale_admin_pin') || '7979';
+
+function isTabAllowedForRole(tabId, roleId) {
+  const r = ROLES[roleId] || ROLES.admin;
+  return r.allowedTabs.includes(tabId);
+}
+
+function changeAppRole(newRole, staffName) {
+  if (!ROLES[newRole]) newRole = 'admin';
+  currentAppRole = newRole;
+  localStorage.setItem('tni_sale_role', newRole);
+
+  if (staffName) {
+    currentStaffUser = staffName;
+    localStorage.setItem('tni_sale_staff', staffName);
+  }
+
+  // Update Topbar select
+  const sel = document.getElementById('app-role-select');
+  if (sel) sel.value = newRole;
+
+  // Update badge pill
+  const pill = document.getElementById('role-badge-pill');
+  if (pill) {
+    const roleMeta = ROLES[newRole];
+    pill.textContent = roleMeta.shortName;
+    if (newRole === 'admin') {
+      pill.style.background = '#fef2f2'; pill.style.color = '#dc2626';
+    } else if (newRole === 'finance') {
+      pill.style.background = '#e0f2fe'; pill.style.color = '#0284c7';
+    } else if (newRole === 'sales' || newRole === 'tech') {
+      pill.style.background = '#dcfce7'; pill.style.color = '#15803d';
+    } else if (newRole === 'warehouse') {
+      pill.style.background = '#fef3c7'; pill.style.color = '#d97706';
+    } else {
+      pill.style.background = '#f3e8ff'; pill.style.color = '#9333ea';
+    }
+  }
+
+  // Update Quick cards in RBAC panel
+  document.querySelectorAll('.role-quick-card').forEach(c => {
+    c.style.borderColor = 'rgba(255,255,255,0.2)';
+    c.style.background = 'rgba(255,255,255,0.12)';
+  });
+  const activeQc = document.getElementById('rqc-' + newRole);
+  if (activeQc) {
+    activeQc.style.borderColor = '#fff';
+    activeQc.style.background = 'rgba(255,255,255,0.28)';
+  }
+
+  // Update Sidebar lock icons & tooltips
+  updateSidebarAccessState(newRole);
+
+  // If currently on a blocked tab, redirect to access denied
+  const curSec = document.querySelector('.sec.on');
+  if (curSec) {
+    const secId = curSec.id.replace(/^s-/, '');
+    if (secId !== 'access-denied' && secId !== 'rbac' && !isTabAllowedForRole(secId, newRole)) {
+      showAccessDenied(secId, newRole);
+    }
+  }
+
+  // Re-render RBAC matrix if active
+  if (document.getElementById('s-rbac')?.classList.contains('on')) {
+    renderRBACMatrix();
+  }
+
+  al('Đã chuyển sang vai trò: ' + ROLES[newRole].name, 'ok');
+}
+
+function updateSidebarAccessState(roleId) {
+  const allowed = (ROLES[roleId] || ROLES.admin).allowedTabs;
+  document.querySelectorAll('#sb nav a[data-nav-a]').forEach(a => {
+    const tabId = a.getAttribute('data-nav-a');
+    const isAllowed = allowed.includes(tabId);
+
+    // Remove existing lock badge if any
+    const oldLock = a.querySelector('.nav-lock-badge');
+    if (oldLock) oldLock.remove();
+
+    if (!isAllowed) {
+      a.style.opacity = '0.52';
+      a.title = '🔒 Bị khóa đối với vai trò ' + ROLES[roleId].shortName;
+      const lockSpan = document.createElement('span');
+      lockSpan.className = 'nav-lock-badge';
+      lockSpan.style.cssText = 'font-size:10px;margin-left:auto;opacity:0.8';
+      lockSpan.textContent = '🔒';
+      a.appendChild(lockSpan);
+    } else {
+      a.style.opacity = '1.0';
+      a.title = '';
+    }
+  });
+}
+
+function showAccessDenied(targetId, roleId) {
+  const roleMeta = ROLES[roleId] || ROLES.admin;
+  const modMeta = SYSTEM_MODULES.find(m => m.id === targetId) || { name: targetId, cat: 'Hệ Thống' };
+
+  // Determine allowed roles for this module
+  const allowedRoleNames = [];
+  Object.values(ROLES).forEach(r => {
+    if (r.allowedTabs.includes(targetId)) allowedRoleNames.push(r.icon + ' ' + r.shortName);
+  });
+
+  const nameEl = document.getElementById('denied-target-name');
+  const roleEl = document.getElementById('denied-current-role');
+  const allowedEl = document.getElementById('denied-allowed-roles');
+
+  if (nameEl) nameEl.textContent = modMeta.name;
+  if (roleEl) roleEl.innerHTML = `<span style="color:${roleMeta.color}">${roleMeta.icon} ${roleMeta.name}</span>`;
+  if (allowedEl) allowedEl.textContent = allowedRoleNames.join(', ');
+
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('on'));
+  const deniedSec = document.getElementById('s-access-denied');
+  if (deniedSec) deniedSec.classList.add('on');
+  document.getElementById('ptitle').textContent = '🛡️ Truy Cập Bị Hạn Chế';
+}
+
+function renderRBACMatrix() {
+  const container = document.getElementById('rbac-matrix-container');
+  if (!container) return;
+
+  const catFilter = document.getElementById('rbac-cat-filter')?.value || 'all';
+  const kw = (document.getElementById('rbac-search-kw')?.value || '').toLowerCase().trim();
+
+  const filtered = SYSTEM_MODULES.filter(m => {
+    if (catFilter !== 'all' && m.cat !== catFilter) return false;
+    if (kw && !m.name.toLowerCase().includes(kw) && !m.desc.toLowerCase().includes(kw) && !m.cat.toLowerCase().includes(kw)) return false;
+    return true;
+  });
+
+  const roleKeys = ['admin', 'finance', 'sales', 'tech', 'warehouse', 'dealer'];
+
+  let html = '<table class="data-table" style="width:100%;border-collapse:collapse;font-size:12px">';
+  html += '<thead style="background:#f1f5f9;color:#334155;position:sticky;top:0;z-index:2">';
+  html += '<tr>';
+  html += '<th style="padding:10px 8px;text-align:center;width:40px">#</th>';
+  html += '<th style="padding:10px 10px;text-align:left;min-width:200px">Phân Hệ / Tính Năng</th>';
+  html += '<th style="padding:10px 8px;text-align:center;width:130px">Cấp Bảo Mật</th>';
+
+  roleKeys.forEach(rk => {
+    const r = ROLES[rk];
+    const isCur = rk === currentAppRole;
+    html += `<th style="padding:10px 6px;text-align:center;min-width:110px;background:${isCur ? '#e0e7ff' : '#f1f5f9'};border-left:1px solid #cbd5e1;cursor:pointer" onclick="changeAppRole('${rk}')" title="Bấm để kích hoạt vai trò này">`;
+    html += `<div style="font-size:14px">${r.icon}</div>`;
+    html += `<div style="font-weight:800;font-size:11.5px;color:${isCur ? '#4338ca' : '#1e293b'}">${r.shortName}</div>`;
+    if (isCur) html += `<div style="font-size:9.5px;background:#4f46e5;color:#fff;border-radius:10px;padding:1px 4px;margin-top:2px;font-weight:700">Đang Chọn</div>`;
+    html += `</th>`;
+  });
+
+  html += '</tr></thead><tbody>';
+
+  let currentCat = '';
+  let count = 1;
+
+  filtered.forEach(mod => {
+    if (mod.cat !== currentCat && catFilter === 'all') {
+      currentCat = mod.cat;
+      html += `<tr style="background:#f8fafc;font-weight:800;color:#475569">`;
+      html += `<td colspan="${3 + roleKeys.length}" style="padding:8px 12px;border-top:2px solid #e2e8f0;border-bottom:1px solid #e2e8f0">`;
+      html += `<span style="color:#0284c7;font-size:13px">📁 ${currentCat}</span>`;
+      html += `</td></tr>`;
+    }
+
+    const isSens = mod.isSensitive;
+    html += `<tr style="${isSens ? 'background:#fff1f2' : ''};border-bottom:1px solid #e2e8f0">`;
+    html += `<td style="padding:8px 6px;text-align:center;color:#64748b;font-size:11px">${count++}</td>`;
+    html += `<td style="padding:8px 10px">`;
+    html += `<div style="font-weight:700;color:${isSens ? '#991b1b' : '#0f172a'};font-size:12.5px">${mod.name}</div>`;
+    html += `<div style="font-size:11px;color:${isSens ? '#b91c1c' : '#64748b'};margin-top:2px">${mod.desc}</div>`;
+    html += `</td>`;
+
+    // Security level
+    html += `<td style="padding:8px 6px;text-align:center">`;
+    if (isSens) {
+      html += `<span style="background:#fee2e2;color:#991b1b;padding:3px 7px;border-radius:6px;font-size:10.5px;font-weight:800;border:1px solid #fca5a5">🔴 Tuyệt Mật 17%</span>`;
+    } else if (mod.secLevel.includes('Cấp 2')) {
+      html += `<span style="background:#fef3c7;color:#b45309;padding:3px 7px;border-radius:6px;font-size:10.5px;font-weight:700">🟡 Vốn Gốc 83%</span>`;
+    } else if (mod.secLevel.includes('Cấp 3')) {
+      html += `<span style="background:#e0f2fe;color:#0369a1;padding:3px 7px;border-radius:6px;font-size:10.5px;font-weight:600">🔵 Nghiệp Vụ</span>`;
+    } else {
+      html += `<span style="background:#f1f5f9;color:#475569;padding:3px 7px;border-radius:6px;font-size:10.5px">⚪ Công Khai</span>`;
+    }
+    html += `</td>`;
+
+    // Role columns
+    roleKeys.forEach(rk => {
+      const allowed = ROLES[rk].allowedTabs.includes(mod.id);
+      const isCur = rk === currentAppRole;
+      html += `<td style="padding:8px 6px;text-align:center;background:${isCur ? '#f5f7ff' : ''};border-left:1px solid #e2e8f0">`;
+      if (allowed) {
+        if (isSens) {
+          html += `<span style="background:#dcfce7;color:#15803d;padding:3px 7px;border-radius:6px;font-size:11px;font-weight:800">✅ Toàn Quyền</span>`;
+        } else {
+          html += `<span style="background:#f0fdf4;color:#16a34a;padding:2px 6px;border-radius:5px;font-size:11px;font-weight:700">✅ Được Xem</span>`;
+        }
+      } else {
+        html += `<span style="background:#fee2e2;color:#dc2626;padding:2px 6px;border-radius:5px;font-size:11px;font-weight:700">❌ Bị Khóa</span>`;
+      }
+      html += `</td>`;
+    });
+
+    html += `</tr>`;
+  });
+
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+function renderStaffUsersTable() {
+  const container = document.getElementById('rbac-staff-table-container');
+  if (!container) return;
+
+  const users = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
+  if (!DB.g('staff_directory').length) {
+    DB.s('staff_directory', DEFAULT_STAFF_USERS);
+  }
+
+  let html = '<table class="data-table" style="width:100%;border-collapse:collapse;font-size:12px">';
+  html += '<thead style="background:#f8fafc;color:#334155">';
+  html += '<tr>';
+  html += '<th style="padding:8px;text-align:left">Nhân Sự</th>';
+  html += '<th style="padding:8px;text-align:left">Chức Danh</th>';
+  html += '<th style="padding:8px;text-align:center">Vai Trò Gán</th>';
+  html += '<th style="padding:8px;text-align:center">Thao Tác</th>';
+  html += '</tr></thead><tbody>';
+
+  users.forEach((u, i) => {
+    const roleMeta = ROLES[u.role] || ROLES.sales;
+    html += `<tr style="border-bottom:1px solid #f1f5f9">`;
+    html += `<td style="padding:8px">`;
+    html += `<div style="font-weight:700;color:#1e293b">${u.name}</div>`;
+    html += `<div style="font-size:11px;color:#64748b">${u.email || u.phone || ''}</div>`;
+    html += `</td>`;
+    html += `<td style="padding:8px;font-size:11.5px;color:#475569">${u.title || '-'}</td>`;
+    html += `<td style="padding:8px;text-align:center">`;
+    html += `<select onchange="updateStaffAssignedRole('${u.id}', this.value)" style="padding:3px 6px;border:1px solid #cbd5e1;border-radius:5px;font-size:11.5px;font-weight:700;color:${roleMeta.color}">`;
+    Object.keys(ROLES).forEach(rk => {
+      html += `<option value="${rk}" ${u.role === rk ? 'selected' : ''}>${ROLES[rk].icon} ${ROLES[rk].shortName}</option>`;
+    });
+    html += `</select></td>`;
+    html += `<td style="padding:8px;text-align:center">`;
+    html += `<button class="btn b-xs b-bl" onclick="selectStaffForLinkGen('${u.name}', '${u.role}')" title="Tạo link gửi cho nhân viên">🔗 Link</button>`;
+    html += `</td></tr>`;
+  });
+
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+function updateStaffAssignedRole(userId, newRole) {
+  let list = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
+  list = list.map(u => u.id === userId ? { ...u, role: newRole } : u);
+  DB.s('staff_directory', list);
+  al('Đã cập nhật vai trò nhân sự thành công!', 'ok');
+  populateStaffUserSelect();
+  renderStaffUsersTable();
+}
+
+function populateStaffUserSelect() {
+  const sel = document.getElementById('gen-staff-sel');
+  if (!sel) return;
+
+  const users = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
+  sel.innerHTML = '';
+  users.forEach(u => {
+    sel.innerHTML += `<option value="${u.name}" data-role="${u.role}">${u.name} (${u.title || u.role})</option>`;
+  });
+  updateGeneratedStaffLink();
+}
+
+function selectStaffForLinkGen(staffName, roleId) {
+  const staffSel = document.getElementById('gen-staff-sel');
+  const roleSel = document.getElementById('gen-role-sel');
+  if (staffSel) staffSel.value = staffName;
+  if (roleSel) roleSel.value = roleId;
+  updateGeneratedStaffLink();
+  al('Đã chọn nhân sự: ' + staffName, 'ok');
+}
+
+function updateGeneratedStaffLink() {
+  const staffSel = document.getElementById('gen-staff-sel');
+  const roleSel = document.getElementById('gen-role-sel');
+  const output = document.getElementById('gen-link-output');
+  if (!staffSel || !roleSel || !output) return;
+
+  const staffName = staffSel.value || 'Staff';
+  const roleId = roleSel.value || 'sales';
+  const baseUrl = window.location.origin + window.location.pathname;
+  const link = `${baseUrl}?staff=${encodeURIComponent(staffName)}&role=${roleId}`;
+  output.value = link;
+}
+
+function copyGeneratedStaffLink() {
+  const output = document.getElementById('gen-link-output');
+  if (!output) return;
+  output.select();
+  navigator.clipboard.writeText(output.value).then(() => {
+    al('Đã sao chép link cá nhân hóa vào bộ nhớ tạm! Có thể dán gửi cho nhân viên.', 'ok');
+  }).catch(() => {
+    al('Sao chép thất bại, vui lòng bôi đen và bấm Ctrl+C', 'er');
+  });
+}
+
+function testGeneratedStaffLink() {
+  const output = document.getElementById('gen-link-output');
+  if (!output) return;
+  window.location.href = output.value;
+}
+
+function promptAdminUnlock() {
+  const input = prompt('Nhập mã PIN Quản Trị Hệ Thống (Mặc định: 7979):');
+  if (input === null) return;
+  if (input.trim() === adminPinCode) {
+    changeAppRole('admin');
+    al('Xác thực PIN Quản Trị thành công! Đã kích hoạt quyền Ban Giám Đốc (Admin).', 'ok');
+  } else {
+    al('Mã PIN không chính xác!', 'er');
+  }
+}
+
+function openAddStaffModal() {
+  const name = prompt('Nhập Họ và Tên Nhân Sự mới:');
+  if (!name || !name.trim()) return;
+  const title = prompt('Nhập Chức Danh / Phòng Ban (VD: Kỹ Sư Hiện Trường, Kinh Doanh...):') || 'Nhân Viên';
+  const role = prompt('Nhập Mã Vai Trò (admin, finance, sales, tech, warehouse, dealer):', 'sales') || 'sales';
+
+  const list = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
+  list.push({
+    id: 'ST' + String(Date.now()).slice(-4),
+    name: name.trim(),
+    title: title.trim(),
+    role: ROLES[role.toLowerCase()] ? role.toLowerCase() : 'sales'
+  });
+  DB.s('staff_directory', list);
+  renderStaffUsersTable();
+  populateStaffUserSelect();
+  al('Đã thêm nhân sự mới thành công!', 'ok');
+}
+
+function exportRBACMatrixCSV() {
+  const h = ['STT', 'Phan He', 'Danh Muc', 'Cap Bao Mat', 'BOD (Admin)', 'Ke Toan (Finance)', 'Kinh Doanh (Sales)', 'Ky Thuat (Tech)', 'Thu Kho (Warehouse)', 'Dai Ly (Dealer)', 'Mo Ta'];
+  const rows = SYSTEM_MODULES.map((m, i) => [
+    i + 1,
+    `"${m.name.replace(/"/g, '""')}"`,
+    `"${m.cat}"`,
+    `"${m.secLevel}"`,
+    ROLES.admin.allowedTabs.includes(m.id) ? 'YES' : 'NO',
+    ROLES.finance.allowedTabs.includes(m.id) ? 'YES' : 'NO',
+    ROLES.sales.allowedTabs.includes(m.id) ? 'YES' : 'NO',
+    ROLES.tech.allowedTabs.includes(m.id) ? 'YES' : 'NO',
+    ROLES.warehouse.allowedTabs.includes(m.id) ? 'YES' : 'NO',
+    ROLES.dealer.allowedTabs.includes(m.id) ? 'YES' : 'NO',
+    `"${m.desc.replace(/"/g, '""')}"`
+  ]);
+
+  const csv = "\uFEFF" + h.join(',') + "\n" + rows.map(function(r){ return r.join(','); }).join("\n");
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = `Ma_Tran_Phan_Quyen_TNI_${td()}.csv`;
+  a.click();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🌐 RBAC INITIALIZATION HOOK ON LOAD
+// ═══════════════════════════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const paramRole = params.get('role');
+  const paramStaff = params.get('staff') || params.get('user') || params.get('email');
+
+  if (paramRole && ROLES[paramRole]) {
+    changeAppRole(paramRole, paramStaff || '');
+  } else {
+    changeAppRole(currentAppRole, currentStaffUser);
+  }
+
+  // Populate staff selects and render matrix
+  setTimeout(() => {
+    populateStaffUserSelect();
+    renderRBACMatrix();
+    renderStaffUsersTable();
+  }, 300);
+});
+
 </script>
 </body>
 </html>
