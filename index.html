@@ -829,6 +829,9 @@
       <button class="nav-tab" onclick="showTab('plan-week-panel', this)">
         <i class="fa-solid fa-calendar-week"></i> Plan - Result Dep
       </button>
+      <button class="nav-tab" id="tab-btn-task-notes" onclick="showTab('task-notes-panel', this)" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(16, 185, 129, 0.22)); border: 1px solid rgba(56, 189, 248, 0.45); color: #38bdf8; font-weight: 700;">
+        <i class="fa-solid fa-clipboard-check"></i> Note Đầu Việc
+      </button>
       <button class="nav-tab" onclick="showTab('access-control-panel', this)">
         <i class="fa-solid fa-lock"></i> Gmail Access List
       </button>
@@ -6507,6 +6510,99 @@ Team04>> 2Box</td>
     </div>
 
     
+    <!-- 8. TASK NOTES & ACTION ITEMS TAB PANEL (SSOT GID 0) -->
+    <div id="task-notes-panel" class="tab-panel">
+      <!-- Section Header -->
+      <div class="section-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.8rem; margin-bottom:1rem;">
+        <div>
+          <div style="display:flex; align-items:center; gap:0.6rem;">
+            <span style="font-size:1.6rem;">📝</span>
+            <h2 style="color:#F8FAFC; font-size:1.35rem; font-weight:800; margin:0;">
+              Sổ Tay Đầu Việc & Tiến Độ Hoàn Thành (SSOT)
+            </h2>
+          </div>
+          <div style="font-size:0.8rem; color:#94A3B8; margin-top:0.3rem;">
+            Đồng bộ 2 chiều thời gian thực với Google Sheet & Nhập liệu Giọng Nói AI (Speech-to-Text Tiếng Việt).
+          </div>
+        </div>
+        <div style="display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center;">
+          <a href="https://docs.google.com/spreadsheets/d/1J4huU6zxJw-gC6_EtuOP1O4FQ2y8s38inxUM5rYYLzo/edit?gid=0#gid=0" target="_blank" class="filter-btn" style="background:rgba(56,189,248,0.12); color:#38BDF8; border:1px solid rgba(56,189,248,0.3); padding:0.5rem 0.9rem; border-radius:10px; cursor:pointer; font-size:0.8rem; text-decoration:none; display:inline-flex; align-items:center; gap:0.4rem;">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Mở Google Sheet ↗
+          </a>
+          <button type="button" class="filter-btn" style="background:rgba(255,255,255,0.08); color:#F8FAFC; border:1px solid rgba(255,255,255,0.2); padding:0.5rem 0.9rem; border-radius:10px; cursor:pointer; font-size:0.8rem;" onclick="window.TaskNotesManager.loadData(true)">
+            <i class="fa-solid fa-rotate" id="task-notes-refresh-icon"></i> Đồng Bộ Live
+          </button>
+          <button type="button" class="filter-btn active" style="background:linear-gradient(135deg, #06B6D4, #10B981); color:#fff; border:none; padding:0.5rem 1.1rem; font-weight:700; border-radius:10px; cursor:pointer; font-size:0.82rem;" onclick="window.TaskNotesManager.openAddModal()">
+            <i class="fa-solid fa-plus-circle"></i> + Thêm Đầu Việc
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick KPI Counters -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:0.8rem; margin-bottom:1.2rem;">
+        <div class="card" style="padding:0.9rem 1rem; margin-bottom:0; text-align:center; border:1px solid rgba(56,189,248,0.25);">
+          <div style="font-size:0.75rem; color:#94A3B8; text-transform:uppercase; letter-spacing:0.5px;">Tổng Đầu Việc</div>
+          <div style="font-size:1.6rem; font-weight:800; color:#38BDF8; margin-top:0.2rem;" id="tn-kpi-total">0</div>
+        </div>
+        <div class="card" style="padding:0.9rem 1rem; margin-bottom:0; text-align:center; border:1px solid rgba(245,158,11,0.25);">
+          <div style="font-size:0.75rem; color:#94A3B8; text-transform:uppercase; letter-spacing:0.5px;">Đang Thực Hiện</div>
+          <div style="font-size:1.6rem; font-weight:800; color:#F59E0B; margin-top:0.2rem;" id="tn-kpi-doing">0</div>
+        </div>
+        <div class="card" style="padding:0.9rem 1rem; margin-bottom:0; text-align:center; border:1px solid rgba(167,139,250,0.25);">
+          <div style="font-size:0.75rem; color:#94A3B8; text-transform:uppercase; letter-spacing:0.5px;">Đã Hoàn Thành</div>
+          <div style="font-size:1.6rem; font-weight:800; color:#10B981; margin-top:0.2rem;" id="tn-kpi-done">0</div>
+        </div>
+        <div class="card" style="padding:0.9rem 1rem; margin-bottom:0; text-align:center; border:1px solid rgba(167,139,250,0.25);">
+          <div style="font-size:0.75rem; color:#94A3B8; text-transform:uppercase; letter-spacing:0.5px;">Tiến Độ Chung</div>
+          <div style="font-size:1.6rem; font-weight:800; color:#A78BFA; margin-top:0.2rem;" id="tn-kpi-avg">0%</div>
+        </div>
+      </div>
+
+      <!-- Filter & Search Toolbar -->
+      <div class="card" style="padding:0.75rem 1rem; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.8rem;">
+        <div style="display:flex; align-items:center; gap:0.5rem; flex:1; min-width:260px;">
+          <i class="fa-solid fa-magnifying-glass" style="color:#94A3B8;"></i>
+          <input type="text" id="tn-search-input" placeholder="Tìm kiếm theo tên công việc, điều kiện hoàn thành..." style="flex:1; background:transparent; border:none; color:#fff; font-size:0.85rem; outline:none;" oninput="window.TaskNotesManager.handleSearch(this.value)" />
+        </div>
+        <div style="display:flex; gap:0.4rem; align-items:center;">
+          <button type="button" class="filter-btn active" id="tn-filter-all" onclick="window.TaskNotesManager.setFilter('ALL', this)" style="font-size:0.78rem; padding:0.35rem 0.75rem; border-radius:8px;">Tất cả</button>
+          <button type="button" class="filter-btn" id="tn-filter-doing" onclick="window.TaskNotesManager.setFilter('DOING', this)" style="font-size:0.78rem; padding:0.35rem 0.75rem; border-radius:8px;">Đang làm</button>
+          <button type="button" class="filter-btn" id="tn-filter-done" onclick="window.TaskNotesManager.setFilter('DONE', this)" style="font-size:0.78rem; padding:0.35rem 0.75rem; border-radius:8px;">Hoàn thành</button>
+          <button type="button" class="filter-btn" id="tn-filter-pending" onclick="window.TaskNotesManager.setFilter('PENDING', this)" style="font-size:0.78rem; padding:0.35rem 0.75rem; border-radius:8px;">Chưa làm</button>
+        </div>
+      </div>
+
+      <!-- Main Data Table Card -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem; flex-wrap:wrap; gap:0.5rem;">
+          <h3 style="color:#fff; font-size:1.05rem; font-weight:700; margin:0;">
+            <i class="fa-solid fa-list-check" style="color:var(--cyan);"></i> Danh Sách Đầu Việc Cần Làm
+            <span id="tn-table-count" style="color:var(--cyan); font-size:0.85rem; margin-left:0.3rem;">(0)</span>
+          </h3>
+          <div style="font-size:0.72rem; color:var(--text-sub);" id="tn-sync-time">Cập nhật: —</div>
+        </div>
+
+        <div style="max-height: 540px; overflow-y: auto; overflow-x: auto;">
+          <table class="data-table" id="tn-table">
+            <thead>
+              <tr>
+                <th style="width:45px; text-align:center;">STT</th>
+                <th style="min-width:240px; text-align:left;">Tên Công Việc</th>
+                <th style="width:190px; text-align:center;">Tiến Độ Hoàn Thành</th>
+                <th style="min-width:260px; text-align:left;">Điều Kiện Hoàn Thành</th>
+                <th style="width:120px; text-align:center;">Trạng Thái</th>
+                <th style="width:130px; text-align:center;">Cập Nhật</th>
+                <th style="width:110px; text-align:center;">Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody id="tn-tbody">
+              <tr><td colspan="7" style="text-align:center; color:var(--text-sub); padding:2.5rem;"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải dữ liệu từ Google Sheet...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- 7. VIRTUAL EXECUTIVE SECRETARY & MULTI-AGENT PANEL -->
     <div id="secretary-panel" class="tab-panel">
       
@@ -6629,6 +6725,30 @@ Team04>> 2Box</td>
           </div>
 
           <div style="border-top:1px solid rgba(255,255,255,0.08); padding-top:0.8rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+              <div class="sidebar-section-title" style="margin-bottom:0;"><i class="fa-solid fa-clipboard-check"></i> Note Đầu Việc Cần Làm</div>
+              <button type="button" class="filter-btn active" style="font-size:0.68rem; padding:0.18rem 0.5rem; background:rgba(56,189,248,0.2); color:#38BDF8; border:1px solid rgba(56,189,248,0.4); border-radius:6px; cursor:pointer;" onclick="showTab('task-notes-panel', document.getElementById('tab-btn-task-notes'))" title="Mở Tab Chi Tiết">
+                Xem Tất Cả ↗
+              </button>
+            </div>
+            <p style="font-size:0.72rem; color:#94A3B8; margin-bottom:0.5rem; line-height:1.3;">
+              Đồng bộ trực tiếp Google Sheet SSOT & Ghi âm giọng nói.
+            </p>
+            <div id="sec-task-notes-mini-list" style="max-height:130px; overflow-y:auto; display:flex; flex-direction:column; gap:0.4rem; margin-bottom:0.6rem;">
+              <!-- Mini task items rendered by JS -->
+            </div>
+            <div style="display:flex; gap:0.35rem;">
+              <input type="text" id="sec-quick-task-input" placeholder="Ghi chú nhanh đầu việc..." style="flex:1; background:#1E293B; border:1px solid rgba(255,255,255,0.15); border-radius:8px; padding:0.4rem 0.5rem; color:#fff; font-size:0.75rem;" onkeydown="if(event.key==='Enter') window.TaskNotesManager.quickAddFromSecretary();" />
+              <button type="button" class="chat-action-btn" id="secQuickTaskMicBtn" style="padding:0.4rem 0.6rem; border-radius:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15);" onclick="window.TaskNotesManager.startVoiceInput('sec-quick-task-input', 'secQuickTaskMicBtn')" title="Thu âm giọng nói">
+                <i class="fa-solid fa-microphone" style="color:var(--cyan); font-size:0.85rem;"></i>
+              </button>
+              <button type="button" class="filter-btn active" style="background:#10B981; border:none; padding:0.4rem 0.65rem; border-radius:8px; font-size:0.75rem; cursor:pointer;" onclick="window.TaskNotesManager.quickAddFromSecretary()">
+                <i class="fa-solid fa-plus"></i> Lưu
+              </button>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid rgba(255,255,255,0.08); padding-top:0.8rem;">
             <div class="sidebar-section-title"><i class="fa-solid fa-shield-halved"></i> An Ninh Hộp Đen (Audit)</div>
             <div style="font-size:0.74rem; color:#94A3B8; line-height:1.5;">
               <div>• <b>Zero-Egress:</b> CSP khóa cứng domain nội bộ</div>
@@ -6653,6 +6773,105 @@ Team04>> 2Box</td>
 
     </div>
 
+
+    <!-- TASK NOTES ADD / EDIT MODAL -->
+    <div id="taskNotesModal" class="modal-backdrop">
+      <div class="modal-box" style="max-width: 640px; background:#0F172A; border:1px solid rgba(56,189,248,0.35); border-radius:20px; padding:1.6rem; box-shadow:0 25px 50px -12px rgba(0,0,0,0.85);">
+        <div class="modal-header" style="margin-bottom:1.2rem; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h3 id="tn-modal-title" style="color:#38BDF8; font-weight:800; font-size:1.3rem; margin:0;">
+              <i class="fa-solid fa-pen-to-square"></i> Thêm Đầu Việc Mới
+            </h3>
+            <p style="font-size:0.8rem; color:var(--text-sub); margin:0.25rem 0 0 0;">
+              Dữ liệu sẽ lưu trực tiếp vào Google Sheet SSOT & hỗ trợ thu âm giọng nói tiếng Việt.
+            </p>
+          </div>
+          <button type="button" class="close-btn" onclick="window.TaskNotesManager.closeModal()">&times;</button>
+        </div>
+
+        <!-- Voice Status Banner -->
+        <div id="tn-voice-banner" style="display:none; background:rgba(239,68,68,0.15); border:1px solid #EF4444; color:#FCA5A5; padding:0.5rem 0.8rem; border-radius:8px; font-size:0.8rem; margin-bottom:1rem; align-items:center; gap:0.5rem;">
+          <span class="agent-pulse" style="background:#EF4444;"></span>
+          <span id="tn-voice-banner-text">🎙️ Đang lắng nghe giọng nói của Sếp... Hãy đọc nội dung!</span>
+        </div>
+
+        <input type="hidden" id="tn-edit-row" value="" />
+
+        <div style="display:flex; flex-direction:column; gap:1rem;">
+          <!-- Tên công việc -->
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+              <label style="font-weight:700; color:#F8FAFC; font-size:0.85rem;">
+                <i class="fa-solid fa-heading" style="color:var(--cyan);"></i> Tên công việc (*):
+              </label>
+              <button type="button" class="filter-btn" id="btn-voice-name" style="background:rgba(56,189,248,0.12); color:#38BDF8; border:1px solid rgba(56,189,248,0.3); padding:0.25rem 0.6rem; border-radius:6px; font-size:0.75rem; cursor:pointer;" onclick="window.TaskNotesManager.startVoiceInput('tn-input-name', 'btn-voice-name')" title="Bấm để nói tiếng Việt">
+                <i class="fa-solid fa-microphone"></i> Nói để nhập
+              </button>
+            </div>
+            <input type="text" id="tn-input-name" placeholder="Ví dụ: Kiểm tra tiến độ xử lý WO quá hạn trạm Dawei..." style="width:100%; background:#1E293B; border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:0.6rem 0.9rem; color:#fff; font-size:0.9rem;" />
+          </div>
+
+          <!-- Tiến độ hoàn thành (%) -->
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+              <label style="font-weight:700; color:#F8FAFC; font-size:0.85rem;">
+                <i class="fa-solid fa-chart-pie" style="color:var(--amber);"></i> Tiến độ hoàn thành:
+              </label>
+              <span id="tn-progress-label" style="font-weight:800; color:#38BDF8; font-size:0.95rem;">0%</span>
+            </div>
+            <input type="range" id="tn-input-progress" min="0" max="100" step="5" value="0" style="width:100%; accent-color:#10B981; cursor:pointer;" oninput="document.getElementById('tn-progress-label').textContent = this.value + '%'; window.TaskNotesManager.syncStatusFromProgress(this.value);" />
+            <!-- Quick Chips -->
+            <div style="display:flex; gap:0.4rem; margin-top:0.4rem;">
+              <button type="button" class="filter-btn" style="flex:1; padding:0.25rem 0; font-size:0.75rem; border-radius:6px;" onclick="window.TaskNotesManager.setProgressValue(0)">0%</button>
+              <button type="button" class="filter-btn" style="flex:1; padding:0.25rem 0; font-size:0.75rem; border-radius:6px;" onclick="window.TaskNotesManager.setProgressValue(25)">25%</button>
+              <button type="button" class="filter-btn" style="flex:1; padding:0.25rem 0; font-size:0.75rem; border-radius:6px;" onclick="window.TaskNotesManager.setProgressValue(50)">50%</button>
+              <button type="button" class="filter-btn" style="flex:1; padding:0.25rem 0; font-size:0.75rem; border-radius:6px;" onclick="window.TaskNotesManager.setProgressValue(75)">75%</button>
+              <button type="button" class="filter-btn" style="flex:1; padding:0.25rem 0; font-size:0.75rem; border-radius:6px; background:rgba(16,185,129,0.2); color:#10B981; border:1px solid rgba(16,185,129,0.4);" onclick="window.TaskNotesManager.setProgressValue(100)">100% ✅</button>
+            </div>
+          </div>
+
+          <!-- Điều kiện hoàn thành -->
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+              <label style="font-weight:700; color:#F8FAFC; font-size:0.85rem;">
+                <i class="fa-solid fa-bullseye" style="color:var(--emerald);"></i> Điều kiện hoàn thành (Criteria):
+              </label>
+              <button type="button" class="filter-btn" id="btn-voice-criteria" style="background:rgba(56,189,248,0.12); color:#38BDF8; border:1px solid rgba(56,189,248,0.3); padding:0.25rem 0.6rem; border-radius:6px; font-size:0.75rem; cursor:pointer;" onclick="window.TaskNotesManager.startVoiceInput('tn-input-criteria', 'btn-voice-criteria')" title="Bấm để nói tiếng Việt">
+                <i class="fa-solid fa-microphone"></i> Nói để nhập
+              </button>
+            </div>
+            <textarea id="tn-input-criteria" rows="3" placeholder="Tiêu chí để việc này được xem là xong (ví dụ: Đã gửi báo cáo lên group, đóng hết 15 WO...)" style="width:100%; background:#1E293B; border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:0.6rem 0.9rem; color:#fff; font-size:0.88rem; resize:vertical;"></textarea>
+          </div>
+
+          <!-- Trạng thái & Ghi chú -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem;">
+            <div>
+              <label style="display:block; font-weight:700; color:#F8FAFC; margin-bottom:0.35rem; font-size:0.85rem;">
+                <i class="fa-solid fa-tag" style="color:var(--rose);"></i> Trạng thái:
+              </label>
+              <select id="tn-input-status" style="width:100%; background:#1E293B; border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:0.55rem 0.8rem; color:#fff; font-size:0.88rem;">
+                <option value="Chưa làm">⚪ Chưa làm</option>
+                <option value="Đang làm">🟡 Đang làm</option>
+                <option value="Hoàn thành">🟢 Hoàn thành</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-weight:700; color:#F8FAFC; margin-bottom:0.35rem; font-size:0.85rem;">
+                <i class="fa-solid fa-note-sticky" style="color:var(--purple);"></i> Ghi chú:
+              </label>
+              <input type="text" id="tn-input-notes" placeholder="Ghi chú thêm..." style="width:100%; background:#1E293B; border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:0.55rem 0.8rem; color:#fff; font-size:0.88rem;" />
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:0.8rem; margin-top:1.5rem;">
+          <button type="button" class="filter-btn" style="background:rgba(255,255,255,0.08); padding:0.55rem 1.1rem; cursor:pointer; font-size:0.85rem;" onclick="window.TaskNotesManager.closeModal()">Hủy</button>
+          <button type="button" id="tn-btn-save" class="filter-btn active" style="background:linear-gradient(135deg, #06B6D4, #10B981); color:#fff; border:none; padding:0.55rem 1.3rem; font-weight:700; cursor:pointer; font-size:0.85rem;" onclick="window.TaskNotesManager.saveTask()">
+            <i class="fa-solid fa-floppy-disk"></i> Lưu Vào Sheet
+          </button>
+        </div>
+      </div>
+    </div>
 
     <!-- PLAN DEP ADD MODAL -->
     <div id="planDepAddModal" class="modal-backdrop">
@@ -9192,9 +9411,574 @@ document.addEventListener("DOMContentLoaded", function() {
       if (panelId === 'secretary-panel') {
         window.ChiefSecretaryAgent.init();
       }
+      if (panelId === 'task-notes-panel') {
+        window.TaskNotesManager.init();
+      }
     };
   });
 })();
+
+/* ========================================================================= */
+/* 📝 TNI TASK NOTES & ACTION ITEMS MANAGER (SSOT GID 0)                      */
+/* Spreadsheet: 1J4huU6zxJw-gC6_EtuOP1O4FQ2y8s38inxUM5rYYLzo                 */
+/* ========================================================================= */
+window.TaskNotesManager = {
+  initialized: false,
+  loading: false,
+  tasks: [],
+  currentFilter: 'ALL',
+  searchQuery: '',
+  activeRecog: null,
+  activeMicBtn: null,
+  API_URL: '/api/task_notes',
+  GAS_FALLBACK: 'https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec',
+
+  init: function() {
+    if (!this.initialized) {
+      this.initialized = true;
+      this.loadData();
+    }
+  },
+
+  async requestAPI(action, data = null, method = 'GET') {
+    const qs = method === 'GET' ? `?action=${action}&t=${Date.now()}` : '';
+    const proxyUrl = `${this.API_URL}${qs}`;
+    const directUrl = `${this.GAS_FALLBACK}?action=${action}&t=${Date.now()}`;
+
+    const headers = { 'Content-Type': 'text/plain;charset=utf-8' };
+    const bodyStr = data ? JSON.stringify(data) : null;
+
+    try {
+      const resp = await fetch(proxyUrl, {
+        method: method,
+        headers: headers,
+        body: bodyStr,
+        signal: AbortSignal.timeout(12000)
+      });
+      if (resp.ok) {
+        const json = await resp.json();
+        if (json && json.status === 'ok') return json;
+      }
+    } catch (e) {
+      console.warn('[TaskNotes] Proxy error, falling back to direct GAS:', e.message);
+    }
+
+    try {
+      const resp = await fetch(directUrl, {
+        method: method,
+        headers: headers,
+        body: bodyStr,
+        signal: AbortSignal.timeout(20000)
+      });
+      return await resp.json();
+    } catch (e) {
+      console.error('[TaskNotes] Direct GAS error:', e);
+      throw e;
+    }
+  },
+
+  async loadData(showToast = false) {
+    if (this.loading) return;
+    this.loading = true;
+    const refreshIcon = document.getElementById('task-notes-refresh-icon');
+    if (refreshIcon) refreshIcon.classList.add('fa-spin');
+
+    try {
+      const res = await this.requestAPI('get_task_notes');
+      if (res && res.status === 'ok') {
+        this.tasks = res.data || [];
+        this.renderTable();
+        this.updateKPIs();
+        this.renderSecretaryMiniList();
+        const syncEl = document.getElementById('tn-sync-time');
+        if (syncEl) syncEl.textContent = `Cập nhật: ${new Date().toLocaleTimeString('vi-VN')}`;
+        if (showToast) this.showToast('✅ Đã đồng bộ thành công dữ liệu từ Google Sheet!');
+      } else {
+        throw new Error(res?.error?.message || 'Không thể tải dữ liệu');
+      }
+    } catch (err) {
+      console.error('[TaskNotes] Load error:', err);
+      const tbody = document.getElementById('tn-tbody');
+      if (tbody && this.tasks.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#EF4444; padding:2rem;">❌ Lỗi kết nối Google Sheet: ${err.message}. Sếp vui lòng bấm "Đồng Bộ Live" để thử lại.</td></tr>`;
+      }
+      if (showToast) this.showToast(`❌ Lỗi tải dữ liệu: ${err.message}`, '#EF4444');
+    } finally {
+      this.loading = false;
+      if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+    }
+  },
+
+  updateKPIs: function() {
+    const total = this.tasks.length;
+    let doing = 0;
+    let done = 0;
+    let totalProgress = 0;
+
+    this.tasks.forEach(t => {
+      const p = parseInt(t.progress || 0, 10);
+      totalProgress += p;
+      if (p >= 100 || t.status === 'Hoàn thành') {
+        done++;
+      } else if (p > 0 || t.status === 'Đang làm') {
+        doing++;
+      }
+    });
+
+    const avg = total > 0 ? Math.round(totalProgress / total) : 0;
+
+    const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    setVal('tn-kpi-total', total);
+    setVal('tn-kpi-doing', doing);
+    setVal('tn-kpi-done', done);
+    setVal('tn-kpi-avg', `${avg}%`);
+  },
+
+  setFilter: function(filter, btn) {
+    this.currentFilter = filter;
+    ['tn-filter-all', 'tn-filter-doing', 'tn-filter-done', 'tn-filter-pending'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('active');
+    });
+    if (btn) btn.classList.add('active');
+    this.renderTable();
+  },
+
+  handleSearch: function(q) {
+    this.searchQuery = (q || '').trim().toLowerCase();
+    this.renderTable();
+  },
+
+  getFilteredTasks: function() {
+    return this.tasks.filter(t => {
+      const p = parseInt(t.progress || 0, 10);
+      if (this.currentFilter === 'DOING' && (p === 0 || p >= 100)) return false;
+      if (this.currentFilter === 'DONE' && p < 100) return false;
+      if (this.currentFilter === 'PENDING' && p > 0) return false;
+
+      if (this.searchQuery) {
+        const text = `${t.taskName} ${t.criteria} ${t.status} ${t.notes}`.toLowerCase();
+        if (!text.includes(this.searchQuery)) return false;
+      }
+      return true;
+    });
+  },
+
+  renderTable: function() {
+    const tbody = document.getElementById('tn-tbody');
+    if (!tbody) return;
+
+    const filtered = this.getFilteredTasks();
+    const countEl = document.getElementById('tn-table-count');
+    if (countEl) countEl.textContent = `(${filtered.length}/${this.tasks.length})`;
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align:center; color:#94A3B8; padding:2.5rem;">
+            <i class="fa-solid fa-clipboard-question" style="font-size:1.8rem; color:#475569; margin-bottom:0.6rem; display:block;"></i>
+            Chưa có đầu việc nào phù hợp. Sếp có thể bấm <b>+ Thêm Đầu Việc</b> hoặc <b>Nói Micro</b> để tạo việc mới!
+          </td>
+        </tr>`;
+      return;
+    }
+
+    let rowsHtml = '';
+    filtered.forEach((t, idx) => {
+      const p = parseInt(t.progress || 0, 10);
+      let statusBadge = '<span class="kpi-pill" style="background:rgba(148,163,184,0.15); color:#94A3B8; border:1px solid rgba(148,163,184,0.3);">⚪ Chưa làm</span>';
+      if (p >= 100 || t.status === 'Hoàn thành') {
+        statusBadge = '<span class="kpi-pill kpi-green">🟢 Hoàn thành</span>';
+      } else if (p > 0 || t.status === 'Đang làm') {
+        statusBadge = '<span class="kpi-pill kpi-amber">🟡 Đang làm</span>';
+      }
+
+      const barColor = p >= 100 ? '#10B981' : (p >= 50 ? '#38BDF8' : '#F59E0B');
+
+      rowsHtml += `
+        <tr style="border-bottom:1px solid rgba(255,255,255,0.06); transition:background 0.2s;">
+          <td style="text-align:center; font-weight:700; color:#94A3B8;">${t.stt || (idx + 1)}</td>
+          <td style="text-align:left;">
+            <div style="font-weight:700; color:#F8FAFC; font-size:0.92rem; line-height:1.4;">${this.escapeHtml(t.taskName)}</div>
+            ${t.notes ? `<div style="font-size:0.75rem; color:#94A3B8; margin-top:0.25rem;"><i class="fa-solid fa-note-sticky" style="color:var(--purple);"></i> ${this.escapeHtml(t.notes)}</div>` : ''}
+          </td>
+          <td style="text-align:center;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.25rem; font-size:0.78rem;">
+              <span style="font-weight:800; color:${barColor};">${p}%</span>
+              <div style="display:flex; gap:0.2rem;">
+                <button type="button" title="0%" style="background:none; border:none; color:#64748B; font-size:0.7rem; cursor:pointer;" onclick="window.TaskNotesManager.quickSetProgress(${t.row}, 0)">0%</button>
+                <button type="button" title="50%" style="background:none; border:none; color:#38BDF8; font-size:0.7rem; cursor:pointer;" onclick="window.TaskNotesManager.quickSetProgress(${t.row}, 50)">50%</button>
+                <button type="button" title="100%" style="background:none; border:none; color:#10B981; font-size:0.7rem; cursor:pointer;" onclick="window.TaskNotesManager.quickSetProgress(${t.row}, 100)">100%</button>
+              </div>
+            </div>
+            <div style="background:#1E293B; height:7px; border-radius:999px; overflow:hidden; border:1px solid rgba(255,255,255,0.1);">
+              <div style="background:${barColor}; width:${p}%; height:100%; transition:width 0.3s ease;"></div>
+            </div>
+          </td>
+          <td style="text-align:left; font-size:0.86rem; color:#CBD5E1; line-height:1.4;">
+            ${t.criteria ? `<i class="fa-solid fa-bullseye" style="color:var(--emerald); font-size:0.75rem; margin-right:0.3rem;"></i>${this.escapeHtml(t.criteria)}` : '<span style="color:#64748B; font-style:italic;">Chưa đặt tiêu chí</span>'}
+          </td>
+          <td style="text-align:center;">${statusBadge}</td>
+          <td style="text-align:center; font-size:0.78rem; color:#94A3B8;">${this.escapeHtml(t.updatedAt || '—')}</td>
+          <td style="text-align:center;">
+            <div style="display:flex; gap:0.35rem; justify-content:center;">
+              <button type="button" class="filter-btn" style="padding:0.3rem 0.55rem; font-size:0.75rem; background:rgba(56,189,248,0.12); color:#38BDF8; border:1px solid rgba(56,189,248,0.3); border-radius:6px; cursor:pointer;" onclick="window.TaskNotesManager.openEditModal(${t.row})" title="Chỉnh sửa">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button type="button" class="filter-btn" style="padding:0.3rem 0.55rem; font-size:0.75rem; background:rgba(239,68,68,0.12); color:#F87171; border:1px solid rgba(239,68,68,0.3); border-radius:6px; cursor:pointer;" onclick="window.TaskNotesManager.deleteTask(${t.row}, '${this.escapeJsStr(t.taskName)}')" title="Xóa">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    });
+
+    tbody.innerHTML = rowsHtml;
+  },
+
+  renderSecretaryMiniList: function() {
+    const listEl = document.getElementById('sec-task-notes-mini-list');
+    if (!listEl) return;
+
+    const uncompleted = this.tasks.filter(t => parseInt(t.progress || 0, 10) < 100);
+    if (uncompleted.length === 0) {
+      listEl.innerHTML = '<div style="font-size:0.72rem; color:#10B981; padding:0.3rem 0;"><i class="fa-solid fa-circle-check"></i> Tuyệt vời! Tất cả đầu việc đã hoàn thành.</div>';
+      return;
+    }
+
+    let miniHtml = '';
+    uncompleted.slice(0, 4).forEach(t => {
+      const p = parseInt(t.progress || 0, 10);
+      miniHtml += `
+        <div style="background:#1E293B; padding:0.4rem 0.55rem; border-radius:6px; border:1px solid rgba(255,255,255,0.08); font-size:0.75rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong style="color:#F8FAFC; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px;">${this.escapeHtml(t.taskName)}</strong>
+            <span style="color:#38BDF8; font-weight:800; font-size:0.72rem;">${p}%</span>
+          </div>
+          ${t.criteria ? `<div style="color:#94A3B8; font-size:0.68rem; margin-top:0.15rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">🎯 ${this.escapeHtml(t.criteria)}</div>` : ''}
+        </div>
+      `;
+    });
+    listEl.innerHTML = miniHtml;
+  },
+
+  openAddModal: function() {
+    document.getElementById('tn-modal-title').innerHTML = '<i class="fa-solid fa-plus-circle" style="color:var(--cyan);"></i> Thêm Đầu Việc Mới';
+    document.getElementById('tn-edit-row').value = '';
+    document.getElementById('tn-input-name').value = '';
+    document.getElementById('tn-input-criteria').value = '';
+    document.getElementById('tn-input-notes').value = '';
+    document.getElementById('tn-input-status').value = 'Chưa làm';
+    this.setProgressValue(0);
+    this.hideVoiceBanner();
+    const modal = document.getElementById('taskNotesModal');
+    if (modal) modal.classList.add('active');
+  },
+
+  openEditModal: function(row) {
+    const task = this.tasks.find(t => t.row === row);
+    if (!task) return;
+
+    document.getElementById('tn-modal-title').innerHTML = `<i class="fa-solid fa-pen-to-square" style="color:var(--amber);"></i> Sửa Đầu Việc #${task.stt || row - 1}`;
+    document.getElementById('tn-edit-row').value = row;
+    document.getElementById('tn-input-name').value = task.taskName || '';
+    document.getElementById('tn-input-criteria').value = task.criteria || '';
+    document.getElementById('tn-input-notes').value = task.notes || '';
+    document.getElementById('tn-input-status').value = task.status || 'Đang làm';
+    this.setProgressValue(parseInt(task.progress || 0, 10));
+    this.hideVoiceBanner();
+    const modal = document.getElementById('taskNotesModal');
+    if (modal) modal.classList.add('active');
+  },
+
+  closeModal: function() {
+    this.stopVoiceInput();
+    const modal = document.getElementById('taskNotesModal');
+    if (modal) modal.classList.remove('active');
+  },
+
+  setProgressValue: function(val) {
+    const p = Math.min(100, Math.max(0, parseInt(val || 0, 10)));
+    const slider = document.getElementById('tn-input-progress');
+    const label = document.getElementById('tn-progress-label');
+    if (slider) slider.value = p;
+    if (label) label.textContent = `${p}%`;
+    this.syncStatusFromProgress(p);
+  },
+
+  syncStatusFromProgress: function(val) {
+    const p = parseInt(val || 0, 10);
+    const sel = document.getElementById('tn-input-status');
+    if (sel) {
+      if (p >= 100) sel.value = 'Hoàn thành';
+      else if (p > 0) sel.value = 'Đang làm';
+      else sel.value = 'Chưa làm';
+    }
+  },
+
+  async saveTask() {
+    const row = document.getElementById('tn-edit-row').value;
+    const taskName = document.getElementById('tn-input-name').value.trim();
+    if (!taskName) {
+      alert('Vui lòng nhập Tên công việc ạ!');
+      document.getElementById('tn-input-name').focus();
+      return;
+    }
+
+    const progress = parseInt(document.getElementById('tn-input-progress').value || 0, 10);
+    const criteria = document.getElementById('tn-input-criteria').value.trim();
+    const status = document.getElementById('tn-input-status').value;
+    const notes = document.getElementById('tn-input-notes').value.trim();
+
+    const btnSave = document.getElementById('tn-btn-save');
+    if (btnSave) {
+      btnSave.disabled = true;
+      btnSave.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
+    }
+
+    try {
+      if (row) {
+        const res = await this.requestAPI('task_notes_update', {
+          action: 'task_notes_update',
+          row: parseInt(row, 10),
+          taskName,
+          progress,
+          criteria,
+          status,
+          notes
+        }, 'POST');
+        if (res && res.status === 'ok') {
+          this.showToast('✅ Đã cập nhật đầu việc vào Google Sheet thành công!');
+        } else {
+          throw new Error(res?.error?.message || 'Lỗi cập nhật');
+        }
+      } else {
+        const res = await this.requestAPI('task_notes_add', {
+          action: 'task_notes_add',
+          taskName,
+          progress,
+          criteria,
+          status,
+          notes
+        }, 'POST');
+        if (res && res.status === 'ok') {
+          this.showToast('✅ Đã thêm đầu việc mới vào Google Sheet thành công!');
+        } else {
+          throw new Error(res?.error?.message || 'Lỗi thêm mới');
+        }
+      }
+
+      this.closeModal();
+      await this.loadData();
+    } catch (err) {
+      alert(`❌ Lỗi lưu dữ liệu: ${err.message}`);
+    } finally {
+      if (btnSave) {
+        btnSave.disabled = false;
+        btnSave.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Lưu Vào Sheet';
+      }
+    }
+  },
+
+  async quickSetProgress(row, progress) {
+    try {
+      const res = await this.requestAPI('task_notes_update_progress', {
+        action: 'task_notes_update_progress',
+        row: row,
+        progress: progress
+      }, 'POST');
+      if (res && res.status === 'ok') {
+        const task = this.tasks.find(t => t.row === row);
+        if (task) {
+          task.progress = progress;
+          task.status = progress >= 100 ? 'Hoàn thành' : (progress > 0 ? 'Đang làm' : 'Chưa làm');
+        }
+        this.renderTable();
+        this.updateKPIs();
+        this.renderSecretaryMiniList();
+        this.showToast(`✅ Đã cập nhật tiến độ #${row - 1} lên ${progress}%!`);
+      }
+    } catch (e) {
+      console.error('[TaskNotes] Quick progress error:', e);
+    }
+  },
+
+  async deleteTask(row, taskName) {
+    if (!confirm(`Sếp có chắc chắn muốn xóa đầu việc: "${taskName}" khỏi Google Sheet không ạ?`)) {
+      return;
+    }
+
+    try {
+      const res = await this.requestAPI('task_notes_delete', {
+        action: 'task_notes_delete',
+        row: row
+      }, 'POST');
+      if (res && res.status === 'ok') {
+        this.showToast('🗑️ Đã xóa đầu việc khỏi Google Sheet!');
+        await this.loadData();
+      } else {
+        throw new Error(res?.error?.message || 'Lỗi xóa hàng');
+      }
+    } catch (err) {
+      alert(`❌ Không thể xóa: ${err.message}`);
+    }
+  },
+
+  async quickAddFromSecretary() {
+    const input = document.getElementById('sec-quick-task-input');
+    if (!input) return;
+    const val = input.value.trim();
+    if (!val) return;
+
+    input.disabled = true;
+    try {
+      const res = await this.requestAPI('task_notes_add', {
+        action: 'task_notes_add',
+        taskName: val,
+        progress: 0,
+        criteria: '',
+        status: 'Chưa làm',
+        notes: 'Thêm từ Sổ Tay Trợ Lý'
+      }, 'POST');
+      if (res && res.status === 'ok') {
+        input.value = '';
+        this.showToast('✅ Đã lưu đầu việc mới vào Google Sheet!');
+        await this.loadData();
+      }
+    } catch (e) {
+      alert(`❌ Lỗi: ${e.message}`);
+    } finally {
+      input.disabled = false;
+      input.focus();
+    }
+  },
+
+  startVoiceInput: function(targetInputId, btnId) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Trình duyệt hiện tại chưa hỗ trợ Web Speech API. Sếp vui lòng mở trang web trên Chrome, Edge hoặc Safari để ghi âm giọng nói ạ!");
+      return;
+    }
+
+    if (this.activeRecog) {
+      this.stopVoiceInput();
+      return;
+    }
+
+    const input = document.getElementById(targetInputId);
+    if (!input) return;
+
+    const btn = btnId ? document.getElementById(btnId) : null;
+    this.activeMicBtn = btn;
+
+    const recog = new SpeechRecognition();
+    recog.lang = 'vi-VN';
+    recog.continuous = false;
+    recog.interimResults = true;
+    this.activeRecog = recog;
+
+    this.showVoiceBanner("🎙️ Đang lắng nghe Sếp nói bằng Tiếng Việt... Hãy đọc nội dung!");
+    if (btn) {
+      btn.style.color = '#EF4444';
+      btn.style.borderColor = '#EF4444';
+      btn.classList.add('speaking-pulse');
+    }
+
+    const origVal = input.value;
+
+    recog.onresult = (e) => {
+      let transcript = '';
+      for (let i = 0; i < e.results.length; i++) {
+        transcript += e.results[i][0].transcript;
+      }
+      if (transcript) {
+        input.value = origVal ? `${origVal} ${transcript}` : transcript;
+        this.showVoiceBanner(`🎙️ Nhận diện: "${transcript}"`);
+
+        const lower = transcript.toLowerCase();
+        const progMatch = lower.match(/(?:tiến độ|hoàn thành|xong)\s*(\d{1,3})(?:\s*phần trăm|\s*%)?/i);
+        if (progMatch && progMatch[1]) {
+          const pVal = parseInt(progMatch[1], 10);
+          if (pVal >= 0 && pVal <= 100) {
+            this.setProgressValue(pVal);
+          }
+        }
+      }
+    };
+
+    recog.onerror = (e) => {
+      console.warn('[TaskNotesVoice] Error:', e.error);
+      this.stopVoiceInput();
+    };
+
+    recog.onend = () => {
+      this.stopVoiceInput();
+    };
+
+    try {
+      recog.start();
+    } catch (e) {
+      this.stopVoiceInput();
+    }
+  },
+
+  stopVoiceInput: function() {
+    if (this.activeRecog) {
+      try { this.activeRecog.stop(); } catch(e) {}
+      this.activeRecog = null;
+    }
+    if (this.activeMicBtn) {
+      this.activeMicBtn.style.color = '';
+      this.activeMicBtn.style.borderColor = '';
+      this.activeMicBtn.classList.remove('speaking-pulse');
+      this.activeMicBtn = null;
+    }
+    setTimeout(() => this.hideVoiceBanner(), 1800);
+  },
+
+  showVoiceBanner: function(msg) {
+    const b = document.getElementById('tn-voice-banner');
+    const t = document.getElementById('tn-voice-banner-text');
+    if (b && t) {
+      t.textContent = msg;
+      b.style.display = 'flex';
+    }
+  },
+
+  hideVoiceBanner: function() {
+    const b = document.getElementById('tn-voice-banner');
+    if (b) b.style.display = 'none';
+  },
+
+  showToast: function(msg, bg = '#10B981') {
+    let toast = document.getElementById('tn-live-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'tn-live-toast';
+      toast.style.cssText = 'position:fixed; bottom:25px; right:25px; z-index:99999; padding:0.75rem 1.2rem; border-radius:12px; color:#fff; font-size:0.85rem; font-weight:700; box-shadow:0 10px 25px rgba(0,0,0,0.5); transition:all 0.3s ease; display:flex; align-items:center; gap:0.5rem;';
+      document.body.appendChild(toast);
+    }
+    toast.style.background = bg;
+    toast.textContent = msg;
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateY(0)';
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(15px)';
+    }, 3200);
+  },
+
+  escapeHtml: function(s) {
+    const d = document.createElement('div');
+    d.textContent = s || '';
+    return d.innerHTML;
+  },
+
+  escapeJsStr: function(s) {
+    return (s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+  }
+};
 </script>
 
 </body>
