@@ -1802,3 +1802,21 @@ Reason: [Lý do]`
 > 2. **Ghế AUDITOR-9.1 Giám Sát Đồng Bộ Menu Mọi Chu Kỳ (Mandatory Menu Sync Audit)**:
 >    - AUDITOR-9.1 BẮT BUỘC phải có bài kiểm tra `audit_construction_menu_sync()` chạy mỗi chu kỳ: Đọc Sheet `Template Cons` → So sánh với `getMyCommands` → Nếu lệch thì tự động gọi `setMyCommands` để đồng bộ.
 >    - Khi thêm Bot mới vào hệ thống, BẮT BUỘC phải bổ sung bài kiểm tra tương tự cho Bot đó vào AUDITOR-9.1.
+
+> ### 🔴 RULE PM-52: WEBHOOK DRIFT DETECTION & RECOVERY — TUYỆT ĐỐI KHÔNG ĐỂ BOT TRỎ SAI SERVER CŨ (ANTI-WEBHOOK-DRIFT POLICY)
+> **Root Cause (Sự Cố 22/09/2026)**: Construction Bot (`TNI_SITE_BOT`, token `8903841312`) bị webhook drift sang server cũ đã chết `https://tele.goldenherd.com/tg/webhook/8903841312` → `502 Bad Gateway` → toàn bộ lệnh `/5g_installation_completed` trong 4 nhóm TEAM CONSTRUCTION bị "đứng" không có phản hồi.
+> 1. **Quy Trình Xử Lý Khi Bot "Đứng" / Không Phản Hồi (Mandatory Webhook Drift Fix Protocol)**:
+>    - Bước 1: Gọi `getWebhookInfo` để xác nhận URL webhook hiện tại của bot bị nghi.
+>    - Bước 2: Nếu URL ≠ expected_url HOẶC `last_error_message` chứa `502 / 503 / Bad Gateway / timeout`: **BẮT BUỘC gọi `setWebhook` ngay lập tức** với `url=expected_url&drop_pending_updates=True`.
+>    - Bước 3: Verify lại bằng `getWebhookInfo` lần 2 — phải thấy `URL=expected_url`, `Pending=0`, `Last Error=None` mới được báo "Đã Fix".
+> 2. **Bảng Webhook URL Chuẩn Toàn Hệ Thống (Bất Biến)**:
+>    - Search Bot (`8606383435`): `https://tni-bot.vercel.app/api/search_bot`
+>    - Asset Collector (`8928677923`): `https://tni-bot.vercel.app/api/collector`
+>    - Site Down Relay (`8647102342`): `https://tni-sitedown.vercel.app/api/site_down_relay`
+>    - **Construction Bot (`8903841312`): `https://tni-bot.vercel.app/api/construction`**
+>    - Cable Bot 15 (`8758104446`): `https://tni-bot.vercel.app/api/cable_bot`
+>    - Attendance Bot (`8628370628`): `https://tni-bot.vercel.app/api/attendance`
+> 3. **Auditor Phải Giám Sát Tất Cả 6 Bot (Full Coverage Audit)**:
+>    - `system_auditor.py` → `BOT_REGISTRY` đã đăng ký đầy đủ 6 bot bao gồm Construction Bot.
+>    - BẮT BUỘC mọi bot trong `BOT_REGISTRY` đều được `audit_telegram_webhooks()` kiểm tra mỗi chu kỳ Auditor chạy.
+>    - TUYỆT ĐỐI CẤM bỏ sót bất kỳ bot nào ra khỏi vòng kiểm tra webhook định kỳ!
