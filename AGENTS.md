@@ -1848,3 +1848,16 @@ Reason: [Lý do]`
 > 3. **Cấm Đoán Mò Thời Gian Đồng Bộ Hoặc Cơ Chế Sync (Zero-Assumption Sync Policy)**:
 >    - Khi Người Dùng hỏi về thời gian đồng bộ, độ trễ hoặc cách thức bot nhận dữ liệu từ Google Sheets: AI BẮT BUỘC phải grep kiểm tra mã nguồn xem có RAM Cache (`CacheService`, `PropertiesService`, memory cache trong Python), kiểm tra TTL cụ thể và cron schedule.
 >    - TUYỆT ĐỐI CẤM trả lời "ngay lập tức" hoặc "0 giây" khi chưa chứng minh được bằng code rằng không có bất kỳ tầng cache hoặc độ trễ nào!
+
+> ### 🔴 RULE PM-54: BI PORTAL LIVE DATA SYNC ENGINE & ZERO HARDCODED STALE ROWS (BI PORTAL DUAL-LAYER SYNC POLICY)
+> **Root Cause (Sự Cố 22/09/2026)**:
+> Tab `BOD Assign` trên TNI Operations BI Portal (`index.html` & `executive_dashboard.html`) bị hardcode tĩnh 481 dòng từ ngày 22/06/2026 bởi một script scratch cũ và hoàn toàn không có hàm Live Fetch CSV cũng như không nằm trong phạm vi đồng bộ của Ghế `BI-WO-SYNC` (`sync_wo_detail.py`). Khi người dùng cập nhật dữ liệu mới trên Google Sheet tab `BOD assign` (GID `1482565085`), Portal vẫn hiển thị dữ liệu tĩnh cũ từ tháng 6 mà không tự cập nhật.
+> 
+> **Quy Tắc Bắt Buộc (Mandatory Directives)**:
+> 1. **Cơ Chế Kép Đồng Bộ BI Portal (Dual-Layer Sync Architecture)**:
+>    - **Lớp 1 (Client-Side Live Fetch)**: Mọi thẻ/tab dữ liệu trên BI Portal kết nối trực tiếp với Google Sheets (`WO Detail`, `BOD Assign`, `Plan - Result Dep`) BẮT BUỘC phải trang bị hàm Live Sync thời gian thực (`refresh...Live()`) sử dụng endpoint `gviz/tq?tqx=out:csv` (Zero-CORS). Hàm này BẮT BUỘC được tự động kích hoạt ngay khi người dùng chuyển sang tab tương ứng (`DOMContentLoaded` tab event binding), kèm theo nút bấm thủ công có icon xoay spinner (`<i class="fa-solid fa-spinner fa-spin"></i>`).
+>    - **Lớp 2 (Backend Offline Pre-rendered Batch)**: Ghế `BI-WO-SYNC` (`sync_wo_detail.py`) chịu trách nhiệm cào đồng thời cả tab `WO Detail` (GID `159298579`) và tab `BOD assign` (GID `1482565085`), tự động sinh mã HTML tiền kết xuất (pre-rendered) và tiêm vào toàn bộ các file `index.html` và `executive_dashboard.html` trong tất cả các repository, đồng thời lưu file cache JSON (`api/wo_detail_cache.json`, `api/bod_assign_cache.json`).
+> 2. **Tuyệt Đối Cấm Để Lại Dữ Liệu Tĩnh Hardcode (Zero Orphan Static Tables)**:
+>    - TUYỆT ĐỐI CẤM tạo các bảng HTML tĩnh chứa hàng trăm dòng dữ liệu giả lập/dữ liệu cũ mà không có cơ chế Live Fetch tự động làm mới.
+>    - Khi bổ sung tab mới vào BI Portal, BẮT BUỘC phải đăng ký nguồn dữ liệu GID vào `sync_wo_detail.py` và tích hợp hàm Live Fetch tương ứng trên frontend.
+

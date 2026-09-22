@@ -317,8 +317,6 @@ def main():
         os.path.join(root_dir, "Task and WO", "executive_dashboard.html"),
         os.path.join(root_dir, "tni-search", "index.html"),
         os.path.join(root_dir, "tni-search", "executive_dashboard.html"),
-        os.path.join(root_dir, "tni-sitedown", "index.html"),
-        os.path.join(root_dir, "tni-sitedown", "executive_dashboard.html"),
     ]
 
     updated_count = 0
