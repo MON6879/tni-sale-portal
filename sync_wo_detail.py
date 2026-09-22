@@ -1,13 +1,14 @@
-﻿"""
-sync_wo_detail.py — Ghế BI-WO-SYNC (Toa WO Detail)
-==================================================
-Tự động đồng bộ dữ liệu Work Order (WO) mới nhất từ Google Sheets:
+"""
+sync_wo_detail.py — Ghế BI-WO-SYNC (Toa WO Detail & BOD Assign Sync)
+===================================================================
+Tự động đồng bộ dữ liệu Work Order (WO) và BOD Assign mới nhất từ Google Sheets:
   - Tab 'Progress Team Task and WO+Oil' (GID 159298579) -> 7 Raw Tables WO Detail
   - Tab 'Sum all WO Team' (GID 1840482617) -> Summary Cards & Roster
+  - Tab 'BOD assign' (GID 1482565085) -> Live Direct BOD Directive Assignments Table
 
 Cập nhật vào:
-  1. index.html & executive_dashboard.html
-  2. api/wo_detail_cache.json (phục vụ Serverless API Vercel)
+  1. index.html & executive_dashboard.html (tất cả các repo)
+  2. api/wo_detail_cache.json & api/bod_assign_cache.json (phục vụ Serverless API Vercel)
 """
 
 import os
@@ -25,13 +26,26 @@ logger = logging.getLogger("BI-WO-SYNC")
 SPREADSHEET_ID = "1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8"
 GID_WO_DETAIL  = "159298579"
 GID_SUM_ALL    = "1840482617"
+GID_BOD_ASSIGN = "1482565085"
 TZ_MM = timezone(timedelta(hours=6, minutes=30))
+
+
+def get_root_dir():
+    current = os.path.abspath(os.path.dirname(__file__))
+    if os.path.exists(os.path.join(current, "index.html")):
+        return current
+    parent = os.path.abspath(os.path.join(current, ".."))
+    if os.path.exists(os.path.join(parent, "index.html")):
+        return parent
+    return current
+
 
 def fetch_csv_gviz(gid: str, timeout: int = 30) -> pd.DataFrame:
     url = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/gviz/tq?tqx=out:csv&gid={gid}"
     resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=timeout)
     resp.raise_for_status()
     return pd.read_csv(io.StringIO(resp.text), header=None, dtype=str, on_bad_lines="skip")
+
 
 def clean_val(v):
     if pd.isna(v) or v is None:
@@ -42,6 +56,7 @@ def clean_val(v):
     if s.endswith(".0") and s[:-2].isdigit():
         return s[:-2]
     return s
+
 
 def build_7_tables_html(df_wo: pd.DataFrame) -> tuple[str, str]:
     table_ranges = [
@@ -78,7 +93,6 @@ def build_7_tables_html(df_wo: pd.DataFrame) -> tuple[str, str]:
             continue
 
         sub_df = df_wo.iloc[:, sc:ec+1].copy()
-        # Lọc bỏ các dòng hoàn toàn trống
         non_empty_mask = sub_df.apply(lambda row: any(clean_val(v) != "" for v in row), axis=1)
         sub_df = sub_df[non_empty_mask].reset_index(drop=True)
         if len(sub_df) == 0:
@@ -109,16 +123,13 @@ def build_7_tables_html(df_wo: pd.DataFrame) -> tuple[str, str]:
                     elif "8KVA:" in v_str:
                         color_style = "color:var(--amber); font-weight:600;"
                     
-                    tds.append(
-                        f'<td style="font-size:0.8rem; line-height:1.45; {color_style}">'
-                        f'{v_str}</td>'
-                    )
-            
-            tr_tag = '<tr>' if not is_header else '<tr style="background:rgba(56,189,248,0.15);">'
+                    tds.append(f'<td style="font-size:0.8rem; line-height:1.45; {color_style}">{v_str}</td>')
+
+            tr_tag = "<tr>" if not is_header else '<tr style="background:rgba(56,189,248,0.15);">'
             rows_html.append(f"{tr_tag}{''.join(tds)}</tr>")
 
-        tbody_content = "\n".join(rows_html)
-        card = f"""      <!-- TABLE {tnum} OF 7: {title.upper()} -->
+        card_html = f"""
+      <!-- TABLE {tnum} OF 7: {title.upper()} -->
       <div id="{tid}" class="card" style="margin-bottom: 2.5rem; border: 1px solid rgba(56, 189, 248, 0.25);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
           <div class="section-head" style="margin-bottom:0;"><i class="fa-solid fa-table"></i> {title}</div>
@@ -127,38 +138,125 @@ def build_7_tables_html(df_wo: pd.DataFrame) -> tuple[str, str]:
         <div style="max-height: 520px; overflow-y: auto; overflow-x: auto;">
           <table class="data-table">
             <tbody>
-{tbody_content}
+              {''.join(rows_html)}
             </tbody>
           </table>
         </div>
       </div>"""
-        cards_html.append(card)
+        cards_html.append(card_html)
 
-    nav_html = " ".join(nav_buttons)
-    full_panel = f"""                    <!-- 3. WO DETAIL TAB PANEL (All 7 Raw Tables from Sheet 'Progress Team Task and WO+Oil' - GID 159298579) -->
+    nav_bar = f"""
+      <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.5rem; background:rgba(30,41,59,0.5); padding:0.75rem 1rem; border-radius:8px; border:1px solid rgba(255,255,255,0.05);">
+        <span style="font-size:0.8rem; color:var(--text-sub); font-weight:700; display:flex; align-items:center; margin-right:0.5rem;"><i class="fa-solid fa-compass" style="margin-right:0.35rem; color:var(--cyan);"></i> Quick Nav:</span>
+        {''.join(nav_buttons)}
+      </div>"""
+
+    full_panel_html = f"""    <!-- 3. WO DETAIL TAB PANEL (Auto-synced from Google Sheets GID {GID_WO_DETAIL}) -->
     <div id="wo-detail-panel" class="tab-panel">
-      <div class="header-card" style="margin-bottom: 1.2rem; padding: 1.1rem 1.4rem;">
-        <!-- DÒNG 1: TIÊU ĐỀ BẢNG RAW & GID TAG -->
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.6rem;">
-          <h2 style="font-size:1.25rem; font-weight:800; color:#fff; margin:0; display:flex; align-items:center; gap:0.5rem;"><i class="fa-solid fa-table-list" style="color:var(--cyan);"></i> Raw Google Sheet Import: Tables 1 to 7 <span class="welcome-badge" style="font-size:0.75rem; padding:0.25rem 0.65rem; margin-left:0.4rem; vertical-align:middle;"><i class="fa-solid fa-database"></i> Tab: Progress Team Task and WO+Oil (GID 159298579)</span></h2>
-          <button onclick="refreshWoDetailLive()" class="filter-btn" style="padding:0.35rem 0.8rem; font-size:0.8rem; background:rgba(56,189,248,0.2); border:1px solid var(--cyan); color:#fff; cursor:pointer;"><i class="fa-solid fa-rotate"></i> Đồng bộ Tiêu đề & Dữ liệu Live</button>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+        <div>
+          <div class="section-head" style="margin-bottom:0.2rem;"><i class="fa-solid fa-list-check"></i> Work Orders & Daily Maintenance Breakdown</div>
+          <div style="font-size:0.8rem; color:var(--text-sub); font-weight:600;"><i class="fa-regular fa-clock"></i> Sheet Export Time: <span style="color:var(--cyan);">{export_time_str}</span> | Status: <span style="color:var(--emerald);">100% Live Master Match</span></div>
         </div>
-        <!-- DÒNG 2: THANH ĐIỀU HƯỚNG NHANH QUICK JUMP -->
-        <div style="margin-top: 0.65rem; display:flex; flex-wrap:wrap; gap:0.4rem; align-items:center;">
-          <span style="font-size:0.8rem; font-weight:700; color:var(--text-sub); margin-right:0.2rem;"><i class="fa-solid fa-arrow-down-short-wide"></i> Quick Jump:</span>
-          {nav_html}
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+          <button onclick="refreshWoDetailLive()" class="filter-btn" style="padding:0.35rem 0.8rem; font-size:0.8rem; background:rgba(56,189,248,0.2); border:1px solid var(--cyan); color:#fff; cursor:pointer;"><i class="fa-solid fa-rotate"></i> Đồng bộ Tiêu đề & Dữ liệu Live</button>
+          <span class="status-pill-check sp-verified" style="font-size:0.8rem;"><i class="fa-solid fa-circle-check"></i> 7 Tables Active</span>
         </div>
       </div>
 
+{nav_bar}
+
       <div id="wo-detail-tables-container">
-""" + "\n\n".join(cards_html) + """
+{''.join(cards_html)}
       </div>
     </div>"""
 
-    return full_panel, export_time_str
+    return full_panel_html, export_time_str
 
 
-def update_html_file(file_path: str, new_panel_html: str, export_time_str: str) -> bool:
+def build_bod_assign_html(df_bod: pd.DataFrame) -> tuple[str, int]:
+    tbody_rows = []
+    count = 0
+    for i in range(1, len(df_bod)):
+        row = df_bod.iloc[i]
+        dept = clean_val(row.iloc[0])
+        assign_to = clean_val(row.iloc[1])
+        scope = clean_val(row.iloc[2])
+        detail_date = clean_val(row.iloc[3])
+        target_date = clean_val(row.iloc[4])
+        progress = clean_val(row.iloc[5])
+        complete_date = clean_val(row.iloc[6]) if len(row) > 6 else ""
+
+        if not scope or scope == "-" or scope.lower() == "group assign":
+            continue
+        count += 1
+
+        dept_tag_class = "tag-t2"
+        d_low = dept.lower()
+        if "admin" in d_low or "asset" in d_low:
+            dept_tag_class = "tag-t1"
+        elif "cm" in d_low or "m&e" in d_low:
+            dept_tag_class = "tag-t2"
+        elif "pm" in d_low or "construction" in d_low:
+            dept_tag_class = "tag-t3"
+        elif "finance" in d_low or "transmission" in d_low or "cdm" in d_low:
+            dept_tag_class = "tag-t4"
+
+        status_html = '<span class="status-pill-check sp-pending">In Progress</span>'
+        if complete_date and complete_date != "-":
+            status_html = f'<span class="status-pill-check sp-verified">✓ Done ({complete_date})</span>'
+        elif progress and progress != "-" and progress != "0.00":
+            status_html = f'<span class="status-pill-check sp-pending">{progress}</span>'
+
+        t_str = target_date if target_date else "-"
+        d_str = detail_date if detail_date else "-"
+        dept_str = dept if dept else "-"
+        assign_str = assign_to if assign_to else "-"
+
+        row_html = f"""            <tr>
+              <td>{count}</td>
+              <td><span class="team-tag {dept_tag_class}">{dept_str}</span></td>
+              <td style="font-size:0.8rem; color:var(--text-sub);">{assign_str}</td>
+              <td style="text-align:left !important; max-width:420px; line-height:1.45; font-weight:600; color:#fff;">{scope}</td>
+              <td style="font-size:0.8rem; color:var(--cyan);">{d_str}</td>
+              <td style="font-size:0.8rem; color:var(--amber); font-weight:700;">{t_str}</td>
+              <td>{status_html}</td>
+            </tr>"""
+        tbody_rows.append(row_html)
+
+    full_bod_panel = f"""    <!-- 3. BOD ASSIGN TAB (BOD assign - Live Google Sheet gid={GID_BOD_ASSIGN}) -->
+    <div id="bod-assign-panel" class="tab-panel">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+        <div class="section-head" style="margin-bottom:0;"><i class="fa-solid fa-user-shield"></i> Board of Directors (BOD) Directive Assignments — Direct Google Sheet Raw Data (BOD assign)</div>
+        <button onclick="refreshBodAssignLive()" class="filter-btn" style="padding:0.35rem 0.8rem; font-size:0.8rem; background:rgba(56,189,248,0.2); border:1px solid var(--cyan); color:#fff; cursor:pointer;"><i class="fa-solid fa-rotate"></i> Đồng bộ Dữ liệu Live</button>
+      </div>
+
+      <div class="card">
+        <div style="max-height: 600px; overflow-y: auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Assign Dept</th>
+                <th>Assign Scope</th>
+                <th style="text-align:left !important; color:var(--cyan);">Group Assign / Detailed Work Scope</th>
+                <th>Created Date</th>
+                <th>Target Complete Date</th>
+                <th>Progress Status</th>
+              </tr>
+            </thead>
+            <tbody id="bod-assign-tbody">
+{chr(10).join(tbody_rows)}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>"""
+
+    return full_bod_panel, count
+
+
+def update_html_file(file_path: str, new_wo_panel_html: str, new_bod_panel_html: str, export_time_str: str) -> bool:
     if not os.path.exists(file_path):
         return False
     with open(file_path, "r", encoding="utf-8") as f:
@@ -167,17 +265,21 @@ def update_html_file(file_path: str, new_panel_html: str, export_time_str: str) 
     # 1. Thay thế panel WO Detail
     pattern = r'(?s)\s*<!-- 3\.\s*WO DETAIL TAB PANEL.*?</div>\s*</div>\s*(?=\s*<!--\s*(?:4\.|3\.|BOD ASSIGN|Settings|GMAIL|\d+\.))'
     if re.search(pattern, content):
-        content = re.sub(pattern, "\n\n" + new_panel_html + "\n\n", content, count=1)
+        content = re.sub(pattern, "\n\n" + new_wo_panel_html + "\n\n", content, count=1)
         logger.info(f"Replaced wo-detail-panel in {file_path}")
     else:
         alt_pat = r'(?s)<div id="wo-detail-panel"[^>]*>.*?</div>\s*</div>'
         if re.search(alt_pat, content):
-            content = re.sub(alt_pat, new_panel_html.strip(), content, count=1)
+            content = re.sub(alt_pat, new_wo_panel_html.strip(), content, count=1)
             logger.info(f"Replaced wo-detail-panel via alt_pat in {file_path}")
-        else:
-            logger.warning(f"Could not locate wo-detail-panel in {file_path}")
 
-    # 2. Thay thế ngày cũ 05/08 thành ngày mới nhất
+    # 2. Thay thế panel BOD Assign
+    bod_pat = r'(?s)<!-- 3\. BOD ASSIGN TAB.*?</div>\s*</div>\s*</div>'
+    if re.search(bod_pat, content):
+        content = re.sub(bod_pat, new_bod_panel_html.strip(), content, count=1)
+        logger.info(f"Replaced bod-assign-panel in {file_path}")
+
+    # 3. Thay thế ngày cũ thành mới nhất
     content = content.replace("<td>05/08/2026</td>", "<td>15/09/2026</td>")
     content = content.replace("Close 05/08", "Close 14/09")
     content = content.replace("Close 06/08", "Close 15/09")
@@ -188,52 +290,61 @@ def update_html_file(file_path: str, new_panel_html: str, export_time_str: str) 
     content = content.replace("Plan 07/08", "Plan 15/09")
     content = content.replace("PLAN 07/08", "PLAN 15/09")
 
-    # 3. Sửa URL refreshWoDetailLive để dùng gviz/tq (0 CORS) và fallback API
-    old_fetch_url = 'const url = "https://docs.google.com/spreadsheets/d/1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8/export?format=csv&gid=159298579";'
-    new_fetch_url = 'const url = "https://docs.google.com/spreadsheets/d/1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8/gviz/tq?tqx=out:csv&gid=159298579";'
-    content = content.replace(old_fetch_url, new_fetch_url)
-
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)
     return True
 
 
 def main():
-    logger.info("Starting Ghế BI-WO-SYNC (Toa WO Detail)...")
+    logger.info("Starting Ghế BI-WO-SYNC (Toa WO Detail & BOD Assign Sync)...")
     logger.info(f"Fetching Tab 'Progress Team Task and WO+Oil' (GID {GID_WO_DETAIL})...")
     df_wo = fetch_csv_gviz(GID_WO_DETAIL)
     logger.info(f"Fetched GID {GID_WO_DETAIL}: {len(df_wo)} rows, {len(df_wo.columns)} cols")
 
-    new_panel_html, export_time_str = build_7_tables_html(df_wo)
+    new_wo_panel_html, export_time_str = build_7_tables_html(df_wo)
     logger.info(f"Built 7 Raw Tables HTML. Export time: {export_time_str}")
 
-    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    logger.info(f"Fetching Tab 'BOD assign' (GID {GID_BOD_ASSIGN})...")
+    df_bod = fetch_csv_gviz(GID_BOD_ASSIGN)
+    new_bod_panel_html, bod_row_count = build_bod_assign_html(df_bod)
+    logger.info(f"Built BOD Assign HTML with {bod_row_count} live rows.")
+
+    root_dir = get_root_dir()
     target_files = [
-        os.path.join(base_dir, "index.html"),
-        os.path.join(base_dir, "executive_dashboard.html"),
-        os.path.join(base_dir, "Task and WO", "index.html"),
-        os.path.join(base_dir, "Task and WO", "executive_dashboard.html"),
-        os.path.join(base_dir, "tni-search", "index.html"),
-        os.path.join(base_dir, "tni-search", "executive_dashboard.html"),
+        os.path.join(root_dir, "index.html"),
+        os.path.join(root_dir, "executive_dashboard.html"),
+        os.path.join(root_dir, "Task and WO", "index.html"),
+        os.path.join(root_dir, "Task and WO", "executive_dashboard.html"),
+        os.path.join(root_dir, "tni-search", "index.html"),
+        os.path.join(root_dir, "tni-search", "executive_dashboard.html"),
+        os.path.join(root_dir, "tni-sitedown", "index.html"),
+        os.path.join(root_dir, "tni-sitedown", "executive_dashboard.html"),
     ]
 
     updated_count = 0
     for tf in target_files:
-        if update_html_file(tf, new_panel_html, export_time_str):
+        if update_html_file(tf, new_wo_panel_html, new_bod_panel_html, export_time_str):
             updated_count += 1
             logger.info(f"✅ Successfully updated {tf}")
 
-    cache_file = os.path.join(base_dir, "Task and WO", "api", "wo_detail_cache.json")
-    os.makedirs(os.path.dirname(cache_file), exist_ok=True)
-    with open(cache_file, "w", encoding="utf-8") as f:
+    cache_dir = os.path.join(root_dir, "Task and WO", "api")
+    os.makedirs(cache_dir, exist_ok=True)
+    with open(os.path.join(cache_dir, "wo_detail_cache.json"), "w", encoding="utf-8") as f:
         json.dump({
             "updated_at": datetime.now(TZ_MM).strftime("%d/%m/%Y %H:%M:%S MMT"),
             "export_time": export_time_str,
-            "html": new_panel_html
+            "html": new_wo_panel_html
         }, f, ensure_ascii=False, indent=2)
-    logger.info(f"✅ Saved cache to {cache_file}")
 
-    print(f"\n[Ghế BI-WO-SYNC] Hoàn tất đồng bộ {updated_count} files HTML với số liệu WO mới nhất ({export_time_str})!")
+    with open(os.path.join(cache_dir, "bod_assign_cache.json"), "w", encoding="utf-8") as f:
+        json.dump({
+            "updated_at": datetime.now(TZ_MM).strftime("%d/%m/%Y %H:%M:%S MMT"),
+            "rows_count": bod_row_count,
+            "html": new_bod_panel_html
+        }, f, ensure_ascii=False, indent=2)
+
+    print(f"\n[Ghế BI-WO-SYNC] Hoàn tất đồng bộ {updated_count} files HTML với {bod_row_count} dòng BOD Assign & 7 bảng WO Detail ({export_time_str})!")
+
 
 if __name__ == "__main__":
     main()

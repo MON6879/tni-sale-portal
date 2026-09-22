@@ -117,6 +117,12 @@
 >    - **Bước PM-2 — Đúc Thành Rule Phòng Ngừa**: Từ root cause, AI BẮT BUỘC phải viết ít nhất **1 rule cụ thể** dưới dạng: *"Khi làm [hành động X], BẮT BUỘC phải [biện pháp Y], TUYỆT ĐỐI CẤM [anti-pattern Z]"*, đủ rõ để AI session sau đọc là hiểu ngay và không lặp lại!
 >    - **Bước PM-3 — Ghi Rule Vào AGENTS.md Ngay Lập Tức**: Rule phòng ngừa mới BẮT BUỘC phải được chèn vào đúng section liên quan trong `AGENTS.md` (và đồng bộ sang 3 file AGENTS.md còn lại) trong cùng commit "lưu đi". TUYỆT ĐỐI KHÔNG ĐƯỢC để rule chỉ nằm trong backup context mà không vào AGENTS.md — vì AI session sau không đọc backup context, chỉ đọc AGENTS.md!
 >    - **Ví Dụ Post-Mortem Mẫu**: Lỗi "hardcode test rows vào migration function → corrupt sheet data" → Rule: *"Khi viết hàm migration/reorder cột trong GAS, TUYỆT ĐỐI KHÔNG hardcode giá trị dữ liệu cụ thể vào trong thân hàm. Hàm migration CHỈ ĐƯỢC PHÉP thay đổi format, header và cấu trúc cột — KHÔNG BAO GIỜ ghi đè dữ liệu thực của người dùng."*
+> 5. **🔒 KHÓA THÉP DEPLOY GAS: CLASP PUSH + CLASP DEPLOY -I BẮT BUỘC (Zero Draft-Only Push Policy)**:
+>    - Khi sửa đổi bất kỳ file nào trong Google Apps Script (`.gs`, `.html`, `appsscript.json`), AI BẮT BUỘC phải thực thi **ĐỦ 2 LỆNH TUẦN TỰ**:
+>      ① `npx clasp push --force` (đẩy mã nguồn lên máy chủ Apps Script).
+>      ② `npx clasp deploy -i <deploymentId> -d "<description>"` (cập nhật phiên bản chạy chính thức của Web App).
+>    - **TUYỆT ĐỐI CẤM** chỉ chạy `clasp push` rồi dừng lại báo "Đã Lưu Đi" hoặc "Đã xong"! `clasp push` CHỈ cập nhật bản nháp `@HEAD`, KHÔNG HỀ thay đổi code mà Web App live đang thực thi!
+>    - Sau khi deploy xong, BẮT BUỘC phải kiểm tra kết quả terminal xuất hiện chuỗi `Deployed <deploymentId> @<version>`, và gọi kiểm tra HTTP live để xác nhận version mới đã phản hồi thành công trước khi kết luận!
 
 ---
 
@@ -1820,3 +1826,25 @@ Reason: [Lý do]`
 >    - `system_auditor.py` → `BOT_REGISTRY` đã đăng ký đầy đủ 6 bot bao gồm Construction Bot.
 >    - BẮT BUỘC mọi bot trong `BOT_REGISTRY` đều được `audit_telegram_webhooks()` kiểm tra mỗi chu kỳ Auditor chạy.
 >    - TUYỆT ĐỐI CẤM bỏ sót bất kỳ bot nào ra khỏi vòng kiểm tra webhook định kỳ!
+
+> ### 🔴 RULE PM-53: BỌC THÉP QUY TRÌNH DEPLOY GAS (PUSH + DEPLOY -I) & CHUẨN RAM CACHE BẢNG CẤU HÌNH (TTL ≤ 60S + LỆNH /REFRESH) & CẤM PHÁN ĐOÁN MÒ THỜI GIAN ĐỒNG BỘ (GAS DEPLOYMENT PARITY & SHORT-TTL CONFIG CACHE POLICY)
+> **Root Cause (Sự Cố 22/09/2026)**:
+> 1. Khi Người Dùng hỏi thời gian đồng bộ template sửa trên Sheet, AI phán đoán bừa "0 giây ngay lập tức" mà không đọc code mã nguồn, trong khi code thực tế đang đặt RAM Cache `CacheService.getScriptCache()` lên tới **6 GIỜ (21,600s)**!
+> 2. `Template Cons` là bảng dữ liệu cấu hình người dùng thường xuyên cập nhật nội dung vật tư, nhưng hệ thống bị cache 6 tiếng không tự động cập nhật, và `onEdit` là simple trigger bị lỗi âm thầm do không đủ quyền OAuth khi gọi hàm gửi thông báo.
+> 3. AI thực hiện sửa code thêm endpoint xóa cache và chạy `clasp push` nhưng **QUÊN CHẠY `clasp deploy -i`**, dẫn đến Web App production vẫn chạy version cũ `@451`, cache vẫn nguyên vẹn và Người Dùng thử lại trên Telegram vẫn nhận template cũ!
+> 
+> **Quy Tắc Bắt Buộc (Mandatory Directives)**:
+> 1. **Khóa Thép Deploy GAS: `clasp push` + `clasp deploy -i` Không Tách Rời (Zero-Draft-Push Policy)**:
+>    - Mọi can thiệp vào các dự án Apps Script (`QLTC_GAS`, `apps_script_tc`, `apps_script_attendance`, v.v.) BẮT BUỘC phải chạy đủ:
+>      ① `npx clasp push --force` (đẩy mã nguồn lên Google Script).
+>      ② `npx clasp deploy -i <deploymentId> -d "..."` (cập nhật phiên bản chạy chính thức của Web App).
+>    - TUYỆT ĐỐI CẤM chỉ push mà không deploy! Bản live Web App CHỈ nhận code mới khi đã được deploy vào đúng `deploymentId`.
+>    - BẮT BUỘC kiểm tra kết quả terminal xuất hiện chuỗi `Deployed <deploymentId> @<version>`, và test endpoint HTTP trả về version mới trước khi báo hoàn thành!
+> 2. **Chuẩn RAM Cache Cho Bảng Cấu Hình Vận Hành (Max 60s TTL & On-Demand Invalidation)**:
+>    - Đối với mọi dữ liệu cấu hình do người dùng chỉnh sửa trên Google Sheets (Templates, Menus, Keywords, Mappings, Rules):
+>      (a) Thời gian lưu cache RAM (`CacheService.getScriptCache().put(...)`) **TỐI ĐA CHỈ ĐƯỢC PHÉP TỪ 30 ĐẾN 60 GIÂY** (TUYỆT ĐỐI CẤM cache hàng giờ >60s).
+>      (b) BẮT BUỘC phải hỗ trợ lệnh xóa cache trực tiếp trên Telegram (`/refresh`, `/reload`, `/sync`, `/clear_cache`) để người dùng có thể ép bot đọc live Sheet ngay lập tức sau khi sửa xong mà không cần chờ.
+>      (c) BẮT BUỘC phải expose action quản trị xóa cache (như `?action=clear_cons_cache`) trên Web App URL để kiểm toán và tích hợp tự động.
+> 3. **Cấm Đoán Mò Thời Gian Đồng Bộ Hoặc Cơ Chế Sync (Zero-Assumption Sync Policy)**:
+>    - Khi Người Dùng hỏi về thời gian đồng bộ, độ trễ hoặc cách thức bot nhận dữ liệu từ Google Sheets: AI BẮT BUỘC phải grep kiểm tra mã nguồn xem có RAM Cache (`CacheService`, `PropertiesService`, memory cache trong Python), kiểm tra TTL cụ thể và cron schedule.
+>    - TUYỆT ĐỐI CẤM trả lời "ngay lập tức" hoặc "0 giây" khi chưa chứng minh được bằng code rằng không có bất kỳ tầng cache hoặc độ trễ nào!
