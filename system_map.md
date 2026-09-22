@@ -223,6 +223,7 @@ grep -c 'continue-on-error: true' train_5min.yml                # Phải = tổn
 | **Báo cáo Kế hoạch Sáng (Report 5C)** | **06:06, 08:28, 09:56, 15:26, 22:06 MMT** | Toa Report 5C Morning | `06:06`, `08:28`, `09:56`, `15:26`, `22:06` MMT | `daily_plan_report.py` | Teams 1..4, CONTROL |
 | **Báo cáo Lượt đọc (Report 6)** | **08:48, 14:58, 17:18, 19:41 MMT** | Toa Report 6 Read | `08:48`, `14:58`, `17:18`, `19:41` MMT | `daily_read_report.py` | Teams 1..4, CONTROL |
 | **Team Operation Progress Report (Ghế GAS-OPS-1 & AUDITOR-9.1)** | **11:46 AM & 17:21 PM MMT** | GAS Native Scheduler (Tránh tuyệt đối va chạm Toa Site Down & ETA :06/:36) | 11:46 & 17:21 MMT | `team_progress_report.gs` | Teams 1..4, CONTROL |
+| **Báo cáo: Ghế giám sát đã kiểm tra không phát hiện lỗi** | **09:00 AM MMT & On-Demand** | Toa Auditor (Ghế AUDITOR-9.1) | 09:00 MMT & On-Demand | `system_auditor.py` | Admin DM (6859790680) |
 | **Báo cáo 6.1 Site Clear Today** | **07:18, 10:18, 14:18, 17:18 MMT** | Toa 6.1 Site Clear | `07:18`, `10:18`, `14:18`, `17:18` MMT | `site_clear_report.py` | Teams 1..4, CONTROL |
 | ~~**Cable Report**~~ | ~~**05:56, 15:56 MMT**~~ | ~~Toa Cable~~ | **ĐÃ HỦY THEO YÊU CẦU NGƯỜI DÙNG** | ~~`cable_report.py`~~ | ~~CABLE Group~~ |
 | **Site Down Detail (Ghế SD-DETAIL-1)** | **Mỗi giờ (:06 & :36 MMT)** | Độc lập `botlookup_relay.yml` (cron: `3,33 * * * *` UTC) | Chạy độc lập ~:03/:33 UTC | `botlookup_relay.py` | CONTROL, T1, T2, T3, T4 |

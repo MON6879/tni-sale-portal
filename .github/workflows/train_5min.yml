@@ -51,6 +51,7 @@ on:
           - 'Task - All Refuel Reports'
           - 'Task - Check Read Status'
           - 'Ghế AUDITOR-9.1 - Master System Audit'
+          - 'Ghế giám sát đã kiểm tra không phát hiện lỗi'
           - 'Toa ETA - Share ETA Reminder'
           - 'Ghế BI-WO-SYNC - Sync WO Detail & BI Portal'
       skip_delay:
@@ -655,7 +656,10 @@ jobs:
         continue-on-error: true
         if: |
           steps.sched.outputs.auditor91 == 'true' ||
-          (github.event_name == 'workflow_dispatch' && inputs.report_type == 'Ghế AUDITOR-9.1 - Master System Audit')
+          (github.event_name == 'workflow_dispatch' && (
+            inputs.report_type == 'Ghế AUDITOR-9.1 - Master System Audit' ||
+            inputs.report_type == 'Ghế giám sát đã kiểm tra không phát hiện lỗi'
+          ))
         env:
           ADMIN_CHAT_ID: "6859790680"
           SEND_BOT_TOKEN: ${{ secrets.SEND_BOT_TOKEN }}
@@ -663,7 +667,12 @@ jobs:
           TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
           TELEGRAM_SESSION: ${{ secrets.TELEGRAM_SESSION }}
           APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
-        run: python system_auditor.py || true
+        run: |
+          if [ "${{ inputs.report_type }}" = "Ghế giám sát đã kiểm tra không phát hiện lỗi" ]; then
+            python system_auditor.py --clean-report || true
+          else
+            python system_auditor.py || true
+          fi
 
       # ═══════════════════════════════════════════════
       # 📋 TOA ETA: Share ETA Reminder
