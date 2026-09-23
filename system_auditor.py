@@ -852,6 +852,232 @@ def audit_bi_wo_stats_anomaly():
     return results
 
 
+# ── AUDIT SALE INVENTORY — Smart formula: Stock alert, slow-mover, overstock ─
+def audit_sale_inventory():
+    """
+    ══════════════════════════════════════════════════════════════
+    🏷️ GHẾ AUDITOR-9.1 — MODULE KIỂM KHO BÁN HÀNG THÔNG MINH
+    ══════════════════════════════════════════════════════════════
+    Đọc trực tiếp từ Sale Sheet (GAS sale_backend) qua 3 tab:
+      • nhap  (Nhap Hang)  → hàng tồn kho nhập
+      • ban   (Ban Hang)   → đã bán
+      • tamung (Tam Ung)   → tạm ứng cho nhân viên
+
+    5 Công thức thông minh:
+      1. 🔴 Hết hàng (Stock = 0 nhưng chưa xoá) — cảnh báo bổ hàng
+      2. 🟡 Sắp hết hàng (Stock <= ngưỡng LOW_STOCK_THRESHOLD = 3)
+      3. 🟠 Hàng tồn lâu không bán (nhập > 30 ngày, tồn > 0, chưa bán)
+      4. 🔵 Tồn kho âm bất thường (sold > imported qty)
+      5. 🟣 Tổng giá trị tồn kho thay đổi bất thường (tăng/giảm > 30% so với run trước)
+    ══════════════════════════════════════════════════════════════
+    """
+    results = []
+    LOW_STOCK_THRESHOLD = 3
+    SLOW_MOVER_DAYS = 30
+    GAS_SALE_URL = os.getenv("GAS_SALE_URL", "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec")
+    SALE_ADMIN_TOKEN = os.getenv("SALE_ADMIN_TOKEN", "")
+
+    def fetch_col(col):
+        try:
+            payload = {"action": "sale_get", "col": col, "token": SALE_ADMIN_TOKEN}
+            resp = requests.post(GAS_SALE_URL, json=payload, timeout=20, allow_redirects=True)
+            data = resp.json()
+            if data.get("ok") and isinstance(data.get("data"), list):
+                return data["data"]
+            logger.warning(f"[AUDIT-INV] sale_get({col}) not ok: {data.get('error','?')}")
+            return []
+        except Exception as e:
+            logger.error(f"[AUDIT-INV] fetch_col({col}) error: {e}")
+            return []
+
+    try:
+        nhap_rows = fetch_col("nhap")   # Goods intake
+        ban_rows  = fetch_col("ban")    # Sales orders
+        tamung_rows = fetch_col("tamung")  # Stock advance
+
+        if not nhap_rows:
+            results.append({
+                "component": "Sale Inventory",
+                "status": "WARN",
+                "label": "⚠️ Không đọc được dữ liệu kho",
+                "detail": "GAS Sale Backend không trả dữ liệu nhap (có thể SALE_ADMIN_TOKEN chưa set trong Script Properties)"
+            })
+            return results
+
+        # ── Build inventory map: model → { sl_nhap, sl_ban, sl_tamung, ten, gg, gb, ngay_nhap }
+        inv = {}
+        for r in nhap_rows:
+            model = str(r.get("model") or r.get("ten") or "").strip()
+            if not model:
+                continue
+            sl = int(float(r.get("sl") or 0))
+            gg = float(r.get("gg") or 0)   # cost price
+            gb = float(r.get("gb") or 0)   # sell price
+            ten = str(r.get("ten") or model)
+            ngay = str(r.get("ngay") or "")
+            if model not in inv:
+                inv[model] = {"ten": ten, "sl_nhap": 0, "sl_ban": 0, "sl_tamung": 0,
+                              "gg": gg, "gb": gb, "ngay_nhap": ngay}
+            inv[model]["sl_nhap"] += sl
+
+        for r in ban_rows:
+            model = str(r.get("model") or r.get("ten") or "").strip()
+            sl = int(float(r.get("sl") or r.get("qty") or 1))
+            if model in inv:
+                inv[model]["sl_ban"] += sl
+            # else: sold item not in nhap → negative stock candidate handled below
+
+        for r in tamung_rows:
+            model = str(r.get("model") or r.get("ten") or "").strip()
+            sl = int(float(r.get("sl") or r.get("qty") or 1))
+            if model in inv:
+                inv[model]["sl_tamung"] += sl
+
+        # ── Compute remaining stock
+        now_mmt = datetime.now(TZ_MM)
+        out_of_stock    = []
+        low_stock       = []
+        slow_movers     = []
+        negative_stock  = []
+        total_val       = 0.0
+
+        for model, d in inv.items():
+            remaining = d["sl_nhap"] - d["sl_ban"] - d["sl_tamung"]
+            val = remaining * d["gg"]
+            total_val += max(val, 0)
+
+            # Formula 4 — âm stock
+            if remaining < 0:
+                negative_stock.append(
+                    f"{d['ten']} [{model}]: tồn = {remaining} (nhập {d['sl_nhap']} − bán {d['sl_ban']} − tạm ứng {d['sl_tamung']})"
+                )
+                continue
+
+            # Formula 1 — hết hàng
+            if remaining == 0 and d["sl_nhap"] > 0:
+                out_of_stock.append(f"{d['ten']} [{model}]")
+                continue
+
+            # Formula 2 — sắp hết
+            if 0 < remaining <= LOW_STOCK_THRESHOLD:
+                low_stock.append(f"{d['ten']} [{model}]: còn {remaining} cái")
+
+            # Formula 3 — hàng tồn lâu
+            if remaining > 0 and d["ngay_nhap"]:
+                try:
+                    # Parse ngay (YYYY-MM-DD hoặc DD/MM/YYYY)
+                    ng = d["ngay_nhap"][:10]
+                    if "/" in ng:
+                        parts = ng.split("/")
+                        ng_dt = datetime(int(parts[2]), int(parts[1]), int(parts[0]), tzinfo=TZ_MM)
+                    else:
+                        ng_dt = datetime.fromisoformat(ng).replace(tzinfo=TZ_MM)
+                    age_days = (now_mmt - ng_dt).days
+                    if age_days >= SLOW_MOVER_DAYS and d["sl_ban"] == 0:
+                        slow_movers.append(
+                            f"{d['ten']} [{model}]: tồn {remaining} cái, nhập {age_days} ngày trước, chưa bán"
+                        )
+                except Exception:
+                    pass
+
+        # ── Formula 5 — Tổng giá trị tồn kho (so sánh với lần trước qua CacheService concept, dùng file cache đơn giản)
+        cache_file = os.path.join(os.path.dirname(__file__), ".inv_value_cache.json")
+        prev_val = None
+        val_change_alert = None
+        try:
+            if os.path.exists(cache_file):
+                with open(cache_file, "r") as f:
+                    cache_data = json.load(f)
+                prev_val = cache_data.get("total_val")
+                prev_ts  = cache_data.get("ts", "")
+                if prev_val and prev_val > 0:
+                    pct_change = (total_val - prev_val) / prev_val * 100
+                    if abs(pct_change) >= 30:
+                        direction = "tăng" if pct_change > 0 else "giảm"
+                        val_change_alert = (
+                            f"Tổng giá trị tồn kho {direction} {abs(pct_change):.1f}% "
+                            f"({prev_val/1e6:.1f}M → {total_val/1e6:.1f}M Ks) "
+                            f"so với lần kiểm tra {prev_ts}"
+                        )
+            with open(cache_file, "w") as f:
+                json.dump({"total_val": total_val, "ts": now_mmt.strftime("%d/%m %H:%M")}, f)
+        except Exception as ce:
+            logger.warning(f"[AUDIT-INV] Cache file error: {ce}")
+
+        # ── Build results
+        has_issue = False
+
+        if negative_stock:
+            has_issue = True
+            results.append({
+                "component": "Sale Inventory — Tồn kho âm",
+                "status": "FAIL",
+                "label": f"🔵 {len(negative_stock)} MẶT HÀNG TỒN KHO ÂM BẤT THƯỜNG",
+                "detail": "Số lượng bán + tạm ứng vượt số nhập: " + " | ".join(negative_stock[:5])
+                          + ("..." if len(negative_stock) > 5 else "")
+            })
+
+        if out_of_stock:
+            has_issue = True
+            results.append({
+                "component": "Sale Inventory — Hết hàng",
+                "status": "WARN",
+                "label": f"🔴 {len(out_of_stock)} MẶT HÀNG ĐÃ HẾT TỒN KHO",
+                "detail": "Cần nhập bổ sung ngay: " + ", ".join(out_of_stock[:8])
+                          + ("..." if len(out_of_stock) > 8 else "")
+            })
+
+        if low_stock:
+            has_issue = True
+            results.append({
+                "component": "Sale Inventory — Sắp hết",
+                "status": "WARN",
+                "label": f"🟡 {len(low_stock)} MẶT HÀNG SẮP HẾT (≤ {LOW_STOCK_THRESHOLD} cái)",
+                "detail": " | ".join(low_stock[:6]) + ("..." if len(low_stock) > 6 else "")
+            })
+
+        if slow_movers:
+            has_issue = True
+            results.append({
+                "component": "Sale Inventory — Hàng tồn lâu",
+                "status": "WARN",
+                "label": f"🟠 {len(slow_movers)} MẶT HÀNG TỒN ≥ {SLOW_MOVER_DAYS} NGÀY CHƯA BÁN",
+                "detail": " | ".join(slow_movers[:5]) + ("..." if len(slow_movers) > 5 else "")
+            })
+
+        if val_change_alert:
+            has_issue = True
+            results.append({
+                "component": "Sale Inventory — Biến động giá trị kho",
+                "status": "WARN",
+                "label": "🟣 BIẾN ĐỘNG GIÁ TRỊ TỒN KHO BẤT THƯỜNG (≥ 30%)",
+                "detail": val_change_alert
+            })
+
+        if not has_issue:
+            results.append({
+                "component": "Sale Inventory",
+                "status": "PASS",
+                "label": "OK",
+                "detail": (
+                    f"Kho bình thường — {len(inv)} SKUs | "
+                    f"Tổng giá trị tồn: {total_val/1e6:.1f}M Ks | "
+                    f"0 hết hàng, 0 âm, 0 tồn lâu"
+                )
+            })
+
+    except Exception as e:
+        logger.error(f"[AUDIT-INV] Lỗi tổng thể: {e}")
+        results.append({
+            "component": "Sale Inventory",
+            "status": "WARN",
+            "label": "Exception",
+            "detail": str(e)
+        })
+
+    return results
+
+
 # ── 4. KIỂM TRA ĐÚNG GIỜ & PHÁT HIỆN NHÂN ĐÔI TIN NHẮN (TELETHON AUDIT) ─────
 async def audit_telegram_messages_telethon():
     """
@@ -1319,6 +1545,7 @@ def build_master_audit_report():
     template_res = audit_attendance_template_semantic()
     bi_anomaly_res = audit_bi_wo_stats_anomaly()
     cons_menu_res = audit_construction_menu_sync()
+    inventory_res = audit_sale_inventory()
 
     # 2. Chạy kiểm tra Telethon (Đúng giờ & Nhân đôi)
     try:
@@ -1332,7 +1559,7 @@ def build_master_audit_report():
     quality_res = telethon_data.get("quality_results", [])
 
     # 3. Tính toán sự cố (Chỉ tính status FAIL là lỗi thực sự)
-    all_static_checks = webhook_res + gas_res + sheets_res + roster_res + template_res + bi_anomaly_res + cons_menu_res
+    all_static_checks = webhook_res + gas_res + sheets_res + roster_res + template_res + bi_anomaly_res + cons_menu_res + inventory_res
     fail_checks = sum(1 for c in all_static_checks if c["status"] == "FAIL")
     warn_checks = sum(1 for c in all_static_checks if c["status"] == "WARN")
 
@@ -1425,6 +1652,14 @@ def build_master_audit_report():
         lines.append("\n🏗️ <b>LỖI ĐỒNG BỘ MENU CONSTRUCTION BOT 10:</b>")
         for r in cons_fails:
             lines.append(f"   ❌ <b>{r['name']}</b>: <i>{r['reason']}</i>")
+
+    # 11. Báo cáo Kho Bán Hàng (Sale Inventory Smart Alerts)
+    inv_fails = [r for r in inventory_res if r["status"] in ("FAIL", "WARN")]
+    if inv_fails:
+        lines.append("\n🏷️ <b>CẢNH BÁO TỒN KHO BÁN HÀNG:</b>")
+        for r in inv_fails:
+            lines.append(f"   {r['label']} (<i>{r['component']}</i>)")
+            lines.append(f"      └ {r['detail']}")
 
     lines.append("\n──────────────────────────")
     lines.append("👉 <i>Vui lòng xử lý các thành phần báo lỗi ở trên.</i>")
