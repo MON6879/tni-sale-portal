@@ -876,6 +876,57 @@ tbody tr:hover{background:#fafcff}
           <button type="button" class="btn b-xs b-out" id="btn-toggle-acc-admin" onclick="toggleAccAdminFin()">👁️ Mở Khóa Quản Lý</button>
         </div>
 
+        <!-- 7. GIAO VIỆC KỸ THUẬT & TÍNH TIỀN CÔNG LẮP ĐẶT -->
+        <b style="font-size:12.5px;color:#065f46;display:block;margin-top:14px;border-top:1px dashed #cbd5e1;padding-top:10px">
+          7. Giao Việc Kỹ Thuật &amp; Tiền Công Lắp Đặt (Installation Work Assignment &amp; Labor Cost):
+        </b>
+        <div style="font-size:11px;color:#64748b;margin-top:3px;font-style:italic">
+          * Sau khi nghiệm thu xong, tự động tính tiền công lắp đặt cho đội kỹ thuật theo từng hạng mục × đơn giá × số lượng.
+        </div>
+
+        <div style="margin-top:8px;background:#f0fdf4;border:1px solid #a7f3d0;border-radius:8px;padding:10px;overflow-x:auto">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button type="button" class="btn b-xs b-gn" onclick="addInstallRow()">➕ Thêm Hạng Mục</button>
+              <button type="button" class="btn b-xs b-out" onclick="loadDefaultInstallItems()">🔄 Mẫu Chuẩn Solar</button>
+            </div>
+            <div style="font-size:11px;color:#047857;font-weight:700">
+              📐 Công thức: Tiền Công = Σ (SL × Đơn Giá)
+            </div>
+          </div>
+
+          <!-- Header -->
+          <div style="display:grid;grid-template-columns:28px minmax(160px,2fr) minmax(100px,1fr) 55px 55px 80px 100px 28px;gap:5px;font-size:10.5px;font-weight:700;color:#475569;border-bottom:1px solid #a7f3d0;padding-bottom:5px;margin-bottom:5px;min-width:620px">
+            <div style="text-align:center">≡</div>
+            <div>Hạng Mục Công Việc (Task)</div>
+            <div>Mã / Code</div>
+            <div style="text-align:center">ĐVT</div>
+            <div style="text-align:center">SL</div>
+            <div style="text-align:right">Đơn Giá (Ks)</div>
+            <div style="text-align:right;color:#059669;font-weight:800">Thành Tiền (Ks)</div>
+            <div></div>
+          </div>
+          <div id="install-items" style="min-width:620px">
+            <!-- Dynamic installation rows -->
+          </div>
+
+          <!-- TỔNG TIỀN CÔNG -->
+          <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div style="background:#dcfce7;border:1px solid #86efac;border-radius:6px;padding:8px 12px">
+              <span style="font-size:10.5px;color:#065f46;font-weight:600">🔧 Tổng Tiền Công Lắp Đặt (Total Labor Cost):</span>
+              <div id="install-total-cost" style="font-size:18px;font-weight:900;color:#059669">0 Ks</div>
+            </div>
+            <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 12px">
+              <span style="font-size:10.5px;color:#1e3a8a;font-weight:600">📊 Tỷ Lệ % Trên Doanh Thu HĐ:</span>
+              <div id="install-ratio" style="font-size:18px;font-weight:900;color:#1e40af">0%</div>
+            </div>
+            <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:6px;padding:8px 12px">
+              <span style="font-size:10.5px;color:#92400e;font-weight:600">👷 Kỹ Sư Trưởng Phụ Trách:</span>
+              <div id="install-engineer" style="font-size:14px;font-weight:800;color:#b45309">—</div>
+            </div>
+          </div>
+        </div>
+
         <!-- NÚT THAO TÁC -->
         <div class="fa" style="margin-top:14px;justify-content:flex-start;flex-wrap:wrap;gap:8px">
           <button class="btn b-gn" onclick="saveAcceptanceRecord(false)" style="font-weight:700">💾 Lưu Biên Bản Nghiệm Thu</button>
@@ -1692,6 +1743,19 @@ tbody tr:hover{background:#fafcff}
     <div class="panel"><div class="ph"><h3>📋 My Consignment</h3></div><div class="pb tw" id="my-consign"><div style="color:#94a3b8;padding:20px;text-align:center">—</div></div></div>
     <div class="panel"><div class="ph"><h3>🧑‍💼 My Advance</h3></div><div class="pb tw" id="my-advance"><div style="color:#94a3b8;padding:20px;text-align:center">—</div></div></div>
   </div>
+  <!-- ══ COMMISSION PANEL ══ -->
+  <div class="panel" style="border-left:4px solid #10b981;margin-top:10px">
+    <div class="ph"><h3>💵 <span data-lang="commission_title">Commission & Installation Fee / Hoa Hồng & Phí Lắp Đặt</span></h3></div>
+    <div class="pb">
+      <div style="background:#ecfdf5;padding:12px 16px;border-radius:8px;border:1px solid #a7f3d0;font-size:12px;line-height:1.8;margin-bottom:12px">
+        <b>📌 <span data-lang="commission_formula">Commission Formula / Công Thức Hoa Hồng</span>:</b><br/>
+        🧑‍💼 <span data-lang="comm_sales_label">Sales Commission</span> = <code>1% × 95% Prepayment</code> = <b>0.95%</b> × Contract Value<br/>
+        🔧 <span data-lang="comm_tech_label">Technical Installation Fee</span> = <code>70%</code> × Contract Value
+      </div>
+      <div id="my-commission-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px"></div>
+      <div id="my-commission-table" class="tw"></div>
+    </div>
+  </div>
 </div>
 
 <!-- ══ STAFF: MY QUOTATIONS ══ -->
@@ -1862,6 +1926,29 @@ tbody tr:hover{background:#fafcff}
     </div>
   </div>
 
+  <!-- ══ GMAIL ACCESS LIST (Modeled after BI Portal) ══ -->
+  <div class="panel" style="margin-bottom:16px;border-left:4px solid #10b981">
+    <div class="ph" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div>
+        <h3 style="margin:0;font-size:15px;color:#1e293b">📧 GMAIL ACCESS LIST — Authorized Accounts Roster</h3>
+        <div style="font-size:11.5px;color:#64748b;margin-top:2px">Danh sách tài khoản Gmail được cấp quyền truy cập hệ thống TNI Sale. Khi mở link với <code>?email=xxx@gmail.com</code>, hệ thống tự gán vai trò.</div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <button class="btn b-gn b-sm" onclick="openAddGmailModal()" style="font-weight:700">+ Add Gmail</button>
+        <button class="btn b-bl b-sm" onclick="copyAllGmailsToClipboard()" style="font-weight:700">📋 Copy All Gmail</button>
+        <input id="gmail-search-kw" placeholder="🔍 Search email or role..." oninput="renderGmailAccessTable()" style="padding:5px 10px;border:1px solid var(--bd);border-radius:6px;font-size:12px;width:200px"/>
+      </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div id="gmail-summary-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;padding:12px 16px 0"></div>
+
+    <!-- Gmail Roster Table -->
+    <div class="pb tw" id="gmail-access-table" style="overflow-x:auto;padding:0">
+      <!-- Generated by renderGmailAccessTable() -->
+    </div>
+  </div>
+
   <!-- 2 CỘT: CÔNG CỤ TẠO LINK CHIA SẺ VÀ DANH SÁCH NHÂN VIÊN GÁN QUYỀN -->
   <div class="g2">
     <!-- CỘT 1: CÔNG CỤ TẠO LINK CHIA SẺ THEO VAI TRÒ -->
@@ -1928,38 +2015,39 @@ tbody tr:hover{background:#fafcff}
       <div style="width:68px;height:68px;margin:0 auto 14px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34px;box-shadow:0 0 0 8px #fef2f2">
         🛡️
       </div>
-      <h2 style="font-size:20px;font-weight:900;color:#991b1b;margin:0 0 6px">TRUY CẬP BỊ HẠN CHẾ (ACCESS RESTRICTED)</h2>
-      <p style="font-size:13px;color:#b91c1c;margin:0">Bạn không có quyền truy cập vào phân hệ này theo chính sách bảo mật nội bộ TNI.</p>
+      <h2 id="denied-h2" style="font-size:20px;font-weight:900;color:#991b1b;margin:0 0 6px">TRUY CẬP BỊ HẠN CHẾ (ACCESS RESTRICTED)</h2>
+      <p id="denied-h2-sub" style="font-size:13px;color:#b91c1c;margin:0">Bạn không có quyền truy cập vào phân hệ này theo chính sách bảo mật nội bộ TNI.</p>
     </div>
     
     <div style="padding:24px 24px;text-align:left">
       <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:18px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #e2e8f0">
-          <span style="font-size:12.5px;color:#64748b;font-weight:600">Phân hệ bạn đang muốn mở:</span>
+          <span id="denied-module-label" style="font-size:12.5px;color:#64748b;font-weight:600">Phân hệ bạn đang muốn mở:</span>
           <span id="denied-target-name" style="font-size:13px;font-weight:800;color:#0f172a">💰 Tài Chính &amp; Lợi Nhuận</span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #e2e8f0">
-          <span style="font-size:12.5px;color:#64748b;font-weight:600">Vai trò hiện tại của bạn:</span>
+          <span id="denied-role-label" style="font-size:12.5px;color:#64748b;font-weight:600">Vai trò hiện tại của bạn:</span>
           <span id="denied-current-role" style="font-size:13px;font-weight:800;color:#dc2626">🧑‍💼 Nhân Viên Kinh Doanh (Sales)</span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:12.5px;color:#64748b;font-weight:600">Các vai trò có quyền xem:</span>
+          <span id="denied-allowed-label" style="font-size:12.5px;color:#64748b;font-weight:600">Các vai trò có quyền xem:</span>
           <span id="denied-allowed-roles" style="font-size:12.5px;font-weight:700;color:#059669">👑 Ban Giám Đốc, 💰 Kế Toán</span>
         </div>
       </div>
 
-      <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 14px;font-size:12.5px;color:#92400e;line-height:1.6;margin-bottom:22px">
+      <div id="denied-sec-policy" style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 14px;font-size:12.5px;color:#92400e;line-height:1.6;margin-bottom:22px">
         <b>💡 Quy định bảo mật hệ thống:</b> Phân hệ này chứa số liệu tài chính sống nhạy cảm (Bao gồm Tỷ lệ 17% nộp Tổng Công Ty VCM, Vốn gốc 83%, lợi nhuận ròng chi nhánh và sổ cái quyết toán tiền nộp). Theo quy định, chỉ <b>Ban Giám Đốc</b> và <b>Kế Toán Trưởng</b> mới được cấp quyền xem dữ liệu này.
       </div>
 
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-        <button class="btn b-bl" onclick="go('dashboard')" style="padding:8px 18px;font-weight:700">🏠 Về Trang Tổng Quan</button>
-        <button class="btn b-out" onclick="go('rbac')" style="padding:8px 18px;font-weight:700">🛡️ Xem Bảng Phân Quyền (RBAC)</button>
-        <button class="btn b-gn" onclick="promptAdminUnlock()" style="padding:8px 18px;font-weight:700">🔑 Mở Khóa Bằng Mã PIN Admin</button>
+        <button id="denied-btn-home" class="btn b-bl" onclick="go('dashboard')" style="padding:8px 18px;font-weight:700">🏠 Về Trang Tổng Quan</button>
+        <button id="denied-btn-rbac" class="btn b-out" onclick="go('rbac')" style="padding:8px 18px;font-weight:700">🛡️ Xem Bảng Phân Quyền (RBAC)</button>
+        <button id="denied-btn-pin" class="btn b-gn" onclick="promptAdminUnlock()" style="padding:8px 18px;font-weight:700">🔑 Mở Khóa Bằng Mã PIN Admin</button>
       </div>
     </div>
   </div>
 </div>
+
 
 </div><!-- /content -->
 </div><!-- /main -->
@@ -2127,6 +2215,9 @@ function go(id){
   else if(event?.target?.closest('a')) event.target.closest('a').classList.add('active');
 
   if(renders[id]) renders[id]();
+  if (typeof translateDOM === 'function' && typeof currentLang !== 'undefined') {
+    translateDOM(currentLang);
+  }
 }
 function sw(el,tid){
   el.closest('.tabs').querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
@@ -5864,6 +5955,116 @@ function resetAccForm() {
   clearAccPhotos();
   calcAccFinancials();
   calcAccMaterials();
+  loadDefaultInstallItems(); // Auto-load installation items template
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 🔧 INSTALLATION WORK ASSIGNMENT & LABOR COST CALCULATOR
+// ═══════════════════════════════════════════════════════════════
+
+let installRowCounter = 0;
+
+function addInstallRow(itemData) {
+  const container = document.getElementById('install-items');
+  if (!container) return;
+
+  installRowCounter++;
+  const id = 'inst-' + installRowCounter;
+  const d = itemData || { name: '', code: '', unit: 'Lot', qty: 1, price: 0 };
+
+  const row = document.createElement('div');
+  row.id = id;
+  row.style.cssText = 'display:grid;grid-template-columns:28px minmax(160px,2fr) minmax(100px,1fr) 55px 55px 80px 100px 28px;gap:5px;margin-bottom:4px;align-items:center';
+
+  const ist = 'padding:4px 6px;border:1px solid #cbd5e1;border-radius:4px;font-size:12px';
+
+  const isVi = currentLang === 'vi';
+  row.innerHTML = `
+    <div style="text-align:center;color:#94a3b8;cursor:grab;font-size:14px">≡</div>
+    <input value="${d.name}" placeholder="${isVi ? 'Tên hạng mục...' : 'Task description...'}" style="${ist};font-weight:700" class="inst-name" oninput="calcInstallTotal()"/>
+    <input value="${d.code}" placeholder="${isVi ? 'Mã code...' : 'Task code...'}" style="${ist}" class="inst-code"/>
+    <input value="${d.unit}" style="${ist};text-align:center" class="inst-unit"/>
+    <input value="${d.qty}" type="number" min="0" style="${ist};text-align:center;font-weight:700" class="inst-qty" oninput="calcInstallTotal()"/>
+    <input value="${d.price}" type="number" min="0" style="${ist};text-align:right" class="inst-price" oninput="calcInstallTotal()"/>
+    <div class="inst-subtotal" style="text-align:right;font-weight:800;color:#059669;font-size:13px">${fn(d.qty * d.price)} đ</div>
+    <button type="button" onclick="removeInstallRow('${id}')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:16px;padding:0">✕</button>
+  `;
+
+  container.appendChild(row);
+  calcInstallTotal();
+}
+
+function removeInstallRow(id) {
+  const row = document.getElementById(id);
+  if (row) row.remove();
+  calcInstallTotal();
+}
+
+function calcInstallTotal() {
+  const container = document.getElementById('install-items');
+  if (!container) return;
+
+  let total = 0;
+  container.querySelectorAll('[id^="inst-"]').forEach(row => {
+    const qty = Number(row.querySelector('.inst-qty')?.value || 0);
+    const price = Number(row.querySelector('.inst-price')?.value || 0);
+    const subtotal = qty * price;
+    total += subtotal;
+
+    const subEl = row.querySelector('.inst-subtotal');
+    if (subEl) subEl.innerHTML = `<b style="color:#059669">${fn(subtotal)} đ</b>`;
+  });
+
+  // Update totals
+  const totalEl = document.getElementById('install-total-cost');
+  if (totalEl) totalEl.textContent = fn(total) + ' Ks';
+
+  // Ratio vs contract value
+  const rev = Number(document.getElementById('acc-rev')?.value || 0);
+  const ratioEl = document.getElementById('install-ratio');
+  if (ratioEl) {
+    const pct = rev > 0 ? ((total / rev) * 100).toFixed(1) : 0;
+    ratioEl.textContent = pct + '%';
+  }
+
+  // Engineer name
+  const engEl = document.getElementById('install-engineer');
+  const eng = document.getElementById('acc-eng')?.value || '—';
+  if (engEl) engEl.textContent = eng;
+}
+
+const DEFAULT_INSTALL_ITEMS = [
+  { name: 'Inverter Installation + System Wiring', code: 'Inverter Installation', unit: 'Lot', qty: 6, price: 60000 },
+  { name: 'Solar Panel Installation (Rooftop)', code: 'Solar Installation', unit: 'Lot', qty: 8, price: 120000 },
+  { name: 'Battery Storage Installation', code: 'Battery Install', unit: 'Lot', qty: 2, price: 80000 },
+  { name: 'DC/AC Cable Wiring & Conduit', code: 'Wiring Works', unit: 'Lot', qty: 1, price: 150000 },
+  { name: 'Earthing & Lightning Protection', code: 'Earthing System', unit: 'Lot', qty: 1, price: 100000 },
+  { name: 'Testing & Commissioning', code: 'T&C', unit: 'Lot', qty: 1, price: 50000 }
+];
+
+function loadDefaultInstallItems() {
+  const container = document.getElementById('install-items');
+  if (!container) return;
+  container.innerHTML = '';
+  installRowCounter = 0;
+  DEFAULT_INSTALL_ITEMS.forEach(item => addInstallRow(item));
+  calcInstallTotal();
+}
+
+function getInstallItemsData() {
+  const container = document.getElementById('install-items');
+  if (!container) return [];
+  const items = [];
+  container.querySelectorAll('[id^="inst-"]').forEach(row => {
+    items.push({
+      name: row.querySelector('.inst-name')?.value || '',
+      code: row.querySelector('.inst-code')?.value || '',
+      unit: row.querySelector('.inst-unit')?.value || 'Lot',
+      qty: Number(row.querySelector('.inst-qty')?.value || 0),
+      price: Number(row.querySelector('.inst-price')?.value || 0)
+    });
+  });
+  return items;
 }
 
 function saveAcceptanceRecord(andPrint) {
@@ -5938,6 +6139,8 @@ function saveAcceptanceRecord(andPrint) {
     debt: debt,
     cty: cty,
     branchNet: branchNet,
+    installItems: getInstallItemsData(),
+    installTotalCost: getInstallItemsData().reduce((s, it) => s + (it.qty * it.price), 0),
     updatedAt: new Date().toISOString()
   };
 
@@ -7793,6 +7996,123 @@ const BILINGUAL_PAIRS = [
   ['📄 UPS / Device Quotations', '📄 UPS / Device Quotations'],
   ['📝 Customer & Partner Survey', '📝 Customer & Partner Survey'],
   ['📋 Lịch Sử Khảo Sát', '📋 Survey History'],
+
+  // ══ HANDOVER & ACCEPTANCE (NGHIỆM THU HIỆN TRƯỜNG) ══
+  ['Đo đạc điện áp 220V/kWp, kiểm soát mét dây Black/Red, Serial thiết bị, ký tay cảm ứng trên điện thoại & chốt sổ cái 1 hàng', 'Measure 220V/kWp voltage, audit Black/Red cables, device serial numbers, on-screen touch signature & closed-loop ledger'],
+  ['⚡ Chọn dự án cần nghiệm thu:', '⚡ Select Project for Handover:'],
+  ['-- Nạp từ Báo Giá Solar / Đơn Bán Hàng --', '-- Load from Solar Quote / Sales Order --'],
+  ['⭐ Mẫu Chuẩn: 16kW Kawthoung', '⭐ 16kW Standard Preset (Kawthoung)'],
+  ['➕ Tạo Mới Trắng', '➕ New Blank Record'],
+  ['📋 Phiếu Nghiệm Thu & Bàn Giao Hiện Trường', '📋 Field Handover & Acceptance Record'],
+  ['1. Thông Tin Công Trình & Khách Hàng:', '1. Project & Customer Information:'],
+  ['Mã Dự Án / Hợp Đồng *', 'Project / Contract Code *'],
+  ['Tên Khách Hàng (Mr/Ms) *', 'Customer Name (Mr/Ms) *'],
+  ['Số Điện Thoại', 'Phone Number'],
+  ['Địa Chỉ Công Trình', 'Site Address'],
+  ['Ngày Nghiệm Thu', 'Acceptance Date'],
+  ['Kỹ Sư Trưởng Phụ Trách', 'Supervising Engineer'],
+  ['2. Đo Đạc Thông Số Bàn Giao Kỹ Thuật (Field Measurements):', '2. Field Technical Measurements & Handover:'],
+  ['⚡ Điện Áp Đo Bàn Giao (V) *', '⚡ Measured Voltage (V) *'],
+  ['☀️ Công Suất Đỉnh Đo Đạc (kWp) *', '☀️ Peak Measured Power (kWp) *'],
+  ['🔋 Mức Sạc Pin Lưu Trữ (SOC %)', '🔋 Battery State of Charge (SOC %)'],
+  ['3. Thống Kê Vật Tư Sử Dụng & Vật Tư Thừa Quy Ra Tiền (Chuyển KH Khác):', '3. Materials Consumed & Surplus Credit (Transferred to Next Site):'],
+  ['* Đối soát vật tư mang đi vs thực dùng. Tiền vật tư thừa thu hồi được đem sang KH khác dùng, không tính vào giá trị sử dụng công trình này.', '* Reconciliation of issued vs consumed materials. Surplus credit is transferred to next site, excluded from this project cost.'],
+  ['➕ Thêm Vật Tư', '➕ Add Material'],
+  ['🔄 Mẫu Chuẩn', '🔄 Standard Preset'],
+  ['Tên Vật Tư', 'Material Name'],
+  ['ĐVT', 'Unit'],
+  ['Mang Đi', 'Issued'],
+  ['Dùng', 'Used'],
+  ['Thừa', 'Surplus'],
+  ['Đơn Giá', 'Unit Price'],
+  ['Tiền Dùng', 'Used Cost'],
+  ['Tiền Thừa (Thu Hồi)', 'Surplus Credit'],
+  ['⚡ Tiền Vật Tư Thực Dùng (Tính Công Trình):', '⚡ Consumed Material Cost (Project Billed):'],
+  ['🔄 Tiền Thừa Thu Hồi (Chuyển KH Khác):', '🔄 Surplus Credit (Transfer to Next Site):'],
+  ['✓ Không tính vào giá trị sử dụng công trình này', '✓ Excluded from this project billed cost'],
+  ['🏷️ Serial Number Inverter *', '🏷️ Inverter Serial Number *'],
+  ['🔋 Serial Number Pin Lưu Trữ (Battery)', '🔋 Battery Serial Number'],
+  ['☀️ Danh Sách / Dải Serial Tấm Pin Solar', '☀️ Solar PV Panel Serial Numbers / Range'],
+  ['4. Khách Hàng Ký Nghiệm Thu Trực Tiếp Trên Màn Hình (Digital Signature):', '4. Customer Direct Digital Signature on Screen:'],
+  ['✍️ Dùng ngón tay ký vào khung dưới đây:', '✍️ Sign with finger or stylus in the box below:'],
+  ['🗑️ Ký Lại', '🗑️ Clear Signature'],
+  ['🔒 Khóa Chữ Ký', '🔒 Lock Signature'],
+  ['Trạng thái: Chưa ký', 'Status: Not signed'],
+  ['Trạng thái: Đã ký', 'Status: Signed'],
+  ['5. Hình Ảnh Hiện Trường Nghiệm Thu (Tủ điện, Giàn pin, Đồng hồ 220V):', '5. Site Handover Photos (Distribution Box, PV Array, 220V Meter):'],
+  ['✕ Xóa Hết Ảnh', '✕ Clear All Photos'],
+  ['Hoặc link Google Drive lưu trữ ảnh:', 'Or Google Drive Folder Link:'],
+  ['6. Thu Tiền & Quyết Toán Bàn Giao Hiện Trường (Customer Payment):', '6. Field Payment Collection & Settlement:'],
+  ['💰 Doanh Thu Hợp Đồng (100%) (Ks) *', '💰 Contract Revenue (100%) (Ks) *'],
+  ['💵 Thực Thu Từ Khách Tại Hiện Trường (Ks) *', '💵 Cash/Transfer Collected On Site (Ks) *'],
+  ['⏳ Khách Còn Nợ / Cần Thu Thêm (Ks)', '⏳ Outstanding Customer Receivable (Ks)'],
+  ['🏢 Bóc Tách Giá Vốn & Lợi Nhuận Công Ty (Chỉ Dành Cho Quản Lý):', '🏢 Internal Cost & HO Profit Breakdown (Admin Only):'],
+  ['🏦 Tổng Giá Gốc Vốn (83%) (Ks) *', '🏦 Base Equipment Cost (83%) (Ks) *'],
+  ['🏢 Phải Nộp Cty (% Cty)', '🏢 Payable to HO (HO %)'],
+  ['🏪 Thực Còn Lại Chi Nhánh', '🏪 Net Retained Branch Profit'],
+  ['⬇ Xuất CSV Sổ Cái (Quản Lý)', '⬇ Export Ledger CSV (Admin)'],
+  ['🛡️ Bảo Mật Kinh Doanh: Nhân viên nghiệm thu chỉ thu tiền khách. Giá vốn 83% & Lợi nhuận cty được khóa bảo mật 100%.', '🛡️ Confidential: Field technicians only handle customer collection. 83% Base Cost & HO Profit are strictly locked.'],
+  ['👁️ Mở Khóa Quản Lý', '👁️ Admin Unlock'],
+  ['🔒 Đóng Chế Độ Quản Lý', '🔒 Lock Admin Mode'],
+  ['💾 Lưu Biên Bản Nghiệm Thu', '💾 Save Acceptance Record'],
+  ['🖨️ In Biên Bản PDF (A4)', '🖨️ Print Acceptance (A4 PDF)'],
+  ['📑 Sổ Cái Nghiệm Thu & Quyết Toán 1 Hàng Khép Kín', '📑 Unified Closed-Loop Settlement Ledger'],
+
+  // ══ 7. INSTALLATION WORK ASSIGNMENT & LABOR COST ══
+  ['7. Giao Việc Kỹ Thuật & Tiền Công Lắp Đặt (Installation Work Assignment & Labor Cost):', '7. Technical Work Assignment & Installation Labor Cost:'],
+  ['* Sau khi nghiệm thu xong, tự động tính tiền công lắp đặt cho đội kỹ thuật theo từng hạng mục × đơn giá × số lượng.', '* Upon acceptance completion, automatically calculate installation labor fees: Qty × Unit Price.'],
+  ['➕ Thêm Hạng Mục', '➕ Add Work Item'],
+  ['🔄 Mẫu Chuẩn Solar', '🔄 Standard Solar Template'],
+  ['📐 Công thức: Tiền Công = Σ (SL × Đơn Giá)', '📐 Formula: Total Labor = Σ (Qty × Unit Price)'],
+  ['Hạng Mục Công Việc (Task)', 'Work Item / Task Description'],
+  ['Mã / Code', 'Item Code'],
+  ['Thành Tiền (Ks)', 'Subtotal (Ks)'],
+  ['🔧 Tổng Tiền Công Lắp Đặt (Total Labor Cost):', '🔧 Total Installation Labor Cost:'],
+  ['📊 Tỷ Lệ % Trên Doanh Thu HĐ:', '📊 % Ratio of Contract Revenue:'],
+  ['👷 Kỹ Sư Trưởng Phụ Trách:', '👷 Lead Engineer in Charge:'],
+
+  // ══ ACCESS RESTRICTED (TRANG BÁO LỖI HẠN CHẾ QUYỀN) ══
+  ['TRUY CẬP BỊ HẠN CHẾ (ACCESS RESTRICTED)', 'ACCESS RESTRICTED'],
+  ['Bạn không có quyền truy cập vào phân hệ này theo chính sách bảo mật nội bộ TNI.', 'You do not have permission to access this module according to TNI internal security policy.'],
+  ['Phân hệ bạn đang muốn mở:', 'Requested Module:'],
+  ['Vai trò hiện tại của bạn:', 'Your Current Role:'],
+  ['Các vai trò có quyền xem:', 'Authorized Roles:'],
+  ['💡 Quy định bảo mật hệ thống: Phân hệ này chứa số liệu tài chính sống nhạy cảm (Bao gồm Tỷ lệ 17% nộp Tổng Công Ty VCM, Vốn gốc 83%, lợi nhuận ròng chi nhánh và sổ cái quyết toán tiền nộp). Theo quy định, chỉ Ban Giám Đốc và Kế Toán Trưởng mới được cấp quyền xem dữ liệu này.', '💡 Security Policy: This module contains sensitive financial records (including 17% HO share to VCM, 83% base cost, net branch profit and settlement ledgers). By regulation, only Executive BOD and Chief Accountant are authorized.'],
+  ['🏠 Về Trang Tổng Quan', '🏠 Return to Dashboard'],
+  ['🛡️ Xem Bảng Phân Quyền (RBAC)', '🛡️ View Role Matrix (RBAC)'],
+  ['🔑 Mở Khóa Bằng Mã PIN Admin', '🔑 Unlock with Admin PIN'],
+
+  // ══ RBAC & GMAIL ACCESS LIST ══
+  ['HỆ THỐNG PHÂN QUYỀN TRUY CẬP NHÂN VIÊN (RBAC)', 'ROLE-BASED ACCESS CONTROL SYSTEM (RBAC)'],
+  ['Xác định minh bạch và bọc thép 100%: Ai Được Xem Gì — Tuyệt đối bảo mật dữ liệu Tài Chính, Lợi Nhuận, Tỷ Lệ 17% Nộp Tổng Cty & Giá Vốn.', 'Transparent & 100% Steel-Locked: Who Sees What — Maximum security for Financial, Profit, 17% HO Share & Base Cost data.'],
+  ['⬇ Xuất CSV Ma Trận', '⬇ Export Matrix CSV'],
+  ['🔑 Đổi PIN Quản Trị', '🔑 Change Admin PIN'],
+  ['Ban Giám Đốc (BOD)', 'Executive Board (BOD)'],
+  ['Toàn quyền 100% tất cả các tab & xem tài chính', '100% full access to all tabs & financial metrics'],
+  ['Kế Toán & Tài Chính', 'Accounting & Finance'],
+  ['Xem quỹ 17%, vốn 83%, tờ trình & công nợ', 'View 17% fund, 83% base cost, statements & receivables'],
+  ['Kinh Doanh (Sales)', 'Sales & Business Dev'],
+  ['Bán hàng, báo giá, CRM. Khóa Tài Chính', 'Sales orders, quotations, CRM. Finance Locked'],
+  ['Kỹ Thuật (Field Ops)', 'Technical & Field Ops'],
+  ['Nghiệm thu, khảo sát, HUB. Khóa Tài Chính', 'Acceptance, surveys, Field Ops Hub. Finance Locked'],
+  ['Thủ Kho / Vận Hành', 'Warehouse / Inventory'],
+  ['Tồn kho, nhập xuất, tạm ứng. Khóa Tài Chính', 'Inventory, intake/dispatch, stock advance. Finance Locked'],
+  ['Đại Lý Phân Phối', 'Authorized Dealer'],
+  ['Báo giá sỉ, ký gởi. Khóa Nội Bộ', 'Wholesale quote, consignments. Internal Data Locked'],
+  ['📊 BẢNG MA TRẬN PHÂN QUYỀN CHI TIẾT ("AI ĐƯỢC XEM GÌ")', '📊 DETAILED PERMISSION MATRIX ("WHO SEES WHAT")'],
+  ['Rà soát chi tiết 20 phân hệ phần mềm và quyền xem / thao tác tương ứng của từng chức danh.', 'Comprehensive audit of 20 software modules and access rights for each role.'],
+  ['-- Tất cả danh mục phân hệ --', '-- All Module Categories --'],
+  ['🔍 Tìm kiếm phân hệ...', '🔍 Search modules...'],
+  ['Danh sách tài khoản Gmail được cấp quyền truy cập hệ thống TNI Sale. Khi mở link với ?email=xxx@gmail.com, hệ thống tự gán vai trò.', 'Authorized Gmail accounts for TNI Sale. Opening links with ?email=xxx@gmail.com automatically assigns the role.'],
+  ['🔗 Tạo Link Phân Quyền Trực Tiếp Cho Nhân Viên', '🔗 Generate Direct Personalized Access Link'],
+  ['💡 Hướng dẫn gửi link cho nhân viên: Quản trị viên chọn tên nhân viên và vai trò tương ứng bên dưới, sau đó bấm "📋 Copy Link" và gửi qua Telegram / Zalo / Email. Khi nhân viên nhấp vào link, hệ thống sẽ tự động khóa đúng vai trò và ẩn các mục bảo mật!', '💡 How to share link: Select staff and assigned role below, click "📋 Copy Link" and send via Telegram/Email. When opened, the system locks access according to role!'],
+  ['👤 Chọn Nhân Viên *', '👤 Select Staff Member *'],
+  ['🏷️ Gán Vai Trò *', '🏷️ Assign Role *'],
+  ['🌐 Đường Link Cá Nhân Hóa Chuẩn:', '🌐 Generated Personalized Link:'],
+  ['📋 Copy Link Gửi Nhân Viên', '📋 Copy Link for Staff'],
+  ['🚀 Thử Nghiệm Link Này', '🚀 Test This Link'],
+  ['👥 Danh Sách Nhân Sự & Vai Trò Đã Gán', '👥 Staff Directory & Assigned Roles'],
+  ['+ Thêm Nhân Sự', '+ Add Staff Member']
 ];
 
 const MAP_VI_TO_EN = {};
@@ -7951,7 +8271,40 @@ function applyLang(lang) {
     if (secId === 'mysurvey' && typeof renderSurveys === 'function') renderSurveys();
     if (secId === 'baogiaups' && typeof rQuUPS === 'function') rQuUPS();
   }
+
+  // 10. Re-render RBAC/Gmail panels (always, to sync language on security sections)
+  if (typeof renderRBACMatrix === 'function') renderRBACMatrix();
+  if (typeof renderStaffUsersTable === 'function') renderStaffUsersTable();
+  if (typeof renderGmailAccessTable === 'function') renderGmailAccessTable();
+  // Re-render access denied screen if currently shown
+  const activeSec2 = document.querySelector('.sec.on');
+  if (activeSec2 && activeSec2.id === 's-access-denied') {
+    // Re-trigger bilingual update on access denied screen labels
+    const isVi2 = lang === 'vi';
+    const h2El = document.getElementById('denied-h2');
+    const h2SubEl = document.getElementById('denied-h2-sub');
+    const descEl = document.getElementById('denied-module-label');
+    const roleLabel = document.getElementById('denied-role-label');
+    const allowedLabel = document.getElementById('denied-allowed-label');
+    const secPolicyEl = document.getElementById('denied-sec-policy');
+    const btnHome = document.getElementById('denied-btn-home');
+    const btnRbac = document.getElementById('denied-btn-rbac');
+    const btnPin = document.getElementById('denied-btn-pin');
+    if (h2El) h2El.textContent = isVi2 ? 'TRUY CẬP BỊ HẠN CHẾ' : 'ACCESS RESTRICTED';
+    if (h2SubEl) h2SubEl.textContent = isVi2 ? 'Bạn không có quyền truy cập vào phân hệ này theo chính sách bảo mật nội bộ TNI.' : 'You do not have permission to access this module per TNI internal security policy.';
+    if (descEl) descEl.textContent = isVi2 ? 'Phân hệ bạn đang muốn mở:' : 'Module you attempted to access:';
+    if (roleLabel) roleLabel.textContent = isVi2 ? 'Vai trò hiện tại của bạn:' : 'Your current role:';
+    if (allowedLabel) allowedLabel.textContent = isVi2 ? 'Các vai trò có quyền xem:' : 'Roles with access:';
+    if (secPolicyEl) secPolicyEl.innerHTML = isVi2
+      ? '<b>💡 Quy định bảo mật hệ thống:</b> Phân hệ này chứa số liệu tài chính sống nhạy cảm. Theo quy định, chỉ <b>Ban Giám Đốc</b> và <b>Kế Toán Trưởng</b> mới được cấp quyền xem dữ liệu này.'
+      : '<b>💡 Security Policy:</b> This module contains sensitive live financial data. Per internal policy, only <b>Board of Directors</b> and <b>Chief Accountant</b> are authorized to access this data.';
+    if (btnHome) btnHome.textContent = isVi2 ? '🏠 Về Trang Tổng Quan' : '🏠 Back to Dashboard';
+    if (btnRbac) btnRbac.textContent = isVi2 ? '🛡️ Xem Bảng Phân Quyền (RBAC)' : '🛡️ View Permission Matrix (RBAC)';
+    if (btnPin) btnPin.textContent = isVi2 ? '🔑 Mở Khóa Bằng Mã PIN Admin' : '🔑 Unlock with Admin PIN';
+    document.getElementById('ptitle').textContent = isVi2 ? '🛡️ Truy Cập Bị Hạn Chế' : '🛡️ Access Restricted';
+  }
 }
+
 
 function toggleLang() {
   const next = currentLang === 'vi' ? 'en' : 'vi';
@@ -8056,6 +8409,9 @@ function renderMyStats(){
   document.getElementById('my-advance').innerHTML=myTU.length?tbl(tuHeaders,
     myTU.map((r,i)=>[i+1,r.spN,r.sl,r.md||'-',fd(r.ngay),bk(r.ts,r.ts==='Đang ứng'?'or':'gn')]))
     :`<div style="color:#94a3b8;padding:20px;text-align:center">${isVi?'Chưa có tạm ứng':'No advances yet'}</div>`;
+
+  // Commission Panel
+  renderCommissionPanel(raw);
 }
 
 // ═══════════════════════════════════════════════════
@@ -8381,7 +8737,7 @@ function updateSidebarAccessState(roleId) {
 
     if (!isAllowed) {
       a.style.opacity = '0.52';
-      a.title = '🔒 Bị khóa đối với vai trò ' + ROLES[roleId].shortName;
+      a.title = currentLang === 'vi' ? '🔒 Bị khóa đối với vai trò ' + ROLES[roleId].shortName : '🔒 Locked for role ' + ROLES[roleId].shortName;
       const lockSpan = document.createElement('span');
       lockSpan.className = 'nav-lock-badge';
       lockSpan.style.cssText = 'font-size:10px;margin-left:auto;opacity:0.8';
@@ -8395,8 +8751,9 @@ function updateSidebarAccessState(roleId) {
 }
 
 function showAccessDenied(targetId, roleId) {
+  const isVi = currentLang === 'vi';
   const roleMeta = ROLES[roleId] || ROLES.admin;
-  const modMeta = SYSTEM_MODULES.find(m => m.id === targetId) || { name: targetId, cat: 'Hệ Thống' };
+  const modMeta = SYSTEM_MODULES.find(m => m.id === targetId) || { name: targetId, cat: isVi ? 'Hệ Thống' : 'System' };
 
   // Determine allowed roles for this module
   const allowedRoleNames = [];
@@ -8407,18 +8764,41 @@ function showAccessDenied(targetId, roleId) {
   const nameEl = document.getElementById('denied-target-name');
   const roleEl = document.getElementById('denied-current-role');
   const allowedEl = document.getElementById('denied-allowed-roles');
+  const descEl = document.getElementById('denied-module-label');
+  const roleLabel = document.getElementById('denied-role-label');
+  const allowedLabel = document.getElementById('denied-allowed-label');
+  const secPolicyEl = document.getElementById('denied-sec-policy');
+  const h2El = document.getElementById('denied-h2');
+  const h2SubEl = document.getElementById('denied-h2-sub');
+  const btnHome = document.getElementById('denied-btn-home');
+  const btnRbac = document.getElementById('denied-btn-rbac');
+  const btnPin = document.getElementById('denied-btn-pin');
 
   if (nameEl) nameEl.textContent = modMeta.name;
   if (roleEl) roleEl.innerHTML = `<span style="color:${roleMeta.color}">${roleMeta.icon} ${roleMeta.name}</span>`;
   if (allowedEl) allowedEl.textContent = allowedRoleNames.join(', ');
+  if (descEl) descEl.textContent = isVi ? 'Phân hệ bạn đang muốn mở:' : 'Module you attempted to access:';
+  if (roleLabel) roleLabel.textContent = isVi ? 'Vai trò hiện tại của bạn:' : 'Your current role:';
+  if (allowedLabel) allowedLabel.textContent = isVi ? 'Các vai trò có quyền xem:' : 'Roles with access:';
+  if (secPolicyEl) secPolicyEl.innerHTML = isVi
+    ? '<b>💡 Quy định bảo mật hệ thống:</b> Phân hệ này chứa số liệu tài chính sống nhạy cảm. Theo quy định, chỉ <b>Ban Giám Đốc</b> và <b>Kế Toán Trưởng</b> mới được cấp quyền xem dữ liệu này.'
+    : '<b>💡 Security Policy:</b> This module contains sensitive live financial data. Per internal policy, only <b>Board of Directors</b> and <b>Chief Accountant</b> are authorized to access this data.';
+  if (h2El) h2El.textContent = isVi ? 'TRUY CẬP BỊ HẠN CHẾ' : 'ACCESS RESTRICTED';
+  if (h2SubEl) h2SubEl.textContent = isVi
+    ? 'Bạn không có quyền truy cập vào phân hệ này theo chính sách bảo mật nội bộ TNI.'
+    : 'You do not have permission to access this module per TNI internal security policy.';
+  if (btnHome) btnHome.textContent = isVi ? '🏠 Về Trang Tổng Quan' : '🏠 Back to Dashboard';
+  if (btnRbac) btnRbac.textContent = isVi ? '🛡️ Xem Bảng Phân Quyền (RBAC)' : '🛡️ View Permission Matrix (RBAC)';
+  if (btnPin) btnPin.textContent = isVi ? '🔑 Mở Khóa Bằng Mã PIN Admin' : '🔑 Unlock with Admin PIN';
 
   document.querySelectorAll('.sec').forEach(s => s.classList.remove('on'));
   const deniedSec = document.getElementById('s-access-denied');
   if (deniedSec) deniedSec.classList.add('on');
-  document.getElementById('ptitle').textContent = '🛡️ Truy Cập Bị Hạn Chế';
+  document.getElementById('ptitle').textContent = isVi ? '🛡️ Truy Cập Bị Hạn Chế' : '🛡️ Access Restricted';
 }
 
 function renderRBACMatrix() {
+  const isVi = currentLang === 'vi';
   const container = document.getElementById('rbac-matrix-container');
   if (!container) return;
 
@@ -8437,16 +8817,16 @@ function renderRBACMatrix() {
   html += '<thead style="background:#f1f5f9;color:#334155;position:sticky;top:0;z-index:2">';
   html += '<tr>';
   html += '<th style="padding:10px 8px;text-align:center;width:40px">#</th>';
-  html += '<th style="padding:10px 10px;text-align:left;min-width:200px">Phân Hệ / Tính Năng</th>';
-  html += '<th style="padding:10px 8px;text-align:center;width:130px">Cấp Bảo Mật</th>';
+  html += `<th style="padding:10px 10px;text-align:left;min-width:200px">${isVi ? 'Phân Hệ / Tính Năng' : 'Module / Feature'}</th>`;
+  html += `<th style="padding:10px 8px;text-align:center;width:130px">${isVi ? 'Cấp Bảo Mật' : 'Security Level'}</th>`;
 
   roleKeys.forEach(rk => {
     const r = ROLES[rk];
     const isCur = rk === currentAppRole;
-    html += `<th style="padding:10px 6px;text-align:center;min-width:110px;background:${isCur ? '#e0e7ff' : '#f1f5f9'};border-left:1px solid #cbd5e1;cursor:pointer" onclick="changeAppRole('${rk}')" title="Bấm để kích hoạt vai trò này">`;
+    html += `<th style="padding:10px 6px;text-align:center;min-width:110px;background:${isCur ? '#e0e7ff' : '#f1f5f9'};border-left:1px solid #cbd5e1;cursor:pointer" onclick="changeAppRole('${rk}')" title="${isVi ? 'Bấm để kích hoạt vai trò này' : 'Click to activate this role'}">`;
     html += `<div style="font-size:14px">${r.icon}</div>`;
     html += `<div style="font-weight:800;font-size:11.5px;color:${isCur ? '#4338ca' : '#1e293b'}">${r.shortName}</div>`;
-    if (isCur) html += `<div style="font-size:9.5px;background:#4f46e5;color:#fff;border-radius:10px;padding:1px 4px;margin-top:2px;font-weight:700">Đang Chọn</div>`;
+    if (isCur) html += `<div style="font-size:9.5px;background:#4f46e5;color:#fff;border-radius:10px;padding:1px 4px;margin-top:2px;font-weight:700">${isVi ? 'Đang Chọn' : 'Active'}</div>`;
     html += `</th>`;
   });
 
@@ -8475,13 +8855,13 @@ function renderRBACMatrix() {
     // Security level
     html += `<td style="padding:8px 6px;text-align:center">`;
     if (isSens) {
-      html += `<span style="background:#fee2e2;color:#991b1b;padding:3px 7px;border-radius:6px;font-size:10.5px;font-weight:800;border:1px solid #fca5a5">🔴 Tuyệt Mật 17%</span>`;
+      html += `<span style="background:#fee2e2;color:#991b1b;padding:3px 7px;border-radius:6px;font-size:10.5px;font-weight:800;border:1px solid #fca5a5">🔴 ${isVi ? 'Tuyệt Mật 17%' : 'Top Secret 17%'}</span>`;
     } else if (mod.secLevel.includes('Cấp 2')) {
-      html += `<span style="background:#fef3c7;color:#b45309;padding:3px 7px;border-radius:6px;font-size:10.5px;font-weight:700">🟡 Vốn Gốc 83%</span>`;
+      html += `<span style="background:#fef3c7;color:#b45309;padding:3px 7px;border-radius:6px;font-size:10.5px;font-weight:700">🟡 ${isVi ? 'Vốn Gốc 83%' : 'Capital 83%'}</span>`;
     } else if (mod.secLevel.includes('Cấp 3')) {
-      html += `<span style="background:#e0f2fe;color:#0369a1;padding:3px 7px;border-radius:6px;font-size:10.5px;font-weight:600">🔵 Nghiệp Vụ</span>`;
+      html += `<span style="background:#e0f2fe;color:#0369a1;padding:3px 7px;border-radius:6px;font-size:10.5px;font-weight:600">🔵 ${isVi ? 'Nghiệp Vụ' : 'Operations'}</span>`;
     } else {
-      html += `<span style="background:#f1f5f9;color:#475569;padding:3px 7px;border-radius:6px;font-size:10.5px">⚪ Công Khai</span>`;
+      html += `<span style="background:#f1f5f9;color:#475569;padding:3px 7px;border-radius:6px;font-size:10.5px">⚪ ${isVi ? 'Công Khai' : 'Public'}</span>`;
     }
     html += `</td>`;
 
@@ -8492,12 +8872,12 @@ function renderRBACMatrix() {
       html += `<td style="padding:8px 6px;text-align:center;background:${isCur ? '#f5f7ff' : ''};border-left:1px solid #e2e8f0">`;
       if (allowed) {
         if (isSens) {
-          html += `<span style="background:#dcfce7;color:#15803d;padding:3px 7px;border-radius:6px;font-size:11px;font-weight:800">✅ Toàn Quyền</span>`;
+          html += `<span style="background:#dcfce7;color:#15803d;padding:3px 7px;border-radius:6px;font-size:11px;font-weight:800">✅ ${isVi ? 'Toàn Quyền' : 'Full Access'}</span>`;
         } else {
-          html += `<span style="background:#f0fdf4;color:#16a34a;padding:2px 6px;border-radius:5px;font-size:11px;font-weight:700">✅ Được Xem</span>`;
+          html += `<span style="background:#f0fdf4;color:#16a34a;padding:2px 6px;border-radius:5px;font-size:11px;font-weight:700">✅ ${isVi ? 'Được Xem' : 'Allowed'}</span>`;
         }
       } else {
-        html += `<span style="background:#fee2e2;color:#dc2626;padding:2px 6px;border-radius:5px;font-size:11px;font-weight:700">❌ Bị Khóa</span>`;
+        html += `<span style="background:#fee2e2;color:#dc2626;padding:2px 6px;border-radius:5px;font-size:11px;font-weight:700">❌ ${isVi ? 'Bị Khóa' : 'Locked'}</span>`;
       }
       html += `</td>`;
     });
@@ -8510,6 +8890,7 @@ function renderRBACMatrix() {
 }
 
 function renderStaffUsersTable() {
+  const isVi = currentLang === 'vi';
   const container = document.getElementById('rbac-staff-table-container');
   if (!container) return;
 
@@ -8521,11 +8902,12 @@ function renderStaffUsersTable() {
   let html = '<table class="data-table" style="width:100%;border-collapse:collapse;font-size:12px">';
   html += '<thead style="background:#f8fafc;color:#334155">';
   html += '<tr>';
-  html += '<th style="padding:8px;text-align:left">Nhân Sự</th>';
-  html += '<th style="padding:8px;text-align:left">Chức Danh</th>';
-  html += '<th style="padding:8px;text-align:center">Vai Trò Gán</th>';
-  html += '<th style="padding:8px;text-align:center">Thao Tác</th>';
+  html += `<th style="padding:8px;text-align:left">${isVi ? 'Nhân Sự' : 'Staff'}</th>`;
+  html += `<th style="padding:8px;text-align:left">${isVi ? 'Chức Danh' : 'Position'}</th>`;
+  html += `<th style="padding:8px;text-align:center">${isVi ? 'Vai Trò Gán' : 'Assigned Role'}</th>`;
+  html += `<th style="padding:8px;text-align:center">${isVi ? 'Thao Tác' : 'Actions'}</th>`;
   html += '</tr></thead><tbody>';
+
 
   users.forEach((u, i) => {
     const roleMeta = ROLES[u.role] || ROLES.sales;
@@ -8664,24 +9046,462 @@ function exportRBACMatrixCSV() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 🌐 RBAC INITIALIZATION HOOK ON LOAD
+// 📧 GMAIL ACCESS LIST — AUTHORIZED ACCOUNTS ROSTER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const TAB_BADGE_COLORS = {
+  dashboard: { bg: '#dbeafe', color: '#1e40af', label: 'DASHBOARD' },
+  nhap: { bg: '#fde68a', color: '#92400e', label: 'GOODS INTAKE' },
+  tonkho: { bg: '#e0e7ff', color: '#4338ca', label: 'INVENTORY' },
+  tamung: { bg: '#d1fae5', color: '#065f46', label: 'STOCK ADV' },
+  banhang: { bg: '#c7d2fe', color: '#4338ca', label: 'SALES' },
+  baogiaups: { bg: '#e0f2fe', color: '#0369a1', label: 'DEVICE QUOTE' },
+  baogiasolar: { bg: '#fef3c7', color: '#d97706', label: 'SOLAR QUOTE' },
+  thucthi: { bg: '#dcfce7', color: '#166534', label: 'FIELD OPS' },
+  acceptance: { bg: '#ccfbf1', color: '#0f766e', label: 'ACCEPTANCE' },
+  daily: { bg: '#ede9fe', color: '#6d28d9', label: 'DISTRIBUTION' },
+  kygoi: { bg: '#fce7f3', color: '#be185d', label: 'CONSIGNMENT' },
+  crm: { bg: '#fff7ed', color: '#c2410c', label: 'CRM' },
+  quangcao: { bg: '#f0abfc', color: '#86198f', label: 'ADS' },
+  leads: { bg: '#a5f3fc', color: '#0e7490', label: 'LEADS' },
+  loinhuan: { bg: '#fee2e2', color: '#991b1b', label: '💰 FINANCE' },
+  statement: { bg: '#fecaca', color: '#b91c1c', label: '📑 STATEMENT' },
+  baocao: { bg: '#fda4af', color: '#9f1239', label: '📊 FIN REPORT' },
+  mystats: { bg: '#e0e7ff', color: '#4338ca', label: 'MY STATS' },
+  myquotes: { bg: '#dbeafe', color: '#1d4ed8', label: 'MY QUOTES' },
+  mysurvey: { bg: '#d1fae5', color: '#047857', label: 'MY SURVEY' },
+  rbac: { bg: '#f5f3ff', color: '#7c3aed', label: 'RBAC' }
+};
+
+const DEFAULT_GMAIL_ACCESS = [
+  { email: 'director@tni.com', role: 'admin', tabs: ['all'], status: 'active', dateAdded: '17/8/2026', name: 'Director TNI' },
+  { email: 'accountant@tni.com', role: 'finance', tabs: ['dashboard','nhap','tonkho','tamung','banhang','loinhuan','statement','baocao','rbac'], status: 'active', dateAdded: '17/8/2026', name: 'Chief Accountant' },
+  { email: 'zinkoko@gmail.com', role: 'sales', tabs: ['dashboard','banhang','baogiaups','baogiasolar','daily','kygoi','crm','quangcao','leads','mystats','myquotes','mysurvey','rbac'], status: 'active', dateAdded: '17/8/2026', name: 'Zin Ko Ko' },
+  { email: 'minmin@gmail.com', role: 'tech', tabs: ['dashboard','baogiasolar','thucthi','acceptance','crm','mystats','myquotes','mysurvey','rbac'], status: 'active', dateAdded: '17/8/2026', name: 'Min Min' },
+  { email: 'aungthu@gmail.com', role: 'warehouse', tabs: ['dashboard','nhap','tonkho','tamung','banhang','kygoi','mystats','rbac'], status: 'active', dateAdded: '17/8/2026', name: 'Aung Thu' }
+];
+
+function getGmailAccessList() {
+  const saved = DB.g('gmail_access_list');
+  if (!saved || !saved.length) {
+    DB.s('gmail_access_list', DEFAULT_GMAIL_ACCESS);
+    return DEFAULT_GMAIL_ACCESS;
+  }
+  return saved;
+}
+
+function renderGmailAccessTable() {
+  const isVi = currentLang === 'vi';
+  const list = getGmailAccessList();
+  const kw = (document.getElementById('gmail-search-kw')?.value || '').toLowerCase().trim();
+  const filtered = list.filter(g => !kw || g.email.toLowerCase().includes(kw) || (g.name||'').toLowerCase().includes(kw) || g.role.toLowerCase().includes(kw));
+
+  // Summary Cards
+  const adminCount = list.filter(g => g.role === 'admin' && g.status === 'active').length;
+  const financeCount = list.filter(g => g.role === 'finance' && g.status === 'active').length;
+  const salesCount = list.filter(g => g.role === 'sales' && g.status === 'active').length;
+  const techCount = list.filter(g => g.role === 'tech' && g.status === 'active').length;
+  const whCount = list.filter(g => g.role === 'warehouse' && g.status === 'active').length;
+  const totalActive = list.filter(g => g.status === 'active').length;
+
+  document.getElementById('gmail-summary-cards').innerHTML = `
+    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px">
+      <div style="font-size:22px;font-weight:900;color:#dc2626">${adminCount} <span style="font-size:12px;font-weight:600">Accounts</span></div>
+      <div style="font-size:11px;color:#991b1b">👑 Full Access (Admin/BOD)</div>
+      <button class="btn b-xs" onclick="copyGmailsByRole('admin')" style="margin-top:6px;background:#dc2626;color:#fff;font-size:10px;width:100%">📋 Copy Gmail Admin</button>
+    </div>
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px">
+      <div style="font-size:22px;font-weight:900;color:#1e40af">${financeCount} <span style="font-size:12px;font-weight:600">Accounts</span></div>
+      <div style="font-size:11px;color:#1e3a8a">💰 Finance & Accounting</div>
+      <button class="btn b-xs" onclick="copyGmailsByRole('finance')" style="margin-top:6px;background:#1e40af;color:#fff;font-size:10px;width:100%">📋 Copy Gmail Finance</button>
+    </div>
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px">
+      <div style="font-size:22px;font-weight:900;color:#16a34a">${salesCount} <span style="font-size:12px;font-weight:600">Accounts</span></div>
+      <div style="font-size:11px;color:#166534">🧑‍💼 Sales Staff</div>
+      <button class="btn b-xs" onclick="copyGmailsByRole('sales')" style="margin-top:6px;background:#16a34a;color:#fff;font-size:10px;width:100%">📋 Copy Gmail Sales</button>
+    </div>
+    <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:10px 14px">
+      <div style="font-size:22px;font-weight:900;color:#059669">${techCount} <span style="font-size:12px;font-weight:600">Accounts</span></div>
+      <div style="font-size:11px;color:#047857">🔧 Technical / Field Ops</div>
+      <button class="btn b-xs" onclick="copyGmailsByRole('tech')" style="margin-top:6px;background:#059669;color:#fff;font-size:10px;width:100%">📋 Copy Gmail Tech</button>
+    </div>
+    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px">
+      <div style="font-size:22px;font-weight:900;color:#d97706">${whCount + list.filter(g=>g.role==='dealer'&&g.status==='active').length} <span style="font-size:12px;font-weight:600">Accounts</span></div>
+      <div style="font-size:11px;color:#92400e">📦 Warehouse & 🏪 Dealer</div>
+      <button class="btn b-xs" onclick="copyGmailsByRole('warehouse')" style="margin-top:6px;background:#d97706;color:#fff;font-size:10px;width:100%">📋 Copy Gmail WH</button>
+    </div>
+  `;
+
+  // Table
+  let html = '<table class="data-table" style="width:100%;border-collapse:collapse;font-size:12px">';
+  html += '<thead style="background:#f1f5f9;color:#334155"><tr>';
+  html += '<th style="padding:10px 8px;width:30px;text-align:center">#</th>';
+  html += '<th style="padding:10px 10px;text-align:left;min-width:200px">AUTHORIZED GMAIL ADDRESS</th>';
+  html += '<th style="padding:10px 10px;text-align:left;min-width:280px">ASSIGNED TAB PERMISSIONS</th>';
+  html += '<th style="padding:10px 8px;text-align:center;width:100px">STATUS</th>';
+  html += '<th style="padding:10px 8px;text-align:center;width:90px">DATE ADDED</th>';
+  html += '<th style="padding:10px 8px;text-align:center;width:130px">ACTIONS</th>';
+  html += '</tr></thead><tbody>';
+
+  filtered.forEach((g, i) => {
+    const roleMeta = ROLES[g.role] || ROLES.sales;
+    const isAll = g.tabs.includes('all');
+    const tabBadges = isAll
+      ? '<span style="background:#dcfce7;color:#166534;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:800;margin:2px">🌟 ALL TABS (FULL ACCESS)</span>'
+      : g.tabs.map(t => {
+          const b = TAB_BADGE_COLORS[t];
+          if (!b) return '';
+          return `<span style="background:${b.bg};color:${b.color};padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;margin:2px;display:inline-block">${b.label}</span>`;
+        }).join('');
+
+    html += `<tr style="border-bottom:1px solid #e2e8f0">`;
+    html += `<td style="padding:10px 8px;text-align:center;color:#64748b">${i + 1}</td>`;
+    html += `<td style="padding:10px 10px">
+      <div style="font-weight:800;color:#0369a1;font-size:13px">${g.email}</div>
+      <div style="font-size:11px;color:#64748b">${g.name || '-'} • ${roleMeta.icon} ${roleMeta.shortName}</div>
+    </td>`;
+    html += `<td style="padding:8px 10px;line-height:2">${tabBadges}</td>`;
+    html += `<td style="padding:10px 8px;text-align:center">
+      <span style="background:${g.status === 'active' ? '#dcfce7' : '#fee2e2'};color:${g.status === 'active' ? '#15803d' : '#dc2626'};padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700">
+        ${g.status === 'active' ? '✓ Active' : '⛔ Disabled'}
+      </span>
+    </td>`;
+    html += `<td style="padding:10px 8px;text-align:center;font-size:11.5px;color:#475569">${g.dateAdded}</td>`;
+    html += `<td style="padding:10px 8px;text-align:center">
+      <button class="btn b-xs b-bl" onclick="editGmailAccess(${i})" style="margin:2px">✏️ Edit</button>
+      <button class="btn b-xs" onclick="removeGmailAccess(${i})" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;margin:2px">🗑 Remove</button>
+    </td>`;
+    html += `</tr>`;
+  });
+
+  html += '</tbody></table>';
+  if (!filtered.length) html = '<div style="color:#94a3b8;padding:20px;text-align:center">No Gmail accounts found.</div>';
+  document.getElementById('gmail-access-table').innerHTML = html;
+}
+
+function openAddGmailModal() {
+  openGmailModal(null);
+}
+
+function editGmailAccess(index) {
+  openGmailModal(index);
+}
+
+function openGmailModal(editIndex) {
+  const isVi = currentLang === 'vi';
+  const isEdit = editIndex !== null && editIndex !== undefined;
+  const list = getGmailAccessList();
+  const g = isEdit ? (list[editIndex] || {}) : {};
+
+  // Remove existing modal if any
+  const existing = document.getElementById('gmail-modal-overlay');
+  if (existing) existing.remove();
+
+  const roleOptions = Object.keys(ROLES).map(rk => {
+    const r = ROLES[rk];
+    const sel = (g.role === rk) ? 'selected' : (!isEdit && rk === 'sales' ? 'selected' : '');
+    return `<option value="${rk}" ${sel}>${r.icon} ${r.shortName}</option>`;
+  }).join('');
+
+  const overlay = document.createElement('div');
+  overlay.id = 'gmail-modal-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:16px;width:100%;max-width:520px;box-shadow:0 25px 60px -12px rgba(0,0,0,0.3);overflow:hidden;animation:fadeIn .18s ease">
+      <div style="background:linear-gradient(135deg,#1e3a8a,#2563eb);padding:18px 24px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="color:#fff;font-size:16px;font-weight:800">${isEdit ? (isVi ? '✏️ Chỉnh Sửa Quyền Gmail' : '✏️ Edit Gmail Access') : (isVi ? '➕ Thêm Gmail Mới' : '➕ Add New Gmail Access')}</div>
+          <div style="color:#bfdbfe;font-size:11.5px;margin-top:3px">${isVi ? 'Phân quyền truy cập hệ thống TNI Sale Portal' : 'TNI Sale Portal access authorization'}</div>
+        </div>
+        <button onclick="document.getElementById('gmail-modal-overlay').remove()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:20px;cursor:pointer;border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center">×</button>
+      </div>
+
+      <div style="padding:24px">
+        <div style="display:grid;gap:14px">
+
+          <div>
+            <label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:5px">${isVi ? '📧 Địa Chỉ Gmail (bắt buộc)' : '📧 Gmail Address (required)'}</label>
+            <input id="gm-email" type="email" value="${g.email || ''}" ${isEdit ? 'readonly style="background:#f8fafc;color:#64748b;"' : ''} placeholder="user@gmail.com" style="width:100%;padding:9px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px;box-sizing:border-box;outline:none" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#d1d5db'">
+            ${isEdit ? `<div style="font-size:10.5px;color:#64748b;margin-top:3px">${isVi ? 'Không thể thay đổi email. Xóa và thêm lại nếu cần.' : 'Email cannot be changed. Remove and re-add if needed.'}</div>` : ''}
+          </div>
+
+          <div>
+            <label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:5px">${isVi ? '👤 Tên Hiển Thị' : '👤 Display Name'}</label>
+            <input id="gm-name" type="text" value="${g.name || ''}" placeholder="${isVi ? 'VD: Nguyễn Văn A' : 'e.g. John Doe'}" style="width:100%;padding:9px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px;box-sizing:border-box;outline:none" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#d1d5db'">
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:5px">${isVi ? '🎭 Vai Trò' : '🎭 Role'}</label>
+              <select id="gm-role" onchange="gmUpdateTabPreview()" style="width:100%;padding:9px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px;font-weight:700;box-sizing:border-box;background:#fff;outline:none" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#d1d5db'">
+                ${roleOptions}
+              </select>
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:5px">${isVi ? '🔘 Trạng Thái' : '🔘 Status'}</label>
+              <select id="gm-status" style="width:100%;padding:9px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px;font-weight:700;box-sizing:border-box;background:#fff;outline:none" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#d1d5db'">
+                <option value="active" ${g.status !== 'disabled' ? 'selected' : ''}>✓ ${isVi ? 'Hoạt Động' : 'Active'}</option>
+                <option value="disabled" ${g.status === 'disabled' ? 'selected' : ''}>⛔ ${isVi ? 'Vô Hiệu' : 'Disabled'}</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px">${isVi ? '🔑 Quyền Truy Cập Tab (theo vai trò)' : '🔑 Tab Access Preview (by role)'}</label>
+            <div id="gm-tab-preview" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;min-height:38px;font-size:11px;line-height:2"></div>
+          </div>
+
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0">
+          <button onclick="document.getElementById('gmail-modal-overlay').remove()" style="padding:9px 18px;border:1.5px solid #d1d5db;background:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:#374151">${isVi ? 'Hủy' : 'Cancel'}</button>
+          <button onclick="saveGmailModal(${isEdit ? editIndex : 'null'})" style="padding:9px 20px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">${isEdit ? (isVi ? '💾 Lưu Thay Đổi' : '💾 Save Changes') : (isVi ? '➕ Thêm Vào Danh Sách' : '➕ Add to List')}</button>
+        </div>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+  // Render initial tab preview
+  setTimeout(() => gmUpdateTabPreview(), 50);
+}
+
+function gmUpdateTabPreview() {
+  const isVi = currentLang === 'vi';
+  const roleEl = document.getElementById('gm-role');
+  const previewEl = document.getElementById('gm-tab-preview');
+  if (!roleEl || !previewEl) return;
+  const role = roleEl.value;
+  const roleTabs = ROLES[role]?.allowedTabs || [];
+  const isAll = role === 'admin';
+  if (isAll) {
+    previewEl.innerHTML = `<span style="background:#dcfce7;color:#166534;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:800;margin:2px">🌟 ${isVi ? 'TOÀN BỘ TABS' : 'ALL TABS'} (FULL ACCESS)</span>`;
+    return;
+  }
+  previewEl.innerHTML = roleTabs.map(t => {
+    const b = (typeof TAB_BADGE_COLORS !== 'undefined' && TAB_BADGE_COLORS[t]) ? TAB_BADGE_COLORS[t] : { bg:'#e2e8f0', color:'#475569', label: t };
+    return `<span style="background:${b.bg};color:${b.color};padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;margin:2px;display:inline-block">${b.label}</span>`;
+  }).join('') || `<span style="color:#94a3b8">${isVi ? 'Không có quyền tab nào' : 'No tab permissions'}</span>`;
+}
+
+function saveGmailModal(editIndex) {
+  const isVi = currentLang === 'vi';
+  const email = (document.getElementById('gm-email')?.value || '').trim().toLowerCase();
+  const name = (document.getElementById('gm-name')?.value || '').trim();
+  const role = document.getElementById('gm-role')?.value || 'sales';
+  const status = document.getElementById('gm-status')?.value || 'active';
+
+  if (!email || !email.includes('@')) {
+    al(isVi ? '❌ Địa chỉ Gmail không hợp lệ!' : '❌ Invalid Gmail address!', 'er');
+    return;
+  }
+
+  const list = getGmailAccessList();
+  const isEdit = editIndex !== null && editIndex !== undefined;
+
+  if (!isEdit && list.some(g => g.email === email)) {
+    al(isVi ? '❌ Gmail này đã có trong danh sách!' : '❌ This Gmail is already in the list!', 'er');
+    return;
+  }
+
+  const entry = {
+    email,
+    name,
+    role,
+    tabs: role === 'admin' ? ['all'] : [...(ROLES[role]?.allowedTabs || [])],
+    status,
+    dateAdded: isEdit ? (list[editIndex]?.dateAdded || new Date().toLocaleDateString('en-GB')) : new Date().toLocaleDateString('en-GB')
+  };
+
+  if (isEdit) {
+    list[editIndex] = { ...list[editIndex], ...entry };
+    al(`✅ ${isVi ? 'Đã cập nhật: ' : 'Updated: '}${email}`, 'ok');
+  } else {
+    list.push(entry);
+    al(`✅ ${isVi ? 'Đã thêm: ' : 'Added: '}${email}`, 'ok');
+  }
+
+  DB.s('gmail_access_list', list);
+  document.getElementById('gmail-modal-overlay')?.remove();
+  renderGmailAccessTable();
+}
+
+function removeGmailAccess(index) {
+  const isVi = currentLang === 'vi';
+  const list = getGmailAccessList();
+  const g = list[index];
+  if (!g) return;
+
+  // Remove existing confirm overlay if any
+  const existing = document.getElementById('gmail-confirm-overlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'gmail-confirm-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:14px;width:100%;max-width:400px;box-shadow:0 20px 50px -10px rgba(0,0,0,0.3);overflow:hidden">
+      <div style="background:#fef2f2;padding:20px 24px;text-align:center;border-bottom:1px solid #fee2e2">
+        <div style="font-size:36px;margin-bottom:8px">🗑️</div>
+        <div style="font-size:15px;font-weight:800;color:#991b1b">${isVi ? 'Xác Nhận Xóa Quyền Truy Cập' : 'Confirm Remove Access'}</div>
+      </div>
+      <div style="padding:20px 24px;text-align:center">
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;margin-bottom:16px">
+          <div style="font-size:13px;font-weight:800;color:#0369a1">${g.email}</div>
+          <div style="font-size:11.5px;color:#64748b;margin-top:3px">${g.name || ''} • ${(ROLES[g.role] || ROLES.sales).icon} ${(ROLES[g.role] || ROLES.sales).shortName}</div>
+        </div>
+        <div style="font-size:12.5px;color:#64748b;margin-bottom:18px">${isVi ? 'Người dùng này sẽ mất quyền truy cập vào hệ thống ngay lập tức.' : 'This user will immediately lose access to the system.'}</div>
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button onclick="document.getElementById('gmail-confirm-overlay').remove()" style="padding:9px 20px;border:1.5px solid #d1d5db;background:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">${isVi ? 'Hủy' : 'Cancel'}</button>
+          <button onclick="confirmRemoveGmail(${index})" style="padding:9px 20px;background:#dc2626;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">${isVi ? '🗑️ Xóa Ngay' : '🗑️ Remove Now'}</button>
+        </div>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+}
+
+function confirmRemoveGmail(index) {
+  const isVi = currentLang === 'vi';
+  const list = getGmailAccessList();
+  const g = list[index];
+  if (!g) return;
+  list.splice(index, 1);
+  DB.s('gmail_access_list', list);
+  document.getElementById('gmail-confirm-overlay')?.remove();
+  renderGmailAccessTable();
+  al(`${isVi ? 'Đã xóa: ' : 'Removed: '}${g.email}`);
+}
+
+
+function copyGmailsByRole(roleId) {
+  const list = getGmailAccessList().filter(g => g.status === 'active' && g.role === roleId);
+  const emails = list.map(g => g.email).join(', ');
+  navigator.clipboard.writeText(emails).then(() => {
+    al(`📋 Copied ${list.length} email(s) for ${ROLES[roleId]?.shortName || roleId}!`, 'ok');
+  }).catch(() => al('Copy failed', 'er'));
+}
+
+function copyAllGmailsToClipboard() {
+  const list = getGmailAccessList().filter(g => g.status === 'active');
+  const emails = list.map(g => g.email).join(', ');
+  navigator.clipboard.writeText(emails).then(() => {
+    al(`📋 Copied all ${list.length} active Gmail(s)!`, 'ok');
+  }).catch(() => al('Copy failed', 'er'));
+}
+
+// Auto-detect role from Gmail Access List
+function detectRoleFromGmail(email) {
+  if (!email) return null;
+  const list = getGmailAccessList();
+  const match = list.find(g => g.email.toLowerCase() === email.toLowerCase() && g.status === 'active');
+  return match ? match : null;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 💵 COMMISSION CALCULATION — Sales 1% × 95% + Tech 70%
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function renderCommissionPanel(staffName) {
+  const isVi = currentLang === 'vi';
+  const name = (staffName || '').toLowerCase();
+  const cardsEl = document.getElementById('my-commission-cards');
+  const tableEl = document.getElementById('my-commission-table');
+  if (!cardsEl || !tableEl) return;
+
+  // Pull from quotesolar (chốt deals) — match by staff name
+  const allQuotes = DB.g('quotesolar') || [];
+  const myQuotes = allQuotes.filter(q =>
+    (q.staff || '').toLowerCase().includes(name) ||
+    (q.staffId || '').toLowerCase().includes(name)
+  );
+
+  if (!myQuotes.length) {
+    cardsEl.innerHTML = '';
+    tableEl.innerHTML = `<div style="color:#94a3b8;padding:20px;text-align:center">${isVi ? 'Chưa có hợp đồng/báo giá nào để tính hoa hồng.' : 'No contracts/quotes found for commission calculation.'}</div>`;
+    return;
+  }
+
+  let totalContractValue = 0;
+  let totalSalesCommission = 0;
+  let totalTechFee = 0;
+
+  const rows = myQuotes.map((q, i) => {
+    const contractVal = Number(q.total || 0);
+    const prepayment95 = contractVal * 0.95;
+    const salesComm = prepayment95 * 0.01;  // 1% of 95%
+    const techInstall = contractVal * 0.70;  // 70% of contract
+
+    totalContractValue += contractVal;
+    totalSalesCommission += salesComm;
+    totalTechFee += techInstall;
+
+    return [
+      i + 1,
+      `<code>${q.code || '-'}</code>`,
+      `<b>${q.kh || '-'}</b>`,
+      `<b>${fn(contractVal)}</b>`,
+      `${fn(prepayment95)}`,
+      `<b style="color:#059669">${fn(salesComm)}</b>`,
+      `<b style="color:#7c3aed">${fn(techInstall)}</b>`,
+      fd(q.date)
+    ];
+  });
+
+  const cur = myQuotes[0]?.currency || 'Ks';
+
+  cardsEl.innerHTML = `
+    <div class="card c-gn"><div class="lbl2">💰 ${isVi ? 'Tổng HĐ' : 'Total Contract'}</div><div class="val" style="font-size:14px">${fn(totalContractValue)} ${cur}</div><div class="sub">${myQuotes.length} ${isVi ? 'hợp đồng' : 'contracts'}</div></div>
+    <div class="card c-bl"><div class="lbl2">💵 ${isVi ? 'Hoa Hồng Sales' : 'Sales Commission'}</div><div class="val" style="font-size:14px;color:#059669">${fn(totalSalesCommission)} ${cur}</div><div class="sub">1% × 95% = 0.95%</div></div>
+    <div class="card c-pu"><div class="lbl2">🔧 ${isVi ? 'Phí Lắp Đặt KT' : 'Tech Install Fee'}</div><div class="val" style="font-size:14px;color:#7c3aed">${fn(totalTechFee)} ${cur}</div><div class="sub">70% ${isVi ? 'giá trị HĐ' : 'contract value'}</div></div>
+    <div class="card c-or"><div class="lbl2">📊 ${isVi ? 'Tỷ Lệ Hoa Hồng' : 'Comm. Rate'}</div><div class="val" style="font-size:14px">0.95%</div><div class="sub">${isVi ? 'trên tổng HĐ' : 'of total contract'}</div></div>
+  `;
+
+  const commHeaders = isVi
+    ? ['#', 'Mã HĐ', 'Khách Hàng', 'Giá Trị HĐ', 'T.Toán 95%', 'Hoa Hồng 1%', 'Phí KT 70%', 'Ngày']
+    : ['#', 'Contract', 'Customer', 'Contract Value', '95% Prepay', '1% Commission', '70% Tech Fee', 'Date'];
+
+  tableEl.innerHTML = tbl(commHeaders, rows);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🌐 RBAC INITIALIZATION HOOK ON LOAD — WITH GMAIL AUTO-DETECTION
 // ═══════════════════════════════════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(window.location.search);
   const paramRole = params.get('role');
-  const paramStaff = params.get('staff') || params.get('user') || params.get('email');
+  const paramStaff = params.get('staff') || params.get('user');
+  const paramEmail = params.get('email');
 
-  if (paramRole && ROLES[paramRole]) {
+  // Priority 1: Gmail auto-detection from Access List
+  if (paramEmail) {
+    const gmailMatch = detectRoleFromGmail(paramEmail);
+    if (gmailMatch) {
+      changeAppRole(gmailMatch.role, gmailMatch.name || paramEmail);
+      al('🔐 Auto-detected role from Gmail: ' + (ROLES[gmailMatch.role]?.shortName || gmailMatch.role), 'ok');
+    } else {
+      // Email not in access list — default to most restricted
+      changeAppRole('sales', paramEmail);
+      al('⚠️ Email not in authorized list. Default role assigned.', 'er');
+    }
+  }
+  // Priority 2: Explicit role parameter
+  else if (paramRole && ROLES[paramRole]) {
     changeAppRole(paramRole, paramStaff || '');
-  } else {
+  }
+  // Priority 3: Saved role from localStorage
+  else {
     changeAppRole(currentAppRole, currentStaffUser);
   }
 
-  // Populate staff selects and render matrix
+  // Populate staff selects and render all RBAC panels
   setTimeout(() => {
     populateStaffUserSelect();
     renderRBACMatrix();
     renderStaffUsersTable();
+    renderGmailAccessTable();
   }, 300);
 });
 
