@@ -9081,23 +9081,139 @@ function promptAdminUnlock() {
 }
 
 function openAddStaffModal() {
-  const name = prompt('Nhập Họ và Tên Nhân Sự mới:');
-  if (!name || !name.trim()) return;
-  const title = prompt('Nhập Chức Danh / Phòng Ban (VD: Kỹ Sư Hiện Trường, Kinh Doanh...):') || 'Nhân Viên';
-  const role = prompt('Nhập Mã Vai Trò (admin, finance, sales, tech, warehouse, dealer):', 'sales') || 'sales';
+  const isVi = currentLang === 'vi';
+  const existing = document.getElementById('staff-add-modal-overlay');
+  if (existing) existing.remove();
 
-  const list = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
+  const overlay = document.createElement('div');
+  overlay.id = 'staff-add-modal-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px)';
+
+  const roleOptions = Object.entries(ROLES).map(([k, v]) =>
+    `<option value="${k}">${v.icon} ${v.name}</option>`
+  ).join('');
+
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:16px;width:100%;max-width:500px;box-shadow:0 25px 60px -12px rgba(0,0,0,0.35);overflow:hidden;animation:slideUp .18s ease">
+      <!-- Header -->
+      <div style="background:linear-gradient(135deg,#1e3a5f 0%,#0369a1 100%);padding:20px 24px;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:18px;font-weight:800;color:#fff">👤 ${isVi ? 'Thêm Nhân Sự Mới' : 'Add New Staff Member'}</div>
+          <div style="font-size:12px;color:#bae6fd;margin-top:2px">${isVi ? 'Điền đầy đủ thông tin nhân viên bên dưới' : 'Fill in staff details below'}</div>
+        </div>
+        <button onclick="document.getElementById('staff-add-modal-overlay').remove()" style="background:rgba(255,255,255,0.18);border:none;color:#fff;font-size:18px;width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">✕</button>
+      </div>
+      <!-- Body -->
+      <div style="padding:22px 24px;display:flex;flex-direction:column;gap:14px">
+        <!-- Name -->
+        <div>
+          <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:5px">👤 ${isVi ? 'Họ và Tên *' : 'Full Name *'}</label>
+          <input id="sm-name" placeholder="${isVi ? 'VD: Nguyễn Văn A' : 'e.g. Aung Kyaw'}" style="width:100%;padding:9px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px;box-sizing:border-box;outline:none" onfocus="this.style.borderColor='#0369a1'" onblur="this.style.borderColor='#d1d5db'">
+        </div>
+        <!-- Title -->
+        <div>
+          <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:5px">💼 ${isVi ? 'Chức Danh / Phòng Ban *' : 'Position / Department *'}</label>
+          <input id="sm-title" placeholder="${isVi ? 'VD: Kỹ Sư Hiện Trường, Kế Toán Viên...' : 'e.g. Field Engineer, Accountant...'}" style="width:100%;padding:9px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px;box-sizing:border-box;outline:none" onfocus="this.style.borderColor='#0369a1'" onblur="this.style.borderColor='#d1d5db'">
+        </div>
+        <!-- Email -->
+        <div>
+          <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:5px">📧 ${isVi ? 'Email Gmail (tuỳ chọn)' : 'Gmail Email (optional)'}</label>
+          <input id="sm-email" type="email" placeholder="${isVi ? 'VD: nguyen.van.a@gmail.com' : 'e.g. aung.kyaw@gmail.com'}" style="width:100%;padding:9px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px;box-sizing:border-box;font-family:monospace;outline:none" onfocus="this.style.borderColor='#0369a1'" onblur="this.style.borderColor='#d1d5db'">
+          <div style="font-size:10.5px;color:#6b7280;margin-top:4px">💡 ${isVi ? 'Có thể thêm vào danh sách Gmail sau để cấp quyền đăng nhập' : 'Can be added to Gmail access list later to grant login'}</div>
+        </div>
+        <!-- Role -->
+        <div>
+          <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:5px">🛡️ ${isVi ? 'Vai Trò Hệ Thống *' : 'System Role *'}</label>
+          <select id="sm-role" style="width:100%;padding:9px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px;background:#fff;box-sizing:border-box;outline:none;font-weight:600" onfocus="this.style.borderColor='#0369a1'" onblur="this.style.borderColor='#d1d5db'">
+            ${roleOptions}
+          </select>
+        </div>
+        <!-- Role preview badge -->
+        <div id="sm-role-preview" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;font-size:12px;color:#475569"></div>
+        <!-- Buttons -->
+        <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:6px;border-top:1px solid #f1f5f9">
+          <button onclick="document.getElementById('staff-add-modal-overlay').remove()" style="padding:9px 18px;border:1.5px solid #d1d5db;background:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:#374151">${isVi ? 'Hủy' : 'Cancel'}</button>
+          <button onclick="saveAddStaffModal()" style="padding:9px 22px;background:linear-gradient(135deg,#1e3a5f,#0369a1);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">👤 ${isVi ? 'Thêm Nhân Sự' : 'Add Staff'}</button>
+        </div>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+
+  // Role preview updater
+  const roleSelect = document.getElementById('sm-role');
+  function updateRolePreview() {
+    const r = ROLES[roleSelect.value] || ROLES.sales;
+    const preview = document.getElementById('sm-role-preview');
+    if (preview) preview.innerHTML = `
+      <span style="font-weight:700;color:${r.color}">${r.icon} ${r.name}</span>
+      <span style="color:#94a3b8;margin:0 8px">•</span>
+      <span style="font-size:11px">${isVi ? 'Truy cập' : 'Tabs'}: ${r.allowedTabs.length} ${isVi ? 'phân hệ' : 'sections'}</span>`;
+  }
+  roleSelect.addEventListener('change', updateRolePreview);
+  updateRolePreview();
+
+  // Auto-focus name field
+  setTimeout(() => { const n = document.getElementById('sm-name'); if (n) n.focus(); }, 80);
+
+  // Close on backdrop click
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+}
+
+function saveAddStaffModal() {
+  const isVi = currentLang === 'vi';
+  const name  = (document.getElementById('sm-name')?.value || '').trim();
+  const title = (document.getElementById('sm-title')?.value || '').trim();
+  const email = (document.getElementById('sm-email')?.value || '').trim().toLowerCase();
+  const role  = document.getElementById('sm-role')?.value || 'sales';
+
+  if (!name) {
+    const n = document.getElementById('sm-name');
+    if (n) { n.style.borderColor = '#dc2626'; n.focus(); }
+    al(isVi ? 'Vui lòng nhập Họ và Tên!' : 'Please enter full name!', 'er');
+    return;
+  }
+  if (!title) {
+    const t = document.getElementById('sm-title');
+    if (t) { t.style.borderColor = '#dc2626'; t.focus(); }
+    al(isVi ? 'Vui lòng nhập Chức Danh!' : 'Please enter position/title!', 'er');
+    return;
+  }
+
+  const list = DB.g('staff_directory').length ? DB.g('staff_directory') : [...DEFAULT_STAFF_USERS];
   list.push({
-    id: 'ST' + String(Date.now()).slice(-4),
-    name: name.trim(),
-    title: title.trim(),
-    role: ROLES[role.toLowerCase()] ? role.toLowerCase() : 'sales'
+    id:    'ST' + String(Date.now()).slice(-5),
+    name:  name,
+    title: title,
+    email: email || '',
+    role:  ROLES[role] ? role : 'sales'
   });
   DB.s('staff_directory', list);
+
+  // Also auto-add to Gmail access list if email provided
+  if (email) {
+    const gmailList = getGmailAccessList();
+    const alreadyExists = gmailList.some(g => g.email === email);
+    if (!alreadyExists) {
+      gmailList.push({
+        email: email,
+        name: name,
+        role: role,
+        status: 'active',
+        dateAdded: new Date().toLocaleDateString('vi-VN'),
+        tabs: (ROLES[role] || ROLES.sales).allowedTabs
+      });
+      localStorage.setItem('gmail_access_list', JSON.stringify(gmailList));
+    }
+  }
+
+  document.getElementById('staff-add-modal-overlay')?.remove();
   renderStaffUsersTable();
+  renderGmailAccessTable();
   populateStaffUserSelect();
-  al('Đã thêm nhân sự mới thành công!', 'ok');
+  al(isVi ? `✅ Đã thêm nhân sự "${name}" thành công!` : `✅ Staff "${name}" added successfully!`, 'ok');
 }
+
 
 function exportRBACMatrixCSV() {
   const h = ['STT', 'Phan He', 'Danh Muc', 'Cap Bao Mat', 'BOD (Admin)', 'Ke Toan (Finance)', 'Kinh Doanh (Sales)', 'Ky Thuat (Tech)', 'Thu Kho (Warehouse)', 'Dai Ly (Dealer)', 'Mo Ta'];
