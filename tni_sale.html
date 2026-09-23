@@ -150,10 +150,12 @@ tbody tr:hover{background:#fafcff}
 
     <div class="lbl" data-nav-lbl="clients">Clients</div>
     <a onclick="go('crm')" data-nav-a="crm">👥 CRM &amp; Survey</a>
+    <a onclick="go('warranty')" data-nav-a="warranty" style="color:#b45309;font-weight:700">🔧 Warranty Claims <small style="background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:auto;font-weight:700">NEW</small></a>
 
     <div class="lbl" data-nav-lbl="marketing">Marketing</div>
     <a onclick="go('quangcao')" data-nav-a="quangcao">📢 Ads Campaigns</a>
     <a onclick="go('leads')" data-nav-a="leads">🎯 Leads &amp; Conv</a>
+
 
     <div class="lbl" data-nav-lbl="finance">Finance</div>
     <a onclick="go('loinhuan')" data-nav-a="loinhuan">💰 Financial &amp; Cashflow</a>
@@ -2007,6 +2009,41 @@ tbody tr:hover{background:#fafcff}
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════ -->
+<!-- 🔧 BẢO HÀNH / WARRANTY CLAIMS MODULE                        -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="sec" id="s-warranty">
+  <!-- Top Action Bar -->
+  <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+    <div style="display:flex;gap:6px;align-items:center">
+      <button class="btn b-or" onclick="openWarrantyModal(null)" style="font-weight:700" id="wt-btn-add">🔧 + New Claim</button>
+      <button class="btn b-out b-sm" onclick="renderWarrantySection()" id="wt-btn-refresh">🔄 Refresh</button>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+      <select id="wt-filter-status" onchange="renderWarrantySection()" style="padding:6px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;background:#fff">
+        <option value="all">All Status</option>
+        <option value="pending">⏳ Pending</option>
+        <option value="repairing">🔨 Under Repair</option>
+        <option value="resolved">✅ Resolved</option>
+        <option value="rejected">❌ Rejected</option>
+      </select>
+      <input id="wt-search" type="text" placeholder="🔍 Search serial / customer..." oninput="renderWarrantySection()" style="padding:6px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;width:200px">
+    </div>
+  </div>
+
+  <!-- KPI Summary Cards -->
+  <div class="cards" id="wt-summary-cards"></div>
+
+  <!-- Warranty Table -->
+  <div class="panel" style="margin-top:14px">
+    <div class="ph">
+      <h3 id="wt-table-h3">🔧 Warranty Claims</h3>
+      <span id="wt-count-badge" style="background:#fef3c7;color:#b45309;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;margin-left:8px"></span>
+    </div>
+    <div class="pb tw" id="wt-table-container"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
 <!-- 🛡️ TRANG BÁO LỖI HẠN CHẾ QUYỀN TRUY CẬP (ACCESS DENIED) -->
 <!-- ══════════════════════════════════════════════════════════════ -->
 <div class="sec" id="s-access-denied">
@@ -2173,6 +2210,7 @@ function v(id){return document.getElementById(id)?.value?.trim()||'';}
 const ptitles={dashboard:'📊 Dashboard',nhap:'📦 Goods Intake',tonkho:'🗄️ Inventory',tamung:'🧑‍💼 Stock Advance',
   banhang:'🛒 Sales Orders',baogiaups:'📄 Device Quotation',baogiasolar:'☀️ Solar Quotation',thucthi:'🚀 Team Thực Thi (Field Operations Hub)',acceptance:'⚡ Handover & Acceptance',
   daily:'🏪 Distribution & Dealers',kygoi:'📋 Consignment',crm:'👥 CRM & Survey',
+  warranty:'🔧 Warranty Claims',
   quangcao:'📢 Ads Campaigns',leads:'🎯 Leads & Conversion',
   loinhuan:'💰 Financial & Cashflow',statement:'📑 VCM Payment Statement',baocao:'📈 Reports',
   mystats:'📊 My Performance',myquotes:'📄 My Quotations',mysurvey:'📝 My Surveys',rbac:'🛡️ Phân Quyền Vai Trò (RBAC)','access-denied':'🛡️ Truy Cập Bị Hạn Chế'};
@@ -2187,6 +2225,7 @@ const renders={
   daily:()=>{rDL();popSP(['pp-sp']);popDL();},
   kygoi:()=>{popSP(['kg-sp','tu-sp']);rKG();},
   crm:()=>{rKH();rKS();rLK();},
+  warranty:()=>{renderWarrantySection();},
   quangcao:()=>{rCampaigns();popCamps(['adr-camp']);rAdsResults();renderAdsSummary();},
   leads:()=>{popCamps(['ld-camp']);rLeads();popLeadSel();renderFunnel();renderLeadsCards();},
   loinhuan:renderLN,statement:()=>{rVCMStatements();populateStatementSources();calcStatementFields();},baocao:rBC,
@@ -7531,6 +7570,7 @@ const NAV_TITLES = {
     daily: '🏪 Distribution',
     kygoi: '📋 Consignment',
     crm: '👥 CRM & Survey',
+    warranty: '🔧 Warranty Claims',
     quangcao: '📢 Ads Campaigns',
     leads: '🎯 Leads & Conv',
     loinhuan: '💰 Financial & Cashflow',
@@ -7562,6 +7602,8 @@ const NAV_TITLES = {
     daily: '🏪 Đại Lý & Phân Phối',
     kygoi: '📋 Hàng Ký Gởi',
     crm: '👥 CRM & Khảo Sát',
+    warranty: '🔧 Bảo Hành & Sửa Chữa',
+
     quangcao: '📢 Chiến Dịch Quảng Cáo',
     leads: '🎯 Leads & Chuyển Đổi',
     loinhuan: '💰 Tài Chính & Lợi Nhuận',
@@ -8528,7 +8570,7 @@ const ROLES = {
     allowedTabs: [
       'dashboard', 'nhap', 'tonkho', 'tamung',
       'banhang', 'baogiaups', 'baogiasolar', 'thucthi', 'acceptance', 'daily', 'kygoi',
-      'crm', 'quangcao', 'leads',
+      'crm', 'warranty', 'quangcao', 'leads',
       'loinhuan', 'statement', 'baocao',
       'mystats', 'myquotes', 'mysurvey', 'rbac'
     ]
@@ -8546,7 +8588,7 @@ const ROLES = {
     allowedTabs: [
       'dashboard', 'nhap', 'tonkho', 'tamung',
       'banhang', 'baogiaups', 'baogiasolar', 'thucthi', 'acceptance', 'daily', 'kygoi',
-      'crm',
+      'crm', 'warranty',
       'loinhuan', 'statement', 'baocao',
       'mystats', 'myquotes', 'rbac'
     ]
@@ -8564,7 +8606,7 @@ const ROLES = {
     allowedTabs: [
       'dashboard',
       'banhang', 'baogiaups', 'baogiasolar', 'daily', 'kygoi',
-      'crm', 'quangcao', 'leads',
+      'crm', 'warranty', 'quangcao', 'leads',
       'mystats', 'myquotes', 'mysurvey', 'rbac'
     ]
   },
@@ -8581,7 +8623,7 @@ const ROLES = {
     allowedTabs: [
       'dashboard',
       'baogiasolar', 'thucthi', 'acceptance',
-      'crm',
+      'crm', 'warranty',
       'mystats', 'myquotes', 'mysurvey', 'rbac'
     ]
   },
@@ -8597,7 +8639,7 @@ const ROLES = {
     canViewCostPrice: false,
     allowedTabs: [
       'dashboard', 'nhap', 'tonkho', 'tamung',
-      'banhang', 'kygoi',
+      'banhang', 'kygoi', 'warranty',
       'mystats', 'rbac'
     ]
   },
@@ -8640,6 +8682,7 @@ const SYSTEM_MODULES = [
   { id: 'mystats', name: '📊 Tiến Độ Cá Nhân', cat: 'Cổng Nhân Viên', secLevel: 'Cấp 4 - Cá Nhân', desc: 'Báo cáo KPI, doanh số và hoa hồng của từng nhân viên' },
   { id: 'myquotes', name: '📄 Báo Giá Của Tôi', cat: 'Cổng Nhân Viên', secLevel: 'Cấp 4 - Cá Nhân', desc: 'Danh sách các báo giá do nhân viên tự lập' },
   { id: 'mysurvey', name: '📝 Khảo Sát Của Tôi', cat: 'Cổng Nhân Viên', secLevel: 'Cấp 4 - Cá Nhân', desc: 'Phiếu khảo sát khách hàng do nhân viên thực hiện' },
+  { id: 'warranty', name: '🔧 Bảo Hành & Sửa Chữa (Warranty)', cat: 'Khách Hàng', secLevel: 'Cấp 3 - Khách Hàng', desc: 'Quản lý yêu cầu bảo hành, theo dõi thiết bị lỗi và trạng thái sửa chữa' },
   { id: 'rbac', name: '🛡️ Phân Quyền Vai Trò (RBAC)', cat: 'Hệ Thống & Phân Quyền', secLevel: 'Cấp 1 - Quản Trị', desc: 'Ma trận phân quyền & phân vai trò nhân viên' }
 ];
 
@@ -9464,6 +9507,349 @@ function renderCommissionPanel(staffName) {
     : ['#', 'Contract', 'Customer', 'Contract Value', '95% Prepay', '1% Commission', '70% Tech Fee', 'Date'];
 
   tableEl.innerHTML = tbl(commHeaders, rows);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🔧 WARRANTY CLAIMS MODULE — Full Lifecycle Management
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const WARRANTY_STATUS = {
+  pending:   { label: { en: '⏳ Pending',      vi: '⏳ Chờ Xử Lý'    }, color: '#b45309', bg: '#fef3c7' },
+  repairing: { label: { en: '🔨 Under Repair', vi: '🔨 Đang Sửa Chữa' }, color: '#1d4ed8', bg: '#eff6ff' },
+  resolved:  { label: { en: '✅ Resolved',     vi: '✅ Đã Giải Quyết'  }, color: '#15803d', bg: '#dcfce7' },
+  rejected:  { label: { en: '❌ Rejected',     vi: '❌ Từ Chối'        }, color: '#dc2626', bg: '#fee2e2' }
+};
+
+const WARRANTY_ISSUE_TYPES = {
+  en: ['No Power', 'Battery Failure', 'Display Fault', 'Inverter Error', 'Physical Damage', 'Installation Defect', 'Communication Error', 'Overheating', 'Other'],
+  vi: ['Mất điện / Không khởi động', 'Pin hỏng / Suy giảm dung lượng', 'Lỗi màn hình hiển thị', 'Lỗi biến tần Inverter', 'Hư hỏng vật lý', 'Lỗi lắp đặt', 'Lỗi kết nối / Truyền thông', 'Quá nhiệt', 'Khác']
+};
+
+function getWarrantyClaims() {
+  return DB.g('warranty_claims') || [];
+}
+
+function saveWarrantyClaims(list) {
+  DB.s('warranty_claims', list);
+}
+
+function renderWarrantySection() {
+  const isVi = currentLang === 'vi';
+  const claims = getWarrantyClaims();
+  const statusFilter = document.getElementById('wt-filter-status')?.value || 'all';
+  const kw = (document.getElementById('wt-search')?.value || '').toLowerCase().trim();
+
+  const filtered = claims.filter(c => {
+    if (statusFilter !== 'all' && c.status !== statusFilter) return false;
+    if (kw && !((c.serial||'').toLowerCase().includes(kw) ||
+                (c.customer||'').toLowerCase().includes(kw) ||
+                (c.product||'').toLowerCase().includes(kw) ||
+                (c.ref||'').toLowerCase().includes(kw))) return false;
+    return true;
+  });
+
+  // Update bilingual UI elements
+  const addBtn = document.getElementById('wt-btn-add');
+  if (addBtn) addBtn.textContent = isVi ? '🔧 + Tạo Yêu Cầu Bảo Hành' : '🔧 + New Claim';
+  const refBtn = document.getElementById('wt-btn-refresh');
+  if (refBtn) refBtn.textContent = isVi ? '🔄 Làm Mới' : '🔄 Refresh';
+  const tableH3 = document.getElementById('wt-table-h3');
+  if (tableH3) tableH3.textContent = isVi ? '🔧 Danh Sách Yêu Cầu Bảo Hành' : '🔧 Warranty Claims';
+  const srchEl = document.getElementById('wt-search');
+  if (srchEl) srchEl.placeholder = isVi ? '🔍 Tìm theo serial / khách hàng...' : '🔍 Search serial / customer...';
+
+  // KPI summary cards
+  const total = claims.length;
+  const pending = claims.filter(c => c.status === 'pending').length;
+  const repairing = claims.filter(c => c.status === 'repairing').length;
+  const resolved = claims.filter(c => c.status === 'resolved').length;
+  const rejected = claims.filter(c => c.status === 'rejected').length;
+
+  const summaryEl = document.getElementById('wt-summary-cards');
+  if (summaryEl) summaryEl.innerHTML = `
+    <div class="card" style="border-left:4px solid #b45309">
+      <div class="lbl2">📋 ${isVi ? 'Tổng Phiếu' : 'Total Claims'}</div>
+      <div class="val">${total}</div>
+      <div class="sub">${isVi ? 'Tất cả yêu cầu' : 'All claims'}</div>
+    </div>
+    <div class="card" style="border-left:4px solid #b45309">
+      <div class="lbl2">⏳ ${isVi ? 'Chờ Xử Lý' : 'Pending'}</div>
+      <div class="val" style="color:#b45309">${pending}</div>
+      <div class="sub">${isVi ? 'Cần xử lý ngay' : 'Need attention'}</div>
+    </div>
+    <div class="card" style="border-left:4px solid #1d4ed8">
+      <div class="lbl2">🔨 ${isVi ? 'Đang Sửa' : 'Under Repair'}</div>
+      <div class="val" style="color:#1d4ed8">${repairing}</div>
+      <div class="sub">${isVi ? 'Đang xử lý kỹ thuật' : 'In technical process'}</div>
+    </div>
+    <div class="card" style="border-left:4px solid #15803d">
+      <div class="lbl2">✅ ${isVi ? 'Đã Giải Quyết' : 'Resolved'}</div>
+      <div class="val" style="color:#15803d">${resolved}</div>
+      <div class="sub">${isVi ? 'Hoàn thành bảo hành' : 'Warranty completed'}</div>
+    </div>
+    <div class="card" style="border-left:4px solid #dc2626">
+      <div class="lbl2">❌ ${isVi ? 'Từ Chối' : 'Rejected'}</div>
+      <div class="val" style="color:#dc2626">${rejected}</div>
+      <div class="sub">${isVi ? 'Không đủ điều kiện BH' : 'Out of warranty'}</div>
+    </div>`;
+
+  // Count badge
+  const badge = document.getElementById('wt-count-badge');
+  if (badge) badge.textContent = `${filtered.length} ${isVi ? 'phiếu' : 'claims'}`;
+
+  // Table
+  const container = document.getElementById('wt-table-container');
+  if (!container) return;
+
+  if (!filtered.length) {
+    container.innerHTML = `<div style="color:#94a3b8;padding:30px;text-align:center;font-size:13px">${isVi ? '📭 Chưa có yêu cầu bảo hành nào. Bấm "+ Tạo Yêu Cầu" để bắt đầu.' : '📭 No warranty claims yet. Click "+ New Claim" to start.'}</div>`;
+    return;
+  }
+
+  const headers = isVi
+    ? ['#', 'Mã Phiếu', 'Khách Hàng', 'Sản Phẩm / Serial', 'Loại Lỗi', 'Ngày Mở', 'Trạng Thái', 'Kỹ Thuật Viên', 'Thao Tác']
+    : ['#', 'Ref', 'Customer', 'Product / Serial', 'Issue Type', 'Date Opened', 'Status', 'Technician', 'Actions'];
+
+  let html = `<table class="data-table" style="width:100%;border-collapse:collapse;font-size:12px">`;
+  html += `<thead style="background:#f8fafc;color:#334155;position:sticky;top:0"><tr>`;
+  headers.forEach((h, i) => {
+    html += `<th style="padding:9px ${i===0?'6px':'10px'};text-align:${i===0?'center':'left'}">${h}</th>`;
+  });
+  html += `</tr></thead><tbody>`;
+
+  filtered.forEach((c, i) => {
+    const st = WARRANTY_STATUS[c.status] || WARRANTY_STATUS.pending;
+    const statusLabel = st.label[isVi ? 'vi' : 'en'];
+    const urgency = c.status === 'pending' && c.daysOpen > 7 ? 'background:#fffbeb' : '';
+    html += `<tr style="${urgency};border-bottom:1px solid #f1f5f9">`;
+    html += `<td style="padding:9px 6px;text-align:center;color:#94a3b8;font-size:11px">${i+1}</td>`;
+    html += `<td style="padding:9px 10px"><code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:11px">${c.ref || '—'}</code></td>`;
+    html += `<td style="padding:9px 10px"><div style="font-weight:700;color:#0f172a">${c.customer || '—'}</div><div style="font-size:10.5px;color:#64748b">${c.phone || ''}</div></td>`;
+    html += `<td style="padding:9px 10px"><div style="font-weight:600;color:#1e293b">${c.product || '—'}</div><div style="font-size:10.5px;color:#64748b;font-family:monospace">${c.serial || ''}</div></td>`;
+    html += `<td style="padding:9px 10px;color:#475569;font-size:11.5px">${c.issueType || '—'}</td>`;
+    html += `<td style="padding:9px 10px;color:#64748b;font-size:11.5px;white-space:nowrap">${c.dateOpened || '—'}</td>`;
+    html += `<td style="padding:9px 10px"><span style="background:${st.bg};color:${st.color};padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap">${statusLabel}</span></td>`;
+    html += `<td style="padding:9px 10px;color:#475569;font-size:11.5px">${c.technician || '—'}</td>`;
+    html += `<td style="padding:9px 8px;text-align:center">
+      <button class="btn b-xs b-bl" onclick="openWarrantyModal(${claims.indexOf(c)})" style="margin:2px" title="${isVi ? 'Sửa / Cập nhật' : 'Edit / Update'}">✏️</button>
+      <button class="btn b-xs" onclick="deleteWarrantyClaim(${claims.indexOf(c)})" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;margin:2px" title="${isVi ? 'Xóa phiếu' : 'Delete claim'}">🗑</button>
+    </td>`;
+    html += `</tr>`;
+    // Notes/description sub-row if has notes
+    if (c.notes) {
+      html += `<tr style="background:#f8fafc;border-bottom:1px solid #f1f5f9">
+        <td></td>
+        <td colspan="8" style="padding:6px 10px;font-size:11px;color:#64748b;font-style:italic">💬 ${c.notes}</td>
+      </tr>`;
+    }
+  });
+
+  html += `</tbody></table>`;
+  container.innerHTML = html;
+}
+
+function openWarrantyModal(editIndex) {
+  const isVi = currentLang === 'vi';
+  const claims = getWarrantyClaims();
+  const isEdit = editIndex !== null && editIndex !== undefined;
+  const c = isEdit ? (claims[editIndex] || {}) : {};
+
+  const existing = document.getElementById('wt-modal-overlay');
+  if (existing) existing.remove();
+
+  const issueOpts = WARRANTY_ISSUE_TYPES[isVi ? 'vi' : 'en'].map(t =>
+    `<option value="${t}" ${c.issueType === t ? 'selected' : ''}>${t}</option>`
+  ).join('');
+
+  const statusOpts = Object.entries(WARRANTY_STATUS).map(([k, v]) =>
+    `<option value="${k}" ${(c.status || 'pending') === k ? 'selected' : ''}>${v.label[isVi ? 'vi' : 'en']}</option>`
+  ).join('');
+
+  const today = new Date().toLocaleDateString('en-GB');
+  const newRef = 'WC-' + Date.now().toString().slice(-6);
+
+  const overlay = document.createElement('div');
+  overlay.id = 'wt-modal-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:16px;width:100%;max-width:580px;box-shadow:0 25px 60px -12px rgba(0,0,0,0.3);overflow:hidden;margin:auto">
+      <div style="background:linear-gradient(135deg,#78350f,#b45309);padding:18px 24px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="color:#fff;font-size:16px;font-weight:800">${isEdit ? (isVi ? '✏️ Cập Nhật Phiếu Bảo Hành' : '✏️ Update Warranty Claim') : (isVi ? '🔧 Tạo Phiếu Bảo Hành Mới' : '🔧 New Warranty Claim')}</div>
+          <div style="color:#fde68a;font-size:11.5px;margin-top:3px">${isVi ? 'Quản lý bảo hành & sửa chữa thiết bị' : 'Device warranty & repair management'}</div>
+        </div>
+        <button onclick="document.getElementById('wt-modal-overlay').remove()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:20px;cursor:pointer;border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center">×</button>
+      </div>
+
+      <div style="padding:22px;display:grid;gap:13px">
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:4px">${isVi ? '🔖 Mã Phiếu' : '🔖 Reference'}</label>
+            <input id="wt-ref" value="${c.ref || newRef}" style="width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;font-family:monospace;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:4px">${isVi ? '📅 Ngày Mở Phiếu' : '📅 Date Opened'}</label>
+            <input id="wt-date" value="${c.dateOpened || today}" style="width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;box-sizing:border-box">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:4px">${isVi ? '👤 Tên Khách Hàng' : '👤 Customer Name'}</label>
+            <input id="wt-customer" value="${c.customer || ''}" placeholder="${isVi ? 'VD: U Kyaw Min' : 'e.g. U Kyaw Min'}" style="width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:4px">${isVi ? '📞 Số Điện Thoại' : '📞 Phone'}</label>
+            <input id="wt-phone" value="${c.phone || ''}" placeholder="09xxxxxxxx" style="width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;box-sizing:border-box">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:4px">${isVi ? '📦 Sản Phẩm / Thiết Bị' : '📦 Product / Device'}</label>
+            <input id="wt-product" value="${c.product || ''}" placeholder="${isVi ? 'VD: UPS 2KVA, Solar Panel 550W' : 'e.g. UPS 2KVA, Solar Panel 550W'}" style="width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:4px">${isVi ? '🔢 Serial Number' : '🔢 Serial Number'}</label>
+            <input id="wt-serial" value="${c.serial || ''}" placeholder="SN-XXXXXXXX" style="width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;font-family:monospace;box-sizing:border-box">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:4px">${isVi ? '⚠️ Loại Lỗi / Vấn Đề' : '⚠️ Issue Type'}</label>
+            <select id="wt-issue" style="width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;background:#fff;box-sizing:border-box">
+              ${issueOpts}
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:4px">${isVi ? '🔘 Trạng Thái Xử Lý' : '🔘 Status'}</label>
+            <select id="wt-status" style="width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;background:#fff;font-weight:700;box-sizing:border-box">
+              ${statusOpts}
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:4px">${isVi ? '🔧 Kỹ Thuật Viên Phụ Trách' : '🔧 Assigned Technician'}</label>
+          <input id="wt-tech" value="${c.technician || ''}" placeholder="${isVi ? 'Tên kỹ thuật viên phụ trách' : 'Assigned technician name'}" style="width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;box-sizing:border-box">
+        </div>
+
+        <div>
+          <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:4px">${isVi ? '📝 Mô Tả Chi Tiết Lỗi / Ghi Chú' : '📝 Issue Description / Notes'}</label>
+          <textarea id="wt-notes" rows="3" placeholder="${isVi ? 'Mô tả chi tiết triệu chứng lỗi, thao tác đã thực hiện...' : 'Describe symptoms, actions taken, parts replaced...'}" style="width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;resize:vertical;box-sizing:border-box">${c.notes || ''}</textarea>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:4px">${isVi ? '📅 Ngày Hẹn Trả / Dự Kiến Xong' : '📅 Expected Completion'}</label>
+            <input id="wt-duedate" value="${c.dueDate || ''}" placeholder="DD/MM/YYYY" style="width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:4px">${isVi ? '💰 Chi Phí Sửa Chữa (Ks)' : '💰 Repair Cost (Ks)'}</label>
+            <input id="wt-cost" type="number" value="${c.repairCost || ''}" placeholder="0" style="width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;box-sizing:border-box">
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:14px;border-top:1px solid #e2e8f0">
+          <button onclick="document.getElementById('wt-modal-overlay').remove()" style="padding:9px 18px;border:1.5px solid #d1d5db;background:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:#374151">${isVi ? 'Hủy' : 'Cancel'}</button>
+          <button onclick="saveWarrantyClaim(${isEdit ? editIndex : 'null'})" style="padding:9px 22px;background:#b45309;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">${isEdit ? (isVi ? '💾 Cập Nhật' : '💾 Update') : (isVi ? '🔧 Tạo Phiếu' : '🔧 Create Claim')}</button>
+        </div>
+
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+}
+
+function saveWarrantyClaim(editIndex) {
+  const isVi = currentLang === 'vi';
+  const get = id => (document.getElementById(id)?.value || '').trim();
+
+  const customer = get('wt-customer');
+  const product  = get('wt-product');
+  if (!customer) { al(isVi ? '❌ Vui lòng nhập tên khách hàng!' : '❌ Please enter customer name!', 'er'); return; }
+  if (!product)  { al(isVi ? '❌ Vui lòng nhập tên sản phẩm!'  : '❌ Please enter product name!', 'er'); return; }
+
+  const entry = {
+    ref:        get('wt-ref'),
+    dateOpened: get('wt-date'),
+    customer,
+    phone:      get('wt-phone'),
+    product,
+    serial:     get('wt-serial'),
+    issueType:  get('wt-issue'),
+    status:     get('wt-status') || 'pending',
+    technician: get('wt-tech'),
+    notes:      get('wt-notes'),
+    dueDate:    get('wt-duedate'),
+    repairCost: Number(document.getElementById('wt-cost')?.value || 0),
+    updatedAt:  new Date().toLocaleDateString('en-GB')
+  };
+
+  const claims = getWarrantyClaims();
+  const isEdit = editIndex !== null && editIndex !== undefined;
+
+  if (isEdit) {
+    entry.createdAt = claims[editIndex]?.createdAt || entry.dateOpened;
+    claims[editIndex] = entry;
+    al(`✅ ${isVi ? 'Đã cập nhật phiếu: ' : 'Updated claim: '}${entry.ref}`, 'ok');
+  } else {
+    entry.createdAt = entry.dateOpened;
+    claims.push(entry);
+    al(`✅ ${isVi ? 'Đã tạo phiếu bảo hành: ' : 'Created warranty claim: '}${entry.ref}`, 'ok');
+  }
+
+  saveWarrantyClaims(claims);
+  document.getElementById('wt-modal-overlay')?.remove();
+  renderWarrantySection();
+}
+
+function deleteWarrantyClaim(index) {
+  const isVi = currentLang === 'vi';
+  const claims = getWarrantyClaims();
+  const c = claims[index];
+  if (!c) return;
+
+  const existing = document.getElementById('wt-del-overlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'wt-del-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:14px;width:100%;max-width:380px;box-shadow:0 20px 50px -10px rgba(0,0,0,0.3);overflow:hidden">
+      <div style="background:#fef2f2;padding:18px 22px;text-align:center;border-bottom:1px solid #fee2e2">
+        <div style="font-size:32px;margin-bottom:6px">🗑️</div>
+        <div style="font-size:14px;font-weight:800;color:#991b1b">${isVi ? 'Xóa Phiếu Bảo Hành?' : 'Delete Warranty Claim?'}</div>
+      </div>
+      <div style="padding:18px 22px;text-align:center">
+        <div style="background:#f8fafc;border-radius:8px;padding:10px;margin-bottom:14px">
+          <div style="font-weight:700;color:#0369a1;font-size:13px">${c.ref}</div>
+          <div style="font-size:11.5px;color:#475569;margin-top:2px">${c.customer} • ${c.product}</div>
+        </div>
+        <div style="font-size:12px;color:#64748b;margin-bottom:16px">${isVi ? 'Hành động này không thể hoàn tác.' : 'This action cannot be undone.'}</div>
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button onclick="document.getElementById('wt-del-overlay').remove()" style="padding:8px 18px;border:1.5px solid #d1d5db;background:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">${isVi ? 'Hủy' : 'Cancel'}</button>
+          <button onclick="confirmDeleteWarranty(${index})" style="padding:8px 20px;background:#dc2626;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">${isVi ? '🗑 Xóa' : '🗑 Delete'}</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+function confirmDeleteWarranty(index) {
+  const isVi = currentLang === 'vi';
+  const claims = getWarrantyClaims();
+  const c = claims[index];
+  claims.splice(index, 1);
+  saveWarrantyClaims(claims);
+  document.getElementById('wt-del-overlay')?.remove();
+  renderWarrantySection();
+  al(`${isVi ? 'Đã xóa phiếu: ' : 'Deleted: '}${c?.ref || ''}`, 'ok');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
