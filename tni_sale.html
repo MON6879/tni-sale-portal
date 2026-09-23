@@ -2102,6 +2102,35 @@ tbody tr:hover{background:#fafcff}
 // ══════════════════════════════════════════════════════════
 const GAS_SALE_URL = 'https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec';
 
+// ── API Token helper (client-side) ────────────────────────────
+// Token strategy:
+//   Admin:        stored in localStorage('tni_sale_api_token') after PIN unlock
+//   Staff user:   email stored as token when verified via gmailTokenVerify
+// The actual master SALE_API_KEY lives ONLY in GAS Script Properties — never exposed here.
+function getSaleToken_() {
+  return localStorage.getItem('tni_sale_api_token') || '';
+}
+
+// Verify email against server gmail list — sets role + token on success
+async function verifySaleEmail_(email) {
+  try {
+    const res  = await fetch(GAS_SALE_URL, {
+      method: 'POST', mode: 'cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'gmail_token_verify', email: email.toLowerCase().trim() })
+    });
+    const json = await res.json();
+    if (json.ok) {
+      localStorage.setItem('tni_sale_api_token', email.toLowerCase().trim()); // email as token for staff
+      return json; // { ok, role, name, canViewFinance }
+    }
+    return { ok: false, error: json.error };
+  } catch(e) {
+    console.warn('[DB] verifySaleEmail_ failed:', e);
+    return { ok: false, error: 'Network error' };
+  }
+}
+
 const DB = {
   // ── Local cache read/write ──────────────────────────────
   g: k => JSON.parse(localStorage.getItem('u_' + k) || '[]'),
@@ -2140,22 +2169,24 @@ const DB = {
     DB._push('sale_bulk', { col: k, items: items });
   },
 
-  // ── Background push to GAS (fire-and-forget) ────────────
+  // ── Background push to GAS — includes auth token ────────
   _push: (action, body) => {
+    const token = getSaleToken_();
     fetch(GAS_SALE_URL, {
       method: 'POST', mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: action, ...body })
+      body: JSON.stringify({ action: action, token: token, ...body })
     }).catch(e => console.warn('[DB] GAS push failed:', e));
   },
 
   // ── Pull live data from Sheet → refresh local cache ─────
   pull: async (k, onDone) => {
     try {
+      const token = getSaleToken_();
       const res  = await fetch(GAS_SALE_URL, {
         method: 'POST', mode: 'cors',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'sale_get', col: k })
+        body: JSON.stringify({ action: 'sale_get', col: k, token: token })
       });
       const json = await res.json();
       if (json.ok && Array.isArray(json.data) && json.data.length > 0) {
@@ -9040,6 +9071,9 @@ function promptAdminUnlock() {
   if (input === null) return;
   if (input.trim() === adminPinCode) {
     changeAppRole('admin');
+    // Set admin API token so GAS requests are authenticated as admin
+    // Admin token = PIN-based hash (not the master key — just identifies admin session)
+    localStorage.setItem('tni_sale_api_token', 'admin:' + btoa('admin:tni_sale:' + input.trim()));
     al('Xác thực PIN Quản Trị thành công! Đã kích hoạt quyền Ban Giám Đốc (Admin).', 'ok');
   } else {
     al('Mã PIN không chính xác!', 'er');
