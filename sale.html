@@ -127,6 +127,138 @@ tbody tr:hover{background:#fafcff}
 <body>
 <div id="alert"></div>
 
+<!-- ══ PASSWORD GATE ══ -->
+<div id="pwd-gate" style="display:none;position:fixed;inset:0;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#0f172a 100%);z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column">
+  <div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:48px 40px;max-width:420px;width:90%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.5)">
+    <div style="font-size:48px;margin-bottom:12px">⚡</div>
+    <div style="font-size:26px;font-weight:800;color:#fff;margin-bottom:4px">TNI Sale Portal</div>
+    <div style="font-size:13px;color:#94a3b8;margin-bottom:32px">Vui lòng nhập mật khẩu để tiếp tục</div>
+    <input id="pwd-input" type="password" placeholder="Nhập mật khẩu..." maxlength="50"
+      style="width:100%;padding:14px 18px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:#fff;font-size:15px;outline:none;box-sizing:border-box;margin-bottom:12px;letter-spacing:2px"
+      onkeydown="if(event.key==='Enter')checkPwd()"
+      oninput="document.getElementById('pwd-err').style.display='none'">
+    <div id="pwd-err" style="display:none;color:#f87171;font-size:12.5px;margin-bottom:10px">❌ Mật khẩu không đúng. Thử lại!</div>
+    <button onclick="checkPwd()" style="width:100%;padding:14px;border-radius:10px;border:none;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:16px">
+      🔓 Đăng Nhập
+    </button>
+    <div style="font-size:11px;color:#475569">TNI Operations System • Restricted Access</div>
+  </div>
+</div>
+
+<!-- ══ CHANGE PASSWORD MODAL ══ -->
+<div id="change-pwd-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99998;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:16px;padding:36px 32px;max-width:400px;width:90%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.3)">
+    <div style="font-size:36px;margin-bottom:8px">🔑</div>
+    <div style="font-size:20px;font-weight:800;color:#1e293b;margin-bottom:6px">Đã đến lúc đổi mật khẩu!</div>
+    <div style="font-size:13px;color:#64748b;margin-bottom:24px">Mật khẩu của bạn đã dùng hơn <b id="pwd-days-used">30</b> ngày.<br>Vui lòng đổi mật khẩu mới để bảo mật.</div>
+    <input id="new-pwd-1" type="password" placeholder="Mật khẩu mới (tối thiểu 6 ký tự)" maxlength="50"
+      style="width:100%;padding:12px 14px;border-radius:8px;border:1.5px solid #e2e8f0;font-size:14px;margin-bottom:10px;box-sizing:border-box;outline:none">
+    <input id="new-pwd-2" type="password" placeholder="Nhập lại mật khẩu mới" maxlength="50"
+      style="width:100%;padding:12px 14px;border-radius:8px;border:1.5px solid #e2e8f0;font-size:14px;margin-bottom:10px;box-sizing:border-box;outline:none">
+    <div id="change-pwd-err" style="display:none;color:#ef4444;font-size:12px;margin-bottom:10px"></div>
+    <div style="display:flex;gap:10px">
+      <button onclick="skipChangePwd()" style="flex:1;padding:12px;border-radius:8px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#64748b;font-size:13px;cursor:pointer;font-weight:600">Để sau</button>
+      <button onclick="doChangePwd()" style="flex:2;padding:12px;border-radius:8px;border:none;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-size:14px;font-weight:700;cursor:pointer">✅ Đổi Mật Khẩu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ PASSWORD GATE SYSTEM ══
+const PWD_KEY      = 'tni_portal_pwd_hash';
+const PWD_SET_KEY  = 'tni_portal_pwd_set_at';
+const PWD_OK_KEY   = 'tni_portal_authed_at';
+const PWD_DAYS     = 30;    // Nhắc đổi sau 30 ngày
+const SESSION_MINS = 480;   // Session tự hết sau 8 tiếng (480 phút)
+const DEFAULT_PWD  = 'TNI@2026';
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function initPwdGate() {
+  const gate = document.getElementById('pwd-gate');
+  // Khởi tạo hash mặc định nếu chưa có
+  if (!localStorage.getItem(PWD_KEY)) {
+    const h = await sha256(DEFAULT_PWD);
+    localStorage.setItem(PWD_KEY, h);
+    localStorage.setItem(PWD_SET_KEY, Date.now().toString());
+  }
+
+  // Kiểm tra session còn hạn không
+  const authedAt = parseInt(localStorage.getItem(PWD_OK_KEY) || '0');
+  const sessionOk = authedAt && (Date.now() - authedAt) < SESSION_MINS * 60 * 1000;
+
+  if (sessionOk) {
+    gate.style.display = 'none';
+    checkPwdExpiry();
+  } else {
+    gate.style.display = 'flex';
+    setTimeout(()=>document.getElementById('pwd-input').focus(), 100);
+  }
+}
+
+async function checkPwd() {
+  const input = document.getElementById('pwd-input').value;
+  if (!input) return;
+  const h = await sha256(input);
+  const stored = localStorage.getItem(PWD_KEY);
+  if (h === stored) {
+    localStorage.setItem(PWD_OK_KEY, Date.now().toString());
+    document.getElementById('pwd-gate').style.display = 'none';
+    checkPwdExpiry();
+  } else {
+    const err = document.getElementById('pwd-err');
+    err.style.display = 'block';
+    document.getElementById('pwd-input').value = '';
+    document.getElementById('pwd-input').focus();
+  }
+}
+
+function checkPwdExpiry() {
+  const setAt = parseInt(localStorage.getItem(PWD_SET_KEY) || '0');
+  if (!setAt) return;
+  const days = Math.floor((Date.now() - setAt) / 86400000);
+  if (days >= PWD_DAYS) {
+    document.getElementById('pwd-days-used').textContent = days;
+    const m = document.getElementById('change-pwd-modal');
+    m.style.display = 'flex';
+  }
+}
+
+function skipChangePwd() {
+  document.getElementById('change-pwd-modal').style.display = 'none';
+}
+
+async function doChangePwd() {
+  const p1 = document.getElementById('new-pwd-1').value;
+  const p2 = document.getElementById('new-pwd-2').value;
+  const err = document.getElementById('change-pwd-err');
+  if (p1.length < 6) { err.textContent='Mật khẩu tối thiểu 6 ký tự!'; err.style.display='block'; return; }
+  if (p1 !== p2)     { err.textContent='Hai mật khẩu không khớp!'; err.style.display='block'; return; }
+  const h = await sha256(p1);
+  localStorage.setItem(PWD_KEY, h);
+  localStorage.setItem(PWD_SET_KEY, Date.now().toString());
+  document.getElementById('change-pwd-modal').style.display = 'none';
+  document.getElementById('new-pwd-1').value = '';
+  document.getElementById('new-pwd-2').value = '';
+  if (typeof al === 'function') al('✅ Đã đổi mật khẩu thành công!', 'ok');
+  else alert('✅ Đổi mật khẩu thành công!');
+}
+
+// Hàm cho phép admin đổi mật khẩu từ menu
+window.openChangePwdModal = function() {
+  document.getElementById('new-pwd-1').value = '';
+  document.getElementById('new-pwd-2').value = '';
+  document.getElementById('change-pwd-err').style.display = 'none';
+  document.getElementById('change-pwd-modal').style.display = 'flex';
+}
+
+// Khởi động gate khi DOM ready
+document.addEventListener('DOMContentLoaded', initPwdGate);
+</script>
+
 <!-- ══ SIDEBAR ══ -->
 <div id="sb">
   <div class="logo">⚡ TNI <span>Sale</span></div>
