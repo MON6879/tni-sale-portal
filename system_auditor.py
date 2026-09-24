@@ -1426,7 +1426,119 @@ def audit_construction_menu_sync():
     return results
 
 
-# ── 5. TỔNG HỢP BÁO CÁO & PHÁT CẢNH BÁO ĐỎ ──────────────────────────────────
+def audit_construction_guide_sync():
+    """
+    📖 GHẾ GIÁM SÁT GUIDE TAB — Kiểm tra tab 'Guide' trong Sheet Construction
+    có đồng bộ đủ với tab 'Template Cons' hay không.
+    - Đọc trực tiếp GViz CSV cả 2 tab
+    - Nếu Guide thiếu template → Gọi GAS syncGuideFromTemplate_ để tự động điền
+    - Nếu Guide đã đủ → PASS không làm gì thêm
+    - Cảnh báo Admin nếu có template mới chưa có giải thích
+    """
+    results = []
+    CONS_SHEET_ID = "1ViXXv5P8jSgx5heBqEP419ZkSR77C3OsflK0xpHMoi8"
+    GAS_URL = os.getenv("APPS_SCRIPT_URL", "")
+
+    try:
+        import csv as csv_mod
+
+        # 1. Đọc Template Cons (cột A từ hàng 3)
+        t_url = f"https://docs.google.com/spreadsheets/d/{CONS_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Template+Cons"
+        t_resp = requests.get(t_url, timeout=15)
+        if t_resp.status_code != 200:
+            results.append({"name": "Guide Tab Sync", "status": "FAIL",
+                            "reason": f"Không đọc được Template Cons (HTTP {t_resp.status_code})"})
+            return results
+
+        t_reader = csv_mod.reader(io.StringIO(t_resp.text))
+        t_rows = list(t_reader)
+        template_keys = []
+        for i, row in enumerate(t_rows):
+            if i < 2: continue
+            if row and row[0] and row[0].strip():
+                k = row[0].strip()
+                if k.lower() not in ("key", "stt", "ref"):
+                    template_keys.append(k)
+
+        # 2. Đọc Guide tab (cột B = Key, từ hàng 2)
+        g_url = f"https://docs.google.com/spreadsheets/d/{CONS_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Guide"
+        g_resp = requests.get(g_url, timeout=15)
+        guide_keys = []
+        if g_resp.status_code == 200:
+            g_reader = csv_mod.reader(io.StringIO(g_resp.text))
+            g_rows = list(g_reader)
+            for i, row in enumerate(g_rows):
+                if i < 1: continue  # Skip header
+                if len(row) >= 2 and row[1] and row[1].strip():
+                    guide_keys.append(row[1].strip())
+
+        guide_set = {k.lower() for k in guide_keys}
+        missing = [k for k in template_keys if k.lower() not in guide_set]
+
+        if not missing and len(guide_keys) >= len(template_keys):
+            results.append({"name": "Guide Tab Sync", "status": "PASS",
+                            "reason": f"Guide đồng bộ OK ({len(template_keys)} templates, {len(guide_keys)} entries)"})
+            return results
+
+        # 3. Lệch → Tự động trigger GAS sync
+        logger.warning(f"📖 Guide tab lệch! Template Cons có {len(template_keys)}, Guide có {len(guide_keys)}. Thiếu: {missing}")
+
+        sync_success = False
+        if GAS_URL:
+            try:
+                sync_resp = requests.get(
+                    GAS_URL + "?action=sync_guide_tab",
+                    timeout=60, allow_redirects=True
+                )
+                if sync_resp.status_code == 200:
+                    sync_data = sync_resp.json()
+                    if sync_data.get("status") == "ok":
+                        sync_success = True
+                        logger.info(f"✅ Guide tab auto-synced via GAS: {sync_data.get('count', '?')} templates written")
+            except Exception as se:
+                logger.warning(f"GAS sync_guide_tab call failed: {se}")
+
+        if sync_success:
+            detail = f"Auto-sync OK — {len(missing)} template(s) được điền vào Guide: {', '.join(missing[:5])}"
+            results.append({"name": "Guide Tab Sync", "status": "PASS", "reason": detail})
+        else:
+            detail = f"Guide lệch {len(missing)} templates, GAS sync chưa thực hiện được: {', '.join(missing[:5])}"
+            results.append({"name": "Guide Tab Sync", "status": "WARN", "reason": detail})
+
+        # 4. Cảnh báo Admin nếu có template mới không có giải thích trong code
+        if missing:
+            admin_id = os.getenv("ADMIN_CHAT_ID", "6859790680")
+            bot_token = os.getenv("SEARCH_BOT_TOKEN", "")
+            if bot_token:
+                alert_lines = [
+                    "📖 <b>[GUIDE SYNC — AUDITOR-9.1]</b>",
+                    f"Tab <b>Guide</b> thiếu {len(missing)} template mới:",
+                ]
+                for m in missing[:8]:
+                    cmd = "/" + m.lower().replace(" ", "_").replace("  ", "_")
+                    alert_lines.append(f"  • <b>{m}</b> → <code>{cmd}</code>")
+                if len(missing) > 8:
+                    alert_lines.append(f"  ... và {len(missing)-8} template khác")
+                alert_lines.append("🔄 Hệ thống đã tự động trigger GAS để điền vào Guide tab.")
+                alert_msg = "\n".join(alert_lines)
+                try:
+                    requests.post(
+                        f"https://api.telegram.org/bot{bot_token}/sendMessage",
+                        json={"chat_id": admin_id, "text": alert_msg, "parse_mode": "HTML"},
+                        timeout=10
+                    )
+                except Exception:
+                    pass
+
+    except Exception as e:
+        logger.error(f"❌ audit_construction_guide_sync error: {e}")
+        results.append({"name": "Guide Tab Sync", "status": "FAIL",
+                        "reason": f"Exception: {str(e)[:80]}"})
+
+    return results
+
+
+
 
 def build_supervisory_clean_report() -> str:
     """
@@ -1545,6 +1657,7 @@ def build_master_audit_report():
     template_res = audit_attendance_template_semantic()
     bi_anomaly_res = audit_bi_wo_stats_anomaly()
     cons_menu_res = audit_construction_menu_sync()
+    guide_sync_res = audit_construction_guide_sync()
     inventory_res = audit_sale_inventory()
 
     # 2. Chạy kiểm tra Telethon (Đúng giờ & Nhân đôi)
@@ -1559,7 +1672,7 @@ def build_master_audit_report():
     quality_res = telethon_data.get("quality_results", [])
 
     # 3. Tính toán sự cố (Chỉ tính status FAIL là lỗi thực sự)
-    all_static_checks = webhook_res + gas_res + sheets_res + roster_res + template_res + bi_anomaly_res + cons_menu_res + inventory_res
+    all_static_checks = webhook_res + gas_res + sheets_res + roster_res + template_res + bi_anomaly_res + cons_menu_res + guide_sync_res + inventory_res
     fail_checks = sum(1 for c in all_static_checks if c["status"] == "FAIL")
     warn_checks = sum(1 for c in all_static_checks if c["status"] == "WARN")
 
