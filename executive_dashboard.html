@@ -802,6 +802,134 @@
 </head>
 <body>
 
+<!-- ══ PASSWORD GATE ══ -->
+<div id="pwd-gate" style="display:none;position:fixed;inset:0;background:linear-gradient(135deg,#070A11 0%,#0F172A 50%,#070A11 100%);z-index:999999;display:flex;align-items:center;justify-content:center;flex-direction:column">
+  <div style="background:rgba(30,41,59,0.7);backdrop-filter:blur(24px);border:1px solid rgba(56,189,248,0.3);border-radius:20px;padding:48px 40px;max-width:420px;width:90%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.6)">
+    <div style="font-size:44px;margin-bottom:12px;color:#38BDF8"><i class="fa-solid fa-shield-halved"></i></div>
+    <div style="font-size:24px;font-weight:800;color:#fff;margin-bottom:4px">TNI Operations Portal</div>
+    <div style="font-size:13px;color:#94A3B8;margin-bottom:28px">Executive Management System — Bảo Mật Nội Bộ</div>
+    <input id="pwd-input" type="password" placeholder="Nhập mật khẩu truy cập..." maxlength="50"
+      style="width:100%;padding:14px 18px;border-radius:10px;border:1.5px solid rgba(56,189,248,0.4);background:rgba(15,23,42,0.8);color:#fff;font-size:15px;outline:none;box-sizing:border-box;margin-bottom:12px;letter-spacing:2px;text-align:center"
+      onkeydown="if(event.key==='Enter')checkPwd()"
+      oninput="document.getElementById('pwd-err').style.display='none'">
+    <div id="pwd-err" style="display:none;color:#f87171;font-size:12.5px;margin-bottom:10px">❌ Mật khẩu không đúng. Thử lại!</div>
+    <button onclick="checkPwd()" style="width:100%;padding:14px;border-radius:10px;border:none;background:linear-gradient(135deg,#0284c7,#2563eb);color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:16px;box-shadow:0 4px 12px rgba(37,99,235,0.3)">
+      🔓 Mở Khóa Truy Cập
+    </button>
+    <div style="font-size:11px;color:#64748b">TNI Executive BI & Operations System • Restricted Access</div>
+  </div>
+</div>
+
+<!-- ══ CHANGE PASSWORD MODAL ══ -->
+<div id="change-pwd-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999998;align-items:center;justify-content:center">
+  <div style="background:#0F172A;border:1px solid rgba(56,189,248,0.3);border-radius:16px;padding:36px 32px;max-width:400px;width:90%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.5)">
+    <div style="font-size:36px;margin-bottom:8px;color:#F59E0B">🔑</div>
+    <div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:6px">Đã đến lúc đổi mật khẩu!</div>
+    <div style="font-size:13px;color:#94A3B8;margin-bottom:24px">Mật khẩu của bạn đã dùng hơn <b id="pwd-days-used" style="color:#38BDF8">30</b> ngày.<br>Vui lòng đổi mật khẩu mới để bảo mật.</div>
+    <input id="new-pwd-1" type="password" placeholder="Mật khẩu mới (tối thiểu 6 ký tự)" maxlength="50"
+      style="width:100%;padding:12px 14px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.15);background:rgba(15,23,42,0.8);color:#fff;font-size:14px;margin-bottom:10px;box-sizing:border-box;outline:none">
+    <input id="new-pwd-2" type="password" placeholder="Nhập lại mật khẩu mới" maxlength="50"
+      style="width:100%;padding:12px 14px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.15);background:rgba(15,23,42,0.8);color:#fff;font-size:14px;margin-bottom:10px;box-sizing:border-box;outline:none">
+    <div id="change-pwd-err" style="display:none;color:#ef4444;font-size:12px;margin-bottom:10px"></div>
+    <div style="display:flex;gap:10px">
+      <button onclick="skipChangePwd()" style="flex:1;padding:12px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.15);background:#1E293B;color:#94A3B8;font-size:13px;cursor:pointer;font-weight:600">Để sau</button>
+      <button onclick="doChangePwd()" style="flex:2;padding:12px;border-radius:8px;border:none;background:linear-gradient(135deg,#0284c7,#2563eb);color:#fff;font-size:14px;font-weight:700;cursor:pointer">✅ Đổi Mật Khẩu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ PASSWORD GATE SYSTEM ══
+const PWD_KEY      = 'tni_portal_pwd_hash';
+const PWD_SET_KEY  = 'tni_portal_pwd_set_at';
+const PWD_OK_KEY   = 'tni_portal_authed_at';
+const PWD_DAYS     = 30;    // Nhắc đổi sau 30 ngày
+const SESSION_MINS = 480;   // Session tự hết sau 8 tiếng (480 phút)
+const DEFAULT_PWD  = 'TNI@2026';
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function initPwdGate() {
+  const gate = document.getElementById('pwd-gate');
+  if (!gate) return;
+  if (!localStorage.getItem(PWD_KEY)) {
+    const h = await sha256(DEFAULT_PWD);
+    localStorage.setItem(PWD_KEY, h);
+    localStorage.setItem(PWD_SET_KEY, Date.now().toString());
+  }
+
+  const authedAt = parseInt(localStorage.getItem(PWD_OK_KEY) || '0');
+  const sessionOk = authedAt && (Date.now() - authedAt) < SESSION_MINS * 60 * 1000;
+
+  if (sessionOk) {
+    gate.style.display = 'none';
+    checkPwdExpiry();
+  } else {
+    gate.style.display = 'flex';
+    setTimeout(()=>{
+      const inp = document.getElementById('pwd-input');
+      if (inp) inp.focus();
+    }, 100);
+  }
+}
+
+async function checkPwd() {
+  const input = document.getElementById('pwd-input').value;
+  if (!input) return;
+  const h = await sha256(input);
+  const stored = localStorage.getItem(PWD_KEY);
+  if (h === stored) {
+    localStorage.setItem(PWD_OK_KEY, Date.now().toString());
+    document.getElementById('pwd-gate').style.display = 'none';
+    checkPwdExpiry();
+  } else {
+    const err = document.getElementById('pwd-err');
+    if (err) err.style.display = 'block';
+    const inp = document.getElementById('pwd-input');
+    if (inp) { inp.value = ''; inp.focus(); }
+  }
+}
+
+function checkPwdExpiry() {
+  const setAt = parseInt(localStorage.getItem(PWD_SET_KEY) || '0');
+  if (!setAt) return;
+  const days = Math.floor((Date.now() - setAt) / 86400000);
+  if (days >= PWD_DAYS) {
+    const du = document.getElementById('pwd-days-used');
+    if (du) du.textContent = days;
+    const m = document.getElementById('change-pwd-modal');
+    if (m) m.style.display = 'flex';
+  }
+}
+
+function skipChangePwd() {
+  const m = document.getElementById('change-pwd-modal');
+  if (m) m.style.display = 'none';
+}
+
+async function doChangePwd() {
+  const p1 = document.getElementById('new-pwd-1').value;
+  const p2 = document.getElementById('new-pwd-2').value;
+  const err = document.getElementById('change-pwd-err');
+  if (p1.length < 6) { if(err){err.textContent='Mật khẩu tối thiểu 6 ký tự!'; err.style.display='block';} return; }
+  if (p1 !== p2)     { if(err){err.textContent='Hai mật khẩu không khớp!'; err.style.display='block';} return; }
+  const h = await sha256(p1);
+  localStorage.setItem(PWD_KEY, h);
+  localStorage.setItem(PWD_SET_KEY, Date.now().toString());
+  const m = document.getElementById('change-pwd-modal');
+  if (m) m.style.display = 'none';
+  document.getElementById('new-pwd-1').value = '';
+  document.getElementById('new-pwd-2').value = '';
+  alert('✅ Đã đổi mật khẩu thành công!');
+}
+
+document.addEventListener('DOMContentLoaded', initPwdGate);
+</script>
+
+
   <!-- Top Executive Header -->
   <header>
     <div class="brand-box">
@@ -831,6 +959,9 @@
       </button>
       <button class="nav-tab" id="tab-btn-task-notes" onclick="showTab('task-notes-panel', this)" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(16, 185, 129, 0.22)); border: 1px solid rgba(56, 189, 248, 0.45); color: #38bdf8; font-weight: 700;">
         <i class="fa-solid fa-clipboard-check"></i> Note Đầu Việc
+      </button>
+            <button class="nav-tab" id="tab-btn-system-guide" onclick="showTab('system-guide-panel', this)">
+        <i class="fa-solid fa-book"></i> System Guide
       </button>
       <button class="nav-tab" onclick="showTab('access-control-panel', this)">
         <i class="fa-solid fa-lock"></i> Gmail Access List
@@ -2518,6 +2649,228 @@ Team04>> 2Box</td>
       </div>
     </div>
 
+    <!-- 7. SYSTEM GUIDE PANEL — Comprehensive Usage Guide for All Teams -->
+    <div id="system-guide-panel" class="tab-panel">
+      <div class="section-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+        <div>
+          <span><i class="fa-solid fa-book"></i> TNI System Usage Guide — Telegram Bot & Operations Guide</span>
+          <div style="font-size:0.78rem; color:#38BDF8; font-weight:700; margin-top:0.2rem;">📌 Living Document — Update when new features are added | Last Updated: 24/09/2026</div>
+        </div>
+      </div>
+
+      <!-- Section 0: Bot Quick Start Links -->
+      <div style="margin-top:1.2rem;">
+        <h3 style="color:#F59E0B; font-weight:800; font-size:1.1rem; margin-bottom:0.8rem;"><i class="fa-solid fa-rocket"></i> QUICK START — Click to Open Bot & Send /start</h3>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:0.8rem;">
+          <a href="https://t.me/SEARCHTNITASKWOBOT" target="_blank" style="text-decoration:none; background:linear-gradient(135deg, rgba(56,189,248,0.15), rgba(56,189,248,0.05)); border:1px solid rgba(56,189,248,0.4); border-radius:14px; padding:1rem; text-align:center; display:block;">
+            <div style="font-size:1.8rem;">🔍</div>
+            <div style="color:#38BDF8; font-weight:700; font-size:0.9rem;">@SEARCHTNITASKWOBOT</div>
+            <div style="color:#94A3B8; font-size:0.75rem;">Search Site · /plan · /help · /myid</div>
+          </a>
+          <a href="https://t.me/TNIASSETorderREQUEST_BOT" target="_blank" style="text-decoration:none; background:linear-gradient(135deg, rgba(251,146,60,0.15), rgba(251,146,60,0.05)); border:1px solid rgba(251,146,60,0.4); border-radius:14px; padding:1rem; text-align:center; display:block;">
+            <div style="font-size:1.8rem;">📦</div>
+            <div style="color:#FB923C; font-weight:700; font-size:0.9rem;">@TNIASSETorderREQUEST_BOT</div>
+            <div style="color:#94A3B8; font-size:0.75rem;">Order · Revoke · Export · Move</div>
+          </a>
+          <a href="https://t.me/TNICLEARSITEBOT" target="_blank" style="text-decoration:none; background:linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05)); border:1px solid rgba(16,185,129,0.4); border-radius:14px; padding:1rem; text-align:center; display:block;">
+            <div style="font-size:1.8rem;">📋</div>
+            <div style="color:#34D399; font-weight:700; font-size:0.9rem;">@TNICLEARSITEBOT</div>
+            <div style="color:#94A3B8; font-size:0.75rem;">Solution · /sol_name · /refresh</div>
+          </a>
+          <a href="https://t.me/tni_site_down_bot" target="_blank" style="text-decoration:none; background:linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.05)); border:1px solid rgba(239,68,68,0.4); border-radius:14px; padding:1rem; text-align:center; display:block;">
+            <div style="font-size:1.8rem;">📡</div>
+            <div style="color:#F87171; font-weight:700; font-size:0.9rem;">@tni_site_down_bot</div>
+            <div style="color:#94A3B8; font-size:0.75rem;">Site Down Auto every 30 min</div>
+          </a>
+          <a href="https://t.me/TNI_SITE_BOT" target="_blank" style="text-decoration:none; background:linear-gradient(135deg, rgba(168,85,247,0.15), rgba(168,85,247,0.05)); border:1px solid rgba(168,85,247,0.4); border-radius:14px; padding:1rem; text-align:center; display:block;">
+            <div style="font-size:1.8rem;">🏗️</div>
+            <div style="color:#C084FC; font-weight:700; font-size:0.9rem;">@TNI_SITE_BOT</div>
+            <div style="color:#94A3B8; font-size:0.75rem;">Construction · 12 Templates · /5g · /plan</div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Section 1: Group Usage Map -->
+      <div style="margin-top:1.5rem;">
+        <h3 style="color:#F59E0B; font-weight:800; font-size:1.1rem; margin-bottom:0.8rem;"><i class="fa-solid fa-users"></i> WHO USES WHAT — Usage Map by Group</h3>
+        <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(99,102,241,0.3); border-radius:14px; padding:1rem; margin-bottom:1rem;">
+          <h4 style="color:#818CF8; font-weight:700; margin-bottom:0.6rem;">🟦 Teams T1 / T2 / T3 / T4 — Field Engineers</h4>
+          <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+            <thead><tr style="background:rgba(99,102,241,0.2);"><th style="padding:0.5rem; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Task</th><th style="padding:0.5rem; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Bot</th><th style="padding:0.5rem; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Command</th><th style="padding:0.5rem; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Example</th></tr></thead>
+            <tbody>
+              <tr><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">🔍 Search Site</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);"><a href="https://t.me/SEARCHTNITASKWOBOT" target="_blank" style="color:#38BDF8;">@SEARCHTNITASKWOBOT</a></td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">Type TNIxxxx</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05); color:#38BDF8;">TNI0394</td></tr>
+              <tr><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">ℹ️ Full Site Info</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);"><a href="https://t.me/SEARCHTNITASKWOBOT" target="_blank" style="color:#38BDF8;">@SEARCHTNITASKWOBOT</a></td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">Info: TNIxxxx</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05); color:#38BDF8;">Info: TNI0394</td></tr>
+              <tr><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">🆔 Get My Telegram ID</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);"><a href="https://t.me/SEARCHTNITASKWOBOT" target="_blank" style="color:#38BDF8;">@SEARCHTNITASKWOBOT</a></td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">/myid</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05); color:#38BDF8;">/myid</td></tr>
+              <tr><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">📦 Order / Revoke / Export</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);"><a href="https://t.me/TNIASSETorderREQUEST_BOT" target="_blank" style="color:#FB923C;">@TNIASSETorderREQUEST_BOT</a></td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">Keyword at start of line</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05); color:#38BDF8;">Order SC/path cord 10m</td></tr>
+              <tr><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">📸 Attach Photo</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);"><a href="https://t.me/TNIASSETorderREQUEST_BOT" target="_blank" style="color:#FB923C;">@TNIASSETorderREQUEST_BOT</a></td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">Reply photo to ✅ msg</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05); color:#38BDF8;">Reply photo</td></tr>
+              <tr><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">📋 Submit Solution</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);"><a href="https://t.me/TNICLEARSITEBOT" target="_blank" style="color:#34D399;">@TNICLEARSITEBOT</a></td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">TNIxxxx Solution: [desc]</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05); color:#38BDF8;">TNI0417 Solution: fuse replaced</td></tr>
+              <tr><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">📝 Solution Template</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);"><a href="https://t.me/TNICLEARSITEBOT" target="_blank" style="color:#34D399;">@TNICLEARSITEBOT</a></td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">/sol_staff_name</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05); color:#38BDF8;">/sol_aung_la_pyae_oo</td></tr>
+              <tr><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">📅 Daily Plan</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);"><a href="https://t.me/SEARCHTNITASKWOBOT" target="_blank" style="color:#38BDF8;">@SEARCHTNITASKWOBOT</a></td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">/plan</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05); color:#38BDF8;">/plan</td></tr>
+              <tr><td style="padding:0.45rem;">👤 Attendance</td><td style="padding:0.45rem;">Attendance Bot</td><td style="padding:0.45rem;">/attendance or selfie</td><td style="padding:0.45rem; color:#38BDF8;">/attendance</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(239,68,68,0.3); border-radius:14px; padding:1rem; margin-bottom:1rem;">
+          <h4 style="color:#F87171; font-weight:700; margin-bottom:0.6rem;">🔴 CONTROL — Operations Management</h4>
+          <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+            <thead><tr style="background:rgba(239,68,68,0.2);"><th style="padding:0.5rem; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Task</th><th style="padding:0.5rem; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Bot</th><th style="padding:0.5rem; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Command</th><th style="padding:0.5rem; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Description</th></tr></thead>
+            <tbody>
+              <tr><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">📊 All Reports</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">Auto</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">—</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">Receives Reports 1-6 combined</td></tr>
+              <tr><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">📋 WO Not Closed</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);"><a href="https://t.me/SEARCHTNITASKWOBOT" target="_blank" style="color:#38BDF8;">@SEARCHTNITASKWOBOT</a></td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">/t1notclose … /t4notclose</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">List unclosed WOs per team</td></tr>
+              <tr><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">⏳ WO Wait CD</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);"><a href="https://t.me/SEARCHTNITASKWOBOT" target="_blank" style="color:#38BDF8;">@SEARCHTNITASKWOBOT</a></td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">/t1waitcd … /t4waitcd</td><td style="padding:0.45rem; border-bottom:1px solid rgba(255,255,255,0.05);">WOs awaiting close date</td></tr>
+              <tr><td style="padding:0.45rem;">🔄 Refresh Clear</td><td style="padding:0.45rem;"><a href="https://t.me/TNICLEARSITEBOT" target="_blank" style="color:#34D399;">@TNICLEARSITEBOT</a></td><td style="padding:0.45rem;">/refresh</td><td style="padding:0.45rem;">Force update site clear list</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:1rem; margin-bottom:1rem;">
+          <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(245,158,11,0.3); border-radius:14px; padding:1rem;">
+            <h4 style="color:#FBBF24; font-weight:700; margin-bottom:0.5rem;">⛽ Refuel Group 9</h4>
+            <div style="font-size:0.82rem; line-height:1.7;"><div>• Refuel plan: <span style="color:#38BDF8;">Team 2: TNI0385=220L</span></div><div>• Auto: Refuel Reports 1, 2, 4</div></div>
+          </div>
+          <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(16,185,129,0.3); border-radius:14px; padding:1rem;">
+            <h4 style="color:#34D399; font-weight:700; margin-bottom:0.5rem;">🔌 Cable Group</h4>
+            <div style="font-size:0.82rem; line-height:1.7;"><div>• Auto: Cable Daily Report</div><div>• Schedule: 05:56 &amp; 15:56 MMT</div></div>
+          </div>
+          <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(168,85,247,0.3); border-radius:14px; padding:1rem;">
+            <h4 style="color:#C084FC; font-weight:700; margin-bottom:0.5rem;">🏗️ Construction T1-T4</h4>
+            <div style="font-size:0.82rem; line-height:1.7;"><div>• Progress: <span style="color:#38BDF8;">Pro TNIxxxx</span></div><div>• Material: <span style="color:#38BDF8;">/team_received_material</span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: All Bot Commands -->
+      <div style="margin-top:1.5rem;">
+        <h3 style="color:#F59E0B; font-weight:800; font-size:1.1rem; margin-bottom:0.8rem;"><i class="fa-solid fa-robot"></i> ALL BOTS &amp; COMMANDS</h3>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:1rem;">
+          <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(56,189,248,0.3); border-radius:14px; padding:1rem;">
+            <h4 style="color:#38BDF8; font-weight:700; margin-bottom:0.5rem;">🔍 <a href="https://t.me/SEARCHTNITASKWOBOT" target="_blank" style="color:#38BDF8;">@SEARCHTNITASKWOBOT</a></h4>
+            <div style="font-size:0.8rem; line-height:1.8;">
+              <div><code style="background:rgba(56,189,248,0.15); padding:2px 6px; border-radius:4px;">TNIxxxx</code> — Quick search</div>
+              <div><code style="background:rgba(56,189,248,0.15); padding:2px 6px; border-radius:4px;">Info: TNIxxxx</code> — Full info</div>
+              <div><code style="background:rgba(56,189,248,0.15); padding:2px 6px; border-radius:4px;">/t1notclose</code> — Unclosed WOs</div>
+              <div><code style="background:rgba(56,189,248,0.15); padding:2px 6px; border-radius:4px;">/t1waitcd</code> — Wait close date</div>
+              <div><code style="background:rgba(56,189,248,0.15); padding:2px 6px; border-radius:4px;">/plan</code> — Submit plan</div>
+              <div><code style="background:rgba(56,189,248,0.15); padding:2px 6px; border-radius:4px;">/myid</code> — Get Telegram ID</div>
+              <div><code style="background:rgba(56,189,248,0.15); padding:2px 6px; border-radius:4px;">/mydata</code> — View your data</div>
+              <div><code style="background:rgba(56,189,248,0.15); padding:2px 6px; border-radius:4px;">/help</code> — Help</div>
+            </div>
+          </div>
+          <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(251,146,60,0.3); border-radius:14px; padding:1rem;">
+            <h4 style="color:#FB923C; font-weight:700; margin-bottom:0.5rem;">📦 <a href="https://t.me/TNIASSETorderREQUEST_BOT" target="_blank" style="color:#FB923C;">@TNIASSETorderREQUEST_BOT</a></h4>
+            <div style="font-size:0.8rem; line-height:1.8;">
+              <div><code style="background:rgba(251,146,60,0.15); padding:2px 6px; border-radius:4px;">Order</code> — Request material</div>
+              <div><code style="background:rgba(251,146,60,0.15); padding:2px 6px; border-radius:4px;">Revoke</code> — Return material</div>
+              <div><code style="background:rgba(251,146,60,0.15); padding:2px 6px; border-radius:4px;">Export</code> — Export equipment</div>
+              <div><code style="background:rgba(251,146,60,0.15); padding:2px 6px; border-radius:4px;">Move</code> — Move equipment</div>
+              <div><code style="background:rgba(251,146,60,0.15); padding:2px 6px; border-radius:4px;">Destroys</code> — Destroy</div>
+              <div><code style="background:rgba(251,146,60,0.15); padding:2px 6px; border-radius:4px;">Loss fuel</code> — Fuel loss</div>
+              <div><code style="background:rgba(251,146,60,0.15); padding:2px 6px; border-radius:4px;">Inventory oil</code> — Oil check</div>
+              <div><code style="background:rgba(251,146,60,0.15); padding:2px 6px; border-radius:4px;">Vcm order to Mytel</code> — VCM</div>
+              <div style="color:#FBBF24; margin-top:0.3rem;">📸 Reply photo to ✅ to attach</div>
+            </div>
+          </div>
+          <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(16,185,129,0.3); border-radius:14px; padding:1rem;">
+            <h4 style="color:#34D399; font-weight:700; margin-bottom:0.5rem;">📋 <a href="https://t.me/TNICLEARSITEBOT" target="_blank" style="color:#34D399;">@TNICLEARSITEBOT</a></h4>
+            <div style="font-size:0.8rem; line-height:1.8;">
+              <div><code style="background:rgba(16,185,129,0.15); padding:2px 6px; border-radius:4px;">/sol_staff_name</code> — Template</div>
+              <div><code style="background:rgba(16,185,129,0.15); padding:2px 6px; border-radius:4px;">TNIxxxx Solution: desc</code> — Submit</div>
+              <div><code style="background:rgba(16,185,129,0.15); padding:2px 6px; border-radius:4px;">/refresh</code> — Refresh list</div>
+              <div><code style="background:rgba(16,185,129,0.15); padding:2px 6px; border-radius:4px;">/menu</code> — Sync menu</div>
+            </div>
+          </div>
+          <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(239,68,68,0.3); border-radius:14px; padding:1rem;">
+            <h4 style="color:#F87171; font-weight:700; margin-bottom:0.5rem;">📡 <a href="https://t.me/tni_site_down_bot" target="_blank" style="color:#F87171;">@tni_site_down_bot</a></h4>
+            <div style="font-size:0.8rem; line-height:1.8;">
+              <div>🔄 <b>Auto every 30 min</b> (:06 &amp; :36)</div>
+              <div>Msg 1 — Site detail per team</div>
+              <div>Msg 2 — Summary matrix</div>
+              <div style="color:#FBBF24; margin-top:0.3rem;">⏱️ Skip data &gt; 30 min old</div>
+            </div>
+          </div>
+          <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(168,85,247,0.3); border-radius:14px; padding:1rem;">
+            <h4 style="color:#C084FC; font-weight:700; margin-bottom:0.5rem;">🏗️ <a href="https://t.me/TNI_SITE_BOT" target="_blank" style="color:#C084FC;">@TNI_SITE_BOT</a> (Bot 10 Construction)</h4>
+            <div style="font-size:0.8rem; line-height:1.7;">
+              <div><code style="background:rgba(168,85,247,0.15); padding:2px 6px; border-radius:4px;">/plan</code> — Kế hoạch trước khi ra trạm (TIMEMARK)</div>
+              <div><code style="background:rgba(168,85,247,0.15); padding:2px 6px; border-radius:4px;">/delivery</code> — Giao vật tư ra hiện trường</div>
+              <div><code style="background:rgba(168,85,247,0.15); padding:2px 6px; border-radius:4px;">/team_received_material</code> — Nhận vật tư (1 mua + 1 bàn giao)</div>
+              <div><code style="background:rgba(168,85,247,0.15); padding:2px 6px; border-radius:4px;">/upgraded</code> — Nâng cấp trạm xong (Route GPS lat/long)</div>
+              <div><code style="background:rgba(168,85,247,0.15); padding:2px 6px; border-radius:4px;">/degraded</code> — Hạ cấp thiết bị khỏi trạm</div>
+              <div><code style="background:rgba(168,85,247,0.15); padding:2px 6px; border-radius:4px;">/revoked_material</code> — Thu hồi vật tư về kho (RRU cần Jack+Module)</div>
+              <div><code style="background:rgba(168,85,247,0.15); padding:2px 6px; border-radius:4px;">/solared</code> — Lắp Solar hoàn thành</div>
+              <div><code style="background:rgba(168,85,247,0.15); padding:2px 6px; border-radius:4px;">/5g_installation_completed</code> — Hoàn thành 5G (AAU, module25G, CPRI...)</div>
+              <div><code style="background:rgba(168,85,247,0.15); padding:2px 6px; border-radius:4px;">/cable_route_over_head_progress</code> — Cáp trên không đang làm</div>
+              <div><code style="background:rgba(168,85,247,0.15); padding:2px 6px; border-radius:4px;">/cable_route_over_head_completed</code> — Cáp trên không hoàn thành</div>
+              <div><code style="background:rgba(168,85,247,0.15); padding:2px 6px; border-radius:4px;">/cable_route_under_ground_progress</code> — Cáp ngầm đang làm</div>
+              <div><code style="background:rgba(168,85,247,0.15); padding:2px 6px; border-radius:4px;">/cable_route_under_ground_completed</code> — Cáp ngầm hoàn thành</div>
+              <div><code style="background:rgba(168,85,247,0.15); padding:2px 6px; border-radius:4px;">/template</code> — Xem tất cả mẫu báo cáo | <code style="background:rgba(168,85,247,0.15); padding:2px 6px; border-radius:4px;">/refresh</code> — Xóa cache làm mới mẫu</div>
+              <div style="color:#FBBF24; margin-top:0.3rem;">⚠️ Bắt buộc gửi ảnh TIMEMARK (giờ + tên trạm) + Route GPS lat/long</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Report Schedule -->
+      <div style="margin-top:1.5rem;">
+        <h3 style="color:#F59E0B; font-weight:800; font-size:1.1rem; margin-bottom:0.8rem;"><i class="fa-solid fa-clock"></i> DAILY AUTO REPORT SCHEDULE (Myanmar Time)</h3>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:1rem;">
+          <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(251,191,36,0.3); border-radius:14px; padding:1rem;">
+            <h4 style="color:#FBBF24; font-weight:700; margin-bottom:0.5rem;">☀️ Morning (05:00 - 10:00)</h4>
+            <div style="font-size:0.78rem; line-height:1.9;">
+              <div><b style="color:#38BDF8;">05:46</b> — Reports 1,2,3 + BOD</div><div><b style="color:#38BDF8;">05:51</b> — Report 4 EOD</div><div><b style="color:#38BDF8;">05:56</b> — Cable Report</div><div><b style="color:#38BDF8;">06:06</b> — Plan Morning</div><div><b style="color:#38BDF8;">07:18</b> — Site Clear</div><div><b style="color:#38BDF8;">08:48</b> — Note Read (Ca 1)</div>
+            </div>
+          </div>
+          <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(99,102,241,0.3); border-radius:14px; padding:1rem;">
+            <h4 style="color:#818CF8; font-weight:700; margin-bottom:0.5rem;">🌤️ Afternoon (13:00 - 16:30)</h4>
+            <div style="font-size:0.78rem; line-height:1.9;">
+              <div><b style="color:#38BDF8;">13:06</b> — Refuel Request</div><div><b style="color:#38BDF8;">14:58</b> — Note Read (Ca 2)</div><div><b style="color:#38BDF8;">15:46</b> — Reports 1,2,3 + BOD</div><div><b style="color:#38BDF8;">15:56</b> — Cable Report</div>
+            </div>
+          </div>
+          <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(168,85,247,0.3); border-radius:14px; padding:1rem;">
+            <h4 style="color:#C084FC; font-weight:700; margin-bottom:0.5rem;">🌙 Evening (17:00 - 22:30)</h4>
+            <div style="font-size:0.78rem; line-height:1.9;">
+              <div><b style="color:#38BDF8;">18:41</b> — Plan EOD</div><div><b style="color:#38BDF8;">19:41</b> — Note Read (Ca 3)</div><div><b style="color:#38BDF8;">22:06</b> — Plan Evening</div>
+              <div style="color:#FBBF24; margin-top:0.3rem;">🔄 Site Down: every 30min all day</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4: New User Onboarding -->
+      <div style="margin-top:1.5rem;">
+        <h3 style="color:#F59E0B; font-weight:800; font-size:1.1rem; margin-bottom:0.8rem;"><i class="fa-solid fa-user-plus"></i> NEW USER — 4 Steps to Start</h3>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1rem;">
+          <div style="background:linear-gradient(135deg, rgba(99,102,241,0.15), rgba(99,102,241,0.05)); border:1px solid rgba(99,102,241,0.3); border-radius:14px; padding:1rem; text-align:center;">
+            <div style="font-size:2rem;">1️⃣</div><h4 style="color:#818CF8; font-weight:700;">Join Group</h4><div style="font-size:0.8rem; color:#94A3B8;">Join your team group T1/T2/T3/T4</div>
+          </div>
+          <div style="background:linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05)); border:1px solid rgba(16,185,129,0.3); border-radius:14px; padding:1rem; text-align:center;">
+            <div style="font-size:2rem;">2️⃣</div><h4 style="color:#34D399; font-weight:700;">Click Bots Above</h4><div style="font-size:0.8rem; color:#94A3B8;">Open each bot link → Send /start</div>
+          </div>
+          <div style="background:linear-gradient(135deg, rgba(251,146,60,0.15), rgba(251,146,60,0.05)); border:1px solid rgba(251,146,60,0.3); border-radius:14px; padding:1rem; text-align:center;">
+            <div style="font-size:2rem;">3️⃣</div><h4 style="color:#FB923C; font-weight:700;">Get Your ID</h4><div style="font-size:0.8rem; color:#94A3B8;">Send /myid to Search Bot</div>
+          </div>
+          <div style="background:linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.05)); border:1px solid rgba(239,68,68,0.3); border-radius:14px; padding:1rem; text-align:center;">
+            <div style="font-size:2rem;">4️⃣</div><h4 style="color:#F87171; font-weight:700;">Read Daily Notes</h4><div style="font-size:0.8rem; color:#94A3B8;">Bot tracks who read EOD Notes</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 5: Mandatory Rule -->
+      <div style="margin-top:1.5rem; background:linear-gradient(135deg, rgba(239,68,68,0.1), rgba(239,68,68,0.03)); border:2px solid rgba(239,68,68,0.4); border-radius:14px; padding:1.2rem;">
+        <h3 style="color:#F87171; font-weight:800; font-size:1rem; margin-bottom:0.6rem;"><i class="fa-solid fa-triangle-exclamation"></i> RULE — Update This Guide When Adding New Features</h3>
+        <div style="font-size:0.82rem; line-height:1.8;">
+          <div>✅ Add to <b>WHO USES WHAT</b> table</div>
+          <div>✅ Add commands to <b>ALL BOTS</b> cards</div>
+          <div>✅ Add to <b>REPORT SCHEDULE</b> if auto report</div>
+          <div>✅ Update <b>system_map.md</b> + <b>AGENTS.md</b></div>
+          <div>✅ Update <b>Last Updated</b> date at top</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. GMAIL ACCESS CONTROL & ROLE PERMISSION PANEL -->
+
     <!-- 5. GMAIL ACCESS CONTROL & ROLE PERMISSION PANEL -->
     <div id="access-control-panel" class="tab-panel">
       <div class="section-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
@@ -3445,7 +3798,7 @@ Team04>> 2Box</td>
         <label style="display:block; font-weight:700; color:#F8FAFC; margin-bottom:0.4rem; font-size:0.88rem;">
           <i class="fa-solid fa-envelope" style="color:var(--cyan);"></i> Danh sách Gmail (Dán 1 hoặc hàng loạt cách nhau bằng Xuống dòng / Dấu phẩy):
         </label>
-        <textarea id="newGmailInput" class="form-input" rows="3" placeholder="Dán danh sách Gmail tại đây...&#10;Ví dụ:&#10;htoolaynyaw@gmail.com&#10;director@mytel.com.mm, technical@gmail.com" style="width:100%; background:#1E293B; border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:0.6rem 0.9rem; color:#fff; font-size:0.92rem; font-family:monospace; resize:vertical;"></textarea>
+        <textarea id="newGmailInput" class="form-input" rows="3" placeholder="Dán danh sách Gmail tại đây...&#10;Ví dụ:&#10;coadmin@tni.com&#10;director@mytel.com.mm, technical@gmail.com" style="width:100%; background:#1E293B; border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:0.6rem 0.9rem; color:#fff; font-size:0.92rem; font-family:monospace; resize:vertical;"></textarea>
       </div>
 
       <!-- Quick Group Presets -->
@@ -3564,8 +3917,8 @@ Team04>> 2Box</td>
 
     /* 🔐 GMAIL ACCESS CONTROL & MULTI-PERMISSION PERSISTENCE */
     const DEFAULT_GMAIL_ACCOUNTS = [
-      { email: "phonghdpxd@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "AUTH"], date: "15/08/2026" },
-      { email: "htoolaynyaw@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "AUTH"], date: "15/08/2026" },
+      { email: "admin@tni.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "AUTH"], date: "15/08/2026" },
+      { email: "coadmin@tni.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "AUTH"], date: "15/08/2026" },
       { email: "bod.director@mytel.com.mm", perms: ["EXEC", "BOD"], date: "15/08/2026" },
       { email: "tni.technical@gmail.com", perms: ["DEPT", "WO", "PLAN"], date: "15/08/2026" },
       { email: "tni.operations@mytel.com.mm", perms: ["EXEC", "DEPT", "WO", "PLAN"], date: "15/08/2026" },
@@ -4464,7 +4817,7 @@ Team04>> 2Box</td>
         }
         
         try {
-          const email = this.userEmail || localStorage.getItem('tni_plan_dep_email') || 'phonghdpxd@gmail.com';
+          const email = this.userEmail || localStorage.getItem('tni_plan_dep_email') || 'admin@tni.com';
           const resp = await fetch(this.GAS_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -4494,7 +4847,7 @@ Team04>> 2Box</td>
       // ── Delete Row (CHỈ ADMIN MỚI CÓ QUYỀN XÓA) ──
       async deleteRow(row, btnEl) {
         if (!confirm('Are you sure you want to delete this plan item?')) return;
-        const email = this.userEmail || localStorage.getItem('tni_plan_dep_email') || 'phonghdpxd@gmail.com';
+        const email = this.userEmail || localStorage.getItem('tni_plan_dep_email') || 'admin@tni.com';
         
         // Optimistic UI: làm mờ hàng và đổi icon đang xóa để người dùng không phải chờ
         const tr = btnEl ? btnEl.closest('tr') : null;
@@ -4845,7 +5198,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const logs = JSON.parse(localStorage.getItem('tni_secretary_audit_log') || '[]');
         const entry = {
           time: new Date().toLocaleString('vi-VN'),
-          user: localStorage.getItem('tni_plan_dep_email') || 'phonghdpxd@gmail.com',
+          user: localStorage.getItem('tni_plan_dep_email') || 'admin@tni.com',
           query: query,
           intent: intent,
           risk: riskLevel || "NORMAL"

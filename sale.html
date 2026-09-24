@@ -652,8 +652,8 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
       <!-- Header đỏ theo hình ảnh đính kèm -->
       <div>
         <div style="font-size:16px;font-weight:900;color:#dc2626;letter-spacing:0.5px">VIETTEL CONSTRUCTION MYANMAR COMPANY LIMITED</div>
-        <div style="font-size:12px;color:#334155;margin-top:3px"><b>A:</b> No 1237 Waizanyantar Street, South Okkalapa, Yangon, Myanmar</div>
-        <div style="font-size:12px;color:#334155;margin-top:2px"><b>W:</b> www.viettelconstructionmyanmar.com &nbsp;&nbsp;|&nbsp;&nbsp; <b>H:</b> 0965 1900 009</div>
+        <div style="font-size:12px;color:#334155;margin-top:3px"><b>A:</b> Văn Phòng Đại Diện TNI Myanmar</div>
+        <div style="font-size:12px;color:#334155;margin-top:2px"><b>W:</b> www.viettelconstructionmyanmar.com &nbsp;&nbsp;|&nbsp;&nbsp; <b>H:</b> 0965 000 003</div>
       </div>
       <div style="text-align:right">
         <span class="bk bk-bl" style="font-size:12px;padding:4px 10px;font-weight:700">TNI SOLAR OFFICIAL QUOTATION</span>
@@ -666,7 +666,7 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <label style="font-size:12px;font-weight:600;color:#1e3a8a;display:flex;align-items:center;gap:4px">
           👤 Đang xem với tư cách (Staff / Gmail):
-          <input id="qs-filter-user" value="Zin Ko Ko" placeholder="Tên nhân viên hoặc Gmail..." style="padding:4px 8px;border:1px solid #94a3b8;border-radius:5px;font-size:12px;width:180px;font-weight:bold;color:#1e293b" onchange="filterQuotesByUser()"/>
+          <input id="qs-filter-user" value="Staff Sales 01" placeholder="Tên nhân viên hoặc Gmail..." style="padding:4px 8px;border:1px solid #94a3b8;border-radius:5px;font-size:12px;width:180px;font-weight:bold;color:#1e293b" onchange="filterQuotesByUser()"/>
         </label>
         <button class="btn b-bl b-xs" onclick="filterQuotesByUser()">🔍 Lọc Báo Giá</button>
         <button class="btn b-out b-xs" onclick="document.getElementById('qs-filter-user').value='all';filterQuotesByUser()">👥 Xem Tất Cả (Admin)</button>
@@ -694,7 +694,7 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
           </h3>
           <div style="display:flex;gap:6px">
             <button class="btn b-out b-sm" onclick="resetNewSolarQuote()">➕ Tạo Báo Giá Mới</button>
-            <button class="btn b-yw b-sm" onclick="presetSolar('zinkoko')">⭐ Mẫu Chuẩn 6kW (Zin Ko Ko)</button>
+            <button class="btn b-yw b-sm" onclick="presetSolar('staffsales01')">⭐ Mẫu Chuẩn 6kW (Staff Sales 01)</button>
           </div>
         </div>
       </div>
@@ -702,14 +702,14 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
         <!-- THÔNG TIN CHUNG CỦA BÁO GIÁ -->
         <div class="fg">
           <div class="f"><label>Mã Báo Giá (Quote Ref)</label><input id="qs-code" value="VCM-07-02" placeholder="VD: VCM-07-02" style="font-weight:bold;color:#1e40af"/></div>
-          <div class="f"><label>Tên Khách Hàng (Mr/Ms) *</label><input id="qs-kh" value="Zin Ko Ko" placeholder="Tên khách hàng"/></div>
+          <div class="f"><label>Tên Khách Hàng (Mr/Ms) *</label><input id="qs-kh" value="Staff Sales 01" placeholder="Tên khách hàng"/></div>
           <div class="f"><label>Điện Thoại Khách</label><input id="qs-dt" placeholder="09xxxxxxx"/></div>
           <div class="f"><label>Gmail / Email Khách</label><input id="qs-email" placeholder="customer@gmail.com"/></div>
           <div class="f"><label>Dự Án / Địa Chỉ Lắp Đặt</label><input id="qs-dc" placeholder="Yangon, Myanmar..."/></div>
           <div class="f"><label>Tiêu Đề / Subject</label><input id="qs-subj" value="6kW Solar System" placeholder="VD: 6kW Solar System"/></div>
           <div class="f"><label>Loại Hệ Thống</label><select id="qs-loai"><option selected>Hybrid (Hòa lưới + Dự trữ)</option><option>Hòa lưới (On-Grid)</option><option>Độc lập (Off-Grid)</option></select></div>
           <div class="f"><label>Công Suất (kWp)</label><input id="qs-cs" type="number" value="6" step="0.5"/></div>
-          <div class="f"><label>Nhân Viên Lập (Staff)</label><input id="qs-nlbg" value="Zin Ko Ko" placeholder="Tên nhân viên"/></div>
+          <div class="f"><label>Nhân Viên Lập (Staff)</label><input id="qs-nlbg" value="Staff Sales 01" placeholder="Tên nhân viên"/></div>
           <div class="f"><label>Mã NV / Phòng Ban</label><input id="qs-staffid" value="NV001" placeholder="Mã NV"/></div>
           <div class="f"><label>Ngày Báo Giá</label><input id="qs-ngay" type="date"/></div>
           <div class="f"><label>Hiệu Lực (ngày)</label><input id="qs-hl" type="number" value="15"/></div>
@@ -732,7 +732,7 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
             <b style="font-size:13px;color:#1e3a8a">📦 Bảng Vật Tư &amp; Giá Cả (Có thể chỉnh sửa giá trực tiếp):</b>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               <button class="btn b-bl b-xs" onclick="addSolarItemRow()">+ Thêm dòng vật tư</button>
-              <button class="btn b-sm" style="background:#fef08a;color:#854d0e;font-size:11px;font-weight:700" onclick="presetSolar('zinkoko')">⭐ Mẫu 6kW TNI (Sept.17)</button>
+              <button class="btn b-sm" style="background:#fef08a;color:#854d0e;font-size:11px;font-weight:700" onclick="presetSolar('staffsales01')">⭐ Mẫu 6kW TNI (Sept.17)</button>
               <button class="btn b-sm" style="background:#dcfce7;color:#15803d;font-size:11px;font-weight:700" onclick="presetSolar('kawthoung16k')">⭐ Mẫu 16kW (Kawthoung)</button>
               <button class="btn b-sm" style="background:#fef9c3;color:#854d0e;font-size:11px" onclick="presetSolar('ongrid5k')">Bộ 5kW OnGrid</button>
               <button class="btn b-sm" style="background:#fef9c3;color:#854d0e;font-size:11px" onclick="presetSolar('hybrid5k')">Bộ Hybrid 5kW</button>
@@ -873,10 +873,10 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
         <div class="fg" style="margin-top:6px">
           <div class="f"><label>Mã Dự Án / Hợp Đồng *</label><input id="acc-code" value="VCM-26-05" placeholder="VD: VCM-26-05" style="font-weight:bold;color:#047857"/></div>
           <div class="f"><label>Tên Khách Hàng (Mr/Ms) *</label><input id="acc-kh" value="Kawthoung Hotel &amp; Resort" placeholder="Tên khách hàng"/></div>
-          <div class="f"><label>Số Điện Thoại</label><input id="acc-dt" value="0965 1900 009" placeholder="09xxxxxxx"/></div>
+          <div class="f"><label>Số Điện Thoại</label><input id="acc-dt" value="0965 000 003" placeholder="09xxxxxxx"/></div>
           <div class="f"><label>Địa Chỉ Công Trình</label><input id="acc-dc" value="Kawthoung, Tanintharyi Region" placeholder="Địa chỉ lắp đặt..."/></div>
           <div class="f"><label>Ngày Nghiệm Thu</label><input id="acc-date" type="date"/></div>
-          <div class="f"><label>Kỹ Sư Trưởng Phụ Trách</label><input id="acc-eng" value="Zin Ko Ko / Technical Team" placeholder="Kỹ sư thi công"/></div>
+          <div class="f"><label>Kỹ Sư Trưởng Phụ Trách</label><input id="acc-eng" value="Staff Sales 01 / Technical Team" placeholder="Kỹ sư thi công"/></div>
         </div>
 
         <!-- 2. ĐO ĐẠC THÔNG SỐ KỸ THUẬT HIỆN TRƯỜNG -->
@@ -1050,10 +1050,10 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px;background:#f0fdf4;padding:8px 12px;border-radius:6px;border:1px solid #bbf7d0">
       <span style="font-size:12px;font-weight:700;color:#166534">👤 Nhân Viên Phụ Trách:</span>
       <select id="tt-staff-sel" style="padding:5px 10px;border:1px solid #86efac;border-radius:5px;font-size:12px;font-weight:700;color:#166534" onchange="handleStaffChange(this.value)">
-        <option value="Zin Ko Ko">Zin Ko Ko (Kỹ Sư Trưởng Thi Công)</option>
+        <option value="Staff Sales 01">Staff Sales 01 (Kỹ Sư Trưởng Thi Công)</option>
         <option value="Min Paing">Min Paing (Kỹ Thuật Hiện Trường)</option>
-        <option value="Aung Thu">Aung Thu (Kỹ Thuật Lắp Đặt)</option>
-        <option value="Kyaw Swar">Kyaw Swar (Sale Thị Trường)</option>
+        <option value="Staff Warehouse 01">Staff Warehouse 01 (Kỹ Thuật Lắp Đặt)</option>
+        <option value="Staff Sales 02">Staff Sales 02 (Sale Thị Trường)</option>
         <option value="Zaw Win">Zaw Win (Khảo Sát &amp; Điểm Bán)</option>
       </select>
       <input id="tt-staff-custom" placeholder="Hoặc gõ tên nhân viên..." style="padding:5px 9px;border:1px solid #cbd5e1;border-radius:5px;font-size:12px;width:170px" oninput="handleStaffCustomInput(this.value)"/>
@@ -1183,7 +1183,7 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
               </select>
             </div>
             <div class="f"><label>Tên Trưởng Thôn / Đại Lý / Điểm Bán *</label>
-              <input id="vcon-name" placeholder="VD: U Kyaw Swar (Trưởng Thôn Palaw North)"/>
+              <input id="vcon-name" placeholder="VD: U Staff Sales 02 (Trưởng Thôn Palaw North)"/>
             </div>
             <div class="f"><label>Người Ký Nhận Hàng</label><input id="vcon-contact" placeholder="Họ tên người nhận"/></div>
             <div class="f"><label>Số Điện Thoại Liên Hệ *</label><input id="vcon-phone" placeholder="09xxxxxxx"/></div>
@@ -1275,7 +1275,7 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
               <option value="Bảo Hành / Lỗi Kỹ Thuật">🔴 Bảo Hành / Lỗi Kỹ Thuật</option>
             </select>
           </div>
-          <div class="f"><label>Vị Trí / Người Giữ / Tên Khách Hàng</label><input id="new-sn-holder" placeholder="Kho Kawthoung / Zin Ko Ko / Tên KH"/></div>
+          <div class="f"><label>Vị Trí / Người Giữ / Tên Khách Hàng</label><input id="new-sn-holder" placeholder="Kho Kawthoung / Staff Sales 01 / Tên KH"/></div>
           <div class="f"><label>Mã Dự Án / Báo Giá Kèm Theo</label><input id="new-sn-ref" placeholder="VCM-26-05 / QU-xxxx"/></div>
         </div>
         <div class="fa" style="margin-top:10px">
@@ -2198,7 +2198,7 @@ if (!localStorage.getItem('u_init')) {
   DB.add('nhap', {ten:'Solar Panel 400W Jinko',model:'JK-400M',serial:'SN003',dm:'Solar Panel',sl:20,gg:1800000,gb:2500000,ncc:'Jinko VN',ngay:td(),bh:12,gc:''});
   DB.add('nhap', {ten:'Inverter Growatt 5kW',model:'SPF-5000',serial:'SN004',dm:'Inverter',sl:3,gg:12000000,gb:17000000,ncc:'Growatt',ngay:td(),bh:24,gc:''});
   DB.add('nhap', {ten:'Ắc Quy GEL 100Ah',model:'GEL-100',serial:'SN005',dm:'Ắc Quy',sl:15,gg:3200000,gb:4500000,ncc:'Deco VN',ngay:td(),bh:12,gc:''});
-  DB.add('daily', {ten:'Điện Tử Minh Khoa',chu:'Khoa Nguyễn',dt:'0901234567',dc:'Q.7 HCM',kv:'TP.HCM',loai:'Đại lý cấp 1',ck:10});
+  DB.add('daily', {ten:'Điện Tử Minh Khoa',chu:'Khoa Nguyễn',dt:'0965 000 000',dc:'Q.7 HCM',kv:'TP.HCM',loai:'Đại lý cấp 1',ck:10});
   localStorage.setItem('u_init', '1');
 }
 
@@ -3373,9 +3373,9 @@ function presetSolar(type) {
       { ten: "Delivery", brand: "-", dv: "Lot", sl: 1, dg: 1160000, remark: "Depends on Site" }
     ];
     kawthoungItems.forEach(it => addSolarItemRow(it));
-  } else if (type === 'zinkoko') {
+  } else if (type === 'staffsales01') {
     document.getElementById('qs-code').value = 'VCM-07-02';
-    document.getElementById('qs-kh').value = 'Zin Ko Ko';
+    document.getElementById('qs-kh').value = 'Staff Sales 01';
     document.getElementById('qs-subj').value = '6kW Solar System';
     document.getElementById('qs-cs').value = '6';
     document.getElementById('qs-loai').value = 'Hybrid (Hòa lưới + Dự trữ)';
@@ -3468,7 +3468,7 @@ function saveSolarQuote(andPrint) {
 
   const total = rows.reduce((s, r) => s + r.sl * r.dg, 0);
   const curr = v('qs-curr') || 'Kyats';
-  const staff = v('qs-nlbg') || 'Zin Ko Ko';
+  const staff = v('qs-nlbg') || 'Staff Sales 01';
   const staffId = v('qs-staffid') || 'NV001';
   const shareTo = v('qs-shareto') || '';
   const email = v('qs-email') || '';
@@ -3646,7 +3646,7 @@ function loadSelectedQuote(quoteId) {
   document.getElementById('qs-subj').value = quote.subj || '6kW Solar System';
   document.getElementById('qs-loai').value = quote.loai || 'Hybrid (Hòa lưới + Dự trữ)';
   document.getElementById('qs-cs').value = quote.cs || '6';
-  document.getElementById('qs-nlbg').value = quote.nlbg || 'Zin Ko Ko';
+  document.getElementById('qs-nlbg').value = quote.nlbg || 'Staff Sales 01';
   document.getElementById('qs-staffid').value = quote.staffId || 'NV001';
   document.getElementById('qs-ngay').value = quote.ngay || td();
   document.getElementById('qs-hl').value = quote.hl || 15;
@@ -3717,7 +3717,7 @@ View Online Quotation:
 ${window.location.origin}/sale?quote=${quote.code || 'VCM-07-02'}&user=${encodeURIComponent(targetEmail)}
 
 Thank you for choosing Viettel Construction Myanmar!
-Hotline: 0965 1900 009 | Website: www.viettelconstructionmyanmar.com`
+Hotline: 0965 000 003 | Website: www.viettelconstructionmyanmar.com`
   );
 
   window.open(`mailto:${targetEmail}?subject=${subject}&body=${body}`, '_blank');
@@ -4312,7 +4312,7 @@ function viewQuote(type, id) {
   // BÁO GIÁ SOLAR CHÍNH THỨC — VIETTEL CONSTRUCTION MYANMAR & TIẾNG ANH CHỦ ĐẠO
   const d = DB.g('quotesolar').find(r => r.id == id) || {
     code: v('qs-code') || 'VCM-07-02',
-    kh: v('qs-kh') || 'Zin Ko Ko',
+    kh: v('qs-kh') || 'Staff Sales 01',
     dt: v('qs-dt') || '-',
     dc: v('qs-dc') || 'Yangon, Myanmar',
     subj: v('qs-subj') || '6kW Solar System',
@@ -4320,7 +4320,7 @@ function viewQuote(type, id) {
     cs: v('qs-cs') || '6',
     ngay: v('qs-ngay') || td(),
     hl: v('qs-hl') || 15,
-    nlbg: v('qs-nlbg') || 'Zin Ko Ko',
+    nlbg: v('qs-nlbg') || 'Staff Sales 01',
     currency: v('qs-curr') || 'Kyats',
     rows: [...document.getElementById('qs-table-body')?.children || []].map(tr => ({
       ten: tr.querySelector('.r-ten')?.value || '',
@@ -4483,7 +4483,7 @@ function viewQuote(type, id) {
     <div class="info-item"><b>Mr / Ms:</b> <span style="font-weight:bold">${d.kh || '-'}</span></div>
     <div class="info-item"><b>Validity:</b> <span>${d.hl || 15} Days</span></div>
     <div class="info-item"><b>Phone Number:</b> <span>${d.dt || '-'}</span></div>
-    <div class="info-item"><b>Prepared By:</b> <span>${d.nlbg || 'Zin Ko Ko'}</span></div>
+    <div class="info-item"><b>Prepared By:</b> <span>${d.nlbg || 'Staff Sales 01'}</span></div>
     <div class="info-item"><b>Project / Site:</b> <span>${d.dc || '-'}</span></div>
     <div class="info-item"><b>System Type:</b> <span>${d.loai || 'Hybrid'} (${d.cs || 6} kWp)</span></div>
     <div class="info-item" style="grid-column:1/-1"><b>Subject:</b> <span style="font-weight:600">${d.subj || (d.cs ? d.cs + 'kW Solar System' : 'Solar System')}</span></div>
@@ -5953,10 +5953,10 @@ function toggleAccAdminFin() {
 function presetSampleAcceptance() {
   document.getElementById('acc-code').value = "VCM-26-05";
   document.getElementById('acc-kh').value = "Kawthoung Hotel & Resort";
-  document.getElementById('acc-dt').value = "0965 1900 009";
+  document.getElementById('acc-dt').value = "0965 000 003";
   document.getElementById('acc-dc').value = "Kawthoung, Tanintharyi Region, Myanmar";
   document.getElementById('acc-date').value = td();
-  document.getElementById('acc-eng').value = "Zin Ko Ko / Technical Team";
+  document.getElementById('acc-eng').value = "Staff Sales 01 / Technical Team";
   document.getElementById('acc-volt').value = "220";
   document.getElementById('acc-kwp').value = "15.8";
   document.getElementById('acc-soc').value = "98%";
@@ -6252,10 +6252,10 @@ function printAcceptanceDoc(id) {
   const r = (id ? list.find(item => item.id == id) : null) || {
     code: v('acc-code') || 'VCM-26-05',
     kh: v('acc-kh') || 'Kawthoung Hotel & Resort',
-    dt: v('acc-dt') || '0965 1900 009',
+    dt: v('acc-dt') || '0965 000 003',
     dc: v('acc-dc') || 'Kawthoung, Tanintharyi Region',
     dateStr: v('acc-date') || td(),
-    eng: v('acc-eng') || 'Zin Ko Ko / Technical Team',
+    eng: v('acc-eng') || 'Staff Sales 01 / Technical Team',
     volt: v('acc-volt') || '220',
     kwp: v('acc-kwp') || '15.8',
     soc: v('acc-soc') || '98%',
@@ -6338,7 +6338,7 @@ function printAcceptanceDoc(id) {
   <div class="header-box">
     <div>
       <div class="co-name">VIETTEL CONSTRUCTION MYANMAR &bull; TNI TECH &amp; ENERGY</div>
-      <div class="co-info">No 1237 Waizanyantar Street, South Okkalapa, Yangon, Myanmar | Hotline: 0965 1900 009</div>
+      <div class="co-info">Văn Phòng Đại Diện TNI Myanmar | Hotline: 0965 000 003</div>
       <div class="co-info">Website: www.viettelconstructionmyanmar.com &bull; Tanintharyi Energy Center</div>
     </div>
     <div style="text-align:right">
@@ -6496,13 +6496,13 @@ function printAcceptanceDoc(id) {
 // 🚀 FIELD OPERATIONS HUB ENGINE (CỔNG ĐIỀU HÀNH TEAM THỰC THI) — RULE PM-42
 // ═══════════════════════════════════════════════════════════════════════════════
 
-let currentFieldStaff = 'Zin Ko Ko';
+let currentFieldStaff = 'Staff Sales 01';
 
 function getCurrentStaff() {
   const custom = (document.getElementById('tt-staff-custom')?.value || '').trim();
   if (custom) return custom;
   const sel = document.getElementById('tt-staff-sel')?.value;
-  return sel || currentFieldStaff || 'Zin Ko Ko';
+  return sel || currentFieldStaff || 'Staff Sales 01';
 }
 
 function updateStaffLinkDisplay() {
@@ -6542,7 +6542,7 @@ function handleStaffCustomInput(val) {
     currentFieldStaff = val.trim();
   } else {
     const sel = document.getElementById('tt-staff-sel');
-    currentFieldStaff = sel ? sel.value : 'Zin Ko Ko';
+    currentFieldStaff = sel ? sel.value : 'Staff Sales 01';
   }
   updateStaffLinkDisplay();
   renderStaffCustomerHistory();
@@ -6740,8 +6740,8 @@ let currentEditingVconId = null;
 function handleVconChannelChange(val) {
   const nameEl = document.getElementById('vcon-name');
   if (nameEl) {
-    if (val.includes('Trưởng Thôn')) nameEl.placeholder = 'VD: U Kyaw Swar (Trưởng Thôn Palaw North)';
-    else if (val.includes('Đại Lý')) nameEl.placeholder = 'VD: Đại Lý Điện Nước Dawei Solar Hub';
+    if (val.includes('Trưởng Thôn')) nameEl.placeholder = 'VD: U Staff Sales 02 (Trưởng Thôn Palaw North)';
+    else if (val.includes('Đại Lý')) nameEl.placeholder = 'VD: Đại Lý Ủy Quyền 01';
     else nameEl.placeholder = 'VD: Cửa Hàng Tạp Hóa Bokpyin Central';
   }
 }
@@ -7272,11 +7272,11 @@ function seedSampleFieldOpsDataIfEmpty() {
       {
         id: 1726000001001,
         kh: 'U Aung San (Xưởng May Kawthoung)',
-        dt: '0945 112 334',
+        dt: '0965 000 008',
         dc: 'Khu Công Nghiệp Cảng Kawthoung, Tanintharyi',
         gps: '9.9832, 98.5491',
         dateStr: td(),
-        eng: 'Zin Ko Ko',
+        eng: 'Staff Sales 01',
         roof: 'Mái Tôn (Tin Roof)',
         orient: 'Hướng Nam (180°) - Tối Ưu',
         grid: 'Điện lưới chập chờn / Cúp thường xuyên',
@@ -7291,7 +7291,7 @@ function seedSampleFieldOpsDataIfEmpty() {
       {
         id: 1726000001002,
         kh: 'Daw Than Than Nu (Nhà Vườn Bokpyin)',
-        dt: '0979 889 123',
+        dt: '0965 000 009',
         dc: 'Thôn Thabawleik, Bokpyin Township',
         gps: '11.1645, 98.7712',
         dateStr: td(),
@@ -7318,11 +7318,11 @@ function seedSampleFieldOpsDataIfEmpty() {
       {
         id: 1726000002001,
         channel: 'Ký Gởi Trưởng Thôn / Già Làng (Village Headman)',
-        name: 'U Kyaw Swar (Trưởng Thôn Palaw North)',
-        contact: 'U Kyaw Swar',
-        phone: '0978 223 991',
+        name: 'U Staff Sales 02 (Trưởng Thôn Palaw North)',
+        contact: 'U Staff Sales 02',
+        phone: '0965 000 010',
         village: 'Thôn Palaw North, Tanintharyi',
-        staff: 'Zin Ko Ko',
+        staff: 'Staff Sales 01',
         product: 'Quạt Năng Lượng Mặt Trời 12V (Solar Fan)',
         qty: 6,
         serials: 'FAN-SOLAR-001, FAN-SOLAR-002, FAN-SOLAR-003, FAN-SOLAR-004, FAN-SOLAR-005, FAN-SOLAR-006',
@@ -7339,11 +7339,11 @@ function seedSampleFieldOpsDataIfEmpty() {
       {
         id: 1726000002002,
         channel: 'Đại Lý Phân Phối (Authorized Dealer)',
-        name: 'Đại Lý Điện Nước Dawei Solar Hub',
-        contact: 'Ko Aung Thu',
-        phone: '0965 334 112',
-        village: 'Thị Xã Dawei, Tanintharyi',
-        staff: 'Kyaw Swar',
+        name: 'Đại Lý Ủy Quyền 01',
+        contact: 'Ko Staff Warehouse 01',
+        phone: '0965 000 007',
+        village: 'Chi Nhánh TNI Region',
+        staff: 'Staff Sales 02',
         product: 'Inverter Hybrid Deye 5kW',
         qty: 2,
         serials: 'DEYE-5K-2026-091, DEYE-5K-2026-092',
@@ -7368,11 +7368,11 @@ function seedSampleFieldOpsDataIfEmpty() {
       { id: 101, sn: 'DEYE-15K-20260501', name: 'Inverter Hybrid Deye 15kW 3P', cat: 'Inverter', status: 'Đã Lắp Cho Khách Hàng', holder: 'Kawthoung Hotel & Resort', ref: 'VCM-26-05' },
       { id: 102, sn: 'CATL-320AH-88912', name: 'Pin Lưu Trữ Lithium 15.36kWh', cat: 'Pin Lưu Trữ (Battery)', status: 'Đã Lắp Cho Khách Hàng', holder: 'Kawthoung Hotel & Resort', ref: 'VCM-26-05' },
       { id: 103, sn: 'DEYE-8K-20260810', name: 'Inverter Hybrid Deye 8kW 1P', cat: 'Inverter', status: 'Trong Kho Chi Nhánh', holder: 'Kho Kawthoung', ref: 'NHẬP KHO LÔ 2' },
-      { id: 104, sn: 'DEYE-8K-20260811', name: 'Inverter Hybrid Deye 8kW 1P', cat: 'Inverter', status: 'Xuất Xe Kỹ Thuật / Đi Lắp', holder: 'Zin Ko Ko (Xe Ford Ranger)', ref: 'LẮP ĐẶT THABAWLEIK' },
+      { id: 104, sn: 'DEYE-8K-20260811', name: 'Inverter Hybrid Deye 8kW 1P', cat: 'Inverter', status: 'Xuất Xe Kỹ Thuật / Đi Lắp', holder: 'Staff Sales 01 (Xe Ford Ranger)', ref: 'LẮP ĐẶT THABAWLEIK' },
       { id: 105, sn: 'CATL-280AH-99104', name: 'Pin Lưu Trữ Lithium 14.33kWh', cat: 'Pin Lưu Trữ (Battery)', status: 'Trong Kho Chi Nhánh', holder: 'Kho Dawei', ref: 'NHẬP KHO LÔ 2' },
-      { id: 106, sn: 'FAN-SOLAR-001', name: 'Quạt Năng Lượng Mặt Trời 12V', cat: 'Quạt Solar / Đèn Solar', status: 'Ký Gởi Trưởng Thôn / Điểm Bán', holder: 'U Kyaw Swar (Trưởng Thôn Palaw North)', ref: 'KÝ GỞI TRƯỞNG THÔN' },
-      { id: 107, sn: 'FAN-SOLAR-002', name: 'Quạt Năng Lượng Mặt Trời 12V', cat: 'Quạt Solar / Đèn Solar', status: 'Ký Gởi Trưởng Thôn / Điểm Bán', holder: 'U Kyaw Swar (Trưởng Thôn Palaw North)', ref: 'KÝ GỞI TRƯỞNG THÔN' },
-      { id: 108, sn: 'DEYE-5K-2026-091', name: 'Inverter Hybrid Deye 5kW', cat: 'Inverter', status: 'Ký Gởi Trưởng Thôn / Điểm Bán', holder: 'Đại Lý Điện Nước Dawei Solar Hub', ref: 'BỎ HÀNG ĐẠI LÝ' },
+      { id: 106, sn: 'FAN-SOLAR-001', name: 'Quạt Năng Lượng Mặt Trời 12V', cat: 'Quạt Solar / Đèn Solar', status: 'Ký Gởi Trưởng Thôn / Điểm Bán', holder: 'U Staff Sales 02 (Trưởng Thôn Palaw North)', ref: 'KÝ GỞI TRƯỞNG THÔN' },
+      { id: 107, sn: 'FAN-SOLAR-002', name: 'Quạt Năng Lượng Mặt Trời 12V', cat: 'Quạt Solar / Đèn Solar', status: 'Ký Gởi Trưởng Thôn / Điểm Bán', holder: 'U Staff Sales 02 (Trưởng Thôn Palaw North)', ref: 'KÝ GỞI TRƯỞNG THÔN' },
+      { id: 108, sn: 'DEYE-5K-2026-091', name: 'Inverter Hybrid Deye 5kW', cat: 'Inverter', status: 'Ký Gởi Trưởng Thôn / Điểm Bán', holder: 'Đại Lý Ủy Quyền 01', ref: 'BỎ HÀNG ĐẠI LÝ' },
       { id: 109, sn: 'INV-DEYE-ERR-009', name: 'Inverter Hybrid Deye 5kW Cũ', cat: 'Inverter', status: 'Bảo Hành / Lỗi Kỹ Thuật', holder: 'Khu Kỹ Thuật Bảo Hành', ref: 'LỖI BOARD MẠCH' }
     ];
     DB.s('serial_inventory', serials);
@@ -7723,7 +7723,7 @@ const BILINGUAL_PAIRS = [
   ['📋 Chọn Báo Giá Cũ:', '📋 Select Past Quote:'],
   ['👁️ Xem & Sửa', '👁️ View & Edit'],
   ['➕ Tạo Báo Giá Mới', '➕ New Solar Quotation'],
-  ['⭐ Mẫu Chuẩn 6kW (Zin Ko Ko)', '⭐ 6kW Standard (Zin Ko Ko)'],
+  ['⭐ Mẫu Chuẩn 6kW (Staff Sales 01)', '⭐ 6kW Standard (Staff Sales 01)'],
   ['Mã Báo Giá (Quote Ref)', 'Quote Ref Code'],
   ['Tên Khách Hàng (Mr/Ms) *', 'Customer Name (Mr/Ms) *'],
   ['Điện Thoại Khách', 'Customer Phone'],
@@ -8099,7 +8099,7 @@ addQRow('qu-items');
 applyLang(currentLang);
 setCompanyRate(getCompanyRate());
 if (document.getElementById('qs-table-body') && document.getElementById('qs-table-body').children.length === 0) {
-  presetSolar('zinkoko');
+  presetSolar('staffsales01');
 }
 filterQuotesByUser();
 
@@ -8421,13 +8421,13 @@ const SYSTEM_MODULES = [
 ];
 
 const DEFAULT_STAFF_USERS = [
-  { id: 'ST001', name: 'Nguyễn Văn A', email: 'director@tni.com', role: 'admin', title: 'Giám Đốc Chi Nhánh', phone: '0965 1900 001' },
-  { id: 'ST002', name: 'Trần Thị B', email: 'accountant@tni.com', role: 'finance', title: 'Kế Toán Trưởng', phone: '0965 1900 002' },
-  { id: 'ST003', name: 'Zin Ko Ko', email: 'zinkoko@gmail.com', role: 'sales', title: 'Chuyên Viên Kinh Doanh Solar', phone: '0965 1900 009' },
-  { id: 'ST004', name: 'Min Min', email: 'minmin@gmail.com', role: 'tech', title: 'Kỹ Sư Trưởng Hiện Trường', phone: '0965 332 110' },
-  { id: 'ST005', name: 'Aung Thu', email: 'aungthu@gmail.com', role: 'warehouse', title: 'Thủ Kho Chi Nhánh', phone: '0965 889 004' },
-  { id: 'ST006', name: 'Kyaw Swar', email: 'kyawswar@gmail.com', role: 'sales', title: 'Nhân Viên Kinh Doanh', phone: '0965 776 223' },
-  { id: 'ST007', name: 'Đại Lý Dawei Solar Hub', email: 'daweisolar@hub.mm', role: 'dealer', title: 'Đại Lý Ủy Quyền Cấp 1', phone: '0965 334 112' }
+  { id: 'ST001', name: 'Nguyễn Văn A', email: 'director@tni.com', role: 'admin', title: 'Giám Đốc Chi Nhánh', phone: '0965 000 001' },
+  { id: 'ST002', name: 'Trần Thị B', email: 'accountant@tni.com', role: 'finance', title: 'Kế Toán Trưởng', phone: '0965 000 002' },
+  { id: 'ST003', name: 'Staff Sales 01', email: 'sales01@tni.com', role: 'sales', title: 'Chuyên Viên Kinh Doanh Solar', phone: '0965 000 003' },
+  { id: 'ST004', name: 'Staff Tech 01', email: 'tech01@tni.com', role: 'tech', title: 'Kỹ Sư Trưởng Hiện Trường', phone: '0965 000 004' },
+  { id: 'ST005', name: 'Staff Warehouse 01', email: 'warehouse01@tni.com', role: 'warehouse', title: 'Thủ Kho Chi Nhánh', phone: '0965 000 005' },
+  { id: 'ST006', name: 'Staff Sales 02', email: 'sales02@tni.com', role: 'sales', title: 'Nhân Viên Kinh Doanh', phone: '0965 000 006' },
+  { id: 'ST007', name: 'Đại Lý Ủy Quyền 01', email: 'dealer01@tni.com', role: 'dealer', title: 'Đại Lý Ủy Quyền Cấp 1', phone: '0965 000 007' }
 ];
 
 let currentAppRole = localStorage.getItem('tni_sale_role') || 'admin';
