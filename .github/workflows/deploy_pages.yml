@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy HTML Only to GitHub Pages
 
 on:
   push:
@@ -8,7 +8,6 @@ on:
       - 'index.html'
       - 'executive_dashboard.html'
       - 'assets/**'
-      - 'api/**'
   workflow_dispatch:
 
 permissions:
@@ -30,13 +29,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # ✅ CHỈ copy HTML + assets vào thư mục deploy — KHÔNG copy Python scripts
+      - name: Prepare safe publish folder (HTML only)
+        run: |
+          mkdir -p _site
+          cp sale.html _site/sale.html
+          cp index.html _site/index.html
+          cp executive_dashboard.html _site/executive_dashboard.html
+          [ -d assets ] && cp -r assets _site/assets || true
+          [ -d api ] && cp -r api/_cache _site/api 2>/dev/null || true
+          echo "Files to publish:"
+          ls -lh _site/
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload artifact
+      - name: Upload artifact (HTML only — no Python, no tokens)
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: '_site'
 
       - name: Deploy to GitHub Pages
         id: deployment
