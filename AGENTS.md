@@ -1860,4 +1860,32 @@ Reason: [Lý do]`
 > 2. **Tuyệt Đối Cấm Để Lại Dữ Liệu Tĩnh Hardcode (Zero Orphan Static Tables)**:
 >    - TUYỆT ĐỐI CẤM tạo các bảng HTML tĩnh chứa hàng trăm dòng dữ liệu giả lập/dữ liệu cũ mà không có cơ chế Live Fetch tự động làm mới.
 >    - Khi bổ sung tab mới vào BI Portal, BẮT BUỘC phải đăng ký nguồn dữ liệu GID vào `sync_wo_detail.py` và tích hợp hàm Live Fetch tương ứng trên frontend.
+> ### 🔴 RULE PM-55: KHÓA CỨNG XÁC MINH INDEX CỘT GOOGLE SHEET TRƯỚC KHI VIẾT CODE GAS — TUYỆT ĐỐI CẤM ĐẶT TÊN BIẾN KHÔNG PHẢN ÁNH ĐÚNG INDEX THỰC TẾ (STRICT LIVE-PROBE COLUMN INDEX VERIFICATION POLICY)
+> **Root Cause (Sự Cố 23/09/2026)**:
+> Hàm `sendTeamOperationProgressReports()` trong `team_progress_report.gs` khai báo comment `// WO: T (idx 19), U (idx 20), V (idx 21)=Team` nhưng live sheet thực tế: Team = col M (idx 12), Site = col L (idx 11), WO Name = col E (idx 4), Staff = col N (idx 13). Code đọc col V (idx 21) trống → TPR luôn báo `Work Orders Completed: 0 WO(s)`.
+>
+> **Quy Tắc Bắt Buộc (Mandatory Directives)**:
+> 1. **Xác Minh Live Trước Khi Viết Code (Live-First Column Probe)**: Khi viết hoặc review code đọc cột từ Google Sheet bằng index số (`row[19]`, `row[21]`...), AI BẮT BUỘC phải chạy probe thực tế (gspread, App Script Logger, hoặc CSV) để đọc ít nhất 5 dòng đầu và xác nhận **TÊN CỘT HEADER THỰC SỰ ↔ INDEX** trước khi lấy giá trị. TUYỆT ĐỐI CẤM suy luận index dựa trên tên cột chữ cái mà không kiểm tra header thực tế.
+> 2. **Comment Chuẩn Dạng Đầy Đủ**: Comment BẮT BUỘC ghi: `// Col L (idx 11) = Site, Col M (idx 12) = Team` (chữ cái + số index + tên thực). Khi phát hiện comment stale sai với live: BẮT BUỘC sửa ngay cả 2.
+> 3. **Phân Biệt 2 Nguồn Dữ Liệu Không So Sánh Được**: Report 4 EOD (`3Day: 8 /23 /2`) là **TL tự nhập** trên tab `Task remain` — KHÔNG PHẢI đếm tự động. TPR đọc tab `WO Close progress` và đếm WO thực tế theo ngày export. Hai nguồn này **hoàn toàn độc lập**, chênh lệch là BÌNH THƯỜNG. AI BẮT BUỘC giải thích rõ sự khác biệt này cho user, TUYỆT ĐỐI CẤM kết luận một trong hai là sai mà không kiểm tra cả 2 nguồn.
+>
+> ### 🔴 RULE PM-56: TAB GUIDE AUTO-SYNC TỪ TEMPLATE CONS & GHẾ AUDITOR-9.1 GIÁM SÁT 24/7 (STRICT CONSTRUCTION GUIDE AUTO-SYNC & AUDITOR SENTINEL POLICY)
+> **Root Cause (Sự Cố 24/09/2026)**:
+> 1. Khi người dùng hoặc admin bổ sung/sửa đổi mẫu template trong tab `Template Cons` của Google Sheet Construction (`1ViXXv5P8jSgx5heBqEP419ZkSR77C3OsflK0xpHMoi8`), tab `Guide` (tài liệu giải thích cho nhân viên và admin) không tự động cập nhật, dẫn đến tab `Guide` bị thiếu thông tin hoặc chỉ chứa dữ liệu cũ, không có các cột hướng dẫn chi tiết (Command Telegram chuẩn, Ý nghĩa công việc, Cần điền gì vào mẫu, Ảnh yêu cầu).
+> 2. Hệ thống thiếu trigger tự động trên Google Apps Script để đồng bộ tab `Guide` khi có chỉnh sửa trong `Template Cons`.
+> 3. Ghế `AUDITOR-9.1` (`system_auditor.py`) chưa có bài kiểm tra giám sát đối chiếu tính toàn vẹn và mức độ đồng bộ giữa tab `Template Cons` và tab `Guide`.
+>
+> **Quy Tắc Bắt Buộc (Mandatory Directives)**:
+> 1. **Đồng Bộ Tự Động Vào Tab `Guide` Với 8 Cột Chuẩn (Mandatory 8-Column Guide Schema)**:
+>    - Trong Google Apps Script (`13_TNI_CONSTRUCTION.gs`), hàm `syncGuideFromTemplate_()` BẮT BUỘC tự động trích xuất mọi template từ `Template Cons`, định dạng và ghi đầy đủ **8 cột chuẩn**:
+>      `STT | Lệnh (Key) | Command Telegram | Ý Nghĩa | Điền Gì Vào Mẫu | Ảnh Yêu Cầu | Mẫu Nội Dung Đầy Đủ | Cập Nhật Lần Cuối`.
+>    - Tự động áp dụng header nền `#0F172A`, chữ xanh cyan `#38BDF8`, cố định dòng đầu (`setFrozenRows(1)`), bật text wrapping và màu xen kẽ hàng.
+>    - Cơ chế kích hoạt: `onEdit` khi người dùng sửa `Template Cons` (cột 1 hoặc 4), endpoint Web App `?action=sync_guide_tab`, và chạy khi có lệnh cập nhật từ menu.
+> 2. **Ghế AUDITOR-9.1 Giám Sát & Tự Động Điền Bù (Sentinel Guide Auto-Remediation)**:
+>    - Trong `system_auditor.py`, hàm `audit_construction_guide_sync()` BẮT BUỘC chạy mỗi chu kỳ kiểm toán: Đọc dữ liệu sống qua GViz CSV của cả 2 tab `Template Cons` và `Guide`.
+>    - Nếu phát hiện `Guide` thiếu bất kỳ template nào so với `Template Cons`: TỰ ĐỘNG gọi API `?action=sync_guide_tab` sang Google Apps Script để điền bù và đồng bộ tức thì, đồng thời gửi thông báo chi tiết qua Telegram cho Admin.
+> 3. **Đồng Bộ Mã Nguồn Tuyệt Đối Giữa Các Repositories**:
+>    - Mọi cập nhật trong `system_auditor.py` BẮT BUỘC phải đồng bộ nguyên tử qua cả 2 repo `Task and WO` và `tni-search`.
+>    - BẮT BUỘC chạy `npx clasp push --force` và `npx clasp deploy -i <deploymentId>` sau mọi thay đổi trong `QLTC_GAS`.
+
 

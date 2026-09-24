@@ -64,9 +64,9 @@
 | Phân hệ | Thành phần đảm nhiệm | File / Script thực thi | Nơi chạy & Trigger | Nhiệm vụ chính |
 |---|---|---|---|---|
 | 🟢 **GAS NATIVE** | **Auto Copy & Delete** | `auto_copy_processor.gs` | Google Cloud (Trigger 15 phút) | Đồng bộ 27 rule tự động giữa các Google Sheets (chỉ copy dòng MỚI) |
-| 🟢 **GAS NATIVE** | **Construction Bot 10** | `13_TNI_CONSTRUCTION.gs` | Google Cloud (Webhook Telegram) | Nhận báo cáo thi công, tải ảnh vào Google Drive, chèn dòng 3 |
+| 🟢 **GAS NATIVE** | **Construction Bot 10** | `13_TNI_CONSTRUCTION.gs` | Google Cloud (Webhook Telegram) | Nhận báo cáo thi công, tải ảnh Drive, auto-sync tab 'Guide' (8 cột) từ 'Template Cons' khi onEdit/API |
 | 🟢 **GAS NATIVE** | **Báo cáo Chiều 17:30** | `auto_send_17h30.gs` / `telegram_report_bot.gs` | Google Cloud (Trigger 17:30 MMT) | Gửi báo cáo tiến độ công việc cho Leader & Manager qua Bot API |
-| 🟢 **GAS NATIVE** | **Sheet Backend API** | `apps_script_collector.gs`, `site_down_v2.gs` | Google Cloud (Web App Endpoint) | Ghi nhận dữ liệu vào Google Sheets (luôn chèn dòng 2) |
+| 🟢 **GAS NATIVE** | **Sheet Backend API** | `apps_script_collector.gs`, `site_down_v2.gs` | Google Cloud (Web App Endpoint) | Ghi nhận dữ liệu vào Google Sheets (luôn chèn dòng 2), endpoint `?action=sync_guide_tab` |
 | 🟢 **GAS SCHEDULER** | **GitHub Dispatch Trigger** | `14_GITHUB_DISPATCH.gs` | Google Cloud (Trigger 5 phút) | **Hẹn giờ CHÍNH** — dispatch `train_5min.yml` (5p) + `botlookup_relay.yml` (chỉ trong cửa sổ :03-:05/:33-:35 MMT) |
 | 🔵 **GITHUB ACTIONS** | **Toa 0 Keepalive** | `train_5min.yml` | GitHub (`MON6879` — **GAS dispatch** mỗi 5 phút) | Sưởi ấm Vercel API & khóa khôi phục `setWebhook` 6 Bot |
 | 🔵 **GITHUB ACTIONS** | **Reports 1, 2, 3, 4 + BOD** | `cron_send.py`, `daily_bod_assign.py` | GitHub (`MON6879` — 05:48 & 15:48 MMT) | Báo cáo công việc hàng ngày 4 Team & BOD Assign (Dung sai ±3p) |
@@ -76,6 +76,7 @@
 | 🔵 **GITHUB ACTIONS** | **Refuel Reports** | `refuel_plan_report.py` (~~`cable_report.py` đã hủy~~) | GitHub (`MON6879` — theo lịch) | Kế hoạch cấp dầu máy phát |
 | 🔵 **GITHUB ACTIONS** | **Site Down Relay (Toa SD ƯU TIÊN 1)** | `train_5min.yml` / `botlookup_relay.py` | GitHub (`MON6879` — Toa SD chạy ĐẦU TIÊN mỗi nhịp :06/:36 MMT trong train) | Cào dữ liệu trạm sập NOC Pro bằng Telethon, chạy tuần tự TRƯỚC mọi report khác |
 | 🔵 **GITHUB ACTIONS** | **Toa Cable Link Down (:16 / :46)** | `cable_link_down_report.py` | GitHub (`MON6879` — :16 & :46 MMT) | Báo cáo tiến độ Link Down tuyến cáp cột C tab Link down now gửi vào SOS (-5531350787) qua Bot 15, xóa tin cũ |
+| 🔵 **GITHUB ACTIONS** | **Toa Auditor 9.1 (System Sentinel)** | `system_auditor.py` | GitHub (`MON6879` — mỗi chu kỳ) | Giám sát Webhooks 6 bot, GAS backends, Sheet connectors, CheckJoint, Anomaly, Sale Inventory, Menu sync và **Guide Tab Sync (`audit_construction_guide_sync`)** |
 
 ---
 
