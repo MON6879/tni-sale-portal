@@ -1888,4 +1888,36 @@ Reason: [Lý do]`
 >    - Mọi cập nhật trong `system_auditor.py` BẮT BUỘC phải đồng bộ nguyên tử qua cả 2 repo `Task and WO` và `tni-search`.
 >    - BẮT BUỘC chạy `npx clasp push --force` và `npx clasp deploy -i <deploymentId>` sau mọi thay đổi trong `QLTC_GAS`.
 
+> ### 🔴 RULE PM-57: QUY TRÌNH BỌC THÉP BẢO MẬT WEB PUBLIC (GITHUB PAGES / VERCEL) — KHỬ TRÙNG 100% PII, CHỐNG LỘ SECRET & CỔNG MẬT KHẨU BẮT BUỘC KHI THÊM TÍNH NĂNG MỚI (STRICT PUBLIC WEB PORTAL SECURITY & MANDATORY ZERO-PII/SECRETS POLICY)
+> **Root Cause (Sự Cố 24/09/2026)**:
+> Khi đưa hệ thống bán hàng và điều hành (`sale.html`, `index.html`, `executive_dashboard.html`) lên các nền tảng lưu trữ web công khai (GitHub Pages public repo `MON6879/tni-sale-portal` hoặc Vercel), phát hiện các lỗ hổng bảo mật nghiêm trọng:
+> 1. Dữ liệu thật của nhân viên và đối tác (tên thật, số điện thoại thật, email cá nhân `@gmail.com`, địa chỉ trụ sở văn phòng) bị hardcode trực tiếp vào mã nguồn client-side HTML/JS, cho phép bất kỳ ai đọc source code trên GitHub đều nhìn thấy toàn bộ PII (Personally Identifiable Information).
+> 2. Các trang web điều hành (`index.html`, `executive_dashboard.html`) được public mà không có cổng bảo vệ mật khẩu, khiến bất kỳ ai có link đều xem được số liệu và bảng điều khiển nội bộ.
+> 3. Khi lập trình viên bổ sung tính năng mới, thường tiện tay đưa dữ liệu mẫu thật hoặc link trực tiếp mà không qua quy trình rà soát bảo mật.
+>
+> **Quy Tắc Bắt Buộc (Mandatory Directives)**:
+> 1. **Kỷ Luật Thép Khử Trùng Dữ Liệu Client-Side (Zero-PII Client Law)**:
+>    - TUYỆT ĐỐI CẤM hardcode bất kỳ thông tin cá nhân thật nào vào các file HTML/JS/CSS client-side công khai: CẤM số điện thoại thật (`09...`), CẤM email cá nhân (`@gmail.com`), CẤM tên nhân viên thật, CẤM địa chỉ văn phòng/nhà riêng thật, CẤM tên đối tác/khách hàng thật.
+>    - Mọi dữ liệu hiển thị mặc định, mẫu thử nghiệm (seed/preset data) BẮT BUỘC phải dùng định danh ẩn danh chuẩn:
+>      - Nhân sự: `Nguyễn Văn A`, `Trần Thị B`, `Staff Sales 01`, `Staff Tech 01`, `Staff Warehouse 01`...
+>      - Email công vụ: `sales01@tni.com`, `tech01@tni.com`, `admin@tni.com`...
+>      - Số điện thoại mẫu: `0965 000 001`, `0965 000 002`...
+>      - Địa chỉ: `Chi Nhánh TNI Region`, `Văn Phòng Đại Diện TNI Myanmar`...
+> 2. **Cổng Mật Khẩu Bắt Buộc Trên Mọi Trang Web (Mandatory Universal Password Gate)**:
+>    - 100% các file giao diện web (`.html`) thuộc hệ thống khi chạy trên môi trường công khai BẮT BUỘC phải tích hợp bộ cổng bảo vệ mật khẩu `#pwd-gate`:
+>      - Mã hóa một chiều bằng hàm băm SHA-256 (`crypto.subtle.digest`). TUYỆT ĐỐI CẤM lưu mật khẩu dạng plain text.
+>      - Phiên đăng nhập (Session) tự động hết hạn sau tối đa 8 tiếng (480 phút).
+>      - Cơ chế cưỡng bức / nhắc nhở đổi mật khẩu mới định kỳ sau mỗi 30 ngày sử dụng.
+>    - TUYỆT ĐỐI CẤM deploy bất kỳ file `.html` nào mở tự do không có cổng mật khẩu che chắn.
+> 3. **Cô Lập Bí Mật Server & Xác Thực 2 Đầu (Strict Server-Side Secret Isolation)**:
+>    - Toàn bộ Telegram Bot Token (`AAH...`), GitHub PAT (`ghp_...`), Google Service Account, Secret Key BẮT BUỘC nằm trong GitHub Secrets (Actions) hoặc GAS Script Properties. TUYỆT ĐỐI CẤM xuất hiện trong file HTML, JS frontend hoặc public repo.
+>    - Mọi API endpoint backend (Google Apps Script `doPost`/`doGet`) nhận dữ liệu từ web BẮT BUỘC phải xác thực Token (`saleAuth_`) và áp dụng giới hạn tần suất (Rate Limit 60 req/phút).
+>    - Phân quyền theo cột (Column-Level Security): Dữ liệu giá vốn và lợi nhuận 17% BẮT BUỘC phải được server tự động cắt bỏ (`stripFinanceCols_`) trước khi trả về cho vai trò không phải Admin/Finance.
+> 4. **Quy Trình 5 Bước Thẩm Định Bảo Mật Bắt Buộc Trước Khi Thêm Bất Kỳ Chức Năng Mới Nào (The 5-Step Pre-Deploy Security Verification Gate)**:
+>    Trước khi commit, push hoặc deploy bất kỳ tính năng, nút bấm, biểu mẫu, bảng dữ liệu hoặc trang web mới nào, AI BẮT BUỘC phải thực hiện đủ 5 bước:
+>    - **Bước 1 — Quét PII (Regex Scan)**: Chạy lệnh tìm kiếm regex quét toàn bộ file xem có SĐT thật (`09\d{8}`), email cá nhân (`@gmail.com`), họ tên thật.
+>    - **Bước 2 — Quét Secrets**: Quét tìm chuỗi nhạy cảm (`AAH`, `AIza`, `ghp_`, `token=`, `key=`).
+>    - **Bước 3 — Kiểm Tra Cổng Khóa**: Xác nhận trang mới đã kế thừa hệ thống `#pwd-gate` và cơ chế session SHA-256.
+>    - **Bước 4 — Kiểm Tra Quyền Backend (RBAC & Server Auth)**: Đảm bảo dữ liệu mới nếu có yếu tố tài chính/nhạy cảm phải được server GAS kiểm tra quyền trước khi gửi về client.
+>    - **Bước 5 — Đồng Bộ Khép Kín & Xóa Cache**: Đồng bộ nguyên tử file qua các kho lưu trữ tương ứng (`Task and WO`, `tni-search`), thông báo rõ cho người dùng các link đã cập nhật.
 
