@@ -1921,3 +1921,21 @@ Reason: [Lý do]`
 >    - **Bước 4 — Kiểm Tra Quyền Backend (RBAC & Server Auth)**: Đảm bảo dữ liệu mới nếu có yếu tố tài chính/nhạy cảm phải được server GAS kiểm tra quyền trước khi gửi về client.
 >    - **Bước 5 — Đồng Bộ Khép Kín & Xóa Cache**: Đồng bộ nguyên tử file qua các kho lưu trữ tương ứng (`Task and WO`, `tni-search`), thông báo rõ cho người dùng các link đã cập nhật.
 
+> ### 🔴 RULE PM-58: KỶ LUẬT BỌC THÉP SONG NGỮ WEB PORTAL (BILINGUAL PARITY) — TUYỆT ĐỐI CẤM HARDCODE ĐƠN NGỮ VÀO MODULE MỚI & BẮT BUỘC ĐỒNG BỘ HOOK applyLang() (STRICT WEB BILINGUAL EN/VN PARITY POLICY)
+> **Root Cause (Sự Cố 26/09/2026)**:
+> Mặc dù hệ thống đã có rule nghiêm ngặt về Tiếng Anh cho Telegram Bot và nút chuyển đổi EN/VN trên Web App, khi xây dựng module mới Phân Quyền Vai Trò (RBAC) trên `sale.html`:
+> 1. Toàn bộ mảng dữ liệu `SYSTEM_MODULES` chỉ khai báo trường `name` và `desc` đơn ngữ bằng Tiếng Việt, thiếu hoàn toàn `name_en` và `desc_en`.
+> 2. Các thành phần giao diện (Banner, Quick Cards, Bảng ma trận, Hướng dẫn gửi link, Danh sách nhân sự) được hardcode chuỗi Tiếng Việt trực tiếp trong HTML/JS.
+> 3. Hàm chuyển đổi ngôn ngữ `applyLang(lang)` bị bỏ quên, không móc nối (hook) vào các hàm render của tab RBAC (`renderRBACMatrix`, `renderStaffUsersTable`, `renderRBACColToggles`, `updateRBACPanelStaticTexts`). Kết quả: Khi người dùng bấm sang chế độ `GB EN`, sidebar đổi tiếng Anh nhưng toàn bộ tab RBAC vẫn trơ ra Tiếng Việt.
+>
+> **Quy Tắc Bắt Buộc (Mandatory Directives)**:
+> 1. **Chuẩn Dữ Liệu Song Ngữ Bắt Buộc Cho Mọi Module Mới (Dual-Key Schema Standard)**:
+>    - Mọi mảng đối tượng, bảng cấu hình, danh sách phân hệ hiển thị trên giao diện Web BẮT BUỘC phải có đầy đủ cặp khóa song ngữ: `{ name: '...', name_en: '...', desc: '...', desc_en: '...' }`.
+>    - TUYỆT ĐỐI CẤM tạo mảng dữ liệu hiển thị chỉ có 1 trường ngôn ngữ Tiếng Việt duy nhất.
+> 2. **Kỷ Luật Hook Bắt Buộc Vào applyLang() (Mandatory applyLang Registration)**:
+>    - Khi thêm bất kỳ tab, section, modal hoặc bảng dữ liệu mới nào vào Web App, lập trình viên/AI BẮT BUỘC phải đăng ký hàm render tương ứng vào bên trong hàm `applyLang(lang)`.
+>    - Khi người dùng bấm nút đổi ngôn ngữ `toggleLang()`, toàn bộ nội dung của tab đang hiển thị BẮT BUỘC phải chuyển đổi tức thì mà không cần reload trang.
+> 3. **Phúc Tra Kiểm Thử 2 Chiều Trước Khi Bàn Giao (Bilingual Toggle Verification)**:
+>    - Trước khi commit/bàn giao bất kỳ tính năng web nào, BẮT BUỘC phải kiểm tra hiển thị ở cả 2 trạng thái: `lang === 'vi'` và `lang === 'en'`.
+>    - Nếu ở chế độ `EN` mà còn sót bất kỳ chữ Tiếng Việt nào trên giao diện ➔ Coi là LỖI NGÔN NGỮ CHƯA HOÀN THÀNH, TUYỆT ĐỐI CẤM báo "Đã xong"!
+
