@@ -127,6 +127,138 @@ tbody tr:hover{background:#fafcff}
 <body>
 <div id="alert"></div>
 
+<!-- ══ PASSWORD GATE ══ -->
+<div id="pwd-gate" style="display:none;position:fixed;inset:0;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#0f172a 100%);z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column">
+  <div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:48px 40px;max-width:420px;width:90%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.5)">
+    <div style="font-size:48px;margin-bottom:12px">⚡</div>
+    <div style="font-size:26px;font-weight:800;color:#fff;margin-bottom:4px">TNI Sale Portal</div>
+    <div style="font-size:13px;color:#94a3b8;margin-bottom:32px">Vui lòng nhập mật khẩu để tiếp tục</div>
+    <input id="pwd-input" type="password" placeholder="Nhập mật khẩu..." maxlength="50"
+      style="width:100%;padding:14px 18px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:#fff;font-size:15px;outline:none;box-sizing:border-box;margin-bottom:12px;letter-spacing:2px"
+      onkeydown="if(event.key==='Enter')checkPwd()"
+      oninput="document.getElementById('pwd-err').style.display='none'">
+    <div id="pwd-err" style="display:none;color:#f87171;font-size:12.5px;margin-bottom:10px">❌ Mật khẩu không đúng. Thử lại!</div>
+    <button onclick="checkPwd()" style="width:100%;padding:14px;border-radius:10px;border:none;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:16px">
+      🔓 Đăng Nhập
+    </button>
+    <div style="font-size:11px;color:#475569">TNI Operations System • Restricted Access</div>
+  </div>
+</div>
+
+<!-- ══ CHANGE PASSWORD MODAL ══ -->
+<div id="change-pwd-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99998;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:16px;padding:36px 32px;max-width:400px;width:90%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.3)">
+    <div style="font-size:36px;margin-bottom:8px">🔑</div>
+    <div style="font-size:20px;font-weight:800;color:#1e293b;margin-bottom:6px">Đã đến lúc đổi mật khẩu!</div>
+    <div style="font-size:13px;color:#64748b;margin-bottom:24px">Mật khẩu của bạn đã dùng hơn <b id="pwd-days-used">30</b> ngày.<br>Vui lòng đổi mật khẩu mới để bảo mật.</div>
+    <input id="new-pwd-1" type="password" placeholder="Mật khẩu mới (tối thiểu 6 ký tự)" maxlength="50"
+      style="width:100%;padding:12px 14px;border-radius:8px;border:1.5px solid #e2e8f0;font-size:14px;margin-bottom:10px;box-sizing:border-box;outline:none">
+    <input id="new-pwd-2" type="password" placeholder="Nhập lại mật khẩu mới" maxlength="50"
+      style="width:100%;padding:12px 14px;border-radius:8px;border:1.5px solid #e2e8f0;font-size:14px;margin-bottom:10px;box-sizing:border-box;outline:none">
+    <div id="change-pwd-err" style="display:none;color:#ef4444;font-size:12px;margin-bottom:10px"></div>
+    <div style="display:flex;gap:10px">
+      <button onclick="skipChangePwd()" style="flex:1;padding:12px;border-radius:8px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#64748b;font-size:13px;cursor:pointer;font-weight:600">Để sau</button>
+      <button onclick="doChangePwd()" style="flex:2;padding:12px;border-radius:8px;border:none;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-size:14px;font-weight:700;cursor:pointer">✅ Đổi Mật Khẩu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ PASSWORD GATE SYSTEM ══
+const PWD_KEY      = 'tni_portal_pwd_hash';
+const PWD_SET_KEY  = 'tni_portal_pwd_set_at';
+const PWD_OK_KEY   = 'tni_portal_authed_at';
+const PWD_DAYS     = 30;    // Nhắc đổi sau 30 ngày
+const SESSION_MINS = 480;   // Session tự hết sau 8 tiếng (480 phút)
+const DEFAULT_PWD  = 'TNI@2026';
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function initPwdGate() {
+  const gate = document.getElementById('pwd-gate');
+  // Khởi tạo hash mặc định nếu chưa có
+  if (!localStorage.getItem(PWD_KEY)) {
+    const h = await sha256(DEFAULT_PWD);
+    localStorage.setItem(PWD_KEY, h);
+    localStorage.setItem(PWD_SET_KEY, Date.now().toString());
+  }
+
+  // Kiểm tra session còn hạn không
+  const authedAt = parseInt(localStorage.getItem(PWD_OK_KEY) || '0');
+  const sessionOk = authedAt && (Date.now() - authedAt) < SESSION_MINS * 60 * 1000;
+
+  if (sessionOk) {
+    gate.style.display = 'none';
+    checkPwdExpiry();
+  } else {
+    gate.style.display = 'flex';
+    setTimeout(()=>document.getElementById('pwd-input').focus(), 100);
+  }
+}
+
+async function checkPwd() {
+  const input = document.getElementById('pwd-input').value;
+  if (!input) return;
+  const h = await sha256(input);
+  const stored = localStorage.getItem(PWD_KEY);
+  if (h === stored) {
+    localStorage.setItem(PWD_OK_KEY, Date.now().toString());
+    document.getElementById('pwd-gate').style.display = 'none';
+    checkPwdExpiry();
+  } else {
+    const err = document.getElementById('pwd-err');
+    err.style.display = 'block';
+    document.getElementById('pwd-input').value = '';
+    document.getElementById('pwd-input').focus();
+  }
+}
+
+function checkPwdExpiry() {
+  const setAt = parseInt(localStorage.getItem(PWD_SET_KEY) || '0');
+  if (!setAt) return;
+  const days = Math.floor((Date.now() - setAt) / 86400000);
+  if (days >= PWD_DAYS) {
+    document.getElementById('pwd-days-used').textContent = days;
+    const m = document.getElementById('change-pwd-modal');
+    m.style.display = 'flex';
+  }
+}
+
+function skipChangePwd() {
+  document.getElementById('change-pwd-modal').style.display = 'none';
+}
+
+async function doChangePwd() {
+  const p1 = document.getElementById('new-pwd-1').value;
+  const p2 = document.getElementById('new-pwd-2').value;
+  const err = document.getElementById('change-pwd-err');
+  if (p1.length < 6) { err.textContent='Mật khẩu tối thiểu 6 ký tự!'; err.style.display='block'; return; }
+  if (p1 !== p2)     { err.textContent='Hai mật khẩu không khớp!'; err.style.display='block'; return; }
+  const h = await sha256(p1);
+  localStorage.setItem(PWD_KEY, h);
+  localStorage.setItem(PWD_SET_KEY, Date.now().toString());
+  document.getElementById('change-pwd-modal').style.display = 'none';
+  document.getElementById('new-pwd-1').value = '';
+  document.getElementById('new-pwd-2').value = '';
+  if (typeof al === 'function') al('✅ Đã đổi mật khẩu thành công!', 'ok');
+  else alert('✅ Đổi mật khẩu thành công!');
+}
+
+// Hàm cho phép admin đổi mật khẩu từ menu
+window.openChangePwdModal = function() {
+  document.getElementById('new-pwd-1').value = '';
+  document.getElementById('new-pwd-2').value = '';
+  document.getElementById('change-pwd-err').style.display = 'none';
+  document.getElementById('change-pwd-modal').style.display = 'flex';
+}
+
+// Khởi động gate khi DOM ready
+document.addEventListener('DOMContentLoaded', initPwdGate);
+</script>
+
 <!-- ══ SIDEBAR ══ -->
 <div id="sb">
   <div class="logo">⚡ TNI <span>Sale</span></div>
@@ -150,12 +282,10 @@ tbody tr:hover{background:#fafcff}
 
     <div class="lbl" data-nav-lbl="clients">Clients</div>
     <a onclick="go('crm')" data-nav-a="crm">👥 CRM &amp; Survey</a>
-    <a onclick="go('warranty')" data-nav-a="warranty" style="color:#b45309;font-weight:700">🔧 Warranty Claims <small style="background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:auto;font-weight:700">NEW</small></a>
 
     <div class="lbl" data-nav-lbl="marketing">Marketing</div>
     <a onclick="go('quangcao')" data-nav-a="quangcao">📢 Ads Campaigns</a>
     <a onclick="go('leads')" data-nav-a="leads">🎯 Leads &amp; Conv</a>
-
 
     <div class="lbl" data-nav-lbl="finance">Finance</div>
     <a onclick="go('loinhuan')" data-nav-a="loinhuan">💰 Financial &amp; Cashflow</a>
@@ -522,8 +652,8 @@ tbody tr:hover{background:#fafcff}
       <!-- Header đỏ theo hình ảnh đính kèm -->
       <div>
         <div style="font-size:16px;font-weight:900;color:#dc2626;letter-spacing:0.5px">VIETTEL CONSTRUCTION MYANMAR COMPANY LIMITED</div>
-        <div style="font-size:12px;color:#334155;margin-top:3px"><b>A:</b> No 1237 Waizanyantar Street, South Okkalapa, Yangon, Myanmar</div>
-        <div style="font-size:12px;color:#334155;margin-top:2px"><b>W:</b> www.viettelconstructionmyanmar.com &nbsp;&nbsp;|&nbsp;&nbsp; <b>H:</b> 0965 1900 009</div>
+        <div style="font-size:12px;color:#334155;margin-top:3px"><b>A:</b> Văn Phòng Đại Diện TNI Myanmar</div>
+        <div style="font-size:12px;color:#334155;margin-top:2px"><b>W:</b> www.viettelconstructionmyanmar.com &nbsp;&nbsp;|&nbsp;&nbsp; <b>H:</b> 0965 000 003</div>
       </div>
       <div style="text-align:right">
         <span class="bk bk-bl" style="font-size:12px;padding:4px 10px;font-weight:700">TNI SOLAR OFFICIAL QUOTATION</span>
@@ -536,7 +666,7 @@ tbody tr:hover{background:#fafcff}
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <label style="font-size:12px;font-weight:600;color:#1e3a8a;display:flex;align-items:center;gap:4px">
           👤 Đang xem với tư cách (Staff / Gmail):
-          <input id="qs-filter-user" value="Zin Ko Ko" placeholder="Tên nhân viên hoặc Gmail..." style="padding:4px 8px;border:1px solid #94a3b8;border-radius:5px;font-size:12px;width:180px;font-weight:bold;color:#1e293b" onchange="filterQuotesByUser()"/>
+          <input id="qs-filter-user" value="Staff Sales 01" placeholder="Tên nhân viên hoặc Gmail..." style="padding:4px 8px;border:1px solid #94a3b8;border-radius:5px;font-size:12px;width:180px;font-weight:bold;color:#1e293b" onchange="filterQuotesByUser()"/>
         </label>
         <button class="btn b-bl b-xs" onclick="filterQuotesByUser()">🔍 Lọc Báo Giá</button>
         <button class="btn b-out b-xs" onclick="document.getElementById('qs-filter-user').value='all';filterQuotesByUser()">👥 Xem Tất Cả (Admin)</button>
@@ -564,7 +694,7 @@ tbody tr:hover{background:#fafcff}
           </h3>
           <div style="display:flex;gap:6px">
             <button class="btn b-out b-sm" onclick="resetNewSolarQuote()">➕ Tạo Báo Giá Mới</button>
-            <button class="btn b-yw b-sm" onclick="presetSolar('zinkoko')">⭐ Mẫu Chuẩn 6kW (Zin Ko Ko)</button>
+            <button class="btn b-yw b-sm" onclick="presetSolar('staffsales01')">⭐ Mẫu Chuẩn 6kW (Staff Sales 01)</button>
           </div>
         </div>
       </div>
@@ -572,14 +702,14 @@ tbody tr:hover{background:#fafcff}
         <!-- THÔNG TIN CHUNG CỦA BÁO GIÁ -->
         <div class="fg">
           <div class="f"><label>Mã Báo Giá (Quote Ref)</label><input id="qs-code" value="VCM-07-02" placeholder="VD: VCM-07-02" style="font-weight:bold;color:#1e40af"/></div>
-          <div class="f"><label>Tên Khách Hàng (Mr/Ms) *</label><input id="qs-kh" value="Zin Ko Ko" placeholder="Tên khách hàng"/></div>
+          <div class="f"><label>Tên Khách Hàng (Mr/Ms) *</label><input id="qs-kh" value="Staff Sales 01" placeholder="Tên khách hàng"/></div>
           <div class="f"><label>Điện Thoại Khách</label><input id="qs-dt" placeholder="09xxxxxxx"/></div>
           <div class="f"><label>Gmail / Email Khách</label><input id="qs-email" placeholder="customer@gmail.com"/></div>
           <div class="f"><label>Dự Án / Địa Chỉ Lắp Đặt</label><input id="qs-dc" placeholder="Yangon, Myanmar..."/></div>
           <div class="f"><label>Tiêu Đề / Subject</label><input id="qs-subj" value="6kW Solar System" placeholder="VD: 6kW Solar System"/></div>
           <div class="f"><label>Loại Hệ Thống</label><select id="qs-loai"><option selected>Hybrid (Hòa lưới + Dự trữ)</option><option>Hòa lưới (On-Grid)</option><option>Độc lập (Off-Grid)</option></select></div>
           <div class="f"><label>Công Suất (kWp)</label><input id="qs-cs" type="number" value="6" step="0.5"/></div>
-          <div class="f"><label>Nhân Viên Lập (Staff)</label><input id="qs-nlbg" value="Zin Ko Ko" placeholder="Tên nhân viên"/></div>
+          <div class="f"><label>Nhân Viên Lập (Staff)</label><input id="qs-nlbg" value="Staff Sales 01" placeholder="Tên nhân viên"/></div>
           <div class="f"><label>Mã NV / Phòng Ban</label><input id="qs-staffid" value="NV001" placeholder="Mã NV"/></div>
           <div class="f"><label>Ngày Báo Giá</label><input id="qs-ngay" type="date"/></div>
           <div class="f"><label>Hiệu Lực (ngày)</label><input id="qs-hl" type="number" value="15"/></div>
@@ -602,7 +732,7 @@ tbody tr:hover{background:#fafcff}
             <b style="font-size:13px;color:#1e3a8a">📦 Bảng Vật Tư &amp; Giá Cả (Có thể chỉnh sửa giá trực tiếp):</b>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               <button class="btn b-bl b-xs" onclick="addSolarItemRow()">+ Thêm dòng vật tư</button>
-              <button class="btn b-sm" style="background:#fef08a;color:#854d0e;font-size:11px;font-weight:700" onclick="presetSolar('zinkoko')">⭐ Mẫu 6kW TNI (Sept.17)</button>
+              <button class="btn b-sm" style="background:#fef08a;color:#854d0e;font-size:11px;font-weight:700" onclick="presetSolar('staffsales01')">⭐ Mẫu 6kW TNI (Sept.17)</button>
               <button class="btn b-sm" style="background:#dcfce7;color:#15803d;font-size:11px;font-weight:700" onclick="presetSolar('kawthoung16k')">⭐ Mẫu 16kW (Kawthoung)</button>
               <button class="btn b-sm" style="background:#fef9c3;color:#854d0e;font-size:11px" onclick="presetSolar('ongrid5k')">Bộ 5kW OnGrid</button>
               <button class="btn b-sm" style="background:#fef9c3;color:#854d0e;font-size:11px" onclick="presetSolar('hybrid5k')">Bộ Hybrid 5kW</button>
@@ -743,10 +873,10 @@ tbody tr:hover{background:#fafcff}
         <div class="fg" style="margin-top:6px">
           <div class="f"><label>Mã Dự Án / Hợp Đồng *</label><input id="acc-code" value="VCM-26-05" placeholder="VD: VCM-26-05" style="font-weight:bold;color:#047857"/></div>
           <div class="f"><label>Tên Khách Hàng (Mr/Ms) *</label><input id="acc-kh" value="Kawthoung Hotel &amp; Resort" placeholder="Tên khách hàng"/></div>
-          <div class="f"><label>Số Điện Thoại</label><input id="acc-dt" value="0965 1900 009" placeholder="09xxxxxxx"/></div>
+          <div class="f"><label>Số Điện Thoại</label><input id="acc-dt" value="0965 000 003" placeholder="09xxxxxxx"/></div>
           <div class="f"><label>Địa Chỉ Công Trình</label><input id="acc-dc" value="Kawthoung, Tanintharyi Region" placeholder="Địa chỉ lắp đặt..."/></div>
           <div class="f"><label>Ngày Nghiệm Thu</label><input id="acc-date" type="date"/></div>
-          <div class="f"><label>Kỹ Sư Trưởng Phụ Trách</label><input id="acc-eng" value="Zin Ko Ko / Technical Team" placeholder="Kỹ sư thi công"/></div>
+          <div class="f"><label>Kỹ Sư Trưởng Phụ Trách</label><input id="acc-eng" value="Staff Sales 01 / Technical Team" placeholder="Kỹ sư thi công"/></div>
         </div>
 
         <!-- 2. ĐO ĐẠC THÔNG SỐ KỸ THUẬT HIỆN TRƯỜNG -->
@@ -878,57 +1008,6 @@ tbody tr:hover{background:#fafcff}
           <button type="button" class="btn b-xs b-out" id="btn-toggle-acc-admin" onclick="toggleAccAdminFin()">👁️ Mở Khóa Quản Lý</button>
         </div>
 
-        <!-- 7. GIAO VIỆC KỸ THUẬT & TÍNH TIỀN CÔNG LẮP ĐẶT -->
-        <b style="font-size:12.5px;color:#065f46;display:block;margin-top:14px;border-top:1px dashed #cbd5e1;padding-top:10px">
-          7. Giao Việc Kỹ Thuật &amp; Tiền Công Lắp Đặt (Installation Work Assignment &amp; Labor Cost):
-        </b>
-        <div style="font-size:11px;color:#64748b;margin-top:3px;font-style:italic">
-          * Sau khi nghiệm thu xong, tự động tính tiền công lắp đặt cho đội kỹ thuật theo từng hạng mục × đơn giá × số lượng.
-        </div>
-
-        <div style="margin-top:8px;background:#f0fdf4;border:1px solid #a7f3d0;border-radius:8px;padding:10px;overflow-x:auto">
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px">
-            <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <button type="button" class="btn b-xs b-gn" onclick="addInstallRow()">➕ Thêm Hạng Mục</button>
-              <button type="button" class="btn b-xs b-out" onclick="loadDefaultInstallItems()">🔄 Mẫu Chuẩn Solar</button>
-            </div>
-            <div style="font-size:11px;color:#047857;font-weight:700">
-              📐 Công thức: Tiền Công = Σ (SL × Đơn Giá)
-            </div>
-          </div>
-
-          <!-- Header -->
-          <div style="display:grid;grid-template-columns:28px minmax(160px,2fr) minmax(100px,1fr) 55px 55px 80px 100px 28px;gap:5px;font-size:10.5px;font-weight:700;color:#475569;border-bottom:1px solid #a7f3d0;padding-bottom:5px;margin-bottom:5px;min-width:620px">
-            <div style="text-align:center">≡</div>
-            <div>Hạng Mục Công Việc (Task)</div>
-            <div>Mã / Code</div>
-            <div style="text-align:center">ĐVT</div>
-            <div style="text-align:center">SL</div>
-            <div style="text-align:right">Đơn Giá (Ks)</div>
-            <div style="text-align:right;color:#059669;font-weight:800">Thành Tiền (Ks)</div>
-            <div></div>
-          </div>
-          <div id="install-items" style="min-width:620px">
-            <!-- Dynamic installation rows -->
-          </div>
-
-          <!-- TỔNG TIỀN CÔNG -->
-          <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-            <div style="background:#dcfce7;border:1px solid #86efac;border-radius:6px;padding:8px 12px">
-              <span style="font-size:10.5px;color:#065f46;font-weight:600">🔧 Tổng Tiền Công Lắp Đặt (Total Labor Cost):</span>
-              <div id="install-total-cost" style="font-size:18px;font-weight:900;color:#059669">0 Ks</div>
-            </div>
-            <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 12px">
-              <span style="font-size:10.5px;color:#1e3a8a;font-weight:600">📊 Tỷ Lệ % Trên Doanh Thu HĐ:</span>
-              <div id="install-ratio" style="font-size:18px;font-weight:900;color:#1e40af">0%</div>
-            </div>
-            <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:6px;padding:8px 12px">
-              <span style="font-size:10.5px;color:#92400e;font-weight:600">👷 Kỹ Sư Trưởng Phụ Trách:</span>
-              <div id="install-engineer" style="font-size:14px;font-weight:800;color:#b45309">—</div>
-            </div>
-          </div>
-        </div>
-
         <!-- NÚT THAO TÁC -->
         <div class="fa" style="margin-top:14px;justify-content:flex-start;flex-wrap:wrap;gap:8px">
           <button class="btn b-gn" onclick="saveAcceptanceRecord(false)" style="font-weight:700">💾 Lưu Biên Bản Nghiệm Thu</button>
@@ -971,10 +1050,10 @@ tbody tr:hover{background:#fafcff}
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px;background:#f0fdf4;padding:8px 12px;border-radius:6px;border:1px solid #bbf7d0">
       <span style="font-size:12px;font-weight:700;color:#166534">👤 Nhân Viên Phụ Trách:</span>
       <select id="tt-staff-sel" style="padding:5px 10px;border:1px solid #86efac;border-radius:5px;font-size:12px;font-weight:700;color:#166534" onchange="handleStaffChange(this.value)">
-        <option value="Zin Ko Ko">Zin Ko Ko (Kỹ Sư Trưởng Thi Công)</option>
+        <option value="Staff Sales 01">Staff Sales 01 (Kỹ Sư Trưởng Thi Công)</option>
         <option value="Min Paing">Min Paing (Kỹ Thuật Hiện Trường)</option>
-        <option value="Aung Thu">Aung Thu (Kỹ Thuật Lắp Đặt)</option>
-        <option value="Kyaw Swar">Kyaw Swar (Sale Thị Trường)</option>
+        <option value="Staff Warehouse 01">Staff Warehouse 01 (Kỹ Thuật Lắp Đặt)</option>
+        <option value="Staff Sales 02">Staff Sales 02 (Sale Thị Trường)</option>
         <option value="Zaw Win">Zaw Win (Khảo Sát &amp; Điểm Bán)</option>
       </select>
       <input id="tt-staff-custom" placeholder="Hoặc gõ tên nhân viên..." style="padding:5px 9px;border:1px solid #cbd5e1;border-radius:5px;font-size:12px;width:170px" oninput="handleStaffCustomInput(this.value)"/>
@@ -1104,7 +1183,7 @@ tbody tr:hover{background:#fafcff}
               </select>
             </div>
             <div class="f"><label>Tên Trưởng Thôn / Đại Lý / Điểm Bán *</label>
-              <input id="vcon-name" placeholder="VD: U Kyaw Swar (Trưởng Thôn Palaw North)"/>
+              <input id="vcon-name" placeholder="VD: U Staff Sales 02 (Trưởng Thôn Palaw North)"/>
             </div>
             <div class="f"><label>Người Ký Nhận Hàng</label><input id="vcon-contact" placeholder="Họ tên người nhận"/></div>
             <div class="f"><label>Số Điện Thoại Liên Hệ *</label><input id="vcon-phone" placeholder="09xxxxxxx"/></div>
@@ -1196,7 +1275,7 @@ tbody tr:hover{background:#fafcff}
               <option value="Bảo Hành / Lỗi Kỹ Thuật">🔴 Bảo Hành / Lỗi Kỹ Thuật</option>
             </select>
           </div>
-          <div class="f"><label>Vị Trí / Người Giữ / Tên Khách Hàng</label><input id="new-sn-holder" placeholder="Kho Kawthoung / Zin Ko Ko / Tên KH"/></div>
+          <div class="f"><label>Vị Trí / Người Giữ / Tên Khách Hàng</label><input id="new-sn-holder" placeholder="Kho Kawthoung / Staff Sales 01 / Tên KH"/></div>
           <div class="f"><label>Mã Dự Án / Báo Giá Kèm Theo</label><input id="new-sn-ref" placeholder="VCM-26-05 / QU-xxxx"/></div>
         </div>
         <div class="fa" style="margin-top:10px">
@@ -1745,19 +1824,6 @@ tbody tr:hover{background:#fafcff}
     <div class="panel"><div class="ph"><h3>📋 My Consignment</h3></div><div class="pb tw" id="my-consign"><div style="color:#94a3b8;padding:20px;text-align:center">—</div></div></div>
     <div class="panel"><div class="ph"><h3>🧑‍💼 My Advance</h3></div><div class="pb tw" id="my-advance"><div style="color:#94a3b8;padding:20px;text-align:center">—</div></div></div>
   </div>
-  <!-- ══ COMMISSION PANEL ══ -->
-  <div class="panel" style="border-left:4px solid #10b981;margin-top:10px">
-    <div class="ph"><h3>💵 <span data-lang="commission_title">Commission & Installation Fee / Hoa Hồng & Phí Lắp Đặt</span></h3></div>
-    <div class="pb">
-      <div style="background:#ecfdf5;padding:12px 16px;border-radius:8px;border:1px solid #a7f3d0;font-size:12px;line-height:1.8;margin-bottom:12px">
-        <b>📌 <span data-lang="commission_formula">Commission Formula / Công Thức Hoa Hồng</span>:</b><br/>
-        🧑‍💼 <span data-lang="comm_sales_label">Sales Commission</span> = <code>1% × 95% Prepayment</code> = <b>0.95%</b> × Contract Value<br/>
-        🔧 <span data-lang="comm_tech_label">Technical Installation Fee</span> = <code>70%</code> × Contract Value
-      </div>
-      <div id="my-commission-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px"></div>
-      <div id="my-commission-table" class="tw"></div>
-    </div>
-  </div>
 </div>
 
 <!-- ══ STAFF: MY QUOTATIONS ══ -->
@@ -1838,6 +1904,7 @@ tbody tr:hover{background:#fafcff}
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
         <button class="btn b-sm" onclick="exportRBACMatrixCSV()" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3);font-weight:700">⬇ Xuất CSV Ma Trận</button>
+        <button class="btn b-sm" onclick="resetRBACOverrides()" title="Reset về phân quyền mặc định hệ thống" style="background:rgba(255,200,100,0.25);color:#fff;border:1px solid rgba(255,200,100,0.5);font-weight:700">↩ Reset Mặc Định</button>
         <button class="btn b-sm" onclick="promptAdminUnlock()" style="background:#fff;color:#4f46e5;font-weight:800;border:none;box-shadow:0 2px 4px rgba(0,0,0,0.1)">🔑 Đổi PIN Quản Trị</button>
       </div>
     </div>
@@ -1923,31 +1990,9 @@ tbody tr:hover{background:#fafcff}
       </div>
     </div>
 
+    <div id="rbac-col-toggle-bar" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:#f8fafc;padding:10px 16px;border-bottom:1px solid var(--bd);font-size:12px"></div>
     <div class="pb tw" id="rbac-matrix-container" style="overflow-x:auto;padding:0">
       <!-- Generated by renderRBACMatrix() -->
-    </div>
-  </div>
-
-  <!-- ══ GMAIL ACCESS LIST (Modeled after BI Portal) ══ -->
-  <div class="panel" style="margin-bottom:16px;border-left:4px solid #10b981">
-    <div class="ph" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-      <div>
-        <h3 style="margin:0;font-size:15px;color:#1e293b">📧 GMAIL ACCESS LIST — Authorized Accounts Roster</h3>
-        <div style="font-size:11.5px;color:#64748b;margin-top:2px">Danh sách tài khoản Gmail được cấp quyền truy cập hệ thống TNI Sale. Khi mở link với <code>?email=xxx@gmail.com</code>, hệ thống tự gán vai trò.</div>
-      </div>
-      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-        <button class="btn b-gn b-sm" onclick="openAddGmailModal()" style="font-weight:700">+ Add Gmail</button>
-        <button class="btn b-bl b-sm" onclick="copyAllGmailsToClipboard()" style="font-weight:700">📋 Copy All Gmail</button>
-        <input id="gmail-search-kw" placeholder="🔍 Search email or role..." oninput="renderGmailAccessTable()" style="padding:5px 10px;border:1px solid var(--bd);border-radius:6px;font-size:12px;width:200px"/>
-      </div>
-    </div>
-
-    <!-- Summary Cards -->
-    <div id="gmail-summary-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;padding:12px 16px 0"></div>
-
-    <!-- Gmail Roster Table -->
-    <div class="pb tw" id="gmail-access-table" style="overflow-x:auto;padding:0">
-      <!-- Generated by renderGmailAccessTable() -->
     </div>
   </div>
 
@@ -2009,41 +2054,6 @@ tbody tr:hover{background:#fafcff}
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════ -->
-<!-- 🔧 BẢO HÀNH / WARRANTY CLAIMS MODULE                        -->
-<!-- ══════════════════════════════════════════════════════════════ -->
-<div class="sec" id="s-warranty">
-  <!-- Top Action Bar -->
-  <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;justify-content:space-between;flex-wrap:wrap">
-    <div style="display:flex;gap:6px;align-items:center">
-      <button class="btn b-or" onclick="openWarrantyModal(null)" style="font-weight:700" id="wt-btn-add">🔧 + New Claim</button>
-      <button class="btn b-out b-sm" onclick="renderWarrantySection()" id="wt-btn-refresh">🔄 Refresh</button>
-    </div>
-    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-      <select id="wt-filter-status" onchange="renderWarrantySection()" style="padding:6px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;background:#fff">
-        <option value="all">All Status</option>
-        <option value="pending">⏳ Pending</option>
-        <option value="repairing">🔨 Under Repair</option>
-        <option value="resolved">✅ Resolved</option>
-        <option value="rejected">❌ Rejected</option>
-      </select>
-      <input id="wt-search" type="text" placeholder="🔍 Search serial / customer..." oninput="renderWarrantySection()" style="padding:6px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;width:200px">
-    </div>
-  </div>
-
-  <!-- KPI Summary Cards -->
-  <div class="cards" id="wt-summary-cards"></div>
-
-  <!-- Warranty Table -->
-  <div class="panel" style="margin-top:14px">
-    <div class="ph">
-      <h3 id="wt-table-h3">🔧 Warranty Claims</h3>
-      <span id="wt-count-badge" style="background:#fef3c7;color:#b45309;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;margin-left:8px"></span>
-    </div>
-    <div class="pb tw" id="wt-table-container"></div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════════ -->
 <!-- 🛡️ TRANG BÁO LỖI HẠN CHẾ QUYỀN TRUY CẬP (ACCESS DENIED) -->
 <!-- ══════════════════════════════════════════════════════════════ -->
 <div class="sec" id="s-access-denied">
@@ -2052,39 +2062,38 @@ tbody tr:hover{background:#fafcff}
       <div style="width:68px;height:68px;margin:0 auto 14px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34px;box-shadow:0 0 0 8px #fef2f2">
         🛡️
       </div>
-      <h2 id="denied-h2" style="font-size:20px;font-weight:900;color:#991b1b;margin:0 0 6px">TRUY CẬP BỊ HẠN CHẾ (ACCESS RESTRICTED)</h2>
-      <p id="denied-h2-sub" style="font-size:13px;color:#b91c1c;margin:0">Bạn không có quyền truy cập vào phân hệ này theo chính sách bảo mật nội bộ TNI.</p>
+      <h2 style="font-size:20px;font-weight:900;color:#991b1b;margin:0 0 6px">TRUY CẬP BỊ HẠN CHẾ (ACCESS RESTRICTED)</h2>
+      <p style="font-size:13px;color:#b91c1c;margin:0">Bạn không có quyền truy cập vào phân hệ này theo chính sách bảo mật nội bộ TNI.</p>
     </div>
     
     <div style="padding:24px 24px;text-align:left">
       <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:18px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #e2e8f0">
-          <span id="denied-module-label" style="font-size:12.5px;color:#64748b;font-weight:600">Phân hệ bạn đang muốn mở:</span>
+          <span style="font-size:12.5px;color:#64748b;font-weight:600">Phân hệ bạn đang muốn mở:</span>
           <span id="denied-target-name" style="font-size:13px;font-weight:800;color:#0f172a">💰 Tài Chính &amp; Lợi Nhuận</span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #e2e8f0">
-          <span id="denied-role-label" style="font-size:12.5px;color:#64748b;font-weight:600">Vai trò hiện tại của bạn:</span>
+          <span style="font-size:12.5px;color:#64748b;font-weight:600">Vai trò hiện tại của bạn:</span>
           <span id="denied-current-role" style="font-size:13px;font-weight:800;color:#dc2626">🧑‍💼 Nhân Viên Kinh Doanh (Sales)</span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <span id="denied-allowed-label" style="font-size:12.5px;color:#64748b;font-weight:600">Các vai trò có quyền xem:</span>
+          <span style="font-size:12.5px;color:#64748b;font-weight:600">Các vai trò có quyền xem:</span>
           <span id="denied-allowed-roles" style="font-size:12.5px;font-weight:700;color:#059669">👑 Ban Giám Đốc, 💰 Kế Toán</span>
         </div>
       </div>
 
-      <div id="denied-sec-policy" style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 14px;font-size:12.5px;color:#92400e;line-height:1.6;margin-bottom:22px">
+      <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 14px;font-size:12.5px;color:#92400e;line-height:1.6;margin-bottom:22px">
         <b>💡 Quy định bảo mật hệ thống:</b> Phân hệ này chứa số liệu tài chính sống nhạy cảm (Bao gồm Tỷ lệ 17% nộp Tổng Công Ty VCM, Vốn gốc 83%, lợi nhuận ròng chi nhánh và sổ cái quyết toán tiền nộp). Theo quy định, chỉ <b>Ban Giám Đốc</b> và <b>Kế Toán Trưởng</b> mới được cấp quyền xem dữ liệu này.
       </div>
 
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-        <button id="denied-btn-home" class="btn b-bl" onclick="go('dashboard')" style="padding:8px 18px;font-weight:700">🏠 Về Trang Tổng Quan</button>
-        <button id="denied-btn-rbac" class="btn b-out" onclick="go('rbac')" style="padding:8px 18px;font-weight:700">🛡️ Xem Bảng Phân Quyền (RBAC)</button>
-        <button id="denied-btn-pin" class="btn b-gn" onclick="promptAdminUnlock()" style="padding:8px 18px;font-weight:700">🔑 Mở Khóa Bằng Mã PIN Admin</button>
+        <button class="btn b-bl" onclick="go('dashboard')" style="padding:8px 18px;font-weight:700">🏠 Về Trang Tổng Quan</button>
+        <button class="btn b-out" onclick="go('rbac')" style="padding:8px 18px;font-weight:700">🛡️ Xem Bảng Phân Quyền (RBAC)</button>
+        <button class="btn b-gn" onclick="promptAdminUnlock()" style="padding:8px 18px;font-weight:700">🔑 Mở Khóa Bằng Mã PIN Admin</button>
       </div>
     </div>
   </div>
 </div>
-
 
 </div><!-- /content -->
 </div><!-- /main -->
@@ -2101,35 +2110,6 @@ tbody tr:hover{background:#fafcff}
 // GAS URL = QLTC_GAS deployed endpoint
 // ══════════════════════════════════════════════════════════
 const GAS_SALE_URL = 'https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec';
-
-// ── API Token helper (client-side) ────────────────────────────
-// Token strategy:
-//   Admin:        stored in localStorage('tni_sale_api_token') after PIN unlock
-//   Staff user:   email stored as token when verified via gmailTokenVerify
-// The actual master SALE_API_KEY lives ONLY in GAS Script Properties — never exposed here.
-function getSaleToken_() {
-  return localStorage.getItem('tni_sale_api_token') || '';
-}
-
-// Verify email against server gmail list — sets role + token on success
-async function verifySaleEmail_(email) {
-  try {
-    const res  = await fetch(GAS_SALE_URL, {
-      method: 'POST', mode: 'cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'gmail_token_verify', email: email.toLowerCase().trim() })
-    });
-    const json = await res.json();
-    if (json.ok) {
-      localStorage.setItem('tni_sale_api_token', email.toLowerCase().trim()); // email as token for staff
-      return json; // { ok, role, name, canViewFinance }
-    }
-    return { ok: false, error: json.error };
-  } catch(e) {
-    console.warn('[DB] verifySaleEmail_ failed:', e);
-    return { ok: false, error: 'Network error' };
-  }
-}
 
 const DB = {
   // ── Local cache read/write ──────────────────────────────
@@ -2169,24 +2149,22 @@ const DB = {
     DB._push('sale_bulk', { col: k, items: items });
   },
 
-  // ── Background push to GAS — includes auth token ────────
+  // ── Background push to GAS (fire-and-forget) ────────────
   _push: (action, body) => {
-    const token = getSaleToken_();
     fetch(GAS_SALE_URL, {
       method: 'POST', mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: action, token: token, ...body })
+      body: JSON.stringify({ action: action, ...body })
     }).catch(e => console.warn('[DB] GAS push failed:', e));
   },
 
   // ── Pull live data from Sheet → refresh local cache ─────
   pull: async (k, onDone) => {
     try {
-      const token = getSaleToken_();
       const res  = await fetch(GAS_SALE_URL, {
         method: 'POST', mode: 'cors',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'sale_get', col: k, token: token })
+        body: JSON.stringify({ action: 'sale_get', col: k })
       });
       const json = await res.json();
       if (json.ok && Array.isArray(json.data) && json.data.length > 0) {
@@ -2221,7 +2199,7 @@ if (!localStorage.getItem('u_init')) {
   DB.add('nhap', {ten:'Solar Panel 400W Jinko',model:'JK-400M',serial:'SN003',dm:'Solar Panel',sl:20,gg:1800000,gb:2500000,ncc:'Jinko VN',ngay:td(),bh:12,gc:''});
   DB.add('nhap', {ten:'Inverter Growatt 5kW',model:'SPF-5000',serial:'SN004',dm:'Inverter',sl:3,gg:12000000,gb:17000000,ncc:'Growatt',ngay:td(),bh:24,gc:''});
   DB.add('nhap', {ten:'Ắc Quy GEL 100Ah',model:'GEL-100',serial:'SN005',dm:'Ắc Quy',sl:15,gg:3200000,gb:4500000,ncc:'Deco VN',ngay:td(),bh:12,gc:''});
-  DB.add('daily', {ten:'Điện Tử Minh Khoa',chu:'Khoa Nguyễn',dt:'0901234567',dc:'Q.7 HCM',kv:'TP.HCM',loai:'Đại lý cấp 1',ck:10});
+  DB.add('daily', {ten:'Điện Tử Minh Khoa',chu:'Khoa Nguyễn',dt:'0965 000 000',dc:'Q.7 HCM',kv:'TP.HCM',loai:'Đại lý cấp 1',ck:10});
   localStorage.setItem('u_init', '1');
 }
 
@@ -2241,7 +2219,6 @@ function v(id){return document.getElementById(id)?.value?.trim()||'';}
 const ptitles={dashboard:'📊 Dashboard',nhap:'📦 Goods Intake',tonkho:'🗄️ Inventory',tamung:'🧑‍💼 Stock Advance',
   banhang:'🛒 Sales Orders',baogiaups:'📄 Device Quotation',baogiasolar:'☀️ Solar Quotation',thucthi:'🚀 Team Thực Thi (Field Operations Hub)',acceptance:'⚡ Handover & Acceptance',
   daily:'🏪 Distribution & Dealers',kygoi:'📋 Consignment',crm:'👥 CRM & Survey',
-  warranty:'🔧 Warranty Claims',
   quangcao:'📢 Ads Campaigns',leads:'🎯 Leads & Conversion',
   loinhuan:'💰 Financial & Cashflow',statement:'📑 VCM Payment Statement',baocao:'📈 Reports',
   mystats:'📊 My Performance',myquotes:'📄 My Quotations',mysurvey:'📝 My Surveys',rbac:'🛡️ Phân Quyền Vai Trò (RBAC)','access-denied':'🛡️ Truy Cập Bị Hạn Chế'};
@@ -2256,11 +2233,10 @@ const renders={
   daily:()=>{rDL();popSP(['pp-sp']);popDL();},
   kygoi:()=>{popSP(['kg-sp','tu-sp']);rKG();},
   crm:()=>{rKH();rKS();rLK();},
-  warranty:()=>{renderWarrantySection();},
   quangcao:()=>{rCampaigns();popCamps(['adr-camp']);rAdsResults();renderAdsSummary();},
   leads:()=>{popCamps(['ld-camp']);rLeads();popLeadSel();renderFunnel();renderLeadsCards();},
   loinhuan:renderLN,statement:()=>{rVCMStatements();populateStatementSources();calcStatementFields();},baocao:rBC,
-  rbac:()=>{renderRBACMatrix();renderStaffUsersTable();populateStaffUserSelect();}
+  rbac:()=>{renderRBACColToggles();renderRBACMatrix();renderStaffUsersTable();populateStaffUserSelect();}
 };
 
 
@@ -2285,9 +2261,6 @@ function go(id){
   else if(event?.target?.closest('a')) event.target.closest('a').classList.add('active');
 
   if(renders[id]) renders[id]();
-  if (typeof translateDOM === 'function' && typeof currentLang !== 'undefined') {
-    translateDOM(currentLang);
-  }
 }
 function sw(el,tid){
   el.closest('.tabs').querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
@@ -3401,9 +3374,9 @@ function presetSolar(type) {
       { ten: "Delivery", brand: "-", dv: "Lot", sl: 1, dg: 1160000, remark: "Depends on Site" }
     ];
     kawthoungItems.forEach(it => addSolarItemRow(it));
-  } else if (type === 'zinkoko') {
+  } else if (type === 'staffsales01') {
     document.getElementById('qs-code').value = 'VCM-07-02';
-    document.getElementById('qs-kh').value = 'Zin Ko Ko';
+    document.getElementById('qs-kh').value = 'Staff Sales 01';
     document.getElementById('qs-subj').value = '6kW Solar System';
     document.getElementById('qs-cs').value = '6';
     document.getElementById('qs-loai').value = 'Hybrid (Hòa lưới + Dự trữ)';
@@ -3496,7 +3469,7 @@ function saveSolarQuote(andPrint) {
 
   const total = rows.reduce((s, r) => s + r.sl * r.dg, 0);
   const curr = v('qs-curr') || 'Kyats';
-  const staff = v('qs-nlbg') || 'Zin Ko Ko';
+  const staff = v('qs-nlbg') || 'Staff Sales 01';
   const staffId = v('qs-staffid') || 'NV001';
   const shareTo = v('qs-shareto') || '';
   const email = v('qs-email') || '';
@@ -3674,7 +3647,7 @@ function loadSelectedQuote(quoteId) {
   document.getElementById('qs-subj').value = quote.subj || '6kW Solar System';
   document.getElementById('qs-loai').value = quote.loai || 'Hybrid (Hòa lưới + Dự trữ)';
   document.getElementById('qs-cs').value = quote.cs || '6';
-  document.getElementById('qs-nlbg').value = quote.nlbg || 'Zin Ko Ko';
+  document.getElementById('qs-nlbg').value = quote.nlbg || 'Staff Sales 01';
   document.getElementById('qs-staffid').value = quote.staffId || 'NV001';
   document.getElementById('qs-ngay').value = quote.ngay || td();
   document.getElementById('qs-hl').value = quote.hl || 15;
@@ -3745,7 +3718,7 @@ View Online Quotation:
 ${window.location.origin}/sale?quote=${quote.code || 'VCM-07-02'}&user=${encodeURIComponent(targetEmail)}
 
 Thank you for choosing Viettel Construction Myanmar!
-Hotline: 0965 1900 009 | Website: www.viettelconstructionmyanmar.com`
+Hotline: 0965 000 003 | Website: www.viettelconstructionmyanmar.com`
   );
 
   window.open(`mailto:${targetEmail}?subject=${subject}&body=${body}`, '_blank');
@@ -4340,7 +4313,7 @@ function viewQuote(type, id) {
   // BÁO GIÁ SOLAR CHÍNH THỨC — VIETTEL CONSTRUCTION MYANMAR & TIẾNG ANH CHỦ ĐẠO
   const d = DB.g('quotesolar').find(r => r.id == id) || {
     code: v('qs-code') || 'VCM-07-02',
-    kh: v('qs-kh') || 'Zin Ko Ko',
+    kh: v('qs-kh') || 'Staff Sales 01',
     dt: v('qs-dt') || '-',
     dc: v('qs-dc') || 'Yangon, Myanmar',
     subj: v('qs-subj') || '6kW Solar System',
@@ -4348,7 +4321,7 @@ function viewQuote(type, id) {
     cs: v('qs-cs') || '6',
     ngay: v('qs-ngay') || td(),
     hl: v('qs-hl') || 15,
-    nlbg: v('qs-nlbg') || 'Zin Ko Ko',
+    nlbg: v('qs-nlbg') || 'Staff Sales 01',
     currency: v('qs-curr') || 'Kyats',
     rows: [...document.getElementById('qs-table-body')?.children || []].map(tr => ({
       ten: tr.querySelector('.r-ten')?.value || '',
@@ -4511,7 +4484,7 @@ function viewQuote(type, id) {
     <div class="info-item"><b>Mr / Ms:</b> <span style="font-weight:bold">${d.kh || '-'}</span></div>
     <div class="info-item"><b>Validity:</b> <span>${d.hl || 15} Days</span></div>
     <div class="info-item"><b>Phone Number:</b> <span>${d.dt || '-'}</span></div>
-    <div class="info-item"><b>Prepared By:</b> <span>${d.nlbg || 'Zin Ko Ko'}</span></div>
+    <div class="info-item"><b>Prepared By:</b> <span>${d.nlbg || 'Staff Sales 01'}</span></div>
     <div class="info-item"><b>Project / Site:</b> <span>${d.dc || '-'}</span></div>
     <div class="info-item"><b>System Type:</b> <span>${d.loai || 'Hybrid'} (${d.cs || 6} kWp)</span></div>
     <div class="info-item" style="grid-column:1/-1"><b>Subject:</b> <span style="font-weight:600">${d.subj || (d.cs ? d.cs + 'kW Solar System' : 'Solar System')}</span></div>
@@ -5981,10 +5954,10 @@ function toggleAccAdminFin() {
 function presetSampleAcceptance() {
   document.getElementById('acc-code').value = "VCM-26-05";
   document.getElementById('acc-kh').value = "Kawthoung Hotel & Resort";
-  document.getElementById('acc-dt').value = "0965 1900 009";
+  document.getElementById('acc-dt').value = "0965 000 003";
   document.getElementById('acc-dc').value = "Kawthoung, Tanintharyi Region, Myanmar";
   document.getElementById('acc-date').value = td();
-  document.getElementById('acc-eng').value = "Zin Ko Ko / Technical Team";
+  document.getElementById('acc-eng').value = "Staff Sales 01 / Technical Team";
   document.getElementById('acc-volt').value = "220";
   document.getElementById('acc-kwp').value = "15.8";
   document.getElementById('acc-soc').value = "98%";
@@ -6025,116 +5998,6 @@ function resetAccForm() {
   clearAccPhotos();
   calcAccFinancials();
   calcAccMaterials();
-  loadDefaultInstallItems(); // Auto-load installation items template
-}
-
-// ═══════════════════════════════════════════════════════════════
-// 🔧 INSTALLATION WORK ASSIGNMENT & LABOR COST CALCULATOR
-// ═══════════════════════════════════════════════════════════════
-
-let installRowCounter = 0;
-
-function addInstallRow(itemData) {
-  const container = document.getElementById('install-items');
-  if (!container) return;
-
-  installRowCounter++;
-  const id = 'inst-' + installRowCounter;
-  const d = itemData || { name: '', code: '', unit: 'Lot', qty: 1, price: 0 };
-
-  const row = document.createElement('div');
-  row.id = id;
-  row.style.cssText = 'display:grid;grid-template-columns:28px minmax(160px,2fr) minmax(100px,1fr) 55px 55px 80px 100px 28px;gap:5px;margin-bottom:4px;align-items:center';
-
-  const ist = 'padding:4px 6px;border:1px solid #cbd5e1;border-radius:4px;font-size:12px';
-
-  const isVi = currentLang === 'vi';
-  row.innerHTML = `
-    <div style="text-align:center;color:#94a3b8;cursor:grab;font-size:14px">≡</div>
-    <input value="${d.name}" placeholder="${isVi ? 'Tên hạng mục...' : 'Task description...'}" style="${ist};font-weight:700" class="inst-name" oninput="calcInstallTotal()"/>
-    <input value="${d.code}" placeholder="${isVi ? 'Mã code...' : 'Task code...'}" style="${ist}" class="inst-code"/>
-    <input value="${d.unit}" style="${ist};text-align:center" class="inst-unit"/>
-    <input value="${d.qty}" type="number" min="0" style="${ist};text-align:center;font-weight:700" class="inst-qty" oninput="calcInstallTotal()"/>
-    <input value="${d.price}" type="number" min="0" style="${ist};text-align:right" class="inst-price" oninput="calcInstallTotal()"/>
-    <div class="inst-subtotal" style="text-align:right;font-weight:800;color:#059669;font-size:13px">${fn(d.qty * d.price)} đ</div>
-    <button type="button" onclick="removeInstallRow('${id}')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:16px;padding:0">✕</button>
-  `;
-
-  container.appendChild(row);
-  calcInstallTotal();
-}
-
-function removeInstallRow(id) {
-  const row = document.getElementById(id);
-  if (row) row.remove();
-  calcInstallTotal();
-}
-
-function calcInstallTotal() {
-  const container = document.getElementById('install-items');
-  if (!container) return;
-
-  let total = 0;
-  container.querySelectorAll('[id^="inst-"]').forEach(row => {
-    const qty = Number(row.querySelector('.inst-qty')?.value || 0);
-    const price = Number(row.querySelector('.inst-price')?.value || 0);
-    const subtotal = qty * price;
-    total += subtotal;
-
-    const subEl = row.querySelector('.inst-subtotal');
-    if (subEl) subEl.innerHTML = `<b style="color:#059669">${fn(subtotal)} đ</b>`;
-  });
-
-  // Update totals
-  const totalEl = document.getElementById('install-total-cost');
-  if (totalEl) totalEl.textContent = fn(total) + ' Ks';
-
-  // Ratio vs contract value
-  const rev = Number(document.getElementById('acc-rev')?.value || 0);
-  const ratioEl = document.getElementById('install-ratio');
-  if (ratioEl) {
-    const pct = rev > 0 ? ((total / rev) * 100).toFixed(1) : 0;
-    ratioEl.textContent = pct + '%';
-  }
-
-  // Engineer name
-  const engEl = document.getElementById('install-engineer');
-  const eng = document.getElementById('acc-eng')?.value || '—';
-  if (engEl) engEl.textContent = eng;
-}
-
-const DEFAULT_INSTALL_ITEMS = [
-  { name: 'Inverter Installation + System Wiring', code: 'Inverter Installation', unit: 'Lot', qty: 6, price: 60000 },
-  { name: 'Solar Panel Installation (Rooftop)', code: 'Solar Installation', unit: 'Lot', qty: 8, price: 120000 },
-  { name: 'Battery Storage Installation', code: 'Battery Install', unit: 'Lot', qty: 2, price: 80000 },
-  { name: 'DC/AC Cable Wiring & Conduit', code: 'Wiring Works', unit: 'Lot', qty: 1, price: 150000 },
-  { name: 'Earthing & Lightning Protection', code: 'Earthing System', unit: 'Lot', qty: 1, price: 100000 },
-  { name: 'Testing & Commissioning', code: 'T&C', unit: 'Lot', qty: 1, price: 50000 }
-];
-
-function loadDefaultInstallItems() {
-  const container = document.getElementById('install-items');
-  if (!container) return;
-  container.innerHTML = '';
-  installRowCounter = 0;
-  DEFAULT_INSTALL_ITEMS.forEach(item => addInstallRow(item));
-  calcInstallTotal();
-}
-
-function getInstallItemsData() {
-  const container = document.getElementById('install-items');
-  if (!container) return [];
-  const items = [];
-  container.querySelectorAll('[id^="inst-"]').forEach(row => {
-    items.push({
-      name: row.querySelector('.inst-name')?.value || '',
-      code: row.querySelector('.inst-code')?.value || '',
-      unit: row.querySelector('.inst-unit')?.value || 'Lot',
-      qty: Number(row.querySelector('.inst-qty')?.value || 0),
-      price: Number(row.querySelector('.inst-price')?.value || 0)
-    });
-  });
-  return items;
 }
 
 function saveAcceptanceRecord(andPrint) {
@@ -6209,8 +6072,6 @@ function saveAcceptanceRecord(andPrint) {
     debt: debt,
     cty: cty,
     branchNet: branchNet,
-    installItems: getInstallItemsData(),
-    installTotalCost: getInstallItemsData().reduce((s, it) => s + (it.qty * it.price), 0),
     updatedAt: new Date().toISOString()
   };
 
@@ -6392,10 +6253,10 @@ function printAcceptanceDoc(id) {
   const r = (id ? list.find(item => item.id == id) : null) || {
     code: v('acc-code') || 'VCM-26-05',
     kh: v('acc-kh') || 'Kawthoung Hotel & Resort',
-    dt: v('acc-dt') || '0965 1900 009',
+    dt: v('acc-dt') || '0965 000 003',
     dc: v('acc-dc') || 'Kawthoung, Tanintharyi Region',
     dateStr: v('acc-date') || td(),
-    eng: v('acc-eng') || 'Zin Ko Ko / Technical Team',
+    eng: v('acc-eng') || 'Staff Sales 01 / Technical Team',
     volt: v('acc-volt') || '220',
     kwp: v('acc-kwp') || '15.8',
     soc: v('acc-soc') || '98%',
@@ -6478,7 +6339,7 @@ function printAcceptanceDoc(id) {
   <div class="header-box">
     <div>
       <div class="co-name">VIETTEL CONSTRUCTION MYANMAR &bull; TNI TECH &amp; ENERGY</div>
-      <div class="co-info">No 1237 Waizanyantar Street, South Okkalapa, Yangon, Myanmar | Hotline: 0965 1900 009</div>
+      <div class="co-info">Văn Phòng Đại Diện TNI Myanmar | Hotline: 0965 000 003</div>
       <div class="co-info">Website: www.viettelconstructionmyanmar.com &bull; Tanintharyi Energy Center</div>
     </div>
     <div style="text-align:right">
@@ -6636,13 +6497,13 @@ function printAcceptanceDoc(id) {
 // 🚀 FIELD OPERATIONS HUB ENGINE (CỔNG ĐIỀU HÀNH TEAM THỰC THI) — RULE PM-42
 // ═══════════════════════════════════════════════════════════════════════════════
 
-let currentFieldStaff = 'Zin Ko Ko';
+let currentFieldStaff = 'Staff Sales 01';
 
 function getCurrentStaff() {
   const custom = (document.getElementById('tt-staff-custom')?.value || '').trim();
   if (custom) return custom;
   const sel = document.getElementById('tt-staff-sel')?.value;
-  return sel || currentFieldStaff || 'Zin Ko Ko';
+  return sel || currentFieldStaff || 'Staff Sales 01';
 }
 
 function updateStaffLinkDisplay() {
@@ -6682,7 +6543,7 @@ function handleStaffCustomInput(val) {
     currentFieldStaff = val.trim();
   } else {
     const sel = document.getElementById('tt-staff-sel');
-    currentFieldStaff = sel ? sel.value : 'Zin Ko Ko';
+    currentFieldStaff = sel ? sel.value : 'Staff Sales 01';
   }
   updateStaffLinkDisplay();
   renderStaffCustomerHistory();
@@ -6880,8 +6741,8 @@ let currentEditingVconId = null;
 function handleVconChannelChange(val) {
   const nameEl = document.getElementById('vcon-name');
   if (nameEl) {
-    if (val.includes('Trưởng Thôn')) nameEl.placeholder = 'VD: U Kyaw Swar (Trưởng Thôn Palaw North)';
-    else if (val.includes('Đại Lý')) nameEl.placeholder = 'VD: Đại Lý Điện Nước Dawei Solar Hub';
+    if (val.includes('Trưởng Thôn')) nameEl.placeholder = 'VD: U Staff Sales 02 (Trưởng Thôn Palaw North)';
+    else if (val.includes('Đại Lý')) nameEl.placeholder = 'VD: Đại Lý Ủy Quyền 01';
     else nameEl.placeholder = 'VD: Cửa Hàng Tạp Hóa Bokpyin Central';
   }
 }
@@ -7412,11 +7273,11 @@ function seedSampleFieldOpsDataIfEmpty() {
       {
         id: 1726000001001,
         kh: 'U Aung San (Xưởng May Kawthoung)',
-        dt: '0945 112 334',
+        dt: '0965 000 008',
         dc: 'Khu Công Nghiệp Cảng Kawthoung, Tanintharyi',
         gps: '9.9832, 98.5491',
         dateStr: td(),
-        eng: 'Zin Ko Ko',
+        eng: 'Staff Sales 01',
         roof: 'Mái Tôn (Tin Roof)',
         orient: 'Hướng Nam (180°) - Tối Ưu',
         grid: 'Điện lưới chập chờn / Cúp thường xuyên',
@@ -7431,7 +7292,7 @@ function seedSampleFieldOpsDataIfEmpty() {
       {
         id: 1726000001002,
         kh: 'Daw Than Than Nu (Nhà Vườn Bokpyin)',
-        dt: '0979 889 123',
+        dt: '0965 000 009',
         dc: 'Thôn Thabawleik, Bokpyin Township',
         gps: '11.1645, 98.7712',
         dateStr: td(),
@@ -7458,11 +7319,11 @@ function seedSampleFieldOpsDataIfEmpty() {
       {
         id: 1726000002001,
         channel: 'Ký Gởi Trưởng Thôn / Già Làng (Village Headman)',
-        name: 'U Kyaw Swar (Trưởng Thôn Palaw North)',
-        contact: 'U Kyaw Swar',
-        phone: '0978 223 991',
+        name: 'U Staff Sales 02 (Trưởng Thôn Palaw North)',
+        contact: 'U Staff Sales 02',
+        phone: '0965 000 010',
         village: 'Thôn Palaw North, Tanintharyi',
-        staff: 'Zin Ko Ko',
+        staff: 'Staff Sales 01',
         product: 'Quạt Năng Lượng Mặt Trời 12V (Solar Fan)',
         qty: 6,
         serials: 'FAN-SOLAR-001, FAN-SOLAR-002, FAN-SOLAR-003, FAN-SOLAR-004, FAN-SOLAR-005, FAN-SOLAR-006',
@@ -7479,11 +7340,11 @@ function seedSampleFieldOpsDataIfEmpty() {
       {
         id: 1726000002002,
         channel: 'Đại Lý Phân Phối (Authorized Dealer)',
-        name: 'Đại Lý Điện Nước Dawei Solar Hub',
-        contact: 'Ko Aung Thu',
-        phone: '0965 334 112',
-        village: 'Thị Xã Dawei, Tanintharyi',
-        staff: 'Kyaw Swar',
+        name: 'Đại Lý Ủy Quyền 01',
+        contact: 'Ko Staff Warehouse 01',
+        phone: '0965 000 007',
+        village: 'Chi Nhánh TNI Region',
+        staff: 'Staff Sales 02',
         product: 'Inverter Hybrid Deye 5kW',
         qty: 2,
         serials: 'DEYE-5K-2026-091, DEYE-5K-2026-092',
@@ -7508,11 +7369,11 @@ function seedSampleFieldOpsDataIfEmpty() {
       { id: 101, sn: 'DEYE-15K-20260501', name: 'Inverter Hybrid Deye 15kW 3P', cat: 'Inverter', status: 'Đã Lắp Cho Khách Hàng', holder: 'Kawthoung Hotel & Resort', ref: 'VCM-26-05' },
       { id: 102, sn: 'CATL-320AH-88912', name: 'Pin Lưu Trữ Lithium 15.36kWh', cat: 'Pin Lưu Trữ (Battery)', status: 'Đã Lắp Cho Khách Hàng', holder: 'Kawthoung Hotel & Resort', ref: 'VCM-26-05' },
       { id: 103, sn: 'DEYE-8K-20260810', name: 'Inverter Hybrid Deye 8kW 1P', cat: 'Inverter', status: 'Trong Kho Chi Nhánh', holder: 'Kho Kawthoung', ref: 'NHẬP KHO LÔ 2' },
-      { id: 104, sn: 'DEYE-8K-20260811', name: 'Inverter Hybrid Deye 8kW 1P', cat: 'Inverter', status: 'Xuất Xe Kỹ Thuật / Đi Lắp', holder: 'Zin Ko Ko (Xe Ford Ranger)', ref: 'LẮP ĐẶT THABAWLEIK' },
+      { id: 104, sn: 'DEYE-8K-20260811', name: 'Inverter Hybrid Deye 8kW 1P', cat: 'Inverter', status: 'Xuất Xe Kỹ Thuật / Đi Lắp', holder: 'Staff Sales 01 (Xe Ford Ranger)', ref: 'LẮP ĐẶT THABAWLEIK' },
       { id: 105, sn: 'CATL-280AH-99104', name: 'Pin Lưu Trữ Lithium 14.33kWh', cat: 'Pin Lưu Trữ (Battery)', status: 'Trong Kho Chi Nhánh', holder: 'Kho Dawei', ref: 'NHẬP KHO LÔ 2' },
-      { id: 106, sn: 'FAN-SOLAR-001', name: 'Quạt Năng Lượng Mặt Trời 12V', cat: 'Quạt Solar / Đèn Solar', status: 'Ký Gởi Trưởng Thôn / Điểm Bán', holder: 'U Kyaw Swar (Trưởng Thôn Palaw North)', ref: 'KÝ GỞI TRƯỞNG THÔN' },
-      { id: 107, sn: 'FAN-SOLAR-002', name: 'Quạt Năng Lượng Mặt Trời 12V', cat: 'Quạt Solar / Đèn Solar', status: 'Ký Gởi Trưởng Thôn / Điểm Bán', holder: 'U Kyaw Swar (Trưởng Thôn Palaw North)', ref: 'KÝ GỞI TRƯỞNG THÔN' },
-      { id: 108, sn: 'DEYE-5K-2026-091', name: 'Inverter Hybrid Deye 5kW', cat: 'Inverter', status: 'Ký Gởi Trưởng Thôn / Điểm Bán', holder: 'Đại Lý Điện Nước Dawei Solar Hub', ref: 'BỎ HÀNG ĐẠI LÝ' },
+      { id: 106, sn: 'FAN-SOLAR-001', name: 'Quạt Năng Lượng Mặt Trời 12V', cat: 'Quạt Solar / Đèn Solar', status: 'Ký Gởi Trưởng Thôn / Điểm Bán', holder: 'U Staff Sales 02 (Trưởng Thôn Palaw North)', ref: 'KÝ GỞI TRƯỞNG THÔN' },
+      { id: 107, sn: 'FAN-SOLAR-002', name: 'Quạt Năng Lượng Mặt Trời 12V', cat: 'Quạt Solar / Đèn Solar', status: 'Ký Gởi Trưởng Thôn / Điểm Bán', holder: 'U Staff Sales 02 (Trưởng Thôn Palaw North)', ref: 'KÝ GỞI TRƯỞNG THÔN' },
+      { id: 108, sn: 'DEYE-5K-2026-091', name: 'Inverter Hybrid Deye 5kW', cat: 'Inverter', status: 'Ký Gởi Trưởng Thôn / Điểm Bán', holder: 'Đại Lý Ủy Quyền 01', ref: 'BỎ HÀNG ĐẠI LÝ' },
       { id: 109, sn: 'INV-DEYE-ERR-009', name: 'Inverter Hybrid Deye 5kW Cũ', cat: 'Inverter', status: 'Bảo Hành / Lỗi Kỹ Thuật', holder: 'Khu Kỹ Thuật Bảo Hành', ref: 'LỖI BOARD MẠCH' }
     ];
     DB.s('serial_inventory', serials);
@@ -7601,7 +7462,6 @@ const NAV_TITLES = {
     daily: '🏪 Distribution',
     kygoi: '📋 Consignment',
     crm: '👥 CRM & Survey',
-    warranty: '🔧 Warranty Claims',
     quangcao: '📢 Ads Campaigns',
     leads: '🎯 Leads & Conv',
     loinhuan: '💰 Financial & Cashflow',
@@ -7633,8 +7493,6 @@ const NAV_TITLES = {
     daily: '🏪 Đại Lý & Phân Phối',
     kygoi: '📋 Hàng Ký Gởi',
     crm: '👥 CRM & Khảo Sát',
-    warranty: '🔧 Bảo Hành & Sửa Chữa',
-
     quangcao: '📢 Chiến Dịch Quảng Cáo',
     leads: '🎯 Leads & Chuyển Đổi',
     loinhuan: '💰 Tài Chính & Lợi Nhuận',
@@ -7866,7 +7724,7 @@ const BILINGUAL_PAIRS = [
   ['📋 Chọn Báo Giá Cũ:', '📋 Select Past Quote:'],
   ['👁️ Xem & Sửa', '👁️ View & Edit'],
   ['➕ Tạo Báo Giá Mới', '➕ New Solar Quotation'],
-  ['⭐ Mẫu Chuẩn 6kW (Zin Ko Ko)', '⭐ 6kW Standard (Zin Ko Ko)'],
+  ['⭐ Mẫu Chuẩn 6kW (Staff Sales 01)', '⭐ 6kW Standard (Staff Sales 01)'],
   ['Mã Báo Giá (Quote Ref)', 'Quote Ref Code'],
   ['Tên Khách Hàng (Mr/Ms) *', 'Customer Name (Mr/Ms) *'],
   ['Điện Thoại Khách', 'Customer Phone'],
@@ -8069,123 +7927,6 @@ const BILINGUAL_PAIRS = [
   ['📄 UPS / Device Quotations', '📄 UPS / Device Quotations'],
   ['📝 Customer & Partner Survey', '📝 Customer & Partner Survey'],
   ['📋 Lịch Sử Khảo Sát', '📋 Survey History'],
-
-  // ══ HANDOVER & ACCEPTANCE (NGHIỆM THU HIỆN TRƯỜNG) ══
-  ['Đo đạc điện áp 220V/kWp, kiểm soát mét dây Black/Red, Serial thiết bị, ký tay cảm ứng trên điện thoại & chốt sổ cái 1 hàng', 'Measure 220V/kWp voltage, audit Black/Red cables, device serial numbers, on-screen touch signature & closed-loop ledger'],
-  ['⚡ Chọn dự án cần nghiệm thu:', '⚡ Select Project for Handover:'],
-  ['-- Nạp từ Báo Giá Solar / Đơn Bán Hàng --', '-- Load from Solar Quote / Sales Order --'],
-  ['⭐ Mẫu Chuẩn: 16kW Kawthoung', '⭐ 16kW Standard Preset (Kawthoung)'],
-  ['➕ Tạo Mới Trắng', '➕ New Blank Record'],
-  ['📋 Phiếu Nghiệm Thu & Bàn Giao Hiện Trường', '📋 Field Handover & Acceptance Record'],
-  ['1. Thông Tin Công Trình & Khách Hàng:', '1. Project & Customer Information:'],
-  ['Mã Dự Án / Hợp Đồng *', 'Project / Contract Code *'],
-  ['Tên Khách Hàng (Mr/Ms) *', 'Customer Name (Mr/Ms) *'],
-  ['Số Điện Thoại', 'Phone Number'],
-  ['Địa Chỉ Công Trình', 'Site Address'],
-  ['Ngày Nghiệm Thu', 'Acceptance Date'],
-  ['Kỹ Sư Trưởng Phụ Trách', 'Supervising Engineer'],
-  ['2. Đo Đạc Thông Số Bàn Giao Kỹ Thuật (Field Measurements):', '2. Field Technical Measurements & Handover:'],
-  ['⚡ Điện Áp Đo Bàn Giao (V) *', '⚡ Measured Voltage (V) *'],
-  ['☀️ Công Suất Đỉnh Đo Đạc (kWp) *', '☀️ Peak Measured Power (kWp) *'],
-  ['🔋 Mức Sạc Pin Lưu Trữ (SOC %)', '🔋 Battery State of Charge (SOC %)'],
-  ['3. Thống Kê Vật Tư Sử Dụng & Vật Tư Thừa Quy Ra Tiền (Chuyển KH Khác):', '3. Materials Consumed & Surplus Credit (Transferred to Next Site):'],
-  ['* Đối soát vật tư mang đi vs thực dùng. Tiền vật tư thừa thu hồi được đem sang KH khác dùng, không tính vào giá trị sử dụng công trình này.', '* Reconciliation of issued vs consumed materials. Surplus credit is transferred to next site, excluded from this project cost.'],
-  ['➕ Thêm Vật Tư', '➕ Add Material'],
-  ['🔄 Mẫu Chuẩn', '🔄 Standard Preset'],
-  ['Tên Vật Tư', 'Material Name'],
-  ['ĐVT', 'Unit'],
-  ['Mang Đi', 'Issued'],
-  ['Dùng', 'Used'],
-  ['Thừa', 'Surplus'],
-  ['Đơn Giá', 'Unit Price'],
-  ['Tiền Dùng', 'Used Cost'],
-  ['Tiền Thừa (Thu Hồi)', 'Surplus Credit'],
-  ['⚡ Tiền Vật Tư Thực Dùng (Tính Công Trình):', '⚡ Consumed Material Cost (Project Billed):'],
-  ['🔄 Tiền Thừa Thu Hồi (Chuyển KH Khác):', '🔄 Surplus Credit (Transfer to Next Site):'],
-  ['✓ Không tính vào giá trị sử dụng công trình này', '✓ Excluded from this project billed cost'],
-  ['🏷️ Serial Number Inverter *', '🏷️ Inverter Serial Number *'],
-  ['🔋 Serial Number Pin Lưu Trữ (Battery)', '🔋 Battery Serial Number'],
-  ['☀️ Danh Sách / Dải Serial Tấm Pin Solar', '☀️ Solar PV Panel Serial Numbers / Range'],
-  ['4. Khách Hàng Ký Nghiệm Thu Trực Tiếp Trên Màn Hình (Digital Signature):', '4. Customer Direct Digital Signature on Screen:'],
-  ['✍️ Dùng ngón tay ký vào khung dưới đây:', '✍️ Sign with finger or stylus in the box below:'],
-  ['🗑️ Ký Lại', '🗑️ Clear Signature'],
-  ['🔒 Khóa Chữ Ký', '🔒 Lock Signature'],
-  ['Trạng thái: Chưa ký', 'Status: Not signed'],
-  ['Trạng thái: Đã ký', 'Status: Signed'],
-  ['5. Hình Ảnh Hiện Trường Nghiệm Thu (Tủ điện, Giàn pin, Đồng hồ 220V):', '5. Site Handover Photos (Distribution Box, PV Array, 220V Meter):'],
-  ['✕ Xóa Hết Ảnh', '✕ Clear All Photos'],
-  ['Hoặc link Google Drive lưu trữ ảnh:', 'Or Google Drive Folder Link:'],
-  ['6. Thu Tiền & Quyết Toán Bàn Giao Hiện Trường (Customer Payment):', '6. Field Payment Collection & Settlement:'],
-  ['💰 Doanh Thu Hợp Đồng (100%) (Ks) *', '💰 Contract Revenue (100%) (Ks) *'],
-  ['💵 Thực Thu Từ Khách Tại Hiện Trường (Ks) *', '💵 Cash/Transfer Collected On Site (Ks) *'],
-  ['⏳ Khách Còn Nợ / Cần Thu Thêm (Ks)', '⏳ Outstanding Customer Receivable (Ks)'],
-  ['🏢 Bóc Tách Giá Vốn & Lợi Nhuận Công Ty (Chỉ Dành Cho Quản Lý):', '🏢 Internal Cost & HO Profit Breakdown (Admin Only):'],
-  ['🏦 Tổng Giá Gốc Vốn (83%) (Ks) *', '🏦 Base Equipment Cost (83%) (Ks) *'],
-  ['🏢 Phải Nộp Cty (% Cty)', '🏢 Payable to HO (HO %)'],
-  ['🏪 Thực Còn Lại Chi Nhánh', '🏪 Net Retained Branch Profit'],
-  ['⬇ Xuất CSV Sổ Cái (Quản Lý)', '⬇ Export Ledger CSV (Admin)'],
-  ['🛡️ Bảo Mật Kinh Doanh: Nhân viên nghiệm thu chỉ thu tiền khách. Giá vốn 83% & Lợi nhuận cty được khóa bảo mật 100%.', '🛡️ Confidential: Field technicians only handle customer collection. 83% Base Cost & HO Profit are strictly locked.'],
-  ['👁️ Mở Khóa Quản Lý', '👁️ Admin Unlock'],
-  ['🔒 Đóng Chế Độ Quản Lý', '🔒 Lock Admin Mode'],
-  ['💾 Lưu Biên Bản Nghiệm Thu', '💾 Save Acceptance Record'],
-  ['🖨️ In Biên Bản PDF (A4)', '🖨️ Print Acceptance (A4 PDF)'],
-  ['📑 Sổ Cái Nghiệm Thu & Quyết Toán 1 Hàng Khép Kín', '📑 Unified Closed-Loop Settlement Ledger'],
-
-  // ══ 7. INSTALLATION WORK ASSIGNMENT & LABOR COST ══
-  ['7. Giao Việc Kỹ Thuật & Tiền Công Lắp Đặt (Installation Work Assignment & Labor Cost):', '7. Technical Work Assignment & Installation Labor Cost:'],
-  ['* Sau khi nghiệm thu xong, tự động tính tiền công lắp đặt cho đội kỹ thuật theo từng hạng mục × đơn giá × số lượng.', '* Upon acceptance completion, automatically calculate installation labor fees: Qty × Unit Price.'],
-  ['➕ Thêm Hạng Mục', '➕ Add Work Item'],
-  ['🔄 Mẫu Chuẩn Solar', '🔄 Standard Solar Template'],
-  ['📐 Công thức: Tiền Công = Σ (SL × Đơn Giá)', '📐 Formula: Total Labor = Σ (Qty × Unit Price)'],
-  ['Hạng Mục Công Việc (Task)', 'Work Item / Task Description'],
-  ['Mã / Code', 'Item Code'],
-  ['Thành Tiền (Ks)', 'Subtotal (Ks)'],
-  ['🔧 Tổng Tiền Công Lắp Đặt (Total Labor Cost):', '🔧 Total Installation Labor Cost:'],
-  ['📊 Tỷ Lệ % Trên Doanh Thu HĐ:', '📊 % Ratio of Contract Revenue:'],
-  ['👷 Kỹ Sư Trưởng Phụ Trách:', '👷 Lead Engineer in Charge:'],
-
-  // ══ ACCESS RESTRICTED (TRANG BÁO LỖI HẠN CHẾ QUYỀN) ══
-  ['TRUY CẬP BỊ HẠN CHẾ (ACCESS RESTRICTED)', 'ACCESS RESTRICTED'],
-  ['Bạn không có quyền truy cập vào phân hệ này theo chính sách bảo mật nội bộ TNI.', 'You do not have permission to access this module according to TNI internal security policy.'],
-  ['Phân hệ bạn đang muốn mở:', 'Requested Module:'],
-  ['Vai trò hiện tại của bạn:', 'Your Current Role:'],
-  ['Các vai trò có quyền xem:', 'Authorized Roles:'],
-  ['💡 Quy định bảo mật hệ thống: Phân hệ này chứa số liệu tài chính sống nhạy cảm (Bao gồm Tỷ lệ 17% nộp Tổng Công Ty VCM, Vốn gốc 83%, lợi nhuận ròng chi nhánh và sổ cái quyết toán tiền nộp). Theo quy định, chỉ Ban Giám Đốc và Kế Toán Trưởng mới được cấp quyền xem dữ liệu này.', '💡 Security Policy: This module contains sensitive financial records (including 17% HO share to VCM, 83% base cost, net branch profit and settlement ledgers). By regulation, only Executive BOD and Chief Accountant are authorized.'],
-  ['🏠 Về Trang Tổng Quan', '🏠 Return to Dashboard'],
-  ['🛡️ Xem Bảng Phân Quyền (RBAC)', '🛡️ View Role Matrix (RBAC)'],
-  ['🔑 Mở Khóa Bằng Mã PIN Admin', '🔑 Unlock with Admin PIN'],
-
-  // ══ RBAC & GMAIL ACCESS LIST ══
-  ['HỆ THỐNG PHÂN QUYỀN TRUY CẬP NHÂN VIÊN (RBAC)', 'ROLE-BASED ACCESS CONTROL SYSTEM (RBAC)'],
-  ['Xác định minh bạch và bọc thép 100%: Ai Được Xem Gì — Tuyệt đối bảo mật dữ liệu Tài Chính, Lợi Nhuận, Tỷ Lệ 17% Nộp Tổng Cty & Giá Vốn.', 'Transparent & 100% Steel-Locked: Who Sees What — Maximum security for Financial, Profit, 17% HO Share & Base Cost data.'],
-  ['⬇ Xuất CSV Ma Trận', '⬇ Export Matrix CSV'],
-  ['🔑 Đổi PIN Quản Trị', '🔑 Change Admin PIN'],
-  ['Ban Giám Đốc (BOD)', 'Executive Board (BOD)'],
-  ['Toàn quyền 100% tất cả các tab & xem tài chính', '100% full access to all tabs & financial metrics'],
-  ['Kế Toán & Tài Chính', 'Accounting & Finance'],
-  ['Xem quỹ 17%, vốn 83%, tờ trình & công nợ', 'View 17% fund, 83% base cost, statements & receivables'],
-  ['Kinh Doanh (Sales)', 'Sales & Business Dev'],
-  ['Bán hàng, báo giá, CRM. Khóa Tài Chính', 'Sales orders, quotations, CRM. Finance Locked'],
-  ['Kỹ Thuật (Field Ops)', 'Technical & Field Ops'],
-  ['Nghiệm thu, khảo sát, HUB. Khóa Tài Chính', 'Acceptance, surveys, Field Ops Hub. Finance Locked'],
-  ['Thủ Kho / Vận Hành', 'Warehouse / Inventory'],
-  ['Tồn kho, nhập xuất, tạm ứng. Khóa Tài Chính', 'Inventory, intake/dispatch, stock advance. Finance Locked'],
-  ['Đại Lý Phân Phối', 'Authorized Dealer'],
-  ['Báo giá sỉ, ký gởi. Khóa Nội Bộ', 'Wholesale quote, consignments. Internal Data Locked'],
-  ['📊 BẢNG MA TRẬN PHÂN QUYỀN CHI TIẾT ("AI ĐƯỢC XEM GÌ")', '📊 DETAILED PERMISSION MATRIX ("WHO SEES WHAT")'],
-  ['Rà soát chi tiết 20 phân hệ phần mềm và quyền xem / thao tác tương ứng của từng chức danh.', 'Comprehensive audit of 20 software modules and access rights for each role.'],
-  ['-- Tất cả danh mục phân hệ --', '-- All Module Categories --'],
-  ['🔍 Tìm kiếm phân hệ...', '🔍 Search modules...'],
-  ['Danh sách tài khoản Gmail được cấp quyền truy cập hệ thống TNI Sale. Khi mở link với ?email=xxx@gmail.com, hệ thống tự gán vai trò.', 'Authorized Gmail accounts for TNI Sale. Opening links with ?email=xxx@gmail.com automatically assigns the role.'],
-  ['🔗 Tạo Link Phân Quyền Trực Tiếp Cho Nhân Viên', '🔗 Generate Direct Personalized Access Link'],
-  ['💡 Hướng dẫn gửi link cho nhân viên: Quản trị viên chọn tên nhân viên và vai trò tương ứng bên dưới, sau đó bấm "📋 Copy Link" và gửi qua Telegram / Zalo / Email. Khi nhân viên nhấp vào link, hệ thống sẽ tự động khóa đúng vai trò và ẩn các mục bảo mật!', '💡 How to share link: Select staff and assigned role below, click "📋 Copy Link" and send via Telegram/Email. When opened, the system locks access according to role!'],
-  ['👤 Chọn Nhân Viên *', '👤 Select Staff Member *'],
-  ['🏷️ Gán Vai Trò *', '🏷️ Assign Role *'],
-  ['🌐 Đường Link Cá Nhân Hóa Chuẩn:', '🌐 Generated Personalized Link:'],
-  ['📋 Copy Link Gửi Nhân Viên', '📋 Copy Link for Staff'],
-  ['🚀 Thử Nghiệm Link Này', '🚀 Test This Link'],
-  ['👥 Danh Sách Nhân Sự & Vai Trò Đã Gán', '👥 Staff Directory & Assigned Roles'],
-  ['+ Thêm Nhân Sự', '+ Add Staff Member']
 ];
 
 const MAP_VI_TO_EN = {};
@@ -8344,40 +8085,7 @@ function applyLang(lang) {
     if (secId === 'mysurvey' && typeof renderSurveys === 'function') renderSurveys();
     if (secId === 'baogiaups' && typeof rQuUPS === 'function') rQuUPS();
   }
-
-  // 10. Re-render RBAC/Gmail panels (always, to sync language on security sections)
-  if (typeof renderRBACMatrix === 'function') renderRBACMatrix();
-  if (typeof renderStaffUsersTable === 'function') renderStaffUsersTable();
-  if (typeof renderGmailAccessTable === 'function') renderGmailAccessTable();
-  // Re-render access denied screen if currently shown
-  const activeSec2 = document.querySelector('.sec.on');
-  if (activeSec2 && activeSec2.id === 's-access-denied') {
-    // Re-trigger bilingual update on access denied screen labels
-    const isVi2 = lang === 'vi';
-    const h2El = document.getElementById('denied-h2');
-    const h2SubEl = document.getElementById('denied-h2-sub');
-    const descEl = document.getElementById('denied-module-label');
-    const roleLabel = document.getElementById('denied-role-label');
-    const allowedLabel = document.getElementById('denied-allowed-label');
-    const secPolicyEl = document.getElementById('denied-sec-policy');
-    const btnHome = document.getElementById('denied-btn-home');
-    const btnRbac = document.getElementById('denied-btn-rbac');
-    const btnPin = document.getElementById('denied-btn-pin');
-    if (h2El) h2El.textContent = isVi2 ? 'TRUY CẬP BỊ HẠN CHẾ' : 'ACCESS RESTRICTED';
-    if (h2SubEl) h2SubEl.textContent = isVi2 ? 'Bạn không có quyền truy cập vào phân hệ này theo chính sách bảo mật nội bộ TNI.' : 'You do not have permission to access this module per TNI internal security policy.';
-    if (descEl) descEl.textContent = isVi2 ? 'Phân hệ bạn đang muốn mở:' : 'Module you attempted to access:';
-    if (roleLabel) roleLabel.textContent = isVi2 ? 'Vai trò hiện tại của bạn:' : 'Your current role:';
-    if (allowedLabel) allowedLabel.textContent = isVi2 ? 'Các vai trò có quyền xem:' : 'Roles with access:';
-    if (secPolicyEl) secPolicyEl.innerHTML = isVi2
-      ? '<b>💡 Quy định bảo mật hệ thống:</b> Phân hệ này chứa số liệu tài chính sống nhạy cảm. Theo quy định, chỉ <b>Ban Giám Đốc</b> và <b>Kế Toán Trưởng</b> mới được cấp quyền xem dữ liệu này.'
-      : '<b>💡 Security Policy:</b> This module contains sensitive live financial data. Per internal policy, only <b>Board of Directors</b> and <b>Chief Accountant</b> are authorized to access this data.';
-    if (btnHome) btnHome.textContent = isVi2 ? '🏠 Về Trang Tổng Quan' : '🏠 Back to Dashboard';
-    if (btnRbac) btnRbac.textContent = isVi2 ? '🛡️ Xem Bảng Phân Quyền (RBAC)' : '🛡️ View Permission Matrix (RBAC)';
-    if (btnPin) btnPin.textContent = isVi2 ? '🔑 Mở Khóa Bằng Mã PIN Admin' : '🔑 Unlock with Admin PIN';
-    document.getElementById('ptitle').textContent = isVi2 ? '🛡️ Truy Cập Bị Hạn Chế' : '🛡️ Access Restricted';
-  }
 }
-
 
 function toggleLang() {
   const next = currentLang === 'vi' ? 'en' : 'vi';
@@ -8392,7 +8100,7 @@ addQRow('qu-items');
 applyLang(currentLang);
 setCompanyRate(getCompanyRate());
 if (document.getElementById('qs-table-body') && document.getElementById('qs-table-body').children.length === 0) {
-  presetSolar('zinkoko');
+  presetSolar('staffsales01');
 }
 filterQuotesByUser();
 
@@ -8482,9 +8190,6 @@ function renderMyStats(){
   document.getElementById('my-advance').innerHTML=myTU.length?tbl(tuHeaders,
     myTU.map((r,i)=>[i+1,r.spN,r.sl,r.md||'-',fd(r.ngay),bk(r.ts,r.ts==='Đang ứng'?'or':'gn')]))
     :`<div style="color:#94a3b8;padding:20px;text-align:center">${isVi?'Chưa có tạm ứng':'No advances yet'}</div>`;
-
-  // Commission Panel
-  renderCommissionPanel(raw);
 }
 
 // ═══════════════════════════════════════════════════
@@ -8601,7 +8306,7 @@ const ROLES = {
     allowedTabs: [
       'dashboard', 'nhap', 'tonkho', 'tamung',
       'banhang', 'baogiaups', 'baogiasolar', 'thucthi', 'acceptance', 'daily', 'kygoi',
-      'crm', 'warranty', 'quangcao', 'leads',
+      'crm', 'quangcao', 'leads',
       'loinhuan', 'statement', 'baocao',
       'mystats', 'myquotes', 'mysurvey', 'rbac'
     ]
@@ -8619,7 +8324,7 @@ const ROLES = {
     allowedTabs: [
       'dashboard', 'nhap', 'tonkho', 'tamung',
       'banhang', 'baogiaups', 'baogiasolar', 'thucthi', 'acceptance', 'daily', 'kygoi',
-      'crm', 'warranty',
+      'crm',
       'loinhuan', 'statement', 'baocao',
       'mystats', 'myquotes', 'rbac'
     ]
@@ -8637,7 +8342,7 @@ const ROLES = {
     allowedTabs: [
       'dashboard',
       'banhang', 'baogiaups', 'baogiasolar', 'daily', 'kygoi',
-      'crm', 'warranty', 'quangcao', 'leads',
+      'crm', 'quangcao', 'leads',
       'mystats', 'myquotes', 'mysurvey', 'rbac'
     ]
   },
@@ -8654,7 +8359,7 @@ const ROLES = {
     allowedTabs: [
       'dashboard',
       'baogiasolar', 'thucthi', 'acceptance',
-      'crm', 'warranty',
+      'crm',
       'mystats', 'myquotes', 'mysurvey', 'rbac'
     ]
   },
@@ -8670,7 +8375,7 @@ const ROLES = {
     canViewCostPrice: false,
     allowedTabs: [
       'dashboard', 'nhap', 'tonkho', 'tamung',
-      'banhang', 'kygoi', 'warranty',
+      'banhang', 'kygoi',
       'mystats', 'rbac'
     ]
   },
@@ -8713,18 +8418,17 @@ const SYSTEM_MODULES = [
   { id: 'mystats', name: '📊 Tiến Độ Cá Nhân', cat: 'Cổng Nhân Viên', secLevel: 'Cấp 4 - Cá Nhân', desc: 'Báo cáo KPI, doanh số và hoa hồng của từng nhân viên' },
   { id: 'myquotes', name: '📄 Báo Giá Của Tôi', cat: 'Cổng Nhân Viên', secLevel: 'Cấp 4 - Cá Nhân', desc: 'Danh sách các báo giá do nhân viên tự lập' },
   { id: 'mysurvey', name: '📝 Khảo Sát Của Tôi', cat: 'Cổng Nhân Viên', secLevel: 'Cấp 4 - Cá Nhân', desc: 'Phiếu khảo sát khách hàng do nhân viên thực hiện' },
-  { id: 'warranty', name: '🔧 Bảo Hành & Sửa Chữa (Warranty)', cat: 'Khách Hàng', secLevel: 'Cấp 3 - Khách Hàng', desc: 'Quản lý yêu cầu bảo hành, theo dõi thiết bị lỗi và trạng thái sửa chữa' },
   { id: 'rbac', name: '🛡️ Phân Quyền Vai Trò (RBAC)', cat: 'Hệ Thống & Phân Quyền', secLevel: 'Cấp 1 - Quản Trị', desc: 'Ma trận phân quyền & phân vai trò nhân viên' }
 ];
 
 const DEFAULT_STAFF_USERS = [
-  { id: 'ST001', name: 'Nguyễn Văn A', email: 'director@tni.com', role: 'admin', title: 'Giám Đốc Chi Nhánh', phone: '0965 1900 001' },
-  { id: 'ST002', name: 'Trần Thị B', email: 'accountant@tni.com', role: 'finance', title: 'Kế Toán Trưởng', phone: '0965 1900 002' },
-  { id: 'ST003', name: 'Zin Ko Ko', email: 'zinkoko@gmail.com', role: 'sales', title: 'Chuyên Viên Kinh Doanh Solar', phone: '0965 1900 009' },
-  { id: 'ST004', name: 'Min Min', email: 'minmin@gmail.com', role: 'tech', title: 'Kỹ Sư Trưởng Hiện Trường', phone: '0965 332 110' },
-  { id: 'ST005', name: 'Aung Thu', email: 'aungthu@gmail.com', role: 'warehouse', title: 'Thủ Kho Chi Nhánh', phone: '0965 889 004' },
-  { id: 'ST006', name: 'Kyaw Swar', email: 'kyawswar@gmail.com', role: 'sales', title: 'Nhân Viên Kinh Doanh', phone: '0965 776 223' },
-  { id: 'ST007', name: 'Đại Lý Dawei Solar Hub', email: 'daweisolar@hub.mm', role: 'dealer', title: 'Đại Lý Ủy Quyền Cấp 1', phone: '0965 334 112' }
+  { id: 'ST001', name: 'Nguyễn Văn A', email: 'director@tni.com', role: 'admin', title: 'Giám Đốc Chi Nhánh', phone: '0965 000 001' },
+  { id: 'ST002', name: 'Trần Thị B', email: 'accountant@tni.com', role: 'finance', title: 'Kế Toán Trưởng', phone: '0965 000 002' },
+  { id: 'ST003', name: 'Staff Sales 01', email: 'sales01@tni.com', role: 'sales', title: 'Chuyên Viên Kinh Doanh Solar', phone: '0965 000 003' },
+  { id: 'ST004', name: 'Staff Tech 01', email: 'tech01@tni.com', role: 'tech', title: 'Kỹ Sư Trưởng Hiện Trường', phone: '0965 000 004' },
+  { id: 'ST005', name: 'Staff Warehouse 01', email: 'warehouse01@tni.com', role: 'warehouse', title: 'Thủ Kho Chi Nhánh', phone: '0965 000 005' },
+  { id: 'ST006', name: 'Staff Sales 02', email: 'sales02@tni.com', role: 'sales', title: 'Nhân Viên Kinh Doanh', phone: '0965 000 006' },
+  { id: 'ST007', name: 'Đại Lý Ủy Quyền 01', email: 'dealer01@tni.com', role: 'dealer', title: 'Đại Lý Ủy Quyền Cấp 1', phone: '0965 000 007' }
 ];
 
 let currentAppRole = localStorage.getItem('tni_sale_role') || 'admin';
@@ -8732,6 +8436,11 @@ let currentStaffUser = localStorage.getItem('tni_sale_staff') || '';
 let adminPinCode = localStorage.getItem('tni_sale_admin_pin') || '7979';
 
 function isTabAllowedForRole(tabId, roleId) {
+  const overrides = DB.g('rbac_overrides') || {};
+  const overrideKey = `${roleId}__${tabId}`;
+  if (overrideKey in overrides) {
+    return overrides[overrideKey];
+  }
   const r = ROLES[roleId] || ROLES.admin;
   return r.allowedTabs.includes(tabId);
 }
@@ -8811,7 +8520,7 @@ function updateSidebarAccessState(roleId) {
 
     if (!isAllowed) {
       a.style.opacity = '0.52';
-      a.title = currentLang === 'vi' ? '🔒 Bị khóa đối với vai trò ' + ROLES[roleId].shortName : '🔒 Locked for role ' + ROLES[roleId].shortName;
+      a.title = '🔒 Bị khóa đối với vai trò ' + ROLES[roleId].shortName;
       const lockSpan = document.createElement('span');
       lockSpan.className = 'nav-lock-badge';
       lockSpan.style.cssText = 'font-size:10px;margin-left:auto;opacity:0.8';
@@ -8825,9 +8534,8 @@ function updateSidebarAccessState(roleId) {
 }
 
 function showAccessDenied(targetId, roleId) {
-  const isVi = currentLang === 'vi';
   const roleMeta = ROLES[roleId] || ROLES.admin;
-  const modMeta = SYSTEM_MODULES.find(m => m.id === targetId) || { name: targetId, cat: isVi ? 'Hệ Thống' : 'System' };
+  const modMeta = SYSTEM_MODULES.find(m => m.id === targetId) || { name: targetId, cat: 'Hệ Thống' };
 
   // Determine allowed roles for this module
   const allowedRoleNames = [];
@@ -8838,44 +8546,115 @@ function showAccessDenied(targetId, roleId) {
   const nameEl = document.getElementById('denied-target-name');
   const roleEl = document.getElementById('denied-current-role');
   const allowedEl = document.getElementById('denied-allowed-roles');
-  const descEl = document.getElementById('denied-module-label');
-  const roleLabel = document.getElementById('denied-role-label');
-  const allowedLabel = document.getElementById('denied-allowed-label');
-  const secPolicyEl = document.getElementById('denied-sec-policy');
-  const h2El = document.getElementById('denied-h2');
-  const h2SubEl = document.getElementById('denied-h2-sub');
-  const btnHome = document.getElementById('denied-btn-home');
-  const btnRbac = document.getElementById('denied-btn-rbac');
-  const btnPin = document.getElementById('denied-btn-pin');
 
   if (nameEl) nameEl.textContent = modMeta.name;
   if (roleEl) roleEl.innerHTML = `<span style="color:${roleMeta.color}">${roleMeta.icon} ${roleMeta.name}</span>`;
   if (allowedEl) allowedEl.textContent = allowedRoleNames.join(', ');
-  if (descEl) descEl.textContent = isVi ? 'Phân hệ bạn đang muốn mở:' : 'Module you attempted to access:';
-  if (roleLabel) roleLabel.textContent = isVi ? 'Vai trò hiện tại của bạn:' : 'Your current role:';
-  if (allowedLabel) allowedLabel.textContent = isVi ? 'Các vai trò có quyền xem:' : 'Roles with access:';
-  if (secPolicyEl) secPolicyEl.innerHTML = isVi
-    ? '<b>💡 Quy định bảo mật hệ thống:</b> Phân hệ này chứa số liệu tài chính sống nhạy cảm. Theo quy định, chỉ <b>Ban Giám Đốc</b> và <b>Kế Toán Trưởng</b> mới được cấp quyền xem dữ liệu này.'
-    : '<b>💡 Security Policy:</b> This module contains sensitive live financial data. Per internal policy, only <b>Board of Directors</b> and <b>Chief Accountant</b> are authorized to access this data.';
-  if (h2El) h2El.textContent = isVi ? 'TRUY CẬP BỊ HẠN CHẾ' : 'ACCESS RESTRICTED';
-  if (h2SubEl) h2SubEl.textContent = isVi
-    ? 'Bạn không có quyền truy cập vào phân hệ này theo chính sách bảo mật nội bộ TNI.'
-    : 'You do not have permission to access this module per TNI internal security policy.';
-  if (btnHome) btnHome.textContent = isVi ? '🏠 Về Trang Tổng Quan' : '🏠 Back to Dashboard';
-  if (btnRbac) btnRbac.textContent = isVi ? '🛡️ Xem Bảng Phân Quyền (RBAC)' : '🛡️ View Permission Matrix (RBAC)';
-  if (btnPin) btnPin.textContent = isVi ? '🔑 Mở Khóa Bằng Mã PIN Admin' : '🔑 Unlock with Admin PIN';
 
   document.querySelectorAll('.sec').forEach(s => s.classList.remove('on'));
   const deniedSec = document.getElementById('s-access-denied');
   if (deniedSec) deniedSec.classList.add('on');
-  document.getElementById('ptitle').textContent = isVi ? '🛡️ Truy Cập Bị Hạn Chế' : '🛡️ Access Restricted';
+  document.getElementById('ptitle').textContent = '🛡️ Truy Cập Bị Hạn Chế';
+}
+
+
+// ══ BILINGUAL DICTIONARIES & COLUMN VISIBILITY FOR RBAC ══
+const RBAC_CATS_EN = {
+  'Tổng Quan': 'Overview',
+  'Kho Hàng': 'Warehouse',
+  'Bán Hàng & Báo Giá': 'Sales & Quotation',
+  'Kỹ Thuật & Hiện Trường': 'Field & Operations',
+  'Khách Hàng': 'CRM & Clients',
+  'Marketing': 'Marketing & Leads',
+  'Tài Chính & Kế Toán': 'Finance & Accounting',
+  'Cổng Nhân Viên': 'Staff Portal',
+  'Hệ Thống & Phân Quyền': 'System & RBAC'
+};
+
+const ROLE_NAMES_BILINGUAL = {
+  admin:     { vi: 'Ban Giám Đốc (BOD)', en: 'BOD (Admin)', shortVi: 'Ban Giám Đốc', shortEn: 'BOD / Admin' },
+  finance:   { vi: 'Kế Toán & Tài Chính', en: 'Finance / Chief Accountant', shortVi: 'Kế Toán Trưởng', shortEn: 'Finance / Chief Acc' },
+  sales:     { vi: 'Kinh Doanh (Sales)', en: 'Sales & Business', shortVi: 'Kinh Doanh', shortEn: 'Sales Rep' },
+  tech:      { vi: 'Kỹ Thuật (Field Ops)', en: 'Field Technical Team', shortVi: 'Kỹ Thuật Hiện Trường', shortEn: 'Field Engineer' },
+  warehouse: { vi: 'Thủ Kho / Vận Hành', en: 'Warehouse & Operations', shortVi: 'Thủ Kho', shortEn: 'Warehouse' },
+  dealer:    { vi: 'Đại Lý Phân Phối', en: 'Authorized Dealer', shortVi: 'Đại Lý Cấp 1', shortEn: 'Tier 1 Dealer' }
+};
+
+function getVisibleRoleKeys() {
+  const saved = localStorage.getItem('tni_rbac_visible_cols');
+  if (saved) {
+    try {
+      const arr = JSON.parse(saved);
+      if (Array.isArray(arr) && arr.length > 0) return arr;
+    } catch(e) {}
+  }
+  return ['admin', 'finance', 'sales', 'tech', 'warehouse', 'dealer'];
+}
+
+function toggleRoleColumnVisibility(rk) {
+  let cur = getVisibleRoleKeys();
+  const isVi = currentLang === 'vi';
+  if (cur.includes(rk)) {
+    if (cur.length <= 1) {
+      al(isVi ? '⚠️ Phải giữ lại ít nhất 1 cột vai trò!' : '⚠️ Must keep at least 1 role column visible!', 'er');
+      return;
+    }
+    cur = cur.filter(k => k !== rk);
+    al((isVi ? '👁️ Đã ẩn cột: ' : '👁️ Hidden column: ') + (ROLE_NAMES_BILINGUAL[rk]?.[isVi?'shortVi':'shortEn'] || rk), 'ok');
+  } else {
+    cur.push(rk);
+    al((isVi ? '👁️ Đã hiện cột: ' : '👁️ Shown column: ') + (ROLE_NAMES_BILINGUAL[rk]?.[isVi?'shortVi':'shortEn'] || rk), 'ok');
+  }
+  localStorage.setItem('tni_rbac_visible_cols', JSON.stringify(cur));
+  renderRBACMatrix();
+  renderRBACColToggles();
+}
+
+function renderRBACColToggles() {
+  const bar = document.getElementById('rbac-col-toggle-bar');
+  if (!bar) return;
+  const isVi = currentLang === 'vi';
+  const visible = getVisibleRoleKeys();
+  const allRoles = ['admin', 'finance', 'sales', 'tech', 'warehouse', 'dealer'];
+
+  let html = `<div style="font-weight:700;color:#1e293b;display:flex;align-items:center;gap:6px;margin-right:4px">
+    <span>👁️</span> <span>${isVi ? 'Bật/Tắt Cột Hiển Thị:' : 'Toggle Visible Columns:'}</span>
+  </div>`;
+
+  allRoles.forEach(rk => {
+    const isVis = visible.includes(rk);
+    const rMeta = ROLES[rk] || ROLES.admin;
+    const rName = ROLE_NAMES_BILINGUAL[rk]?.[isVi ? 'shortVi' : 'shortEn'] || rMeta.shortName;
+    const isFinance = rk === 'finance';
+    
+    if (isVis) {
+      html += `<button type="button" onclick="toggleRoleColumnVisibility('${rk}')" 
+        title="${isVi ? 'Bấm để ẨN cột này' : 'Click to HIDE this column'}"
+        style="padding:4px 10px;border-radius:20px;font-size:11.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;border:1.5px solid ${isFinance ? '#f59e0b' : '#3b82f6'};background:${isFinance ? '#fef3c7' : '#eff6ff'};color:${isFinance ? '#b45309' : '#1d4ed8'};transition:all 0.15s">
+        <span>${rMeta.icon}</span> <span>${rName}</span> <span style="font-size:10px;opacity:0.8">✓</span>
+      </button>`;
+    } else {
+      html += `<button type="button" onclick="toggleRoleColumnVisibility('${rk}')" 
+        title="${isVi ? 'Bấm để HIỆN cột này' : 'Click to SHOW this column'}"
+        style="padding:4px 10px;border-radius:20px;font-size:11.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;border:1.5px dashed #94a3b8;background:#f8fafc;color:#64748b;opacity:0.75;transition:all 0.15s">
+        <span>${rMeta.icon}</span> <span>${rName}</span> <span style="font-size:10px;font-weight:bold">+</span>
+      </button>`;
+    }
+  });
+
+  html += `<button type="button" onclick="localStorage.removeItem('tni_rbac_visible_cols');renderRBACMatrix();renderRBACColToggles();al('${isVi ? 'Đã hiện đủ tất cả các cột' : 'All columns restored'}','ok')" 
+    style="margin-left:auto;padding:3px 8px;border-radius:6px;font-size:11px;border:1px solid #cbd5e1;background:#fff;color:#475569;cursor:pointer">
+    ↺ ${isVi ? 'Hiện tất cả' : 'Show All'}
+  </button>`;
+
+  bar.innerHTML = html;
 }
 
 function renderRBACMatrix() {
-  const isVi = currentLang === 'vi';
   const container = document.getElementById('rbac-matrix-container');
   if (!container) return;
 
+  const isVi = currentLang === 'vi';
   const catFilter = document.getElementById('rbac-cat-filter')?.value || 'all';
   const kw = (document.getElementById('rbac-search-kw')?.value || '').toLowerCase().trim();
 
@@ -8885,7 +8664,7 @@ function renderRBACMatrix() {
     return true;
   });
 
-  const roleKeys = ['admin', 'finance', 'sales', 'tech', 'warehouse', 'dealer'];
+  const visibleRoleKeys = getVisibleRoleKeys();
 
   let html = '<table class="data-table" style="width:100%;border-collapse:collapse;font-size:12px">';
   html += '<thead style="background:#f1f5f9;color:#334155;position:sticky;top:0;z-index:2">';
@@ -8894,12 +8673,13 @@ function renderRBACMatrix() {
   html += `<th style="padding:10px 10px;text-align:left;min-width:200px">${isVi ? 'Phân Hệ / Tính Năng' : 'Module / Feature'}</th>`;
   html += `<th style="padding:10px 8px;text-align:center;width:130px">${isVi ? 'Cấp Bảo Mật' : 'Security Level'}</th>`;
 
-  roleKeys.forEach(rk => {
-    const r = ROLES[rk];
+  visibleRoleKeys.forEach(rk => {
+    const r = ROLES[rk] || ROLES.admin;
     const isCur = rk === currentAppRole;
-    html += `<th style="padding:10px 6px;text-align:center;min-width:110px;background:${isCur ? '#e0e7ff' : '#f1f5f9'};border-left:1px solid #cbd5e1;cursor:pointer" onclick="changeAppRole('${rk}')" title="${isVi ? 'Bấm để kích hoạt vai trò này' : 'Click to activate this role'}">`;
+    const rName = ROLE_NAMES_BILINGUAL[rk]?.[isVi ? 'shortVi' : 'shortEn'] || r.shortName;
+    html += `<th style="padding:10px 6px;text-align:center;min-width:110px;background:${isCur ? '#e0e7ff' : '#f1f5f9'};border-left:1px solid #cbd5e1;cursor:pointer" onclick="changeAppRole('${rk}')" title="${isVi ? 'Bấm để kích hoạt vai trò này' : 'Click to switch to this role'}">`;
     html += `<div style="font-size:14px">${r.icon}</div>`;
-    html += `<div style="font-weight:800;font-size:11.5px;color:${isCur ? '#4338ca' : '#1e293b'}">${r.shortName}</div>`;
+    html += `<div style="font-weight:800;font-size:11.5px;color:${isCur ? '#4338ca' : '#1e293b'}">${rName}</div>`;
     if (isCur) html += `<div style="font-size:9.5px;background:#4f46e5;color:#fff;border-radius:10px;padding:1px 4px;margin-top:2px;font-weight:700">${isVi ? 'Đang Chọn' : 'Active'}</div>`;
     html += `</th>`;
   });
@@ -8912,9 +8692,10 @@ function renderRBACMatrix() {
   filtered.forEach(mod => {
     if (mod.cat !== currentCat && catFilter === 'all') {
       currentCat = mod.cat;
+      const catDisplayName = isVi ? currentCat : (RBAC_CATS_EN[currentCat] || currentCat);
       html += `<tr style="background:#f8fafc;font-weight:800;color:#475569">`;
-      html += `<td colspan="${3 + roleKeys.length}" style="padding:8px 12px;border-top:2px solid #e2e8f0;border-bottom:1px solid #e2e8f0">`;
-      html += `<span style="color:#0284c7;font-size:13px">📁 ${currentCat}</span>`;
+      html += `<td colspan="${3 + visibleRoleKeys.length}" style="padding:8px 12px;border-top:2px solid #e2e8f0;border-bottom:1px solid #e2e8f0">`;
+      html += `<span style="color:#0284c7;font-size:13px">📁 ${catDisplayName}</span>`;
       html += `</td></tr>`;
     }
 
@@ -8929,29 +8710,34 @@ function renderRBACMatrix() {
     // Security level
     html += `<td style="padding:8px 6px;text-align:center">`;
     if (isSens) {
-      html += `<span style="background:#fee2e2;color:#991b1b;padding:3px 7px;border-radius:6px;font-size:10.5px;font-weight:800;border:1px solid #fca5a5">🔴 ${isVi ? 'Tuyệt Mật 17%' : 'Top Secret 17%'}</span>`;
+      html += `<span style="background:#fee2e2;color:#991b1b;padding:3px 7px;border-radius:6px;font-size:10.5px;font-weight:800;border:1px solid #fca5a5">${isVi ? '🔴 Tuyệt Mật 17%' : '🔴 Top Secret 17%'}</span>`;
     } else if (mod.secLevel.includes('Cấp 2')) {
-      html += `<span style="background:#fef3c7;color:#b45309;padding:3px 7px;border-radius:6px;font-size:10.5px;font-weight:700">🟡 ${isVi ? 'Vốn Gốc 83%' : 'Capital 83%'}</span>`;
+      html += `<span style="background:#fef3c7;color:#b45309;padding:3px 7px;border-radius:6px;font-size:10.5px;font-weight:700">${isVi ? '🟡 Vốn Gốc 83%' : '🟡 Base Cost 83%'}</span>`;
     } else if (mod.secLevel.includes('Cấp 3')) {
-      html += `<span style="background:#e0f2fe;color:#0369a1;padding:3px 7px;border-radius:6px;font-size:10.5px;font-weight:600">🔵 ${isVi ? 'Nghiệp Vụ' : 'Operations'}</span>`;
+      html += `<span style="background:#e0f2fe;color:#0369a1;padding:3px 7px;border-radius:6px;font-size:10.5px;font-weight:600">${isVi ? '🔵 Nghiệp Vụ' : '🔵 Operational'}</span>`;
     } else {
-      html += `<span style="background:#f1f5f9;color:#475569;padding:3px 7px;border-radius:6px;font-size:10.5px">⚪ ${isVi ? 'Công Khai' : 'Public'}</span>`;
+      html += `<span style="background:#f1f5f9;color:#475569;padding:3px 7px;border-radius:6px;font-size:10.5px">${isVi ? '⚪ Công Khai' : '⚪ Public'}</span>`;
     }
     html += `</td>`;
 
-    // Role columns
-    roleKeys.forEach(rk => {
-      const allowed = ROLES[rk].allowedTabs.includes(mod.id);
+    // Role columns — clickable toggle
+    visibleRoleKeys.forEach(rk => {
+      const overrides = DB.g('rbac_overrides') || {};
+      const overrideKey = `${rk}__${mod.id}`;
+      const baseAllowed = ROLES[rk].allowedTabs.includes(mod.id);
+      const allowed = overrideKey in overrides ? overrides[overrideKey] : baseAllowed;
+      const isOverridden = overrideKey in overrides && overrides[overrideKey] !== baseAllowed;
       const isCur = rk === currentAppRole;
-      html += `<td style="padding:8px 6px;text-align:center;background:${isCur ? '#f5f7ff' : ''};border-left:1px solid #e2e8f0">`;
+      const overrideBadge = isOverridden ? `<span title="${isVi ? 'Đã chỉnh thủ công' : 'Custom Override'}" style="font-size:10px;color:#7c3aed;margin-left:2px">✎</span>` : '';
+      html += `<td style="padding:6px 4px;text-align:center;background:${isCur ? '#f5f7ff' : ''};border-left:1px solid #e2e8f0">`;
       if (allowed) {
         if (isSens) {
-          html += `<span style="background:#dcfce7;color:#15803d;padding:3px 7px;border-radius:6px;font-size:11px;font-weight:800">✅ ${isVi ? 'Toàn Quyền' : 'Full Access'}</span>`;
+          html += `<button type="button" onclick="toggleRBACPermission('${rk}','${mod.id}')" title="${isVi ? 'Bấm để đổi thành Bị Khóa' : 'Click to LOCK access'}" style="background:#dcfce7;color:#15803d;padding:3px 7px;border-radius:6px;font-size:11px;font-weight:800;border:1px solid #86efac;cursor:pointer;transition:transform 0.1s" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">${isVi ? '✅ Toàn Quyền' : '✅ Full Access'}${overrideBadge}</button>`;
         } else {
-          html += `<span style="background:#f0fdf4;color:#16a34a;padding:2px 6px;border-radius:5px;font-size:11px;font-weight:700">✅ ${isVi ? 'Được Xem' : 'Allowed'}</span>`;
+          html += `<button type="button" onclick="toggleRBACPermission('${rk}','${mod.id}')" title="${isVi ? 'Bấm để đổi thành Bị Khóa' : 'Click to LOCK access'}" style="background:#f0fdf4;color:#16a34a;padding:3px 7px;border-radius:6px;font-size:11px;font-weight:700;border:1px solid #bbf7d0;cursor:pointer;transition:transform 0.1s" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">${isVi ? '✅ Được Xem' : '✅ Allowed'}${overrideBadge}</button>`;
         }
       } else {
-        html += `<span style="background:#fee2e2;color:#dc2626;padding:2px 6px;border-radius:5px;font-size:11px;font-weight:700">❌ ${isVi ? 'Bị Khóa' : 'Locked'}</span>`;
+        html += `<button type="button" onclick="toggleRBACPermission('${rk}','${mod.id}')" title="${isVi ? 'Bấm để đổi thành Được Xem' : 'Click to ALLOW access'}" style="background:#fee2e2;color:#dc2626;padding:3px 7px;border-radius:6px;font-size:11px;font-weight:700;border:1px solid #fca5a5;cursor:pointer;transition:transform 0.1s" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">${isVi ? '❌ Bị Khóa' : '❌ Locked'}${overrideBadge}</button>`;
       }
       html += `</td>`;
     });
@@ -8964,27 +8750,40 @@ function renderRBACMatrix() {
 }
 
 function renderStaffUsersTable() {
-  const isVi = currentLang === 'vi';
   const container = document.getElementById('rbac-staff-table-container');
   if (!container) return;
 
-  const users = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
-  if (!DB.g('staff_directory').length) {
-    DB.s('staff_directory', DEFAULT_STAFF_USERS);
+  const isVi = currentLang === 'vi';
+  let users = DB.g('staff_directory');
+  if (!users || !users.length) {
+    users = DEFAULT_STAFF_USERS;
+    DB.s('staff_directory', users);
   }
+
+  // Auto-sanitize old cached names (Zin Ko Ko, Min Min, etc.) while preserving custom users
+  let migrated = false;
+  users = users.map(u => {
+    if (u.name === 'Zin Ko Ko') { migrated = true; return { ...u, name: 'Staff Sales 01', email: 'sales01@tni.com' }; }
+    if (u.name === 'Min Min') { migrated = true; return { ...u, name: 'Staff Tech 01', email: 'tech01@tni.com' }; }
+    if (u.name === 'Aung Thu') { migrated = true; return { ...u, name: 'Staff Warehouse 01', email: 'warehouse01@tni.com' }; }
+    if (u.name === 'Kyaw Swar') { migrated = true; return { ...u, name: 'Staff Sales 02', email: 'sales02@tni.com' }; }
+    if (u.name === 'Đại Lý Dawei Solar Hub') { migrated = true; return { ...u, name: 'Đại Lý Ủy Quyền 01', email: 'dealer01@tni.com' }; }
+    return u;
+  });
+  if (migrated) DB.s('staff_directory', users);
 
   let html = '<table class="data-table" style="width:100%;border-collapse:collapse;font-size:12px">';
   html += '<thead style="background:#f8fafc;color:#334155">';
   html += '<tr>';
-  html += `<th style="padding:8px;text-align:left">${isVi ? 'Nhân Sự' : 'Staff'}</th>`;
-  html += `<th style="padding:8px;text-align:left">${isVi ? 'Chức Danh' : 'Position'}</th>`;
+  html += `<th style="padding:8px;text-align:left">${isVi ? 'Nhân Sự' : 'Staff Member'}</th>`;
+  html += `<th style="padding:8px;text-align:left">${isVi ? 'Chức Danh' : 'Job Title'}</th>`;
   html += `<th style="padding:8px;text-align:center">${isVi ? 'Vai Trò Gán' : 'Assigned Role'}</th>`;
   html += `<th style="padding:8px;text-align:center">${isVi ? 'Thao Tác' : 'Actions'}</th>`;
   html += '</tr></thead><tbody>';
 
-
   users.forEach((u, i) => {
     const roleMeta = ROLES[u.role] || ROLES.sales;
+    const rName = ROLE_NAMES_BILINGUAL[u.role]?.[isVi ? 'shortVi' : 'shortEn'] || roleMeta.shortName;
     html += `<tr style="border-bottom:1px solid #f1f5f9">`;
     html += `<td style="padding:8px">`;
     html += `<div style="font-weight:700;color:#1e293b">${u.name}</div>`;
@@ -8992,18 +8791,29 @@ function renderStaffUsersTable() {
     html += `</td>`;
     html += `<td style="padding:8px;font-size:11.5px;color:#475569">${u.title || '-'}</td>`;
     html += `<td style="padding:8px;text-align:center">`;
-    html += `<select onchange="updateStaffAssignedRole('${u.id}', this.value)" style="padding:3px 6px;border:1px solid #cbd5e1;border-radius:5px;font-size:11.5px;font-weight:700;color:${roleMeta.color}">`;
+    html += `<select onchange="updateStaffAssignedRole('${u.id}', this.value)" style="padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:11.5px;font-weight:700;color:${roleMeta.color}">`;
     Object.keys(ROLES).forEach(rk => {
-      html += `<option value="${rk}" ${u.role === rk ? 'selected' : ''}>${ROLES[rk].icon} ${ROLES[rk].shortName}</option>`;
+      const optName = ROLE_NAMES_BILINGUAL[rk]?.[isVi ? 'shortVi' : 'shortEn'] || ROLES[rk].shortName;
+      html += `<option value="${rk}" ${u.role === rk ? 'selected' : ''}>${ROLES[rk].icon} ${optName}</option>`;
     });
     html += `</select></td>`;
-    html += `<td style="padding:8px;text-align:center">`;
-    html += `<button class="btn b-xs b-bl" onclick="selectStaffForLinkGen('${u.name}', '${u.role}')" title="Tạo link gửi cho nhân viên">🔗 Link</button>`;
+    html += `<td style="padding:8px;text-align:center;display:flex;gap:6px;justify-content:center;align-items:center">`;
+    html += `<button class="btn b-xs b-bl" onclick="selectStaffForLinkGen('${u.name}', '${u.role}')" title="${isVi ? 'Tạo link gửi cho nhân viên' : 'Generate personal login link'}">🔗 Link</button>`;
+    html += `<button class="btn b-xs" onclick="deleteStaffUser('${u.id}','${u.name}')" title="${isVi ? 'Xóa nhân sự này khỏi danh sách' : 'Delete staff member'}" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;font-weight:700;cursor:pointer">🗑 ${isVi ? 'Xóa' : 'Delete'}</button>`;
     html += `</td></tr>`;
   });
 
   html += '</tbody></table>';
   container.innerHTML = html;
+}
+
+function resetStaffDirectoryClean() {
+  const isVi = currentLang === 'vi';
+  if (!confirm(isVi ? 'Xác nhận đặt lại danh sách nhân sự về mẫu chuẩn sạch (Xóa tên cũ lộ thông tin)?' : 'Reset staff directory to clean standard list?')) return;
+  DB.s('staff_directory', DEFAULT_STAFF_USERS);
+  populateStaffUserSelect();
+  renderStaffUsersTable();
+  al(isVi ? '✅ Đã làm sạch và khôi phục danh sách nhân sự mẫu!' : '✅ Staff directory reset to clean standard list!', 'ok');
 }
 
 function updateStaffAssignedRole(userId, newRole) {
@@ -9013,6 +8823,40 @@ function updateStaffAssignedRole(userId, newRole) {
   al('Đã cập nhật vai trò nhân sự thành công!', 'ok');
   populateStaffUserSelect();
   renderStaffUsersTable();
+}
+
+// 🗑 Xóa nhân sự (khi nghỉ việc)
+function deleteStaffUser(userId, userName) {
+  if (!confirm(`⚠️ Xác nhận XÓA nhân sự:\n"${userName}"\n\nThao tác này không thể hoàn tác. Tiếp tục?`)) return;
+  let list = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
+  list = list.filter(u => u.id !== userId);
+  DB.s('staff_directory', list);
+  al(`Đã xóa nhân sự "${userName}" khỏi hệ thống.`, 'ok');
+  populateStaffUserSelect();
+  renderStaffUsersTable();
+}
+
+// 🔄 Toggle thủ công Được Xem / Bị Khóa trong bảng RBAC
+function toggleRBACPermission(roleKey, moduleId) {
+  const overrides = DB.g('rbac_overrides') || {};
+  const key = `${roleKey}__${moduleId}`;
+  const baseAllowed = ROLES[roleKey]?.allowedTabs?.includes(moduleId) ?? false;
+  const currentAllowed = key in overrides ? overrides[key] : baseAllowed;
+  overrides[key] = !currentAllowed;
+  // Nếu toggle về đúng giá trị gốc thì xóa override (reset về mặc định)
+  if (overrides[key] === baseAllowed) delete overrides[key];
+  DB.s('rbac_overrides', overrides);
+  renderRBACMatrix();
+  const roleName = ROLES[roleKey]?.shortName || roleKey;
+  al(`${roleName} — ${moduleId}: ${overrides[key] === false ? '❌ Bị Khóa' : overrides[key] === true ? '✅ Được Xem' : '↩ Về mặc định'}`, 'ok');
+}
+
+// ↩ Reset toàn bộ tùy chỉnh RBAC về mặc định
+function resetRBACOverrides() {
+  if (!confirm('Reset toàn bộ tùy chỉnh thủ công về mặc định hệ thống?')) return;
+  DB.s('rbac_overrides', {});
+  renderRBACMatrix();
+  al('Đã reset về phân quyền mặc định hệ thống.', 'ok');
 }
 
 function populateStaffUserSelect() {
@@ -9071,9 +8915,6 @@ function promptAdminUnlock() {
   if (input === null) return;
   if (input.trim() === adminPinCode) {
     changeAppRole('admin');
-    // Set admin API token so GAS requests are authenticated as admin
-    // Admin token = PIN-based hash (not the master key — just identifies admin session)
-    localStorage.setItem('tni_sale_api_token', 'admin:' + btoa('admin:tni_sale:' + input.trim()));
     al('Xác thực PIN Quản Trị thành công! Đã kích hoạt quyền Ban Giám Đốc (Admin).', 'ok');
   } else {
     al('Mã PIN không chính xác!', 'er');
@@ -9081,139 +8922,23 @@ function promptAdminUnlock() {
 }
 
 function openAddStaffModal() {
-  const isVi = currentLang === 'vi';
-  const existing = document.getElementById('staff-add-modal-overlay');
-  if (existing) existing.remove();
+  const name = prompt('Nhập Họ và Tên Nhân Sự mới:');
+  if (!name || !name.trim()) return;
+  const title = prompt('Nhập Chức Danh / Phòng Ban (VD: Kỹ Sư Hiện Trường, Kinh Doanh...):') || 'Nhân Viên';
+  const role = prompt('Nhập Mã Vai Trò (admin, finance, sales, tech, warehouse, dealer):', 'sales') || 'sales';
 
-  const overlay = document.createElement('div');
-  overlay.id = 'staff-add-modal-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px)';
-
-  const roleOptions = Object.entries(ROLES).map(([k, v]) =>
-    `<option value="${k}">${v.icon} ${v.name}</option>`
-  ).join('');
-
-  overlay.innerHTML = `
-    <div style="background:#fff;border-radius:16px;width:100%;max-width:500px;box-shadow:0 25px 60px -12px rgba(0,0,0,0.35);overflow:hidden;animation:slideUp .18s ease">
-      <!-- Header -->
-      <div style="background:linear-gradient(135deg,#1e3a5f 0%,#0369a1 100%);padding:20px 24px;display:flex;align-items:center;justify-content:space-between">
-        <div>
-          <div style="font-size:18px;font-weight:800;color:#fff">👤 ${isVi ? 'Thêm Nhân Sự Mới' : 'Add New Staff Member'}</div>
-          <div style="font-size:12px;color:#bae6fd;margin-top:2px">${isVi ? 'Điền đầy đủ thông tin nhân viên bên dưới' : 'Fill in staff details below'}</div>
-        </div>
-        <button onclick="document.getElementById('staff-add-modal-overlay').remove()" style="background:rgba(255,255,255,0.18);border:none;color:#fff;font-size:18px;width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">✕</button>
-      </div>
-      <!-- Body -->
-      <div style="padding:22px 24px;display:flex;flex-direction:column;gap:14px">
-        <!-- Name -->
-        <div>
-          <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:5px">👤 ${isVi ? 'Họ và Tên *' : 'Full Name *'}</label>
-          <input id="sm-name" placeholder="${isVi ? 'VD: Nguyễn Văn A' : 'e.g. Aung Kyaw'}" style="width:100%;padding:9px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px;box-sizing:border-box;outline:none" onfocus="this.style.borderColor='#0369a1'" onblur="this.style.borderColor='#d1d5db'">
-        </div>
-        <!-- Title -->
-        <div>
-          <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:5px">💼 ${isVi ? 'Chức Danh / Phòng Ban *' : 'Position / Department *'}</label>
-          <input id="sm-title" placeholder="${isVi ? 'VD: Kỹ Sư Hiện Trường, Kế Toán Viên...' : 'e.g. Field Engineer, Accountant...'}" style="width:100%;padding:9px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px;box-sizing:border-box;outline:none" onfocus="this.style.borderColor='#0369a1'" onblur="this.style.borderColor='#d1d5db'">
-        </div>
-        <!-- Email -->
-        <div>
-          <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:5px">📧 ${isVi ? 'Email Gmail (tuỳ chọn)' : 'Gmail Email (optional)'}</label>
-          <input id="sm-email" type="email" placeholder="${isVi ? 'VD: nguyen.van.a@gmail.com' : 'e.g. aung.kyaw@gmail.com'}" style="width:100%;padding:9px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px;box-sizing:border-box;font-family:monospace;outline:none" onfocus="this.style.borderColor='#0369a1'" onblur="this.style.borderColor='#d1d5db'">
-          <div style="font-size:10.5px;color:#6b7280;margin-top:4px">💡 ${isVi ? 'Có thể thêm vào danh sách Gmail sau để cấp quyền đăng nhập' : 'Can be added to Gmail access list later to grant login'}</div>
-        </div>
-        <!-- Role -->
-        <div>
-          <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:5px">🛡️ ${isVi ? 'Vai Trò Hệ Thống *' : 'System Role *'}</label>
-          <select id="sm-role" style="width:100%;padding:9px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px;background:#fff;box-sizing:border-box;outline:none;font-weight:600" onfocus="this.style.borderColor='#0369a1'" onblur="this.style.borderColor='#d1d5db'">
-            ${roleOptions}
-          </select>
-        </div>
-        <!-- Role preview badge -->
-        <div id="sm-role-preview" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;font-size:12px;color:#475569"></div>
-        <!-- Buttons -->
-        <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:6px;border-top:1px solid #f1f5f9">
-          <button onclick="document.getElementById('staff-add-modal-overlay').remove()" style="padding:9px 18px;border:1.5px solid #d1d5db;background:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:#374151">${isVi ? 'Hủy' : 'Cancel'}</button>
-          <button onclick="saveAddStaffModal()" style="padding:9px 22px;background:linear-gradient(135deg,#1e3a5f,#0369a1);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">👤 ${isVi ? 'Thêm Nhân Sự' : 'Add Staff'}</button>
-        </div>
-      </div>
-    </div>`;
-
-  document.body.appendChild(overlay);
-
-  // Role preview updater
-  const roleSelect = document.getElementById('sm-role');
-  function updateRolePreview() {
-    const r = ROLES[roleSelect.value] || ROLES.sales;
-    const preview = document.getElementById('sm-role-preview');
-    if (preview) preview.innerHTML = `
-      <span style="font-weight:700;color:${r.color}">${r.icon} ${r.name}</span>
-      <span style="color:#94a3b8;margin:0 8px">•</span>
-      <span style="font-size:11px">${isVi ? 'Truy cập' : 'Tabs'}: ${r.allowedTabs.length} ${isVi ? 'phân hệ' : 'sections'}</span>`;
-  }
-  roleSelect.addEventListener('change', updateRolePreview);
-  updateRolePreview();
-
-  // Auto-focus name field
-  setTimeout(() => { const n = document.getElementById('sm-name'); if (n) n.focus(); }, 80);
-
-  // Close on backdrop click
-  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
-}
-
-function saveAddStaffModal() {
-  const isVi = currentLang === 'vi';
-  const name  = (document.getElementById('sm-name')?.value || '').trim();
-  const title = (document.getElementById('sm-title')?.value || '').trim();
-  const email = (document.getElementById('sm-email')?.value || '').trim().toLowerCase();
-  const role  = document.getElementById('sm-role')?.value || 'sales';
-
-  if (!name) {
-    const n = document.getElementById('sm-name');
-    if (n) { n.style.borderColor = '#dc2626'; n.focus(); }
-    al(isVi ? 'Vui lòng nhập Họ và Tên!' : 'Please enter full name!', 'er');
-    return;
-  }
-  if (!title) {
-    const t = document.getElementById('sm-title');
-    if (t) { t.style.borderColor = '#dc2626'; t.focus(); }
-    al(isVi ? 'Vui lòng nhập Chức Danh!' : 'Please enter position/title!', 'er');
-    return;
-  }
-
-  const list = DB.g('staff_directory').length ? DB.g('staff_directory') : [...DEFAULT_STAFF_USERS];
+  const list = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
   list.push({
-    id:    'ST' + String(Date.now()).slice(-5),
-    name:  name,
-    title: title,
-    email: email || '',
-    role:  ROLES[role] ? role : 'sales'
+    id: 'ST' + String(Date.now()).slice(-4),
+    name: name.trim(),
+    title: title.trim(),
+    role: ROLES[role.toLowerCase()] ? role.toLowerCase() : 'sales'
   });
   DB.s('staff_directory', list);
-
-  // Also auto-add to Gmail access list if email provided
-  if (email) {
-    const gmailList = getGmailAccessList();
-    const alreadyExists = gmailList.some(g => g.email === email);
-    if (!alreadyExists) {
-      gmailList.push({
-        email: email,
-        name: name,
-        role: role,
-        status: 'active',
-        dateAdded: new Date().toLocaleDateString('vi-VN'),
-        tabs: (ROLES[role] || ROLES.sales).allowedTabs
-      });
-      localStorage.setItem('gmail_access_list', JSON.stringify(gmailList));
-    }
-  }
-
-  document.getElementById('staff-add-modal-overlay')?.remove();
   renderStaffUsersTable();
-  renderGmailAccessTable();
   populateStaffUserSelect();
-  al(isVi ? `✅ Đã thêm nhân sự "${name}" thành công!` : `✅ Staff "${name}" added successfully!`, 'ok');
+  al('Đã thêm nhân sự mới thành công!', 'ok');
 }
-
 
 function exportRBACMatrixCSV() {
   const h = ['STT', 'Phan He', 'Danh Muc', 'Cap Bao Mat', 'BOD (Admin)', 'Ke Toan (Finance)', 'Kinh Doanh (Sales)', 'Ky Thuat (Tech)', 'Thu Kho (Warehouse)', 'Dai Ly (Dealer)', 'Mo Ta'];
@@ -9239,805 +8964,24 @@ function exportRBACMatrixCSV() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 📧 GMAIL ACCESS LIST — AUTHORIZED ACCOUNTS ROSTER
-// ═══════════════════════════════════════════════════════════════════════════════
-
-const TAB_BADGE_COLORS = {
-  dashboard: { bg: '#dbeafe', color: '#1e40af', label: 'DASHBOARD' },
-  nhap: { bg: '#fde68a', color: '#92400e', label: 'GOODS INTAKE' },
-  tonkho: { bg: '#e0e7ff', color: '#4338ca', label: 'INVENTORY' },
-  tamung: { bg: '#d1fae5', color: '#065f46', label: 'STOCK ADV' },
-  banhang: { bg: '#c7d2fe', color: '#4338ca', label: 'SALES' },
-  baogiaups: { bg: '#e0f2fe', color: '#0369a1', label: 'DEVICE QUOTE' },
-  baogiasolar: { bg: '#fef3c7', color: '#d97706', label: 'SOLAR QUOTE' },
-  thucthi: { bg: '#dcfce7', color: '#166534', label: 'FIELD OPS' },
-  acceptance: { bg: '#ccfbf1', color: '#0f766e', label: 'ACCEPTANCE' },
-  daily: { bg: '#ede9fe', color: '#6d28d9', label: 'DISTRIBUTION' },
-  kygoi: { bg: '#fce7f3', color: '#be185d', label: 'CONSIGNMENT' },
-  crm: { bg: '#fff7ed', color: '#c2410c', label: 'CRM' },
-  quangcao: { bg: '#f0abfc', color: '#86198f', label: 'ADS' },
-  leads: { bg: '#a5f3fc', color: '#0e7490', label: 'LEADS' },
-  loinhuan: { bg: '#fee2e2', color: '#991b1b', label: '💰 FINANCE' },
-  statement: { bg: '#fecaca', color: '#b91c1c', label: '📑 STATEMENT' },
-  baocao: { bg: '#fda4af', color: '#9f1239', label: '📊 FIN REPORT' },
-  mystats: { bg: '#e0e7ff', color: '#4338ca', label: 'MY STATS' },
-  myquotes: { bg: '#dbeafe', color: '#1d4ed8', label: 'MY QUOTES' },
-  mysurvey: { bg: '#d1fae5', color: '#047857', label: 'MY SURVEY' },
-  rbac: { bg: '#f5f3ff', color: '#7c3aed', label: 'RBAC' }
-};
-
-const DEFAULT_GMAIL_ACCESS = [
-  { email: 'director@tni.com', role: 'admin', tabs: ['all'], status: 'active', dateAdded: '17/8/2026', name: 'Director TNI' },
-  { email: 'accountant@tni.com', role: 'finance', tabs: ['dashboard','nhap','tonkho','tamung','banhang','loinhuan','statement','baocao','rbac'], status: 'active', dateAdded: '17/8/2026', name: 'Chief Accountant' },
-  { email: 'zinkoko@gmail.com', role: 'sales', tabs: ['dashboard','banhang','baogiaups','baogiasolar','daily','kygoi','crm','quangcao','leads','mystats','myquotes','mysurvey','rbac'], status: 'active', dateAdded: '17/8/2026', name: 'Zin Ko Ko' },
-  { email: 'minmin@gmail.com', role: 'tech', tabs: ['dashboard','baogiasolar','thucthi','acceptance','crm','mystats','myquotes','mysurvey','rbac'], status: 'active', dateAdded: '17/8/2026', name: 'Min Min' },
-  { email: 'aungthu@gmail.com', role: 'warehouse', tabs: ['dashboard','nhap','tonkho','tamung','banhang','kygoi','mystats','rbac'], status: 'active', dateAdded: '17/8/2026', name: 'Aung Thu' }
-];
-
-function getGmailAccessList() {
-  const saved = DB.g('gmail_access_list');
-  if (!saved || !saved.length) {
-    DB.s('gmail_access_list', DEFAULT_GMAIL_ACCESS);
-    return DEFAULT_GMAIL_ACCESS;
-  }
-  return saved;
-}
-
-function renderGmailAccessTable() {
-  const isVi = currentLang === 'vi';
-  const list = getGmailAccessList();
-  const kw = (document.getElementById('gmail-search-kw')?.value || '').toLowerCase().trim();
-  const filtered = list.filter(g => !kw || g.email.toLowerCase().includes(kw) || (g.name||'').toLowerCase().includes(kw) || g.role.toLowerCase().includes(kw));
-
-  // Summary Cards
-  const adminCount = list.filter(g => g.role === 'admin' && g.status === 'active').length;
-  const financeCount = list.filter(g => g.role === 'finance' && g.status === 'active').length;
-  const salesCount = list.filter(g => g.role === 'sales' && g.status === 'active').length;
-  const techCount = list.filter(g => g.role === 'tech' && g.status === 'active').length;
-  const whCount = list.filter(g => g.role === 'warehouse' && g.status === 'active').length;
-  const totalActive = list.filter(g => g.status === 'active').length;
-
-  document.getElementById('gmail-summary-cards').innerHTML = `
-    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px">
-      <div style="font-size:22px;font-weight:900;color:#dc2626">${adminCount} <span style="font-size:12px;font-weight:600">Accounts</span></div>
-      <div style="font-size:11px;color:#991b1b">👑 Full Access (Admin/BOD)</div>
-      <button class="btn b-xs" onclick="copyGmailsByRole('admin')" style="margin-top:6px;background:#dc2626;color:#fff;font-size:10px;width:100%">📋 Copy Gmail Admin</button>
-    </div>
-    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px">
-      <div style="font-size:22px;font-weight:900;color:#1e40af">${financeCount} <span style="font-size:12px;font-weight:600">Accounts</span></div>
-      <div style="font-size:11px;color:#1e3a8a">💰 Finance & Accounting</div>
-      <button class="btn b-xs" onclick="copyGmailsByRole('finance')" style="margin-top:6px;background:#1e40af;color:#fff;font-size:10px;width:100%">📋 Copy Gmail Finance</button>
-    </div>
-    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px">
-      <div style="font-size:22px;font-weight:900;color:#16a34a">${salesCount} <span style="font-size:12px;font-weight:600">Accounts</span></div>
-      <div style="font-size:11px;color:#166534">🧑‍💼 Sales Staff</div>
-      <button class="btn b-xs" onclick="copyGmailsByRole('sales')" style="margin-top:6px;background:#16a34a;color:#fff;font-size:10px;width:100%">📋 Copy Gmail Sales</button>
-    </div>
-    <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:10px 14px">
-      <div style="font-size:22px;font-weight:900;color:#059669">${techCount} <span style="font-size:12px;font-weight:600">Accounts</span></div>
-      <div style="font-size:11px;color:#047857">🔧 Technical / Field Ops</div>
-      <button class="btn b-xs" onclick="copyGmailsByRole('tech')" style="margin-top:6px;background:#059669;color:#fff;font-size:10px;width:100%">📋 Copy Gmail Tech</button>
-    </div>
-    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px">
-      <div style="font-size:22px;font-weight:900;color:#d97706">${whCount + list.filter(g=>g.role==='dealer'&&g.status==='active').length} <span style="font-size:12px;font-weight:600">Accounts</span></div>
-      <div style="font-size:11px;color:#92400e">📦 Warehouse & 🏪 Dealer</div>
-      <button class="btn b-xs" onclick="copyGmailsByRole('warehouse')" style="margin-top:6px;background:#d97706;color:#fff;font-size:10px;width:100%">📋 Copy Gmail WH</button>
-    </div>
-  `;
-
-  // Table
-  let html = '<table class="data-table" style="width:100%;border-collapse:collapse;font-size:12px">';
-  html += '<thead style="background:#f1f5f9;color:#334155"><tr>';
-  html += '<th style="padding:10px 8px;width:30px;text-align:center">#</th>';
-  html += '<th style="padding:10px 10px;text-align:left;min-width:200px">AUTHORIZED GMAIL ADDRESS</th>';
-  html += '<th style="padding:10px 10px;text-align:left;min-width:280px">ASSIGNED TAB PERMISSIONS</th>';
-  html += '<th style="padding:10px 8px;text-align:center;width:100px">STATUS</th>';
-  html += '<th style="padding:10px 8px;text-align:center;width:90px">DATE ADDED</th>';
-  html += '<th style="padding:10px 8px;text-align:center;width:130px">ACTIONS</th>';
-  html += '</tr></thead><tbody>';
-
-  filtered.forEach((g, i) => {
-    const roleMeta = ROLES[g.role] || ROLES.sales;
-    const isAll = g.tabs.includes('all');
-    const tabBadges = isAll
-      ? '<span style="background:#dcfce7;color:#166534;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:800;margin:2px">🌟 ALL TABS (FULL ACCESS)</span>'
-      : g.tabs.map(t => {
-          const b = TAB_BADGE_COLORS[t];
-          if (!b) return '';
-          return `<span style="background:${b.bg};color:${b.color};padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;margin:2px;display:inline-block">${b.label}</span>`;
-        }).join('');
-
-    html += `<tr style="border-bottom:1px solid #e2e8f0">`;
-    html += `<td style="padding:10px 8px;text-align:center;color:#64748b">${i + 1}</td>`;
-    html += `<td style="padding:10px 10px">
-      <div style="font-weight:800;color:#0369a1;font-size:13px">${g.email}</div>
-      <div style="font-size:11px;color:#64748b">${g.name || '-'} • ${roleMeta.icon} ${roleMeta.shortName}</div>
-    </td>`;
-    html += `<td style="padding:8px 10px;line-height:2">${tabBadges}</td>`;
-    html += `<td style="padding:10px 8px;text-align:center">
-      <span style="background:${g.status === 'active' ? '#dcfce7' : '#fee2e2'};color:${g.status === 'active' ? '#15803d' : '#dc2626'};padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700">
-        ${g.status === 'active' ? '✓ Active' : '⛔ Disabled'}
-      </span>
-    </td>`;
-    html += `<td style="padding:10px 8px;text-align:center;font-size:11.5px;color:#475569">${g.dateAdded}</td>`;
-    html += `<td style="padding:10px 8px;text-align:center">
-      <button class="btn b-xs b-bl" onclick="editGmailAccess(${i})" style="margin:2px">✏️ Edit</button>
-      <button class="btn b-xs" onclick="removeGmailAccess(${i})" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;margin:2px">🗑 Remove</button>
-    </td>`;
-    html += `</tr>`;
-  });
-
-  html += '</tbody></table>';
-  if (!filtered.length) html = '<div style="color:#94a3b8;padding:20px;text-align:center">No Gmail accounts found.</div>';
-  document.getElementById('gmail-access-table').innerHTML = html;
-}
-
-function openAddGmailModal() {
-  openGmailModal(null);
-}
-
-function editGmailAccess(index) {
-  openGmailModal(index);
-}
-
-function openGmailModal(editIndex) {
-  const isVi = currentLang === 'vi';
-  const isEdit = editIndex !== null && editIndex !== undefined;
-  const list = getGmailAccessList();
-  const g = isEdit ? (list[editIndex] || {}) : {};
-
-  // Remove existing modal if any
-  const existing = document.getElementById('gmail-modal-overlay');
-  if (existing) existing.remove();
-
-  const roleOptions = Object.keys(ROLES).map(rk => {
-    const r = ROLES[rk];
-    const sel = (g.role === rk) ? 'selected' : (!isEdit && rk === 'sales' ? 'selected' : '');
-    return `<option value="${rk}" ${sel}>${r.icon} ${r.shortName}</option>`;
-  }).join('');
-
-  const overlay = document.createElement('div');
-  overlay.id = 'gmail-modal-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
-  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
-
-  overlay.innerHTML = `
-    <div style="background:#fff;border-radius:16px;width:100%;max-width:520px;box-shadow:0 25px 60px -12px rgba(0,0,0,0.3);overflow:hidden;animation:fadeIn .18s ease">
-      <div style="background:linear-gradient(135deg,#1e3a8a,#2563eb);padding:18px 24px;display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="color:#fff;font-size:16px;font-weight:800">${isEdit ? (isVi ? '✏️ Chỉnh Sửa Quyền Gmail' : '✏️ Edit Gmail Access') : (isVi ? '➕ Thêm Gmail Mới' : '➕ Add New Gmail Access')}</div>
-          <div style="color:#bfdbfe;font-size:11.5px;margin-top:3px">${isVi ? 'Phân quyền truy cập hệ thống TNI Sale Portal' : 'TNI Sale Portal access authorization'}</div>
-        </div>
-        <button onclick="document.getElementById('gmail-modal-overlay').remove()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:20px;cursor:pointer;border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center">×</button>
-      </div>
-
-      <div style="padding:24px">
-        <div style="display:grid;gap:14px">
-
-          <div>
-            <label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:5px">${isVi ? '📧 Địa Chỉ Gmail (bắt buộc)' : '📧 Gmail Address (required)'}</label>
-            <input id="gm-email" type="email" value="${g.email || ''}" ${isEdit ? 'readonly style="background:#f8fafc;color:#64748b;"' : ''} placeholder="user@gmail.com" style="width:100%;padding:9px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px;box-sizing:border-box;outline:none" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#d1d5db'">
-            ${isEdit ? `<div style="font-size:10.5px;color:#64748b;margin-top:3px">${isVi ? 'Không thể thay đổi email. Xóa và thêm lại nếu cần.' : 'Email cannot be changed. Remove and re-add if needed.'}</div>` : ''}
-          </div>
-
-          <div>
-            <label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:5px">${isVi ? '👤 Tên Hiển Thị' : '👤 Display Name'}</label>
-            <input id="gm-name" type="text" value="${g.name || ''}" placeholder="${isVi ? 'VD: Nguyễn Văn A' : 'e.g. John Doe'}" style="width:100%;padding:9px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px;box-sizing:border-box;outline:none" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#d1d5db'">
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div>
-              <label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:5px">${isVi ? '🎭 Vai Trò' : '🎭 Role'}</label>
-              <select id="gm-role" onchange="gmUpdateTabPreview()" style="width:100%;padding:9px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px;font-weight:700;box-sizing:border-box;background:#fff;outline:none" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#d1d5db'">
-                ${roleOptions}
-              </select>
-            </div>
-            <div>
-              <label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:5px">${isVi ? '🔘 Trạng Thái' : '🔘 Status'}</label>
-              <select id="gm-status" style="width:100%;padding:9px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px;font-weight:700;box-sizing:border-box;background:#fff;outline:none" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#d1d5db'">
-                <option value="active" ${g.status !== 'disabled' ? 'selected' : ''}>✓ ${isVi ? 'Hoạt Động' : 'Active'}</option>
-                <option value="disabled" ${g.status === 'disabled' ? 'selected' : ''}>⛔ ${isVi ? 'Vô Hiệu' : 'Disabled'}</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px">${isVi ? '🔑 Quyền Truy Cập Tab (theo vai trò)' : '🔑 Tab Access Preview (by role)'}</label>
-            <div id="gm-tab-preview" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;min-height:38px;font-size:11px;line-height:2"></div>
-          </div>
-
-        </div>
-
-        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0">
-          <button onclick="document.getElementById('gmail-modal-overlay').remove()" style="padding:9px 18px;border:1.5px solid #d1d5db;background:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:#374151">${isVi ? 'Hủy' : 'Cancel'}</button>
-          <button onclick="saveGmailModal(${isEdit ? editIndex : 'null'})" style="padding:9px 20px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">${isEdit ? (isVi ? '💾 Lưu Thay Đổi' : '💾 Save Changes') : (isVi ? '➕ Thêm Vào Danh Sách' : '➕ Add to List')}</button>
-        </div>
-      </div>
-    </div>`;
-
-  document.body.appendChild(overlay);
-  // Render initial tab preview
-  setTimeout(() => gmUpdateTabPreview(), 50);
-}
-
-function gmUpdateTabPreview() {
-  const isVi = currentLang === 'vi';
-  const roleEl = document.getElementById('gm-role');
-  const previewEl = document.getElementById('gm-tab-preview');
-  if (!roleEl || !previewEl) return;
-  const role = roleEl.value;
-  const roleTabs = ROLES[role]?.allowedTabs || [];
-  const isAll = role === 'admin';
-  if (isAll) {
-    previewEl.innerHTML = `<span style="background:#dcfce7;color:#166534;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:800;margin:2px">🌟 ${isVi ? 'TOÀN BỘ TABS' : 'ALL TABS'} (FULL ACCESS)</span>`;
-    return;
-  }
-  previewEl.innerHTML = roleTabs.map(t => {
-    const b = (typeof TAB_BADGE_COLORS !== 'undefined' && TAB_BADGE_COLORS[t]) ? TAB_BADGE_COLORS[t] : { bg:'#e2e8f0', color:'#475569', label: t };
-    return `<span style="background:${b.bg};color:${b.color};padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;margin:2px;display:inline-block">${b.label}</span>`;
-  }).join('') || `<span style="color:#94a3b8">${isVi ? 'Không có quyền tab nào' : 'No tab permissions'}</span>`;
-}
-
-function saveGmailModal(editIndex) {
-  const isVi = currentLang === 'vi';
-  const email = (document.getElementById('gm-email')?.value || '').trim().toLowerCase();
-  const name = (document.getElementById('gm-name')?.value || '').trim();
-  const role = document.getElementById('gm-role')?.value || 'sales';
-  const status = document.getElementById('gm-status')?.value || 'active';
-
-  if (!email || !email.includes('@')) {
-    al(isVi ? '❌ Địa chỉ Gmail không hợp lệ!' : '❌ Invalid Gmail address!', 'er');
-    return;
-  }
-
-  const list = getGmailAccessList();
-  const isEdit = editIndex !== null && editIndex !== undefined;
-
-  if (!isEdit && list.some(g => g.email === email)) {
-    al(isVi ? '❌ Gmail này đã có trong danh sách!' : '❌ This Gmail is already in the list!', 'er');
-    return;
-  }
-
-  const entry = {
-    email,
-    name,
-    role,
-    tabs: role === 'admin' ? ['all'] : [...(ROLES[role]?.allowedTabs || [])],
-    status,
-    dateAdded: isEdit ? (list[editIndex]?.dateAdded || new Date().toLocaleDateString('en-GB')) : new Date().toLocaleDateString('en-GB')
-  };
-
-  if (isEdit) {
-    list[editIndex] = { ...list[editIndex], ...entry };
-    al(`✅ ${isVi ? 'Đã cập nhật: ' : 'Updated: '}${email}`, 'ok');
-  } else {
-    list.push(entry);
-    al(`✅ ${isVi ? 'Đã thêm: ' : 'Added: '}${email}`, 'ok');
-  }
-
-  DB.s('gmail_access_list', list);
-  document.getElementById('gmail-modal-overlay')?.remove();
-  renderGmailAccessTable();
-}
-
-function removeGmailAccess(index) {
-  const isVi = currentLang === 'vi';
-  const list = getGmailAccessList();
-  const g = list[index];
-  if (!g) return;
-
-  // Remove existing confirm overlay if any
-  const existing = document.getElementById('gmail-confirm-overlay');
-  if (existing) existing.remove();
-
-  const overlay = document.createElement('div');
-  overlay.id = 'gmail-confirm-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
-
-  overlay.innerHTML = `
-    <div style="background:#fff;border-radius:14px;width:100%;max-width:400px;box-shadow:0 20px 50px -10px rgba(0,0,0,0.3);overflow:hidden">
-      <div style="background:#fef2f2;padding:20px 24px;text-align:center;border-bottom:1px solid #fee2e2">
-        <div style="font-size:36px;margin-bottom:8px">🗑️</div>
-        <div style="font-size:15px;font-weight:800;color:#991b1b">${isVi ? 'Xác Nhận Xóa Quyền Truy Cập' : 'Confirm Remove Access'}</div>
-      </div>
-      <div style="padding:20px 24px;text-align:center">
-        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;margin-bottom:16px">
-          <div style="font-size:13px;font-weight:800;color:#0369a1">${g.email}</div>
-          <div style="font-size:11.5px;color:#64748b;margin-top:3px">${g.name || ''} • ${(ROLES[g.role] || ROLES.sales).icon} ${(ROLES[g.role] || ROLES.sales).shortName}</div>
-        </div>
-        <div style="font-size:12.5px;color:#64748b;margin-bottom:18px">${isVi ? 'Người dùng này sẽ mất quyền truy cập vào hệ thống ngay lập tức.' : 'This user will immediately lose access to the system.'}</div>
-        <div style="display:flex;gap:10px;justify-content:center">
-          <button onclick="document.getElementById('gmail-confirm-overlay').remove()" style="padding:9px 20px;border:1.5px solid #d1d5db;background:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">${isVi ? 'Hủy' : 'Cancel'}</button>
-          <button onclick="confirmRemoveGmail(${index})" style="padding:9px 20px;background:#dc2626;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">${isVi ? '🗑️ Xóa Ngay' : '🗑️ Remove Now'}</button>
-        </div>
-      </div>
-    </div>`;
-
-  document.body.appendChild(overlay);
-}
-
-function confirmRemoveGmail(index) {
-  const isVi = currentLang === 'vi';
-  const list = getGmailAccessList();
-  const g = list[index];
-  if (!g) return;
-  list.splice(index, 1);
-  DB.s('gmail_access_list', list);
-  document.getElementById('gmail-confirm-overlay')?.remove();
-  renderGmailAccessTable();
-  al(`${isVi ? 'Đã xóa: ' : 'Removed: '}${g.email}`);
-}
-
-
-function copyGmailsByRole(roleId) {
-  const list = getGmailAccessList().filter(g => g.status === 'active' && g.role === roleId);
-  const emails = list.map(g => g.email).join(', ');
-  navigator.clipboard.writeText(emails).then(() => {
-    al(`📋 Copied ${list.length} email(s) for ${ROLES[roleId]?.shortName || roleId}!`, 'ok');
-  }).catch(() => al('Copy failed', 'er'));
-}
-
-function copyAllGmailsToClipboard() {
-  const list = getGmailAccessList().filter(g => g.status === 'active');
-  const emails = list.map(g => g.email).join(', ');
-  navigator.clipboard.writeText(emails).then(() => {
-    al(`📋 Copied all ${list.length} active Gmail(s)!`, 'ok');
-  }).catch(() => al('Copy failed', 'er'));
-}
-
-// Auto-detect role from Gmail Access List
-function detectRoleFromGmail(email) {
-  if (!email) return null;
-  const list = getGmailAccessList();
-  const match = list.find(g => g.email.toLowerCase() === email.toLowerCase() && g.status === 'active');
-  return match ? match : null;
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// 💵 COMMISSION CALCULATION — Sales 1% × 95% + Tech 70%
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function renderCommissionPanel(staffName) {
-  const isVi = currentLang === 'vi';
-  const name = (staffName || '').toLowerCase();
-  const cardsEl = document.getElementById('my-commission-cards');
-  const tableEl = document.getElementById('my-commission-table');
-  if (!cardsEl || !tableEl) return;
-
-  // Pull from quotesolar (chốt deals) — match by staff name
-  const allQuotes = DB.g('quotesolar') || [];
-  const myQuotes = allQuotes.filter(q =>
-    (q.staff || '').toLowerCase().includes(name) ||
-    (q.staffId || '').toLowerCase().includes(name)
-  );
-
-  if (!myQuotes.length) {
-    cardsEl.innerHTML = '';
-    tableEl.innerHTML = `<div style="color:#94a3b8;padding:20px;text-align:center">${isVi ? 'Chưa có hợp đồng/báo giá nào để tính hoa hồng.' : 'No contracts/quotes found for commission calculation.'}</div>`;
-    return;
-  }
-
-  let totalContractValue = 0;
-  let totalSalesCommission = 0;
-  let totalTechFee = 0;
-
-  const rows = myQuotes.map((q, i) => {
-    const contractVal = Number(q.total || 0);
-    const prepayment95 = contractVal * 0.95;
-    const salesComm = prepayment95 * 0.01;  // 1% of 95%
-    const techInstall = contractVal * 0.70;  // 70% of contract
-
-    totalContractValue += contractVal;
-    totalSalesCommission += salesComm;
-    totalTechFee += techInstall;
-
-    return [
-      i + 1,
-      `<code>${q.code || '-'}</code>`,
-      `<b>${q.kh || '-'}</b>`,
-      `<b>${fn(contractVal)}</b>`,
-      `${fn(prepayment95)}`,
-      `<b style="color:#059669">${fn(salesComm)}</b>`,
-      `<b style="color:#7c3aed">${fn(techInstall)}</b>`,
-      fd(q.date)
-    ];
-  });
-
-  const cur = myQuotes[0]?.currency || 'Ks';
-
-  cardsEl.innerHTML = `
-    <div class="card c-gn"><div class="lbl2">💰 ${isVi ? 'Tổng HĐ' : 'Total Contract'}</div><div class="val" style="font-size:14px">${fn(totalContractValue)} ${cur}</div><div class="sub">${myQuotes.length} ${isVi ? 'hợp đồng' : 'contracts'}</div></div>
-    <div class="card c-bl"><div class="lbl2">💵 ${isVi ? 'Hoa Hồng Sales' : 'Sales Commission'}</div><div class="val" style="font-size:14px;color:#059669">${fn(totalSalesCommission)} ${cur}</div><div class="sub">1% × 95% = 0.95%</div></div>
-    <div class="card c-pu"><div class="lbl2">🔧 ${isVi ? 'Phí Lắp Đặt KT' : 'Tech Install Fee'}</div><div class="val" style="font-size:14px;color:#7c3aed">${fn(totalTechFee)} ${cur}</div><div class="sub">70% ${isVi ? 'giá trị HĐ' : 'contract value'}</div></div>
-    <div class="card c-or"><div class="lbl2">📊 ${isVi ? 'Tỷ Lệ Hoa Hồng' : 'Comm. Rate'}</div><div class="val" style="font-size:14px">0.95%</div><div class="sub">${isVi ? 'trên tổng HĐ' : 'of total contract'}</div></div>
-  `;
-
-  const commHeaders = isVi
-    ? ['#', 'Mã HĐ', 'Khách Hàng', 'Giá Trị HĐ', 'T.Toán 95%', 'Hoa Hồng 1%', 'Phí KT 70%', 'Ngày']
-    : ['#', 'Contract', 'Customer', 'Contract Value', '95% Prepay', '1% Commission', '70% Tech Fee', 'Date'];
-
-  tableEl.innerHTML = tbl(commHeaders, rows);
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// 🔧 WARRANTY CLAIMS MODULE — Full Lifecycle Management
-// ═══════════════════════════════════════════════════════════════════════════════
-
-const WARRANTY_STATUS = {
-  pending:   { label: { en: '⏳ Pending',      vi: '⏳ Chờ Xử Lý'    }, color: '#b45309', bg: '#fef3c7' },
-  repairing: { label: { en: '🔨 Under Repair', vi: '🔨 Đang Sửa Chữa' }, color: '#1d4ed8', bg: '#eff6ff' },
-  resolved:  { label: { en: '✅ Resolved',     vi: '✅ Đã Giải Quyết'  }, color: '#15803d', bg: '#dcfce7' },
-  rejected:  { label: { en: '❌ Rejected',     vi: '❌ Từ Chối'        }, color: '#dc2626', bg: '#fee2e2' }
-};
-
-const WARRANTY_ISSUE_TYPES = {
-  en: ['No Power', 'Battery Failure', 'Display Fault', 'Inverter Error', 'Physical Damage', 'Installation Defect', 'Communication Error', 'Overheating', 'Other'],
-  vi: ['Mất điện / Không khởi động', 'Pin hỏng / Suy giảm dung lượng', 'Lỗi màn hình hiển thị', 'Lỗi biến tần Inverter', 'Hư hỏng vật lý', 'Lỗi lắp đặt', 'Lỗi kết nối / Truyền thông', 'Quá nhiệt', 'Khác']
-};
-
-function getWarrantyClaims() {
-  return DB.g('warranty_claims') || [];
-}
-
-function saveWarrantyClaims(list) {
-  DB.s('warranty_claims', list);
-}
-
-function renderWarrantySection() {
-  const isVi = currentLang === 'vi';
-  const claims = getWarrantyClaims();
-  const statusFilter = document.getElementById('wt-filter-status')?.value || 'all';
-  const kw = (document.getElementById('wt-search')?.value || '').toLowerCase().trim();
-
-  const filtered = claims.filter(c => {
-    if (statusFilter !== 'all' && c.status !== statusFilter) return false;
-    if (kw && !((c.serial||'').toLowerCase().includes(kw) ||
-                (c.customer||'').toLowerCase().includes(kw) ||
-                (c.product||'').toLowerCase().includes(kw) ||
-                (c.ref||'').toLowerCase().includes(kw))) return false;
-    return true;
-  });
-
-  // Update bilingual UI elements
-  const addBtn = document.getElementById('wt-btn-add');
-  if (addBtn) addBtn.textContent = isVi ? '🔧 + Tạo Yêu Cầu Bảo Hành' : '🔧 + New Claim';
-  const refBtn = document.getElementById('wt-btn-refresh');
-  if (refBtn) refBtn.textContent = isVi ? '🔄 Làm Mới' : '🔄 Refresh';
-  const tableH3 = document.getElementById('wt-table-h3');
-  if (tableH3) tableH3.textContent = isVi ? '🔧 Danh Sách Yêu Cầu Bảo Hành' : '🔧 Warranty Claims';
-  const srchEl = document.getElementById('wt-search');
-  if (srchEl) srchEl.placeholder = isVi ? '🔍 Tìm theo serial / khách hàng...' : '🔍 Search serial / customer...';
-
-  // KPI summary cards
-  const total = claims.length;
-  const pending = claims.filter(c => c.status === 'pending').length;
-  const repairing = claims.filter(c => c.status === 'repairing').length;
-  const resolved = claims.filter(c => c.status === 'resolved').length;
-  const rejected = claims.filter(c => c.status === 'rejected').length;
-
-  const summaryEl = document.getElementById('wt-summary-cards');
-  if (summaryEl) summaryEl.innerHTML = `
-    <div class="card" style="border-left:4px solid #b45309">
-      <div class="lbl2">📋 ${isVi ? 'Tổng Phiếu' : 'Total Claims'}</div>
-      <div class="val">${total}</div>
-      <div class="sub">${isVi ? 'Tất cả yêu cầu' : 'All claims'}</div>
-    </div>
-    <div class="card" style="border-left:4px solid #b45309">
-      <div class="lbl2">⏳ ${isVi ? 'Chờ Xử Lý' : 'Pending'}</div>
-      <div class="val" style="color:#b45309">${pending}</div>
-      <div class="sub">${isVi ? 'Cần xử lý ngay' : 'Need attention'}</div>
-    </div>
-    <div class="card" style="border-left:4px solid #1d4ed8">
-      <div class="lbl2">🔨 ${isVi ? 'Đang Sửa' : 'Under Repair'}</div>
-      <div class="val" style="color:#1d4ed8">${repairing}</div>
-      <div class="sub">${isVi ? 'Đang xử lý kỹ thuật' : 'In technical process'}</div>
-    </div>
-    <div class="card" style="border-left:4px solid #15803d">
-      <div class="lbl2">✅ ${isVi ? 'Đã Giải Quyết' : 'Resolved'}</div>
-      <div class="val" style="color:#15803d">${resolved}</div>
-      <div class="sub">${isVi ? 'Hoàn thành bảo hành' : 'Warranty completed'}</div>
-    </div>
-    <div class="card" style="border-left:4px solid #dc2626">
-      <div class="lbl2">❌ ${isVi ? 'Từ Chối' : 'Rejected'}</div>
-      <div class="val" style="color:#dc2626">${rejected}</div>
-      <div class="sub">${isVi ? 'Không đủ điều kiện BH' : 'Out of warranty'}</div>
-    </div>`;
-
-  // Count badge
-  const badge = document.getElementById('wt-count-badge');
-  if (badge) badge.textContent = `${filtered.length} ${isVi ? 'phiếu' : 'claims'}`;
-
-  // Table
-  const container = document.getElementById('wt-table-container');
-  if (!container) return;
-
-  if (!filtered.length) {
-    container.innerHTML = `<div style="color:#94a3b8;padding:30px;text-align:center;font-size:13px">${isVi ? '📭 Chưa có yêu cầu bảo hành nào. Bấm "+ Tạo Yêu Cầu" để bắt đầu.' : '📭 No warranty claims yet. Click "+ New Claim" to start.'}</div>`;
-    return;
-  }
-
-  const headers = isVi
-    ? ['#', 'Mã Phiếu', 'Khách Hàng', 'Sản Phẩm / Serial', 'Loại Lỗi', 'Ngày Mở', 'Trạng Thái', 'Kỹ Thuật Viên', 'Thao Tác']
-    : ['#', 'Ref', 'Customer', 'Product / Serial', 'Issue Type', 'Date Opened', 'Status', 'Technician', 'Actions'];
-
-  let html = `<table class="data-table" style="width:100%;border-collapse:collapse;font-size:12px">`;
-  html += `<thead style="background:#f8fafc;color:#334155;position:sticky;top:0"><tr>`;
-  headers.forEach((h, i) => {
-    html += `<th style="padding:9px ${i===0?'6px':'10px'};text-align:${i===0?'center':'left'}">${h}</th>`;
-  });
-  html += `</tr></thead><tbody>`;
-
-  filtered.forEach((c, i) => {
-    const st = WARRANTY_STATUS[c.status] || WARRANTY_STATUS.pending;
-    const statusLabel = st.label[isVi ? 'vi' : 'en'];
-    const urgency = c.status === 'pending' && c.daysOpen > 7 ? 'background:#fffbeb' : '';
-    html += `<tr style="${urgency};border-bottom:1px solid #f1f5f9">`;
-    html += `<td style="padding:9px 6px;text-align:center;color:#94a3b8;font-size:11px">${i+1}</td>`;
-    html += `<td style="padding:9px 10px"><code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:11px">${c.ref || '—'}</code></td>`;
-    html += `<td style="padding:9px 10px"><div style="font-weight:700;color:#0f172a">${c.customer || '—'}</div><div style="font-size:10.5px;color:#64748b">${c.phone || ''}</div></td>`;
-    html += `<td style="padding:9px 10px"><div style="font-weight:600;color:#1e293b">${c.product || '—'}</div><div style="font-size:10.5px;color:#64748b;font-family:monospace">${c.serial || ''}</div></td>`;
-    html += `<td style="padding:9px 10px;color:#475569;font-size:11.5px">${c.issueType || '—'}</td>`;
-    html += `<td style="padding:9px 10px;color:#64748b;font-size:11.5px;white-space:nowrap">${c.dateOpened || '—'}</td>`;
-    html += `<td style="padding:9px 10px"><span style="background:${st.bg};color:${st.color};padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap">${statusLabel}</span></td>`;
-    html += `<td style="padding:9px 10px;color:#475569;font-size:11.5px">${c.technician || '—'}</td>`;
-    html += `<td style="padding:9px 8px;text-align:center">
-      <button class="btn b-xs b-bl" onclick="openWarrantyModal(${claims.indexOf(c)})" style="margin:2px" title="${isVi ? 'Sửa / Cập nhật' : 'Edit / Update'}">✏️</button>
-      <button class="btn b-xs" onclick="deleteWarrantyClaim(${claims.indexOf(c)})" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;margin:2px" title="${isVi ? 'Xóa phiếu' : 'Delete claim'}">🗑</button>
-    </td>`;
-    html += `</tr>`;
-    // Notes/description sub-row if has notes
-    if (c.notes) {
-      html += `<tr style="background:#f8fafc;border-bottom:1px solid #f1f5f9">
-        <td></td>
-        <td colspan="8" style="padding:6px 10px;font-size:11px;color:#64748b;font-style:italic">💬 ${c.notes}</td>
-      </tr>`;
-    }
-  });
-
-  html += `</tbody></table>`;
-  container.innerHTML = html;
-}
-
-function openWarrantyModal(editIndex) {
-  const isVi = currentLang === 'vi';
-  const claims = getWarrantyClaims();
-  const isEdit = editIndex !== null && editIndex !== undefined;
-  const c = isEdit ? (claims[editIndex] || {}) : {};
-
-  const existing = document.getElementById('wt-modal-overlay');
-  if (existing) existing.remove();
-
-  const issueOpts = WARRANTY_ISSUE_TYPES[isVi ? 'vi' : 'en'].map(t =>
-    `<option value="${t}" ${c.issueType === t ? 'selected' : ''}>${t}</option>`
-  ).join('');
-
-  const statusOpts = Object.entries(WARRANTY_STATUS).map(([k, v]) =>
-    `<option value="${k}" ${(c.status || 'pending') === k ? 'selected' : ''}>${v.label[isVi ? 'vi' : 'en']}</option>`
-  ).join('');
-
-  const today = new Date().toLocaleDateString('en-GB');
-  const newRef = 'WC-' + Date.now().toString().slice(-6);
-
-  const overlay = document.createElement('div');
-  overlay.id = 'wt-modal-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto';
-  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
-
-  overlay.innerHTML = `
-    <div style="background:#fff;border-radius:16px;width:100%;max-width:580px;box-shadow:0 25px 60px -12px rgba(0,0,0,0.3);overflow:hidden;margin:auto">
-      <div style="background:linear-gradient(135deg,#78350f,#b45309);padding:18px 24px;display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="color:#fff;font-size:16px;font-weight:800">${isEdit ? (isVi ? '✏️ Cập Nhật Phiếu Bảo Hành' : '✏️ Update Warranty Claim') : (isVi ? '🔧 Tạo Phiếu Bảo Hành Mới' : '🔧 New Warranty Claim')}</div>
-          <div style="color:#fde68a;font-size:11.5px;margin-top:3px">${isVi ? 'Quản lý bảo hành & sửa chữa thiết bị' : 'Device warranty & repair management'}</div>
-        </div>
-        <button onclick="document.getElementById('wt-modal-overlay').remove()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:20px;cursor:pointer;border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center">×</button>
-      </div>
-
-      <div style="padding:22px;display:grid;gap:13px">
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div>
-            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:4px">${isVi ? '🔖 Mã Phiếu' : '🔖 Reference'}</label>
-            <input id="wt-ref" value="${c.ref || newRef}" style="width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;font-family:monospace;box-sizing:border-box">
-          </div>
-          <div>
-            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:4px">${isVi ? '📅 Ngày Mở Phiếu' : '📅 Date Opened'}</label>
-            <input id="wt-date" value="${c.dateOpened || today}" style="width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;box-sizing:border-box">
-          </div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div>
-            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:4px">${isVi ? '👤 Tên Khách Hàng' : '👤 Customer Name'}</label>
-            <input id="wt-customer" value="${c.customer || ''}" placeholder="${isVi ? 'VD: U Kyaw Min' : 'e.g. U Kyaw Min'}" style="width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;box-sizing:border-box">
-          </div>
-          <div>
-            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:4px">${isVi ? '📞 Số Điện Thoại' : '📞 Phone'}</label>
-            <input id="wt-phone" value="${c.phone || ''}" placeholder="09xxxxxxxx" style="width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;box-sizing:border-box">
-          </div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div>
-            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:4px">${isVi ? '📦 Sản Phẩm / Thiết Bị' : '📦 Product / Device'}</label>
-            <input id="wt-product" value="${c.product || ''}" placeholder="${isVi ? 'VD: UPS 2KVA, Solar Panel 550W' : 'e.g. UPS 2KVA, Solar Panel 550W'}" style="width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;box-sizing:border-box">
-          </div>
-          <div>
-            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:4px">${isVi ? '🔢 Serial Number' : '🔢 Serial Number'}</label>
-            <input id="wt-serial" value="${c.serial || ''}" placeholder="SN-XXXXXXXX" style="width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;font-family:monospace;box-sizing:border-box">
-          </div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div>
-            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:4px">${isVi ? '⚠️ Loại Lỗi / Vấn Đề' : '⚠️ Issue Type'}</label>
-            <select id="wt-issue" style="width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;background:#fff;box-sizing:border-box">
-              ${issueOpts}
-            </select>
-          </div>
-          <div>
-            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:4px">${isVi ? '🔘 Trạng Thái Xử Lý' : '🔘 Status'}</label>
-            <select id="wt-status" style="width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;background:#fff;font-weight:700;box-sizing:border-box">
-              ${statusOpts}
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:4px">${isVi ? '🔧 Kỹ Thuật Viên Phụ Trách' : '🔧 Assigned Technician'}</label>
-          <input id="wt-tech" value="${c.technician || ''}" placeholder="${isVi ? 'Tên kỹ thuật viên phụ trách' : 'Assigned technician name'}" style="width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;box-sizing:border-box">
-        </div>
-
-        <div>
-          <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:4px">${isVi ? '📝 Mô Tả Chi Tiết Lỗi / Ghi Chú' : '📝 Issue Description / Notes'}</label>
-          <textarea id="wt-notes" rows="3" placeholder="${isVi ? 'Mô tả chi tiết triệu chứng lỗi, thao tác đã thực hiện...' : 'Describe symptoms, actions taken, parts replaced...'}" style="width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;resize:vertical;box-sizing:border-box">${c.notes || ''}</textarea>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div>
-            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:4px">${isVi ? '📅 Ngày Hẹn Trả / Dự Kiến Xong' : '📅 Expected Completion'}</label>
-            <input id="wt-duedate" value="${c.dueDate || ''}" placeholder="DD/MM/YYYY" style="width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;box-sizing:border-box">
-          </div>
-          <div>
-            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:4px">${isVi ? '💰 Chi Phí Sửa Chữa (Ks)' : '💰 Repair Cost (Ks)'}</label>
-            <input id="wt-cost" type="number" value="${c.repairCost || ''}" placeholder="0" style="width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:12px;box-sizing:border-box">
-          </div>
-        </div>
-
-        <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:14px;border-top:1px solid #e2e8f0">
-          <button onclick="document.getElementById('wt-modal-overlay').remove()" style="padding:9px 18px;border:1.5px solid #d1d5db;background:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:#374151">${isVi ? 'Hủy' : 'Cancel'}</button>
-          <button onclick="saveWarrantyClaim(${isEdit ? editIndex : 'null'})" style="padding:9px 22px;background:#b45309;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">${isEdit ? (isVi ? '💾 Cập Nhật' : '💾 Update') : (isVi ? '🔧 Tạo Phiếu' : '🔧 Create Claim')}</button>
-        </div>
-
-      </div>
-    </div>`;
-
-  document.body.appendChild(overlay);
-}
-
-function saveWarrantyClaim(editIndex) {
-  const isVi = currentLang === 'vi';
-  const get = id => (document.getElementById(id)?.value || '').trim();
-
-  const customer = get('wt-customer');
-  const product  = get('wt-product');
-  if (!customer) { al(isVi ? '❌ Vui lòng nhập tên khách hàng!' : '❌ Please enter customer name!', 'er'); return; }
-  if (!product)  { al(isVi ? '❌ Vui lòng nhập tên sản phẩm!'  : '❌ Please enter product name!', 'er'); return; }
-
-  const entry = {
-    ref:        get('wt-ref'),
-    dateOpened: get('wt-date'),
-    customer,
-    phone:      get('wt-phone'),
-    product,
-    serial:     get('wt-serial'),
-    issueType:  get('wt-issue'),
-    status:     get('wt-status') || 'pending',
-    technician: get('wt-tech'),
-    notes:      get('wt-notes'),
-    dueDate:    get('wt-duedate'),
-    repairCost: Number(document.getElementById('wt-cost')?.value || 0),
-    updatedAt:  new Date().toLocaleDateString('en-GB')
-  };
-
-  const claims = getWarrantyClaims();
-  const isEdit = editIndex !== null && editIndex !== undefined;
-
-  if (isEdit) {
-    entry.createdAt = claims[editIndex]?.createdAt || entry.dateOpened;
-    claims[editIndex] = entry;
-    al(`✅ ${isVi ? 'Đã cập nhật phiếu: ' : 'Updated claim: '}${entry.ref}`, 'ok');
-  } else {
-    entry.createdAt = entry.dateOpened;
-    claims.push(entry);
-    al(`✅ ${isVi ? 'Đã tạo phiếu bảo hành: ' : 'Created warranty claim: '}${entry.ref}`, 'ok');
-  }
-
-  saveWarrantyClaims(claims);
-  document.getElementById('wt-modal-overlay')?.remove();
-  renderWarrantySection();
-}
-
-function deleteWarrantyClaim(index) {
-  const isVi = currentLang === 'vi';
-  const claims = getWarrantyClaims();
-  const c = claims[index];
-  if (!c) return;
-
-  const existing = document.getElementById('wt-del-overlay');
-  if (existing) existing.remove();
-
-  const overlay = document.createElement('div');
-  overlay.id = 'wt-del-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
-  overlay.innerHTML = `
-    <div style="background:#fff;border-radius:14px;width:100%;max-width:380px;box-shadow:0 20px 50px -10px rgba(0,0,0,0.3);overflow:hidden">
-      <div style="background:#fef2f2;padding:18px 22px;text-align:center;border-bottom:1px solid #fee2e2">
-        <div style="font-size:32px;margin-bottom:6px">🗑️</div>
-        <div style="font-size:14px;font-weight:800;color:#991b1b">${isVi ? 'Xóa Phiếu Bảo Hành?' : 'Delete Warranty Claim?'}</div>
-      </div>
-      <div style="padding:18px 22px;text-align:center">
-        <div style="background:#f8fafc;border-radius:8px;padding:10px;margin-bottom:14px">
-          <div style="font-weight:700;color:#0369a1;font-size:13px">${c.ref}</div>
-          <div style="font-size:11.5px;color:#475569;margin-top:2px">${c.customer} • ${c.product}</div>
-        </div>
-        <div style="font-size:12px;color:#64748b;margin-bottom:16px">${isVi ? 'Hành động này không thể hoàn tác.' : 'This action cannot be undone.'}</div>
-        <div style="display:flex;gap:10px;justify-content:center">
-          <button onclick="document.getElementById('wt-del-overlay').remove()" style="padding:8px 18px;border:1.5px solid #d1d5db;background:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">${isVi ? 'Hủy' : 'Cancel'}</button>
-          <button onclick="confirmDeleteWarranty(${index})" style="padding:8px 20px;background:#dc2626;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">${isVi ? '🗑 Xóa' : '🗑 Delete'}</button>
-        </div>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
-}
-
-function confirmDeleteWarranty(index) {
-  const isVi = currentLang === 'vi';
-  const claims = getWarrantyClaims();
-  const c = claims[index];
-  claims.splice(index, 1);
-  saveWarrantyClaims(claims);
-  document.getElementById('wt-del-overlay')?.remove();
-  renderWarrantySection();
-  al(`${isVi ? 'Đã xóa phiếu: ' : 'Deleted: '}${c?.ref || ''}`, 'ok');
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// 🌐 RBAC INITIALIZATION HOOK ON LOAD — WITH GMAIL AUTO-DETECTION
+// 🌐 RBAC INITIALIZATION HOOK ON LOAD
 // ═══════════════════════════════════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(window.location.search);
   const paramRole = params.get('role');
-  const paramStaff = params.get('staff') || params.get('user');
-  const paramEmail = params.get('email');
+  const paramStaff = params.get('staff') || params.get('user') || params.get('email');
 
-  // Priority 1: Gmail auto-detection from Access List
-  if (paramEmail) {
-    const gmailMatch = detectRoleFromGmail(paramEmail);
-    if (gmailMatch) {
-      changeAppRole(gmailMatch.role, gmailMatch.name || paramEmail);
-      al('🔐 Auto-detected role from Gmail: ' + (ROLES[gmailMatch.role]?.shortName || gmailMatch.role), 'ok');
-    } else {
-      // Email not in access list — default to most restricted
-      changeAppRole('sales', paramEmail);
-      al('⚠️ Email not in authorized list. Default role assigned.', 'er');
-    }
-  }
-  // Priority 2: Explicit role parameter
-  else if (paramRole && ROLES[paramRole]) {
+  if (paramRole && ROLES[paramRole]) {
     changeAppRole(paramRole, paramStaff || '');
-  }
-  // Priority 3: Saved role from localStorage
-  else {
+  } else {
     changeAppRole(currentAppRole, currentStaffUser);
   }
 
-  // Populate staff selects and render all RBAC panels
+  // Populate staff selects and render matrix
   setTimeout(() => {
     populateStaffUserSelect();
     renderRBACMatrix();
     renderStaffUsersTable();
-    renderGmailAccessTable();
   }, 300);
 });
 
