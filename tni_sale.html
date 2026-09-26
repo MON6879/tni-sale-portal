@@ -8435,8 +8435,27 @@ let currentAppRole = localStorage.getItem('tni_sale_role') || 'admin';
 let currentStaffUser = localStorage.getItem('tni_sale_staff') || '';
 let adminPinCode = localStorage.getItem('tni_sale_admin_pin') || '7979';
 
+function getRBACOverrides() {
+  try {
+    const raw = localStorage.getItem('tni_rbac_overrides');
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : {};
+  } catch(e) {
+    return {};
+  }
+}
+
+function saveRBACOverrides(obj) {
+  try {
+    localStorage.setItem('tni_rbac_overrides', JSON.stringify(obj || {}));
+  } catch(e) {
+    console.error('Failed to save rbac overrides', e);
+  }
+}
+
 function isTabAllowedForRole(tabId, roleId) {
-  const overrides = DB.g('rbac_overrides') || {};
+  const overrides = getRBACOverrides();
   const overrideKey = `${roleId}__${tabId}`;
   if (overrideKey in overrides) {
     return overrides[overrideKey];
@@ -8722,11 +8741,10 @@ function renderRBACMatrix() {
 
     // Role columns — clickable toggle
     visibleRoleKeys.forEach(rk => {
-      const overrides = DB.g('rbac_overrides') || {};
       const overrideKey = `${rk}__${mod.id}`;
-      const baseAllowed = ROLES[rk].allowedTabs.includes(mod.id);
+      const baseAllowed = (ROLES[rk] && ROLES[rk].allowedTabs) ? ROLES[rk].allowedTabs.includes(mod.id) : false;
       const allowed = overrideKey in overrides ? overrides[overrideKey] : baseAllowed;
-      const isOverridden = overrideKey in overrides && overrides[overrideKey] !== baseAllowed;
+      const isOverridden = (overrideKey in overrides) && (overrides[overrideKey] !== baseAllowed);
       const isCur = rk === currentAppRole;
       const overrideBadge = isOverridden ? `<span title="${isVi ? 'Đã chỉnh thủ công' : 'Custom Override'}" style="font-size:10px;color:#7c3aed;margin-left:2px">✎</span>` : '';
       html += `<td style="padding:6px 4px;text-align:center;background:${isCur ? '#f5f7ff' : ''};border-left:1px solid #e2e8f0">`;
@@ -8838,17 +8856,39 @@ function deleteStaffUser(userId, userName) {
 
 // 🔄 Toggle thủ công Được Xem / Bị Khóa trong bảng RBAC
 function toggleRBACPermission(roleKey, moduleId) {
-  const overrides = DB.g('rbac_overrides') || {};
+  const overrides = getRBACOverrides();
   const key = `${roleKey}__${moduleId}`;
-  const baseAllowed = ROLES[roleKey]?.allowedTabs?.includes(moduleId) ?? false;
+  const baseAllowed = (ROLES[roleKey] && ROLES[roleKey].allowedTabs) ? ROLES[roleKey].allowedTabs.includes(moduleId) : false;
   const currentAllowed = key in overrides ? overrides[key] : baseAllowed;
-  overrides[key] = !currentAllowed;
-  // Nếu toggle về đúng giá trị gốc thì xóa override (reset về mặc định)
-  if (overrides[key] === baseAllowed) delete overrides[key];
-  DB.s('rbac_overrides', overrides);
+  const newAllowed = !currentAllowed;
+
+  if (newAllowed === baseAllowed) {
+    delete overrides[key];
+  } else {
+    overrides[key] = newAllowed;
+  }
+  saveRBACOverrides(overrides);
   renderRBACMatrix();
-  const roleName = ROLES[roleKey]?.shortName || roleKey;
-  al(`${roleName} — ${moduleId}: ${overrides[key] === false ? '❌ Bị Khóa' : overrides[key] === true ? '✅ Được Xem' : '↩ Về mặc định'}`, 'ok');
+
+  if (roleKey === currentAppRole) {
+    updateSidebarAccessState(roleKey);
+  }
+
+  const roleMeta = ROLES[roleKey] || ROLES.admin;
+  const isVi = currentLang === 'vi';
+  const roleName = ROLE_NAMES_BILINGUAL[roleKey]?.[isVi ? 'shortVi' : 'shortEn'] || roleMeta.shortName;
+  const statusText = newAllowed ? (isVi ? '✅ Được Xem' : '✅ Allowed') : (isVi ? '❌ Bị Khóa' : '❌ Locked');
+  al(`${roleName} — ${moduleId}: ${statusText}`, 'ok');
+}
+
+// ↩ Reset toàn bộ tùy chỉnh RBAC về mặc định
+function resetRBACOverrides() {
+  const isVi = currentLang === 'vi';
+  if (!confirm(isVi ? 'Reset toàn bộ tùy chỉnh thủ công về mặc định hệ thống?' : 'Reset all permission overrides to system default?')) return;
+  saveRBACOverrides({});
+  renderRBACMatrix();
+  updateSidebarAccessState(currentAppRole);
+  al(isVi ? 'Đã reset về phân quyền mặc định hệ thống.' : 'Reset to system default permissions.', 'ok');
 }
 
 // ↩ Reset toàn bộ tùy chỉnh RBAC về mặc định
