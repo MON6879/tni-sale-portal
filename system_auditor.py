@@ -198,21 +198,21 @@ SCHEDULE_RULES = [
         "group_key": "CONTROL",
         "target_times": ["18:41"],
         "title_patterns": [r"5\.\s*Report.*Plan", r"Plan\s*EOD"],
-        "max_delay_min": 5
+        "max_delay_min": 15
     },
     {
         "report_name": "Report 5B (Plan Update)",
         "group_key": "CONTROL",
         "target_times": ["19:11"],
         "title_patterns": [r"5\.\s*Report.*Plan", r"Plan\s*Update"],
-        "max_delay_min": 5
+        "max_delay_min": 15
     },
     {
         "report_name": "Report 5C (Plan Sáng/Chiều)",
         "group_key": "CONTROL",
-        "target_times": ["08:28", "09:56", "15:26", "22:06"],
+        "target_times": ["06:06", "08:28", "09:56", "15:26", "22:06"],
         "title_patterns": [r"5(?:\.1|\.)?\s*Report.*Plan", r"5\.\d*\s*Report.*Plan", r"Daily\s*Plan", r"Plan.*Summary"],
-        "max_delay_min": 5
+        "max_delay_min": 15
     },
     {
         "report_name": "Report 6 (Read Status)",
@@ -1254,9 +1254,11 @@ async def audit_telegram_messages_telethon():
                             if diff_sec <= 180 and is_same_content:
                                 auto_del_str = ""
                                 try:
-                                    await client.delete_messages(chat_id, [m2["id"]])
-                                    auto_del_str = " (Đã auto-delete ✅)"
-                                    logger.info(f"🗑️ Đã tự động xóa tin nhân đôi ID {m2['id']} trong nhóm {gkey}")
+                                    target_cid = ALL_MONITORED_GROUPS.get(gkey)
+                                    if target_cid:
+                                        await client.delete_messages(target_cid, [m2["id"]])
+                                        auto_del_str = " (Đã auto-delete ✅)"
+                                        logger.info(f"🗑️ Đã tự động xóa tin nhân đôi ID {m2['id']} trong nhóm {gkey}")
                                 except Exception as del_err:
                                     logger.warning(f"Không thể xóa tin nhân đôi ID {m2['id']}: {del_err}")
 
