@@ -8948,7 +8948,7 @@ function renderStaffUsersTable() {
   container.innerHTML = html;
 }
 
-function resetStaffDirectoryClean() {
+function resetStaffDirectoryToClean() {
   const isVi = currentLang === 'vi';
   if (!confirm(isVi ? 'Xác nhận đặt lại danh sách nhân sự về mẫu chuẩn sạch (Xóa tên cũ lộ thông tin)?' : 'Reset staff directory to clean standard list?')) return;
   DB.s('staff_directory', DEFAULT_STAFF_USERS);
@@ -8956,6 +8956,7 @@ function resetStaffDirectoryClean() {
   renderStaffUsersTable();
   al(isVi ? '✅ Đã làm sạch và khôi phục danh sách nhân sự mẫu!' : '✅ Staff directory reset to clean standard list!', 'ok');
 }
+const resetStaffDirectoryClean = resetStaffDirectoryToClean;
 
 function updateStaffAssignedRole(userId, newRole) {
   let list = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
