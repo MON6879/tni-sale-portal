@@ -8546,8 +8546,8 @@ const SYSTEM_MODULES = [
 ];
 
 const DEFAULT_STAFF_USERS = [
-  { id: 'ST001', name: 'Nguyễn Văn A', email: 'director@tni.com', role: 'admin', title: 'Giám Đốc Chi Nhánh', phone: '0965 000 001' },
-  { id: 'ST002', name: 'Trần Thị B', email: 'accountant@tni.com', role: 'finance', title: 'Kế Toán Trưởng', phone: '0965 000 002' },
+  { id: 'ST001', name: 'Ban Giám Đốc', email: 'director@tni.com', role: 'admin', title: 'Giám Đốc Chi Nhánh', phone: '0965 000 001' },
+  { id: 'ST002', name: 'Kế Toán Trưởng', email: 'accountant@tni.com', role: 'finance', title: 'Kế Toán & Tài Chính', phone: '0965 000 002' },
   { id: 'ST003', name: 'Staff Sales 01', email: 'sales01@tni.com', role: 'sales', title: 'Chuyên Viên Kinh Doanh Solar', phone: '0965 000 003' },
   { id: 'ST004', name: 'Staff Tech 01', email: 'tech01@tni.com', role: 'tech', title: 'Kỹ Sư Trưởng Hiện Trường', phone: '0965 000 004' },
   { id: 'ST005', name: 'Staff Warehouse 01', email: 'warehouse01@tni.com', role: 'warehouse', title: 'Thủ Kho Chi Nhánh', phone: '0965 000 005' },
@@ -8720,7 +8720,6 @@ const ROLE_NAMES_BILINGUAL = {
   sales:     { vi: 'Kinh Doanh (Sales)', en: 'Sales & Business', shortVi: 'Kinh Doanh', shortEn: 'Sales Rep' },
   tech:      { vi: 'Kỹ Thuật (Field Ops)', en: 'Field Technical Team', shortVi: 'Kỹ Thuật Hiện Trường', shortEn: 'Field Engineer' },
   warehouse: { vi: 'Thủ Kho / Vận Hành', en: 'Warehouse & Operations', shortVi: 'Thủ Kho', shortEn: 'Warehouse' },
-  dealer:    { vi: 'Đại Lý Phân Phối', en: 'Authorized Dealer', shortVi: 'Đại Lý Cấp 1', shortEn: 'Tier 1 Dealer' }
 };
 
 function getVisibleRoleKeys() {
@@ -9016,14 +9015,6 @@ function resetRBACOverrides() {
   renderRBACMatrix();
   updateSidebarAccessState(currentAppRole);
   al(isVi ? 'Đã reset về phân quyền mặc định hệ thống.' : 'Reset to system default permissions.', 'ok');
-}
-
-// ↩ Reset toàn bộ tùy chỉnh RBAC về mặc định
-function resetRBACOverrides() {
-  if (!confirm('Reset toàn bộ tùy chỉnh thủ công về mặc định hệ thống?')) return;
-  DB.s('rbac_overrides', {});
-  renderRBACMatrix();
-  al('Đã reset về phân quyền mặc định hệ thống.', 'ok');
 }
 
 function populateStaffUserSelect() {
