@@ -1897,15 +1897,15 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
         <div style="display:flex;align-items:center;gap:10px">
           <span style="font-size:28px">🛡️</span>
           <div>
-            <h2 style="font-size:20px;font-weight:900;margin:0;letter-spacing:0.5px">HỆ THỐNG PHÂN QUYỀN TRUY CẬP NHÂN VIÊN (RBAC)</h2>
-            <div style="font-size:13px;opacity:0.9;margin-top:4px">Xác định minh bạch và bọc thép 100%: <b>Ai Được Xem Gì</b> — Tuyệt đối bảo mật dữ liệu Tài Chính, Lợi Nhuận, Tỷ Lệ 17% Nộp Tổng Cty &amp; Giá Vốn.</div>
+            <h2 id="rbac-banner-title" style="font-size:20px;font-weight:900;margin:0;letter-spacing:0.5px">HỆ THỐNG PHÂN QUYỀN TRUY CẬP NHÂN VIÊN (RBAC)</h2>
+            <div id="rbac-banner-desc" style="font-size:13px;opacity:0.9;margin-top:4px">Xác định minh bạch và bọc thép 100%: <b>Ai Được Xem Gì</b> — Tuyệt đối bảo mật dữ liệu Tài Chính, Lợi Nhuận, Tỷ Lệ 17% Nộp Tổng Cty &amp; Giá Vốn.</div>
           </div>
         </div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <button class="btn b-sm" onclick="exportRBACMatrixCSV()" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3);font-weight:700">⬇ Xuất CSV Ma Trận</button>
-        <button class="btn b-sm" onclick="resetRBACOverrides()" title="Reset về phân quyền mặc định hệ thống" style="background:rgba(255,200,100,0.25);color:#fff;border:1px solid rgba(255,200,100,0.5);font-weight:700">↩ Reset Mặc Định</button>
-        <button class="btn b-sm" onclick="promptAdminUnlock()" style="background:#fff;color:#4f46e5;font-weight:800;border:none;box-shadow:0 2px 4px rgba(0,0,0,0.1)">🔑 Đổi PIN Quản Trị</button>
+        <button id="rbac-btn-csv" class="btn b-sm" onclick="exportRBACMatrixCSV()" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3);font-weight:700">⬇ Xuất CSV Ma Trận</button>
+        <button id="rbac-btn-reset" class="btn b-sm" onclick="resetRBACOverrides()" title="Reset về phân quyền mặc định hệ thống" style="background:rgba(255,200,100,0.25);color:#fff;border:1px solid rgba(255,200,100,0.5);font-weight:700">↩ Reset Mặc Định</button>
+        <button id="rbac-btn-pin" class="btn b-sm" onclick="promptAdminUnlock()" style="background:#fff;color:#4f46e5;font-weight:800;border:none;box-shadow:0 2px 4px rgba(0,0,0,0.1)">🔑 Đổi PIN Quản Trị</button>
       </div>
     </div>
 
@@ -1971,8 +1971,8 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
   <div class="panel" style="margin-bottom:16px">
     <div class="ph" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
       <div>
-        <h3 style="margin:0;font-size:15px;color:#1e293b">📊 BẢNG MA TRẬN PHÂN QUYỀN CHI TIẾT ("AI ĐƯỢC XEM GÌ")</h3>
-        <div style="font-size:11.5px;color:#64748b;margin-top:2px">Rà soát chi tiết 20 phân hệ phần mềm và quyền xem / thao tác tương ứng của từng chức danh.</div>
+        <h3 id="rbac-matrix-h3" style="margin:0;font-size:15px;color:#1e293b">📊 BẢNG MA TRẬN PHÂN QUYỀN CHI TIẾT ("AI ĐƯỢC XEM GÌ")</h3>
+        <div id="rbac-matrix-sub" style="font-size:11.5px;color:#64748b;margin-top:2px">Rà soát chi tiết 20 phân hệ phần mềm và quyền xem / thao tác tương ứng của từng chức danh.</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <select id="rbac-cat-filter" onchange="renderRBACMatrix()" style="padding:5px 8px;border:1px solid var(--bd);border-radius:6px;font-size:12px">
@@ -2001,7 +2001,7 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
     <!-- CỘT 1: CÔNG CỤ TẠO LINK CHIA SẺ THEO VAI TRÒ -->
     <div class="panel">
       <div class="ph">
-        <h3 style="margin:0;font-size:14px">🔗 Tạo Link Phân Quyền Trực Tiếp Cho Nhân Viên</h3>
+        <h3 id="rbac-link-h3" style="margin:0;font-size:14px">🔗 Tạo Link Phân Quyền Trực Tiếp Cho Nhân Viên</h3>
       </div>
       <div class="pb">
         <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:12px;line-height:1.6;color:#334155">
@@ -8012,6 +8012,72 @@ function translateDOM(lang) {
   document.title = isVi ? 'TNI Sale — Quản Lý Bán Hàng & Phân Bổ Lợi Nhuận' : 'TNI Sale — Sales & Profit Distribution';
 }
 
+
+function updateRBACPanelStaticTexts() {
+  const isVi = currentLang === 'vi';
+  
+  // Banner
+  const bTitle = document.getElementById('rbac-banner-title');
+  if (bTitle) bTitle.textContent = isVi ? 'HỆ THỐNG PHÂN QUYỀN TRUY CẬP NHÂN VIÊN (RBAC)' : 'EMPLOYEE ROLE-BASED ACCESS CONTROL (RBAC)';
+  const bDesc = document.getElementById('rbac-banner-desc');
+  if (bDesc) bDesc.innerHTML = isVi ? 
+    'Xác định minh bạch và bọc thép 100%: <b>Ai Được Xem Gì</b> — Tuyệt đối bảo mật dữ liệu Tài Chính, Lợi Nhuận, Tỷ Lệ 17% Nộp Tổng Cty &amp; Giá Vốn.' : 
+    '100% Strict Access Control: <b>Who Sees What</b> — 17% HO Quota, Base Costs, and Financial Net Profit Strictly Protected.';
+
+  // Quick card labels
+  const cards = {
+    'rqc-admin':     { title: isVi ? 'Ban Giám Đốc (BOD)' : 'BOD (Executive)', desc: isVi ? 'Toàn quyền 100% tất cả các tab & xem tài chính' : 'Full 100% access to all modules & financials', badge: isVi ? 'Toàn Quyền' : 'Admin' },
+    'rqc-finance':   { title: isVi ? 'Kế Toán & Tài Chính' : 'Chief Accountant / Finance', desc: isVi ? 'Xem quỹ 17%, vốn 83%, tờ trình & công nợ' : 'Access 17% HO quota, 83% cost, statements & debts', badge: isVi ? 'Tài Chính' : 'Finance' },
+    'rqc-sales':     { title: isVi ? 'Kinh Doanh (Sales)' : 'Sales & Business', desc: isVi ? 'Bán hàng, báo giá, CRM. <b>Khóa Tài Chính</b>' : 'Sales, quotes, CRM. <b>Financials Locked</b>', badge: isVi ? 'Bán Hàng' : 'Sales' },
+    'rqc-tech':      { title: isVi ? 'Kỹ Thuật (Field Ops)' : 'Field Technical Team', desc: isVi ? 'Nghiệm thu, khảo sát, HUB. <b>Khóa Tài Chính</b>' : 'Site acceptance, surveys, HUB. <b>Financials Locked</b>', badge: isVi ? 'Hiện Trường' : 'Field' },
+    'rqc-warehouse': { title: isVi ? 'Thủ Kho / Vận Hành' : 'Warehouse & Operations', desc: isVi ? 'Tồn kho, nhập xuất, tạm ứng. <b>Khóa Tài Chính</b>' : 'Stock on-hand, intake, dispatch. <b>Financials Locked</b>', badge: isVi ? 'Thủ Kho' : 'Warehouse' },
+    'rqc-dealer':    { title: isVi ? 'Đại Lý Phân Phối' : 'Authorized Dealers', desc: isVi ? 'Báo giá sỉ, ký gởi. <b>Khóa Nội Bộ</b>' : 'Wholesale prices, consignment. <b>Internal Locked</b>', badge: isVi ? 'Đại Lý' : 'Dealers' }
+  };
+  Object.keys(cards).forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const meta = cards[id];
+    const b = el.querySelector('span:nth-child(2)');
+    if (b) b.textContent = meta.badge;
+    const t = el.querySelector('div:nth-of-type(2)');
+    if (t) t.textContent = meta.title;
+    const d = el.querySelector('div:nth-of-type(3)');
+    if (d) d.innerHTML = meta.desc;
+  });
+
+  // Table panel header
+  const mTitle = document.getElementById('rbac-matrix-h3');
+  if (mTitle) mTitle.textContent = isVi ? '📊 BẢNG MA TRẬN PHÂN QUYỀN CHI TIẾT ("AI ĐƯỢC XEM GÌ")' : '📊 DETAILED PERMISSION MATRIX ("WHO SEES WHAT")';
+  const mSub = document.getElementById('rbac-matrix-sub');
+  if (mSub) mSub.textContent = isVi ? 'Rà soát chi tiết 20 phân hệ phần mềm và quyền xem / thao tác tương ứng của từng chức danh.' : 'Review detailed access rights for all 20 modules across staff operation roles.';
+
+  // Search input & filter
+  const sInput = document.getElementById('rbac-search-kw');
+  if (sInput) sInput.placeholder = isVi ? '🔍 Tìm kiếm phân hệ...' : '🔍 Search modules...';
+  const cSel = document.getElementById('rbac-cat-filter');
+  if (cSel && cSel.options.length > 0) {
+    cSel.options[0].text = isVi ? '-- Tất cả danh mục phân hệ --' : '-- All Module Categories --';
+  }
+
+  // Buttons in banner
+  const btnCsv = document.getElementById('rbac-btn-csv');
+  if (btnCsv) btnCsv.textContent = isVi ? '⬇ Xuất CSV Ma Trận' : '⬇ Export CSV Matrix';
+  const btnReset = document.getElementById('rbac-btn-reset');
+  if (btnReset) btnReset.textContent = isVi ? '↩ Reset Mặc Định' : '↩ Reset Defaults';
+  const btnPin = document.getElementById('rbac-btn-pin');
+  if (btnPin) btnPin.textContent = isVi ? '🔑 Đổi PIN Quản Trị' : '🔑 Change Admin PIN';
+
+  // Panels below
+  const lTitle = document.getElementById('rbac-link-h3');
+  if (lTitle) lTitle.textContent = isVi ? '🔗 Tạo Link Phân Quyền Trực Tiếp Cho Nhân Viên' : '🔗 Generate Role-Based Login Link for Staff';
+  const sTitle = document.getElementById('rbac-staff-h3');
+  if (sTitle) sTitle.textContent = isVi ? '👥 Danh Sách Nhân Sự & Vai Trò Đã Gán' : '👥 Staff Directory & Assigned Roles';
+  const btnAddStaff = document.getElementById('rbac-btn-add-staff');
+  if (btnAddStaff) btnAddStaff.textContent = isVi ? '+ Thêm Nhân Sự' : '+ Add Staff';
+  const cleanLbl = document.getElementById('rbac-clean-lbl');
+  if (cleanLbl) cleanLbl.textContent = isVi ? 'Làm Sạch Mẫu' : 'Clean List';
+}
+
 function applyLang(lang) {
   currentLang = lang;
   localStorage.setItem('ups_lang', lang);
@@ -8398,27 +8464,27 @@ const ROLES = {
 };
 
 const SYSTEM_MODULES = [
-  { id: 'dashboard', name: '📊 Dashboard (Tổng Quan)', cat: 'Tổng Quan', secLevel: 'Cấp 4 - Công Khai', desc: 'Bảng tổng hợp hoạt động chung của chi nhánh' },
-  { id: 'nhap', name: '📦 Nhập Hàng (Goods Intake)', cat: 'Kho Hàng', secLevel: 'Cấp 2 - Vốn Gốc 83%', desc: 'Phiếu nhập kho, quản lý serial và giá vốn gốc' },
-  { id: 'tonkho', name: '🗄️ Tồn Kho Thực Tế (Inventory)', cat: 'Kho Hàng', secLevel: 'Cấp 3 - Quản Lý Kho', desc: 'Số lượng tồn thực tế, khả dụng và cảnh báo hết hàng' },
-  { id: 'tamung', name: '🧑‍💼 Tạm Ứng Hàng (Stock Advance)', cat: 'Kho Hàng', secLevel: 'Cấp 3 - Quản Lý Kho', desc: 'Thiết bị nhân viên mượn đi lắp đặt công trình' },
-  { id: 'banhang', name: '🛒 Bán Hàng & Xuất Kho', cat: 'Bán Hàng & Báo Giá', secLevel: 'Cấp 3 - Bán Hàng', desc: 'Đơn xuất kho, người nhận, hình thức thanh toán' },
-  { id: 'baogiaups', name: '📄 Báo Giá Thiết Bị / UPS', cat: 'Bán Hàng & Báo Giá', secLevel: 'Cấp 4 - Bán Hàng', desc: 'Lập và in báo giá thiết bị đơn lẻ' },
-  { id: 'baogiasolar', name: '☀️ Báo Giá Solar (Chuẩn VCM)', cat: 'Bán Hàng & Báo Giá', secLevel: 'Cấp 4 - Bán Hàng', desc: 'Lập báo giá hệ thống điện mặt trời trọn gói' },
-  { id: 'thucthi', name: '🚀 Team Thực Thi (HUB)', cat: 'Kỹ Thuật & Hiện Trường', secLevel: 'Cấp 3 - Kỹ Thuật', desc: 'Điều phối nhân sự thi công & quản lý thiết bị hiện trường' },
-  { id: 'acceptance', name: '⚡ Nghiệm Thu Hiện Trường', cat: 'Kỹ Thuật & Hiện Trường', secLevel: 'Cấp 3 - Kỹ Thuật', desc: 'Biên bản nghiệm thu kỹ thuật & bàn giao đưa vào sử dụng' },
-  { id: 'daily', name: '🏪 Đại Lý & Phân Phối', cat: 'Bán Hàng & Báo Giá', secLevel: 'Cấp 3 - Kênh Bán', desc: 'Danh sách đại lý, mức chiết khấu và chính sách giá' },
-  { id: 'kygoi', name: '📋 Hàng Ký Gởi', cat: 'Bán Hàng & Báo Giá', secLevel: 'Cấp 3 - Kênh Bán', desc: 'Theo dõi thiết bị gửi bán tại điểm bán & trưởng thôn' },
-  { id: 'crm', name: '👥 CRM & Khảo Sát', cat: 'Khách Hàng', secLevel: 'Cấp 3 - Khách Hàng', desc: 'Quản lý thông tin khách hàng & nhu cầu lắp đặt' },
-  { id: 'quangcao', name: '📢 Chiến Dịch Quảng Cáo', cat: 'Marketing', secLevel: 'Cấp 3 - Tiếp Thị', desc: 'Ngân sách và hiệu quả chiến dịch Facebook, Tiktok' },
-  { id: 'leads', name: '🎯 Leads & Chuyển Đổi', cat: 'Marketing', secLevel: 'Cấp 3 - Tiếp Thị', desc: 'Theo dõi phễu bán hàng và tỷ lệ chốt đơn' },
-  { id: 'loinhuan', name: '💰 Tài Chính & Lợi Nhuận', cat: 'Tài Chính & Kế Toán', secLevel: '🔴 CẤP 1 - TUYỆT MẬT', desc: 'Tỷ lệ 17% Tổng Cty, vốn gốc 83%, lợi nhuận ròng chi nhánh', isSensitive: true },
-  { id: 'statement', name: '📑 Tờ Trình Quyết Toán VCM', cat: 'Tài Chính & Kế Toán', secLevel: '🔴 CẤP 1 - TUYỆT MẬT', desc: 'Sổ cái quyết toán 17% nộp về Tổng Công Ty VCM', isSensitive: true },
-  { id: 'baocao', name: '📈 Báo Cáo Kho Hàng (Tài Chính)', cat: 'Tài Chính & Kế Toán', secLevel: '🔴 CẤP 1 - TUYỆT MẬT', desc: 'Tổng kết giá trị tài sản vốn hàng tồn kho chi nhánh', isSensitive: true },
-  { id: 'mystats', name: '📊 Tiến Độ Cá Nhân', cat: 'Cổng Nhân Viên', secLevel: 'Cấp 4 - Cá Nhân', desc: 'Báo cáo KPI, doanh số và hoa hồng của từng nhân viên' },
-  { id: 'myquotes', name: '📄 Báo Giá Của Tôi', cat: 'Cổng Nhân Viên', secLevel: 'Cấp 4 - Cá Nhân', desc: 'Danh sách các báo giá do nhân viên tự lập' },
-  { id: 'mysurvey', name: '📝 Khảo Sát Của Tôi', cat: 'Cổng Nhân Viên', secLevel: 'Cấp 4 - Cá Nhân', desc: 'Phiếu khảo sát khách hàng do nhân viên thực hiện' },
-  { id: 'rbac', name: '🛡️ Phân Quyền Vai Trò (RBAC)', cat: 'Hệ Thống & Phân Quyền', secLevel: 'Cấp 1 - Quản Trị', desc: 'Ma trận phân quyền & phân vai trò nhân viên' }
+  { id: 'dashboard', name: '📊 Dashboard (Tổng Quan)', name_en: '📊 Executive Dashboard', cat: 'Tổng Quan', secLevel: 'Cấp 4 - Công Khai', desc: 'Bảng tổng hợp hoạt động chung của chi nhánh', desc_en: 'Consolidated overview of branch operations' },
+  { id: 'nhap', name: '📦 Nhập Hàng (Goods Intake)', name_en: '📦 Goods Intake', cat: 'Kho Hàng', secLevel: 'Cấp 2 - Vốn Gốc 83%', desc: 'Phiếu nhập kho, quản lý serial và giá vốn gốc', desc_en: 'Stock intake, serial tracking & 83% base cost' },
+  { id: 'tonkho', name: '🗄️ Tồn Kho Thực Tế (Inventory)', name_en: '🗄️ Inventory Management', cat: 'Kho Hàng', secLevel: 'Cấp 3 - Quản Lý Kho', desc: 'Số lượng tồn thực tế, khả dụng và cảnh báo hết hàng', desc_en: 'Real-time on-hand stock, available units & low stock alerts' },
+  { id: 'tamung', name: '🧑‍💼 Tạm Ứng Hàng (Stock Advance)', name_en: '🧑‍💼 Stock Advance', cat: 'Kho Hàng', secLevel: 'Cấp 3 - Quản Lý Kho', desc: 'Thiết bị nhân viên mượn đi lắp đặt công trình', desc_en: 'Equipment advanced to field staff for installations' },
+  { id: 'banhang', name: '🛒 Bán Hàng & Xuất Kho', name_en: '🛒 Sales & Dispatch', cat: 'Bán Hàng & Báo Giá', secLevel: 'Cấp 3 - Bán Hàng', desc: 'Đơn xuất kho, người nhận, hình thức thanh toán', desc_en: 'Sales orders, dispatch records, payment terms' },
+  { id: 'baogiaups', name: '📄 Báo Giá Thiết Bị / UPS', name_en: '📄 Device & UPS Quote', cat: 'Bán Hàng & Báo Giá', secLevel: 'Cấp 4 - Bán Hàng', desc: 'Lập và in báo giá thiết bị đơn lẻ', desc_en: 'Create & print individual device/UPS quotations' },
+  { id: 'baogiasolar', name: '☀️ Báo Giá Solar (Chuẩn VCM)', name_en: '☀️ Solar Quote (VCM Standard)', cat: 'Bán Hàng & Báo Giá', secLevel: 'Cấp 4 - Bán Hàng', desc: 'Lập báo giá hệ thống điện mặt trời trọn gói', desc_en: 'Create turnkey solar power system quotations' },
+  { id: 'thucthi', name: '🚀 Team Thực Thi (HUB)', name_en: '🚀 Field Operations Team (HUB)', cat: 'Kỹ Thuật & Hiện Trường', secLevel: 'Cấp 3 - Kỹ Thuật', desc: 'Điều phối nhân sự thi công & quản lý thiết bị hiện trường', desc_en: 'Field staff scheduling & site equipment tracking' },
+  { id: 'acceptance', name: '⚡ Nghiệm Thu Hiện Trường', name_en: '⚡ Field Acceptance & Handover', cat: 'Kỹ Thuật & Hiện Trường', secLevel: 'Cấp 3 - Kỹ Thuật', desc: 'Biên bản nghiệm thu kỹ thuật & bàn giao đưa vào sử dụng', desc_en: 'Technical acceptance protocols & customer handovers' },
+  { id: 'daily', name: '🏪 Đại Lý & Phân Phối', name_en: '🏪 Authorized Dealers', cat: 'Bán Hàng & Báo Giá', secLevel: 'Cấp 3 - Kênh Bán', desc: 'Danh sách đại lý, mức chiết khấu và chính sách giá', desc_en: 'Dealer network directory, wholesale discounts & terms' },
+  { id: 'kygoi', name: '📋 Hàng Ký Gởi', name_en: '📋 Consignment Stock', cat: 'Bán Hàng & Báo Giá', secLevel: 'Cấp 3 - Kênh Bán', desc: 'Theo dõi thiết bị gửi bán tại điểm bán & trưởng thôn', desc_en: 'Consignment equipment at retail partners & village heads' },
+  { id: 'crm', name: '👥 CRM & Khảo Sát', name_en: '👥 CRM & Customer Surveys', cat: 'Khách Hàng', secLevel: 'Cấp 3 - Khách Hàng', desc: 'Quản lý thông tin khách hàng & nhu cầu lắp đặt', desc_en: 'Client database, site survey leads & installation needs' },
+  { id: 'quangcao', name: '📢 Chiến Dịch Quảng Cáo', name_en: '📢 Ads Campaigns', cat: 'Marketing', secLevel: 'Cấp 3 - Tiếp Thị', desc: 'Ngân sách và hiệu quả chiến dịch Facebook, Tiktok', desc_en: 'Marketing budget, TikTok & Facebook campaign ROI' },
+  { id: 'leads', name: '🎯 Leads & Chuyển Đổi', name_en: '🎯 Leads & Conversions', cat: 'Marketing', secLevel: 'Cấp 3 - Tiếp Thị', desc: 'Theo dõi phễu bán hàng và tỷ lệ chốt đơn', desc_en: 'Sales pipeline funnel & conversion rate analytics' },
+  { id: 'loinhuan', name: '💰 Tài Chính & Lợi Nhuận', name_en: '💰 Financials & Profit', cat: 'Tài Chính & Kế Toán', secLevel: '🔴 CẤP 1 - TUYỆT MẬT', desc: 'Tỷ lệ 17% Tổng Cty, vốn gốc 83%, lợi nhuận ròng chi nhánh', desc_en: '17% HO quota, 83% base cost, net branch profit', isSensitive: true },
+  { id: 'statement', name: '📑 Tờ Trình Quyết Toán VCM', name_en: '📑 VCM Payment Statement', cat: 'Tài Chính & Kế Toán', secLevel: '🔴 CẤP 1 - TUYỆT MẬT', desc: 'Sổ cái quyết toán 17% nộp về Tổng Công Ty VCM', desc_en: 'General ledger & 17% settlement statements for HO', isSensitive: true },
+  { id: 'baocao', name: '📈 Báo Cáo Kho Hàng (Tài Chính)', name_en: '📈 Inventory Financial Reports', cat: 'Tài Chính & Kế Toán', secLevel: '🔴 CẤP 1 - TUYỆT MẬT', desc: 'Tổng kết giá trị tài sản vốn hàng tồn kho chi nhánh', desc_en: 'Asset valuation report of branch stock & materials', isSensitive: true },
+  { id: 'mystats', name: '📊 Tiến Độ Cá Nhân', name_en: '📊 My Performance KPI', cat: 'Cổng Nhân Viên', secLevel: 'Cấp 4 - Cá Nhân', desc: 'Báo cáo KPI, doanh số và hoa hồng của từng nhân viên', desc_en: 'Personal sales KPI, revenue target & commissions' },
+  { id: 'myquotes', name: '📄 Báo Giá Của Tôi', name_en: '📄 My Quotations', cat: 'Cổng Nhân Viên', secLevel: 'Cấp 4 - Cá Nhân', desc: 'Danh sách các báo giá do nhân viên tự lập', desc_en: 'Archive of quotations created by current staff member' },
+  { id: 'mysurvey', name: '📝 Khảo Sát Của Tôi', name_en: '📝 My Field Surveys', cat: 'Cổng Nhân Viên', secLevel: 'Cấp 4 - Cá Nhân', desc: 'Phiếu khảo sát khách hàng do nhân viên thực hiện', desc_en: 'Customer survey forms recorded by current staff member' },
+  { id: 'rbac', name: '🛡️ Phân Quyền Vai Trò (RBAC)', name_en: '🛡️ Role Permissions (RBAC)', cat: 'Hệ Thống & Phân Quyền', secLevel: 'Cấp 1 - Quản Trị', desc: 'Ma trận phân quyền & phân vai trò nhân viên', desc_en: 'Access matrix & staff organizational role assignments' }
 ];
 
 const DEFAULT_STAFF_USERS = [
@@ -8722,8 +8788,10 @@ function renderRBACMatrix() {
     html += `<tr style="${isSens ? 'background:#fff1f2' : ''};border-bottom:1px solid #e2e8f0">`;
     html += `<td style="padding:8px 6px;text-align:center;color:#64748b;font-size:11px">${count++}</td>`;
     html += `<td style="padding:8px 10px">`;
-    html += `<div style="font-weight:700;color:${isSens ? '#991b1b' : '#0f172a'};font-size:12.5px">${mod.name}</div>`;
-    html += `<div style="font-size:11px;color:${isSens ? '#b91c1c' : '#64748b'};margin-top:2px">${mod.desc}</div>`;
+    const modTitle = isVi ? mod.name : (mod.name_en || mod.name);
+    const modDescription = isVi ? mod.desc : (mod.desc_en || mod.desc);
+    html += `<div style="font-weight:700;color:${isSens ? '#991b1b' : '#0f172a'};font-size:12.5px">${modTitle}</div>`;
+    html += `<div style="font-size:11px;color:${isSens ? '#b91c1c' : '#64748b'};margin-top:2px">${modDescription}</div>`;
     html += `</td>`;
 
     // Security level
