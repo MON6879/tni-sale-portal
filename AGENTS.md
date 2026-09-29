@@ -1939,3 +1939,31 @@ Reason: [Lý do]`
 >    - Trước khi commit/bàn giao bất kỳ tính năng web nào, BẮT BUỘC phải kiểm tra hiển thị ở cả 2 trạng thái: `lang === 'vi'` và `lang === 'en'`.
 >    - Nếu ở chế độ `EN` mà còn sót bất kỳ chữ Tiếng Việt nào trên giao diện ➔ Coi là LỖI NGÔN NGỮ CHƯA HOÀN THÀNH, TUYỆT ĐỐI CẤM báo "Đã xong"!
 
+---
+
+> ### 🔴 RULE PM-59: TIN SITE DOWN ALARM CHỒNG CHẤT — 3 NGUYÊN NHÂN GỐC & QUY TẮC BẮT BUỘC XÓA TIN CŨ TRONG GAS SITE DOWN (STRICT SITE DOWN OLD MESSAGE SWEEP POLICY)
+> **Root Cause (Sự Cố 29/09/2026 — Tin TNI_SITE_DOWN_CELL_ALARM chồng chất tất cả 4 nhóm)**:
+>
+> **Root Cause 1 — Cơ chế xóa có nhưng phụ thuộc vào `SD_MSGID_<key>` trong PropertiesService bị mất:**
+> Hàm `deleteOldMessages_(chatId, msgKey)` đọc `getSavedMsgIds_(msgKey)` từ GAS PropertiesService. Nếu GAS bị reset (deploy lại, hết quota, properties bị xóa), tất cả `SD_MSGID_*` biến mất → GAS không còn biết ID tin cũ là gì → không xóa được → mỗi lần chạy lại GỬI THÊM 1 tin mới chồng lên → nhóm Telegram tích lũy hàng chục tin Site Down cũ không ai xóa.
+>
+> **Root Cause 2 — Dedup timestamp A1 (`TS_KEY_A1`) bị reset hàng ngày lúc 03:30 nhưng MsgIDs KHÔNG bị reset:**
+> Code `checkAndSend()` mỗi ngày mới xóa `TS_KEY_A1` để GAS gửi lại bản tin mới buổi sáng. Nhưng `SD_MSGID_TIN1_T1..T4` KHÔNG bị reset theo → GAS cố xóa tin theo ID cũ từ hôm qua (đã >48h, Telegram từ chối) → xóa thất bại hoàn toàn → gửi tin mới chồng lên tin cũ hàng ngày.
+>
+> **Root Cause 3 — `deleteTelegramMsgBot_()` hardcode 1 token backup cũ `8647102342:AAGwI...` có thể đã hết hạn:**
+> Hàm xóa tin dùng 2 token: `[SD_BOT_TOKEN, "8647102342:AAGwI95-..."]`. Nếu token thứ 2 hết hạn hoặc bot đó không có quyền admin trong nhóm → cả 2 token thất bại → `deleteTelegramMsgBot_` trả về `false` nhưng không throw lỗi → `deleteOldMessages_` vẫn tiếp tục xóa `SD_MSGID_*` khỏi Properties (dòng 967: `finally { deleteProperty }`) → GAS mất dấu vết ID cũ mà tin vẫn còn trong nhóm.
+>
+> **Quy Tắc Bắt Buộc (Mandatory Directives)**:
+> 1. **Bắt Buộc Reset MsgIDs Cùng Với Timestamp Đầu Ngày (Mandatory Daily MsgID Sweep)**:
+>    - Khi `checkAndSend()` reset `TS_KEY_A1` lúc đầu ngày mới, BẮT BUỘC phải đồng thời gọi `deleteOldMessages_(chatId, "TIN1_" + team)` cho TẤT CẢ 5 nhóm (T1, T2, T3, T4, CONTROL) để dọn sạch tin cũ từ ngày hôm trước TRƯỚC KHI gửi tin mới buổi sáng.
+>    - TUYỆT ĐỐI CẤM reset chỉ `TS_KEY_A1` mà không kèm theo sweep dọn tin cũ.
+> 2. **Chỉ Dùng Token Chính Thức Đang Hoạt Động (Single Active Token Policy)**:
+>    - `deleteTelegramMsgBot_()` BẮT BUỘC chỉ dùng `SD_BOT_TOKEN` (lấy từ ScriptProperties) làm token duy nhất.
+>    - TUYỆT ĐỐI CẤM hardcode token backup lỗi thời vào mảng `tokens[]` — bot cũ/token cũ sẽ gây `deleteMessage` thất bại âm thầm, khiến GAS tưởng đã xóa nhưng tin vẫn còn trong nhóm.
+> 3. **Log Rõ Kết Quả Xóa — Không Được Im Lặng Khi Fail (Zero Silent Delete Failure)**:
+>    - `deleteTelegramMsgBot_()` BẮT BUỘC phải ghi `Logger.log` cả khi xóa thành công LẪN khi thất bại kèm mô tả lỗi từ Telegram API (`res.description`).
+>    - TUYỆT ĐỐI CẤM dùng `catch(e) {}` rỗng bên trong vòng lặp xóa — đây là anti-pattern che giấu lỗi, khiến tin không bị xóa mà không ai biết.
+> 4. **Sweep Proactive Bằng Telethon Khi Bot API Thất Bại >48h (Telethon Fallback Sweep)**:
+>    - Khi tin cũ đã quá 48h và Bot API không thể xóa (`can't be deleted for everyone`), hệ thống BẮT BUỘC phải dùng Telethon (`revoke=True`) trong `sweep_orphan_eta.py` để quét và xóa các tin Site Down Alarm cũ theo pattern tiêu đề (`TNI_SITE_DOWN_CELL_ALARM`, `Team.*Bokpyin`, `Team.*Dawei`...).
+>    - TUYỆT ĐỐI CẤM để tin Site Down Alarm tồn tại quá 48h trong nhóm — phải có fallback sweep Telethon chạy định kỳ (:11/:41 MMT) quét cả loại tin này.
+
