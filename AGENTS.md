@@ -9,6 +9,10 @@
 >    - Deployment ID: `AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-` (Version `@92`).
 >    - Luồng Relay: `botlookup_relay.py` (chạy nhịp :06 và :36 MMT).
 >    - Bảng Tính: `1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow` (GID 0).
+> 5. **🔧 BẮT BUỘC SỬA TRIỆT ĐỂ END-TO-END TRONG CÙNG 1 PHIÊN STEEL LOCK (Zero Incomplete Fix Policy)**:
+>    - Khi Người Dùng mở khóa thép (`UNLOCK STEEL: Phucat@7979`), AI **BẮT BUỘC** phải thực hiện **TOÀN BỘ** các bước sửa code, clasp push, clasp deploy, git commit, git push và phúc tra live **TRONG CÙNG 1 PHIÊN DUY NHẤT** trước khi khóa đóng lại.
+>    - **TUYỆT ĐỐI CẤM** chỉ ghi Rule / phân tích root cause rồi đóng khóa khi code vẫn còn lỗi chưa được sửa — đây là anti-pattern "sửa nửa chừng" buộc Người Dùng phải gõ lại mật khẩu thêm lần nữa một cách vô nghĩa.
+>    - **Thứ tự bắt buộc trong 1 phiên**: ① Đọc code hiểu đủ → ② Sửa code triệt để tất cả điểm lỗi → ③ `clasp push --force` → ④ `clasp deploy -i <id>` → ⑤ git commit + push 3 repos → ⑥ Ghi Rule PM vào AGENTS.md → ⑦ Sync AGENTS.md → ⑧ Báo "ĐÃ LƯU ĐI ✅". TUYỆT ĐỐI CẤM đảo thứ tự: ghi Rule trước → đóng khóa → để code lỗi còn đó!
 ---
 
 # 🚂 STRICT SINGLE-TRAIN RULE: 1 ĐOÀN TÀU THỜI GIAN TUẦN TỰ DUY NHẤT — TUYỆT ĐỐI CẤM TỰ Ý TÁCH WORKFLOW / TÁCH CRON RIÊNG (STRICT SINGLE UNIFIED SEQUENTIAL TRAIN POLICY)
