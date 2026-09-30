@@ -2335,7 +2335,7 @@ const ptitles={dashboard:'📊 Dashboard',nhap:'📦 Goods Intake',tonkho:'🗄�
   daily:'🏪 Distribution & Dealers',kygoi:'📋 Consignment',crm:'👥 CRM & Survey',
   quangcao:'📢 Ads Campaigns',leads:'🎯 Leads & Conversion',
   loinhuan:'💰 Financial & Cashflow',statement:'📑 VCM Payment Statement',baocao:'📈 Reports',
-  mystats:'📊 My Performance',myquotes:'📄 My Quotations',mysurvey:'📝 My Surveys',rbac:'🛡️ Phân Quyền Vai Trò (RBAC)','access-denied':'🛡️ Truy Cập Bị Hạn Chế'};
+  mystats:'📊 My Performance',myquotes:'📄 My Quotations',mysurvey:'📝 My Surveys',rbac:'🛡️ Role Permissions (RBAC)','access-denied':'🔒 Access Restricted'};
 
 const renders={
   dashboard:rDash,nhap:rNhap,tonkho:renderTK,tamung:rTU,
@@ -8367,6 +8367,11 @@ function applyLang(lang) {
     if (secId === 'mysurvey' && typeof renderSurveys === 'function') renderSurveys();
     if (secId === 'baogiaups' && typeof rQuUPS === 'function') rQuUPS();
   }
+
+  // 10. Always re-render RBAC tables (bilingual — matrix + staff list)
+  if (typeof renderRBACMatrix === 'function') renderRBACMatrix();
+  if (typeof renderRBACColToggles === 'function') renderRBACColToggles();
+  if (typeof renderStaffUsersTable === 'function') renderStaffUsersTable();
 }
 
 function toggleLang() {
@@ -9098,11 +9103,12 @@ function renderStaffUsersTable() {
       html += `<option value="${rk}" ${u.role === rk ? 'selected' : ''}>${ROLES[rk].icon} ${optName}</option>`;
     });
     html += `</select></td>`;
-    html += `<td style="padding:8px;text-align:center;display:flex;gap:6px;justify-content:center;align-items:center">`;
+    html += `<td style="padding:6px;text-align:center;white-space:nowrap">`;
+    html += `<div style="display:flex;gap:5px;justify-content:center;align-items:center;flex-wrap:wrap">`;
     html += `<button class="btn b-xs" onclick="openAddStaffModal('${u.id}')" title="${isVi ? 'Chỉnh sửa thông tin nhân sự' : 'Edit staff info'}" style="background:#f1f5f9;color:#334155;border:1.5px solid #cbd5e1;cursor:pointer;font-weight:700">✏️ ${isVi ? 'Sửa' : 'Edit'}</button>`;
     html += `<button class="btn b-xs b-bl" onclick="selectStaffForLinkGen('${u.name}', '${u.role}')" title="${isVi ? 'Tạo link gửi cho nhân viên' : 'Generate personal login link'}">🔗 Link</button>`;
     html += `<button class="btn b-xs" onclick="deleteStaffUser('${u.id}','${u.name}')" title="${isVi ? 'Xóa nhân sự này khỏi danh sách' : 'Delete staff member'}" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;font-weight:700;cursor:pointer">🗑 ${isVi ? 'Xóa' : 'Delete'}</button>`;
-    html += `</td></tr>`;
+    html += `</div></td></tr>`;
   });
 
   html += '</tbody></table>';
