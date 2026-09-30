@@ -190,8 +190,37 @@ tbody tr:hover{background:#fafcff}
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div class="f">
-          <label id="lbl-staff-modal-title" style="font-size:12px;font-weight:700;color:#334155;margin-bottom:4px">Job Title / Position</label>
-          <input id="staff-modal-title-input" placeholder="e.g. Field Engineer, Sales Rep..." style="width:100%;padding:9px 12px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#cbd5e1'"/>
+          <label id="lbl-staff-modal-title" style="font-size:12px;font-weight:700;color:#334155;margin-bottom:4px">Chức Danh / Vị Trí</label>
+          <input id="staff-modal-title-input" list="title-datalist" placeholder="Chọn hoặc gõ chức danh..." autocomplete="off"
+            style="width:100%;padding:9px 12px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;outline:none;box-sizing:border-box"
+            onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#cbd5e1'"/>
+          <datalist id="title-datalist">
+            <option value="Giám Đốc Điều Hành (CEO)">
+            <option value="Phó Giám Đốc">
+            <option value="Trưởng Phòng Kinh Doanh">
+            <option value="Nhân Viên Kinh Doanh">
+            <option value="Kỹ Thuật Viên Hiện Trường">
+            <option value="Trưởng Nhóm Kỹ Thuật">
+            <option value="Kế Toán Trưởng">
+            <option value="Kế Toán Viên">
+            <option value="Thủ Kho">
+            <option value="Trợ Lý Kho">
+            <option value="Nhân Viên Vận Hành">
+            <option value="Quản Lý Dự Án">
+            <option value="Kỹ Sư Hạ Tầng">
+            <option value="Kỹ Sư M&E">
+            <option value="Kỹ Sư Xây Dựng">
+            <option value="Đại Lý Ủy Quyền Vùng">
+            <option value="Nhân Viên Hành Chính">
+            <option value="Nhân Viên IT">
+            <option value="Trưởng Phòng Kỹ Thuật">
+            <option value="Field Engineer">
+            <option value="Sales Representative">
+            <option value="Project Manager">
+            <option value="Chief Accountant">
+            <option value="Warehouse Supervisor">
+            <option value="Operations Staff">
+          </datalist>
         </div>
         <div class="f">
           <label id="lbl-staff-modal-role" style="font-size:12px;font-weight:700;color:#334155;margin-bottom:4px">System Role (RBAC) <span style="color:#ef4444">*</span></label>
