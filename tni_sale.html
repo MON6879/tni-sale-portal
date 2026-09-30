@@ -2155,9 +2155,12 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
     <div class="panel">
       <div class="ph" style="display:flex;justify-content:space-between;align-items:center">
         <h3 id="rbac-staff-h3" style="margin:0;font-size:14px">👥 Danh Sách Nhân Sự &amp; Vai Trò Đã Gán</h3>
-        <div style="display:flex;gap:6px">
+        <div style="display:flex;gap:5px;flex-wrap:wrap">
           <button id="rbac-btn-clean-staff" class="btn b-out b-xs" onclick="resetStaffDirectoryToClean()" title="Khôi phục danh sách nhân sự mẫu chuẩn">🔄 <span id="rbac-clean-lbl">Làm Sạch Mẫu</span></button>
-          <button id="rbac-btn-add-staff" class="btn b-gn b-xs" onclick="openAddStaffModal()">+ Thêm Nhân Sự</button>
+          <button id="rbac-btn-tpl-staff" class="btn b-xs" onclick="downloadStaffTemplate()" title="Tải file Excel mẫu để điền nhân sự" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-weight:700">📋 <span id="rbac-tpl-lbl">Template</span></button>
+          <button id="rbac-btn-export-staff" class="btn b-xs" onclick="exportStaffToExcel()" title="Xuất danh sách nhân sự hiện tại ra Excel" style="background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;font-weight:700">⬇ <span id="rbac-export-lbl">Export</span></button>
+          <label id="rbac-btn-import-staff" class="btn b-xs" title="Nhập danh sách nhân sự từ file Excel CSV" style="background:#f0fdf4;color:#166534;border:1px solid #86efac;font-weight:700;cursor:pointer">⬆ <span id="rbac-import-lbl">Import</span><input type="file" accept=".csv,.xlsx,.xls" onchange="importStaffFromFile(this)" style="display:none"/></label>
+          <button id="rbac-btn-add-staff" class="btn b-gn b-xs" onclick="openAddStaffModal()">+ <span id="rbac-add-lbl">Thêm Nhân Sự</span></button>
         </div>
       </div>
       <div class="pb tw" id="rbac-staff-table-container" style="padding:0">
@@ -8234,9 +8237,15 @@ function updateRBACPanelStaticTexts() {
   const sTitle = document.getElementById('rbac-staff-h3');
   if (sTitle) sTitle.textContent = isVi ? '👥 Danh Sách Nhân Sự & Vai Trò Đã Gán' : '👥 Staff Directory & Assigned Roles';
   const btnAddStaff = document.getElementById('rbac-btn-add-staff');
-  if (btnAddStaff) btnAddStaff.textContent = isVi ? '+ Thêm Nhân Sự' : '+ Add Staff';
+  if (btnAddStaff) { const sp = btnAddStaff.querySelector('span'); if (sp) sp.textContent = isVi ? 'Thêm Nhân Sự' : 'Add Staff'; }
   const cleanLbl = document.getElementById('rbac-clean-lbl');
   if (cleanLbl) cleanLbl.textContent = isVi ? 'Làm Sạch Mẫu' : 'Clean List';
+  const tplLbl = document.getElementById('rbac-tpl-lbl');
+  if (tplLbl) tplLbl.textContent = isVi ? 'Template' : 'Template';
+  const exportLbl = document.getElementById('rbac-export-lbl');
+  if (exportLbl) exportLbl.textContent = isVi ? 'Xuất Excel' : 'Export';
+  const importLbl = document.getElementById('rbac-import-lbl');
+  if (importLbl) importLbl.textContent = isVi ? 'Nhập File' : 'Import';
 
   // Add / Edit Staff Modal dynamic translations
   const smTitle = document.getElementById('staff-modal-title');
@@ -9315,6 +9324,98 @@ function saveStaffUserModal() {
   closeAddStaffModal();
   renderStaffUsersTable();
   populateStaffUserSelect();
+}
+
+
+// ── Staff Template / Export / Import (Excel) ──────────────────
+function _staffToExcelBlob(rows, filename) {
+  // Build Excel-compatible HTML table (no lib needed — opens in Excel)
+  const ROLE_LIST = Object.keys(ROLES).join(' / ');
+  let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
+<x:Name>Staff</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>
+<table border="1"><thead><tr style="background:#1e3a8a;color:#fff;font-weight:bold">
+<th>No</th><th>Full Name *</th><th>Job Title</th><th>Role * (${ROLE_LIST})</th><th>Email</th><th>Phone</th><th>Note</th>
+</tr></thead><tbody>`;
+  rows.forEach((r, i) => {
+    html += `<tr><td>${i+1}</td><td>${r.name||''}</td><td>${r.title||''}</td><td>${r.role||'sales'}</td><td>${r.email||''}</td><td>${r.phone||''}</td><td>${r.note||''}</td></tr>`;
+  });
+  html += '</tbody></table></body></html>';
+  const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+function downloadStaffTemplate() {
+  const isVi = currentLang === 'vi';
+  // Template = 3 sample rows (blank data, just show format)
+  const sample = [
+    { name: 'Nguyen Van A', title: isVi ? 'Giám Đốc Chi Nhánh' : 'Branch Director', role: 'admin', email: 'director@tni.com', phone: '', note: '' },
+    { name: 'Tran Thi B', title: isVi ? 'Kế Toán Trưởng' : 'Chief Accountant', role: 'finance', email: 'accountant@tni.com', phone: '', note: '' },
+    { name: 'Staff Sales 01', title: isVi ? 'Nhân Viên Kinh Doanh' : 'Sales Representative', role: 'sales', email: 'sales01@tni.com', phone: '', note: '' },
+  ];
+  _staffToExcelBlob(sample, `TNI_Staff_Template_${td()}.xls`);
+  al(isVi ? '📋 Đã tải file mẫu Excel! Điền dữ liệu rồi Import lại.' : '📋 Template downloaded! Fill in data then Import.', 'ok');
+}
+
+function exportStaffToExcel() {
+  const isVi = currentLang === 'vi';
+  let users = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
+  _staffToExcelBlob(users, `TNI_Staff_Export_${td()}.xls`);
+  al(isVi ? `⬇ Đã xuất ${users.length} nhân sự ra Excel thành công!` : `⬇ Exported ${users.length} staff members to Excel!`, 'ok');
+}
+
+function importStaffFromFile(input) {
+  const isVi = currentLang === 'vi';
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const text = e.target.result;
+      const lines = text.split(/\r?\n/).filter(l => l.trim());
+      if (lines.length < 2) { al(isVi ? '⚠️ File trống hoặc không hợp lệ!' : '⚠️ File is empty or invalid!', 'er'); return; }
+      // Skip header row (row 0), parse from row 1
+      const imported = [];
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(',').map(c => c.replace(/^"|"$/g, '').trim());
+        if (!cols[1]) continue; // skip if no name
+        const roleVal = (cols[3] || 'sales').toLowerCase().trim();
+        const validRole = ROLES[roleVal] ? roleVal : 'sales';
+        imported.push({
+          id: 'ST' + String(Date.now() + i).slice(-6),
+          name: cols[1] || '',
+          title: cols[2] || '',
+          role: validRole,
+          email: cols[4] || '',
+          phone: cols[5] || '',
+          note: cols[6] || ''
+        });
+      }
+      if (!imported.length) { al(isVi ? '⚠️ Không tìm thấy dữ liệu hợp lệ!' : '⚠️ No valid data found in file!', 'er'); return; }
+      // Merge: keep existing, add new (by name match)
+      let existing = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
+      const existingNames = existing.map(u => u.name.toLowerCase());
+      let added = 0, updated = 0;
+      imported.forEach(u => {
+        const idx = existingNames.indexOf(u.name.toLowerCase());
+        if (idx >= 0) { existing[idx] = { ...existing[idx], ...u, id: existing[idx].id }; updated++; }
+        else { existing.push(u); added++; }
+      });
+      DB.s('staff_directory', existing);
+      renderStaffUsersTable();
+      populateStaffUserSelect();
+      al(isVi ? `✅ Import xong! Thêm ${added} mới, cập nhật ${updated} nhân sự.` : `✅ Import done! Added ${added} new, updated ${updated} staff.`, 'ok');
+    } catch(err) {
+      al(isVi ? `❌ Lỗi đọc file: ${err.message}` : `❌ File read error: ${err.message}`, 'er');
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
 }
 
 function exportRBACMatrixCSV() {
