@@ -2005,4 +2005,10 @@ Reason: [Lý do]`
 >    - `botlookup_relay.py` đã giải quyết Loại B bằng `send_time` window 35s — chỉ lấy tin sau khi gửi lệnh. Trong window này, tất cả tin từ bot = split parts của 1 response → áp dụng Anchor.
 > 3. **TUYỆT ĐỐI CẤM Chỉ Lấy 1 Tin Cuối Cùng (Zero Last-Only Fallback)**:
 >    - `tni_messages[-1]` hay `bot_messages[-1]` chỉ lấy phần cuối → bỏ toàn bộ header + phần đầu. **Đây là anti-pattern gây mất dữ liệu có hệ thống!**
+> 4. **Fix Cuối Cùng v843 — Điều Kiện TNI Left-3 (TNI Left-3 Dual-Condition Filter)**:
+>    - Nhận diện tin hợp lệ bằng **2 điều kiện OR**:
+>      - `"tanintharyi" in m.lower()` → Tin đầu tiên chứa header region
+>      - `any(line.strip()[:3].upper() == "TNI" for line in m.split("\n") if line.strip())` → Các tin tiếp theo chứa station ID
+>    - Logic này **mạnh hơn anchor-based** vì: (a) không phụ thuộc thứ tự tin, (b) tự loại tin rác từ user khác trong 35s window, (c) đúng với mọi N phần split bất kể số lượng.
+>    - BẮT BUỘC dùng hàm `is_tni_data_msg(m)` bọc 2 điều kiện trên, sau đó `[m for m in bot_messages if is_tni_data_msg(m)]` để gom đủ phần.
 
