@@ -2012,3 +2012,28 @@ Reason: [Lý do]`
 >    - Logic này **mạnh hơn anchor-based** vì: (a) không phụ thuộc thứ tự tin, (b) tự loại tin rác từ user khác trong 35s window, (c) đúng với mọi N phần split bất kể số lượng.
 >    - BẮT BUỘC dùng hàm `is_tni_data_msg(m)` bọc 2 điều kiện trên, sau đó `[m for m in bot_messages if is_tni_data_msg(m)]` để gom đủ phần.
 
+> ### 🔴 RULE PM-61: BUG TỔNG KẾT WORK/WEEK THÁNG BỊ BLOCK BỞI ĐIỀU KIỆN TỔNG THÁNG — PHẢI DÙNG CHECK PER-DAY (STRICT PER-DAY LEAVE-CHECK FOR MONTHLY ACCUMULATION POLICY)
+> **Root Cause (Sự Cố 30/09/2026 — Work Month luôn = 0 dù nhân viên đi làm đủ ngày)**:
+>
+> Trong hàm `buildDailyAttendanceText_()` của `TNI attendance.js`, khi tích lũy `moW` (Work tháng) và `wkW` (Work tuần) từ dữ liệu ảnh trong `List Attendance`, code cũ kiểm tra điều kiện:
+> ```js
+> // ❌ SAI: a.moL và a.moH là TỔNG tháng — nếu có 1 ngày Leave thì block toàn bộ Work tháng còn lại!
+> if (mStr === curMonthStr && a.moL === 0 && a.moH === 0) a.moW++;
+> ```
+> Điều kiện `a.moL === 0` kiểm tra **tổng số Leave của cả tháng**. Khi nhân viên có dù chỉ 1 ngày Leave trong tháng, `a.moL` sẽ = 1 sau khi xử lý ngày Leave đó. Từ đó, tất cả các ảnh Work của các ngày còn lại trong tháng đều bị block → `moW` luôn = 0 dù nhân viên đi làm đầy đủ!
+>
+> **Fix đúng (v105 — Per-Day Check)**:
+> ```js
+> // ✅ ĐÚNG: Check Leave/Half của chính ngày dStr đó, không dùng tổng tháng
+> const thisDayL = (dStr === todayStr) ? a.tL : (dStr === yestStr) ? a.yL : (dStr === day2Str) ? a.d2L : 0;
+> const thisDayH = (dStr === todayStr) ? a.tH : (dStr === yestStr) ? a.yH : (dStr === day2Str) ? a.d2H : 0;
+> const isFarDay = (dStr !== todayStr && dStr !== yestStr && dStr !== day2Str); // Ngày xa hơn Day-3 không block
+> if (mStr === curMonthStr && (isFarDay || (thisDayL === 0 && thisDayH === 0))) a.moW++;
+> ```
+>
+> **Quy Tắc Bắt Buộc (Mandatory Directives)**:
+> 1. **TUYỆT ĐỐI CẤM Dùng Tổng Tháng Để Block Per-Day Accumulation**: Khi tích lũy số liệu theo tuần (`wkW`, `wkL`, `wkH`) hoặc theo tháng (`moW`, `moL`, `moH`) bằng cách duyệt từng dòng dữ liệu (mỗi dòng = 1 ngày cụ thể), BẮT BUỘC phải kiểm tra điều kiện conflict (Leave/Half) **của chính ngày dStr đó**, TUYỆT ĐỐI KHÔNG ĐƯỢC dùng bộ đếm tổng (`a.moL`, `a.moH`) để block — vì bộ đếm tổng tháng sẽ tăng dần qua mỗi vòng lặp và block toàn bộ các ngày Work còn lại!
+> 2. **Logic Per-Day Check Chuẩn Cho Ngày Trong 3 Ngày Gần**: Với `todayStr`, `yestStr`, `day2Str` → dùng bộ đếm ngày tương ứng (`a.tL`, `a.yL`, `a.d2L`) để check conflict của ngày đó.
+> 3. **Logic Cho Ngày Xa (Trước Day-3 — Chỉ Ảnh Hưởng Week/Month)**: Nếu `dStr` không phải 3 ngày gần (`isFarDay = true`) → ảnh chứng minh có mặt là đủ, KHÔNG BLOCK (vì không có per-day Leave counter riêng cho ngày xa).
+> 4. **Cùng Bug Áp Dụng Cho `wkW`**: Điều kiện `a.wkL === 0 && a.wkH === 0` khi tích lũy `wkW` cũng phải sửa theo nguyên tắc tương tự — dùng `isFarDay || (thisDayL === 0 && thisDayH === 0)`.
+
