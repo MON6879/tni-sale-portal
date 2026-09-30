@@ -1971,3 +1971,38 @@ Reason: [Lý do]`
 >    - Khi tin cũ đã quá 48h và Bot API không thể xóa (`can't be deleted for everyone`), hệ thống BẮT BUỘC phải dùng Telethon (`revoke=True`) trong `sweep_orphan_eta.py` để quét và xóa các tin Site Down Alarm cũ theo pattern tiêu đề (`TNI_SITE_DOWN_CELL_ALARM`, `Team.*Bokpyin`, `Team.*Dawei`...).
 >    - TUYỆT ĐỐI CẤM để tin Site Down Alarm tồn tại quá 48h trong nhóm — phải có fallback sweep Telethon chạy định kỳ (:11/:41 MMT) quét cả loại tin này.
 
+---
+
+> ### 🔴 RULE PM-60: SCRAPING THIẾU DỮ LIỆU KHI CHATBOT CHIA NHIỀU TIN — ANCHOR-BASED COLLECTION BẮT BUỘC (STRICT MULTI-PART BOT MESSAGE COLLECTION POLICY)
+> **Root Cause (Sự Cố 30/09/2026 — 172 trạm down nhưng GAS chỉ nhận phần cuối)**:
+>
+> Chatbot `/down_tni@auto_nocpro_bot` trả về 172 dòng station data → quá dài cho 1 tin Telegram → **tự động chia thành 3 tin riêng biệt**:
+> - **Tin 1**: Header `"Site down in Tanintharyi Region – ..."` + ~50 dòng đầu → **CÓ chữ "tanintharyi"**
+> - **Tin 2**: ~60 dòng tiếp → **KHÔNG có chữ "tanintharyi"** (chỉ là bảng số liệu thuần túy)
+> - **Tin 3**: ~60 dòng cuối → **KHÔNG có chữ "tanintharyi"** (chỉ là bảng số liệu thuần túy)
+>
+> Code cũ filter: `tni_messages = [m for m in bot_messages if "tanintharyi" in m.lower()]`
+> → Chỉ lấy được Tin 1, bỏ sót hoàn toàn Tin 2 và Tin 3 → **GAS nhận thiếu 2/3 dữ liệu!**
+>
+> Fix sai lần 1 (v841): `"\n".join(tni_messages)` — vẫn sai vì filter vẫn loại Tin 2+3.
+>
+> **Fix đúng (v842 — Anchor-Based Collection)**:
+> ```python
+> # Tìm INDEX tin đầu tiên có "tanintharyi" (anchor)
+> first_tni_idx = next((i for i, m in enumerate(bot_messages) if "tanintharyi" in m.lower()), None)
+> if first_tni_idx is not None:
+>     # Gom TẤT CẢ tin từ anchor trở đi — bao gồm cả tin 2+3 không có "tanintharyi"
+>     raw_text = "\n".join(bot_messages[first_tni_idx:])
+> ```
+>
+> **Quy Tắc Bắt Buộc (Mandatory Directives)**:
+> 1. **Anchor-Based Collection — Không Filter Từng Tin (Mandatory Anchor Strategy)**:
+>    - Khi cào dữ liệu từ chatbot có thể trả về nhiều tin split, BẮT BUỘC dùng chiến lược **ANCHOR**: tìm vị trí (index) tin đầu tiên có keyword nhận diện, rồi gom TẤT CẢ tin từ index đó trở đi.
+>    - TUYỆT ĐỐI CẤM dùng `[m for m in messages if keyword in m]` để filter từng tin — phương pháp này sẽ bỏ sót các tin tiếp theo không chứa keyword nhưng vẫn là phần của cùng 1 response!
+> 2. **Phân Biệt 2 Loại "Nhiều Tin Từ Bot" (Multi-Message Classification)**:
+>    - **Loại A — Split (Cần gom)**: Bot nhận 1 yêu cầu → trả về N tin liên tiếp do quá dài. Tin 1 có header/keyword, Tin 2..N là phần tiếp theo. **→ PHẢI GOM TẤT CẢ từ anchor.**
+>    - **Loại B — Nhiều lần relay cũ (Không gom)**: Nhiều lần chạy relay khác nhau → nhiều set tin cũ còn trong lịch sử. **→ CHỈ LẤY set tin từ lần relay HIỆN TẠI** (đã được lọc bằng `send_time` window).
+>    - `botlookup_relay.py` đã giải quyết Loại B bằng `send_time` window 35s — chỉ lấy tin sau khi gửi lệnh. Trong window này, tất cả tin từ bot = split parts của 1 response → áp dụng Anchor.
+> 3. **TUYỆT ĐỐI CẤM Chỉ Lấy 1 Tin Cuối Cùng (Zero Last-Only Fallback)**:
+>    - `tni_messages[-1]` hay `bot_messages[-1]` chỉ lấy phần cuối → bỏ toàn bộ header + phần đầu. **Đây là anti-pattern gây mất dữ liệu có hệ thống!**
+
