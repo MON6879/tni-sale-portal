@@ -2157,7 +2157,8 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
         <h3 id="rbac-staff-h3" style="margin:0;font-size:14px">👥 Danh Sách Nhân Sự &amp; Vai Trò Đã Gán</h3>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button id="rbac-btn-clean-staff" class="btn b-out b-xs" onclick="resetStaffDirectoryToClean()" title="Khôi phục danh sách nhân sự mẫu chuẩn">🔄 <span id="rbac-clean-lbl">Làm Sạch Mẫu</span></button>
-          <button class="btn b-xs" onclick="exportStaffJSON()" title="Tải file JSON backup danh sách nhân sự" style="background:#f0fdf4;color:#16a34a;border:1.5px solid #86efac;font-weight:700">⬇ Export</button>
+          <button class="btn b-xs" onclick="downloadStaffTemplate()" title="Tải file JSON mẫu để điền nhân sự rồi Import" style="background:#fefce8;color:#854d0e;border:1.5px solid #fde68a;font-weight:700">📋 Template</button>
+          <button class="btn b-xs" onclick="exportStaffJSON()" title="Tải file JSON backup danh sách nhân sự hiện tại" style="background:#f0fdf4;color:#16a34a;border:1.5px solid #86efac;font-weight:700">⬇ Export</button>
           <button class="btn b-xs" onclick="document.getElementById('import-staff-file').click()" title="Nạp file JSON danh sách nhân sự đã backup" style="background:#eff6ff;color:#2563eb;border:1.5px solid #93c5fd;font-weight:700">⬆ Import</button>
           <input type="file" id="import-staff-file" accept=".json" style="display:none" onchange="importStaffJSON(this)">
           <button id="rbac-btn-add-staff" class="btn b-gn b-xs" onclick="openAddStaffModal()">+ Thêm Nhân Sự</button>
@@ -9370,6 +9371,50 @@ window.addEventListener('DOMContentLoaded', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 // 📤 EXPORT / 📥 IMPORT STAFF DIRECTORY — JSON BACKUP
 // ═══════════════════════════════════════════════════════════════════════════════
+function downloadStaffTemplate() {
+  const template = {
+    "_huong_dan": "HƯỚNG DẪN: Xóa dòng _huong_dan này trước khi import. Điền đúng trường bên dưới.",
+    "_cac_role_hop_le": {
+      "admin":     "Ban Giám Đốc (BOD) — Toàn quyền",
+      "finance":   "Kế Toán & Tài Chính",
+      "sales":     "Kinh Doanh (Sales)",
+      "tech":      "Kỹ Thuật (Field Ops)",
+      "warehouse": "Thủ Kho / Vận Hành",
+      "dealer":    "Đại Lý Phân Phối"
+    },
+    "_cac_truong": {
+      "id":    "BẮT BUỘC nếu muốn giữ ID cũ khi merge. Bỏ trống → hệ thống tự tạo.",
+      "name":  "BẮT BUỘC — Họ và tên đầy đủ",
+      "title": "Tùy chọn — Chức danh (VD: Trưởng Phòng Kỹ Thuật)",
+      "role":  "BẮT BUỘC — Một trong 6 role hợp lệ ở trên",
+      "email": "Tùy chọn — Email liên hệ",
+      "phone": "Tùy chọn — Số điện thoại",
+      "note":  "Tùy chọn — Ghi chú thêm"
+    },
+    "version": 1,
+    "staff": [
+      { "id": "ST001", "name": "Nguyễn Văn An",    "title": "Giám Đốc Điều Hành",      "role": "admin",     "email": "an.nguyen@tni.com",    "phone": "090-xxx-0001", "note": "" },
+      { "id": "ST002", "name": "Trần Thị Bình",     "title": "Kế Toán Trưởng",           "role": "finance",   "email": "binh.tran@tni.com",    "phone": "090-xxx-0002", "note": "" },
+      { "id": "ST003", "name": "Lê Minh Cường",     "title": "Nhân Viên Kinh Doanh",     "role": "sales",     "email": "cuong.le@tni.com",     "phone": "090-xxx-0003", "note": "" },
+      { "id": "ST004", "name": "Phạm Văn Dũng",     "title": "Kỹ Thuật Viên Hiện Trường","role": "tech",      "email": "dung.pham@tni.com",    "phone": "090-xxx-0004", "note": "" },
+      { "id": "ST005", "name": "Hoàng Thị Lan",     "title": "Thủ Kho",                  "role": "warehouse", "email": "lan.hoang@tni.com",    "phone": "090-xxx-0005", "note": "" },
+      { "id": "ST006", "name": "Đại Lý Dawei Hub",  "title": "Đại Lý Ủy Quyền Vùng",   "role": "dealer",    "email": "dawei@dealer.tni.com", "phone": "090-xxx-0006", "note": "Khu vực Dawei" }
+    ]
+  };
+  const isVi = currentLang === 'vi';
+  const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'TNI_Staff_Template.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  al(isVi
+    ? '📋 Đã tải file Template! Mở bằng Notepad/VS Code, xóa dòng "_huong_dan", điền tên nhân sự thật rồi Import.'
+    : '📋 Template downloaded! Open with Notepad/VS Code, delete "_huong_dan" lines, fill real staff data then Import.',
+    'ok');
+}
+
 function exportStaffJSON() {
   const isVi = currentLang === 'vi';
   const list = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
