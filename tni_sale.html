@@ -2140,7 +2140,7 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
           </div>
           <div class="f" style="grid-column:1/-1">
             <label id="rbac-lbl-link">🌐 Đường Link Cá Nhân Hóa Chuẩn:</label>
-            <input id="gen-link-output" readonly style="background:#f1f5f9;font-weight:700;color:#1e3a8a;cursor:text" value="https://mon6879.github.io/tni-sale-portal/sale.html?staff=Staff+Sales+01&amp;role=sales"/>
+            <input id="gen-link-output" readonly style="background:#f1f5f9;font-weight:700;color:#1e3a8a;cursor:text" placeholder="← Chọn nhân viên để tạo link..." value=""/>
           </div>
         </div>
 
@@ -9324,6 +9324,21 @@ function saveStaffUserModal() {
   closeAddStaffModal();
   renderStaffUsersTable();
   populateStaffUserSelect();
+  // Scroll danh sách vào view ngay sau khi thêm/sửa
+  setTimeout(() => {
+    const tbl = document.getElementById('rbac-staff-table-container');
+    if (tbl) {
+      tbl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Flash highlight dòng cuối (mới nhất)
+      const rows = tbl.querySelectorAll('tbody tr');
+      const lastRow = rows[rows.length - 1];
+      if (lastRow) {
+        lastRow.style.transition = 'background 0.3s';
+        lastRow.style.background = '#bbf7d0';
+        setTimeout(() => { lastRow.style.background = ''; }, 2000);
+      }
+    }
+  }, 100);
 }
 
 
