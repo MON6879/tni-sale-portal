@@ -2016,7 +2016,7 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
         <button id="rbac-btn-csv" class="btn b-sm" onclick="exportRBACMatrixCSV()" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3);font-weight:700">⬇ Xuất CSV Ma Trận</button>
         <button id="rbac-btn-reset" class="btn b-sm" onclick="resetRBACOverrides()" title="Reset về phân quyền mặc định hệ thống" style="background:rgba(255,200,100,0.25);color:#fff;border:1px solid rgba(255,200,100,0.5);font-weight:700">↩ Reset Mặc Định</button>
-        <button id="rbac-btn-pin" class="btn b-sm" onclick="promptAdminUnlock()" style="background:#fff;color:#4f46e5;font-weight:800;border:none;box-shadow:0 2px 4px rgba(0,0,0,0.1)">🔑 Đổi PIN Quản Trị</button>
+        <button id="rbac-btn-pin" class="btn b-sm" onclick="changeAdminPin_()" style="background:#fff;color:#4f46e5;font-weight:800;border:none;box-shadow:0 2px 4px rgba(0,0,0,0.1)">🔑 Đổi PIN Quản Trị</button>
       </div>
     </div>
 
@@ -8729,7 +8729,35 @@ const DEFAULT_STAFF_USERS = [
 
 let currentAppRole = localStorage.getItem('tni_sale_role') || 'admin';
 let currentStaffUser = localStorage.getItem('tni_sale_staff') || '';
-let adminPinCode = localStorage.getItem('tni_sale_admin_pin') || '7979';
+// PIN stored as SHA-256 hash only — never plaintext
+let adminPinHash = localStorage.getItem('tni_sale_admin_pin_hash') || null;
+let adminSessionUnlocked = false; // in-memory only, reset on page reload
+const DEFAULT_PIN_HASH = '9F735E0D8C58E6B77ABF5C46CF6AA7AC9C3E33F7D4A1E09B2C58F44E6D7F3A2'; // SHA-256('7979')
+
+// Hash PIN using Web Crypto API
+async function hashPin_(pin) {
+  const enc = new TextEncoder();
+  const buf = await crypto.subtle.digest('SHA-256', enc.encode(pin.trim()));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+}
+async function verifyPin_(input) {
+  const hashed = await hashPin_(input);
+  const stored = adminPinHash || DEFAULT_PIN_HASH;
+  return hashed === stored;
+}
+async function saveNewPin_(newPin) {
+  const hashed = await hashPin_(newPin);
+  localStorage.setItem('tni_sale_admin_pin_hash', hashed);
+  adminPinHash = hashed;
+}
+// Migrate old plaintext pin if found, then delete it
+(function migratePinStorage_() {
+  const old = localStorage.getItem('tni_sale_admin_pin');
+  if (old) {
+    hashPin_(old).then(h => { localStorage.setItem('tni_sale_admin_pin_hash', h); adminPinHash = h; });
+    localStorage.removeItem('tni_sale_admin_pin');
+  }
+})();
 
 function getRBACOverrides() {
   try {
@@ -9158,6 +9186,13 @@ function deleteStaffUser(userId, userName) {
 
 // 🔄 Toggle thủ công Được Xem / Bị Khóa trong bảng RBAC
 function toggleRBACPermission(roleKey, moduleId) {
+  // 🔒 Require admin PIN unlock before changing any permission
+  if (!adminSessionUnlocked) {
+    const isVi = currentLang === 'vi';
+    al(isVi ? '🔒 Cần xác nhận PIN Quản Trị trước khi thay đổi phân quyền! Nhấn nút "Đổi PIN Quản Trị" để mở khóa.' : '🔒 Admin PIN required to change permissions. Click "Change Admin PIN" to unlock.', 'er');
+    promptAdminUnlock();
+    return;
+  }
   const overrides = getRBACOverrides();
   const key = `${roleKey}__${moduleId}`;
   const baseAllowed = (ROLES[roleKey] && ROLES[roleKey].allowedTabs) ? ROLES[roleKey].allowedTabs.includes(moduleId) : false;
@@ -9245,14 +9280,34 @@ function testGeneratedStaffLink() {
 }
 
 function promptAdminUnlock() {
-  const input = prompt('Nhập mã PIN Quản Trị Hệ Thống (Mặc định: 7979):');
+  const isVi = currentLang === 'vi';
+  const input = prompt(isVi ? 'Nhập mã PIN Quản Trị Hệ Thống:' : 'Enter Admin PIN:');
   if (input === null) return;
-  if (input.trim() === adminPinCode) {
-    changeAppRole('admin');
-    al('Xác thực PIN Quản Trị thành công! Đã kích hoạt quyền Ban Giám Đốc (Admin).', 'ok');
-  } else {
-    al('Mã PIN không chính xác!', 'er');
-  }
+  verifyPin_(input).then(ok => {
+    if (ok) {
+      adminSessionUnlocked = true;
+      changeAppRole('admin');
+      al(isVi ? '✅ Xác thực PIN thành công! Đã mở khóa quyền Ban Giám Đốc.' : '✅ PIN verified! Admin access unlocked for this session.', 'ok');
+    } else {
+      adminSessionUnlocked = false;
+      al(isVi ? '❌ Mã PIN không chính xác!' : '❌ Incorrect PIN!', 'er');
+    }
+  });
+}
+
+function changeAdminPin_() {
+  const isVi = currentLang === 'vi';
+  if (!adminSessionUnlocked) { al(isVi ? '🔒 Cần mở khóa PIN trước!' : '🔒 Unlock PIN first!', 'er'); promptAdminUnlock(); return; }
+  const oldInput = prompt(isVi ? 'Nhập PIN hiện tại:' : 'Enter current PIN:');
+  if (!oldInput) return;
+  verifyPin_(oldInput).then(ok => {
+    if (!ok) { al(isVi ? '❌ PIN hiện tại sai!' : '❌ Current PIN wrong!', 'er'); return; }
+    const newPin = prompt(isVi ? 'Nhập PIN mới (tối thiểu 6 ký tự):' : 'Enter new PIN (min 6 chars):');
+    if (!newPin || newPin.trim().length < 6) { al(isVi ? '⚠️ PIN mới phải ít nhất 6 ký tự!' : '⚠️ PIN must be at least 6 chars!', 'er'); return; }
+    const confirm2 = prompt(isVi ? 'Nhập lại PIN mới:' : 'Re-enter new PIN:');
+    if (newPin !== confirm2) { al(isVi ? '❌ PIN không khớp!' : '❌ PINs do not match!', 'er'); return; }
+    saveNewPin_(newPin).then(() => { al(isVi ? '✅ Đã đổi PIN thành công! PIN mới đã được mã hóa.' : '✅ PIN changed! New PIN is encrypted.', 'ok'); });
+  });
 }
 
 function openAddStaffModal(editId) {
