@@ -2155,8 +2155,11 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
     <div class="panel">
       <div class="ph" style="display:flex;justify-content:space-between;align-items:center">
         <h3 id="rbac-staff-h3" style="margin:0;font-size:14px">👥 Danh Sách Nhân Sự &amp; Vai Trò Đã Gán</h3>
-        <div style="display:flex;gap:6px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button id="rbac-btn-clean-staff" class="btn b-out b-xs" onclick="resetStaffDirectoryToClean()" title="Khôi phục danh sách nhân sự mẫu chuẩn">🔄 <span id="rbac-clean-lbl">Làm Sạch Mẫu</span></button>
+          <button class="btn b-xs" onclick="exportStaffJSON()" title="Tải file JSON backup danh sách nhân sự" style="background:#f0fdf4;color:#16a34a;border:1.5px solid #86efac;font-weight:700">⬇ Export</button>
+          <button class="btn b-xs" onclick="document.getElementById('import-staff-file').click()" title="Nạp file JSON danh sách nhân sự đã backup" style="background:#eff6ff;color:#2563eb;border:1.5px solid #93c5fd;font-weight:700">⬆ Import</button>
+          <input type="file" id="import-staff-file" accept=".json" style="display:none" onchange="importStaffJSON(this)">
           <button id="rbac-btn-add-staff" class="btn b-gn b-xs" onclick="openAddStaffModal()">+ Thêm Nhân Sự</button>
         </div>
       </div>
@@ -9363,6 +9366,88 @@ window.addEventListener('DOMContentLoaded', () => {
     renderStaffUsersTable();
   }, 300);
 });
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 📤 EXPORT / 📥 IMPORT STAFF DIRECTORY — JSON BACKUP
+// ═══════════════════════════════════════════════════════════════════════════════
+function exportStaffJSON() {
+  const isVi = currentLang === 'vi';
+  const list = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
+  if (!list || !list.length) {
+    al(isVi ? '⚠️ Danh sách nhân sự trống, không có gì để export!' : '⚠️ Staff directory is empty, nothing to export!', 'er');
+    return;
+  }
+  const payload = { version: 1, exported_at: new Date().toISOString(), count: list.length, staff: list };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateTag = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  a.href = url;
+  a.download = `TNI_Staff_Backup_${dateTag}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  al(isVi ? `✅ Đã export ${list.length} nhân sự ra file JSON backup!` : `✅ Exported ${list.length} staff to JSON backup!`, 'ok');
+}
+
+function importStaffJSON(input) {
+  const isVi = currentLang === 'vi';
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const raw = JSON.parse(e.target.result);
+      // Hỗ trợ 2 format: {version:1, staff:[...]} hoặc array trực tiếp [...]
+      let imported = Array.isArray(raw) ? raw : (raw.staff && Array.isArray(raw.staff) ? raw.staff : null);
+      if (!imported || !imported.length) {
+        al(isVi ? '❌ File JSON không hợp lệ hoặc danh sách trống!' : '❌ Invalid JSON file or empty staff list!', 'er');
+        return;
+      }
+      // Validate: mỗi item phải có ít nhất trường "name"
+      const valid = imported.filter(u => u && typeof u.name === 'string' && u.name.trim());
+      if (!valid.length) {
+        al(isVi ? '❌ Không tìm thấy dữ liệu nhân sự hợp lệ trong file!' : '❌ No valid staff data found in file!', 'er');
+        return;
+      }
+      // Chuẩn hóa: đảm bảo mỗi item có đủ trường
+      const normalized = valid.map(u => ({
+        id:    u.id    || ('ST' + String(Date.now() + Math.random()).replace('.','').slice(-6)),
+        name:  u.name.trim(),
+        title: u.title || (isVi ? 'Nhân Viên' : 'Staff'),
+        role:  (u.role && ROLES[u.role]) ? u.role : 'sales',
+        email: u.email || '',
+        phone: u.phone || '',
+        note:  u.note  || ''
+      }));
+      const mode = confirm(
+        isVi
+          ? `Tìm thấy ${normalized.length} nhân sự trong file.\n\nBấm OK → THAY THẾ toàn bộ danh sách hiện tại.\nBấm Hủy → GỘP (merge) thêm vào danh sách hiện tại.`
+          : `Found ${normalized.length} staff in file.\n\nClick OK → REPLACE current staff list.\nClick Cancel → MERGE (add) into current list.`
+      );
+      let finalList;
+      if (mode) {
+        // Replace
+        finalList = normalized;
+      } else {
+        // Merge: không trùng ID
+        const current = DB.g('staff_directory') || [];
+        const existingIds = new Set(current.map(u => u.id));
+        const toAdd = normalized.filter(u => !existingIds.has(u.id));
+        finalList = [...current, ...toAdd];
+        al(isVi ? `➕ Đã gộp thêm ${toAdd.length} nhân sự mới (bỏ qua ${normalized.length - toAdd.length} trùng ID).` : `➕ Merged ${toAdd.length} new staff (skipped ${normalized.length - toAdd.length} duplicate IDs).`, 'ok');
+      }
+      DB.s('staff_directory', finalList);
+      populateStaffUserSelect();
+      renderStaffUsersTable();
+      if (mode) al(isVi ? `✅ Đã import và thay thế bằng ${finalList.length} nhân sự từ file!` : `✅ Imported & replaced with ${finalList.length} staff from file!`, 'ok');
+    } catch(err) {
+      al(isVi ? '❌ Lỗi đọc file JSON: ' + err.message : '❌ Error reading JSON file: ' + err.message, 'er');
+    }
+    // Reset input để có thể import lại cùng file nếu cần
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
 
 </script>
 </body>
