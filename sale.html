@@ -9099,10 +9099,15 @@ function renderStaffUsersTable(sourceOverride) {
   if (!container) return;
   container.innerHTML = '<div style="padding:16px;text-align:center;color:#94a3b8;font-size:13px">⏳ Đang tải danh sách nhân sự từ Sheet...</div>';
 
+  // AbortController timeout — GAS cold start can take 30-60s, cap at 12s then fall back to local
+  const ctrl = new AbortController();
+  const tId = setTimeout(() => ctrl.abort(), 12000);
+
   // Use GET (not POST) — GAS redirects POST→GET losing body; GET with ?action= works correctly
-  fetch(SALE_GAS_URL + '?action=staff_get', { method: 'GET' })
+  fetch(SALE_GAS_URL + '?action=staff_get', { method: 'GET', signal: ctrl.signal })
   .then(r => r.json())
   .then(res => {
+    clearTimeout(tId);
     let users, source;
     if (res.ok && res.data && res.data.length > 0) {
       users = res.data;
@@ -9117,7 +9122,8 @@ function renderStaffUsersTable(sourceOverride) {
     _renderStaffTable_(users, source);
   })
   .catch(() => {
-    // Offline → dùng localStorage
+    clearTimeout(tId);
+    // Offline hoặc timeout → dùng localStorage
     let users = DB.g('staff_directory');
     if (!users || !users.length) { users = DEFAULT_STAFF_USERS; DB.s('staff_directory', users); }
     _renderStaffTable_(users, '💾 Local (offline)');
