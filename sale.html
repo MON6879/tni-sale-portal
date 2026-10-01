@@ -9118,7 +9118,8 @@ function renderStaffUsersTable(sourceOverride) {
 
 function _renderStaffTable_(users, source) {
   const container = document.getElementById('rbac-staff-table-container');
-  if (!container) return;
+  console.log('[STAFF] _renderStaffTable_ called — container:', container, '| users.length:', users ? users.length : 'null', '| source:', source);
+  if (!container) { console.warn('[STAFF] container NOT FOUND in DOM'); return; }
   const isVi = currentLang === 'vi';
 
   // Auto-sanitize old cached names
