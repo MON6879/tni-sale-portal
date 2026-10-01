@@ -9098,8 +9098,8 @@ function renderStaffUsersTable(sourceOverride) {
 
   // ── BƯỚC 1: Render ngay lập tức từ localStorage (không spinner, không đợi) ──
   const cached = DB.g('staff_directory');
-  const users0 = (cached && cached.length) ? cached : DEFAULT_STAFF_USERS;
-  _renderStaffTable_(users0, cached && cached.length ? '💾 Local' : '📋 Default');
+  const users0 = (cached && cached.length > 0) ? cached : DEFAULT_STAFF_USERS;
+  _renderStaffTable_(users0, (cached && cached.length > 0) ? '💾 Local' : '📋 Default');
 
   // ── BƯỚC 2: Cập nhật từ Sheet trong nền (silent update) ──
   const ctrl = new AbortController();
