@@ -9099,12 +9099,8 @@ function renderStaffUsersTable(sourceOverride) {
   if (!container) return;
   container.innerHTML = '<div style="padding:16px;text-align:center;color:#94a3b8;font-size:13px">⏳ Đang tải danh sách nhân sự từ Sheet...</div>';
 
-  // Try Sheet first, fall back to localStorage
-  fetch(SALE_GAS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'staff_get' })
-  })
+  // Use GET (not POST) — GAS redirects POST→GET losing body; GET with ?action= works correctly
+  fetch(SALE_GAS_URL + '?action=staff_get', { method: 'GET' })
   .then(r => r.json())
   .then(res => {
     let users, source;
