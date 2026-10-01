@@ -9097,37 +9097,25 @@ const SALE_GAS_URL = 'https://script.google.com/macros/s/AKfycbylrXMEDKpBfvs9Wbr
 function renderStaffUsersTable(sourceOverride) {
   const container = document.getElementById('rbac-staff-table-container');
   if (!container) return;
-  container.innerHTML = '<div style="padding:16px;text-align:center;color:#94a3b8;font-size:13px">⏳ Đang tải danh sách nhân sự từ Sheet...</div>';
 
-  // AbortController timeout — GAS cold start can take 30-60s, cap at 12s then fall back to local
+  // ── BƯỚC 1: Render ngay lập tức từ localStorage (không spinner, không đợi) ──
+  const cached = DB.g('staff_directory');
+  const users0 = (cached && cached.length) ? cached : DEFAULT_STAFF_USERS;
+  _renderStaffTable_(users0, cached && cached.length ? '💾 Local' : '📋 Default');
+
+  // ── BƯỚC 2: Cập nhật từ Sheet trong nền (silent update) ──
   const ctrl = new AbortController();
-  const tId = setTimeout(() => ctrl.abort(), 12000);
-
-  // Use GET (not POST) — GAS redirects POST→GET losing body; GET with ?action= works correctly
+  setTimeout(() => ctrl.abort(), 12000); // 12s cap — GAS cold start
   fetch(SALE_GAS_URL + '?action=staff_get', { method: 'GET', signal: ctrl.signal })
   .then(r => r.json())
   .then(res => {
-    clearTimeout(tId);
-    let users, source;
     if (res.ok && res.data && res.data.length > 0) {
-      users = res.data;
-      source = '☁️ Google Sheet';
-      DB.s('staff_directory', users); // cache locally
-    } else {
-      // Sheet trống → dùng localStorage hoặc default
-      users = DB.g('staff_directory');
-      if (!users || !users.length) { users = DEFAULT_STAFF_USERS; DB.s('staff_directory', users); }
-      source = '💾 Local';
+      DB.s('staff_directory', res.data);
+      _renderStaffTable_(res.data, '☁️ Google Sheet');
     }
-    _renderStaffTable_(users, source);
+    // Sheet trống → giữ nguyên bảng local đã hiện
   })
-  .catch(() => {
-    clearTimeout(tId);
-    // Offline hoặc timeout → dùng localStorage
-    let users = DB.g('staff_directory');
-    if (!users || !users.length) { users = DEFAULT_STAFF_USERS; DB.s('staff_directory', users); }
-    _renderStaffTable_(users, '💾 Local (offline)');
-  });
+  .catch(() => { /* timeout hoặc offline — bảng local đã hiện rồi, không làm gì */ });
 }
 
 function _renderStaffTable_(users, source) {
