@@ -9092,18 +9092,23 @@ function renderRBACMatrix() {
 
 const SALE_GAS_URL = 'https://script.google.com/macros/s/AKfycbylrXMEDKpBfvs9Wbr3kmoqrJ6UoWE1KaN-WC94mE2wm1V2MJUFu-zyYrzzm10Vo0Ue5Q/exec';
 
-function renderStaffUsersTable(sourceOverride) {
+function renderStaffUsersTable(sourceOverride, _retry) {
   const container = document.getElementById('rbac-staff-table-container');
-  if (!container) return;
 
-  // ── BƯỚC 1: Render ngay lập tức từ localStorage (không spinner, không đợi) ──
+  // Nếu container chưa trong DOM → retry tối đa 10 lần × 100ms
+  if (!container) {
+    if (!_retry || _retry < 10) setTimeout(() => renderStaffUsersTable(sourceOverride, (_retry||0)+1), 100);
+    return;
+  }
+
+  // BƯỚC 1: Render ngay từ localStorage (không spinner, không đợi)
   const cached = DB.g('staff_directory');
   const users0 = (cached && cached.length > 0) ? cached : DEFAULT_STAFF_USERS;
   _renderStaffTable_(users0, (cached && cached.length > 0) ? '💾 Local' : '📋 Default');
 
-  // ── BƯỚC 2: Cập nhật từ Sheet trong nền (silent update) ──
+  // BƯỚC 2: Cập nhật từ Sheet trong nền
   const ctrl = new AbortController();
-  setTimeout(() => ctrl.abort(), 12000); // 12s cap — GAS cold start
+  setTimeout(() => ctrl.abort(), 12000);
   fetch(SALE_GAS_URL + '?action=staff_get', { method: 'GET', signal: ctrl.signal })
   .then(r => r.json())
   .then(res => {
@@ -9111,9 +9116,8 @@ function renderStaffUsersTable(sourceOverride) {
       DB.s('staff_directory', res.data);
       _renderStaffTable_(res.data, '☁️ Google Sheet');
     }
-    // Sheet trống → giữ nguyên bảng local đã hiện
   })
-  .catch(() => { /* timeout hoặc offline — bảng local đã hiện rồi, không làm gì */ });
+  .catch(() => {});
 }
 
 function _renderStaffTable_(users, source) {
