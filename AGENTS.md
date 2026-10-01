@@ -2108,3 +2108,24 @@ Reason: [Lý do]`
 >   | Main Hub | Xem `system_map.md` |
 >   | Sale Backend | `AKfycbx09J8PPi_IN3_n_ho8QF4RapsPh5uzLchVfS9T89iuw-4QMZWU_ynlhzDvav4wRvj4` |
 
+---
+
+> ### 🔴 RULE PM-67: WINDOWS TASK SCHEDULER PHẢI CHẠY DƯỚI ĐÚNG USER ACCOUNT — TUYỆT ĐỐI CẤM ĐỂ CHẠY DƯỚI SYSTEM ACCOUNT (STRICT TASK SCHEDULER USER ACCOUNT POLICY)
+> **Root Cause (Sự Cố 01/10/2026 — ICT Auto Fetch không chạy)**:
+> Task `ICT_Auto_Fetch` đăng ký dưới **SYSTEM account** → `LastResult: 0x80070002` ("The system cannot find the file specified"). Nguyên nhân: SYSTEM account không có quyền truy cập:
+> - **D: drive** (network/secondary drive mapped cho user `HA DUC PHONG`)
+> - **Python path** `C:\Users\HA DUC PHONG\AppData\Local\...` (user-scope installation)
+> Script chạy tay dưới user bình thường thì OK hoàn toàn — chỉ fail khi Task Scheduler gọi.
+>
+> **Fix**: Đăng ký task với `LogonType Interactive` dưới đúng user `PHONGHD\HA DUC PHONG`:
+> ```powershell
+> $Principal = New-ScheduledTaskPrincipal -UserId "PHONGHD\HA DUC PHONG" -LogonType Interactive -RunLevel Highest
+> ```
+> Sau đó chạy script đăng ký bằng `powershell -ExecutionPolicy Bypass -File "...\update_task.ps1"` từ **CMD Admin** (không phải `& "..."` vì `&` là PowerShell operator, không phải CMD).
+>
+> **Quy Tắc Bắt Buộc**:
+> 1. **Mọi Scheduled Task chạy script Python/BAT truy cập D: drive hoặc Python user-scope** BẮT BUỘC đăng ký với `LogonType Interactive` dưới đúng user account. TUYỆT ĐỐI CẤM để mặc định SYSTEM account.
+> 2. **Chẩn đoán nhanh**: Nếu Task Scheduler báo `LastResult: 0x80070002` = "file not found" nhưng chạy tay OK → 100% là lỗi user account, không phải lỗi script.
+> 3. **Chạy .ps1 từ CMD Admin**: Dùng `powershell -ExecutionPolicy Bypass -File "path\script.ps1"`. TUYỆT ĐỐI CẤM dùng `& "path\script.ps1"` từ CMD vì `&` là toán tử PowerShell, CMD sẽ báo lỗi "& was unexpected".
+> 4. **File liên quan**: `D:\6. AI\1. QLTC\ICT Fetch\update_task.ps1` — đã cập nhật LogonType Interactive. Khi cần re-register task ICT, chạy file này bằng CMD Admin.
+
