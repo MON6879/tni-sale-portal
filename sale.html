@@ -9092,18 +9092,48 @@ function renderRBACMatrix() {
   container.innerHTML = html;
 }
 
-function renderStaffUsersTable() {
+const SALE_GAS_URL = 'https://script.google.com/macros/s/AKfycbylrXMEDKpBfvs9Wbr3kmoqrJ6UoWE1KaN-WC94mE2wm1V2MJUFu-zyYrzzm10Vo0Ue5Q/exec';
+
+function renderStaffUsersTable(sourceOverride) {
   const container = document.getElementById('rbac-staff-table-container');
   if (!container) return;
+  container.innerHTML = '<div style="padding:16px;text-align:center;color:#94a3b8;font-size:13px">⏳ Đang tải danh sách nhân sự từ Sheet...</div>';
 
+  // Try Sheet first, fall back to localStorage
+  fetch(SALE_GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'staff_get' })
+  })
+  .then(r => r.json())
+  .then(res => {
+    let users, source;
+    if (res.ok && res.data && res.data.length > 0) {
+      users = res.data;
+      source = '☁️ Google Sheet';
+      DB.s('staff_directory', users); // cache locally
+    } else {
+      // Sheet trống → dùng localStorage hoặc default
+      users = DB.g('staff_directory');
+      if (!users || !users.length) { users = DEFAULT_STAFF_USERS; DB.s('staff_directory', users); }
+      source = '💾 Local';
+    }
+    _renderStaffTable_(users, source);
+  })
+  .catch(() => {
+    // Offline → dùng localStorage
+    let users = DB.g('staff_directory');
+    if (!users || !users.length) { users = DEFAULT_STAFF_USERS; DB.s('staff_directory', users); }
+    _renderStaffTable_(users, '💾 Local (offline)');
+  });
+}
+
+function _renderStaffTable_(users, source) {
+  const container = document.getElementById('rbac-staff-table-container');
+  if (!container) return;
   const isVi = currentLang === 'vi';
-  let users = DB.g('staff_directory');
-  if (!users || !users.length) {
-    users = DEFAULT_STAFF_USERS;
-    DB.s('staff_directory', users);
-  }
 
-  // Auto-sanitize old cached names (Zin Ko Ko, Min Min, etc.) while preserving custom users
+  // Auto-sanitize old cached names
   let migrated = false;
   users = users.map(u => {
     if (u.name === 'Zin Ko Ko') { migrated = true; return { ...u, name: 'Staff Sales 01', email: 'sales01@tni.com' }; }
@@ -9287,6 +9317,11 @@ function promptAdminUnlock() {
     if (ok) {
       adminSessionUnlocked = true;
       changeAppRole('admin');
+      // Lấy admin token để sync staff lên Sheet
+      if (!localStorage.getItem('tni_sale_admin_token')) {
+        const tok = prompt(isVi ? '🔑 Nhập Admin API Token để đồng bộ nhân sự lên Google Sheet\n(Bỏ qua = chỉ lưu local, không sync Sheet):' : '🔑 Enter Admin API Token to sync staff to Google Sheet\n(Skip = local-only, no Sheet sync):');
+        if (tok && tok.trim()) localStorage.setItem('tni_sale_admin_token', tok.trim());
+      }
       al(isVi ? '✅ Xác thực PIN thành công! Đã mở khóa quyền Ban Giám Đốc.' : '✅ PIN verified! Admin access unlocked for this session.', 'ok');
     } else {
       adminSessionUnlocked = false;
@@ -9376,6 +9411,22 @@ function saveStaffUserModal() {
   }
   
   DB.s('staff_directory', list);
+
+  // 🔄 Sync lên Google Sheet nếu admin đã unlock (có token)
+  const adminToken = localStorage.getItem('tni_sale_admin_token') || '';
+  if (adminToken) {
+    fetch(SALE_GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'staff_save', token: adminToken, data: list })
+    })
+    .then(r => r.json())
+    .then(res => {
+      if (res.ok) al(isVi ? `✅ Đã lưu lên Google Sheet (${res.saved} nhân sự)!` : `✅ Synced to Google Sheet (${res.saved} staff)!`, 'ok');
+      else al(isVi ? `⚠️ Lưu local OK nhưng Sheet chưa sync: ${res.error}` : `⚠️ Local OK but Sheet sync failed: ${res.error}`, 'er');
+    })
+    .catch(() => al(isVi ? '⚠️ Lưu local OK. Sheet offline — sẽ sync lần sau.' : '⚠️ Local saved. Sheet offline — will sync later.', 'er'));
+  }
   closeAddStaffModal();
   renderStaffUsersTable();
   populateStaffUserSelect();
