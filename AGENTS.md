@@ -2067,3 +2067,23 @@ Reason: [Lý do]`
 >   ```
 >   Nếu có bất kỳ file nào lỗi syntax → BẮT BUỘC sửa xong trước khi deploy.
 
+---
+
+> ### 🔴 RULE PM-62: AW7 ĐỘC LẬP TUYỆT ĐỐI — CẤM THÊM GUARD SO SÁNH VỚI CỘT A / FRESHNESS CHECK (STRICT AW7-INDEPENDENCE & ANTI-OVER-ENGINEERING POLICY)
+> **Root Cause (Sự Cố 01/10/2026)**:
+> Commit `da358f0` thêm CHỐT CHẶN 2 so sánh `AW7 timestamp < A1 timestamp` → block gửi mỗi khi relay cào Cột A có timestamp mới hơn AW7 → AW7 cập nhật nhưng không gửi được tin.
+>
+> **Lịch sử sửa qua sửa lại làm phức tạp thêm**:
+> - `d9f8bfd`: Logic đơn giản nhất — đọc thẳng `sheet.getRange("AW7").getValue()`, chỉ dedup `TS_KEY_AW7`. **Chạy mượt.**
+> - `57b609b → c20b4ef`: Thêm freshness 30→60 min guard → block khi AW7 cũ hơn 60 phút.
+> - `d9f8bfd`: Bỏ freshness check. **Chạy mượt lại.**
+> - `da358f0`: Thêm CHỐT CHẶN 2 (AW7 vs A1) → **Bug: không gửi tin**.
+> - `9a06b3a`: Bỏ CHỐT CHẶN 2. **Nhưng vẫn còn wrapper `parseAW7Timestamp()` phức tạp + CHỐT CHẶN 1 (45 phút)**.
+> - `64eab61`: **Restore hoàn toàn về d9f8bfd**: đọc thẳng AW7, không wrapper, không freshness, không A1 guard. ✅
+>
+> **Quy Tắc Bắt Buộc (ANTI-OVER-ENGINEERING)**:
+> 1. **`processSummaryAwAz()` CHỈ ĐƯỢC CÓ 2 ĐIỀU KIỆN**: ① AW7 rỗng → skip. ② `tsKey === lastTs` → skip (dedup). **TUYỆT ĐỐI CẤM thêm bất kỳ guard thứ 3 nào** (freshness, so sánh A1, so sánh relayTs, v.v.).
+> 2. **ĐỌC THẲNG `sheet.getRange("AW7").getValue()`** — TUYỆT ĐỐI CẤM bọc thêm `parseAW7Timestamp()` hay hàm wrapper trung gian nào khác có thể fail.
+> 3. **Khi AW7 chạy tốt mà bị báo lỗi**: Trước khi sửa, BẮT BUỘC đọc `git log -- site_down_v2.gs` tìm commit gần nhất thêm code mới vào `processSummaryAwAz`. Đó là thủ phạm — REVERT về version trước đó.
+> 4. **ANTI-OVER-ENGINEERING**: Mỗi lần "fix" thêm guard vào AW7 = tạo thêm bug. Logic đơn giản nhất là đúng nhất. Resist the urge to add "safety" guards.
+
