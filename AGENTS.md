@@ -2129,3 +2129,44 @@ Reason: [Lý do]`
 > 3. **Chạy .ps1 từ CMD Admin**: Dùng `powershell -ExecutionPolicy Bypass -File "path\script.ps1"`. TUYỆT ĐỐI CẤM dùng `& "path\script.ps1"` từ CMD vì `&` là toán tử PowerShell, CMD sẽ báo lỗi "& was unexpected".
 > 4. **File liên quan**: `D:\6. AI\1. QLTC\ICT Fetch\update_task.ps1` — đã cập nhật LogonType Interactive. Khi cần re-register task ICT, chạy file này bằng CMD Admin.
 
+
+---
+
+# 📌 PM RULES — POST-MORTEM TỪ BUG THỰC TẾ (AUTO-INJECTED)
+
+> **PM-R1 (01/10/2026) — Refuel Icon / Repo Isolation Vi Phạm**:
+> - **Root Cause**: Khi sửa `refuel_plan_report.py` (repo `tni-bot`), AI dùng `Copy-Item ... tni_site_down_repo\` — vi phạm Strict Repo Isolation (`tni-sitedown` chỉ phục vụ Site Down).
+> - **Rule**: Khi sửa file Python thuộc `Task and WO`, TUYỆT ĐỐI CẤM copy sang `tni_site_down_repo`. Chỉ `git push` vào đúng `phonghdpxd-cmd/tni-bot`.
+> - **Anti-pattern CẤM**: `Copy-Item "...refuel_plan_report.py" "...tni_site_down_repo\..."`
+
+> **PM-R2 (01/10/2026) — Icon Priority / Column Mapping Không Verify**:
+> - **Root Cause**: Thêm logic đọc cột Sheet mà không verify header trước → sửa nhiều vòng (ICT Grade → q → col Q → col R).
+> - **Rule**: Khi thêm logic đọc cột mới từ Google Sheet, BẮT BUỘC chạy `python -c "..."` đọc header row thực tế TRƯỚC khi viết code. TUYỆT ĐỐI CẤM đoán `column=X` mà không xác minh bằng dữ liệu thật.
+
+> **PM-68 (01/10/2026) — GAS Web App Redirect Kills POST Body (staff_get spinner bug)**:
+> - **Root Cause**: Google Apps Script Web App **luôn redirect POST -> GET (HTTP 302)** truoc khi thuc thi. Browser fetch() follow redirect chuyen thanh GET — **toan bo body JSON bi mat**. GAS nhan action="" -> tra response khong co ok:true -> portal fallback local -> spinner khong tat.
+> - **Rule**: Khi viet GAS public read-only endpoint (no auth), BAT BUOC dung **GET voi ?action=xxx query param**, TUYET DOI CAM dung POST voi body JSON cho public no-auth actions.
+> - **Pattern dung (Portal)**: fetch(GAS_URL + '?action=staff_get', { method: 'GET' })
+> - **Pattern dung (GAS)**: Xu ly trong doGetCollector_(e) voi e.parameter.action
+> - **Anti-pattern CAM**: fetch(GAS_URL, { method:'POST', body: JSON.stringify({action:'staff_get'}) })
+
+> **PM-69 (01/10/2026) — Them Action Moi Vao GAS Phai Cap Nhat CA 2 Duong Route**:
+> - **Root Cause**: staff_get them vao doPostCollector_ nhung QUEN them vao doGetCollector_ -> khi GAS redirect POST->GET, doGetCollector_ khong nhan duoc route.
+> - **Rule**: Khi them action moi vao GAS collector, BAT BUOC kiem tra CA 2 ham: doPostCollector_ (write) VA doGetCollector_ (read public). TUYET DOI CAM chi them vao 1 trong 2.
+> - **Checklist**: (1) doPostCollector_ co route? (2) doGetCollector_ co route? (3) handleSalePost_ public actions TRUOC auth check?
+
+> **PM-70 (02/10/2026) — Bot Thu Thập Mất Webhook Nhưng Ghế Giám Sát Bị Sót Trong Danh Mục (Zero Unmonitored Bot Policy)**:
+> - **Root Cause**: Bot thu thập `@TNI_FUEL` (`8811503647`) bị mất webhook (url="" rỗng, 36 tin nhắn bị nghẽn trong hàng đợi Telegram). Ghế giám sát `AUDITOR-9.1` (`system_auditor.py`) và Toa 0 Keepalive (`train_5min.yml`) **bị sót không đưa bot này vào danh mục kiểm tra `BOT_REGISTRY`**, dẫn đến bot bị rớt webhook nhưng Sentinel không phát hiện và không cảnh báo.
+> - **Rule**: Toàn bộ bot phục vụ thu thập tự động (Search, Asset, Site Down, Construction, Cable, Attendance, Refuel...) BẮT BUỘC 100% phải được đăng ký vào:
+>   1. `system_auditor.py` -> `BOT_REGISTRY` (Kiểm tra url, pending queue, latency, lỗi 302).
+>   2. `train_5min.yml` -> `Toa 0 Keepalive Ping All Endpoints & Webhooks` (Ping getWebhookInfo & endpoint Vercel mỗi nhịp tàu).
+> - **Checklist Khẩn Cấp Khi Bot Không Thu Thập**:
+>   1. Chạy ngay: `requests.get('https://api.telegram.org/bot<TOKEN>/getWebhookInfo')`
+>   2. Nếu `url == ""`: Gọi ngay `setWebhook` trỏ về đúng endpoint Vercel.
+>   3. Kiểm tra xem bot đã có mặt trong `system_auditor.py` và `train_5min.yml` chưa. Nếu chưa -> bổ sung ngay lập tức!
+
+
+> **PM-R3 (02/10/2026) — Hiển Thị Đầy Đủ Ghế Giám Sát Tick Xanh & Bảo Vệ Hàm Gửi Tin**:
+> - **Root Cause 1**: Báo cáo kiểm toán `build_master_audit_report()` trước đây chỉ hiển thị danh sách các ghế giám sát khi 0 lỗi & 0 cảnh báo. Khi có cảnh báo nhỏ (như WO Hoarding), danh sách các ghế giám sát bị ẩn mất, khiến người dùng không biết các ghế khác có hoạt động hay không.
+> - **Root Cause 2**: Khi thêm `notify_desktop()` bằng replace file ở phiên trước, hàm cốt lõi `send_report_telegram()` đã bị vô tình xóa đè, gây nguy cơ NameError lúc gửi báo cáo.
+> - **Rule**: Trong báo cáo kiểm toán hàng ngày của Toa Auditor (Ghế AUDITOR-9.1), BẮT BUỘC luôn luôn hiển thị khối trạng thái toàn bộ 10+ Ghế Giám Sát hệ thống với tick xanh ✅ cho các ghế đang hoạt động bình thường. Khi thêm/sửa bất kỳ hàm tiện ích nào, BẮT BUỘC kiểm tra hàm vận hành cốt lõi `send_report_telegram()` còn nguyên vẹn và kiểm tra `hasattr` trước khi bàn giao.
