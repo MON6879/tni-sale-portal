@@ -2170,3 +2170,14 @@ Reason: [Lý do]`
 > - **Root Cause 1**: Báo cáo kiểm toán `build_master_audit_report()` trước đây chỉ hiển thị danh sách các ghế giám sát khi 0 lỗi & 0 cảnh báo. Khi có cảnh báo nhỏ (như WO Hoarding), danh sách các ghế giám sát bị ẩn mất, khiến người dùng không biết các ghế khác có hoạt động hay không.
 > - **Root Cause 2**: Khi thêm `notify_desktop()` bằng replace file ở phiên trước, hàm cốt lõi `send_report_telegram()` đã bị vô tình xóa đè, gây nguy cơ NameError lúc gửi báo cáo.
 > - **Rule**: Trong báo cáo kiểm toán hàng ngày của Toa Auditor (Ghế AUDITOR-9.1), BẮT BUỘC luôn luôn hiển thị khối trạng thái toàn bộ 10+ Ghế Giám Sát hệ thống với tick xanh ✅ cho các ghế đang hoạt động bình thường. Khi thêm/sửa bất kỳ hàm tiện ích nào, BẮT BUỘC kiểm tra hàm vận hành cốt lõi `send_report_telegram()` còn nguyên vẹn và kiểm tra `hasattr` trước khi bàn giao.
+
+> **PM-71 (02/10/2026) — ES6 Temporal Dead Zone (TDZ) & Undefined Variable Crash in Portal Runtime (Zero Uncaught Runtime Exception Policy)**:
+> - **Root Cause**:
+>   1. Trong `tni_sale.html`, hàm `applyLang(currentLang)` được gọi ở dòng 8394 trong khi các hằng số `SYSTEM_MODULES`, `ROLES`, `DEFAULT_STAFF_USERS` lại khai báo bằng `const` ở dòng 8589+. `applyLang` gọi `renderRBACMatrix` -> truy cập `SYSTEM_MODULES` khi chưa được khai báo -> JS ném `ReferenceError: Cannot access 'SYSTEM_MODULES' before initialization` (TDZ). Toàn bộ luồng khởi tạo script bị đứt gãy ngay từ lúc tải trang.
+>   2. Trong hàm `renderRBACMatrix()`, biến `overrides` được sử dụng (`overrideKey in overrides`) nhưng hoàn toàn không được khai báo -> ném `ReferenceError: overrides is not defined`. Lỗi này làm ngắt hàm, khiến các hàm render sau nó (`renderStaffUsersTable` và `populateStaffUserSelect`) không bao giờ được gọi -> giao diện trắng tinh.
+>   3. Mảng rỗng `[]` trong JavaScript là Truthy, nên cú pháp `DB.g('staff_directory') || DEFAULT_STAFF_USERS` nhận `[]` chứ không fallback về `DEFAULT_STAFF_USERS`.
+> - **Rule**:
+>   1. **Khóa Thép Thứ Tự Khai Báo (Zero Top-Level TDZ)**: Mọi hằng số danh mục cấu hình hệ thống (`ROLES`, `SYSTEM_MODULES`, `DEFAULT_STAFF_USERS`) BẮT BUỘC phải được khai báo TRƯỚC mọi hàm khởi tạo giao diện gọi đến chúng. Tuyệt đối không gọi các hàm render bảng dữ liệu bên trong hàm đổi ngôn ngữ `applyLang` trừ khi tab đó đang thực sự mở (`classList.contains('on')`).
+>   2. **Khai Báo Đầy Đủ Biến & Bọc Try/Catch Độc Lập Cho Từng Component**: Mọi hàm render component con (`matrix`, `staffTable`, `userSelect`) trong các tab quản trị BẮT BUỘC phải được bọc `try/catch` riêng biệt. Sự cố của 1 component không bao giờ được phép làm sập việc hiển thị của các component khác.
+>   3. **Fallback Cho Mảng Rỗng**: Khi kiểm tra dữ liệu từ cache LocalStorage hoặc API, BẮT BUỘC dùng `(cached && cached.length > 0) ? cached : DEFAULT_VALUES`, TUYỆT ĐỐI CẤM dùng `cached || DEFAULT` vì `[]` là truthy trong JS.
+

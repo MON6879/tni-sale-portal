@@ -2351,7 +2351,7 @@ const renders={
   quangcao:()=>{rCampaigns();popCamps(['adr-camp']);rAdsResults();renderAdsSummary();},
   leads:()=>{popCamps(['ld-camp']);rLeads();popLeadSel();renderFunnel();renderLeadsCards();},
   loinhuan:renderLN,statement:()=>{rVCMStatements();populateStatementSources();calcStatementFields();},baocao:rBC,
-  rbac:()=>{if(typeof updateRBACPanelStaticTexts==='function')updateRBACPanelStaticTexts();renderRBACColToggles();renderRBACMatrix();renderStaffUsersTable();populateStaffUserSelect();}
+  rbac:()=>{try{if(typeof updateRBACPanelStaticTexts==='function')updateRBACPanelStaticTexts();}catch(e){console.warn(e);}try{renderRBACColToggles();}catch(e){console.warn(e);}try{renderRBACMatrix();}catch(e){console.warn(e);}try{renderStaffUsersTable();}catch(e){console.warn(e);}try{populateStaffUserSelect();}catch(e){console.warn(e);}}
 };
 
 
@@ -8375,10 +8375,13 @@ function applyLang(lang) {
     if (secId === 'baogiaups' && typeof rQuUPS === 'function') rQuUPS();
   }
 
-  // 10. Always re-render RBAC tables (bilingual — matrix + staff list)
-  if (typeof renderRBACMatrix === 'function') renderRBACMatrix();
-  if (typeof renderRBACColToggles === 'function') renderRBACColToggles();
-  if (typeof renderStaffUsersTable === 'function') renderStaffUsersTable();
+  // 10. Re-render RBAC only if RBAC tab is currently active
+  const rbacSec = document.getElementById('s-rbac');
+  if (rbacSec && rbacSec.classList && rbacSec.classList.contains('on')) {
+    try { if (typeof renderRBACMatrix === 'function') renderRBACMatrix(); } catch(e) {}
+    try { if (typeof renderRBACColToggles === 'function') renderRBACColToggles(); } catch(e) {}
+    try { if (typeof renderStaffUsersTable === 'function') renderStaffUsersTable(); } catch(e) {}
+  }
 }
 
 function toggleLang() {
@@ -9005,6 +9008,7 @@ function renderRBACMatrix() {
   });
 
   const visibleRoleKeys = getVisibleRoleKeys();
+  const overrides = (typeof getRBACOverrides === 'function') ? getRBACOverrides() : {};
 
   let html = '<table class="data-table" style="width:100%;border-collapse:collapse;font-size:12px">';
   html += '<thead style="background:#f1f5f9;color:#334155;position:sticky;top:0;z-index:2">';
@@ -9187,7 +9191,8 @@ const resetStaffDirectoryClean = resetStaffDirectoryToClean;
 
 function updateStaffAssignedRole(userId, newRole) {
   const isVi = currentLang === 'vi';
-  let list = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
+  const cached = DB.g('staff_directory');
+  let list = (cached && cached.length > 0) ? cached : DEFAULT_STAFF_USERS;
   list = list.map(u => u.id === userId ? { ...u, role: newRole } : u);
   DB.s('staff_directory', list);
   al(isVi ? 'Đã cập nhật vai trò nhân sự thành công!' : 'Staff role updated successfully!', 'ok');
@@ -9199,7 +9204,8 @@ function updateStaffAssignedRole(userId, newRole) {
 function deleteStaffUser(userId, userName) {
   const isVi = currentLang === 'vi';
   if (!confirm(isVi ? `⚠️ Xác nhận XÓA nhân sự:\n"${userName}"\n\nThao tác này không thể hoàn tác. Tiếp tục?` : `⚠️ Confirm DELETE staff member:\n"${userName}"\n\nThis action cannot be undone. Continue?`)) return;
-  let list = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
+  const cached = DB.g('staff_directory');
+  let list = (cached && cached.length > 0) ? cached : DEFAULT_STAFF_USERS;
   list = list.filter(u => u.id !== userId);
   DB.s('staff_directory', list);
   al(isVi ? `Đã xóa nhân sự "${userName}" khỏi hệ thống.` : `Deleted staff member "${userName}".`, 'ok');
@@ -9255,7 +9261,8 @@ function populateStaffUserSelect() {
   const sel = document.getElementById('gen-staff-sel');
   if (!sel) return;
 
-  const users = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
+  const cached = DB.g('staff_directory');
+  const users = (cached && cached.length > 0) ? cached : DEFAULT_STAFF_USERS;
   sel.innerHTML = '';
   users.forEach(u => {
     sel.innerHTML += `<option value="${u.name}" data-role="${u.role}">${u.name} (${u.title || u.role})</option>`;
@@ -9571,11 +9578,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Populate staff selects and render matrix
   setTimeout(() => {
-    if (typeof updateRBACPanelStaticTexts === 'function') updateRBACPanelStaticTexts();
-    if (typeof renderRBACColToggles === 'function') renderRBACColToggles();
-    populateStaffUserSelect();
-    renderRBACMatrix();
-    renderStaffUsersTable();
+    try { if (typeof updateRBACPanelStaticTexts === 'function') updateRBACPanelStaticTexts(); } catch(e) { console.warn(e); }
+    try { if (typeof renderRBACColToggles === 'function') renderRBACColToggles(); } catch(e) { console.warn(e); }
+    try { populateStaffUserSelect(); } catch(e) { console.warn(e); }
+    try { renderRBACMatrix(); } catch(e) { console.warn(e); }
+    try { renderStaffUsersTable(); } catch(e) { console.warn(e); }
   }, 300);
 });
 
