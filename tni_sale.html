@@ -1496,34 +1496,95 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
 
 <!-- ══ KÝ GỞI ══ -->
 <div class="sec" id="s-kygoi">
-  <div class="panel">
-    <div class="ph"><h3>📋 Tạo Phiếu Ký Gởi</h3></div>
-    <div class="pb">
-      <div class="fg">
-        <div class="f"><label>Điểm Bán *</label><input id="kg-db" placeholder="Tên điểm bán"/></div>
-        <div class="f"><label>Người Nhận</label><input id="kg-nn" placeholder="Họ tên"/></div>
-        <div class="f"><label>Điện Thoại</label><input id="kg-dt" placeholder="0xxxxxxx"/></div>
-        <div class="f"><label>Sản Phẩm *</label><select id="kg-sp" onchange="autoPrice('kg-sp','kg-gia');calcKGProfit()"></select></div>
-        <div class="f"><label>Số Lượng *</label><input id="kg-sl" type="number" min="1" placeholder="0" oninput="calcKGProfit()"/></div>
-        <div class="f"><label>Giá Bán Tại Điểm (₫)</label><input id="kg-gia" type="number" placeholder="0" oninput="calcKGProfit()"/></div>
-        <div class="f"><label>Ngày Gởi</label><input id="kg-ngay" type="date"/></div>
-        <div class="f"><label>Hạn (ngày)</label><input id="kg-han" type="number" placeholder="30"/></div>
-      </div>
+  <!-- Chuyển đổi chế độ: Đơn lẻ vs Import Hàng loạt -->
+  <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+    <div style="display:flex;gap:6px">
+      <button class="btn b-or" id="btn-kg-mode-single" onclick="switchKGMode('single')" style="font-weight:600" data-lang="btn_kg_mode_single">➕ Tạo Phiếu Đơn Lẻ</button>
+      <button class="btn b-out" id="btn-kg-mode-bulk" onclick="switchKGMode('bulk')" style="font-weight:600" data-lang="btn_kg_mode_bulk">📥 Import Ký Gởi Hàng Loạt (.CSV / Excel)</button>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button class="btn b-gn b-sm" onclick="downloadKGTemplate()" data-lang="btn_download_kg_tpl">📥 Tải File Mẫu (.CSV)</button>
+      <button class="btn b-or b-sm" onclick="document.getElementById('kg-bulk-file-input').click()" data-lang="btn_choose_kg_csv">📁 Chọn File .CSV</button>
+      <input type="file" id="kg-bulk-file-input" accept=".csv,.txt,.xlsx,.xls" onchange="handleKGBulkFile(event)" style="display:none"/>
+    </div>
+  </div>
 
-      <!-- 💡 LIVE CONSIGNMENT 17% & COMPANY PROFIT PREVIEW -->
-      <div id="kg-calc-box" style="margin-top:14px;padding:12px 14px;background:#fff7ed;border-radius:8px;border:1px solid #fed7aa;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
-        <div><span style="font-size:11px;color:#9a3412">📦 Giá Vốn Sản Phẩm (Gốc)</span><div id="kg-c-gg" style="font-size:15px;font-weight:700;color:#1e293b">0 ₫ / SP</div></div>
-        <div><span style="font-size:11px;color:#9a3412">💵 Tổng Tiền Bán Dự Kiến (SL x Giá Bán)</span><div id="kg-c-tt" style="font-size:15px;font-weight:700;color:#2563eb">0 ₫</div></div>
-        <div><span style="font-size:11px;color:#c2410c">🤝 17% Điểm Bán Hưởng (Hoa Hồng 17%)</span><div id="kg-c-hh" style="font-size:15px;font-weight:700;color:#ea580c">0 ₫</div></div>
-        <div><span style="font-size:11px;color:#15803d">🏢 Lợi Nhuận Còn Lại Cty (Sau Trừ Vốn & 17%)</span><div id="kg-c-ln" style="font-size:15px;font-weight:700;color:#16a34a">0 ₫</div></div>
-      </div>
+  <!-- PHẦN 1: TẠO PHIẾU ĐƠN LẺ -->
+  <div id="kg-single-container">
+    <div class="panel">
+      <div class="ph"><h3>📋 Tạo Phiếu Ký Gởi</h3></div>
+      <div class="pb">
+        <div class="fg">
+          <div class="f"><label>Điểm Bán *</label><input id="kg-db" placeholder="Tên điểm bán"/></div>
+          <div class="f"><label>Người Nhận</label><input id="kg-nn" placeholder="Họ tên"/></div>
+          <div class="f"><label>Điện Thoại</label><input id="kg-dt" placeholder="0xxxxxxx"/></div>
+          <div class="f"><label>Sản Phẩm *</label><select id="kg-sp" onchange="autoPrice('kg-sp','kg-gia');calcKGProfit()"></select></div>
+          <div class="f"><label>Số Lượng *</label><input id="kg-sl" type="number" min="1" placeholder="0" oninput="calcKGProfit()"/></div>
+          <div class="f"><label>Giá Bán Tại Điểm (₫)</label><input id="kg-gia" type="number" placeholder="0" oninput="calcKGProfit()"/></div>
+          <div class="f"><label>Ngày Gởi</label><input id="kg-ngay" type="date"/></div>
+          <div class="f"><label>Hạn (ngày)</label><input id="kg-han" type="number" placeholder="30"/></div>
+        </div>
 
-      <div class="fa">
-        <button class="btn b-or" onclick="addKG()">📋 Xác Nhận Ký Gởi</button>
-        <button class="btn b-out" onclick="clrForm('kg-');calcKGProfit()">✕ Xóa</button>
+        <!-- 💡 LIVE CONSIGNMENT 17% & COMPANY PROFIT PREVIEW -->
+        <div id="kg-calc-box" style="margin-top:14px;padding:12px 14px;background:#fff7ed;border-radius:8px;border:1px solid #fed7aa;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+          <div><span style="font-size:11px;color:#9a3412">📦 Giá Vốn Sản Phẩm (Gốc)</span><div id="kg-c-gg" style="font-size:15px;font-weight:700;color:#1e293b">0 ₫ / SP</div></div>
+          <div><span style="font-size:11px;color:#9a3412">💵 Tổng Tiền Bán Dự Kiến (SL x Giá Bán)</span><div id="kg-c-tt" style="font-size:15px;font-weight:700;color:#2563eb">0 ₫</div></div>
+          <div><span style="font-size:11px;color:#c2410c">🤝 17% Điểm Bán Hưởng (Hoa Hồng 17%)</span><div id="kg-c-hh" style="font-size:15px;font-weight:700;color:#ea580c">0 ₫</div></div>
+          <div><span style="font-size:11px;color:#15803d">🏢 Lợi Nhuận Còn Lại Cty (Sau Trừ Vốn & 17%)</span><div id="kg-c-ln" style="font-size:15px;font-weight:700;color:#16a34a">0 ₫</div></div>
+        </div>
+
+        <div class="fa">
+          <button class="btn b-or" onclick="addKG()">📋 Xác Nhận Ký Gởi</button>
+          <button class="btn b-out" onclick="clrForm('kg-');calcKGProfit()">✕ Xóa</button>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- PHẦN 2: IMPORT HÀNG LOẠT -->
+  <div id="kg-bulk-container" style="display:none">
+    <div class="panel">
+      <div class="ph">
+        <h3 data-lang="kg_bulk_h3">📥 Import Phiếu Ký Gởi / Bỏ Sỉ Hàng Loạt (.CSV / Excel)</h3>
+        <span style="font-size:12px;color:#64748b" data-lang="kg_bulk_syntax">Cú pháp: Điểm Bán | Người Nhận | SĐT | Tên SP | Model | Số Lượng | Giá Bỏ Sỉ / Ký Gởi | Hạn (ngày) | Ghi Chú</span>
+      </div>
+      <div class="pb">
+        <div style="background:#fff7ed;padding:12px 14px;border-radius:8px;border:1px solid #fed7aa;margin-bottom:12px;font-size:12.5px;line-height:1.6">
+          <b>💡 Hướng dẫn 3 bước cho nhân viên kinh doanh / đại lý:</b><br/>
+          <b>1.</b> Bấm nút <button class="btn b-gn b-xs" onclick="downloadKGTemplate()">📥 Tải File Mẫu (.CSV)</button> để tải file mẫu (không yêu cầu giá gốc, chỉ cần giá sỉ/ký gởi).<br/>
+          <b>2.</b> Điền danh sách ký gởi trên Excel / Google Sheets rồi lưu file.<br/>
+          <b>3.</b> Bấm <button class="btn b-or b-xs" onclick="document.getElementById('kg-bulk-file-input').click()">📁 Chọn File</button> <b>HOẶC</b> bôi đen trong Excel bấm <code>Ctrl+C</code> rồi <b>dán (Ctrl+V)</b> vào khung bên dưới:
+        </div>
+
+        <textarea id="kg-bulk-paste-area" rows="6" style="width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;font-family:monospace;font-size:12px;line-height:1.5" placeholder="Dán (Ctrl+V) bảng ký gởi từ Excel / Google Sheets vào đây...&#10;Ví dụ:&#10;Điện Máy Hòa Phát	Anh Tuấn	0988111222	UPS Santak 1200VA	TG-1200	5	1950000	30	Ký gởi đợt 1 showroom&#10;Năng Lượng Xanh	Chị Mai	0977333444	Solar Panel 400W Jinko	JK-400M	10	2300000	45	Ký gởi đại lý cấp 1&#10;Cửa Hàng Điện Gia Dụng	Anh Minh	0912345678	Inverter Growatt 5kW	SPF-5000	2	15500000	60	Ký gởi dự án" oninput="parseKGBulkInput()"></textarea>
+
+        <div style="display:flex;gap:8px;margin-top:10px;justify-content:space-between;flex-wrap:wrap">
+          <div style="display:flex;gap:8px">
+            <button class="btn b-or" onclick="parseKGBulkInput()">🔍 Phân Tích &amp; Xem Trước (Preview)</button>
+            <button class="btn b-out" onclick="document.getElementById('kg-bulk-paste-area').value='';parseKGBulkInput()">✕ Xóa Khung Dán</button>
+          </div>
+          <button class="btn b-gn" id="btn-kg-confirm-bulk" onclick="confirmKGBulkImport()" style="font-weight:700" disabled>🚀 Xác Nhận Import Ký Gởi Hàng Loạt (0 Món)</button>
+        </div>
+
+        <!-- THẺ THỐNG KÊ NHANH BATCH IMPORT KÝ GỞI -->
+        <div id="kg-bulk-stats-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px;display:none">
+          <div class="card c-or"><div class="lbl2">🏪 Điểm Bán</div><div class="val" id="kg-bs-stores">0</div><div class="sub">Điểm nhận hàng</div></div>
+          <div class="card c-bl"><div class="lbl2">📦 Mặt Hàng</div><div class="val" id="kg-bs-items">0</div><div class="sub">Mặt hàng ký gởi</div></div>
+          <div class="card c-gn"><div class="lbl2">🔢 Tổng Số Lượng</div><div class="val" id="kg-bs-qty">0</div><div class="sub">PCS ký gởi</div></div>
+          <div class="card c-yw"><div class="lbl2">💵 Tổng Tiền Bán</div><div class="val" id="kg-bs-revenue" style="font-size:15px">0 ₫</div><div class="sub">Dự kiến tại điểm</div></div>
+          <div class="card c-or"><div class="lbl2">🤝 17% Điểm Bán</div><div class="val" id="kg-bs-hh" style="font-size:15px">0 ₫</div><div class="sub">Hoa hồng điểm bán</div></div>
+          <div class="card c-gn"><div class="lbl2">🏢 LN Dự Kiến Cty</div><div class="val" id="kg-bs-profit" style="font-size:15px">0 ₫</div><div class="sub">Sau trừ vốn &amp; 17%</div></div>
+        </div>
+
+        <!-- BẢNG PREVIEW CHI TIẾT -->
+        <div id="kg-bulk-preview-wrap" style="margin-top:14px;display:none">
+          <h4 style="margin-bottom:8px;color:#334155">📋 Danh Sách Ký Gởi Xem Trước:</h4>
+          <div class="tw" id="kg-bulk-preview-table"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="panel"><div class="ph"><h3>📦 Danh Sách Ký Gởi</h3></div><div class="pb tw" id="t-kygoi"></div></div>
 </div>
 
@@ -4795,6 +4856,307 @@ function rKG(){
 function updKG(id,ts){let d=DB.g('kygoi');d=d.map(r=>r.id==id?{...r,ts}:r);DB.s('kygoi',d);rKG();}
 
 // ═══════════════════════════════════════════════════
+// KÝ GỞI / BÁN SỈ HÀNG LOẠT (BULK CONSIGNMENT IMPORT)
+// ═══════════════════════════════════════════════════
+let parsedKGBulkItems = [];
+
+function switchKGMode(mode) {
+  const singleC = document.getElementById('kg-single-container');
+  const bulkC = document.getElementById('kg-bulk-container');
+  const btnSingle = document.getElementById('btn-kg-mode-single');
+  const btnBulk = document.getElementById('btn-kg-mode-bulk');
+
+  if (mode === 'bulk') {
+    if (singleC) singleC.style.display = 'none';
+    if (bulkC) bulkC.style.display = 'block';
+    if (btnSingle) btnSingle.className = 'btn b-out';
+    if (btnBulk) btnBulk.className = 'btn b-or';
+  } else {
+    if (singleC) singleC.style.display = 'block';
+    if (bulkC) bulkC.style.display = 'none';
+    if (btnSingle) btnSingle.className = 'btn b-or';
+    if (btnBulk) btnBulk.className = 'btn b-out';
+  }
+}
+
+function downloadKGTemplate() {
+  const isVi = currentLang === 'vi';
+  // Chuẩn Song Ngữ: KHÔNG CÓ GIÁ GỐC, CHỈ CÓ GIÁ BỎ SỈ / GIÁ KÝ GỞI
+  const headers = [
+    "Điểm Bán / Store POS (Bắt buộc)",
+    "Người Nhận / Contact Person",
+    "Số Điện Thoại / Phone",
+    "Tên Sản Phẩm / Product Name (Bắt buộc)",
+    "Model / Item Code",
+    "Số Lượng / Quantity (Bắt buộc)",
+    "Giá Bỏ Sỉ Hoặc Ký Gởi / Wholesale or Consignment Price (₫)",
+    "Hạn Ký Gởi (ngày) / Term Days (Mặc định 30)",
+    "Ghi Chú / Notes"
+  ];
+  const sampleRows = [
+    ["Điện Máy Hòa Phát", "Anh Tuấn", "0988111222", "UPS Santak 1200VA", "TG-1200", "5", "1950000", "30", "Ký gởi đợt 1 showroom"],
+    ["Năng Lượng Xanh", "Chị Mai", "0977333444", "Solar Panel 400W Jinko", "JK-400M", "10", "2300000", "45", "Ký gởi đại lý cấp 1"],
+    ["Cửa Hàng Điện Gia Dụng", "Anh Minh", "0912345678", "Inverter Growatt 5kW", "SPF-5000", "2", "15500000", "60", "Ký gởi dự án"],
+    ["Tạp Hóa Năng Lượng Mặt Trời", "Bác Ba", "0909000111", "Ắc Quy GEL 100Ah", "GEL-100", "8", "3900000", "30", "Ký gởi điểm bán xã"]
+  ];
+
+  let csvContent = "\uFEFF" + headers.join(",") + "\n" + sampleRows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Mau_Ky_Goi_Ban_Si_TNI_${td()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  al(isVi ? '📥 Đã tải file mẫu Ký Gởi / Bỏ Sỉ!' : '📥 Consignment template downloaded!');
+}
+
+function handleKGBulkFile(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    document.getElementById('kg-bulk-paste-area').value = text;
+    switchKGMode('bulk');
+    parseKGBulkInput();
+    al(`📁 Đã đọc file "${file.name}"!`);
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+function parseKGBulkInput() {
+  const raw = (document.getElementById('kg-bulk-paste-area')?.value || '').trim();
+  const cards = document.getElementById('kg-bulk-stats-cards');
+  const wrap = document.getElementById('kg-bulk-preview-wrap');
+  const btn = document.getElementById('btn-kg-confirm-bulk');
+
+  if (!raw) {
+    parsedKGBulkItems = [];
+    if (cards) cards.style.display = 'none';
+    if (wrap) wrap.style.display = 'none';
+    if (btn) { btn.disabled = true; btn.textContent = '🚀 Xác Nhận Import Ký Gởi Hàng Loạt (0 Món)'; }
+    return;
+  }
+
+  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+  if (lines.length === 0) return;
+
+  // Kiểm tra header dòng 1
+  let startIndex = 0;
+  const firstLine = lines[0].toLowerCase();
+  if (firstLine.includes('điểm bán') || firstLine.includes('store') || firstLine.includes('sản phẩm') || firstLine.includes('product') || firstLine.includes('model') || firstLine.includes('số lượng') || firstLine.includes('qty')) {
+    startIndex = 1;
+  }
+
+  const nhapList = DB.g('nhap') || [];
+  parsedKGBulkItems = [];
+
+  for (let i = startIndex; i < lines.length; i++) {
+    const line = lines[i];
+    let parts = [];
+    if (line.includes('\t')) {
+      parts = line.split('\t').map(p => p.trim());
+    } else if (line.includes('|')) {
+      parts = line.split('|').map(p => p.trim());
+    } else {
+      parts = parseCSVLine(line);
+    }
+
+    if (!parts || parts.length === 0 || (!parts[0] && !parts[3])) continue;
+
+    // Cột: Điểm Bán | Người Nhận | SĐT | Tên SP | Model | Số Lượng | Giá Bỏ Sỉ/Ký Gởi | Hạn | Ghi Chú
+    const db = parts[0] || '';
+    const nn = parts[1] || '';
+    const dt = parts[2] || '';
+    const ten = parts[3] || '';
+    const model = parts[4] || '-';
+    const sl = parseInt((parts[5] || '1').replace(/\D/g, ''), 10) || 1;
+    const giaBan = parseFloat((parts[6] || '0').replace(/[^0-9.]/g, '')) || 0;
+    const han = parseInt((parts[7] || '30').replace(/\D/g, ''), 10) || 30;
+    const gc = parts.slice(8).join(' | ') || 'Import ký gởi';
+
+    // Đối chiếu sản phẩm trong kho (DB.g('nhap'))
+    let matchedSp = null;
+    if (model && model !== '-') {
+      matchedSp = nhapList.find(n => (n.model || '').toLowerCase().trim() === model.toLowerCase().trim());
+    }
+    if (!matchedSp && ten) {
+      matchedSp = nhapList.find(n => (n.ten || '').toLowerCase().trim() === ten.toLowerCase().trim());
+    }
+    if (!matchedSp && ten) {
+      matchedSp = nhapList.find(n => (n.ten || '').toLowerCase().includes(ten.toLowerCase().trim()) || ten.toLowerCase().includes((n.ten || '').toLowerCase().trim()));
+    }
+
+    let spId, spN, finalModel, giagoc, finalGia;
+    let hasStockMatch = false;
+
+    if (matchedSp) {
+      spId = matchedSp.id;
+      spN = matchedSp.ten;
+      finalModel = matchedSp.model || model;
+      giagoc = Number(matchedSp.gg || 0);
+      finalGia = giaBan > 0 ? giaBan : Number(matchedSp.gDiemban || matchedSp.gb || 0);
+      hasStockMatch = true;
+    } else {
+      spId = Date.now() + Math.random();
+      spN = ten;
+      finalModel = model;
+      finalGia = giaBan;
+      giagoc = Math.round(finalGia * 0.70); // Tạm tính 70% giá bán nếu chưa có trong kho
+      hasStockMatch = false;
+    }
+
+    const hh17 = Math.round(finalGia * 0.17);
+    const lnCty = (finalGia - giagoc) - hh17;
+    const tongDoanhThu = finalGia * sl;
+    const tongHH17 = hh17 * sl;
+    const tongLNCty = lnCty * sl;
+
+    const isValid = db.length > 0 && spN.length > 0 && sl > 0 && finalGia > 0;
+
+    parsedKGBulkItems.push({
+      db, nn, dt,
+      spId, spN, model: finalModel,
+      sl,
+      giagoc,
+      giaBan: finalGia,
+      hh17, lnCty,
+      tongDoanhThu, tongHH17, tongLNCty,
+      han, gc,
+      hasStockMatch,
+      valid: isValid
+    });
+  }
+
+  renderKGBulkPreview(parsedKGBulkItems);
+}
+
+function renderKGBulkPreview(items) {
+  const cards = document.getElementById('kg-bulk-stats-cards');
+  const wrap = document.getElementById('kg-bulk-preview-wrap');
+  const btn = document.getElementById('btn-kg-confirm-bulk');
+  const tableDiv = document.getElementById('kg-bulk-preview-table');
+
+  if (!items || items.length === 0) {
+    if (cards) cards.style.display = 'none';
+    if (wrap) wrap.style.display = 'none';
+    if (btn) { btn.disabled = true; btn.textContent = '🚀 Xác Nhận Import Ký Gởi Hàng Loạt (0 Món)'; }
+    return;
+  }
+
+  const validItems = items.filter(it => it.valid);
+  const storesCount = new Set(validItems.map(it => it.db)).size;
+  const totQty = validItems.reduce((s, it) => s + it.sl, 0);
+  const totRevenue = validItems.reduce((s, it) => s + it.tongDoanhThu, 0);
+  const totHH17 = validItems.reduce((s, it) => s + it.tongHH17, 0);
+  const totLNCty = validItems.reduce((s, it) => s + it.tongLNCty, 0);
+
+  const isVi = currentLang === 'vi';
+
+  // Hiển thị thống kê
+  const elStores = document.getElementById('kg-bs-stores');
+  const elItems = document.getElementById('kg-bs-items');
+  const elQty = document.getElementById('kg-bs-qty');
+  const elRev = document.getElementById('kg-bs-revenue');
+  const elHH = document.getElementById('kg-bs-hh');
+  const elProf = document.getElementById('kg-bs-profit');
+
+  if (elStores) elStores.textContent = storesCount;
+  if (elItems) elItems.textContent = `${validItems.length} / ${items.length}`;
+  if (elQty) elQty.textContent = totQty;
+  if (elRev) elRev.textContent = fn(totRevenue) + ' ₫';
+  if (elHH) elHH.textContent = fn(totHH17) + ' ₫';
+  if (elProf) elProf.textContent = fn(totLNCty) + ' ₫';
+
+  if (cards) cards.style.display = 'grid';
+  if (wrap) wrap.style.display = 'block';
+  if (btn) {
+    btn.disabled = validItems.length === 0;
+    btn.textContent = isVi ? `🚀 Xác Nhận Import Ký Gởi (${validItems.length} Phiếu)` : `🚀 Confirm Bulk Consignment (${validItems.length} Slips)`;
+  }
+
+  // Render bảng preview
+  const headers = isVi ?
+    ['#', 'Trạng Thái', 'Điểm Bán', 'Người Nhận / SĐT', 'Sản Phẩm & Model', 'SL', 'Giá Ký Gởi / Sỉ', 'Thành Tiền', '17% Điểm Bán', 'LN Dự Kiến Cty', 'Hạn'] :
+    ['#', 'Status', 'Store POS', 'Contact / Phone', 'Product & Model', 'Qty', 'Wholesale Price', 'Total Value', '17% Store Fee', 'Est. HO Profit', 'Terms'];
+
+  const rows = items.map((it, idx) => {
+    let statusHtml = '';
+    if (!it.valid) {
+      statusHtml = `<span class="badge bk-rd">${isVi ? '❌ Thiếu TT' : '❌ Invalid'}</span>`;
+    } else if (it.hasStockMatch) {
+      statusHtml = `<span class="badge bk-gn">${isVi ? '✓ Khớp kho' : '✓ In Stock'}</span>`;
+    } else {
+      statusHtml = `<span class="badge bk-yw">${isVi ? '⚠️ SP Mới' : '⚠️ New Item'}</span>`;
+    }
+
+    return [
+      idx + 1,
+      statusHtml,
+      `<b>${it.db}</b>`,
+      `${it.nn || '-'}<br><small style="color:#64748b">${it.dt || '-'}</small>`,
+      `<b>${it.spN}</b><br><small style="color:#0284c7">${it.model || '-'}</small>`,
+      `<b>${it.sl}</b>`,
+      `<b>${fn(it.giaBan)} ₫</b>`,
+      `<span style="color:#2563eb;font-weight:700">${fn(it.tongDoanhThu)} ₫</span>`,
+      `<span style="color:var(--or);font-weight:600">${fn(it.tongHH17)} ₫</span><br><small style="color:#c2410c">(${fn(it.hh17)}₫/sp)</small>`,
+      `<b style="color:${it.tongLNCty >= 0 ? 'var(--gn)' : 'var(--rd)'}">${fn(it.tongLNCty)} ₫</b>`,
+      it.han + ' ng'
+    ];
+  });
+
+  tableDiv.innerHTML = tbl(headers, rows);
+}
+
+function confirmKGBulkImport() {
+  const isVi = currentLang === 'vi';
+  const validItems = parsedKGBulkItems.filter(it => it.valid);
+  if (validItems.length === 0) {
+    al(isVi ? 'Không có phiếu ký gởi hợp lệ để import!' : 'No valid consignment slips to import!', 'er');
+    return;
+  }
+
+  const btn = document.getElementById('btn-kg-confirm-bulk');
+  if (btn) { btn.disabled = true; btn.textContent = isVi ? '⏳ Đang lưu vào hệ thống...' : '⏳ Saving...'; }
+
+  // Lưu từng phiếu vào DB
+  validItems.forEach(it => {
+    DB.add('kygoi', {
+      db: it.db,
+      nn: it.nn,
+      dt: it.dt,
+      spId: +it.spId,
+      spN: it.spN,
+      model: it.model,
+      sl: +it.sl,
+      giagoc: it.giagoc,
+      gia: it.giaBan,
+      hh17: it.hh17,
+      lnCty: it.lnCty,
+      tongHH17: it.tongHH17,
+      tongLNCty: it.tongLNCty,
+      ngay: td(),
+      han: +it.han,
+      gc: it.gc || 'Import ký gởi hàng loạt',
+      ts: 'Đang gởi'
+    });
+  });
+
+  al(isVi ? `✅ Đã import thành công ${validItems.length} phiếu ký gởi!` : `✅ Successfully imported ${validItems.length} consignment slips!`);
+  document.getElementById('kg-bulk-paste-area').value = '';
+  parsedKGBulkItems = [];
+  renderKGBulkPreview([]);
+  switchKGMode('single');
+  rKG();
+  renderTK();
+  rDash();
+}
+
+// ═══════════════════════════════════════════════════
 // CRM
 // ═══════════════════════════════════════════════════
 function addKH(){const ten=v('kh-ten');if(!ten){al('Nhập tên','er');return;}
@@ -7682,6 +8044,12 @@ const DICT = {
     btn_preview_bulk: '🔍 Analyze & Preview',
     btn_clear_bulk: '✕ Clear Paste Area',
     btn_confirm_bulk: '🚀 Confirm Bulk Import to Inventory (0 Items)',
+    btn_kg_mode_single: '➕ Single Consignment',
+    btn_kg_mode_bulk: '📥 Bulk Consignment Import (.CSV / Excel)',
+    btn_download_kg_tpl: '📥 Download CSV Template',
+    btn_choose_kg_csv: '📁 Choose .CSV File',
+    kg_bulk_h3: '📥 Bulk Consignment Import via .CSV File or Paste from Excel',
+    kg_bulk_syntax: 'Standard syntax: Store POS | Contact | Phone | Product / Model | Qty | Wholesale/Consignment Price | Terms (days) | Notes',
     qu_title: '📄 Device Quotation',
     lbl_old_quote_select: '📋 Copy / Edit Previous Quote:',
     opt_old_quote_select: '-- Select previous quote to Copy / Edit --',
@@ -7768,6 +8136,12 @@ const DICT = {
     btn_preview_bulk: '🔍 Phân Tích & Xem Trước (Preview)',
     btn_clear_bulk: '✕ Xóa Khung Dán',
     btn_confirm_bulk: '🚀 Xác Nhận Import Hàng Loạt Vào Kho (0 Món)',
+    btn_kg_mode_single: '➕ Tạo Phiếu Đơn Lẻ',
+    btn_kg_mode_bulk: '📥 Import Ký Gởi Hàng Loạt (.CSV / Excel)',
+    btn_download_kg_tpl: '📥 Tải File Mẫu (.CSV)',
+    btn_choose_kg_csv: '📁 Chọn File .CSV',
+    kg_bulk_h3: '📥 Import Phiếu Ký Gởi / Bỏ Sỉ Hàng Loạt (.CSV / Excel)',
+    kg_bulk_syntax: 'Cú pháp chuẩn: Điểm Bán | Người Nhận | SĐT | Tên SP / Model | Số Lượng | Giá Bỏ Sỉ / Ký Gởi | Hạn (ngày) | Ghi Chú',
     qu_title: '📄 Tạo Báo Giá Thiết Bị',
     lbl_old_quote_select: '📋 Copy / Sửa Báo Giá Cũ:',
     opt_old_quote_select: '-- Chọn báo giá cũ để Copy / Sửa --',

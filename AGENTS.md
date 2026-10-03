@@ -2181,3 +2181,10 @@ Reason: [Lý do]`
 >   2. **Khai Báo Đầy Đủ Biến & Bọc Try/Catch Độc Lập Cho Từng Component**: Mọi hàm render component con (`matrix`, `staffTable`, `userSelect`) trong các tab quản trị BẮT BUỘC phải được bọc `try/catch` riêng biệt. Sự cố của 1 component không bao giờ được phép làm sập việc hiển thị của các component khác.
 >   3. **Fallback Cho Mảng Rỗng**: Khi kiểm tra dữ liệu từ cache LocalStorage hoặc API, BẮT BUỘC dùng `(cached && cached.length > 0) ? cached : DEFAULT_VALUES`, TUYỆT ĐỐI CẤM dùng `cached || DEFAULT` vì `[]` là truthy trong JS.
 
+> **PM-72 (03/10/2026) — Ký Gởi / Bán Sỉ Bulk Import Zero Cost-Price Leakage & Smart Inventory Auto-Link Policy**:
+> - **Requirement & Context**: Phân hệ Ký Gởi (`s-kygoi`) phục vụ nhân viên kinh doanh, điểm bán và đối tác gửi hàng. Nhân viên/đối tác lập file import KHÔNG ĐƯỢC PHÉP và KHÔNG CẦN BIẾT giá vốn gốc (83%). File import CHỈ yêu cầu: `Điểm Bán`, `Người Nhận`, `SĐT`, `Tên SP`, `Model`, `Số Lượng`, `Giá Bỏ Sỉ Hoặc Ký Gởi`, `Hạn (ngày)`, `Ghi Chú`.
+> - **Rule**:
+>   1. **Tuyệt Đối Giấu Cột Giá Gốc Khỏi File Mẫu Ký Gởi / Bán Sỉ (Zero Cost In Consignment Import)**: File template và khung dán của Ký Gởi TUYỆT ĐỐI KHÔNG chứa cột giá gốc đầu vào.
+>   2. **Cơ Chế Khớp Kho Thông Minh (Smart Inventory Auto-Link)**: Hệ thống tự động đối chiếu `Model` hoặc `Tên SP` với danh mục nhập kho (`DB.g('nhap')`) để tự động gán `spId`, `spN`, và `giagoc` ngầm phục vụ tính toán tài chính (hoa hồng 17% điểm bán & lợi nhuận công ty). Nếu là sản phẩm mới chưa có trong kho, tự động tạo mã và gán cờ `⚠️ SP Mới` mà không chặn người dùng import.
+>   3. **Chuẩn UX Đồng Nhất 2 Chế Độ (Single & Bulk Mode Parity)**: Mọi phân hệ có chức năng import hàng loạt BẮT BUỘC có thanh chuyển đổi chế độ (`➕ Tạo Đơn Lẻ` vs `📥 Import Hàng Loạt`), nút tải file mẫu chuẩn UTF-8 CSV BOM, khung dán từ Excel, khối thống kê nhanh và bảng xem trước (preview) kèm badge kiểm tra tính hợp lệ trước khi xác nhận lưu.
+
