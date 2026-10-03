@@ -2146,6 +2146,17 @@ Reason: [Lý do]`
 > 3. **Chạy .ps1 từ CMD Admin**: Dùng `powershell -ExecutionPolicy Bypass -File "path\script.ps1"`. TUYỆT ĐỐI CẤM dùng `& "path\script.ps1"` từ CMD vì `&` là toán tử PowerShell, CMD sẽ báo lỗi "& was unexpected".
 > 4. **File liên quan**: `D:\6. AI\1. QLTC\ICT Fetch\update_task.ps1` — đã cập nhật LogonType Interactive. Khi cần re-register task ICT, chạy file này bằng CMD Admin.
 
+> ### 🔴 RULE PM-68: ĐỒNG BỘ SLIDE CẨM NANG TỪ GOOGLE PRESENTATION & GHẾ GIÁM SÁT SENTINEL-GUIDE-SYNC (STRICT GUIDE PRESENTATION DYNAMIC SYNC & SENTINEL PURGE POLICY)
+> **Root Cause (Sự Cố 03/10/2026)**:
+> 1. Khi tài liệu trình chiếu Google Presentation (Slide Traing - Google Slides, ID 1UqHw1AzsKM-U-I5rhBTdqqSokeTuukrE_vsrL6xB2uI) được cập nhật, xóa slide cũ (giảm từ 44 slide xuống 41 slide), Web Portal (executive_dashboard.html) và thư mục tĩnh ssets/guide_slides/ vẫn lưu các file slide ảnh cũ (slide_42.jpg, slide_43.jpg, slide_44.jpg, ảnh Drive cũ tại slide 8).
+> 2. Trình duyệt client cache ảnh theo URL tĩnh, dẫn đến giao diện hiển thị hình ảnh slide đã bị xóa trên Google Slide, gây nhầm lẫn quy trình vận hành hiện trường.
+> 3. Một số slide bị tác giả kéo đồ họa tràn viền âm (off-canvas như Slide 4 cột 1) khiến render trang thông thường làm mất một phần đồ họa.
+>
+> **Biện Pháp Phòng Ngừa Kỷ Luật Thép (Bắt Buộc)**:
+> 1. **Đối Chiếu Số Lượng Slide Tuyệt Đối & Dọn Sạch File Cũ (Absolute Count Match & Stale File Purge)**: Khi đồng bộ từ Google Presentation, BẮT BUỘC phải đọc trực tiếp số lượng slide thực tế từ file export PDF mới nhất. Nếu tổng số slide giảm, BẮT BUỘC phải xóa sạch các file ảnh slide thừa cũ (slide_N.jpg với N > total) trên cả 3 thư mục ssets/guide_slides/ (root, 	ni-search, Task and WO). TUYỆT ĐỐI CẤM để lại file slide cũ gây sai lệch.
+> 2. **Khai Thác Ghế Giám Sát SENTINEL-GUIDE-SYNC & Nút Đồng Bộ Live (Supervisory Sentinel & Cache-Busting)**: BẮT BUỘC duy trì ghế giám sát SENTINEL-GUIDE-SYNC trong trung tâm điều hành supervisory-sentinel-card và tích hợp nút [Đồng Bộ Slide Mới] trên giao diện Guide For Staff. Hàm đồng bộ syncGuideSlidesLive() BẮT BUỘC đính kèm query string timestamp ?t=Date.now() vào thẻ <img> để buộc trình duyệt tải lại ảnh 2K mới nhất 100%, xóa bỏ triệt để cache cũ trên thiết bị của kỹ sư hiện trường.
+> 3. **Bảo Tồn Toàn Vẹn Đồ Họa Không Bị Cắt (Lossless Unclipped Graphic Extraction)**: Với các slide đồ họa bị kéo ra ngoài khung viền trắng (off-canvas âm như Slide 4 cột 1), BẮT BUỘC trích xuất đối tượng đồ họa gốc (raw graphic object xref) thay vì chụp trang (page pixmap) để giữ nguyên vẹn 100% cột và nội dung.
+
 
 ---
 
@@ -2234,6 +2245,20 @@ Reason: [Lý do]`
 > - **Rule**:
 >   1. **Xây Dựng Bảng Ánh Xạ Bí Danh Hai Chiều (Bi-directional Alias Mapping SSOT)**: Trong `buildDailyAttendanceText_()`, khi quét bảng `Staff attendance`, BẮT BUỘC phải lập hai bảng ánh xạ: `tgIdToStaffName[tgId] = canonLow` và `aliasToStaffName[fullName.toLowerCase()] = canonLow`, `aliasToStaffName[tgName.toLowerCase()] = canonLow`.
 >   2. **Phân Giải Danh Tính Chuẩn Xác Từ List Attendance**: Khi duyệt ảnh trong `List Attendance`, BẮT BUỘC phân giải định danh theo thứ tự ưu tiên: `canonName = (tgId && tgIdToStaffName[tgId]) || aliasToStaffName[nameLow] || nameLow`. Dùng `canonName` để cập nhật `bestPhotoSlot`, `attMap` và đồng thời ghi nhận vào `photoMap[canonName]` để đảm bảo số liệu Work/Late/Photo luôn đồng bộ 100% cho mọi nhân viên.
->   3. **Kỷ Luật Clasp Deploy Ngay Khi Sửa Logic**: Sửa Attendance GAS BẮT BUỘC phải thực hiện đủ 2 lệnh `npx clasp push --force` và `npx clasp deploy -i <deploymentId>` trên cả 2 deployment ID (`AKfycbzSz_...` và `AKfycbyFID...`), sau đó chạy Ghế Giám Sát `AUDITOR-9.1` để phúc tra trước khi hoàn tất phiên làm việc.
+> **PM-76 (03/10/2026) — Khóa Thép Xóa Nhân Sự 2 Chiều & Chuẩn Hóa Chống Lỗi "Undefined" Trong Danh Bạ RBAC (Staff Directory 2-Way Deletion & Zero-Undefined Normalization Policy)**:
+> - **Yêu Cầu & Bối Cảnh**: Người dùng phản ánh lỗi *"sao không xóa được"* trong bảng Danh Sách Nhân Sự & Phân Quyền (`#s-rbac` trên Portal `sale.html`). Các dòng hiển thị tên nhân viên là `undefined`, chức danh `-`, vai trò mặc định, khung tạo link cá nhân hóa hiện `undefined (undefined)`, và khi bấm nút `🗑 Xóa` thì xác nhận `Confirm DELETE staff member: "undefined"` nhưng bấm OK không xóa được hoặc bị tải lại nguyên vẹn.
+> - **Nguyên Nhân Gốc (Root Cause)**:
+>   1. **Lệch Cấu Trúc Khóa Thuộc Tính**: Khi `staff_get` được gọi từ Web UI, phiên bản GAS Web App đang chạy (@462) trả về mảng các đối tượng có khóa là toàn bộ tiêu đề cột của Google Sheet (`"ID (Mã NV)"`, `"Full Name (Họ và Tên) *"`, `"Job Title (Chức Danh)"`...). Web UI (`tni_sale.html`) chỉ đọc thuộc tính viết tắt (`u.id`, `u.name`, `u.title`, `u.role`), dẫn đến toàn bộ trường dữ liệu bị `undefined` trên giao diện bảng và ô tạo liên kết cá nhân hóa.
+>   2. **Bộ Lọc Client Bị Lệch Kiểu**: Khi người dùng bấm nút `🗑 Xóa`, hàm `deleteStaffUser` nhận `userId` là chuỗi `"undefined"`, bộ lọc `list.filter(u => u.id !== userId)` so sánh chuỗi `"undefined"` với giá trị `undefined` của đối tượng (primitive) nên không loại bỏ được phần tử nào.
+>   3. **Thiếu Luồng Đồng Bộ Xóa Lên Google Sheet**: `deleteStaffUser` trước đây chỉ lọc trên `localStorage` mà KHÔNG HỀ gửi lệnh xóa/đồng bộ về Google Sheet (`staff_delete` hoặc `staff_save`). Ngay sau khi xóa, hàm gọi lại `renderStaffUsersTable()`, tiến trình chạy ngầm lập tức gọi `fetch(SALE_GAS_URL + '?action=staff_get')` tải lại nguyên vẹn các dòng từ Sheet về và ghi đè lại vào `localStorage`, khiến các dòng vừa xóa (hoặc các dòng `undefined`) lập tức hồi sinh ngay trước mắt người dùng!
+>   4. **Deployment ID Cũ Chưa Được Deploy Bản Mới**: Deployment ID `AKfycbylrXMEDKpBfvs9Wbr3kmoqrJ6UoWE1KaN-WC94mE2wm1V2MJUFu-zyYrzzm10Vo0Ue5Q` được dùng trong Web UI bị đóng băng tại `@462` (chứa logic cũ), trong khi code mới chỉ được cập nhật ở deployment khác `@466`.
+> - **Quy Trình & Biện Pháp Khắc Phục Bọc Thép (The 4-Pillar RBAC Directory Protocol)**:
+>   1. **Hàm Chuẩn Hóa Phòng Vệ Bắt Buộc (`normalizeStaffUser`)**: Mọi luồng dữ liệu nhân sự nạp vào Web (từ `localStorage`, từ Google Sheet fetch, từ file import CSV/Excel) BẮT BUỘC phải đi qua hàm `normalizeStaffUser(u)`. Hàm tự động nhận diện cả khóa viết tắt (`id`, `name`, `title`, `role`, `email`, `phone`) lẫn khóa tiêu đề Sheet đầy đủ (`ID (Mã NV)`, `Full Name (Họ và Tên) *`...), đồng thời **LỌC BỎ TRIỆT ĐỂ** bất kỳ bản ghi nào có `name === 'undefined'`, rỗng hoặc `null`. TUYỆT ĐỐI KHÔNG BAO GIỜ để chuỗi `undefined` lọt vào DOM hay ô select!
+>   2. **Đồng Bộ Xóa 2 Chiều Tức Thì (Optimistic UI + Live Sheet Sync)**: Khi người dùng bấm `🗑 Xóa`, `deleteStaffUser` BẮT BUỘC:
+>      - Cập nhật ngay trên `localStorage` và vẽ lại bảng DOM tức thì (Optimistic UI) để người dùng thấy dòng bị xóa biến mất ngay lập tức.
+>      - Đồng thời gửi ngay POST request qua `syncStaffDirectoryToSheet(cleanList)` (`Content-Type: text/plain;charset=utf-8` tránh CORS) để ghi đè danh sách sạch lên tab `staff` của Google Sheet.
+>      - Đồng thời gọi endpoint `staff_delete` (hỗ trợ cả GET và POST) để xóa triệt để dòng tương ứng và dọn sạch mọi dòng rác/undefined trên Google Sheet.
+>   3. **Tự Động Đồng Bộ Khi Thêm / Sửa / Đổi Vai Trò / Import**: Mọi hành động làm thay đổi danh sách nhân sự (`saveStaffUserModal`, `updateStaffAssignedRole`, `resetStaffDirectoryToClean`, `importStaffFromFile`) đều BẮT BUỘC gọi `syncStaffDirectoryToSheet` để bảo đảm tính nhất quán hai chiều (Web UI <-> Google Sheet tab `staff`) 100% thời gian thực.
+>   4. **Khóa Thép Deploy Đồng Nhất Cho Cả 2 Deployment ID GAS**: Khi sửa backend GAS (`QLTC_GAS`), AI BẮT BUỘC phải deploy cho CẢ 2 deployment ID (`AKfycbylrX...` và `AKfycbz-NZ...`) bằng lệnh `npx clasp deploy -i <id>`, bảo đảm Web UI luôn chạy trên phiên bản backend mới nhất (@467+).
 
 

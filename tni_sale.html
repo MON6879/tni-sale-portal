@@ -9519,6 +9519,60 @@ function renderRBACMatrix() {
 
 const SALE_GAS_URL = 'https://script.google.com/macros/s/AKfycbylrXMEDKpBfvs9Wbr3kmoqrJ6UoWE1KaN-WC94mE2wm1V2MJUFu-zyYrzzm10Vo0Ue5Q/exec';
 
+// ── Chuẩn hóa đối tượng nhân sự (Chống rò rỉ undefined, tương thích cả Sheet lẫn local) ──
+function normalizeStaffUser(u, fallbackIdx) {
+  if (!u || typeof u !== 'object') return null;
+  const rawName = u.name || u['Full Name (Họ và Tên) *'] || u['Full Name'] || u['Họ và Tên'] || u['Tên'] || u['Nhân viên'] || '';
+  const name = String(rawName || '').trim();
+  // Loại bỏ hoàn toàn nếu tên rỗng, tên undefined hoặc null
+  if (!name || name === 'undefined' || name.toLowerCase() === 'null') return null;
+
+  const rawId = u.id || u['ID (Mã NV)'] || u['ID'] || u['Mã NV'] || u['Mã'] || '';
+  const cleanId = (rawId && String(rawId).trim() !== '' && String(rawId).trim() !== 'undefined') 
+    ? String(rawId).trim() 
+    : ('ST' + String(fallbackIdx || Date.now()).slice(-4));
+
+  const rawTitle = u.title || u['Job Title (Chức Danh)'] || u['Job Title'] || u['Chức Danh'] || u['Chức vụ'] || '-';
+  const title = String(rawTitle || '').trim();
+
+  let rawRole = u.role || u['Role (Vai Trò: admin/finance/sales/warehouse/tech/dealer) *'] || u['Role'] || u['Vai Trò'] || 'sales';
+  let role = String(rawRole || '').toLowerCase().trim();
+  if (role.includes('admin') || role.includes('quản trị')) role = 'admin';
+  else if (role.includes('finance') || role.includes('kế toán') || role.includes('tài chính')) role = 'finance';
+  else if (role.includes('ware') || role.includes('kho') || role.includes('thủ kho')) role = 'warehouse';
+  else if (role.includes('tech') || role.includes('kỹ thuật')) role = 'tech';
+  else if (role.includes('dealer') || role.includes('đại lý')) role = 'dealer';
+  else if (!ROLES[role]) role = 'sales';
+
+  const email = String(u.email || u['Email'] || '').trim();
+  const phone = String(u.phone || u['Phone (Số Điện Thoại)'] || u['Phone'] || u['Số Điện Thoại'] || u['SĐT'] || '').trim();
+  const note = String(u.note || u['Note (Ghi Chú)'] || u['Note'] || u['Ghi Chú'] || '').trim();
+  const status = String(u.status || u['Status (Trạng Thái: active/inactive)'] || 'active').trim();
+
+  return { id: cleanId, name, title, role, email, phone, note, status };
+}
+
+// ── Đồng bộ danh sách nhân sự lên Google Sheet (2 chiều SSOT, POST text/plain không bị chặn CORS) ──
+function syncStaffDirectoryToSheet(list, cb) {
+  const cleanList = (list || []).map((u, i) => normalizeStaffUser(u, i + 1)).filter(Boolean);
+  fetch(SALE_GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'staff_save', data: cleanList })
+  })
+  .then(r => r.json())
+  .then(res => {
+    if (res && res.ok) {
+      if (typeof cb === 'function') cb(true, res.saved || cleanList.length);
+    } else {
+      if (typeof cb === 'function') cb(false, (res && res.error) ? res.error : 'Unknown error');
+    }
+  })
+  .catch(err => {
+    if (typeof cb === 'function') cb(false, err.message || 'Network error');
+  });
+}
+
 function renderStaffUsersTable(sourceOverride, _retry) {
   const container = document.getElementById('rbac-staff-table-container');
 
@@ -9528,9 +9582,12 @@ function renderStaffUsersTable(sourceOverride, _retry) {
     return;
   }
 
-  // BƯỚC 1: Render ngay từ localStorage (không spinner, không đợi)
+  // BƯỚC 1: Render ngay từ localStorage (chuẩn hóa dữ liệu sạch, không rác)
   const cached = DB.g('staff_directory');
-  const users0 = (cached && cached.length > 0) ? cached : DEFAULT_STAFF_USERS;
+  let users0 = (cached && cached.length > 0)
+    ? cached.map((u, i) => normalizeStaffUser(u, i + 1)).filter(Boolean)
+    : DEFAULT_STAFF_USERS;
+  if (!users0 || users0.length === 0) users0 = DEFAULT_STAFF_USERS;
   _renderStaffTable_(users0, (cached && cached.length > 0) ? '💾 Local' : '📋 Default');
 
   // BƯỚC 2: Cập nhật từ Sheet trong nền
@@ -9540,8 +9597,12 @@ function renderStaffUsersTable(sourceOverride, _retry) {
   .then(r => r.json())
   .then(res => {
     if (res.ok && res.data && res.data.length > 0) {
-      DB.s('staff_directory', res.data);
-      _renderStaffTable_(res.data, '☁️ Google Sheet');
+      const cleanData = res.data.map((u, i) => normalizeStaffUser(u, i + 1)).filter(Boolean);
+      if (cleanData.length > 0) {
+        DB.s('staff_directory', cleanData);
+        _renderStaffTable_(cleanData, '☁️ Google Sheet');
+        populateStaffUserSelect();
+      }
     }
   })
   .catch(() => {});
@@ -9549,9 +9610,14 @@ function renderStaffUsersTable(sourceOverride, _retry) {
 
 function _renderStaffTable_(users, source) {
   const container = document.getElementById('rbac-staff-table-container');
-  console.log('[STAFF] _renderStaffTable_ called — container:', container, '| users.length:', users ? users.length : 'null', '| source:', source);
   if (!container) { console.warn('[STAFF] container NOT FOUND in DOM'); return; }
   const isVi = currentLang === 'vi';
+
+  // Lọc sạch tuyệt đối dữ liệu đầu vào: KHÔNG BAO GIỜ cho phép dòng undefined/rác xuất hiện
+  users = (users || []).map((u, i) => normalizeStaffUser(u, i + 1)).filter(Boolean);
+  if (users.length === 0) {
+    users = DEFAULT_STAFF_USERS.map((u, i) => normalizeStaffUser(u, i + 1)).filter(Boolean);
+  }
 
   // Auto-sanitize old cached names
   let migrated = false;
@@ -9577,6 +9643,10 @@ function _renderStaffTable_(users, source) {
   users.forEach((u, i) => {
     const roleMeta = ROLES[u.role] || ROLES.sales;
     const rName = ROLE_NAMES_BILINGUAL[u.role]?.[isVi ? 'shortVi' : 'shortEn'] || roleMeta.shortName;
+    const safeId = String(u.id || '').replace(/'/g, "\\'");
+    const safeName = String(u.name || '').replace(/'/g, "\\'");
+    const safeRole = String(u.role || 'sales').replace(/'/g, "\\'");
+
     html += `<tr style="border-bottom:1px solid #f1f5f9">`;
     html += `<td style="padding:8px">`;
     html += `<div style="font-weight:700;color:#1e293b">${u.name}</div>`;
@@ -9584,7 +9654,7 @@ function _renderStaffTable_(users, source) {
     html += `</td>`;
     html += `<td style="padding:8px;font-size:11.5px;color:#475569">${u.title || '-'}</td>`;
     html += `<td style="padding:8px;text-align:center">`;
-    html += `<select onchange="updateStaffAssignedRole('${u.id}', this.value)" style="padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:11.5px;font-weight:700;color:${roleMeta.color}">`;
+    html += `<select onchange="updateStaffAssignedRole('${safeId}', this.value)" style="padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:11.5px;font-weight:700;color:${roleMeta.color}">`;
     Object.keys(ROLES).forEach(rk => {
       const optName = ROLE_NAMES_BILINGUAL[rk]?.[isVi ? 'shortVi' : 'shortEn'] || ROLES[rk].shortName;
       html += `<option value="${rk}" ${u.role === rk ? 'selected' : ''}>${ROLES[rk].icon} ${optName}</option>`;
@@ -9592,9 +9662,9 @@ function _renderStaffTable_(users, source) {
     html += `</select></td>`;
     html += `<td style="padding:6px;text-align:center;white-space:nowrap">`;
     html += `<div style="display:flex;gap:5px;justify-content:center;align-items:center;flex-wrap:wrap">`;
-    html += `<button class="btn b-xs" onclick="openAddStaffModal('${u.id}')" title="${isVi ? 'Chỉnh sửa thông tin nhân sự' : 'Edit staff info'}" style="background:#f1f5f9;color:#334155;border:1.5px solid #cbd5e1;cursor:pointer;font-weight:700">✏️ ${isVi ? 'Sửa' : 'Edit'}</button>`;
-    html += `<button class="btn b-xs b-bl" onclick="selectStaffForLinkGen('${u.name}', '${u.role}')" title="${isVi ? 'Tạo link gửi cho nhân viên' : 'Generate personal login link'}">🔗 Link</button>`;
-    html += `<button class="btn b-xs" onclick="deleteStaffUser('${u.id}','${u.name}')" title="${isVi ? 'Xóa nhân sự này khỏi danh sách' : 'Delete staff member'}" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;font-weight:700;cursor:pointer">🗑 ${isVi ? 'Xóa' : 'Delete'}</button>`;
+    html += `<button class="btn b-xs" onclick="openAddStaffModal('${safeId}')" title="${isVi ? 'Chỉnh sửa thông tin nhân sự' : 'Edit staff info'}" style="background:#f1f5f9;color:#334155;border:1.5px solid #cbd5e1;cursor:pointer;font-weight:700">✏️ ${isVi ? 'Sửa' : 'Edit'}</button>`;
+    html += `<button class="btn b-xs b-bl" onclick="selectStaffForLinkGen('${safeName}', '${safeRole}')" title="${isVi ? 'Tạo link gửi cho nhân viên' : 'Generate personal login link'}">🔗 Link</button>`;
+    html += `<button class="btn b-xs" onclick="deleteStaffUser('${safeId}','${safeName}')" title="${isVi ? 'Xóa nhân sự này khỏi danh sách' : 'Delete staff member'}" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;font-weight:700;cursor:pointer">🗑 ${isVi ? 'Xóa' : 'Delete'}</button>`;
     html += `</div></td></tr>`;
   });
 
@@ -9604,36 +9674,76 @@ function _renderStaffTable_(users, source) {
 
 function resetStaffDirectoryToClean() {
   const isVi = currentLang === 'vi';
-  if (!confirm(isVi ? 'Xác nhận đặt lại danh sách nhân sự về mẫu chuẩn sạch (Xóa tên cũ lộ thông tin)?' : 'Reset staff directory to clean standard list?')) return;
-  DB.s('staff_directory', DEFAULT_STAFF_USERS);
+  if (!confirm(isVi ? 'Xác nhận đặt lại danh sách nhân sự về mẫu chuẩn sạch (Xóa sạch mọi dòng rác/undefined và đồng bộ Google Sheet)?' : 'Reset staff directory to clean standard list (Purge corrupt/undefined rows and sync Google Sheet)?')) return;
+  const cleanList = DEFAULT_STAFF_USERS.map((u, i) => normalizeStaffUser(u, i + 1)).filter(Boolean);
+  DB.s('staff_directory', cleanList);
   populateStaffUserSelect();
-  renderStaffUsersTable();
-  al(isVi ? '✅ Đã làm sạch và khôi phục danh sách nhân sự mẫu!' : '✅ Staff directory reset to clean standard list!', 'ok');
+  _renderStaffTable_(cleanList, '💾 Local');
+  al(isVi ? 'Đang cập nhật danh sách sạch lên Google Sheet...' : 'Syncing clean list to Google Sheet...', 'ok');
+
+  syncStaffDirectoryToSheet(cleanList, function(ok, msg) {
+    if (ok) {
+      al(isVi ? '✅ Đã làm sạch và khôi phục danh sách nhân sự mẫu trên Google Sheet!' : '✅ Staff directory reset and synced to Google Sheet!', 'ok');
+      _renderStaffTable_(cleanList, '☁️ Google Sheet');
+    } else {
+      al(isVi ? `⚠️ Đã khôi phục trên máy nhưng lỗi sync Google Sheet: ${msg}` : `⚠️ Restored locally but Sheet sync failed: ${msg}`, 'er');
+    }
+  });
 }
 const resetStaffDirectoryClean = resetStaffDirectoryToClean;
 
 function updateStaffAssignedRole(userId, newRole) {
   const isVi = currentLang === 'vi';
   const cached = DB.g('staff_directory');
-  let list = (cached && cached.length > 0) ? cached : DEFAULT_STAFF_USERS;
+  let list = (cached && cached.length > 0) ? cached.map((u, i) => normalizeStaffUser(u, i + 1)).filter(Boolean) : DEFAULT_STAFF_USERS;
   list = list.map(u => u.id === userId ? { ...u, role: newRole } : u);
   DB.s('staff_directory', list);
   al(isVi ? 'Đã cập nhật vai trò nhân sự thành công!' : 'Staff role updated successfully!', 'ok');
   populateStaffUserSelect();
   renderStaffUsersTable();
+  // Tự động đồng bộ vai trò mới lên Google Sheet
+  syncStaffDirectoryToSheet(list);
 }
 
-// 🗑 Xóa nhân sự (khi nghỉ việc)
+// 🗑 Xóa nhân sự (khi nghỉ việc) — Đồng bộ 2 chiều tức thì lên Google Sheet
 function deleteStaffUser(userId, userName) {
   const isVi = currentLang === 'vi';
-  if (!confirm(isVi ? `⚠️ Xác nhận XÓA nhân sự:\n"${userName}"\n\nThao tác này không thể hoàn tác. Tiếp tục?` : `⚠️ Confirm DELETE staff member:\n"${userName}"\n\nThis action cannot be undone. Continue?`)) return;
-  const cached = DB.g('staff_directory');
-  let list = (cached && cached.length > 0) ? cached : DEFAULT_STAFF_USERS;
-  list = list.filter(u => u.id !== userId);
+  const displayName = (userName && userName !== 'undefined') ? userName : (isVi ? 'nhân sự này' : 'this staff member');
+  if (!confirm(isVi ? `⚠️ Xác nhận XÓA nhân sự:\n"${displayName}"\n\nThao tác này sẽ xóa khỏi hệ thống và đồng bộ trực tiếp lên Google Sheet. Tiếp tục?` : `⚠️ Confirm DELETE staff member:\n"${displayName}"\n\nThis will remove from system and sync directly to Google Sheet. Continue?`)) return;
+
+  const cached = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
+  // Lọc sạch: loại bỏ theo id, theo tên, và loại bỏ tất cả bản ghi rác/undefined
+  const list = cached
+    .map((u, i) => normalizeStaffUser(u, i + 1))
+    .filter(u => {
+      if (!u) return false;
+      if (userId && userId !== 'undefined' && u.id === userId) return false;
+      if (userName && userName !== 'undefined' && u.name === userName) return false;
+      if ((!userId || userId === 'undefined') && (!userName || userName === 'undefined')) return false; // purge undefined rows
+      return true;
+    });
+
+  // Lưu ngay local để UI phản hồi tức thì
   DB.s('staff_directory', list);
-  al(isVi ? `Đã xóa nhân sự "${userName}" khỏi hệ thống.` : `Deleted staff member "${userName}".`, 'ok');
   populateStaffUserSelect();
-  renderStaffUsersTable();
+  _renderStaffTable_(list, '💾 Local (Đang đồng bộ Sheet...)');
+  al(isVi ? `Đang xóa "${displayName}" và đồng bộ lên Google Sheet...` : `Deleting "${displayName}" and syncing to Google Sheet...`, 'ok');
+
+  // Gọi API xóa và lưu danh sách sạch lên Google Sheet
+  syncStaffDirectoryToSheet(list, function(ok, msg) {
+    if (ok) {
+      al(isVi ? `✅ Đã xóa vĩnh viễn "${displayName}" và đồng bộ xong Google Sheet!` : `✅ Deleted "${displayName}" and synced to Google Sheet!`, 'ok');
+      _renderStaffTable_(list, '☁️ Google Sheet (Đã xóa)');
+    } else {
+      al(isVi ? `⚠️ Đã xóa trên máy, nhưng đồng bộ Google Sheet chưa thành công: ${msg}` : `⚠️ Deleted locally, but Google Sheet sync failed: ${msg}`, 'er');
+    }
+  });
+
+  // Gọi thêm staff_delete trực tiếp nếu có userId hoặc userName
+  if ((userId && userId !== 'undefined') || (userName && userName !== 'undefined')) {
+    const delUrl = SALE_GAS_URL + '?action=staff_delete&id=' + encodeURIComponent(userId || '') + '&name=' + encodeURIComponent(userName || '');
+    fetch(delUrl, { method: 'GET' }).catch(() => {});
+  }
 }
 
 // 🔄 Toggle thủ công Được Xem / Bị Khóa trong bảng RBAC
@@ -9685,7 +9795,11 @@ function populateStaffUserSelect() {
   if (!sel) return;
 
   const cached = DB.g('staff_directory');
-  const users = (cached && cached.length > 0) ? cached : DEFAULT_STAFF_USERS;
+  let users = (cached && cached.length > 0)
+    ? cached.map((u, i) => normalizeStaffUser(u, i + 1)).filter(Boolean)
+    : DEFAULT_STAFF_USERS;
+  if (!users || users.length === 0) users = DEFAULT_STAFF_USERS;
+
   sel.innerHTML = '';
   users.forEach(u => {
     sel.innerHTML += `<option value="${u.name}" data-role="${u.role}">${u.name} (${u.title || u.role})</option>`;
@@ -9835,21 +9949,12 @@ function saveStaffUserModal() {
   
   DB.s('staff_directory', list);
 
-  // 🔄 Sync lên Google Sheet nếu admin đã unlock (có token)
-  const adminToken = localStorage.getItem('tni_sale_admin_token') || '';
-  if (adminToken) {
-    fetch(SALE_GAS_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'staff_save', token: adminToken, data: list })
-    })
-    .then(r => r.json())
-    .then(res => {
-      if (res.ok) al(isVi ? `✅ Đã lưu lên Google Sheet (${res.saved} nhân sự)!` : `✅ Synced to Google Sheet (${res.saved} staff)!`, 'ok');
-      else al(isVi ? `⚠️ Lưu local OK nhưng Sheet chưa sync: ${res.error}` : `⚠️ Local OK but Sheet sync failed: ${res.error}`, 'er');
-    })
-    .catch(() => al(isVi ? '⚠️ Lưu local OK. Sheet offline — sẽ sync lần sau.' : '⚠️ Local saved. Sheet offline — will sync later.', 'er'));
-  }
+  // 🔄 Sync lên Google Sheet (2 chiều SSOT)
+  syncStaffDirectoryToSheet(list, function(ok, msg) {
+    if (ok) al(isVi ? `✅ Đã lưu lên Google Sheet (${msg} nhân sự)!` : `✅ Synced to Google Sheet (${msg} staff)!`, 'ok');
+    else al(isVi ? `⚠️ Lưu local OK nhưng Sheet chưa sync: ${msg}` : `⚠️ Local OK but Sheet sync failed: ${msg}`, 'er');
+    renderStaffUsersTable();
+  });
   closeAddStaffModal();
   renderStaffUsersTable();
   populateStaffUserSelect();
@@ -9952,6 +10057,7 @@ function importStaffFromFile(input) {
         else { existing.push(u); added++; }
       });
       DB.s('staff_directory', existing);
+      syncStaffDirectoryToSheet(existing);
       renderStaffUsersTable();
       populateStaffUserSelect();
       al(isVi ? `✅ Import xong! Thêm ${added} mới, cập nhật ${updated} nhân sự.` : `✅ Import done! Added ${added} new, updated ${updated} staff.`, 'ok');
