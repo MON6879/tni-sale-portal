@@ -70,9 +70,9 @@ def send_telegram(chat_id, text):
         return False
 
 def _in_slot(now_mm):
-    """True within 4 min of 11:30 / 17:30 MMT. Prevents a re-run / late dispatch from double-sending."""
+    """True within 4 min of 17:30 MMT (single daily slot per SALE_SPEC.md). Prevents a re-run / late dispatch from double-sending."""
     mins = now_mm.hour * 60 + now_mm.minute
-    return any(abs(mins - s) <= 4 for s in (11 * 60 + 30, 17 * 60 + 30))
+    return any(abs(mins - s) <= 4 for s in (17 * 60 + 30,))
 
 def run_sale_summary():
     now_mm = datetime.now(TZ_MM)
@@ -80,7 +80,7 @@ def run_sale_summary():
         logger.error("SALE_BOT_TOKEN not configured (GitHub Secret) - skipping Sale Summary")
         return
     if os.getenv("GITHUB_EVENT_NAME") != "workflow_dispatch" and not _in_slot(now_mm):
-        logger.info("Outside 11:30/17:30 MMT slot - skipping to avoid duplicate summary")
+        logger.info("Outside 17:30 MMT slot - skipping to avoid duplicate summary")
         return
     date_str = now_mm.strftime("%d/%m/%Y")
     time_str = now_mm.strftime("%H:%M")

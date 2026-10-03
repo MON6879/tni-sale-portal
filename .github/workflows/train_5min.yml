@@ -211,8 +211,8 @@ jobs:
           # ═══════ 🌙 EVENING BLOCK (17:00-22:30) ═══════
           #  17:18 → Report 6 & Report 6.1
           check_time_exact 17 18 && R6=true && R61=true && NEED_PYTHON=true && echo "🚃 Toa 6+6.1: Report 6 + Report 6.1 Site Clear Today (17:18 MMT)"
-          #  11:30 & 17:30 → Toa Sale Summary Report (🛒 Live stock + group summary)
-          (check_time_exact 11 30 || check_time_exact 17 30) && SALE_SUM=true && NEED_PYTHON=true && echo "🛒 Toa Sale: Sale Summary Report (11:30/17:30 MMT)"
+          #  17:30 → Toa Sale Summary Report (daily, SALE_SPEC.md) (🛒 Live stock + group summary)
+          check_time_exact 17 30 && SALE_SUM=true && NEED_PYTHON=true && echo "🛒 Toa Sale: Sale Summary Report (17:30 MMT)"
           #  18:06 → [DISABLED] Refuel — chuyển sang 20:56
           #  18:41 → Report 5 (Daily Plan - Ca Chiều / EOD Plan vs Actual) (📱 Telethon)
           check_time 18 41 && P5A=true && NEED_PYTHON=true && echo "🚃 Toa 3: Report 5 Daily Plan EOD (18:41 MMT)"

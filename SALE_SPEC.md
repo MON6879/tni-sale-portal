@@ -1,7 +1,7 @@
 # SALE_SPEC.md — Đặc tả nghiệp vụ Đoàn Tàu Sale (nguồn sự thật duy nhất)
 
 > Quy trình bắt buộc: **sửa SPEC trước → sửa code → chạy bộ ca test**. Không code ngoài SPEC.
-> Trạng thái: **v1.2** (03/10/2026) — gộp 6 quyết định của chủ + rà soát 4 chuyên gia (bán hàng, logic, bảo mật, song ngữ). Mục `[MẶC ĐỊNH]` là phương án tạm chọn, đổi bằng cách sửa file này.
+> Trạng thái: **v1.3** (03/10/2026) — gộp quyết định của chủ (tiền tệ MMK, báo cáo lên GROUP chỉ định) + rà soát 4 chuyên gia (bán hàng, logic, bảo mật, song ngữ) + ghế thực thi/giám sát (mục 13) + sửa rule đúng chỗ (mục 14). Mục `[MẶC ĐỊNH]` là phương án tạm chọn, đổi bằng cách sửa file này.
 
 ## 0. Bảng Đã chốt / Chờ chốt
 | Mục | Trạng thái |
@@ -13,8 +13,10 @@
 | Hàng trả & hàng hỏng do kho nhập; trả thì trừ hàng đang giữ của người giữ; hỏng thì theo dõi gởi bảo hành | Đã chốt |
 | Ngôn ngữ: VI chính + EN, không Myanmar | Đã chốt |
 | Sửa/xóa đơn: chủ đơn khi còn Nháp; sau đó chỉ admin | Đã chốt |
-| Tiền tệ: lưu số thuần + cột `tien_te`, mặc định `VND` | [MẶC ĐỊNH] chờ chủ xác nhận |
-| DM Telegram cho người giữ hàng bằng tiếng Việt; nhóm/báo cáo BOD bằng tiếng Anh | [MẶC ĐỊNH] chờ chủ xác nhận |
+| Tiền tệ: **MMK**; lưu số thuần + cột `tien_te` (mặc định `MMK`) | Đã chốt |
+| Báo cáo Sale **nhắn lên GROUP Telegram chỉ định** (không DM người giữ hàng) | Đã chốt |
+| Group nhận báo cáo Sale: tên đặt ở `Cau Hinh.sale_report_group`, id lấy từ tab `List Group Telegram` | **Chờ chủ chỉ định group** (chưa chọn thì báo cáo bỏ qua, không đoán) |
+| Tin nhóm theo template 2 dòng EN + VI | [MẶC ĐỊNH] chờ chủ xác nhận |
 
 ## 1. Nguồn dữ liệu
 - Google Sheet Sale (`1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA`) là **SSOT**. Web chỉ là giao diện, `localStorage` chỉ là cache đọc.
@@ -106,8 +108,8 @@ Mỗi serial có **đúng 1 trạng thái hiện tại** (tab `Serial`: serial, 
 ## 8. Báo cáo & kiểm soát
 | Báo cáo | Nội dung | Gửi | Ai xem |
 |---|---|---|---|
-| **Báo cáo ngày: Tồn & Bán hàng** | Bán trong ngày theo 4 kênh (SL, doanh thu), tồn khả dụng theo SKU, tồn thấp, nợ quá hạn (chỉ kênh có nợ), tổng hợp ký gởi/NV (giao/bán/trả/còn giữ/ngày giữ lâu nhất), lô còn 7 ngày & quá 60 ngày, hàng hỏng/đang BH, người `inactive` còn giữ, kết quả đối soát | 1 lần/ngày **17:30 MMT**; bỏ nhịp 11:30; chạy trong `train_5min.yml` | Nhóm vận hành: **chỉ SL/tồn, không tiền/giá vốn/LN**; tiền, giá vốn, LN → DM `finance/admin` |
-| DM người giữ hàng | Lô của riêng mình: còn giữ, hạn, số ngày còn lại | cùng slot 17:30 | chính người đó (VI) |
+| **Báo cáo ngày: Tồn & Bán hàng** | Bán trong ngày theo 4 kênh (SL, doanh thu), tồn khả dụng theo SKU, tồn thấp, nợ quá hạn (chỉ kênh có nợ), tổng hợp ký gởi/NV (giao/bán/trả/còn giữ/ngày giữ lâu nhất), lô còn 7 ngày & quá 60 ngày, hàng hỏng/đang BH, người `inactive` còn giữ, kết quả đối soát | 1 lần/ngày **17:30 MMT**; bỏ nhịp 11:30; chạy trong `train_5min.yml` | Group Sale chỉ định: **chỉ SL/tồn/hạn, không giá vốn/lợi nhuận/CK/hoa hồng**; số tiền MMK doanh thu tổng được phép, chi tiết giá vốn/LN → DM `finance/admin` |
+| Mục "Người giữ hàng" trong báo cáo ngày | Bảng theo người giữ: giao / bán / trả / còn giữ / hạn / số ngày còn lại (không tiền) | cùng slot 17:30, **cùng 1 tin trên group chỉ định** | Thành viên group; web "Lô của tôi" vẫn chỉ cho chính người đó |
 
 - Dedup theo slot `SALE_SLOT_yyyyMMdd_HHmm` (PropertiesService), ghi **sau khi gửi thành công**.
 - **Đối soát tự động hằng ngày** (cùng 17:30): Nhập = `IN_STOCK`+`HELD`+`SOLD`+`DEFECTIVE/IN_REPAIR/REPAIRED`+`LOST` (không cộng trừ tay); mọi serial đúng 1 trạng thái; mọi `SOLD` có đơn; mọi lô `Đóng` có giao = bán + trả; số "còn giữ" trên web = tính lại từ nhật ký. Lệch → báo admin, **không tự sửa**.
@@ -117,7 +119,7 @@ Mỗi serial có **đúng 1 trạng thái hiện tại** (tab `Serial`: serial, 
 ## 9. Ngôn ngữ & định dạng
 - Web: **VI mặc định + EN**, nút chuyển, nhớ lựa chọn, `<html lang>` đổi theo ngôn ngữ; không Myanmar. Một từ điển `t(key)` cho web + GAS + Python; nhãn tab qua `t()`. Tên tab Sheet là hằng số (không dịch).
 - Thông báo lỗi server: `{ok:false, code:'ERR_*', params:{...}, msg_vi, msg_en}`; web dịch theo `code`. Mã: `ERR_UNAUTHORIZED`, `ERR_FORBIDDEN`, `ERR_STOCK_NEGATIVE`, `ERR_SERIAL_DUP`, `ERR_SERIAL_REQUIRED`, `ERR_ORDER_LOCKED`, `ERR_HOLD_EXCEEDED`, `ERR_LOT_EXPIRED`, `ERR_DUPLICATE`, `ERR_STATE_MISMATCH`, `ERR_SELF_APPROVE`.
-- Tiền: lưu số thuần + cột `tien_te` (`VND` mặc định); hiển thị `fmtMoney(v,cur,lang)` (VI `1.234.567`, EN `1,234,567`). Phần trăm lưu dấu chấm. Ngày hiển thị VI `dd/MM/yyyy`, EN `yyyy-MM-dd`.
+- Tiền: **MMK**; lưu số thuần + cột `tien_te` (`MMK` mặc định); hiển thị `fmtMoney(v,cur,lang)` (VI `1.234.567 MMK`, EN `1,234,567 MMK`). Bỏ ký hiệu `₫`/VND khỏi giao diện và tin nhắn. Phần trăm lưu dấu chấm. Ngày hiển thị VI `dd/MM/yyyy`, EN `yyyy-MM-dd`.
 - Chọn **một chính tả** "ký gởi" xuyên suốt.
 - Thuật ngữ chuẩn:
 
@@ -144,7 +146,7 @@ Mỗi serial có **đúng 1 trạng thái hiện tại** (tab `Serial`: serial, 
 | Tạm ứng | Advance |
 | Nhập kho | Stock-in |
 
-- Mẫu DM (VI): `📦 Lô {lo_id} — còn giữ {n} (hạn {yyyy-MM-dd}, còn {d} ngày). Vui lòng bán hoặc trả lại kho.` Mã SKU, serial, số lô, số tiền giữ nguyên.
+- Mẫu dòng trong tin group (2 dòng): `📦 {holder} — Lot {lo_id}: holding {n}, due {yyyy-MM-dd} ({d} days left)` / `📦 {holder} — Lô {lo_id}: còn giữ {n}, hạn {dd/MM/yyyy} (còn {d} ngày)`. Mã SKU, serial, số lô giữ nguyên.
 
 ## 10. Phân quyền & bảo mật (tiên quyết trước khi mở tính năng nhạy cảm)
 - `admin`, `finance`: thấy giá vốn/lợi nhuận/CK/hoa hồng. `sales`, `warehouse`, `tech`, `dealer`: **không**; lọc theo whitelist cột theo vai trò **ở server**.
@@ -153,7 +155,7 @@ Mỗi serial có **đúng 1 trạng thái hiện tại** (tab `Serial`: serial, 
 - **Nhật ký bất biến thật**: chỉ append bằng 1 hàm GAS, range protected, hash chain (`SHA256(prev_hash + dòng)`), snapshot hằng ngày sang bản chỉ-đọc, job đối soát phát hiện đứt chuỗi. Sửa sai = sự kiện bù trừ (`REVERSAL`).
 - Hành động nhạy cảm (hủy đơn đã xác nhận, gia hạn, sửa serial, điều chỉnh, sửa Cấu hình): chỉ `admin` + PIN kiểm phía server.
 - **Đăng nhập thật**: Google Sign-In (ID token verify phía server: aud, exp, email_verified) → session ngắn hạn 8–12 giờ, kiểm trạng thái nhân viên ở **mỗi request**; Vercel làm cổng, gọi GAS kèm key + HMAC. Rate-limit: login/PIN 5 lần/15 phút, ghi 20/phút/session, fail-closed.
-- **DM Telegram**: liên kết `telegram_id`↔nhân viên qua mã 6 số dùng 1 lần (TTL 10 phút) sau khi đăng nhập web; admin mới gỡ/sửa liên kết; chỉ gửi tới id đã liên kết; webhook có secret.
+- **Telegram**: báo cáo gửi lên **group chỉ định** (id lấy từ `List Group Telegram` theo tên ở `Cau Hinh.sale_report_group`; thiếu/không khớp → bỏ qua và báo lỗi cho admin qua DM, KHÔNG đoán group). Tin group không chứa giá vốn/LN/CK/hoa hồng. Webhook thu thập có secret; thu thập chỉ nhận từ group nằm trong `List Group Telegram`. (Liên kết `telegram_id` cho DM cá nhân là tùy chọn, không bắt buộc.)
 - Chưa xong đăng nhập thật thì **không phát hành** module lô/nợ/giá vốn lên web.
 
 ## 11. Tiêu chí nghiệm thu
@@ -173,3 +175,27 @@ Mỗi serial có **đúng 1 trạng thái hiện tại** (tab `Serial`: serial, 
 4. **Phase 2** — chuyển trạng thái serial, công thức tồn, `Tong Hop`, chạy 19 ca test.
 5. **Phase 3** — giao diện: "Lô của tôi", form bán, bảo hành theo serial, kho nhập trả/hỏng; một file `sale.html` chính, bỏ bản lệch; i18n `t()`.
 6. **Phase 4** — đối soát tự động, cảnh báo, báo cáo 17:30, DM liên kết Telegram, kiểm kê hằng tháng; chạy song song 1–2 tuần.
+
+## 13. Ghế THỰC THI & ghế GIÁM SÁT Sale (mỗi ghế một việc, đúng chỗ)
+| Loại | Mã ghế | Phạm vi duy nhất | Không được làm |
+|---|---|---|---|
+| Thực thi | `WEB-SALE-16` | `tni-search/sale.html` (+ bản sao `tni_sale.html` đến khi gộp): giao diện, `t()` VI/EN, "Lô của tôi" | Tự tính tồn/nợ; tự ghi Sheet; giữ token |
+| Thực thi | `GAS-SALE-16` | `QLTC_GAS/sale_backend.gs` (Script `1rvgW…`, ID chính + ID phụ): **hàm ghi duy nhất**, máy trạng thái serial, RBAC cột, audit hash chain | Sửa chéo GAS khác; ghi ngoài hàm ghi duy nhất |
+| Thực thi | `BOT-SALE-16` | Bot Telegram **riêng của Sale** (token mới, không dùng chung Site Down): thu thập đơn từ group trong `List Group Telegram`; gửi báo cáo lên group chỉ định | Gửi DM cá nhân dữ liệu lô; dùng token của Site Down |
+| Thực thi | `TRAIN-SALE-1730` | Toa Sale trong `train_5min.yml` → `sale_summary_report.py`, **1 lần 17:30 MMT**, dedup `SALE_SLOT_yyyyMMdd_1730` | Workflow/cron riêng; chạy 11:30; đọc Telegram thay vì Sheet |
+| Giám sát | `SENTINEL-SALE-RECON` (mới) | Đối soát hằng ngày: Nhập = tổng trạng thái serial; mọi serial đúng 1 trạng thái; mọi `SOLD` có đơn; kiểm hash chain `Sale Audit`/`Lo Giao Su Kien`; lô ≥53 ngày/quá 60 ngày; người `inactive` còn giữ; serial hỏng/bảo hành quá N ngày; tồn âm | Tự sửa dữ liệu (chỉ báo) |
+| Giám sát | `AUDITOR-9.1` (sẵn có) | Sức khỏe: webhook bot Sale, 2 GAS ID cùng version, Sheet đọc được, báo cáo 17:30 đã gửi đúng 1 lần | — |
+| Kênh báo lỗi | `AUDITOR-DM` | DM Admin cho mọi cảnh báo đỏ của ghế giám sát | Spam vào group chung |
+
+- `SENTINEL-SALE-RECON` chạy **bên trong** Toa Auditor 9.1 của đoàn tàu `train_5min.yml` (không tạo workflow/cron/trigger riêng — Single Train). Kết quả đối soát nằm ở mục cuối tin 17:30 và, khi lệch, cảnh báo đỏ về DM Admin.
+- Mỗi ghế khai báo trong `system_map.md` (ma trận ghế giám sát) và có rule kiểm tự động ở `system_auditor.py` ở Phase 4.
+
+## 14. Rule sai chỗ nào sửa đúng chỗ đó (đối chiếu 03/10/2026)
+| File | Chỗ sai | Sửa |
+|---|---|---|
+| `AGENTS.md` (Single Train, mục 1) | "Toa Sale Summary (11:30 & 17:30 MMT)" | → "Toa Sale Summary (17:30 MMT)" |
+| `train_5min.yml` (2 bản `Task and WO`, `tni-search`) | điều kiện `check_time_exact 11 30 \|\| 17 30` | → chỉ `17 30` |
+| `sale_summary_report.py` (2 bản; **bản `tni-sitedown` không đụng, đang vi phạm cô lập repo — chờ mở khóa thép để xóa**) | `_in_slot` cho 11:30 và 17:30 | → chỉ 17:30 |
+| `sale_backend.gs` | `fmtVnd_` in `₫` | → định dạng MMK |
+| `system_map.md` ma trận ghế | `GAS-SALE-16` ghi `@465`, `BOT-SALE-16` dùng token `8647102342` chung Site Down; chưa có ghế giám sát Sale | → cập nhật phiên bản @474/@475; BOT-SALE-16 chuyển sang bot riêng (khi tạo); thêm `TRAIN-SALE-1730` và `SENTINEL-SALE-RECON` |
+| `AGENTS.md` PM-70 | thiếu quy tắc tin lên group chỉ định và ghế | → thêm mục 6–7 |
