@@ -2189,6 +2189,13 @@ Reason: [Lý do]`
 > 8. **Hai bản HTML cùng chức năng (`sale.html`, `tni_sale.html`) CẤM lệch nhau**; sửa một bản thì đồng bộ bản kia và `Task and WO`, kiểm `Get-FileHash` giống nhau.
 > 9. **Thao tác thủ công còn lại sau PM-69** (AI không làm thay được): đặt `SALE_API_KEY`, `SALE_ADMIN_PIN_HASH`, `SALE_COLLECT_SECRET`, `BOT_TOKEN` trong Script Properties; thêm GitHub Secrets `SALE_BOT_TOKEN`, `ASSET_BOT_TOKEN`; xoay token bot Sale/Site Down (cần mật khẩu khóa thép vì dùng chung).
 
+> ### 🔴 RULE PM-70: SALE — SPEC LÀ NGUỒN SỰ THẬT, VÒNG ĐỜI ĐƠN & LÔ GIỮ HÀNG DO SERVER KIỂM SOÁT
+> 1. **Mọi thay đổi nghiệp vụ Sale BẮT BUỘC sửa `SALE_SPEC.md` TRƯỚC, code SAU** (file ở root và `tni-search`). CẤM code ngoài SPEC; yêu cầu mới của chủ phải ghi vào SPEC ngay trong cùng phiên.
+> 2. **Trạng thái đơn do server đặt** (`Nháp → Đã gửi báo giá → Đã xác nhận nhận hàng → Đã thanh toán đủ`). CẤM client tự ghi `status/da_thu/con_no`; chỉ `sale_status`/`sale_payment` đổi chúng. Chủ đơn sửa/xóa khi còn `Nháp`; sau đó chỉ admin, mọi thay đổi ghi `Sale Audit`.
+> 3. **Mọi ghi mới BẮT BUỘC có `idem_key`** (gọi lại không tạo dòng trùng). Migration cột chỉ **thêm cuối, idempotent**, snapshot tab đã có dữ liệu (`bak_<tab>_v0`) trước khi đụng header; CẤM đổi thứ tự cột hay ghi đè dữ liệu thật.
+> 4. **Nghiệp vụ chủ đã chốt (03/10/2026)**: đại lý = bán đứt (trừ kho + doanh thu ngay, không nợ, không hoa hồng; chiết khấu nhập tay theo lô); ký gởi và lô giao nhân viên bắt buộc có serial, tối đa 60 ngày/lô, người giữ chỉ thấy lô của mình (lọc ở server); hàng trả và hàng hỏng do kho (`warehouse`) nhập, trả thì giảm trừ công nợ hàng của người giữ, hỏng thì theo dõi gởi bảo hành. CẤM tính hàng ký gởi vào doanh thu trước khi có đơn bán thật.
+> 5. **Chưa đạt nghiệm thu thì CẤM báo xong**: Phase 1a đã deploy (@474/@475) nhưng `sale_status/sale_payment/rule chủ đơn` chưa test live vì `SALE_API_KEY` chưa đặt; phải test trước khi báo hoàn thành các phase sau.
+
 ---
 
 # 📌 PM RULES — POST-MORTEM TỪ BUG THỰC TẾ (AUTO-INJECTED)

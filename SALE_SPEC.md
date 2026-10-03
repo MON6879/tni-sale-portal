@@ -42,7 +42,13 @@
 - Ràng buộc (kiểm tra trong lock): BAN/TRA không vượt `còn giữ`; serial bán phải đang nằm trong lô của chính người bán; giao serial đã giữ/đã bán bị chặn. BAN chỉ ghi khi gắn với đơn thật trong `Ban Hang` (đó mới là doanh thu).
 - Cột `kenh` trên đơn: `retail | dealer_outright | consignment_sale | staff_sale`.
 - Tin ký gởi hằng ngày nằm trong báo cáo ngày 17:30 (không gửi tin riêng); mỗi người giữ nhận DM phần của mình. Màn web "Lô của tôi": Giao / Đã bán / Còn giữ + nút Bán, Trả lại.
-- *Chờ chủ chốt:* ký gởi có hàng không serial không? Giữ tối đa bao nhiêu ngày? Ai xác nhận nhận lại hàng trả (khuyến nghị `warehouse`)?
+- **Chủ đã chốt 03/10/2026 21:10:**
+  1. **Chiết khấu nhập tay theo lô** (ô input mỗi lô phân phối/giao), không dùng CK% cố định của danh bạ làm giá chính; lưu `ck_lo` + `gia_ap_dung` trên dòng.
+  2. **Đại lý không trả chậm** → không có công nợ/hạn nợ cho đại lý.
+  3. **Ký gởi bắt buộc có serial** (không hàng không serial).
+  4. **Mỗi lô giữ tối đa 2 tháng** (60 ngày; cấu hình `max_hold_days`=60); cảnh báo khi còn 7 ngày và khi quá hạn trong báo cáo ngày.
+  5. **Hàng trả lại do kho (`warehouse`) nhập**; khi nhập, **giảm trừ công nợ/trách nhiệm hàng của nhân viên hoặc người ký gởi** (còn giữ −SL; serial về `Trong kho`).
+  6. **Hàng hỏng cũng do kho nhập** và **theo dõi gởi bảo hành**: trạng thái `Hỏng → Gởi bảo hành → Đã bảo hành/Đổi → Trong kho`, có ngày gởi, nơi nhận, ngày nhận lại; hàng hỏng không tính vào tồn khả dụng.
 
 
 ## 6. Báo cáo
