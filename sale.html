@@ -610,79 +610,140 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
 
 <!-- ══ BÁN HÀNG ══ -->
 <div class="sec" id="s-banhang">
-  <div class="panel">
-    <div class="ph"><h3 data-lang="dispatch_title">🚚 Bán Hàng &amp; Xuất Kho Cho... (Smart Dispatch)</h3></div>
-    <div class="pb">
-      <div class="fg">
-        <div class="f">
-          <label data-lang="dispatch_to">Xuất Cho (Dispatch Target) *</label>
-          <select id="b-type" onchange="onDispatchTargetChange()" style="font-weight:700;color:#0284c7;background:#f0f9ff">
-            <option value="retail">🛒 Khách Hàng Bán Lẻ (Retail Customer)</option>
-            <option value="dealer">🏪 Đại Lý Phân Phối (Dealer Wholesale)</option>
-            <option value="pos">📋 Điểm Bán Ký Gởi (POS / Consignment)</option>
-            <option value="staff">🧑‍💼 Nhân Viên Tạm Ứng / Đi Công Trình (Staff)</option>
-          </select>
-        </div>
-        <div class="f">
-          <label data-lang="p_select">Sản Phẩm Xuất *</label>
-          <select id="b-sp" onchange="onDispatchTargetChange()"></select>
-        </div>
-        <div class="f">
-          <label data-lang="p_qty">Số Lượng Xuất *</label>
-          <input id="b-sl" type="number" min="1" value="1" oninput="calcBanProfit()"/>
-        </div>
-        <div class="f">
-          <label data-lang="p_unit_price">Đơn Giá Áp Dụng (₫) *</label>
-          <input id="b-gia" type="number" placeholder="0" oninput="calcBanProfit()"/>
-        </div>
-        <div class="f">
-          <label id="lbl-b-kh" data-lang="recipient_name">Tên Khách Hàng / Đại Lý / Người Nhận *</label>
-          <input id="b-kh" placeholder="Tên đơn vị nhận hàng"/>
-        </div>
-        <div class="f">
-          <label data-lang="phone_number">Số Điện Thoại</label>
-          <input id="b-dt" placeholder="09xx xxx xxx"/>
-        </div>
-        <div class="f">
-          <label data-lang="p_serial">Serial Number / Mã SP</label>
-          <input id="b-serial" placeholder="SN123456..."/>
-        </div>
-        <div class="f">
-          <label data-lang="payment_method">Hình Thức Thanh Toán</label>
-          <select id="b-tt" onchange="onPaymentTypeChange()">
-            <option value="cash">💵 Đã Thu 100% (Tiền mặt / Chuyển khoản)</option>
-            <option value="credit">⏳ Ghi Nợ / Gối Đầu (Chưa thanh toán đủ)</option>
-            <option value="consignment">📋 Ký Gởi / Tạm Ứng (Chưa thu tiền)</option>
-          </select>
-        </div>
-        <div class="f" id="f-credit-deposit" style="display:none">
-          <label data-lang="deposit_paid">Tiền Đã Trả Trước (₫)</label>
-          <input id="b-deposit" type="number" value="0" placeholder="0"/>
-        </div>
-        <div class="f">
-          <label data-lang="dispatch_date">Ngày Xuất Kho</label>
-          <input id="b-ngay" type="date"/>
-        </div>
-        <div class="f" style="grid-column:1/-1">
-          <label data-lang="notes">Ghi Chú Phiếu Xuất</label>
-          <textarea id="b-gc" placeholder="Ghi chú người giao, địa chỉ giao hàng, dự án..."></textarea>
-        </div>
-      </div>
+  <!-- Chuyển đổi chế độ: Đơn lẻ vs Import Bán Hàng Hàng Loạt -->
+  <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+    <div style="display:flex;gap:6px">
+      <button class="btn b-or" id="btn-ban-mode-single" onclick="switchBanMode('single')" style="font-weight:600" data-lang="btn_ban_mode_single">➕ Tạo Đơn Lẻ</button>
+      <button class="btn b-out" id="btn-ban-mode-bulk" onclick="switchBanMode('bulk')" style="font-weight:600" data-lang="btn_ban_mode_bulk">📥 Import Bán Hàng Hàng Loạt (.CSV / Excel)</button>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button class="btn b-gn b-sm" onclick="downloadBanTemplate()" data-lang="btn_download_ban_tpl">📥 Tải File Mẫu (.CSV)</button>
+      <button class="btn b-or b-sm" onclick="document.getElementById('ban-bulk-file-input').click()" data-lang="btn_choose_ban_csv">📁 Chọn File .CSV</button>
+      <input type="file" id="ban-bulk-file-input" accept=".csv,.txt,.xlsx,.xls" onchange="handleBanBulkFile(event)" style="display:none"/>
+    </div>
+  </div>
 
-      <!-- 💡 LIVE DISPATCH FINANCIAL SUMMARY -->
-      <div id="ban-financial-box" style="margin-top:14px;padding:12px 14px;background:#f8fafc;border-radius:8px;border:1px solid #cbd5e1;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
-        <div><span style="font-size:11px;color:#0284c7">💰 Tổng Tiền Hàng</span><div id="bf-total" style="font-size:15px;font-weight:700;color:#0284c7">0 ₫</div></div>
-        <div><span style="font-size:11px;color:#475569">🏦 Vốn Gốc (83%)</span><div id="bf-cost" style="font-size:15px;font-weight:700;color:#475569">0 ₫</div></div>
-        <div><span style="font-size:11px;color:#1e40af">🏢 Phải Nộp Cty (% Cty)</span><div id="bf-cty" style="font-size:15px;font-weight:700;color:#1e40af">0 ₫</div></div>
-        <div><span style="font-size:11px;color:#16a34a">🏪 LN Chi Nhánh Thuần</span><div id="bf-branch" style="font-size:15px;font-weight:700;color:#16a34a">0 ₫</div></div>
-      </div>
+  <!-- PHẦN 1: TẠO PHIẾU ĐƠN LẺ -->
+  <div id="ban-single-container">
+    <div class="panel">
+      <div class="ph"><h3 data-lang="dispatch_title">🚚 Bán Hàng &amp; Xuất Kho Cho... (Smart Dispatch)</h3></div>
+      <div class="pb">
+        <div class="fg">
+          <div class="f">
+            <label data-lang="dispatch_to">Xuất Cho (Dispatch Target) *</label>
+            <select id="b-type" onchange="onDispatchTargetChange()" style="font-weight:700;color:#0284c7;background:#f0f9ff">
+              <option value="retail">🛒 Khách Hàng Bán Lẻ (Retail Customer)</option>
+              <option value="dealer">🏪 Đại Lý Phân Phối (Dealer Wholesale)</option>
+              <option value="pos">📋 Điểm Bán Ký Gởi (POS / Consignment)</option>
+              <option value="staff">🧑‍💼 Nhân Viên Tạm Ứng / Đi Công Trình (Staff)</option>
+            </select>
+          </div>
+          <div class="f">
+            <label data-lang="p_select">Sản Phẩm Xuất *</label>
+            <select id="b-sp" onchange="onDispatchTargetChange()"></select>
+          </div>
+          <div class="f">
+            <label data-lang="p_qty">Số Lượng Xuất *</label>
+            <input id="b-sl" type="number" min="1" value="1" oninput="calcBanProfit()"/>
+          </div>
+          <div class="f">
+            <label data-lang="p_unit_price">Đơn Giá Áp Dụng (₫) *</label>
+            <input id="b-gia" type="number" placeholder="0" oninput="calcBanProfit()"/>
+          </div>
+          <div class="f">
+            <label id="lbl-b-kh" data-lang="recipient_name">Tên Khách Hàng / Đại Lý / Người Nhận *</label>
+            <input id="b-kh" placeholder="Tên đơn vị nhận hàng"/>
+          </div>
+          <div class="f">
+            <label data-lang="phone_number">Số Điện Thoại</label>
+            <input id="b-dt" placeholder="09xx xxx xxx"/>
+          </div>
+          <div class="f">
+            <label data-lang="p_serial">Serial Number / Mã SP</label>
+            <input id="b-serial" placeholder="SN123456..."/>
+          </div>
+          <div class="f">
+            <label data-lang="payment_method">Hình Thức Thanh Toán</label>
+            <select id="b-tt" onchange="onPaymentTypeChange()">
+              <option value="cash">💵 Đã Thu 100% (Tiền mặt / Chuyển khoản)</option>
+              <option value="credit">⏳ Ghi Nợ / Gối Đầu (Chưa thanh toán đủ)</option>
+              <option value="consignment">📋 Ký Gởi / Tạm Ứng (Chưa thu tiền)</option>
+            </select>
+          </div>
+          <div class="f" id="f-credit-deposit" style="display:none">
+            <label data-lang="deposit_paid">Tiền Đã Trả Trước (₫)</label>
+            <input id="b-deposit" type="number" value="0" placeholder="0"/>
+          </div>
+          <div class="f">
+            <label data-lang="dispatch_date">Ngày Xuất Kho</label>
+            <input id="b-ngay" type="date"/>
+          </div>
+          <div class="f" style="grid-column:1/-1">
+            <label data-lang="notes">Ghi Chú Phiếu Xuất</label>
+            <textarea id="b-gc" placeholder="Ghi chú người giao, địa chỉ giao hàng, dự án..."></textarea>
+          </div>
+        </div>
 
-      <div class="fa" style="margin-top:14px">
-        <button class="btn b-gn" onclick="addBan()" data-lang="btn_confirm_dispatch" style="font-weight:700">🚚 Xác Nhận Xuất Kho &amp; Lưu Đơn</button>
-        <button class="btn b-bl" onclick="printDispatchNote()" data-lang="btn_print_dispatch">📄 In Phiếu Xuất Kho</button>
+        <!-- 💡 LIVE DISPATCH FINANCIAL SUMMARY -->
+        <div id="ban-financial-box" style="margin-top:14px;padding:12px 14px;background:#f8fafc;border-radius:8px;border:1px solid #cbd5e1;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
+          <div><span style="font-size:11px;color:#0284c7">💰 Tổng Tiền Hàng</span><div id="bf-total" style="font-size:15px;font-weight:700;color:#0284c7">0 ₫</div></div>
+          <div><span style="font-size:11px;color:#475569">🏦 Vốn Gốc (83%)</span><div id="bf-cost" style="font-size:15px;font-weight:700;color:#475569">0 ₫</div></div>
+          <div><span style="font-size:11px;color:#1e40af">🏢 Phải Nộp Cty (% Cty)</span><div id="bf-cty" style="font-size:15px;font-weight:700;color:#1e40af">0 ₫</div></div>
+          <div><span style="font-size:11px;color:#16a34a">🏪 LN Chi Nhánh Thuần</span><div id="bf-branch" style="font-size:15px;font-weight:700;color:#16a34a">0 ₫</div></div>
+        </div>
+
+        <div class="fa" style="margin-top:14px">
+          <button class="btn b-gn" onclick="addBan()" data-lang="btn_confirm_dispatch" style="font-weight:700">🚚 Xác Nhận Xuất Kho &amp; Lưu Đơn</button>
+          <button class="btn b-bl" onclick="printDispatchNote()" data-lang="btn_print_dispatch">📄 In Phiếu Xuất Kho</button>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- PHẦN 2: IMPORT BÁN HÀNG HÀNG LOẠT -->
+  <div id="ban-bulk-container" style="display:none">
+    <div class="panel">
+      <div class="ph">
+        <h3 data-lang="ban_bulk_h3">📥 Import Đơn Bán Hàng &amp; Xuất Kho Hàng Loạt (.CSV / Excel)</h3>
+        <span style="font-size:12px;color:#64748b" data-lang="ban_bulk_syntax">Cú pháp: Đối Tượng | Tên Khách/Đại Lý | Số Điện Thoại | Tên SP | Model | Số Lượng | Đơn Giá Bán | Thanh Toán | Trả Trước | Serial | Ghi Chú</span>
+      </div>
+      <div class="pb">
+        <div style="background:#f0f9ff;padding:12px 14px;border-radius:8px;border:1px solid #bae6fd;margin-bottom:12px;font-size:12.5px;line-height:1.6">
+          <b>💡 Hướng dẫn 3 bước cho nhân viên kinh doanh / xuất kho:</b><br/>
+          <b>1.</b> Bấm nút <button class="btn b-gn b-xs" onclick="downloadBanTemplate()">📥 Tải File Mẫu (.CSV)</button> để tải file mẫu (không yêu cầu giá gốc, chỉ cần đơn giá bán cho khách).<br/>
+          <b>2.</b> Điền danh sách đơn hàng xuất kho trên Excel / Google Sheets rồi lưu file.<br/>
+          <b>3.</b> Bấm <button class="btn b-or b-xs" onclick="document.getElementById('ban-bulk-file-input').click()">📁 Chọn File</button> <b>HOẶC</b> bôi đen trong Excel bấm <code>Ctrl+C</code> rồi <b>dán (Ctrl+V)</b> vào khung bên dưới:
+        </div>
+
+        <textarea id="ban-bulk-paste-area" rows="6" style="width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;font-family:monospace;font-size:12px;line-height:1.5" placeholder="Dán (Ctrl+V) bảng xuất bán hàng từ Excel / Google Sheets vào đây...&#10;Ví dụ:&#10;retail	Anh Tuấn Q.1	0988111222	Bộ Lưu Điện UPS Santak 1200VA	TG-1200	2	2450000	cash	2450000	SN-TG1200-01	Giao hàng lắp đặt tận nơi&#10;dealer	Cửa Hàng Hòa Phát	0977333444	Tấm Pin Mặt Trời Jinko 400W	JK-400M	10	2350000	credit	10000000	SN-JK400-01...10	Đại lý thanh toán 50%&#10;pos	Shop Năng Lượng Xanh	0912345678	Biến Tần Inverter Growatt 5kW	SPF-5000	1	16500000	consignment	0	SN-GW5K-01	Ký gởi showroom trưng bày" oninput="parseBanBulkInput()"></textarea>
+
+        <div style="display:flex;gap:8px;margin-top:10px;justify-content:space-between;flex-wrap:wrap">
+          <div style="display:flex;gap:8px">
+            <button class="btn b-or" onclick="parseBanBulkInput()">🔍 Phân Tích &amp; Xem Trước (Preview)</button>
+            <button class="btn b-out" onclick="document.getElementById('ban-bulk-paste-area').value='';parseBanBulkInput()">✕ Xóa Khung Dán</button>
+          </div>
+          <button class="btn b-gn" id="btn-ban-confirm-bulk" onclick="confirmBanBulkImport()" style="font-weight:700" disabled>🚀 Xác Nhận Import Bán Hàng Hàng Loạt (0 Đơn)</button>
+        </div>
+
+        <!-- THẺ THỐNG KÊ NHANH BATCH IMPORT BÁN HÀNG -->
+        <div id="ban-bulk-stats-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px;display:none">
+          <div class="card c-bl"><div class="lbl2">🛒 Số Đơn Hàng</div><div class="val" id="ban-bs-orders">0</div><div class="sub">Đơn xuất kho</div></div>
+          <div class="card c-or"><div class="lbl2">📦 Mặt Hàng</div><div class="val" id="ban-bs-items">0</div><div class="sub">Mặt hàng xuất</div></div>
+          <div class="card c-gn"><div class="lbl2">🔢 Tổng Số Lượng</div><div class="val" id="ban-bs-qty">0</div><div class="sub">Sản phẩm xuất</div></div>
+          <div class="card c-bl"><div class="lbl2">💵 Tổng Doanh Thu</div><div class="val" id="ban-bs-rev" style="font-size:15px">0 ₫</div><div class="sub">Doanh thu bán</div></div>
+          <div class="card c-yw"><div class="lbl2">🏢 Phải Nộp Cty</div><div class="val" id="ban-bs-cty" style="font-size:15px">0 ₫</div><div class="sub">Trích nộp 17% Cty</div></div>
+          <div class="card c-gn"><div class="lbl2">🏪 LN Chi Nhánh</div><div class="val" id="ban-bs-branch" style="font-size:15px">0 ₫</div><div class="sub">LN chi nhánh thuần</div></div>
+        </div>
+
+        <!-- BẢNG PREVIEW CHI TIẾT -->
+        <div id="ban-bulk-preview-wrap" style="margin-top:14px;display:none">
+          <h4 style="margin-bottom:8px;color:#334155">📋 Danh Sách Đơn Xuất Kho Xem Trước:</h4>
+          <div class="tw" id="ban-bulk-preview-table"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="panel"><div class="ph"><h3>📋 Lịch Sử Bán Hàng</h3></div><div class="pb tw" id="t-ban"></div></div>
 </div>
 
@@ -1459,7 +1520,15 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
   </div>
   <div id="td-ds">
     <div class="panel">
-      <div class="ph"><h3>Danh Sách Đại Lý</h3><button class="btn b-bl b-sm" onclick="tog('fdl')">+ Thêm</button></div>
+      <div class="ph">
+        <h3>Danh Sách Đại Lý</h3>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn b-bl b-sm" onclick="tog('fdl')">+ Thêm</button>
+          <button class="btn b-gn b-sm" onclick="downloadDLTemplate()" data-lang="btn_download_dl_tpl">📥 Tải Mẫu DS Đại Lý (.CSV)</button>
+          <button class="btn b-or b-sm" onclick="document.getElementById('dl-bulk-file-input').click()" data-lang="btn_choose_dl_csv">📁 Import DS Đại Lý</button>
+          <input type="file" id="dl-bulk-file-input" accept=".csv,.txt" onchange="handleDLBulkFile(event)" style="display:none"/>
+        </div>
+      </div>
       <div class="pb" id="fdl" style="display:none">
         <div class="fg">
           <div class="f"><label>Tên Đại Lý *</label><input id="dl-ten" placeholder="Tên cửa hàng"/></div>
@@ -1476,20 +1545,80 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
     <div class="panel"><div class="ph"><h3>🏪 Đại Lý</h3></div><div class="pb tw" id="t-daily"></div></div>
   </div>
   <div id="td-pp" style="display:none">
-    <div class="panel">
-      <div class="ph"><h3>🚚 Phân Phối Hàng</h3></div>
-      <div class="pb">
-        <div class="fg">
-          <div class="f"><label>Đại Lý *</label><select id="pp-dl"></select></div>
-          <div class="f"><label>Sản Phẩm *</label><select id="pp-sp" onchange="autoPrice('pp-sp','pp-gia')"></select></div>
-          <div class="f"><label>Số Lượng *</label><input id="pp-sl" type="number" min="1" placeholder="0"/></div>
-          <div class="f"><label>Giá Sỉ (₫)</label><input id="pp-gia" type="number" placeholder="0"/></div>
-          <div class="f"><label>Ngày Giao</label><input id="pp-ngay" type="date"/></div>
-          <div class="f"><label>Ghi Chú</label><input id="pp-gc" placeholder="..."/></div>
-        </div>
-        <div class="fa"><button class="btn b-or" onclick="addPP()">🚚 Xác Nhận Phân Phối</button></div>
+    <!-- Chuyển đổi chế độ: Phân Phối Đơn Lẻ vs Import Hàng Loạt -->
+    <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+      <div style="display:flex;gap:6px">
+        <button class="btn b-or" id="btn-pp-mode-single" onclick="switchPPMode('single')" style="font-weight:600" data-lang="btn_pp_mode_single">➕ Phân Phối Đơn Lẻ</button>
+        <button class="btn b-out" id="btn-pp-mode-bulk" onclick="switchPPMode('bulk')" style="font-weight:600" data-lang="btn_pp_mode_bulk">📥 Import Phân Phối Hàng Loạt (.CSV / Excel)</button>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn b-gn b-sm" onclick="downloadPPTemplate()" data-lang="btn_download_pp_tpl">📥 Tải File Mẫu (.CSV)</button>
+        <button class="btn b-or b-sm" onclick="document.getElementById('pp-bulk-file-input').click()" data-lang="btn_choose_pp_csv">📁 Chọn File .CSV</button>
+        <input type="file" id="pp-bulk-file-input" accept=".csv,.txt,.xlsx,.xls" onchange="handlePPBulkFile(event)" style="display:none"/>
       </div>
     </div>
+
+    <!-- PHẦN 1: PHÂN PHỐI ĐƠN LẺ -->
+    <div id="pp-single-container">
+      <div class="panel">
+        <div class="ph"><h3>🚚 Phân Phối Hàng</h3></div>
+        <div class="pb">
+          <div class="fg">
+            <div class="f"><label>Đại Lý *</label><select id="pp-dl"></select></div>
+            <div class="f"><label>Sản Phẩm *</label><select id="pp-sp" onchange="autoPrice('pp-sp','pp-gia')"></select></div>
+            <div class="f"><label>Số Lượng *</label><input id="pp-sl" type="number" min="1" placeholder="0"/></div>
+            <div class="f"><label>Giá Sỉ (₫)</label><input id="pp-gia" type="number" placeholder="0"/></div>
+            <div class="f"><label>Ngày Giao</label><input id="pp-ngay" type="date"/></div>
+            <div class="f"><label>Ghi Chú</label><input id="pp-gc" placeholder="..."/></div>
+          </div>
+          <div class="fa"><button class="btn b-or" onclick="addPP()">🚚 Xác Nhận Phân Phối</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHẦN 2: IMPORT PHÂN PHỐI HÀNG LOẠT -->
+    <div id="pp-bulk-container" style="display:none">
+      <div class="panel">
+        <div class="ph">
+          <h3 data-lang="pp_bulk_h3">📥 Import Phân Phối Đại Lý Hàng Loạt (.CSV / Excel)</h3>
+          <span style="font-size:12px;color:#64748b" data-lang="pp_bulk_syntax">Cú pháp: Tên Đại Lý | SĐT / Liên Hệ | Khu Vực | Tên SP | Model | Số Lượng | Giá Bỏ Sỉ (₫) | Ngày Giao | Ghi Chú</span>
+        </div>
+        <div class="pb">
+          <div style="background:#fff7ed;padding:12px 14px;border-radius:8px;border:1px solid #fed7aa;margin-bottom:12px;font-size:12.5px;line-height:1.6">
+            <b>💡 Hướng dẫn 3 bước cho bộ phận phân phối &amp; đại lý:</b><br/>
+            <b>1.</b> Bấm nút <button class="btn b-gn b-xs" onclick="downloadPPTemplate()">📥 Tải File Mẫu (.CSV)</button> để tải file mẫu (không yêu cầu giá gốc, chỉ cần giá sỉ thỏa thuận).<br/>
+            <b>2.</b> Điền danh sách xuất sỉ cho đại lý trên Excel / Google Sheets rồi lưu file.<br/>
+            <b>3.</b> Bấm <button class="btn b-or b-xs" onclick="document.getElementById('pp-bulk-file-input').click()">📁 Chọn File</button> <b>HOẶC</b> bôi đen trong Excel bấm <code>Ctrl+C</code> rồi <b>dán (Ctrl+V)</b> vào khung bên dưới:
+          </div>
+
+          <textarea id="pp-bulk-paste-area" rows="6" style="width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;font-family:monospace;font-size:12px;line-height:1.5" placeholder="Dán (Ctrl+V) bảng phân phối đại lý từ Excel / Google Sheets vào đây...&#10;Ví dụ:&#10;Đại Lý Ánh Dương	Anh Tuấn - 0988111222	TP.HCM	Bộ Lưu Điện UPS Santak 1200VA	TG-1200	5	1850000	2026-10-03	Phân phối đợt 1 showroom&#10;Solar Miền Trung	Chị Hằng - 0977333444	Miền Trung	Tấm Pin Năng Lượng Mặt Trời Jinko 400W	JK-400M	20	2150000	2026-10-03	Đại lý cấp 1 phân phối dự án&#10;Điện Năng Lượng Xanh	Anh Hải - 0912345678	Hà Nội	Biến Tần Inverter Growatt 5kW	SPF-5000	3	14800000	2026-10-03	Phân phối trọn gói" oninput="parsePPBulkInput()"></textarea>
+
+          <div style="display:flex;gap:8px;margin-top:10px;justify-content:space-between;flex-wrap:wrap">
+            <div style="display:flex;gap:8px">
+              <button class="btn b-or" onclick="parsePPBulkInput()">🔍 Phân Tích &amp; Xem Trước (Preview)</button>
+              <button class="btn b-out" onclick="document.getElementById('pp-bulk-paste-area').value='';parsePPBulkInput()">✕ Xóa Khung Dán</button>
+            </div>
+            <button class="btn b-gn" id="btn-pp-confirm-bulk" onclick="confirmPPBulkImport()" style="font-weight:700" disabled>🚀 Xác Nhận Import Phân Phối (0 Lô)</button>
+          </div>
+
+          <!-- THẺ THỐNG KÊ NHANH BATCH IMPORT PHÂN PHỐI -->
+          <div id="pp-bulk-stats-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px;display:none">
+            <div class="card c-or"><div class="lbl2">🏪 Đại Lý</div><div class="val" id="pp-bs-dealers">0</div><div class="sub">Đại lý nhận hàng</div></div>
+            <div class="card c-bl"><div class="lbl2">📦 Mặt Hàng</div><div class="val" id="pp-bs-items">0</div><div class="sub">Mặt hàng phân phối</div></div>
+            <div class="card c-gn"><div class="lbl2">🔢 Tổng Số Lượng</div><div class="val" id="pp-bs-qty">0</div><div class="sub">PCS giao đại lý</div></div>
+            <div class="card c-yw"><div class="lbl2">💵 Tổng Giá Trị Sỉ</div><div class="val" id="pp-bs-val" style="font-size:15px">0 ₫</div><div class="sub">Giá trị giao dịch sỉ</div></div>
+            <div class="card c-gn"><div class="lbl2">🏢 Ước Tính LN Cty</div><div class="val" id="pp-bs-profit" style="font-size:15px">0 ₫</div><div class="sub">Nộp 17% Cty</div></div>
+          </div>
+
+          <!-- BẢNG PREVIEW CHI TIẾT -->
+          <div id="pp-bulk-preview-wrap" style="margin-top:14px;display:none">
+            <h4 style="margin-bottom:8px;color:#334155">📋 Danh Sách Phân Phối Xem Trước:</h4>
+            <div class="tw" id="pp-bulk-preview-table"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="panel"><div class="ph"><h3>📋 Lịch Sử Phân Phối</h3></div><div class="pb tw" id="t-pp"></div></div>
   </div>
 </div>
