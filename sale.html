@@ -8060,7 +8060,7 @@ function exportAcceptancesCSV() {
 // ═══════════════════════════════════════════════════
 // 🌐 UNIFIED BILINGUAL ENGINE (VIỆT - ANH ĐỒNG BỘ 100%)
 // ═══════════════════════════════════════════════════
-let currentLang = localStorage.getItem('ups_lang') || 'vi';
+let currentLang = localStorage.getItem('ups_lang') || 'en';
 
 const NAV_TITLES = {
   en: {
@@ -8560,6 +8560,34 @@ const BILINGUAL_PAIRS = [
   ['📄 UPS / Device Quotations', '📄 UPS / Device Quotations'],
   ['📝 Customer & Partner Survey', '📝 Customer & Partner Survey'],
   ['📋 Lịch Sử Khảo Sát', '📋 Survey History'],
+  ['📝 1. Khảo Sát Hiện Trường', '📝 1. Field Site Survey'],
+  ['🚚 2. Bỏ Hàng Đại Lý / Ký Gởi Trưởng Thôn', '🚚 2. Wholesale Dealer & Village Consignment'],
+  ['🏷️ 3. Tồn Kho Chi Tiết Serial', '🏷️ 3. Serial-Tracked Stock'],
+  ['⚡ 4. Nghiệm Thu & Hoàn Vật Tư', '⚡ 4. Field Acceptance & Materials'],
+  ['👥 5. Lịch Sử Khách Hàng Của Tôi', '👥 5. My Customer Journey'],
+  ['📝 Phiếu Khảo Sát Địa Hình & Phụ Tải Hiện Trường', '📝 Site & Electrical Load Survey Form'],
+  ['📋 Danh Sách Khảo Sát Hiện Trường', '📋 Field Site Survey Registry'],
+  ['Loại Kiến Trúc Mái', 'Roof Architecture Type'],
+  ['Hướng Đón Nắng Chính & Góc Nghiêng', 'Main Sun Orientation & Tilt Angle'],
+  ['Hiện Trạng Nguồn Điện', 'Existing Power Supply Status'],
+  ['Phụ Tải Thiết Bị Chính', 'Primary Electrical Loads'],
+  ['Công Suất Inverter Đề Xuất (kW)', 'Proposed Inverter Capacity (kW)'],
+  ['Dung Lượng Pin Lưu Trữ Đề Xuất', 'Proposed Battery Storage Capacity'],
+  ['Số Lượng Tấm Pin Đề Xuất', 'Proposed Solar Panels Count'],
+  ['Khoảng Cách Dây DC Dự Kiến (m)', 'Estimated DC Cable Length (m)'],
+  ['Đặc Điểm Thi Công & Ghi Chú Kỹ Thuật', 'Installation Notes & Technical Details'],
+  ['Lưu Khảo Sát Hiện Trường', 'Save Site Survey'],
+  ['Tạo Mới', 'New Survey / Reset'],
+  ['Bảo Mật Kinh Doanh', 'Confidentiality Protocol'],
+  ['Sổ Cái Nghiệm Thu & Quyết Toán 1 Hàng Khép Kín', 'Unified Closed-Loop Settlement Ledger'],
+  ['Phiếu Nhập Hàng', 'Goods Intake Form'],
+  ['Tạo Phiếu Tạm Ứng Hàng', 'Create Stock Advance Form'],
+  ['Tạo Báo Giá Thiết Bị', 'Create Device Quotation'],
+  ['Báo Giá Solar', 'Solar Quotation'],
+  ['Tồn Kho Hiện Tại', 'Current On-Hand Inventory'],
+  ['Bán Hàng & Xuất Kho', 'Sales Orders & Dispatch'],
+  ['Mẫu Gửi Telegram', 'Telegram Message Templates'],
+  ['Danh Sách Nhóm Tiếp Nhận Telegram', 'Active Telegram Recipient Groups']
 ];
 
 const MAP_VI_TO_EN = {};
@@ -8603,10 +8631,9 @@ function translateDOM(lang) {
   const map = isVi ? MAP_EN_TO_VI : MAP_VI_TO_EN;
   const mapLower = isVi ? MAP_EN_TO_VI_LOWER : MAP_VI_TO_EN_LOWER;
 
-  // 1. Text elements: labels, headings, buttons, th, options, spans, paragraphs, summary boxes
-  const selectors = 'label, h1, h2, h3, h4, h5, h6, button, th, option, b, span, p, div.qtotal div, div.lbl2, div.sub';
+  // 1. Text elements: labels, headings, buttons, th, options, spans, paragraphs, summary boxes, tabs
+  const selectors = 'label, h1, h2, h3, h4, h5, h6, button, th, option, b, span, p, div.tab, div.qtotal div, div.lbl2, div.sub';
   document.querySelectorAll(selectors).forEach(el => {
-    if (el.closest('.tabs') && el.classList.contains('tab')) return;
     if (el.children.length === 0) {
       const orig = el.textContent.trim();
       if (map[orig]) {
