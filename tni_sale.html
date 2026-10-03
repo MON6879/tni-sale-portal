@@ -2418,7 +2418,7 @@ const renders={
 
 function go(id){
   // 🛡️ RBAC INTERCEPTOR: Kiểm tra phân quyền vai trò trước khi chuyển tab
-  if (id !== 'access-denied' && id !== 'rbac') {
+  if (id !== 'access-denied') {
     const allowed = isTabAllowedForRole(id, currentAppRole);
     if (!allowed) {
       showAccessDenied(id, currentAppRole);
@@ -9025,7 +9025,7 @@ const ROLES = {
       'dashboard',
       'banhang', 'baogiaups', 'baogiasolar', 'daily', 'kygoi',
       'crm', 'quangcao', 'leads',
-      'mystats', 'myquotes', 'mysurvey', 'rbac'
+      'mystats', 'myquotes', 'mysurvey'
     ]
   },
   tech: {
@@ -9042,7 +9042,7 @@ const ROLES = {
       'dashboard',
       'baogiasolar', 'thucthi', 'acceptance',
       'crm',
-      'mystats', 'myquotes', 'mysurvey', 'rbac'
+      'mystats', 'myquotes', 'mysurvey'
     ]
   },
   warehouse: {
@@ -9058,7 +9058,7 @@ const ROLES = {
     allowedTabs: [
       'dashboard', 'nhap', 'tonkho', 'tamung',
       'banhang', 'kygoi',
-      'mystats', 'rbac'
+      'mystats'
     ]
   },
   dealer: {
@@ -9073,8 +9073,7 @@ const ROLES = {
     canViewCostPrice: false,
     allowedTabs: [
       'dashboard',
-      'baogiaups', 'baogiasolar', 'daily', 'kygoi',
-      'rbac'
+      'baogiaups', 'baogiasolar', 'daily', 'kygoi'
     ]
   }
 };
@@ -9100,7 +9099,7 @@ const SYSTEM_MODULES = [
   { id: 'mystats', name: '📊 Tiến Độ Cá Nhân', name_en: '📊 My Performance KPI', cat: 'Cổng Nhân Viên', secLevel: 'Cấp 4 - Cá Nhân', desc: 'Báo cáo KPI, doanh số và hoa hồng của từng nhân viên', desc_en: 'Personal sales KPI, revenue target & commissions' },
   { id: 'myquotes', name: '📄 Báo Giá Của Tôi', name_en: '📄 My Quotations', cat: 'Cổng Nhân Viên', secLevel: 'Cấp 4 - Cá Nhân', desc: 'Danh sách các báo giá do nhân viên tự lập', desc_en: 'Archive of quotations created by current staff member' },
   { id: 'mysurvey', name: '📝 Khảo Sát Của Tôi', name_en: '📝 My Field Surveys', cat: 'Cổng Nhân Viên', secLevel: 'Cấp 4 - Cá Nhân', desc: 'Phiếu khảo sát khách hàng do nhân viên thực hiện', desc_en: 'Customer survey forms recorded by current staff member' },
-  { id: 'rbac', name: '🛡️ Phân Quyền Vai Trò (RBAC)', name_en: '🛡️ Role Permissions (RBAC)', cat: 'Hệ Thống & Phân Quyền', secLevel: 'Cấp 1 - Quản Trị', desc: 'Ma trận phân quyền & phân vai trò nhân viên', desc_en: 'Access matrix & staff organizational role assignments' }
+  { id: 'rbac', name: '🛡️ Phân Quyền Vai Trò (RBAC)', name_en: '🛡️ Role Permissions (RBAC)', cat: 'Hệ Thống & Phân Quyền', secLevel: '🔴 CẤP 1 - QUẢN TRỊ', desc: 'Ma trận phân quyền & phân vai trò nhân viên', desc_en: 'Access matrix & staff organizational role assignments', isSensitive: true }
 ];
 
 const DEFAULT_STAFF_USERS = [
@@ -9113,7 +9112,7 @@ const DEFAULT_STAFF_USERS = [
   { id: 'ST007', name: 'Đại Lý Ủy Quyền 01', email: 'dealer01@tni.com', role: 'dealer', title: 'Đại Lý Ủy Quyền Cấp 1', phone: '0965 000 007' }
 ];
 
-let currentAppRole = localStorage.getItem('tni_sale_role') || 'admin';
+let currentAppRole = localStorage.getItem('tni_sale_role') || 'sales';
 let currentStaffUser = localStorage.getItem('tni_sale_staff') || '';
 // PIN stored as SHA-256 hash only — never plaintext
 let adminPinHash = localStorage.getItem('tni_sale_admin_pin_hash') || null;
@@ -9174,8 +9173,34 @@ function isTabAllowedForRole(tabId, roleId) {
   return r.allowedTabs.includes(tabId);
 }
 
-function changeAppRole(newRole, staffName) {
-  if (!ROLES[newRole]) newRole = 'admin';
+function changeAppRole(newRole, staffName, bypassPin) {
+  if (!ROLES[newRole]) newRole = 'sales';
+
+  // 🔒 SECURITY GATE: Chuyển sang quyền Quản Trị hoặc Tài Chính BẮT BUỘC phải qua mã PIN nếu chưa mở khóa
+  if ((newRole === 'admin' || newRole === 'finance') && !adminSessionUnlocked && !bypassPin) {
+    const isVi = currentLang === 'vi';
+    const roleTitle = ROLES[newRole].name;
+    const pin = prompt(isVi ? `🔒 VAI TRÒ BẢO MẬT CAO CẤP: ${roleTitle}\nVui lòng nhập mã PIN Quản Trị để truy cập:` : `🔒 PRIVILEGED ROLE: ${roleTitle}\nPlease enter Admin PIN to access:`);
+    if (pin === null) {
+      // Người dùng bấm Hủy -> Trả lại dropdown vai trò hiện tại
+      const sel = document.getElementById('app-role-select');
+      if (sel) sel.value = currentAppRole;
+      return;
+    }
+    verifyPin_(pin).then(ok => {
+      if (ok) {
+        adminSessionUnlocked = true;
+        changeAppRole(newRole, staffName, true);
+        al(isVi ? `✅ Mở khóa thành công vai trò: ${roleTitle}` : `✅ Access unlocked for: ${roleTitle}`, 'ok');
+      } else {
+        const sel = document.getElementById('app-role-select');
+        if (sel) sel.value = currentAppRole;
+        al(isVi ? '❌ Mã PIN không chính xác! Không thể chuyển sang vai trò này.' : '❌ Incorrect PIN! Cannot switch to this privileged role.', 'er');
+      }
+    });
+    return;
+  }
+
   currentAppRole = newRole;
   localStorage.setItem('tni_sale_role', newRole);
 
@@ -9217,14 +9242,14 @@ function changeAppRole(newRole, staffName) {
     activeQc.style.background = 'rgba(255,255,255,0.28)';
   }
 
-  // Update Sidebar lock icons & tooltips
+  // Update Sidebar items & section categories
   updateSidebarAccessState(newRole);
 
   // If currently on a blocked tab, redirect to access denied
   const curSec = document.querySelector('.sec.on');
   if (curSec) {
     const secId = curSec.id.replace(/^s-/, '');
-    if (secId !== 'access-denied' && secId !== 'rbac' && !isTabAllowedForRole(secId, newRole)) {
+    if (secId !== 'access-denied' && !isTabAllowedForRole(secId, newRole)) {
       showAccessDenied(secId, newRole);
     }
   }
@@ -9239,26 +9264,39 @@ function changeAppRole(newRole, staffName) {
 
 function updateSidebarAccessState(roleId) {
   const allowed = (ROLES[roleId] || ROLES.admin).allowedTabs;
+
+  // 1. Cập nhật từng liên kết menu (ẩn hoàn toàn nếu không được phép)
   document.querySelectorAll('#sb nav a[data-nav-a]').forEach(a => {
     const tabId = a.getAttribute('data-nav-a');
-    const isAllowed = allowed.includes(tabId);
+    const isAllowed = isTabAllowedForRole(tabId, roleId);
 
-    // Remove existing lock badge if any
+    // Xóa badge lock cũ nếu có
     const oldLock = a.querySelector('.nav-lock-badge');
     if (oldLock) oldLock.remove();
 
     if (!isAllowed) {
-      a.style.opacity = '0.52';
-      a.title = '🔒 Bị khóa đối với vai trò ' + ROLES[roleId].shortName;
-      const lockSpan = document.createElement('span');
-      lockSpan.className = 'nav-lock-badge';
-      lockSpan.style.cssText = 'font-size:10px;margin-left:auto;opacity:0.8';
-      lockSpan.textContent = '🔒';
-      a.appendChild(lockSpan);
+      // 🔒 KHÓA TRIỆT ĐỂ: Ẩn hoàn toàn khỏi sidebar, không để lại dấu vết
+      a.style.display = 'none';
+      a.title = '';
     } else {
+      a.style.display = '';
       a.style.opacity = '1.0';
       a.title = '';
     }
+  });
+
+  // 2. Ẩn tiêu đề phân mục (lbl) nếu toàn bộ liên kết con bên dưới mục đó đều bị ẩn
+  document.querySelectorAll('#sb nav .lbl[data-nav-lbl]').forEach(lbl => {
+    let nextEl = lbl.nextElementSibling;
+    let hasVisibleChild = false;
+    while (nextEl && !nextEl.classList.contains('lbl')) {
+      if (nextEl.tagName === 'A' && nextEl.style.display !== 'none') {
+        hasVisibleChild = true;
+        break;
+      }
+      nextEl = nextEl.nextElementSibling;
+    }
+    lbl.style.display = hasVisibleChild ? '' : 'none';
   });
 }
 
@@ -9701,7 +9739,7 @@ function promptAdminUnlock() {
   verifyPin_(input).then(ok => {
     if (ok) {
       adminSessionUnlocked = true;
-      changeAppRole('admin');
+      changeAppRole('admin', null, true);
       // Lấy admin token để sync staff lên Sheet
       if (!localStorage.getItem('tni_sale_admin_token')) {
         const tok = prompt(isVi ? '🔑 Nhập Admin API Token để đồng bộ nhân sự lên Google Sheet\n(Bỏ qua = chỉ lưu local, không sync Sheet):' : '🔑 Enter Admin API Token to sync staff to Google Sheet\n(Skip = local-only, no Sheet sync):');
@@ -9955,10 +9993,30 @@ window.addEventListener('DOMContentLoaded', () => {
   const paramRole = params.get('role');
   const paramStaff = params.get('staff') || params.get('user') || params.get('email');
 
-  if (paramRole && ROLES[paramRole]) {
-    changeAppRole(paramRole, paramStaff || '');
+  let resolvedRole = paramRole;
+  let resolvedStaff = paramStaff || '';
+
+  // 🔍 Tự động tra cứu nhân sự trong danh bạ nếu có tên hoặc email
+  if (resolvedStaff) {
+    const list = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
+    const found = list.find(u => 
+      (u.name && u.name.toLowerCase() === resolvedStaff.toLowerCase()) || 
+      (u.email && u.email.toLowerCase() === resolvedStaff.toLowerCase()) ||
+      (u.id && u.id.toLowerCase() === resolvedStaff.toLowerCase())
+    );
+    if (found) {
+      resolvedRole = found.role;
+      resolvedStaff = found.name;
+    }
+  }
+
+  if (resolvedRole && ROLES[resolvedRole]) {
+    // Nếu vào bằng link gán role nhân viên hoặc được gán role
+    changeAppRole(resolvedRole, resolvedStaff, false);
   } else {
-    changeAppRole(currentAppRole, currentStaffUser);
+    // Không có param -> sử dụng role đã lưu hoặc an toàn mặc định là sales
+    const safeSavedRole = (currentAppRole === 'admin' || currentAppRole === 'finance') ? 'sales' : currentAppRole;
+    changeAppRole(safeSavedRole, currentStaffUser, false);
   }
 
   // Populate staff selects and render matrix

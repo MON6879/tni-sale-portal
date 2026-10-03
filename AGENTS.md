@@ -1,4 +1,4 @@
-# 🔒 STRICT STEEL-LOCK RULE: KHÓA THÉP PHÂN HỆ SITE DOWN — TUYỆT ĐỐI CẤM TỰ Ý VÀO XEM / SỬA KHI KHÔNG CÓ YÊU CẦU (STRICT SITE DOWN STEEL LOCK & ZERO-UNAUTHORIZED-ACCESS POLICY)
+﻿# 🔒 STRICT STEEL-LOCK RULE: KHÓA THÉP PHÂN HỆ SITE DOWN — TUYỆT ĐỐI CẤM TỰ Ý VÀO XEM / SỬA KHI KHÔNG CÓ YÊU CẦU (STRICT SITE DOWN STEEL LOCK & ZERO-UNAUTHORIZED-ACCESS POLICY)
 
 > ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (SITE DOWN STEEL-LOCK POLICY)**:
 > 1. **Khóa Thép Tuyệt Đối (Absolute Steel Freeze)**: Phân hệ Site Down (`apps_script_sitedown`, Script ID `1fgIR_frjlOHBt4o3STTjGmHYaKfuiSb3zAtp7IrO__uLSIuRQGJ2Oc6X`, Version `@89`, `botlookup_relay.py`) đã hoàn thiện và được KHÓA THÉP 100%.
@@ -129,6 +129,17 @@
 >    - Sau khi deploy xong, BẮT BUỘC phải kiểm tra kết quả terminal xuất hiện chuỗi `Deployed <deploymentId> @<version>`, và gọi kiểm tra HTTP live để xác nhận version mới đã phản hồi thành công trước khi kết luận!
 
 ---
+
+
+---
+
+# 🛡️ STRICT RULE: BẢO VỆ PHÂN QUYỀN RBAC WEB UI & BỌC THÉP MẬT MÃ 17% — TUYỆT ĐỐI CẤM LỘ GIÁ VỐN & THÔNG TIN TÀI CHÍNH (STRICT WEB RBAC PIN-GATE & ZERO-FINANCIAL-LEAK POLICY)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (WEB RBAC PIN-GATE & ZERO-FINANCIAL-LEAK POLICY)**:
+> 1. **Khóa PIN Cứng Khi Đổi Sang Vai Trò Cao Cấp (Mandatory Admin/Finance PIN Gate)**: Bất kỳ thao tác chuyển đổi vai trò sang dmin (Ban Giám Đốc) hoặc inance (Kế Toán / Tài Chính) qua dropdown topbar (#app-role-select) hoặc Quick Cards (#rqc-...) BẮT BUỘC phải xác thực mã PIN Quản Trị (erifyPin_). Nếu người dùng hủy hoặc nhập sai PIN, hệ thống BẮT BUỘC hoàn nguyên ngay lập tức về vai trò trước đó. TUYỆT ĐỐI CẤM cho phép chuyển vai trò đặc quyền tự do mà không qua xác thực!
+> 2. **Khóa Ẩn Hoàn Toàn Sidebar & Phân Mục (Strict Display None & Category Clean-up)**: Đối với các phân hệ/tab mà vai trò hiện tại không được cấp phép (!isTabAllowedForRole), BẮT BUỘC phải đặt style display: none để ẩn hoàn toàn khỏi thanh điều hướng sidebar. TUYỆT ĐỐI CẤM chỉ làm mờ (opacity: 0.52) hoặc gắn icon khóa 🔒 làm lộ sự tồn tại của tính năng mật. Đồng thời, nếu toàn bộ liên kết con trong một nhóm mục (.lbl[data-nav-lbl]) đều bị ẩn (ví dụ mục Finance), tiêu đề phân mục đó cũng BẮT BUỘC phải ẩn hoàn toàn (display: none).
+> 3. **Phân Hệ RBAC Chỉ Dành Cho Admin (RBAC Module Admin-Only)**: Phân hệ Quản Trị Phân Quyền (bac) BẮT BUỘC chỉ nằm trong danh sách được phép (llowedTabs) của duy nhất vai trò dmin. Toàn bộ các vai trò khác (sales, 	ech, warehouse, dealer) TUYỆT ĐỐI CẤM được truy cập module bac.
+> 4. **Tự Động Nhận Diện Vai Trò Theo Nhân Sự (Staff Auto-Role Resolution & Safe Fallback)**: Khi mở trang bằng tham số link cá nhân hóa (?staff=... hoặc ?email=...), hệ thống BẮT BUỘC tra cứu danh bạ nhân sự (staff_directory) để gán chính xác vai trò tương ứng của nhân viên đó. Nếu truy cập trang công khai không có tham số xác thực, vai trò mặc định an toàn BẮT BUỘC là sales (không tự ý gán dmin).
 
 # 🔒 STRICT SEARCH & MENU RULE: KHÓA CỨNG ANCHOR BẮT ĐẦU — TUYỆT ĐỐI KHÔNG TÌM Ở GIỮA CÂU (STRICT START-KEY ANCHORING & ZERO MID-SENTENCE MATCHING POLICY)
 
