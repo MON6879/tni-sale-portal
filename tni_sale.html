@@ -610,140 +610,79 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
 
 <!-- ══ BÁN HÀNG ══ -->
 <div class="sec" id="s-banhang">
-  <!-- Chuyển đổi chế độ: Đơn lẻ vs Import Bán Hàng Hàng Loạt -->
-  <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;justify-content:space-between;flex-wrap:wrap">
-    <div style="display:flex;gap:6px">
-      <button class="btn b-or" id="btn-ban-mode-single" onclick="switchBanMode('single')" style="font-weight:600" data-lang="btn_ban_mode_single">➕ Tạo Đơn Lẻ</button>
-      <button class="btn b-out" id="btn-ban-mode-bulk" onclick="switchBanMode('bulk')" style="font-weight:600" data-lang="btn_ban_mode_bulk">📥 Import Bán Hàng Hàng Loạt (.CSV / Excel)</button>
-    </div>
-    <div style="display:flex;gap:6px">
-      <button class="btn b-gn b-sm" onclick="downloadBanTemplate()" data-lang="btn_download_ban_tpl">📥 Tải File Mẫu (.CSV)</button>
-      <button class="btn b-or b-sm" onclick="document.getElementById('ban-bulk-file-input').click()" data-lang="btn_choose_ban_csv">📁 Chọn File .CSV</button>
-      <input type="file" id="ban-bulk-file-input" accept=".csv,.txt,.xlsx,.xls" onchange="handleBanBulkFile(event)" style="display:none"/>
-    </div>
-  </div>
-
-  <!-- PHẦN 1: TẠO PHIẾU ĐƠN LẺ -->
-  <div id="ban-single-container">
-    <div class="panel">
-      <div class="ph"><h3 data-lang="dispatch_title">🚚 Bán Hàng &amp; Xuất Kho Cho... (Smart Dispatch)</h3></div>
-      <div class="pb">
-        <div class="fg">
-          <div class="f">
-            <label data-lang="dispatch_to">Xuất Cho (Dispatch Target) *</label>
-            <select id="b-type" onchange="onDispatchTargetChange()" style="font-weight:700;color:#0284c7;background:#f0f9ff">
-              <option value="retail">🛒 Khách Hàng Bán Lẻ (Retail Customer)</option>
-              <option value="dealer">🏪 Đại Lý Phân Phối (Dealer Wholesale)</option>
-              <option value="pos">📋 Điểm Bán Ký Gởi (POS / Consignment)</option>
-              <option value="staff">🧑‍💼 Nhân Viên Tạm Ứng / Đi Công Trình (Staff)</option>
-            </select>
-          </div>
-          <div class="f">
-            <label data-lang="p_select">Sản Phẩm Xuất *</label>
-            <select id="b-sp" onchange="onDispatchTargetChange()"></select>
-          </div>
-          <div class="f">
-            <label data-lang="p_qty">Số Lượng Xuất *</label>
-            <input id="b-sl" type="number" min="1" value="1" oninput="calcBanProfit()"/>
-          </div>
-          <div class="f">
-            <label data-lang="p_unit_price">Đơn Giá Áp Dụng (₫) *</label>
-            <input id="b-gia" type="number" placeholder="0" oninput="calcBanProfit()"/>
-          </div>
-          <div class="f">
-            <label id="lbl-b-kh" data-lang="recipient_name">Tên Khách Hàng / Đại Lý / Người Nhận *</label>
-            <input id="b-kh" placeholder="Tên đơn vị nhận hàng"/>
-          </div>
-          <div class="f">
-            <label data-lang="phone_number">Số Điện Thoại</label>
-            <input id="b-dt" placeholder="09xx xxx xxx"/>
-          </div>
-          <div class="f">
-            <label data-lang="p_serial">Serial Number / Mã SP</label>
-            <input id="b-serial" placeholder="SN123456..."/>
-          </div>
-          <div class="f">
-            <label data-lang="payment_method">Hình Thức Thanh Toán</label>
-            <select id="b-tt" onchange="onPaymentTypeChange()">
-              <option value="cash">💵 Đã Thu 100% (Tiền mặt / Chuyển khoản)</option>
-              <option value="credit">⏳ Ghi Nợ / Gối Đầu (Chưa thanh toán đủ)</option>
-              <option value="consignment">📋 Ký Gởi / Tạm Ứng (Chưa thu tiền)</option>
-            </select>
-          </div>
-          <div class="f" id="f-credit-deposit" style="display:none">
-            <label data-lang="deposit_paid">Tiền Đã Trả Trước (₫)</label>
-            <input id="b-deposit" type="number" value="0" placeholder="0"/>
-          </div>
-          <div class="f">
-            <label data-lang="dispatch_date">Ngày Xuất Kho</label>
-            <input id="b-ngay" type="date"/>
-          </div>
-          <div class="f" style="grid-column:1/-1">
-            <label data-lang="notes">Ghi Chú Phiếu Xuất</label>
-            <textarea id="b-gc" placeholder="Ghi chú người giao, địa chỉ giao hàng, dự án..."></textarea>
-          </div>
+  <div class="panel">
+    <div class="ph"><h3 data-lang="dispatch_title">🚚 Bán Hàng &amp; Xuất Kho Cho... (Smart Dispatch)</h3></div>
+    <div class="pb">
+      <div class="fg">
+        <div class="f">
+          <label data-lang="dispatch_to">Xuất Cho (Dispatch Target) *</label>
+          <select id="b-type" onchange="onDispatchTargetChange()" style="font-weight:700;color:#0284c7;background:#f0f9ff">
+            <option value="retail">🛒 Khách Hàng Bán Lẻ (Retail Customer)</option>
+            <option value="dealer">🏪 Đại Lý Phân Phối (Dealer Wholesale)</option>
+            <option value="pos">📋 Điểm Bán Ký Gởi (POS / Consignment)</option>
+            <option value="staff">🧑‍💼 Nhân Viên Tạm Ứng / Đi Công Trình (Staff)</option>
+          </select>
         </div>
-
-        <!-- 💡 LIVE DISPATCH FINANCIAL SUMMARY -->
-        <div id="ban-financial-box" style="margin-top:14px;padding:12px 14px;background:#f8fafc;border-radius:8px;border:1px solid #cbd5e1;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
-          <div><span style="font-size:11px;color:#0284c7">💰 Tổng Tiền Hàng</span><div id="bf-total" style="font-size:15px;font-weight:700;color:#0284c7">0 ₫</div></div>
-          <div><span style="font-size:11px;color:#475569">🏦 Vốn Gốc (83%)</span><div id="bf-cost" style="font-size:15px;font-weight:700;color:#475569">0 ₫</div></div>
-          <div><span style="font-size:11px;color:#1e40af">🏢 Phải Nộp Cty (% Cty)</span><div id="bf-cty" style="font-size:15px;font-weight:700;color:#1e40af">0 ₫</div></div>
-          <div><span style="font-size:11px;color:#16a34a">🏪 LN Chi Nhánh Thuần</span><div id="bf-branch" style="font-size:15px;font-weight:700;color:#16a34a">0 ₫</div></div>
+        <div class="f">
+          <label data-lang="p_select">Sản Phẩm Xuất *</label>
+          <select id="b-sp" onchange="onDispatchTargetChange()"></select>
         </div>
-
-        <div class="fa" style="margin-top:14px">
-          <button class="btn b-gn" onclick="addBan()" data-lang="btn_confirm_dispatch" style="font-weight:700">🚚 Xác Nhận Xuất Kho &amp; Lưu Đơn</button>
-          <button class="btn b-bl" onclick="printDispatchNote()" data-lang="btn_print_dispatch">📄 In Phiếu Xuất Kho</button>
+        <div class="f">
+          <label data-lang="p_qty">Số Lượng Xuất *</label>
+          <input id="b-sl" type="number" min="1" value="1" oninput="calcBanProfit()"/>
         </div>
+        <div class="f">
+          <label data-lang="p_unit_price">Đơn Giá Áp Dụng (₫) *</label>
+          <input id="b-gia" type="number" placeholder="0" oninput="calcBanProfit()"/>
+        </div>
+        <div class="f">
+          <label id="lbl-b-kh" data-lang="recipient_name">Tên Khách Hàng / Đại Lý / Người Nhận *</label>
+          <input id="b-kh" placeholder="Tên đơn vị nhận hàng"/>
+        </div>
+        <div class="f">
+          <label data-lang="phone_number">Số Điện Thoại</label>
+          <input id="b-dt" placeholder="09xx xxx xxx"/>
+        </div>
+        <div class="f">
+          <label data-lang="p_serial">Serial Number / Mã SP</label>
+          <input id="b-serial" placeholder="SN123456..."/>
+        </div>
+        <div class="f">
+          <label data-lang="payment_method">Hình Thức Thanh Toán</label>
+          <select id="b-tt" onchange="onPaymentTypeChange()">
+            <option value="cash">💵 Đã Thu 100% (Tiền mặt / Chuyển khoản)</option>
+            <option value="credit">⏳ Ghi Nợ / Gối Đầu (Chưa thanh toán đủ)</option>
+            <option value="consignment">📋 Ký Gởi / Tạm Ứng (Chưa thu tiền)</option>
+          </select>
+        </div>
+        <div class="f" id="f-credit-deposit" style="display:none">
+          <label data-lang="deposit_paid">Tiền Đã Trả Trước (₫)</label>
+          <input id="b-deposit" type="number" value="0" placeholder="0"/>
+        </div>
+        <div class="f">
+          <label data-lang="dispatch_date">Ngày Xuất Kho</label>
+          <input id="b-ngay" type="date"/>
+        </div>
+        <div class="f" style="grid-column:1/-1">
+          <label data-lang="notes">Ghi Chú Phiếu Xuất</label>
+          <textarea id="b-gc" placeholder="Ghi chú người giao, địa chỉ giao hàng, dự án..."></textarea>
+        </div>
+      </div>
+
+      <!-- 💡 LIVE DISPATCH FINANCIAL SUMMARY -->
+      <div id="ban-financial-box" style="margin-top:14px;padding:12px 14px;background:#f8fafc;border-radius:8px;border:1px solid #cbd5e1;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
+        <div><span style="font-size:11px;color:#0284c7">💰 Tổng Tiền Hàng</span><div id="bf-total" style="font-size:15px;font-weight:700;color:#0284c7">0 ₫</div></div>
+        <div><span style="font-size:11px;color:#475569">🏦 Vốn Gốc (83%)</span><div id="bf-cost" style="font-size:15px;font-weight:700;color:#475569">0 ₫</div></div>
+        <div><span style="font-size:11px;color:#1e40af">🏢 Phải Nộp Cty (% Cty)</span><div id="bf-cty" style="font-size:15px;font-weight:700;color:#1e40af">0 ₫</div></div>
+        <div><span style="font-size:11px;color:#16a34a">🏪 LN Chi Nhánh Thuần</span><div id="bf-branch" style="font-size:15px;font-weight:700;color:#16a34a">0 ₫</div></div>
+      </div>
+
+      <div class="fa" style="margin-top:14px">
+        <button class="btn b-gn" onclick="addBan()" data-lang="btn_confirm_dispatch" style="font-weight:700">🚚 Xác Nhận Xuất Kho &amp; Lưu Đơn</button>
+        <button class="btn b-bl" onclick="printDispatchNote()" data-lang="btn_print_dispatch">📄 In Phiếu Xuất Kho</button>
       </div>
     </div>
   </div>
-
-  <!-- PHẦN 2: IMPORT BÁN HÀNG HÀNG LOẠT -->
-  <div id="ban-bulk-container" style="display:none">
-    <div class="panel">
-      <div class="ph">
-        <h3 data-lang="ban_bulk_h3">📥 Import Đơn Bán Hàng &amp; Xuất Kho Hàng Loạt (.CSV / Excel)</h3>
-        <span style="font-size:12px;color:#64748b" data-lang="ban_bulk_syntax">Cú pháp: Đối Tượng | Tên Khách/Đại Lý | Số Điện Thoại | Tên SP | Model | Số Lượng | Đơn Giá Bán | Thanh Toán | Trả Trước | Serial | Ghi Chú</span>
-      </div>
-      <div class="pb">
-        <div style="background:#f0f9ff;padding:12px 14px;border-radius:8px;border:1px solid #bae6fd;margin-bottom:12px;font-size:12.5px;line-height:1.6">
-          <b>💡 Hướng dẫn 3 bước cho nhân viên kinh doanh / xuất kho:</b><br/>
-          <b>1.</b> Bấm nút <button class="btn b-gn b-xs" onclick="downloadBanTemplate()">📥 Tải File Mẫu (.CSV)</button> để tải file mẫu (không yêu cầu giá gốc, chỉ cần đơn giá bán cho khách).<br/>
-          <b>2.</b> Điền danh sách đơn hàng xuất kho trên Excel / Google Sheets rồi lưu file.<br/>
-          <b>3.</b> Bấm <button class="btn b-or b-xs" onclick="document.getElementById('ban-bulk-file-input').click()">📁 Chọn File</button> <b>HOẶC</b> bôi đen trong Excel bấm <code>Ctrl+C</code> rồi <b>dán (Ctrl+V)</b> vào khung bên dưới:
-        </div>
-
-        <textarea id="ban-bulk-paste-area" rows="6" style="width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;font-family:monospace;font-size:12px;line-height:1.5" placeholder="Dán (Ctrl+V) bảng xuất bán hàng từ Excel / Google Sheets vào đây...&#10;Ví dụ:&#10;retail	Anh Tuấn Q.1	0988111222	Bộ Lưu Điện UPS Santak 1200VA	TG-1200	2	2450000	cash	2450000	SN-TG1200-01	Giao hàng lắp đặt tận nơi&#10;dealer	Cửa Hàng Hòa Phát	0977333444	Tấm Pin Mặt Trời Jinko 400W	JK-400M	10	2350000	credit	10000000	SN-JK400-01...10	Đại lý thanh toán 50%&#10;pos	Shop Năng Lượng Xanh	0912345678	Biến Tần Inverter Growatt 5kW	SPF-5000	1	16500000	consignment	0	SN-GW5K-01	Ký gởi showroom trưng bày" oninput="parseBanBulkInput()"></textarea>
-
-        <div style="display:flex;gap:8px;margin-top:10px;justify-content:space-between;flex-wrap:wrap">
-          <div style="display:flex;gap:8px">
-            <button class="btn b-or" onclick="parseBanBulkInput()">🔍 Phân Tích &amp; Xem Trước (Preview)</button>
-            <button class="btn b-out" onclick="document.getElementById('ban-bulk-paste-area').value='';parseBanBulkInput()">✕ Xóa Khung Dán</button>
-          </div>
-          <button class="btn b-gn" id="btn-ban-confirm-bulk" onclick="confirmBanBulkImport()" style="font-weight:700" disabled>🚀 Xác Nhận Import Bán Hàng Hàng Loạt (0 Đơn)</button>
-        </div>
-
-        <!-- THẺ THỐNG KÊ NHANH BATCH IMPORT BÁN HÀNG -->
-        <div id="ban-bulk-stats-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px;display:none">
-          <div class="card c-bl"><div class="lbl2">🛒 Số Đơn Hàng</div><div class="val" id="ban-bs-orders">0</div><div class="sub">Đơn xuất kho</div></div>
-          <div class="card c-or"><div class="lbl2">📦 Mặt Hàng</div><div class="val" id="ban-bs-items">0</div><div class="sub">Mặt hàng xuất</div></div>
-          <div class="card c-gn"><div class="lbl2">🔢 Tổng Số Lượng</div><div class="val" id="ban-bs-qty">0</div><div class="sub">Sản phẩm xuất</div></div>
-          <div class="card c-bl"><div class="lbl2">💵 Tổng Doanh Thu</div><div class="val" id="ban-bs-rev" style="font-size:15px">0 ₫</div><div class="sub">Doanh thu bán</div></div>
-          <div class="card c-yw"><div class="lbl2">🏢 Phải Nộp Cty</div><div class="val" id="ban-bs-cty" style="font-size:15px">0 ₫</div><div class="sub">Trích nộp 17% Cty</div></div>
-          <div class="card c-gn"><div class="lbl2">🏪 LN Chi Nhánh</div><div class="val" id="ban-bs-branch" style="font-size:15px">0 ₫</div><div class="sub">LN chi nhánh thuần</div></div>
-        </div>
-
-        <!-- BẢNG PREVIEW CHI TIẾT -->
-        <div id="ban-bulk-preview-wrap" style="margin-top:14px;display:none">
-          <h4 style="margin-bottom:8px;color:#334155">📋 Danh Sách Đơn Xuất Kho Xem Trước:</h4>
-          <div class="tw" id="ban-bulk-preview-table"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <div class="panel"><div class="ph"><h3>📋 Lịch Sử Bán Hàng</h3></div><div class="pb tw" id="t-ban"></div></div>
 </div>
 
@@ -1520,15 +1459,7 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
   </div>
   <div id="td-ds">
     <div class="panel">
-      <div class="ph">
-        <h3>Danh Sách Đại Lý</h3>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button class="btn b-bl b-sm" onclick="tog('fdl')">+ Thêm</button>
-          <button class="btn b-gn b-sm" onclick="downloadDLTemplate()" data-lang="btn_download_dl_tpl">📥 Tải Mẫu DS Đại Lý (.CSV)</button>
-          <button class="btn b-or b-sm" onclick="document.getElementById('dl-bulk-file-input').click()" data-lang="btn_choose_dl_csv">📁 Import DS Đại Lý</button>
-          <input type="file" id="dl-bulk-file-input" accept=".csv,.txt" onchange="handleDLBulkFile(event)" style="display:none"/>
-        </div>
-      </div>
+      <div class="ph"><h3>Danh Sách Đại Lý</h3><button class="btn b-bl b-sm" onclick="tog('fdl')">+ Thêm</button></div>
       <div class="pb" id="fdl" style="display:none">
         <div class="fg">
           <div class="f"><label>Tên Đại Lý *</label><input id="dl-ten" placeholder="Tên cửa hàng"/></div>
@@ -1545,80 +1476,20 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
     <div class="panel"><div class="ph"><h3>🏪 Đại Lý</h3></div><div class="pb tw" id="t-daily"></div></div>
   </div>
   <div id="td-pp" style="display:none">
-    <!-- Chuyển đổi chế độ: Phân Phối Đơn Lẻ vs Import Hàng Loạt -->
-    <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;justify-content:space-between;flex-wrap:wrap">
-      <div style="display:flex;gap:6px">
-        <button class="btn b-or" id="btn-pp-mode-single" onclick="switchPPMode('single')" style="font-weight:600" data-lang="btn_pp_mode_single">➕ Phân Phối Đơn Lẻ</button>
-        <button class="btn b-out" id="btn-pp-mode-bulk" onclick="switchPPMode('bulk')" style="font-weight:600" data-lang="btn_pp_mode_bulk">📥 Import Phân Phối Hàng Loạt (.CSV / Excel)</button>
-      </div>
-      <div style="display:flex;gap:6px">
-        <button class="btn b-gn b-sm" onclick="downloadPPTemplate()" data-lang="btn_download_pp_tpl">📥 Tải File Mẫu (.CSV)</button>
-        <button class="btn b-or b-sm" onclick="document.getElementById('pp-bulk-file-input').click()" data-lang="btn_choose_pp_csv">📁 Chọn File .CSV</button>
-        <input type="file" id="pp-bulk-file-input" accept=".csv,.txt,.xlsx,.xls" onchange="handlePPBulkFile(event)" style="display:none"/>
+    <div class="panel">
+      <div class="ph"><h3>🚚 Phân Phối Hàng</h3></div>
+      <div class="pb">
+        <div class="fg">
+          <div class="f"><label>Đại Lý *</label><select id="pp-dl"></select></div>
+          <div class="f"><label>Sản Phẩm *</label><select id="pp-sp" onchange="autoPrice('pp-sp','pp-gia')"></select></div>
+          <div class="f"><label>Số Lượng *</label><input id="pp-sl" type="number" min="1" placeholder="0"/></div>
+          <div class="f"><label>Giá Sỉ (₫)</label><input id="pp-gia" type="number" placeholder="0"/></div>
+          <div class="f"><label>Ngày Giao</label><input id="pp-ngay" type="date"/></div>
+          <div class="f"><label>Ghi Chú</label><input id="pp-gc" placeholder="..."/></div>
+        </div>
+        <div class="fa"><button class="btn b-or" onclick="addPP()">🚚 Xác Nhận Phân Phối</button></div>
       </div>
     </div>
-
-    <!-- PHẦN 1: PHÂN PHỐI ĐƠN LẺ -->
-    <div id="pp-single-container">
-      <div class="panel">
-        <div class="ph"><h3>🚚 Phân Phối Hàng</h3></div>
-        <div class="pb">
-          <div class="fg">
-            <div class="f"><label>Đại Lý *</label><select id="pp-dl"></select></div>
-            <div class="f"><label>Sản Phẩm *</label><select id="pp-sp" onchange="autoPrice('pp-sp','pp-gia')"></select></div>
-            <div class="f"><label>Số Lượng *</label><input id="pp-sl" type="number" min="1" placeholder="0"/></div>
-            <div class="f"><label>Giá Sỉ (₫)</label><input id="pp-gia" type="number" placeholder="0"/></div>
-            <div class="f"><label>Ngày Giao</label><input id="pp-ngay" type="date"/></div>
-            <div class="f"><label>Ghi Chú</label><input id="pp-gc" placeholder="..."/></div>
-          </div>
-          <div class="fa"><button class="btn b-or" onclick="addPP()">🚚 Xác Nhận Phân Phối</button></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- PHẦN 2: IMPORT PHÂN PHỐI HÀNG LOẠT -->
-    <div id="pp-bulk-container" style="display:none">
-      <div class="panel">
-        <div class="ph">
-          <h3 data-lang="pp_bulk_h3">📥 Import Phân Phối Đại Lý Hàng Loạt (.CSV / Excel)</h3>
-          <span style="font-size:12px;color:#64748b" data-lang="pp_bulk_syntax">Cú pháp: Tên Đại Lý | SĐT / Liên Hệ | Khu Vực | Tên SP | Model | Số Lượng | Giá Bỏ Sỉ (₫) | Ngày Giao | Ghi Chú</span>
-        </div>
-        <div class="pb">
-          <div style="background:#fff7ed;padding:12px 14px;border-radius:8px;border:1px solid #fed7aa;margin-bottom:12px;font-size:12.5px;line-height:1.6">
-            <b>💡 Hướng dẫn 3 bước cho bộ phận phân phối &amp; đại lý:</b><br/>
-            <b>1.</b> Bấm nút <button class="btn b-gn b-xs" onclick="downloadPPTemplate()">📥 Tải File Mẫu (.CSV)</button> để tải file mẫu (không yêu cầu giá gốc, chỉ cần giá sỉ thỏa thuận).<br/>
-            <b>2.</b> Điền danh sách xuất sỉ cho đại lý trên Excel / Google Sheets rồi lưu file.<br/>
-            <b>3.</b> Bấm <button class="btn b-or b-xs" onclick="document.getElementById('pp-bulk-file-input').click()">📁 Chọn File</button> <b>HOẶC</b> bôi đen trong Excel bấm <code>Ctrl+C</code> rồi <b>dán (Ctrl+V)</b> vào khung bên dưới:
-          </div>
-
-          <textarea id="pp-bulk-paste-area" rows="6" style="width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;font-family:monospace;font-size:12px;line-height:1.5" placeholder="Dán (Ctrl+V) bảng phân phối đại lý từ Excel / Google Sheets vào đây...&#10;Ví dụ:&#10;Đại Lý Ánh Dương	Anh Tuấn - 0988111222	TP.HCM	Bộ Lưu Điện UPS Santak 1200VA	TG-1200	5	1850000	2026-10-03	Phân phối đợt 1 showroom&#10;Solar Miền Trung	Chị Hằng - 0977333444	Miền Trung	Tấm Pin Năng Lượng Mặt Trời Jinko 400W	JK-400M	20	2150000	2026-10-03	Đại lý cấp 1 phân phối dự án&#10;Điện Năng Lượng Xanh	Anh Hải - 0912345678	Hà Nội	Biến Tần Inverter Growatt 5kW	SPF-5000	3	14800000	2026-10-03	Phân phối trọn gói" oninput="parsePPBulkInput()"></textarea>
-
-          <div style="display:flex;gap:8px;margin-top:10px;justify-content:space-between;flex-wrap:wrap">
-            <div style="display:flex;gap:8px">
-              <button class="btn b-or" onclick="parsePPBulkInput()">🔍 Phân Tích &amp; Xem Trước (Preview)</button>
-              <button class="btn b-out" onclick="document.getElementById('pp-bulk-paste-area').value='';parsePPBulkInput()">✕ Xóa Khung Dán</button>
-            </div>
-            <button class="btn b-gn" id="btn-pp-confirm-bulk" onclick="confirmPPBulkImport()" style="font-weight:700" disabled>🚀 Xác Nhận Import Phân Phối (0 Lô)</button>
-          </div>
-
-          <!-- THẺ THỐNG KÊ NHANH BATCH IMPORT PHÂN PHỐI -->
-          <div id="pp-bulk-stats-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px;display:none">
-            <div class="card c-or"><div class="lbl2">🏪 Đại Lý</div><div class="val" id="pp-bs-dealers">0</div><div class="sub">Đại lý nhận hàng</div></div>
-            <div class="card c-bl"><div class="lbl2">📦 Mặt Hàng</div><div class="val" id="pp-bs-items">0</div><div class="sub">Mặt hàng phân phối</div></div>
-            <div class="card c-gn"><div class="lbl2">🔢 Tổng Số Lượng</div><div class="val" id="pp-bs-qty">0</div><div class="sub">PCS giao đại lý</div></div>
-            <div class="card c-yw"><div class="lbl2">💵 Tổng Giá Trị Sỉ</div><div class="val" id="pp-bs-val" style="font-size:15px">0 ₫</div><div class="sub">Giá trị giao dịch sỉ</div></div>
-            <div class="card c-gn"><div class="lbl2">🏢 Ước Tính LN Cty</div><div class="val" id="pp-bs-profit" style="font-size:15px">0 ₫</div><div class="sub">Nộp 17% Cty</div></div>
-          </div>
-
-          <!-- BẢNG PREVIEW CHI TIẾT -->
-          <div id="pp-bulk-preview-wrap" style="margin-top:14px;display:none">
-            <h4 style="margin-bottom:8px;color:#334155">📋 Danh Sách Phân Phối Xem Trước:</h4>
-            <div class="tw" id="pp-bulk-preview-table"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <div class="panel"><div class="ph"><h3>📋 Lịch Sử Phân Phối</h3></div><div class="pb tw" id="t-pp"></div></div>
   </div>
 </div>
@@ -1723,7 +1594,6 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
     <div class="tab on" onclick="sw(this,'tc-kh')">👤 Khách Hàng</div>
     <div class="tab" onclick="sw(this,'tc-ks')">📝 Khảo Sát Đại Lý</div>
     <div class="tab" onclick="sw(this,'tc-lk')">📞 Lịch Tiếp Xúc</div>
-    <div class="tab" onclick="sw(this,'tc-tpl');renderSaleTemplatesView()">📋 Mẫu Gửi Telegram</div>
   </div>
   <div id="tc-kh">
     <div class="panel">
@@ -1782,26 +1652,7 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
     </div>
     <div class="panel"><div class="ph"><h3>📋 Lịch Sử Tiếp Xúc</h3></div><div class="pb tw" id="t-lk"></div></div>
   </div>
-
-  <!-- Tab Mẫu Gửi Telegram (Đọc động 100% từ Sheet Tab 'Template Sale') -->
-  <div id="tc-tpl" style="display:none">
-    <div class="panel">
-      <div class="ph">
-        <h3>📋 Danh Sách Template Gửi Telegram (Thu thập & Xóa Tự Động)</h3>
-        <button class="btn b-bl b-sm" onclick="renderSaleTemplatesView(true)">🔄 Tải Lại Từ Sheet</button>
-      </div>
-      <div class="pb">
-        <p style="font-size:13px;color:#475569;margin-bottom:14px">
-          💡 <b>Cơ chế hoạt động:</b> Khi nhân viên gửi đúng cú pháp mẫu vào nhóm Telegram, Bot sẽ <b>thu thập ngay vào dòng 2 của Sheet tương ứng</b> và <b>tự động xóa tin nhắn gốc</b> trên nhóm để tránh trôi tin. Bấm <b>Sao Chép</b> để copy mẫu và gửi nhanh!
-        </p>
-        <div id="sale-templates-list" style="display:grid;gap:12px">
-          <div style="padding:16px;text-align:center;color:#94a3b8">⏳ Đang tải mẫu từ Google Sheet...</div>
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
-
 
 <!-- ══ QUẢNG CÁO ══ -->
 <div class="sec" id="s-quangcao">
@@ -2366,7 +2217,6 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
       <div class="ph" style="display:flex;justify-content:space-between;align-items:center">
         <h3 id="rbac-staff-h3" style="margin:0;font-size:14px">👥 Danh Sách Nhân Sự &amp; Vai Trò Đã Gán</h3>
         <div style="display:flex;gap:5px;flex-wrap:wrap">
-          <button id="rbac-btn-sync-staff" class="btn b-bl b-xs" onclick="syncStaffWithGoogleSheet(true)" title="Đồng bộ 2 chiều tức thì với Google Sheet tab 'staff'">☁️ <span id="rbac-sync-lbl">Đồng Bộ Sheet</span></button>
           <button id="rbac-btn-clean-staff" class="btn b-out b-xs" onclick="resetStaffDirectoryToClean()" title="Khôi phục danh sách nhân sự mẫu chuẩn">🔄 <span id="rbac-clean-lbl">Làm Sạch Mẫu</span></button>
           <button id="rbac-btn-tpl-staff" class="btn b-xs" onclick="downloadStaffTemplate()" title="Tải file Excel mẫu để điền nhân sự" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-weight:700">📋 <span id="rbac-tpl-lbl">Template</span></button>
           <button id="rbac-btn-export-staff" class="btn b-xs" onclick="exportStaffToExcel()" title="Xuất danh sách nhân sự hiện tại ra Excel" style="background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;font-weight:700">⬇ <span id="rbac-export-lbl">Export</span></button>
@@ -2568,7 +2418,7 @@ const renders={
 
 function go(id){
   // 🛡️ RBAC INTERCEPTOR: Kiểm tra phân quyền vai trò trước khi chuyển tab
-  if (id !== 'access-denied' && id !== 'rbac') {
+  if (id !== 'access-denied') {
     const allowed = isTabAllowedForRole(id, currentAppRole);
     if (!allowed) {
       showAccessDenied(id, currentAppRole);
@@ -5318,746 +5168,6 @@ function confirmKGBulkImport() {
 }
 
 // ═══════════════════════════════════════════════════
-// BÁN HÀNG & XUẤT KHO HÀNG LOẠT (BULK SALES IMPORT)
-// ═══════════════════════════════════════════════════
-let parsedBanBulkItems = [];
-
-function switchBanMode(mode) {
-  const singleC = document.getElementById('ban-single-container');
-  const bulkC = document.getElementById('ban-bulk-container');
-  const btnSingle = document.getElementById('btn-ban-mode-single');
-  const btnBulk = document.getElementById('btn-ban-mode-bulk');
-
-  if (mode === 'bulk') {
-    if (singleC) singleC.style.display = 'none';
-    if (bulkC) bulkC.style.display = 'block';
-    if (btnSingle) btnSingle.className = 'btn b-out';
-    if (btnBulk) btnBulk.className = 'btn b-or';
-  } else {
-    if (singleC) singleC.style.display = 'block';
-    if (bulkC) bulkC.style.display = 'none';
-    if (btnSingle) btnSingle.className = 'btn b-or';
-    if (btnBulk) btnBulk.className = 'btn b-out';
-  }
-}
-
-function downloadBanTemplate() {
-  const isVi = currentLang === 'vi';
-  // Chuẩn Song Ngữ: KHÔNG CÓ GIÁ GỐC, CHỈ CÓ ĐƠN GIÁ BÁN ÁP DỤNG
-  const headers = [
-    "Đối Tượng / Target (retail/dealer/pos/staff)",
-    "Tên Khách Hàng hoặc Đại Lý / Customer or Dealer Name (Bắt buộc)",
-    "Số Điện Thoại / Phone",
-    "Tên Sản Phẩm / Product Name (Bắt buộc)",
-    "Model / Item Code",
-    "Số Lượng / Quantity (Bắt buộc)",
-    "Đơn Giá Bán / Selling Price (₫) (Bắt buộc)",
-    "Hình Thức TT / Payment (cash/credit/consignment)",
-    "Tiền Đã Trả Trước / Deposit (₫)",
-    "Serial Number / Mã SP",
-    "Ghi Chú / Notes"
-  ];
-  const sampleRows = [
-    ["retail", "Anh Tuấn Q.1", "0988111222", "Bộ Lưu Điện UPS Santak 1200VA", "TG-1200", "2", "2450000", "cash", "2450000", "SN-TG1200-01", "Giao hàng lắp đặt tận nơi"],
-    ["dealer", "Cửa Hàng Hòa Phát", "0977333444", "Tấm Pin Năng Lượng Mặt Trời Jinko 400W", "JK-400M", "10", "2350000", "credit", "10000000", "SN-JK400-01...10", "Đại lý cấp 1 thanh toán 50% gối đầu"],
-    ["pos", "Shop Năng Lượng Xanh", "0912345678", "Biến Tần Inverter Growatt 5kW", "SPF-5000", "1", "16500000", "consignment", "0", "SN-GW5K-01", "Ký gởi showroom trưng bày"],
-    ["staff", "Nguyễn Văn Hùng (Kỹ thuật)", "0909000111", "Ắc Quy GEL Chuyên Dụng 12V 100Ah", "GEL-100", "4", "3950000", "cash", "3950000", "SN-GEL100-01", "Xuất đi lắp công trình trạm BTS"]
-  ];
-
-  let csvContent = "\uFEFF" + headers.join(",") + "\n" + sampleRows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `Mau_Ban_Hang_Xuat_Kho_TNI_${td()}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  al(isVi ? '📥 Đã tải file mẫu Bán Hàng & Xuất Kho!' : '📥 Sales dispatch template downloaded!');
-}
-
-function handleBanBulkFile(event) {
-  const file = event.target.files && event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const text = e.target.result;
-    document.getElementById('ban-bulk-paste-area').value = text;
-    switchBanMode('bulk');
-    parseBanBulkInput();
-    al(`📁 Đã đọc file "${file.name}"!`);
-  };
-  reader.readAsText(file, 'utf-8');
-}
-
-function parseBanBulkInput() {
-  const raw = (document.getElementById('ban-bulk-paste-area')?.value || '').trim();
-  const cards = document.getElementById('ban-bulk-stats-cards');
-  const wrap = document.getElementById('ban-bulk-preview-wrap');
-  const btn = document.getElementById('btn-ban-confirm-bulk');
-
-  if (!raw) {
-    parsedBanBulkItems = [];
-    if (cards) cards.style.display = 'none';
-    if (wrap) wrap.style.display = 'none';
-    if (btn) { btn.disabled = true; btn.textContent = '🚀 Xác Nhận Import Bán Hàng Hàng Loạt (0 Đơn)'; }
-    return;
-  }
-
-  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(l => l);
-  if (lines.length === 0) return;
-
-  // Kiểm tra header dòng 1
-  let startIndex = 0;
-  const firstLine = lines[0].toLowerCase();
-  if (firstLine.includes('đối tượng') || firstLine.includes('target') || firstLine.includes('khách hàng') || firstLine.includes('customer') || firstLine.includes('sản phẩm') || firstLine.includes('product') || firstLine.includes('đơn giá') || firstLine.includes('price')) {
-    startIndex = 1;
-  }
-
-  const nhapList = DB.g('nhap') || [];
-  parsedBanBulkItems = [];
-
-  for (let i = startIndex; i < lines.length; i++) {
-    const line = lines[i];
-    let parts = [];
-    if (line.includes('\t')) {
-      parts = line.split('\t').map(p => p.trim());
-    } else if (line.includes('|')) {
-      parts = line.split('|').map(p => p.trim());
-    } else {
-      parts = parseCSVLine(line);
-    }
-
-    if (!parts || parts.length === 0 || (!parts[1] && !parts[3])) continue;
-
-    // Cột: Đối Tượng | Tên Khách/Đại Lý | SĐT | Tên SP | Model | Số Lượng | Đơn Giá Bán | Thanh Toán | Trả Trước | Serial | Ghi Chú
-    let rawTarget = (parts[0] || '').toLowerCase().trim();
-    let target = 'retail';
-    if (rawTarget.includes('đại lý') || rawTarget.includes('dealer') || rawTarget.includes('sỉ') || rawTarget.includes('wholesale')) target = 'dealer';
-    else if (rawTarget.includes('ký gởi') || rawTarget.includes('ky goi') || rawTarget.includes('pos') || rawTarget.includes('điểm bán')) target = 'pos';
-    else if (rawTarget.includes('nhân viên') || rawTarget.includes('staff') || rawTarget.includes('công trình') || rawTarget.includes('tạm ứng')) target = 'staff';
-    else target = 'retail';
-
-    const kh = parts[1] || '';
-    const dt = parts[2] || '-';
-    const ten = parts[3] || '';
-    const model = parts[4] || '-';
-    const sl = parseInt((parts[5] || '1').replace(/\D/g, ''), 10) || 1;
-    const gia = parseFloat((parts[6] || '0').replace(/[^0-9.]/g, '')) || 0;
-
-    let rawTT = (parts[7] || '').toLowerCase().trim();
-    let tt = 'cash';
-    if (rawTT.includes('nợ') || rawTT.includes('gối đầu') || rawTT.includes('credit') || rawTT.includes('chưa đủ')) tt = 'credit';
-    else if (rawTT.includes('ký gởi') || rawTT.includes('consignment') || rawTT.includes('tạm ứng')) tt = 'consignment';
-    else tt = 'cash';
-
-    const totalAmount = gia * sl;
-    let depositVal = parseFloat((parts[8] || '').replace(/[^0-9.]/g, ''));
-    let deposit = isNaN(depositVal) ? (tt === 'credit' ? 0 : (tt === 'consignment' ? 0 : totalAmount)) : depositVal;
-    if (tt === 'cash' && isNaN(depositVal)) deposit = totalAmount;
-    const debt = Math.max(0, totalAmount - deposit);
-
-    const serial = parts[9] || '-';
-    const gc = parts.slice(10).join(' | ') || 'Import bán hàng';
-
-    // Đối chiếu sản phẩm trong kho (DB.g('nhap'))
-    let matchedSp = null;
-    if (model && model !== '-') {
-      matchedSp = nhapList.find(n => (n.model || '').toLowerCase().trim() === model.toLowerCase().trim());
-    }
-    if (!matchedSp && ten) {
-      matchedSp = nhapList.find(n => (n.ten || '').toLowerCase().trim() === ten.toLowerCase().trim());
-    }
-    if (!matchedSp && ten) {
-      matchedSp = nhapList.find(n => (n.ten || '').toLowerCase().includes(ten.toLowerCase().trim()) || ten.toLowerCase().includes((n.ten || '').toLowerCase().trim()));
-    }
-
-    let spId, spN, finalModel, cost;
-    let hasStockMatch = false;
-
-    if (matchedSp) {
-      spId = matchedSp.id;
-      spN = matchedSp.ten;
-      finalModel = matchedSp.model || model;
-      cost = Number(matchedSp.gg || 0);
-      hasStockMatch = true;
-    } else {
-      spId = Date.now() + Math.random();
-      spN = ten;
-      finalModel = model;
-      cost = Math.round(gia * 0.70); // Tạm tính 70% giá bán nếu chưa có trong kho
-      hasStockMatch = false;
-    }
-
-    const rate = Number(v('cfg-cty-rate') || 17);
-    const lnCtyUnit = cost > 0 && rate < 100 ? Math.round(cost / (100 - rate) * rate) : 0;
-    const cost83 = cost * sl;
-    const lnCty = lnCtyUnit * sl;
-    const lnBranch = totalAmount - cost83 - lnCty;
-
-    const isValid = kh.length > 0 && spN.length > 0 && sl > 0 && gia > 0;
-
-    parsedBanBulkItems.push({
-      target, kh, dt,
-      spId, spN, model: finalModel,
-      sl, gia, totalAmount,
-      tt, deposit, debt,
-      serial, gc,
-      cost, cost83, lnCty, lnBranch,
-      hasStockMatch,
-      valid: isValid
-    });
-  }
-
-  renderBanBulkPreview(parsedBanBulkItems);
-}
-
-function renderBanBulkPreview(items) {
-  const cards = document.getElementById('ban-bulk-stats-cards');
-  const wrap = document.getElementById('ban-bulk-preview-wrap');
-  const btn = document.getElementById('btn-ban-confirm-bulk');
-  const tableDiv = document.getElementById('ban-bulk-preview-table');
-
-  if (!items || items.length === 0) {
-    if (cards) cards.style.display = 'none';
-    if (wrap) wrap.style.display = 'none';
-    if (btn) { btn.disabled = true; btn.textContent = '🚀 Xác Nhận Import Bán Hàng Hàng Loạt (0 Đơn)'; }
-    return;
-  }
-
-  const validItems = items.filter(it => it.valid);
-  const ordersCount = validItems.length;
-  const uniqueItemsCount = new Set(validItems.map(it => it.spN)).size;
-  const totQty = validItems.reduce((s, it) => s + it.sl, 0);
-  const totRevenue = validItems.reduce((s, it) => s + it.totalAmount, 0);
-  const totCty = validItems.reduce((s, it) => s + it.lnCty, 0);
-  const totBranch = validItems.reduce((s, it) => s + it.lnBranch, 0);
-
-  const isVi = currentLang === 'vi';
-
-  // Thống kê
-  const elOrders = document.getElementById('ban-bs-orders');
-  const elItems = document.getElementById('ban-bs-items');
-  const elQty = document.getElementById('ban-bs-qty');
-  const elRev = document.getElementById('ban-bs-rev');
-  const elCty = document.getElementById('ban-bs-cty');
-  const elBranch = document.getElementById('ban-bs-branch');
-
-  if (elOrders) elOrders.textContent = ordersCount;
-  if (elItems) elItems.textContent = `${uniqueItemsCount} (${validItems.length}/${items.length})`;
-  if (elQty) elQty.textContent = totQty;
-  if (elRev) elRev.textContent = fn(totRevenue) + ' ₫';
-  if (elCty) elCty.textContent = fn(totCty) + ' ₫';
-  if (elBranch) elBranch.textContent = fn(totBranch) + ' ₫';
-
-  if (cards) cards.style.display = 'grid';
-  if (wrap) wrap.style.display = 'block';
-  if (btn) {
-    btn.disabled = validItems.length === 0;
-    btn.textContent = isVi ? `🚀 Xác Nhận Import Bán Hàng (${validItems.length} Đơn)` : `🚀 Confirm Bulk Sales (${validItems.length} Orders)`;
-  }
-
-  // Bảng Preview
-  const headers = isVi ?
-    ['#', 'Trạng Thái', 'Đối Tượng & Tên Khách', 'SĐT', 'Sản Phẩm & Model', 'SL', 'Đơn Giá Bán', 'Tổng Tiền', 'Thanh Toán / Nợ', 'Phải Nộp Cty', 'LN Chi Nhánh', 'Ghi Chú'] :
-    ['#', 'Status', 'Target & Customer', 'Phone', 'Product & Model', 'Qty', 'Unit Price', 'Total Amount', 'Payment / Debt', 'HO Due', 'Branch Profit', 'Notes'];
-
-  const rows = items.map((it, idx) => {
-    let statusHtml = '';
-    if (!it.valid) {
-      statusHtml = `<span class="badge bk-rd">${isVi ? '❌ Thiếu TT' : '❌ Invalid'}</span>`;
-    } else if (it.hasStockMatch) {
-      statusHtml = `<span class="badge bk-gn">${isVi ? '✓ Khớp kho' : '✓ In Stock'}</span>`;
-    } else {
-      statusHtml = `<span class="badge bk-yw">${isVi ? '⚠️ SP Mới' : '⚠️ New Item'}</span>`;
-    }
-
-    const targetBadge = it.target === 'dealer' ? bk(isVi?'Đại Lý':'Dealer','bl') :
-                        it.target === 'pos' ? bk(isVi?'Điểm Ký Gởi':'POS','or') :
-                        it.target === 'staff' ? bk(isVi?'Nhân Viên':'Staff','pu') :
-                        bk(isVi?'Khách Lẻ':'Retail','gy');
-
-    const ttBadge = it.tt === 'credit' ? `<span style="color:#d97706;font-weight:600">⏳ Ghi nợ (Nợ: ${fn(it.debt)}₫)</span>` :
-                    it.tt === 'consignment' ? `<span style="color:#0284c7;font-weight:600">📋 Ký gởi</span>` :
-                    `<span style="color:#16a34a;font-weight:600">💵 Đã thu 100%</span>`;
-
-    return [
-      idx + 1,
-      statusHtml,
-      `${targetBadge} <b>${it.kh}</b>`,
-      it.dt || '-',
-      `<b>${it.spN}</b><br><small style="color:#0284c7">${it.model || '-'}</small>`,
-      `<b>${it.sl}</b>`,
-      `${fn(it.gia)} ₫`,
-      `<b style="color:#0284c7">${fn(it.totalAmount)} ₫</b>`,
-      ttBadge,
-      `<span style="color:#1e40af;font-weight:600">${fn(it.lnCty)} ₫</span>`,
-      `<b style="color:${it.lnBranch >= 0 ? 'var(--gn)' : 'var(--rd)'}">${fn(it.lnBranch)} ₫</b>`,
-      it.gc || '-'
-    ];
-  });
-
-  tableDiv.innerHTML = tbl(headers, rows);
-}
-
-function confirmBanBulkImport() {
-  const isVi = currentLang === 'vi';
-  const validItems = parsedBanBulkItems.filter(it => it.valid);
-  if (validItems.length === 0) {
-    al(isVi ? 'Không có đơn bán hàng hợp lệ để import!' : 'No valid sales orders to import!', 'er');
-    return;
-  }
-
-  const btn = document.getElementById('btn-ban-confirm-bulk');
-  if (btn) { btn.disabled = true; btn.textContent = isVi ? '⏳ Đang lưu vào hệ thống...' : '⏳ Saving...'; }
-
-  // Lưu từng đơn hàng vào DB
-  validItems.forEach(it => {
-    DB.add('ban', {
-      spId: +it.spId,
-      spN: it.spN,
-      sl: +it.sl,
-      serial: it.serial || '-',
-      gia: +it.gia,
-      totalAmount: it.totalAmount,
-      deposit: it.deposit,
-      debt: it.debt,
-      cost83: it.cost83,
-      lnCty: it.lnCty,
-      lnBranch: it.lnBranch,
-      target: it.target,
-      kh: it.kh,
-      dt: it.dt,
-      tt: it.tt,
-      hoPaid: false,
-      ngay: td(),
-      gc: it.gc || 'Import bán hàng hàng loạt',
-      source: 'web_bulk'
-    });
-  });
-
-  al(isVi ? `✅ Đã import thành công ${validItems.length} đơn xuất bán hàng!` : `✅ Successfully imported ${validItems.length} sales orders!`);
-
-  document.getElementById('ban-bulk-paste-area').value = '';
-  parsedBanBulkItems = [];
-  renderBanBulkPreview([]);
-  switchBanMode('single');
-  rBan();
-  renderTK();
-  rDash();
-  renderLN();
-  popSP(['b-sp','pp-sp','kg-sp','tu-sp']);
-}
-
-// ═══════════════════════════════════════════════════
-// PHÂN PHỐI ĐẠI LÝ HÀNG LOẠT (BULK DEALER DISTRIBUTION)
-// ═══════════════════════════════════════════════════
-let parsedPPBulkItems = [];
-
-function switchPPMode(mode) {
-  const singleC = document.getElementById('pp-single-container');
-  const bulkC = document.getElementById('pp-bulk-container');
-  const btnSingle = document.getElementById('btn-pp-mode-single');
-  const btnBulk = document.getElementById('btn-pp-mode-bulk');
-
-  if (mode === 'bulk') {
-    if (singleC) singleC.style.display = 'none';
-    if (bulkC) bulkC.style.display = 'block';
-    if (btnSingle) btnSingle.className = 'btn b-out';
-    if (btnBulk) btnBulk.className = 'btn b-or';
-  } else {
-    if (singleC) singleC.style.display = 'block';
-    if (bulkC) bulkC.style.display = 'none';
-    if (btnSingle) btnSingle.className = 'btn b-or';
-    if (btnBulk) btnBulk.className = 'btn b-out';
-  }
-}
-
-function downloadPPTemplate() {
-  const isVi = currentLang === 'vi';
-  // Chuẩn Song Ngữ: KHÔNG CÓ GIÁ GỐC, CHỈ CÓ GIÁ BỎ SỈ ĐẠI LÝ
-  const headers = [
-    "Tên Đại Lý / Dealer Name (Bắt buộc)",
-    "Người Liên Hệ & SĐT / Contact & Phone",
-    "Khu Vực / Region (TP.HCM/Hà Nội/Miền Nam/Miền Bắc/Miền Trung/Khác)",
-    "Tên Sản Phẩm / Product Name (Bắt buộc)",
-    "Model / Item Code",
-    "Số Lượng Phân Phối / Quantity (Bắt buộc)",
-    "Giá Bỏ Sỉ / Wholesale Price (₫) (Bắt buộc)",
-    "Ngày Giao / Dispatch Date (YYYY-MM-DD)",
-    "Ghi Chú Phân Phối / Notes"
-  ];
-  const sampleRows = [
-    ["Đại Lý Ánh Dương", "Anh Tuấn - 0988111222", "TP.HCM", "Bộ Lưu Điện UPS Santak 1200VA", "TG-1200", "5", "1850000", td(), "Phân phối đợt 1 showroom"],
-    ["Solar Miền Trung", "Chị Hằng - 0977333444", "Miền Trung", "Tấm Pin Năng Lượng Mặt Trời Jinko 400W", "JK-400M", "20", "2150000", td(), "Đại lý cấp 1 phân phối dự án"],
-    ["Điện Năng Lượng Xanh", "Anh Hải - 0912345678", "Hà Nội", "Biến Tần Inverter Growatt 5kW", "SPF-5000", "3", "14800000", td(), "Phân phối trọn gói"],
-    ["Cửa Hàng Điện Gia Dụng Minh Phát", "Bác Ba - 0909000111", "Miền Nam", "Ắc Quy GEL Chuyên Dụng 12V 100Ah", "GEL-100", "8", "3750000", td(), "Giao hàng tại kho"]
-  ];
-
-  let csvContent = "\uFEFF" + headers.join(",") + "\n" + sampleRows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `Mau_Phan_Phoi_Dai_Ly_TNI_${td()}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  al(isVi ? '📥 Đã tải file mẫu Phân Phối Đại Lý!' : '📥 Dealer distribution template downloaded!');
-}
-
-function handlePPBulkFile(event) {
-  const file = event.target.files && event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const text = e.target.result;
-    document.getElementById('pp-bulk-paste-area').value = text;
-    switchPPMode('bulk');
-    parsePPBulkInput();
-    al(`📁 Đã đọc file "${file.name}"!`);
-  };
-  reader.readAsText(file, 'utf-8');
-}
-
-function parsePPBulkInput() {
-  const raw = (document.getElementById('pp-bulk-paste-area')?.value || '').trim();
-  const cards = document.getElementById('pp-bulk-stats-cards');
-  const wrap = document.getElementById('pp-bulk-preview-wrap');
-  const btn = document.getElementById('btn-pp-confirm-bulk');
-
-  if (!raw) {
-    parsedPPBulkItems = [];
-    if (cards) cards.style.display = 'none';
-    if (wrap) wrap.style.display = 'none';
-    if (btn) { btn.disabled = true; btn.textContent = '🚀 Xác Nhận Import Phân Phối (0 Lô)'; }
-    return;
-  }
-
-  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(l => l);
-  if (lines.length === 0) return;
-
-  // Kiểm tra header dòng 1
-  let startIndex = 0;
-  const firstLine = lines[0].toLowerCase();
-  if (firstLine.includes('đại lý') || firstLine.includes('dealer') || firstLine.includes('sản phẩm') || firstLine.includes('product') || firstLine.includes('giá') || firstLine.includes('price') || firstLine.includes('số lượng')) {
-    startIndex = 1;
-  }
-
-  const dailyList = DB.g('daily') || [];
-  const nhapList = DB.g('nhap') || [];
-  parsedPPBulkItems = [];
-
-  for (let i = startIndex; i < lines.length; i++) {
-    const line = lines[i];
-    let parts = [];
-    if (line.includes('\t')) {
-      parts = line.split('\t').map(p => p.trim());
-    } else if (line.includes('|')) {
-      parts = line.split('|').map(p => p.trim());
-    } else {
-      parts = parseCSVLine(line);
-    }
-
-    if (!parts || parts.length === 0 || (!parts[0] && !parts[3])) continue;
-
-    // Cột: Tên Đại Lý | Người Liên Hệ & SĐT | Khu Vực | Tên SP | Model | Số Lượng | Giá Bỏ Sỉ | Ngày Giao | Ghi Chú
-    const dlName = parts[0] || '';
-    const contactPhone = parts[1] || '';
-    const area = parts[2] || 'TP.HCM';
-    const ten = parts[3] || '';
-    const model = parts[4] || '-';
-    const sl = parseInt((parts[5] || '1').replace(/\D/g, ''), 10) || 1;
-    const gia = parseFloat((parts[6] || '0').replace(/[^0-9.]/g, '')) || 0;
-    const ngay = parts[7] || td();
-    const gc = parts.slice(8).join(' | ') || 'Import phân phối đại lý';
-
-    // 1. Đối chiếu đại lý trong DB.g('daily')
-    let matchedDL = null;
-    if (dlName) {
-      matchedDL = dailyList.find(d => (d.ten || '').toLowerCase().trim() === dlName.toLowerCase().trim());
-      if (!matchedDL) {
-        matchedDL = dailyList.find(d => (d.ten || '').toLowerCase().includes(dlName.toLowerCase().trim()) || dlName.toLowerCase().includes((d.ten || '').toLowerCase().trim()));
-      }
-    }
-
-    let dlId, dlN, isNewDealer = false;
-    if (matchedDL) {
-      dlId = matchedDL.id;
-      dlN = matchedDL.ten;
-    } else {
-      dlId = Date.now() + Math.random();
-      dlN = dlName;
-      isNewDealer = true;
-    }
-
-    // 2. Đối chiếu sản phẩm trong kho (DB.g('nhap'))
-    let matchedSp = null;
-    if (model && model !== '-') {
-      matchedSp = nhapList.find(n => (n.model || '').toLowerCase().trim() === model.toLowerCase().trim());
-    }
-    if (!matchedSp && ten) {
-      matchedSp = nhapList.find(n => (n.ten || '').toLowerCase().trim() === ten.toLowerCase().trim());
-    }
-    if (!matchedSp && ten) {
-      matchedSp = nhapList.find(n => (n.ten || '').toLowerCase().includes(ten.toLowerCase().trim()) || ten.toLowerCase().includes((n.ten || '').toLowerCase().trim()));
-    }
-
-    let spId, spN, finalModel, cost;
-    let hasStockMatch = false;
-
-    if (matchedSp) {
-      spId = matchedSp.id;
-      spN = matchedSp.ten;
-      finalModel = matchedSp.model || model;
-      cost = Number(matchedSp.gg || 0);
-      hasStockMatch = true;
-    } else {
-      spId = Date.now() + Math.random();
-      spN = ten;
-      finalModel = model;
-      cost = Math.round(gia * 0.70); // Tạm tính 70% giá sỉ nếu chưa có trong kho
-      hasStockMatch = false;
-    }
-
-    const rate = Number(v('cfg-cty-rate') || 17);
-    const lnCtyUnit = cost > 0 && rate < 100 ? Math.round(cost / (100 - rate) * rate) : 0;
-    const tongGiaTri = gia * sl;
-    const tongLNCty = lnCtyUnit * sl;
-
-    const isValid = dlN.length > 0 && spN.length > 0 && sl > 0 && gia > 0;
-
-    parsedPPBulkItems.push({
-      dlId, dlN, isNewDealer,
-      contactPhone, area,
-      spId, spN, model: finalModel,
-      sl, gia,
-      tongGiaTri, tongLNCty,
-      ngay, gc,
-      hasStockMatch,
-      valid: isValid
-    });
-  }
-
-  renderPPBulkPreview(parsedPPBulkItems);
-}
-
-function renderPPBulkPreview(items) {
-  const cards = document.getElementById('pp-bulk-stats-cards');
-  const wrap = document.getElementById('pp-bulk-preview-wrap');
-  const btn = document.getElementById('btn-pp-confirm-bulk');
-  const tableDiv = document.getElementById('pp-bulk-preview-table');
-
-  if (!items || items.length === 0) {
-    if (cards) cards.style.display = 'none';
-    if (wrap) wrap.style.display = 'none';
-    if (btn) { btn.disabled = true; btn.textContent = '🚀 Xác Nhận Import Phân Phối (0 Lô)'; }
-    return;
-  }
-
-  const validItems = items.filter(it => it.valid);
-  const dealersCount = new Set(validItems.map(it => it.dlN)).size;
-  const totQty = validItems.reduce((s, it) => s + it.sl, 0);
-  const totVal = validItems.reduce((s, it) => s + it.tongGiaTri, 0);
-  const totLNCty = validItems.reduce((s, it) => s + it.tongLNCty, 0);
-
-  const isVi = currentLang === 'vi';
-
-  // Thống kê
-  const elDealers = document.getElementById('pp-bs-dealers');
-  const elItems = document.getElementById('pp-bs-items');
-  const elQty = document.getElementById('pp-bs-qty');
-  const elVal = document.getElementById('pp-bs-val');
-  const elProf = document.getElementById('pp-bs-profit');
-
-  if (elDealers) elDealers.textContent = dealersCount;
-  if (elItems) elItems.textContent = `${validItems.length} / ${items.length}`;
-  if (elQty) elQty.textContent = totQty;
-  if (elVal) elVal.textContent = fn(totVal) + ' ₫';
-  if (elProf) elProf.textContent = fn(totLNCty) + ' ₫';
-
-  if (cards) cards.style.display = 'grid';
-  if (wrap) wrap.style.display = 'block';
-  if (btn) {
-    btn.disabled = validItems.length === 0;
-    btn.textContent = isVi ? `🚀 Xác Nhận Import Phân Phối (${validItems.length} Lô)` : `🚀 Confirm Bulk Distribution (${validItems.length} Lots)`;
-  }
-
-  // Bảng Preview
-  const headers = isVi ?
-    ['#', 'Trạng Thái', 'Đại Lý & SĐT', 'Khu Vực', 'Sản Phẩm & Model', 'SL', 'Giá Bỏ Sỉ', 'Thành Tiền', 'Ngày Giao', 'Ghi Chú'] :
-    ['#', 'Status', 'Dealer & Phone', 'Region', 'Product & Model', 'Qty', 'Wholesale Price', 'Total Value', 'Date', 'Notes'];
-
-  const rows = items.map((it, idx) => {
-    let statusHtml = '';
-    if (!it.valid) {
-      statusHtml = `<span class="badge bk-rd">${isVi ? '❌ Thiếu TT' : '❌ Invalid'}</span>`;
-    } else {
-      let tags = [];
-      if (it.hasStockMatch) tags.push(`<span class="badge bk-gn">${isVi ? '✓ Khớp kho' : '✓ Stock OK'}</span>`);
-      else tags.push(`<span class="badge bk-yw">${isVi ? '⚠️ SP Mới' : '⚠️ New Item'}</span>`);
-      if (it.isNewDealer) tags.push(`<span class="badge bk-or">${isVi ? '🏪 ĐL Mới' : '🏪 New DL'}</span>`);
-      statusHtml = tags.join(' ');
-    }
-
-    return [
-      idx + 1,
-      statusHtml,
-      `<b>${it.dlN}</b><br><small style="color:#64748b">${it.contactPhone || '-'}</small>`,
-      `<span class="badge bk-bl">${it.area || 'TP.HCM'}</span>`,
-      `<b>${it.spN}</b><br><small style="color:#0284c7">${it.model || '-'}</small>`,
-      `<b>${it.sl}</b>`,
-      `${fn(it.gia)} ₫`,
-      `<b style="color:#2563eb">${fn(it.tongGiaTri)} ₫</b>`,
-      fd(it.ngay),
-      it.gc || '-'
-    ];
-  });
-
-  tableDiv.innerHTML = tbl(headers, rows);
-}
-
-function confirmPPBulkImport() {
-  const isVi = currentLang === 'vi';
-  const validItems = parsedPPBulkItems.filter(it => it.valid);
-  if (validItems.length === 0) {
-    al(isVi ? 'Không có lô phân phối hợp lệ để import!' : 'No valid distribution lots to import!', 'er');
-    return;
-  }
-
-  const btn = document.getElementById('btn-pp-confirm-bulk');
-  if (btn) { btn.disabled = true; btn.textContent = isVi ? '⏳ Đang lưu vào hệ thống...' : '⏳ Saving...'; }
-
-  // 1. Tự động thêm đại lý mới vào danh mục nếu chưa có
-  validItems.forEach(it => {
-    if (it.isNewDealer) {
-      const dailyList = DB.g('daily') || [];
-      const already = dailyList.some(d => (d.ten || '').toLowerCase().trim() === it.dlN.toLowerCase().trim());
-      if (!already) {
-        DB.add('daily', {
-          id: +it.dlId,
-          ten: it.dlN,
-          chu: it.contactPhone || '',
-          dt: it.contactPhone || '',
-          dc: '',
-          kv: it.area || 'TP.HCM',
-          loai: 'Đại lý cấp 1',
-          ck: 0
-        });
-      }
-    }
-  });
-
-  // 2. Lưu từng phiếu phân phối vào DB
-  validItems.forEach(it => {
-    DB.add('pp', {
-      dlId: +it.dlId,
-      dlN: it.dlN,
-      spId: +it.spId,
-      spN: it.spN,
-      sl: +it.sl,
-      gia: +it.gia,
-      ngay: it.ngay || td(),
-      gc: it.gc || 'Import phân phối hàng loạt'
-    });
-  });
-
-  al(isVi ? `✅ Đã import thành công ${validItems.length} lô phân phối hàng cho đại lý!` : `✅ Successfully imported ${validItems.length} distribution lots!`);
-  document.getElementById('pp-bulk-paste-area').value = '';
-  parsedPPBulkItems = [];
-  renderPPBulkPreview([]);
-  switchPPMode('single');
-  renderPP();
-  rDL();
-  popDL();
-  renderTK();
-  rDash();
-  popSP(['b-sp','pp-sp','kg-sp','tu-sp']);
-}
-
-// ═══════════════════════════════════════════════════
-// DANH SÁCH ĐẠI LÝ IMPORT (BULK DEALER DIRECTORY IMPORT)
-// ═══════════════════════════════════════════════════
-function downloadDLTemplate() {
-  const isVi = currentLang === 'vi';
-  const headers = [
-    "Tên Đại Lý / Dealer Name (Bắt buộc)",
-    "Người Đại Diện / Contact Person",
-    "Số Điện Thoại / Phone",
-    "Địa Chỉ / Address",
-    "Khu Vực / Region (TP.HCM/Hà Nội/Miền Nam/Miền Bắc/Miền Trung/Khác)",
-    "Loại Đại Lý / Tier (Đại lý cấp 1/Đại lý cấp 2/Điểm bán lẻ)",
-    "Chiết Khấu % / Discount (%)"
-  ];
-  const sampleRows = [
-    ["Đại Lý Ánh Dương", "Anh Tuấn", "0988111222", "123 Lê Lợi, Q.1", "TP.HCM", "Đại lý cấp 1", "15"],
-    ["Solar Miền Trung", "Chị Hằng", "0977333444", "45 Nguyễn Tất Thành, Đà Nẵng", "Miền Trung", "Đại lý cấp 1", "12"],
-    ["Điện Năng Lượng Xanh", "Anh Hải", "0912345678", "78 Cầu Giấy, Hà Nội", "Hà Nội", "Đại lý cấp 2", "10"]
-  ];
-  let csvContent = "\uFEFF" + headers.join(",") + "\n" + sampleRows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `Mau_Danh_Sach_Dai_Ly_TNI_${td()}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  al(isVi ? '📥 Đã tải file mẫu Danh Sách Đại Lý!' : '📥 Dealer list template downloaded!');
-}
-
-function handleDLBulkFile(event) {
-  const file = event.target.files && event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const text = e.target.result;
-    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l);
-    if (lines.length <= 1) return;
-
-    let startIndex = 0;
-    const firstLine = lines[0].toLowerCase();
-    if (firstLine.includes('tên đại lý') || firstLine.includes('dealer') || firstLine.includes('người đại diện') || firstLine.includes('điện thoại')) {
-      startIndex = 1;
-    }
-
-    let addedCount = 0;
-    const dailyList = DB.g('daily') || [];
-
-    for (let i = startIndex; i < lines.length; i++) {
-      const line = lines[i];
-      let parts = line.includes('\t') ? line.split('\t').map(p => p.trim()) : (line.includes('|') ? line.split('|').map(p => p.trim()) : parseCSVLine(line));
-      if (!parts || parts.length === 0 || !parts[0]) continue;
-
-      const ten = parts[0];
-      const chu = parts[1] || '';
-      const dt = parts[2] || '';
-      const dc = parts[3] || '';
-      const kv = parts[4] || 'TP.HCM';
-      const loai = parts[5] || 'Đại lý cấp 1';
-      const ck = parseInt((parts[6] || '0').replace(/\D/g, ''), 10) || 0;
-
-      const exists = dailyList.some(d => (d.ten || '').toLowerCase().trim() === ten.toLowerCase().trim());
-      if (!exists) {
-        DB.add('daily', { ten, chu, dt, dc, kv, loai, ck });
-        addedCount++;
-      }
-    }
-
-    rDL();
-    popDL();
-    al(`✅ Đã import thành công ${addedCount} đại lý mới!`);
-  };
-  reader.readAsText(file, 'utf-8');
-}
-
-// ═══════════════════════════════════════════════════
 // CRM
 // ═══════════════════════════════════════════════════
 function addKH(){const ten=v('kh-ten');if(!ten){al('Nhập tên','er');return;}
@@ -6080,79 +5190,6 @@ function addLK(){const ten=v('lk-ten');if(!ten){al('Nhập tên','er');return;}
 function rLK(){document.getElementById('t-lk').innerHTML=tbl(['#','Khách/ĐL','Hình Thức','Ngày','Hành Động Tiếp','Follow-up',''],
   DB.g('lienlac').map((r,i)=>[i+1,r.ten,bk(r.ht,'bl'),fd(r.ngay),r.hd||'-',fd(r.fu)||'-',
     `<button class="btn b-xs b-rd" onclick="del('lienlac',${r.id},rLK)">🗑</button>`]));}
-
-// ── DYNAMIC SALE TEMPLATES RENDERER (CƠ CHẾ MỞ: TAB TEMPLATE SALE) ──
-let _cachedSaleTemplates = null;
-
-async function renderSaleTemplatesView(force = false) {
-  const container = document.getElementById('sale-templates-list');
-  if (!container) return;
-
-  if (force || !_cachedSaleTemplates) {
-    container.innerHTML = '<div style="padding:16px;text-align:center;color:#64748b">⏳ Đang đọc cấu hình mẫu từ Google Sheet...</div>';
-    try {
-      const res = await fetch(GAS_SALE_URL + '?action=template_sale_get');
-      const json = await res.json();
-      if (json.ok && Array.isArray(json.data)) {
-        _cachedSaleTemplates = json.data;
-      }
-    } catch(e) {
-      console.warn('[SaleTemplates] Fetch error:', e);
-    }
-  }
-
-  const list = _cachedSaleTemplates || [];
-  if (list.length === 0) {
-    container.innerHTML = '<div style="padding:16px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:8px">' +
-      '⚠️ Chưa có mẫu nào được thiết lập trong Tab <b>Template Sale</b> trên Google Sheet.<br>' +
-      '💡 Anh có thể mở Google Sheet và thêm các dòng mẫu theo cú pháp: <code>Tên Mẫu : Cột 1 | Cột 2 | Cột 3</code>' +
-      '</div>';
-    return;
-  }
-
-  let html = '';
-  list.forEach((t, idx) => {
-    const rawEsc = t.rawLine.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    html += `
-      <div style="background:#ffffff;border:1.5px solid #e2e8f0;border-radius:10px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,0.05);display:flex;flex-direction:column;gap:8px">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="background:#eff6ff;color:#2563eb;font-weight:700;font-size:12px;padding:3px 8px;border-radius:6px">#${idx + 1}</span>
-            <span style="font-weight:800;color:#0f172a;font-size:14.5px">${t.keyword}</span>
-            <span style="background:#f1f5f9;color:#475569;font-size:11.5px;padding:2px 8px;border-radius:12px">Tab đích: <b>${t.targetTab}</b></span>
-          </div>
-          <button class="btn b-bl b-sm" onclick="copySaleTemplateToClipboard('${rawEsc}')" style="display:flex;align-items:center;gap:4px">
-            📋 Sao Chép Mẫu
-          </button>
-        </div>
-        <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;padding:10px 12px;font-family:monospace;font-size:13px;color:#1e293b;word-break:break-word">
-          ${t.rawLine}
-        </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-          <span style="font-size:11px;color:#64748b">Cột dữ liệu (${t.fields.length}):</span>
-          ${t.fields.map(f => `<span style="background:#e0f2fe;color:#0369a1;font-size:11px;padding:1px 6px;border-radius:4px">${f}</span>`).join('')}
-        </div>
-      </div>
-    `;
-  });
-
-  container.innerHTML = html;
-}
-
-function copySaleTemplateToClipboard(text) {
-  if (!navigator.clipboard) {
-    const el = document.createElement('textarea');
-    el.value = text;
-    document.body.appendChild(el);
-    el.select();
-    document.execCommand('copy');
-    document.body.removeChild(el);
-  } else {
-    navigator.clipboard.writeText(text);
-  }
-  al('📋 Đã sao chép mẫu! Bạn chỉ cần dán vào nhóm Telegram.');
-}
-
 
 // ═══════════════════════════════════════════════════
 // LỢI NHUẬN (BÁN TRỰC TIẾP & KÝ GỞI 17%)
@@ -9024,20 +8061,6 @@ const DICT = {
     btn_choose_kg_csv: '📁 Choose .CSV File',
     kg_bulk_h3: '📥 Bulk Consignment Import via .CSV File or Paste from Excel',
     kg_bulk_syntax: 'Standard syntax: Store POS | Contact | Phone | Product / Model | Qty | Wholesale/Consignment Price | Terms (days) | Notes',
-    btn_ban_mode_single: '➕ Single Sales Order',
-    btn_ban_mode_bulk: '📥 Bulk Sales Import (.CSV / Excel)',
-    btn_download_ban_tpl: '📥 Download Sales CSV Template',
-    btn_choose_ban_csv: '📁 Choose Sales .CSV File',
-    ban_bulk_h3: '📥 Bulk Sales & Dispatch Import via .CSV File or Paste from Excel',
-    ban_bulk_syntax: 'Standard syntax: Target | Customer/Dealer Name | Phone | Product | Model | Qty | Selling Price | Payment | Deposit | Serial | Notes',
-    btn_pp_mode_single: '➕ Single Distribution',
-    btn_pp_mode_bulk: '📥 Bulk Dealer Distribution (.CSV / Excel)',
-    btn_download_pp_tpl: '📥 Download Wholesale CSV Template',
-    btn_choose_pp_csv: '📁 Choose Dealer .CSV File',
-    pp_bulk_h3: '📥 Bulk Dealer Distribution Import via .CSV File or Paste from Excel',
-    pp_bulk_syntax: 'Standard syntax: Dealer Name | Phone/Contact | Region | Product | Model | Qty | Wholesale Price | Date | Notes',
-    btn_download_dl_tpl: '📥 Download Dealer Template (.CSV)',
-    btn_choose_dl_csv: '📁 Import Dealers (.CSV)',
     qu_title: '📄 Device Quotation',
     lbl_old_quote_select: '📋 Copy / Edit Previous Quote:',
     opt_old_quote_select: '-- Select previous quote to Copy / Edit --',
@@ -9130,20 +8153,6 @@ const DICT = {
     btn_choose_kg_csv: '📁 Chọn File .CSV',
     kg_bulk_h3: '📥 Import Phiếu Ký Gởi / Bỏ Sỉ Hàng Loạt (.CSV / Excel)',
     kg_bulk_syntax: 'Cú pháp chuẩn: Điểm Bán | Người Nhận | SĐT | Tên SP / Model | Số Lượng | Giá Bỏ Sỉ / Ký Gởi | Hạn (ngày) | Ghi Chú',
-    btn_ban_mode_single: '➕ Tạo Đơn Lẻ',
-    btn_ban_mode_bulk: '📥 Import Bán Hàng Hàng Loạt (.CSV / Excel)',
-    btn_download_ban_tpl: '📥 Tải File Mẫu Bán Hàng (.CSV)',
-    btn_choose_ban_csv: '📁 Chọn File Bán Hàng .CSV',
-    ban_bulk_h3: '📥 Import Đơn Bán Hàng & Xuất Kho Hàng Loạt (.CSV / Excel)',
-    ban_bulk_syntax: 'Cú pháp chuẩn: Đối Tượng | Tên Khách/Đại Lý | Số ĐT | Tên SP | Model | Số Lượng | Đơn Giá Bán | Thanh Toán | Trả Trước | Serial | Ghi Chú',
-    btn_pp_mode_single: '➕ Phân Phối Đơn Lẻ',
-    btn_pp_mode_bulk: '📥 Import Phân Phối Hàng Loạt (.CSV / Excel)',
-    btn_download_pp_tpl: '📥 Tải File Mẫu Phân Phối (.CSV)',
-    btn_choose_pp_csv: '📁 Chọn File Phân Phối .CSV',
-    pp_bulk_h3: '📥 Import Phân Phối Đại Lý Hàng Loạt (.CSV / Excel)',
-    pp_bulk_syntax: 'Cú pháp chuẩn: Tên Đại Lý | SĐT / Liên Hệ | Khu Vực | Tên SP | Model | Số Lượng | Giá Bỏ Sỉ (₫) | Ngày Giao | Ghi Chú',
-    btn_download_dl_tpl: '📥 Tải Mẫu DS Đại Lý (.CSV)',
-    btn_choose_dl_csv: '📁 Import DS Đại Lý (.CSV)',
     qu_title: '📄 Tạo Báo Giá Thiết Bị',
     lbl_old_quote_select: '📋 Copy / Sửa Báo Giá Cũ:',
     opt_old_quote_select: '-- Chọn báo giá cũ để Copy / Sửa --',
@@ -10016,7 +9025,7 @@ const ROLES = {
       'dashboard',
       'banhang', 'baogiaups', 'baogiasolar', 'daily', 'kygoi',
       'crm', 'quangcao', 'leads',
-      'mystats', 'myquotes', 'mysurvey', 'rbac'
+      'mystats', 'myquotes', 'mysurvey'
     ]
   },
   tech: {
@@ -10033,7 +9042,7 @@ const ROLES = {
       'dashboard',
       'baogiasolar', 'thucthi', 'acceptance',
       'crm',
-      'mystats', 'myquotes', 'mysurvey', 'rbac'
+      'mystats', 'myquotes', 'mysurvey'
     ]
   },
   warehouse: {
@@ -10049,7 +9058,7 @@ const ROLES = {
     allowedTabs: [
       'dashboard', 'nhap', 'tonkho', 'tamung',
       'banhang', 'kygoi',
-      'mystats', 'rbac'
+      'mystats'
     ]
   },
   dealer: {
@@ -10064,8 +9073,7 @@ const ROLES = {
     canViewCostPrice: false,
     allowedTabs: [
       'dashboard',
-      'baogiaups', 'baogiasolar', 'daily', 'kygoi',
-      'rbac'
+      'baogiaups', 'baogiasolar', 'daily', 'kygoi'
     ]
   }
 };
@@ -10091,7 +9099,7 @@ const SYSTEM_MODULES = [
   { id: 'mystats', name: '📊 Tiến Độ Cá Nhân', name_en: '📊 My Performance KPI', cat: 'Cổng Nhân Viên', secLevel: 'Cấp 4 - Cá Nhân', desc: 'Báo cáo KPI, doanh số và hoa hồng của từng nhân viên', desc_en: 'Personal sales KPI, revenue target & commissions' },
   { id: 'myquotes', name: '📄 Báo Giá Của Tôi', name_en: '📄 My Quotations', cat: 'Cổng Nhân Viên', secLevel: 'Cấp 4 - Cá Nhân', desc: 'Danh sách các báo giá do nhân viên tự lập', desc_en: 'Archive of quotations created by current staff member' },
   { id: 'mysurvey', name: '📝 Khảo Sát Của Tôi', name_en: '📝 My Field Surveys', cat: 'Cổng Nhân Viên', secLevel: 'Cấp 4 - Cá Nhân', desc: 'Phiếu khảo sát khách hàng do nhân viên thực hiện', desc_en: 'Customer survey forms recorded by current staff member' },
-  { id: 'rbac', name: '🛡️ Phân Quyền Vai Trò (RBAC)', name_en: '🛡️ Role Permissions (RBAC)', cat: 'Hệ Thống & Phân Quyền', secLevel: 'Cấp 1 - Quản Trị', desc: 'Ma trận phân quyền & phân vai trò nhân viên', desc_en: 'Access matrix & staff organizational role assignments' }
+  { id: 'rbac', name: '🛡️ Phân Quyền Vai Trò (RBAC)', name_en: '🛡️ Role Permissions (RBAC)', cat: 'Hệ Thống & Phân Quyền', secLevel: '🔴 CẤP 1 - QUẢN TRỊ', desc: 'Ma trận phân quyền & phân vai trò nhân viên', desc_en: 'Access matrix & staff organizational role assignments', isSensitive: true }
 ];
 
 const DEFAULT_STAFF_USERS = [
@@ -10104,7 +9112,7 @@ const DEFAULT_STAFF_USERS = [
   { id: 'ST007', name: 'Đại Lý Ủy Quyền 01', email: 'dealer01@tni.com', role: 'dealer', title: 'Đại Lý Ủy Quyền Cấp 1', phone: '0965 000 007' }
 ];
 
-let currentAppRole = localStorage.getItem('tni_sale_role') || 'admin';
+let currentAppRole = localStorage.getItem('tni_sale_role') || 'sales';
 let currentStaffUser = localStorage.getItem('tni_sale_staff') || '';
 // PIN stored as SHA-256 hash only — never plaintext
 let adminPinHash = localStorage.getItem('tni_sale_admin_pin_hash') || null;
@@ -10165,8 +9173,34 @@ function isTabAllowedForRole(tabId, roleId) {
   return r.allowedTabs.includes(tabId);
 }
 
-function changeAppRole(newRole, staffName) {
-  if (!ROLES[newRole]) newRole = 'admin';
+function changeAppRole(newRole, staffName, bypassPin) {
+  if (!ROLES[newRole]) newRole = 'sales';
+
+  // 🔒 SECURITY GATE: Chuyển sang quyền Quản Trị hoặc Tài Chính BẮT BUỘC phải qua mã PIN nếu chưa mở khóa
+  if ((newRole === 'admin' || newRole === 'finance') && !adminSessionUnlocked && !bypassPin) {
+    const isVi = currentLang === 'vi';
+    const roleTitle = ROLES[newRole].name;
+    const pin = prompt(isVi ? `🔒 VAI TRÒ BẢO MẬT CAO CẤP: ${roleTitle}\nVui lòng nhập mã PIN Quản Trị để truy cập:` : `🔒 PRIVILEGED ROLE: ${roleTitle}\nPlease enter Admin PIN to access:`);
+    if (pin === null) {
+      // Người dùng bấm Hủy -> Trả lại dropdown vai trò hiện tại
+      const sel = document.getElementById('app-role-select');
+      if (sel) sel.value = currentAppRole;
+      return;
+    }
+    verifyPin_(pin).then(ok => {
+      if (ok) {
+        adminSessionUnlocked = true;
+        changeAppRole(newRole, staffName, true);
+        al(isVi ? `✅ Mở khóa thành công vai trò: ${roleTitle}` : `✅ Access unlocked for: ${roleTitle}`, 'ok');
+      } else {
+        const sel = document.getElementById('app-role-select');
+        if (sel) sel.value = currentAppRole;
+        al(isVi ? '❌ Mã PIN không chính xác! Không thể chuyển sang vai trò này.' : '❌ Incorrect PIN! Cannot switch to this privileged role.', 'er');
+      }
+    });
+    return;
+  }
+
   currentAppRole = newRole;
   localStorage.setItem('tni_sale_role', newRole);
 
@@ -10208,14 +9242,14 @@ function changeAppRole(newRole, staffName) {
     activeQc.style.background = 'rgba(255,255,255,0.28)';
   }
 
-  // Update Sidebar lock icons & tooltips
+  // Update Sidebar items & section categories
   updateSidebarAccessState(newRole);
 
   // If currently on a blocked tab, redirect to access denied
   const curSec = document.querySelector('.sec.on');
   if (curSec) {
     const secId = curSec.id.replace(/^s-/, '');
-    if (secId !== 'access-denied' && secId !== 'rbac' && !isTabAllowedForRole(secId, newRole)) {
+    if (secId !== 'access-denied' && !isTabAllowedForRole(secId, newRole)) {
       showAccessDenied(secId, newRole);
     }
   }
@@ -10230,26 +9264,39 @@ function changeAppRole(newRole, staffName) {
 
 function updateSidebarAccessState(roleId) {
   const allowed = (ROLES[roleId] || ROLES.admin).allowedTabs;
+
+  // 1. Cập nhật từng liên kết menu (ẩn hoàn toàn nếu không được phép)
   document.querySelectorAll('#sb nav a[data-nav-a]').forEach(a => {
     const tabId = a.getAttribute('data-nav-a');
-    const isAllowed = allowed.includes(tabId);
+    const isAllowed = isTabAllowedForRole(tabId, roleId);
 
-    // Remove existing lock badge if any
+    // Xóa badge lock cũ nếu có
     const oldLock = a.querySelector('.nav-lock-badge');
     if (oldLock) oldLock.remove();
 
     if (!isAllowed) {
-      a.style.opacity = '0.52';
-      a.title = '🔒 Bị khóa đối với vai trò ' + ROLES[roleId].shortName;
-      const lockSpan = document.createElement('span');
-      lockSpan.className = 'nav-lock-badge';
-      lockSpan.style.cssText = 'font-size:10px;margin-left:auto;opacity:0.8';
-      lockSpan.textContent = '🔒';
-      a.appendChild(lockSpan);
+      // 🔒 KHÓA TRIỆT ĐỂ: Ẩn hoàn toàn khỏi sidebar, không để lại dấu vết
+      a.style.display = 'none';
+      a.title = '';
     } else {
+      a.style.display = '';
       a.style.opacity = '1.0';
       a.title = '';
     }
+  });
+
+  // 2. Ẩn tiêu đề phân mục (lbl) nếu toàn bộ liên kết con bên dưới mục đó đều bị ẩn
+  document.querySelectorAll('#sb nav .lbl[data-nav-lbl]').forEach(lbl => {
+    let nextEl = lbl.nextElementSibling;
+    let hasVisibleChild = false;
+    while (nextEl && !nextEl.classList.contains('lbl')) {
+      if (nextEl.tagName === 'A' && nextEl.style.display !== 'none') {
+        hasVisibleChild = true;
+        break;
+      }
+      nextEl = nextEl.nextElementSibling;
+    }
+    lbl.style.display = hasVisibleChild ? '' : 'none';
   });
 }
 
@@ -10470,46 +9517,7 @@ function renderRBACMatrix() {
   container.innerHTML = html;
 }
 
-const SALE_GAS_URL = GAS_SALE_URL;
-
-function syncStaffWithGoogleSheet(manualNotify) {
-  const isVi = currentLang === 'vi';
-  if (manualNotify) al(isVi ? '⏳ Đang đồng bộ với Google Sheet...' : '⏳ Syncing with Google Sheet...', 'in');
-
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 15000);
-
-  fetch(GAS_SALE_URL + '?action=staff_get', { method: 'GET', signal: ctrl.signal })
-    .then(r => r.json())
-    .then(res => {
-      clearTimeout(timer);
-      if (res.ok && Array.isArray(res.data) && res.data.length > 0) {
-        DB.s('staff_directory', res.data);
-        _renderStaffTable_(res.data, '☁️ Google Sheet');
-        populateStaffUserSelect();
-        if (manualNotify) al(isVi ? `✅ Đã đồng bộ thành công ${res.data.length} nhân sự từ Google Sheet!` : `✅ Synced ${res.data.length} staff from Google Sheet!`, 'ok');
-      } else {
-        // Nếu Sheet rỗng mà local có dữ liệu, tự động đẩy lên khởi tạo Sheet
-        const currentList = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
-        if (currentList && currentList.length > 0) {
-          fetch(GAS_SALE_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'staff_save', data: currentList })
-          }).then(r2 => r2.json()).then(res2 => {
-            if (res2.ok && manualNotify) {
-              al(isVi ? `☁️ Sheet chưa có dữ liệu — đã khởi tạo ${res2.saved} nhân sự lên Sheet!` : `☁️ Initialized ${res2.saved} staff to Google Sheet!`, 'ok');
-            }
-          }).catch(() => {});
-        }
-        if (manualNotify) al(isVi ? 'ℹ️ Google Sheet đã được kết nối và kiểm tra.' : 'ℹ️ Google Sheet connected and verified.', 'in');
-      }
-    })
-    .catch(err => {
-      clearTimeout(timer);
-      console.warn('[STAFF] Sync error:', err);
-      if (manualNotify) al(isVi ? '⚠️ Không thể kết nối Google Sheet, đang dùng dữ liệu lưu bộ nhớ.' : '⚠️ Cannot connect to Google Sheet, using local data.', 'er');
-    });
-}
+const SALE_GAS_URL = 'https://script.google.com/macros/s/AKfycbylrXMEDKpBfvs9Wbr3kmoqrJ6UoWE1KaN-WC94mE2wm1V2MJUFu-zyYrzzm10Vo0Ue5Q/exec';
 
 function renderStaffUsersTable(sourceOverride, _retry) {
   const container = document.getElementById('rbac-staff-table-container');
@@ -10525,8 +9533,18 @@ function renderStaffUsersTable(sourceOverride, _retry) {
   const users0 = (cached && cached.length > 0) ? cached : DEFAULT_STAFF_USERS;
   _renderStaffTable_(users0, (cached && cached.length > 0) ? '💾 Local' : '📋 Default');
 
-  // BƯỚC 2: Cập nhật tự động 2 chiều từ Google Sheet trong nền
-  syncStaffWithGoogleSheet(false);
+  // BƯỚC 2: Cập nhật từ Sheet trong nền
+  const ctrl = new AbortController();
+  setTimeout(() => ctrl.abort(), 12000);
+  fetch(SALE_GAS_URL + '?action=staff_get', { method: 'GET', signal: ctrl.signal })
+  .then(r => r.json())
+  .then(res => {
+    if (res.ok && res.data && res.data.length > 0) {
+      DB.s('staff_directory', res.data);
+      _renderStaffTable_(res.data, '☁️ Google Sheet');
+    }
+  })
+  .catch(() => {});
 }
 
 function _renderStaffTable_(users, source) {
@@ -10591,11 +9609,6 @@ function resetStaffDirectoryToClean() {
   populateStaffUserSelect();
   renderStaffUsersTable();
   al(isVi ? '✅ Đã làm sạch và khôi phục danh sách nhân sự mẫu!' : '✅ Staff directory reset to clean standard list!', 'ok');
-  // 🔄 Đồng bộ lên Google Sheet tab 'staff'
-  fetch(GAS_SALE_URL, {
-    method: 'POST',
-    body: JSON.stringify({ action: 'staff_save', data: DEFAULT_STAFF_USERS })
-  }).catch(() => {});
 }
 const resetStaffDirectoryClean = resetStaffDirectoryToClean;
 
@@ -10608,11 +9621,6 @@ function updateStaffAssignedRole(userId, newRole) {
   al(isVi ? 'Đã cập nhật vai trò nhân sự thành công!' : 'Staff role updated successfully!', 'ok');
   populateStaffUserSelect();
   renderStaffUsersTable();
-  // 🔄 Đồng bộ lên Google Sheet tab 'staff'
-  fetch(GAS_SALE_URL, {
-    method: 'POST',
-    body: JSON.stringify({ action: 'staff_save', data: list })
-  }).catch(() => {});
 }
 
 // 🗑 Xóa nhân sự (khi nghỉ việc)
@@ -10626,11 +9634,6 @@ function deleteStaffUser(userId, userName) {
   al(isVi ? `Đã xóa nhân sự "${userName}" khỏi hệ thống.` : `Deleted staff member "${userName}".`, 'ok');
   populateStaffUserSelect();
   renderStaffUsersTable();
-  // 🔄 Đồng bộ lên Google Sheet tab 'staff'
-  fetch(GAS_SALE_URL, {
-    method: 'POST',
-    body: JSON.stringify({ action: 'staff_save', data: list })
-  }).catch(() => {});
 }
 
 // 🔄 Toggle thủ công Được Xem / Bị Khóa trong bảng RBAC
@@ -10736,7 +9739,7 @@ function promptAdminUnlock() {
   verifyPin_(input).then(ok => {
     if (ok) {
       adminSessionUnlocked = true;
-      changeAppRole('admin');
+      changeAppRole('admin', null, true);
       // Lấy admin token để sync staff lên Sheet
       if (!localStorage.getItem('tni_sale_admin_token')) {
         const tok = prompt(isVi ? '🔑 Nhập Admin API Token để đồng bộ nhân sự lên Google Sheet\n(Bỏ qua = chỉ lưu local, không sync Sheet):' : '🔑 Enter Admin API Token to sync staff to Google Sheet\n(Skip = local-only, no Sheet sync):');
@@ -10832,17 +9835,21 @@ function saveStaffUserModal() {
   
   DB.s('staff_directory', list);
 
-  // 🔄 Tự động đồng bộ 2 chiều lên Google Sheet ngay lập tức
-  fetch(GAS_SALE_URL, {
-    method: 'POST',
-    body: JSON.stringify({ action: 'staff_save', data: list })
-  })
-  .then(r => r.json())
-  .then(res => {
-    if (res.ok) al(isVi ? `☁️ Đã đồng bộ lên Google Sheet (${res.saved} nhân sự)!` : `☁️ Synced to Google Sheet (${res.saved} staff)!`, 'ok');
-    else console.warn('Sheet sync response:', res);
-  })
-  .catch(err => console.warn('Sheet sync offline/network error:', err));
+  // 🔄 Sync lên Google Sheet nếu admin đã unlock (có token)
+  const adminToken = localStorage.getItem('tni_sale_admin_token') || '';
+  if (adminToken) {
+    fetch(SALE_GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'staff_save', token: adminToken, data: list })
+    })
+    .then(r => r.json())
+    .then(res => {
+      if (res.ok) al(isVi ? `✅ Đã lưu lên Google Sheet (${res.saved} nhân sự)!` : `✅ Synced to Google Sheet (${res.saved} staff)!`, 'ok');
+      else al(isVi ? `⚠️ Lưu local OK nhưng Sheet chưa sync: ${res.error}` : `⚠️ Local OK but Sheet sync failed: ${res.error}`, 'er');
+    })
+    .catch(() => al(isVi ? '⚠️ Lưu local OK. Sheet offline — sẽ sync lần sau.' : '⚠️ Local saved. Sheet offline — will sync later.', 'er'));
+  }
   closeAddStaffModal();
   renderStaffUsersTable();
   populateStaffUserSelect();
@@ -10948,11 +9955,6 @@ function importStaffFromFile(input) {
       renderStaffUsersTable();
       populateStaffUserSelect();
       al(isVi ? `✅ Import xong! Thêm ${added} mới, cập nhật ${updated} nhân sự.` : `✅ Import done! Added ${added} new, updated ${updated} staff.`, 'ok');
-      // 🔄 Đồng bộ lên Google Sheet tab 'staff'
-      fetch(GAS_SALE_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'staff_save', data: existing })
-      }).catch(() => {});
     } catch(err) {
       al(isVi ? `❌ Lỗi đọc file: ${err.message}` : `❌ File read error: ${err.message}`, 'er');
     }
@@ -10991,10 +9993,30 @@ window.addEventListener('DOMContentLoaded', () => {
   const paramRole = params.get('role');
   const paramStaff = params.get('staff') || params.get('user') || params.get('email');
 
-  if (paramRole && ROLES[paramRole]) {
-    changeAppRole(paramRole, paramStaff || '');
+  let resolvedRole = paramRole;
+  let resolvedStaff = paramStaff || '';
+
+  // 🔍 Tự động tra cứu nhân sự trong danh bạ nếu có tên hoặc email
+  if (resolvedStaff) {
+    const list = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
+    const found = list.find(u => 
+      (u.name && u.name.toLowerCase() === resolvedStaff.toLowerCase()) || 
+      (u.email && u.email.toLowerCase() === resolvedStaff.toLowerCase()) ||
+      (u.id && u.id.toLowerCase() === resolvedStaff.toLowerCase())
+    );
+    if (found) {
+      resolvedRole = found.role;
+      resolvedStaff = found.name;
+    }
+  }
+
+  if (resolvedRole && ROLES[resolvedRole]) {
+    // Nếu vào bằng link gán role nhân viên hoặc được gán role
+    changeAppRole(resolvedRole, resolvedStaff, false);
   } else {
-    changeAppRole(currentAppRole, currentStaffUser);
+    // Không có param -> sử dụng role đã lưu hoặc an toàn mặc định là sales
+    const safeSavedRole = (currentAppRole === 'admin' || currentAppRole === 'finance') ? 'sales' : currentAppRole;
+    changeAppRole(safeSavedRole, currentStaffUser, false);
   }
 
   // Populate staff selects and render matrix
