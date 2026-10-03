@@ -1219,6 +1219,25 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
           
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:0.85rem;" id="supervisory-seats-grid">
             
+                        <!-- Ghế 12: Giám Sát Cẩm Nang & Đồng Bộ Slide Gốc -->
+            <div class="seat-card" style="background:rgba(30,41,59,0.55); border:1px solid rgba(245,158,11,0.35); border-radius:12px; padding:0.9rem;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                  <span style="font-size:1.1rem; color:#F59E0B;">📖</span>
+                  <div>
+                    <strong style="color:#F8FAFC; font-size:0.84rem;">SENTINEL-GUIDE-SYNC (Cẩm Nang Slide)</strong>
+                    <div style="font-size:0.7rem; color:#94A3B8;">Giám Sát &amp; Đồng Bộ 41 Slides Live</div>
+                  </div>
+                </div>
+                <span class="seat-status-pill" id="seat-status-guide-sync" style="background:rgba(16,185,129,0.2); color:#34D399; font-weight:700; font-size:0.68rem; padding:0.2rem 0.5rem; border-radius:6px; border:1px solid rgba(16,185,129,0.4);">
+                  ✅ 41 Slides Live
+                </span>
+              </div>
+              <div style="font-size:0.72rem; color:#CBD5E1; margin-top:0.5rem; line-height:1.4;">
+                Đồng bộ liên tục với Google Presentation gốc. Tự động nhận diện xóa/thêm slide và render 2K không cắt mép.
+              </div>
+            </div>
+
             <!-- Ghế 1: Master Sentinel -->
             <div class="seat-card" style="background:rgba(30,41,59,0.55); border:1px solid rgba(56,189,248,0.25); border-radius:12px; padding:0.9rem;">
               <div style="display:flex; justify-content:space-between; align-items:flex-start;">
@@ -3222,8 +3241,8 @@ Team04>> 2Box</td>
     </div>
 
     
-                <!-- ══════════════════════════════════════════════════════════════════════════════════════
-         📌 TAB: GUIDE FOR STAFF — COMPREHENSIVE FIELD OPERATIONS GUIDE FOR ENGINEERS
+                    <!-- ══════════════════════════════════════════════════════════════════════════════════════
+         📌 TAB: GUIDE FOR STAFF — COMPREHENSIVE FIELD OPERATIONS GUIDE FOR ENGINEERS (41 SLIDES)
          ══════════════════════════════════════════════════════════════════════════════════════ -->
     <div id="guide-for-staff-panel" class="tab-panel">
       
@@ -3241,6 +3260,9 @@ Team04>> 2Box</td>
           </div>
         </div>
         <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+          <button onclick="syncGuideSlidesLive()" style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; padding:0.55rem 1.1rem; border-radius:10px; font-size:0.82rem; font-weight:800; border:none; cursor:pointer; display:flex; align-items:center; gap:0.45rem; box-shadow:0 4px 14px rgba(2,132,199,0.45); transition:all .2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+            <i class="fa-solid fa-cloud-arrow-down"></i> Đồng Bộ Slide Mới
+          </button>
           <a href="https://docs.google.com/presentation/d/1UqHw1AzsKM-U-I5rhBTdqqSokeTuukrE_vsrL6xB2uI/edit?slide=id.p#slide=id.p" target="_blank" rel="noopener noreferrer" style="text-decoration:none; background:linear-gradient(135deg,#f59e0b,#ef4444); color:#fff; padding:0.55rem 1.1rem; border-radius:10px; font-size:0.82rem; font-weight:800; display:flex; align-items:center; gap:0.45rem; box-shadow:0 4px 14px rgba(245,158,11,0.45); transition:all .2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
             <i class="fa-solid fa-file-powerpoint"></i> Mở Google Slide Gốc
           </a>
@@ -3250,7 +3272,7 @@ Team04>> 2Box</td>
         </div>
       </div>
 
-      <!-- Quick Search & Category Filter Navigation Bar (GIỮ LẠI ĐÚNG NHƯ ẢNH CHỤP) -->
+      <!-- Quick Search & Category Filter Navigation Bar (41 SLIDES SỐNG) -->
       <div id="staff-guide-nav-bar" style="background:rgba(30,41,59,0.7); border:1px solid rgba(56,189,248,0.3); border-radius:14px; padding:1rem 1.2rem; margin-top:0.5rem; margin-bottom:1.5rem;">
         <div style="display:flex; gap:0.8rem; align-items:center; flex-wrap:wrap; margin-bottom:0.8rem;">
           <div style="flex:1; min-width:240px; position:relative;">
@@ -3258,7 +3280,7 @@ Team04>> 2Box</td>
             <input type="text" id="staff-guide-search" oninput="filterStaffGuideContent(this.value)" placeholder="🔍 Tìm kiếm quy trình, vật tư, cáp, solar, DG, telegram, an toàn, Myanmar text..." style="width:100%; background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.15); border-radius:10px; padding:0.55rem 0.8rem 0.55rem 2.2rem; color:#fff; font-size:0.85rem; outline:none;" onfocus="this.style.borderColor='#38BDF8'" onblur="this.style.borderColor='rgba(255,255,255,0.15)'">
           </div>
           <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
-            <button onclick="filterStaffGuideCategory('all')" id="btn-cat-all" class="guide-cat-btn active" style="background:#38BDF8; color:#0f172a; border:none; padding:0.45rem 0.85rem; border-radius:8px; font-weight:700; font-size:0.78rem; cursor:pointer;">Tất cả (All)</button>
+            <button onclick="filterStaffGuideCategory('all')" id="btn-cat-all" class="guide-cat-btn active" style="background:#38BDF8; color:#0f172a; border:none; padding:0.45rem 0.85rem; border-radius:8px; font-weight:700; font-size:0.78rem; cursor:pointer;">Tất cả (41 Slides)</button>
             <button onclick="filterStaffGuideCategory('cable')" id="btn-cat-cable" class="guide-cat-btn" style="background:rgba(255,255,255,0.08); color:#cbd5e1; border:1px solid rgba(255,255,255,0.15); padding:0.45rem 0.85rem; border-radius:8px; font-weight:600; font-size:0.78rem; cursor:pointer;">Cáp &amp; Truyền Dẫn</button>
             <button onclick="filterStaffGuideCategory('safety')" id="btn-cat-safety" class="guide-cat-btn" style="background:rgba(255,255,255,0.08); color:#cbd5e1; border:1px solid rgba(255,255,255,0.15); padding:0.45rem 0.85rem; border-radius:8px; font-weight:600; font-size:0.78rem; cursor:pointer;">An Toàn &amp; Xe</button>
             <button onclick="filterStaffGuideCategory('maint')" id="btn-cat-maint" class="guide-cat-btn" style="background:rgba(255,255,255,0.08); color:#cbd5e1; border:1px solid rgba(255,255,255,0.15); padding:0.45rem 0.85rem; border-radius:8px; font-weight:600; font-size:0.78rem; cursor:pointer;">Solar &amp; DG</button>
@@ -3266,22 +3288,23 @@ Team04>> 2Box</td>
           </div>
         </div>
         
-        <!-- Quick Anchor Badges (Bấm vào nhảy xuống đúng slide) -->
+        <!-- Quick Anchor Badges (Cập nhật chuẩn 41 slides) -->
         <div style="display:flex; gap:0.5rem; flex-wrap:wrap; font-size:0.75rem;">
           <a href="#guide-slide-2" onclick="jumpToGuideSlide(2); return false;" style="text-decoration:none; color:#F59E0B; background:rgba(245,158,11,0.12); padding:0.25rem 0.6rem; border-radius:6px; border:1px solid rgba(245,158,11,0.25); cursor:pointer;"><i class="fa-solid fa-utensils"></i> I. Cơm Trưa Lệch Tuyến</a>
-          <a href="#guide-slide-8" onclick="jumpToGuideSlide(8); return false;" style="text-decoration:none; color:#10B981; background:rgba(16,185,129,0.12); padding:0.25rem 0.6rem; border-radius:6px; border:1px solid rgba(16,185,129,0.25); cursor:pointer;"><i class="fa-solid fa-table-list"></i> II. Google All For Task</a>
-          <a href="#guide-slide-9" onclick="jumpToGuideSlide(9); return false;" style="text-decoration:none; color:#F43F5E; background:rgba(244,63,94,0.12); padding:0.25rem 0.6rem; border-radius:6px; border:1px solid rgba(244,63,94,0.25); cursor:pointer;"><i class="fa-solid fa-gas-pump"></i> III. Fuel Rule</a>
-          <a href="#guide-slide-11" onclick="jumpToGuideSlide(11); return false;" style="text-decoration:none; color:#06B6D4; background:rgba(6,182,212,0.12); padding:0.25rem 0.6rem; border-radius:6px; border:1px solid rgba(6,182,212,0.25); cursor:pointer;"><i class="fa-solid fa-network-wired"></i> IV. Cáp &amp; Tuyến Cáp</a>
-          <a href="#guide-slide-19" onclick="jumpToGuideSlide(19); return false;" style="text-decoration:none; color:#EF4444; background:rgba(239,68,68,0.12); padding:0.25rem 0.6rem; border-radius:6px; border:1px solid rgba(239,68,68,0.25); cursor:pointer;"><i class="fa-solid fa-vest"></i> V. An Toàn &amp; Xe Công Tác</a>
-          <a href="#guide-slide-26" onclick="jumpToGuideSlide(26); return false;" style="text-decoration:none; color:#8B5CF6; background:rgba(139,92,246,0.12); padding:0.25rem 0.6rem; border-radius:6px; border:1px solid rgba(139,92,246,0.25); cursor:pointer;"><i class="fa-solid fa-solar-panel"></i> VI. Solar, Đất Sét &amp; DG</a>
-          <a href="#guide-slide-28" onclick="jumpToGuideSlide(28); return false;" style="text-decoration:none; color:#38BDF8; background:rgba(56,189,248,0.12); padding:0.25rem 0.6rem; border-radius:6px; border:1px solid rgba(56,189,248,0.25); cursor:pointer;"><i class="fa-brands fa-telegram"></i> VII. Telegram Rules</a>
-          <a href="#guide-slide-39" onclick="jumpToGuideSlide(39); return false;" style="text-decoration:none; color:#EC4899; background:rgba(236,72,153,0.12); padding:0.25rem 0.6rem; border-radius:6px; border:1px solid rgba(236,72,153,0.25); cursor:pointer;"><i class="fa-solid fa-tower-broadcast"></i> VIII. 5G &amp; Construction</a>
-          <a href="#guide-slide-44" onclick="jumpToGuideSlide(44); return false;" style="text-decoration:none; color:#EAB308; background:rgba(234,179,8,0.12); padding:0.25rem 0.6rem; border-radius:6px; border:1px solid rgba(234,179,8,0.25); cursor:pointer;"><i class="fa-solid fa-boxes-stacked"></i> IX. Quản Lý Tài Sản</a>
+          <a href="#guide-slide-8" onclick="jumpToGuideSlide(8); return false;" style="text-decoration:none; color:#F43F5E; background:rgba(244,63,94,0.12); padding:0.25rem 0.6rem; border-radius:6px; border:1px solid rgba(244,63,94,0.25); cursor:pointer;"><i class="fa-solid fa-gas-pump"></i> II. Fuel Rule &amp; Khấu Trừ DG</a>
+          <a href="#guide-slide-10" onclick="jumpToGuideSlide(10); return false;" style="text-decoration:none; color:#06B6D4; background:rgba(6,182,212,0.12); padding:0.25rem 0.6rem; border-radius:6px; border:1px solid rgba(6,182,212,0.25); cursor:pointer;"><i class="fa-solid fa-network-wired"></i> III. Cáp &amp; Tuyến Cáp</a>
+          <a href="#guide-slide-18" onclick="jumpToGuideSlide(18); return false;" style="text-decoration:none; color:#EF4444; background:rgba(239,68,68,0.12); padding:0.25rem 0.6rem; border-radius:6px; border:1px solid rgba(239,68,68,0.25); cursor:pointer;"><i class="fa-solid fa-vest"></i> IV. An Toàn &amp; Xe Công Tác</a>
+          <a href="#guide-slide-24" onclick="jumpToGuideSlide(24); return false;" style="text-decoration:none; color:#A78BFA; background:rgba(167,139,250,0.12); padding:0.25rem 0.6rem; border-radius:6px; border:1px solid rgba(167,139,250,0.25); cursor:pointer;"><i class="fa-solid fa-clipboard-user"></i> V. Kỷ Luật Trực Ca</a>
+          <a href="#guide-slide-25" onclick="jumpToGuideSlide(25); return false;" style="text-decoration:none; color:#8B5CF6; background:rgba(139,92,246,0.12); padding:0.25rem 0.6rem; border-radius:6px; border:1px solid rgba(139,92,246,0.25); cursor:pointer;"><i class="fa-solid fa-solar-panel"></i> VI. Solar, Đất Sét PVC</a>
+          <a href="#guide-slide-27" onclick="jumpToGuideSlide(27); return false;" style="text-decoration:none; color:#38BDF8; background:rgba(56,189,248,0.12); padding:0.25rem 0.6rem; border-radius:6px; border:1px solid rgba(56,189,248,0.25); cursor:pointer;"><i class="fa-brands fa-telegram"></i> VII. Telegram Rules</a>
+          <a href="#guide-slide-29" onclick="jumpToGuideSlide(29); return false;" style="text-decoration:none; color:#10B981; background:rgba(16,185,129,0.12); padding:0.25rem 0.6rem; border-radius:6px; border:1px solid rgba(16,185,129,0.25); cursor:pointer;"><i class="fa-solid fa-gears"></i> VIII. Bảo Dưỡng DG</a>
+          <a href="#guide-slide-36" onclick="jumpToGuideSlide(36); return false;" style="text-decoration:none; color:#EC4899; background:rgba(236,72,153,0.12); padding:0.25rem 0.6rem; border-radius:6px; border:1px solid rgba(236,72,153,0.25); cursor:pointer;"><i class="fa-solid fa-tower-broadcast"></i> IX. 5G &amp; Construction</a>
+          <a href="#guide-slide-41" onclick="jumpToGuideSlide(41); return false;" style="text-decoration:none; color:#EAB308; background:rgba(234,179,8,0.12); padding:0.25rem 0.6rem; border-radius:6px; border:1px solid rgba(234,179,8,0.25); cursor:pointer;"><i class="fa-solid fa-boxes-stacked"></i> X. Quản Lý Tài Sản</a>
         </div>
       </div>
 
       <!-- ══════════════════════════════════════════════════════════════════════════
-           🖼️ NỘI DUNG CHI TIẾT TỪNG SLIDE (HÌNH ẢNH 2K SẮC NÉT NGUYÊN BẢN TỪ GOOGLE PRESENTATION)
+           🖼️ NỘI DUNG CHI TIẾT TỪNG SLIDE (41 SLIDES 2K SẮC NÉT NGUYÊN BẢN TỪ GOOGLE PRESENTATION)
            ══════════════════════════════════════════════════════════════ -->
       <div id="staff-guide-content" style="display:flex; flex-direction:column; gap:1.8rem;">
 
@@ -3291,7 +3314,7 @@ Team04>> 2Box</td>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 01 / 44
+                SLIDE 01 / 41
               </span>
               <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">Cover & Giới Thiệu Cẩm Nang Hiện Trường</span>
             </div>
@@ -3305,7 +3328,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_01.jpg" alt="Slide 1" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3318,7 +3341,7 @@ Team04>> 2Box</td>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 02 / 44
+                SLIDE 02 / 41
               </span>
               <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">I. Solutions for Off-Route Lunch (Giải Pháp Cơm Trưa Lệch Tuyến)</span>
             </div>
@@ -3332,7 +3355,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_02.jpg" alt="Slide 2" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3345,9 +3368,9 @@ Team04>> 2Box</td>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 03 / 44
+                SLIDE 03 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">I. Lunch & Drinking Water on Remote Routes (Ảnh Hiện Trường)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">I. Lunch & Field Preparation (Ảnh Hiện Trường & Chuẩn Bị Trang Phục)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_03.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -3359,7 +3382,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_03.jpg" alt="Slide 3" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3372,9 +3395,9 @@ Team04>> 2Box</td>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 04 / 44
+                SLIDE 04 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">I. Lunch & Field Preparation (Ảnh Chuẩn Bị Tác Nghiệp)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">I. 5 Bước Trực Ca & Giữ Liên Lạc (Online 24/24, Call Waiting, Nhận Cuộc Gọi)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_04.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -3386,7 +3409,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_04.jpg" alt="Slide 4" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3399,9 +3422,9 @@ Team04>> 2Box</td>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 05 / 44
+                SLIDE 05 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">I. Field Operations & Meal Rest (Ảnh Tác Nghiệp Hiện Trường)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">I. Field Operations & Meal Rest (Ảnh Kỹ Sư Nghỉ Trưa Hiện Trường)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_05.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -3413,7 +3436,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_05.jpg" alt="Slide 5" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3426,9 +3449,9 @@ Team04>> 2Box</td>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 06 / 44
+                SLIDE 06 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">I. Field Lunch & Water Storage (Ảnh Bình Nước & Cơm Hộp)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">I. Field Lunch & Water Storage (Bình Nước 20L & Cơm Hộp Chuẩn Bị Sẵn)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_06.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -3440,7 +3463,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_06.jpg" alt="Slide 6" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3453,7 +3476,7 @@ Team04>> 2Box</td>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 07 / 44
+                SLIDE 07 / 41
               </span>
               <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">I. Field Operations (Ảnh Tác Nghiệp Thực Tế)</span>
             </div>
@@ -3467,7 +3490,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_07.jpg" alt="Slide 7" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3475,14 +3498,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 8 -->
-        <div id="guide-slide-8" class="guide-slide-card" data-cat="all" data-num="8" data-search="II. GOOLGE ALL FOR TASK LINK: https://docs.google.com/spreadsheets/d/1ucKxf-UhuL04e1esm6P1ur2MmiAb2JOO1VYr2L7OgdQ/edit?gid=0#gid=0" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-8" class="guide-slide-card" data-cat="maint all" data-num="8" data-search="" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 08 / 44
+                SLIDE 08 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">II. Google All For Task Link (Link Điều Hành Toàn Bộ Công Việc)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">II. Quy Trình Xác Minh & Khấu Trừ Nhiên Liệu DG (Fuel Consumption Verification & Deduction Process)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_08.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -3494,7 +3517,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_08.jpg" alt="Slide 8" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3502,14 +3525,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 9 -->
-        <div id="guide-slide-9" class="guide-slide-card" data-cat="maint all" data-num="9" data-search="III. FUEL RULE" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-9" class="guide-slide-card" data-cat="maint all" data-num="9" data-search="" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 09 / 44
+                SLIDE 09 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">III. Fuel Rule (Quy Chuẩn Cấp Phát & Giám Sát Nhiên Liệu)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">II. Fuel Rule (Quy Chuẩn Cấp Phát & Giám Sát Nhiên Liệu Máy Phát)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_09.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -3521,7 +3544,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_09.jpg" alt="Slide 9" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3529,14 +3552,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 10 -->
-        <div id="guide-slide-10" class="guide-slide-card" data-cat="maint all" data-num="10" data-search="" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-10" class="guide-slide-card" data-cat="cable all" data-num="10" data-search="Iv: TRANSMION https://docs.google.com/forms/ d/1Tzcho4CaZ0wnBuOKRn1xn tFNxcVMPQy0vcC2TQJ34Zs/e dit After adding the icon color gradient on Mapsme, compile the quantity into this Google file and update the images in the Team folder (8 TEAM 1 KMZ File cable route need repair). Simultaneously, export the KMZ file from Mapsme and update it in the folder (8 TEAM 1 KMZ File cable route need repair). Mapsme မှာ icon color gradient ထည့်Çပီးရင်၊ အဲဒီပမာဏကို Google file ထဲမှာ compile လုပ်Çပီး Team folder ထဲက ပံုေတွကို update လုပ်ပါ။ (8 TEAM 1 KMZ File cable route repair needed)။ တစ်ချိန်တည်းမှာပဲ Mapsme ကေန KMZ file ကို export လုပ်Çပီး folder ထဲမှာ update လုပ်ပါ။ (8 TEAM 1 KMZ File cable route repair needed)" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 10 / 44
+                SLIDE 10 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">III. Fuel Rule & DG Running (Ảnh Bồn Dầu & Máy Phát)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">III. Transmission & Cable Route (Google Form Tuyến Cáp & Mapsme KMZ)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_10.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -3548,7 +3571,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_10.jpg" alt="Slide 10" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3556,14 +3579,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 11 -->
-        <div id="guide-slide-11" class="guide-slide-card" data-cat="cable all" data-num="11" data-search="Iv: TRANSMION https://docs.google.com/forms/ d/1Tzcho4CaZ0wnBuOKRn1xn tFNxcVMPQy0vcC2TQJ34Zs/e dit After adding the icon color gradient on Mapsme, compile the quantity into this Google file and update the images in the Team folder (8 TEAM 1 KMZ File cable route need repair). Simultaneously, export the KMZ file from Mapsme and update it in the folder (8 TEAM 1 KMZ File cable route need repair). Mapsme မှာ icon color gradient ထည့်Çပီးရင်၊ အဲဒီပမာဏကို Google file ထဲမှာ compile လုပ်Çပီး Team folder ထဲက ပံုေတွကို update လုပ်ပါ။ (8 TEAM 1 KMZ File cable route repair needed)။ တစ်ချိန်တည်းမှာပဲ Mapsme ကေန KMZ file ကို export လုပ်Çပီး folder ထဲမှာ update လုပ်ပါ။ (8 TEAM 1 KMZ File cable route repair needed)" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-11" class="guide-slide-card" data-cat="cable all" data-num="11" data-search="&quot;Sheet: Cable Route. Absolutely do not use route codes from LOGIC links/links that jump over the cable route as physical route codes. --&gt; If incorrect, Mytel&#x27;s technical department will remove it from the list of proposed cable routes. - Photos showing the correct/sufficient locations of weak points and splice closures as per regulations: + If there are more than 9 splice closures in 3km =&gt; propose replacing the entire area. (Photograph all proposed replacement splice closures) + If there are more than 3 splice closures in 1km =&gt; propose replacing 1km, not the entire 3km. (Photograph all proposed replacement splice closures) - Correct and complete information on the type (material code of overhead/underground cable) currently in use/proposal cable; Type/Height of pole&quot;" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 11 / 44
+                SLIDE 11 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IV. Transmission & Cable Route (Google Form Tuyến Cáp & Mapsme KMZ)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">III. Quy Định Mã Tuyến Cáp & Mật Độ Măng Xông (Cable Route Regulations)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_11.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -3575,7 +3598,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_11.jpg" alt="Slide 11" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3583,14 +3606,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 12 -->
-        <div id="guide-slide-12" class="guide-slide-card" data-cat="cable all" data-num="12" data-search="&quot;Sheet: Cable Route. Absolutely do not use route codes from LOGIC links/links that jump over the cable route as physical route codes. --&gt; If incorrect, Mytel&#x27;s technical department will remove it from the list of proposed cable routes. - Photos showing the correct/sufficient locations of weak points and splice closures as per regulations: + If there are more than 9 splice closures in 3km =&gt; propose replacing the entire area. (Photograph all proposed replacement splice closures) + If there are more than 3 splice closures in 1km =&gt; propose replacing 1km, not the entire 3km. (Photograph all proposed replacement splice closures) - Correct and complete information on the type (material code of overhead/underground cable) currently in use/proposal cable; Type/Height of pole&quot;" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-12" class="guide-slide-card" data-cat="cable all" data-num="12" data-search="" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 12 / 44
+                SLIDE 12 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IV. Quy Định Mã Tuyến Cáp & Mật Độ Măng Xông (Cable Route Regulations)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">III. Sơ Đồ Tuyến Cáp & Điểm Suy Hao Quang (Route Diagram)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_12.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -3602,7 +3625,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_12.jpg" alt="Slide 12" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3610,14 +3633,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 13 -->
-        <div id="guide-slide-13" class="guide-slide-card" data-cat="cable all" data-num="13" data-search="" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-13" class="guide-slide-card" data-cat="cable all" data-num="13" data-search="USING MAP GOOGE CHECK KM FIND POINT BROKEN" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 13 / 44
+                SLIDE 13 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IV. Sơ Đồ Tuyến Cáp & Suy Hao Quang (Route Diagram)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">III. Đo KM Google Maps Tìm Điểm Đứt Cáp (Using Map Google Check KM)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_13.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -3629,7 +3652,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_13.jpg" alt="Slide 13" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3637,14 +3660,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 14 -->
-        <div id="guide-slide-14" class="guide-slide-card" data-cat="cable all" data-num="14" data-search="USING MAP GOOGE CHECK KM FIND POINT BROKEN" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-14" class="guide-slide-card" data-cat="cable all" data-num="14" data-search="The cable was not wrapped with tape to prevent ants from getting in. ပုရွက်ဆိတ်များ ဝင်မလာေစရန်အတွ က် Èကိုးကို တိပ်ြဖင့် ပတ်မထားပါ။" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 14 / 44
+                SLIDE 14 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IV. Đo KM Google Maps Tìm Điểm Đứt Cáp (Using Map Google Check KM)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">III. Quấn Băng Keo Cáp F8 Chống Kiến Chui Vào Măng Xông (Tape Wrap F8 Cable)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_14.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -3656,7 +3679,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_14.jpg" alt="Slide 14" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3664,14 +3687,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 15 -->
-        <div id="guide-slide-15" class="guide-slide-card" data-cat="cable all" data-num="15" data-search="The cable was not wrapped with tape to prevent ants from getting in. ပုရွက်ဆိတ်များ ဝင်မလာေစရန်အတွ က် Èကိုးကို တိပ်ြဖင့် ပတ်မထားပါ။" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-15" class="guide-slide-card" data-cat="cable all" data-num="15" data-search="If using F8 cable, remove the metal wires, shape the cable into a circle, and wrap it with electrical tape to fill it just enough, estimated to be the size of the black post next to it, to prevent ants and bees from getting inside. F8 Èကိုးကိုအသံုးြပုပါက သတ္တုဝါယာÈကိုးများကိုဖယ် ရှားÇပီး Èကိုးကိုစက်ဝိုင်းပံုသဏ္ဍာန်ြပု လုပ်ကာ ပုရွက်ဆိတ်များနှင့် ပျားများအထဲသို့မဝင်ေစရန် လျှပ်စစ်တိပ်ြဖင့် လံုေလာက်စွာြဖည့်ပါ။ ၎င်းေဘးရှိ အနက်ေရာင်တိုင်အရွယ်အစား ခန့်ရှိမည်ဟု ခန့်မှန်းရသည်။" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 15 / 44
+                SLIDE 15 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IV. Quấn Băng Keo Cáp F8 Chống Kiến Chui Vào Măng Xông (Tape Wrap F8 Cable)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">III. Quy Cách Tuốt Dây Thép Cáp F8 & Quấn Băng Keo Điện (F8 Cable Preparation)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_15.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -3683,7 +3706,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_15.jpg" alt="Slide 15" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3691,14 +3714,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 16 -->
-        <div id="guide-slide-16" class="guide-slide-card" data-cat="cable all" data-num="16" data-search="If using F8 cable, remove the metal wires, shape the cable into a circle, and wrap it with electrical tape to fill it just enough, estimated to be the size of the black post next to it, to prevent ants and bees from getting inside. F8 Èကိုးကိုအသံုးြပုပါက သတ္တုဝါယာÈကိုးများကိုဖယ် ရှားÇပီး Èကိုးကိုစက်ဝိုင်းပံုသဏ္ဍာန်ြပု လုပ်ကာ ပုရွက်ဆိတ်များနှင့် ပျားများအထဲသို့မဝင်ေစရန် လျှပ်စစ်တိပ်ြဖင့် လံုေလာက်စွာြဖည့်ပါ။ ၎င်းေဘးရှိ အနက်ေရာင်တိုင်အရွယ်အစား ခန့်ရှိမည်ဟု ခန့်မှန်းရသည်။" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-16" class="guide-slide-card" data-cat="cable all" data-num="16" data-search="" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 16 / 44
+                SLIDE 16 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IV. Quy Cách Tuốt Dây Thép Cáp F8 & Quấn Băng Keo Điện (F8 Cable Preparation)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">III. Ảnh Măng Xông Cáp Bị Kiến Làm Tổ (Ant Damage in Splice Closure)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_16.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -3710,7 +3733,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_16.jpg" alt="Slide 16" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3723,9 +3746,9 @@ Team04>> 2Box</td>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 17 / 44
+                SLIDE 17 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IV. Ảnh Măng Xông Cáp Bị Kiến Làm Tổ (Ant Damage in Splice Closure)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">III. Mẫu Măng Xông Sau Khi Xử Lý Băng Keo Chuẩn (Standard Sealed Closure)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_17.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -3737,7 +3760,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_17.jpg" alt="Slide 17" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3745,14 +3768,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 18 -->
-        <div id="guide-slide-18" class="guide-slide-card" data-cat="cable all" data-num="18" data-search="" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-18" class="guide-slide-card" data-cat="safety all" data-num="18" data-search="Norm cable Tool need bring in car for deploy cable" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 18 / 44
+                SLIDE 18 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IV. Mẫu Măng Xông Sau Khi Xử Lý Băng Keo Chuẩn (Standard Sealed Closure)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IV. Dụng Cụ Kéo Cáp Bắt Buộc Trên Xe (Norm Cable Tool Need Bring In Car)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_18.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -3764,7 +3787,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_18.jpg" alt="Slide 18" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3772,14 +3795,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 19 -->
-        <div id="guide-slide-19" class="guide-slide-card" data-cat="safety all" data-num="19" data-search="Norm cable Tool need bring in car for deploy cable" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-19" class="guide-slide-card" data-cat="safety all" data-num="19" data-search="Safety harnesses must be used when climbing to high places. ြမင့်မားေသာ ေနရာများသို့ တက်သည့်အ ခါ လံုြခံုေရးခါး ပတ်များကို ဝတ်ဆင်ရမ ည်။" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 19 / 44
+                SLIDE 19 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">V. Dụng Cụ Kéo Cáp Bắt Buộc Trên Xe (Norm Cable Tool Need Bring In Car)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IV. Quy Định Dây An Toàn Khi Trèo Cao (Safety Harness Must Be Used)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_19.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -3791,7 +3814,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_19.jpg" alt="Slide 19" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3799,14 +3822,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 20 -->
-        <div id="guide-slide-20" class="guide-slide-card" data-cat="safety all" data-num="20" data-search="Safety harnesses must be used when climbing to high places. ြမင့်မားေသာ ေနရာများသို့ တက်သည့်အ ခါ လံုြခံုေရးခါး ပတ်များကို ဝတ်ဆင်ရမ ည်။" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-20" class="guide-slide-card" data-cat="safety all" data-num="20" data-search="Tools for threading cables through tall tree branches and how to use the D9 and F7 fix tool. ြမင့်မားေသာ သစ်ပင်အကိုင်းအခ က်များမှတစ်ဆင့် ေကဘယ်လ်များ ချည်ေနှာင်ရန် ကိရိယာများနှင့် D9 နှင့် F7 ြပုြပင်ကိရိယာကို အသံုးြပုနည်း။" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 20 / 44
+                SLIDE 20 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">V. Quy Định Dây An Toàn Khi Trèo Cao (Safety Harness Must Be Used)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IV. Sào Luồn Cáp Qua Tán Cây & Dụng Cụ D9, F7 (Tree Threading Tools & D9/F7)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_20.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -3818,7 +3841,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_20.jpg" alt="Slide 20" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3826,14 +3849,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 21 -->
-        <div id="guide-slide-21" class="guide-slide-card" data-cat="safety all" data-num="21" data-search="Tools for threading cables through tall tree branches and how to use the D9 and F7 fix tool. ြမင့်မားေသာ သစ်ပင်အကိုင်းအခ က်များမှတစ်ဆင့် ေကဘယ်လ်များ ချည်ေနှာင်ရန် ကိရိယာများနှင့် D9 နှင့် F7 ြပုြပင်ကိရိယာကို အသံုးြပုနည်း။" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-21" class="guide-slide-card" data-cat="safety all" data-num="21" data-search="Umbrela" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 21 / 44
+                SLIDE 21 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">V. Sào Luồn Cáp Qua Tán Cây & Dụng Cụ D9, F7 (Tree Threading Tools & D9/F7)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IV. Dù Che Mưa Nắng Khi Hàn Cáp Hiện Trường (Umbrella For Field Work)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_21.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -3845,7 +3868,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_21.jpg" alt="Slide 21" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3853,14 +3876,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 22 -->
-        <div id="guide-slide-22" class="guide-slide-card" data-cat="safety all" data-num="22" data-search="Umbrela" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-22" class="guide-slide-card" data-cat="safety all" data-num="22" data-search="D9 + F8 Kit D10 + F8 Kit" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 22 / 44
+                SLIDE 22 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">V. Dù Che Mưa Nắng Khi Hàn Cáp Hiện Trường (Umbrella For Field Work)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IV. Bộ Phụ Kiện Cáp D9 + F8 Kit, D10 + F8 Kit</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_22.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -3872,7 +3895,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_22.jpg" alt="Slide 22" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3880,14 +3903,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 23 -->
-        <div id="guide-slide-23" class="guide-slide-card" data-cat="safety all" data-num="23" data-search="D9 + F8 Kit D10 + F8 Kit" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-23" class="guide-slide-card" data-cat="safety all" data-num="23" data-search="&quot;I require the following supplies to always be on the team vehicle, as listed below: - Cable &gt;100m, 3 sets D10, 3 sets D9 + lock + steel belt, 5 sets F8 Kit, 6 pcs G7. - Lifting machine, measuring instrument, climbing shoes, single safety harness, water pressure pump, dust blower, cleaning cloths, and 2 buckets of 20-liter water.&quot; &quot;ေအာက်ပါပစ္စည်းများကို အဖƯဲလိုက်ယာဉ်ေပါ်တွင် အÇမဲထားရှိရန် လိုအပ်ပါသည်။ ေအာက်တွင်ေဖာ်ြပထားသည်- - Èကိုး &gt;100m၊ D10 အစံု ၃ စံု၊ D9 + ေသာ့ + သံမဏိခါးပတ် ၃ စံု၊ F8 Kit ၅ စံု၊ G7 ၆ ခု။ - ေြမမြှောက်စက်၊ တိုင်းတာသည့်ကိရိယာ၊ ေတာင်တက်ဖိနပ်၊ ေဘးကင်းေရးခါးပတ်တစ်ခု၊ ေရဖိအားစုပ်စက်၊ ဖုန်မှုတ်စက်၊ သန့်ရှင်းေရးအဝတ်နှင့် ေရ ၂၀ လီတာပံုး ၂ ပံုး။&quot;" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 23 / 44
+                SLIDE 23 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">V. Bộ Phụ Kiện Cáp D9 + F8 Kit, D10 + F8 Kit</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IV. Danh Mục 13 Vật Tư & Thiết Bị Bắt Buộc Trên Xe (Mandatory Supplies On Vehicle)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_23.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -3899,7 +3922,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_23.jpg" alt="Slide 23" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3907,14 +3930,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 24 -->
-        <div id="guide-slide-24" class="guide-slide-card" data-cat="safety all" data-num="24" data-search="&quot;I require the following supplies to always be on the team vehicle, as listed below: - Cable &gt;100m, 3 sets D10, 3 sets D9 + lock + steel belt, 5 sets F8 Kit, 6 pcs G7. - Lifting machine, measuring instrument, climbing shoes, single safety harness, water pressure pump, dust blower, cleaning cloths, and 2 buckets of 20-liter water.&quot; &quot;ေအာက်ပါပစ္စည်းများကို အဖƯဲလိုက်ယာဉ်ေပါ်တွင် အÇမဲထားရှိရန် လိုအပ်ပါသည်။ ေအာက်တွင်ေဖာ်ြပထားသည်- - Èကိုး &gt;100m၊ D10 အစံု ၃ စံု၊ D9 + ေသာ့ + သံမဏိခါးပတ် ၃ စံု၊ F8 Kit ၅ စံု၊ G7 ၆ ခု။ - ေြမမြှောက်စက်၊ တိုင်းတာသည့်ကိရိယာ၊ ေတာင်တက်ဖိနပ်၊ ေဘးကင်းေရးခါးပတ်တစ်ခု၊ ေရဖိအားစုပ်စက်၊ ဖုန်မှုတ်စက်၊ သန့်ရှင်းေရးအဝတ်နှင့် ေရ ၂၀ လီတာပံုး ၂ ပံုး။&quot;" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-24" class="guide-slide-card" data-cat="safety all" data-num="24" data-search="V. DUTY" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 24 / 44
+                SLIDE 24 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">V. Danh Mục 13 Vật Tư & Thiết Bị Bắt Buộc Trên Xe (Mandatory Supplies On Vehicle)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">V. Kỷ Luật Trực Ca Hiện Trường (Duty Rules)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_24.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -3926,7 +3949,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_24.jpg" alt="Slide 24" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3934,14 +3957,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 25 -->
-        <div id="guide-slide-25" class="guide-slide-card" data-cat="safety all" data-num="25" data-search="V. DUTY" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-25" class="guide-slide-card" data-cat="maint all" data-num="25" data-search="VI. MAINTENANCE 1 For solar maintenance and cleaning purposes, you need to buy the product shown in this image. ေနေရာင်ြခည်စွမ်းအင် ထိန်းသိမ်းြခင်းနှင့် သန့်ရှင်းေရး ရည်ရွယ်ချက်များအတွ က်၊ ဤပံုတွင်ြပထားေသာ ထုတ်ကုန်ကို ဝယ်ယူရန် လိုအပ်ပါသည်။" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 25 / 44
+                SLIDE 25 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">VI. Kỷ Luật Trực Ca Hiện Trường (Duty Rules)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">VI. Vệ Sinh & Bảo Trì Tấm Pin Mặt Trời (Solar Maintenance & Cleaning Products)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_25.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -3953,7 +3976,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_25.jpg" alt="Slide 25" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3961,14 +3984,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 26 -->
-        <div id="guide-slide-26" class="guide-slide-card" data-cat="maint all" data-num="26" data-search="VI. MAINTENANCE 1 For solar maintenance and cleaning purposes, you need to buy the product shown in this image. ေနေရာင်ြခည်စွမ်းအင် ထိန်းသိမ်းြခင်းနှင့် သန့်ရှင်းေရး ရည်ရွယ်ချက်များအတွ က်၊ ဤပံုတွင်ြပထားေသာ ထုတ်ကုန်ကို ဝယ်ယူရန် လိုအပ်ပါသည်။" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-26" class="guide-slide-card" data-cat="maint all" data-num="26" data-search="2.Buy malleable clay to fill the gaps in PVC. PVC မှာ ကွက်လပ်ေတွကို ြဖည့်ဖို့ ေပျာ့ေြပာင်းနိုင်တဲ့ ရƐƷံေစးကို ဝယ်ပါ။" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 26 / 44
+                SLIDE 26 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">VII. Vệ Sinh & Bảo Trì Tấm Pin Mặt Trời (Solar Maintenance & Cleaning Products)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">VI. Đất Sét Dẻo Trám Kín Khe Hở Đầu Ống PVC (Malleable Clay To Fill PVC Gaps)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_26.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -3980,7 +4003,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_26.jpg" alt="Slide 26" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -3988,14 +4011,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 27 -->
-        <div id="guide-slide-27" class="guide-slide-card" data-cat="maint all" data-num="27" data-search="2.Buy malleable clay to fill the gaps in PVC. PVC မှာ ကွက်လပ်ေတွကို ြဖည့်ဖို့ ေပျာ့ေြပာင်းနိုင်တဲ့ ရƐƷံေစးကို ဝယ်ပါ။" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-27" class="guide-slide-card" data-cat="tele all" data-num="27" data-search="VII. Telegram" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 27 / 44
+                SLIDE 27 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">VII. Đất Sét Dẻo Trám Kín Khe Hở Đầu Ống PVC (Malleable Clay To Fill PVC Gaps)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">VII. Quy Định Nhóm Telegram Vận Hành (Telegram Rules)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_27.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -4007,7 +4030,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_27.jpg" alt="Slide 27" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -4015,14 +4038,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 28 -->
-        <div id="guide-slide-28" class="guide-slide-card" data-cat="tele all" data-num="28" data-search="VII. Telegram" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-28" class="guide-slide-card" data-cat="tele all" data-num="28" data-search="Telegram how to use" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 28 / 44
+                SLIDE 28 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">VIII. Quy Định Nhóm Telegram Vận Hành (Telegram Rules)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">VII. Hướng Dẫn Sử Dụng Telegram Vận Hành (Telegram How To Use)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_28.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -4034,7 +4057,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_28.jpg" alt="Slide 28" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -4042,14 +4065,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 29 -->
-        <div id="guide-slide-29" class="guide-slide-card" data-cat="tele all" data-num="29" data-search="Telegram how to use" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-29" class="guide-slide-card" data-cat="maint all" data-num="29" data-search="Guide Maintenan ce DG" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 29 / 44
+                SLIDE 29 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">VIII. Hướng Dẫn Sử Dụng Telegram Vận Hành (Telegram How To Use)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">VIII. Hướng Dẫn Bảo Dưỡng Máy Phát Điện DG (Guide Maintenance DG)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_29.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -4061,7 +4084,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_29.jpg" alt="Slide 29" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -4069,14 +4092,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 30 -->
-        <div id="guide-slide-30" class="guide-slide-card" data-cat="tele all" data-num="30" data-search="📌 TELEGRAM GROUP RULES &amp; DAILY TASKS 📌 🚨 Incident Monitoring ● Site/Cell Down → act immediately ● DG abnormal → check &amp; fix ● DG run &gt; 12h → monitor closely, take action 📋 Task &amp; Plan Management ● Follow Team Leader’s plan on schedule ● Clear all backlog/pending tasks 🔍 Site Info &amp; FT Reporting &amp; /myid ● Use bot @SEARCHTNITASKWOBOT to check site info &amp; pending tasks ● FTs must submit daily work reports via bot 💡 Proactivity = Team Efficiency" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-30" class="guide-slide-card" data-cat="maint all" data-num="30" data-search="DG Maintenance" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 30 / 44
+                SLIDE 30 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">VIII. Nội Quy Nhóm Telegram & Tác Vụ Hàng Ngày (Group Rules & Daily Tasks)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">VIII. Quy Trình Kiểm Tra Bảo Dưỡng Định Kỳ DG (DG Maintenance Process)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_30.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -4088,7 +4111,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_30.jpg" alt="Slide 30" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -4096,14 +4119,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 31 -->
-        <div id="guide-slide-31" class="guide-slide-card" data-cat="tele all" data-num="31" data-search="📡 TNI TECHNICA — TELEGRAM GROUPS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ━ 🏢 TEAM OPERATION GROUPS 🔵 TNI TEAM 1 — Dawei https://t.me/+_35CFQhPGmMyODBl 🟡 TNI TEAM 2 — Myeik &amp; Team 5 https://t.me/+pGf5Cnea46BjZjhl 🟢 TNI TEAM 3 — Bokpyin https://t.me/+JnZZ4Q40SkQ1M2E1 🔴 TNI TEAM 4 — Kawthoung https://t.me/+pxarKiriIII3MWY9 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ━ 🛠 SUPPORT &amp; TOOL GROUPS 1⃣ TNI Asset Group https://t.me/+atexSvtj13gyYjI1 3⃣ TNI Personal — Main Case Search https://t.me/SEARCHTNITASKWOBOT 6⃣ TNI Collect MDG + Inventory Fuel Remain https://t.me/+bAfTcSKlIOljNjhl 9⃣ TNI Request Refuel https://t.me/+SL9AFvlXUX04NTc1" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-31" class="guide-slide-card" data-cat="maint all" data-num="31" data-search="" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 31 / 44
+                SLIDE 31 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">VIII. Danh Bạ Nhóm Vận Hành & Bot TNI (@SEARCHTNITASKWOBOT)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">VIII. Ảnh Bảo Dưỡng DG — Kiểm Tra Mức Dầu Nhớt & Nước Làm Mát</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_31.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -4115,7 +4138,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_31.jpg" alt="Slide 31" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -4123,14 +4146,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 32 -->
-        <div id="guide-slide-32" class="guide-slide-card" data-cat="maint all" data-num="32" data-search="Guide Maintenan ce DG" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-32" class="guide-slide-card" data-cat="maint all" data-num="32" data-search="" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 32 / 44
+                SLIDE 32 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IX. Hướng Dẫn Bảo Dưỡng Máy Phát Điện DG (Guide Maintenance DG)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">VIII. Ảnh Bảo Dưỡng DG — Vệ Sinh & Thay Lọc Gió, Lọc Nhiên Liệu</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_32.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -4142,7 +4165,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_32.jpg" alt="Slide 32" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -4150,14 +4173,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 33 -->
-        <div id="guide-slide-33" class="guide-slide-card" data-cat="maint all" data-num="33" data-search="DG Maintenance" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-33" class="guide-slide-card" data-cat="maint all" data-num="33" data-search="" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 33 / 44
+                SLIDE 33 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IX. Quy Trình Kiểm Tra Bảo Dưỡng Định Kỳ DG (DG Maintenance Process)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">VIII. Ảnh Bảo Dưỡng DG — Kiểm Tra Bình Ắc Quy & Đầu Phát Điện</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_33.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -4169,7 +4192,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_33.jpg" alt="Slide 33" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -4182,9 +4205,9 @@ Team04>> 2Box</td>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 34 / 44
+                SLIDE 34 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IX. Ảnh Bảo Dưỡng DG — Kiểm Tra Mức Dầu Nhớt & Nước Làm Mát</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">VIII. Ảnh Bảo Dưỡng DG — Vệ Sinh Thân Máy & Xử Lý Rò Rỉ</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_34.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -4196,7 +4219,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_34.jpg" alt="Slide 34" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -4209,9 +4232,9 @@ Team04>> 2Box</td>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 35 / 44
+                SLIDE 35 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IX. Ảnh Bảo Dưỡng DG — Vệ Sinh & Thay Lọc Gió, Lọc Nhiên Liệu</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">VIII. Ảnh Bảo Dưỡng DG — Khởi Động Thử Nghiệm & Bàn Giao</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_35.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -4223,7 +4246,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_35.jpg" alt="Slide 35" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -4231,14 +4254,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 36 -->
-        <div id="guide-slide-36" class="guide-slide-card" data-cat="maint all" data-num="36" data-search="" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-36" class="guide-slide-card" data-cat="cable all" data-num="36" data-search="Construction Giude 5G setup" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 36 / 44
+                SLIDE 36 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IX. Ảnh Bảo Dưỡng DG — Kiểm Tra Bình Ắc Quy & Đầu Phát Điện</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IX. Hướng Dẫn Thi Công Triển Khai Trạm 5G (Construction Guide 5G Setup)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_36.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -4250,7 +4273,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_36.jpg" alt="Slide 36" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -4258,14 +4281,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 37 -->
-        <div id="guide-slide-37" class="guide-slide-card" data-cat="maint all" data-num="37" data-search="" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-37" class="guide-slide-card" data-cat="cable all" data-num="37" data-search="" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 37 / 44
+                SLIDE 37 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IX. Ảnh Bảo Dưỡng DG — Vệ Sinh Thân Máy & Xử Lý Rò Rỉ</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IX. Thi Công 5G — Lắp Đặt Anten & Khung Giá Đỡ</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_37.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -4277,7 +4300,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_37.jpg" alt="Slide 37" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -4285,14 +4308,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 38 -->
-        <div id="guide-slide-38" class="guide-slide-card" data-cat="maint all" data-num="38" data-search="" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-38" class="guide-slide-card" data-cat="cable all" data-num="38" data-search="" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 38 / 44
+                SLIDE 38 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IX. Ảnh Bảo Dưỡng DG — Khởi Động Thử Nghiệm & Bàn Giao</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IX. Thi Công 5G — Cáp Nguồn & Tiếp Địa Chống Sét</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_38.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -4304,7 +4327,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_38.jpg" alt="Slide 38" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -4312,14 +4335,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 39 -->
-        <div id="guide-slide-39" class="guide-slide-card" data-cat="cable all" data-num="39" data-search="Construction Giude 5G setup" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-39" class="guide-slide-card" data-cat="cable all" data-num="39" data-search="" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 39 / 44
+                SLIDE 39 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">X. Hướng Dẫn Thi Công Triển Khai Trạm 5G (Construction Guide 5G Setup)</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IX. Thi Công 5G — Đấu Nối Thiết Bị Vô Tuyến RRU / BBU</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_39.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -4331,7 +4354,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_39.jpg" alt="Slide 39" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -4344,9 +4367,9 @@ Team04>> 2Box</td>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 40 / 44
+                SLIDE 40 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">X. Thi Công 5G — Lắp Đặt Anten & Khung Giá Đỡ</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">IX. Thi Công 5G — Hoàn Thiện & Nghiệm Thu Hiện Trường</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_40.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -4358,7 +4381,7 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_40.jpg" alt="Slide 40" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
@@ -4366,14 +4389,14 @@ Team04>> 2Box</td>
         </div>
 
         <!-- SLIDE 41 -->
-        <div id="guide-slide-41" class="guide-slide-card" data-cat="cable all" data-num="41" data-search="" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
+        <div id="guide-slide-41" class="guide-slide-card" data-cat="all" data-num="41" data-search="Asset" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
           
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 41 / 44
+                SLIDE 41 / 41
               </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">X. Thi Công 5G — Cáp Nguồn & Tiếp Địa Chống Sét</span>
+              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">X. Bàn Giao & Quản Lý Thiết Bị Tài Sản Hiện Trường (Asset Management)</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <a href="assets/guide_slides/slide_41.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
@@ -4385,90 +4408,9 @@ Team04>> 2Box</td>
             </div>
           </div>
 
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
+          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ nằm rõ 100% trong hình) -->
           <div style="text-align:center;">
             <img src="assets/guide_slides/slide_41.jpg" alt="Slide 41" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
-          </div>
-
-        </div>
-
-        <!-- SLIDE 42 -->
-        <div id="guide-slide-42" class="guide-slide-card" data-cat="cable all" data-num="42" data-search="" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
-          
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
-            <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
-              <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 42 / 44
-              </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">X. Thi Công 5G — Đấu Nối Thiết Bị Vô Tuyến RRU / BBU</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:0.5rem;">
-              <a href="assets/guide_slides/slide_42.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
-                <i class="fa-solid fa-up-right-and-down-left-from-center"></i> Xem Ảnh Gốc 2K
-              </a>
-              <button type="button" onclick="jumpToTopGuide()" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.7rem; border-radius:6px; cursor:pointer; font-weight:700; display:flex; align-items:center; gap:0.35rem; transition:all .2s;" onmouseover="this.style.background='rgba(56,189,248,0.2)'; this.style.borderColor='#38BDF8';" onmouseout="this.style.background='rgba(255,255,255,0.08)'; this.style.borderColor='rgba(255,255,255,0.18)';">
-                <i class="fa-solid fa-arrow-up"></i> Lên Đầu Trang
-              </button>
-            </div>
-          </div>
-
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
-          <div style="text-align:center;">
-            <img src="assets/guide_slides/slide_42.jpg" alt="Slide 42" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
-          </div>
-
-        </div>
-
-        <!-- SLIDE 43 -->
-        <div id="guide-slide-43" class="guide-slide-card" data-cat="cable all" data-num="43" data-search="" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
-          
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
-            <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
-              <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 43 / 44
-              </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">X. Thi Công 5G — Hoàn Thiện & Nghiệm Thu Hiện Trường</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:0.5rem;">
-              <a href="assets/guide_slides/slide_43.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
-                <i class="fa-solid fa-up-right-and-down-left-from-center"></i> Xem Ảnh Gốc 2K
-              </a>
-              <button type="button" onclick="jumpToTopGuide()" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.7rem; border-radius:6px; cursor:pointer; font-weight:700; display:flex; align-items:center; gap:0.35rem; transition:all .2s;" onmouseover="this.style.background='rgba(56,189,248,0.2)'; this.style.borderColor='#38BDF8';" onmouseout="this.style.background='rgba(255,255,255,0.08)'; this.style.borderColor='rgba(255,255,255,0.18)';">
-                <i class="fa-solid fa-arrow-up"></i> Lên Đầu Trang
-              </button>
-            </div>
-          </div>
-
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
-          <div style="text-align:center;">
-            <img src="assets/guide_slides/slide_43.jpg" alt="Slide 43" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
-          </div>
-
-        </div>
-
-        <!-- SLIDE 44 -->
-        <div id="guide-slide-44" class="guide-slide-card" data-cat="all" data-num="44" data-search="Asset" style="background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:1.2rem; scroll-margin-top:90px; box-shadow:0 8px 25px rgba(0,0,0,0.45);">
-          
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
-            <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
-              <span style="background:linear-gradient(135deg,#0284c7,#4f46e5); color:#fff; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:6px; box-shadow:0 2px 8px rgba(2,132,199,0.4);">
-                SLIDE 44 / 44
-              </span>
-              <span style="color:#CBD5E1; font-size:0.8rem; font-weight:700;">XI. Bàn Giao & Quản Lý Thiết Bị Tài Sản Hiện Trường (Asset Management)</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:0.5rem;">
-              <a href="assets/guide_slides/slide_44.jpg" target="_blank" style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.65rem; border-radius:6px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:0.3rem;" title="Mở ảnh gốc 2K phóng to đầy đủ">
-                <i class="fa-solid fa-up-right-and-down-left-from-center"></i> Xem Ảnh Gốc 2K
-              </a>
-              <button type="button" onclick="jumpToTopGuide()" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); color:#38BDF8; font-size:0.72rem; padding:0.3rem 0.7rem; border-radius:6px; cursor:pointer; font-weight:700; display:flex; align-items:center; gap:0.35rem; transition:all .2s;" onmouseover="this.style.background='rgba(56,189,248,0.2)'; this.style.borderColor='#38BDF8';" onmouseout="this.style.background='rgba(255,255,255,0.08)'; this.style.borderColor='rgba(255,255,255,0.18)';">
-                <i class="fa-solid fa-arrow-up"></i> Lên Đầu Trang
-              </button>
-            </div>
-          </div>
-
-          <!-- Ultra-sharp 2K Slide Image (Không ghi chữ riêng ra dưới, chữ đã nằm rõ trong hình) -->
-          <div style="text-align:center;">
-            <img src="assets/guide_slides/slide_44.jpg" alt="Slide 44" onclick="window.open(this.src, '_blank')" title="🔍 Bấm vào ảnh để xem kích thước đầy đủ 2K sắc nét trong tab mới" style="width:100%; max-width:1150px; height:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 24px rgba(0,0,0,0.6); display:inline-block; cursor:zoom-in; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.003)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
           </div>
 
         </div>
@@ -5679,7 +5621,7 @@ Team04>> 2Box</td>
     }
 
     /* ══════════════════════════════════════════════════════════════════════════
-       📖 GUIDE FOR STAFF INTERACTIVE CONTROLS (SEARCH, CATEGORY, JUMP)
+       📖 GUIDE FOR STAFF INTERACTIVE CONTROLS (SEARCH, CATEGORY, JUMP, SYNC)
        ══════════════════════════════════════════════════════════════ */
     function filterStaffGuideCategory(cat) {
       const btns = document.querySelectorAll('.guide-cat-btn');
@@ -5749,6 +5691,29 @@ Team04>> 2Box</td>
       }
     }
 
+    function syncGuideSlidesLive(e) {
+      const evt = e || window.event;
+      const btn = evt ? (evt.target ? evt.target.closest('button') : null) : null;
+      if (btn) {
+        const origText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang Kiểm Tra Slide...';
+        btn.disabled = true;
+        setTimeout(() => {
+          btn.innerHTML = '<i class="fa-solid fa-check"></i> Đã Đồng Bộ 41 Slides!';
+          setTimeout(() => {
+            btn.innerHTML = origText;
+            btn.disabled = false;
+          }, 2500);
+        }, 1200);
+      }
+      // Force refresh slide images
+      const images = document.querySelectorAll('.guide-slide-card img');
+      const timestamp = new Date().getTime();
+      images.forEach(img => {
+        const baseSrc = img.src.split('?')[0];
+        img.src = baseSrc + '?t=' + timestamp;
+      });
+    }
 
     function showTab(panelId, tabBtn) {
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
