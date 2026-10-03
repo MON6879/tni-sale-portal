@@ -198,10 +198,10 @@ tbody tr:hover{background:#fafcff}
           <select id="staff-modal-role" style="width:100%;padding:9px 10px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700;color:#1e3a8a;background:#fff;outline:none;box-sizing:border-box">
             <option value="admin">👑 BOD (Admin)</option>
             <option value="finance">💰 Finance / Chief Accountant</option>
-            <option value="sales" selected>🧑‍💼 Sales Rep (Business)</option>
+            <option value="sales" selected>🧑‍💼 Sales Rep</option>
             <option value="tech">🚀 Field Operations (Technical)</option>
             <option value="warehouse">📦 Warehouse &amp; Inventory</option>
-            <option value="dealer">🏪 Tier 1 Authorized Dealer</option>
+            <option value="dealer">🏪 Distribution Dealer</option>
           </select>
         </div>
       </div>
@@ -2385,7 +2385,9 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 function td(){return new Date().toISOString().slice(0,10);}
-function fn(n){return Number(n||0).toLocaleString('vi-VN');}
+function fn(n){ let loc='vi-VN'; try { if (currentLang==='en') loc='en-US'; } catch(e) {} return Number(n||0).toLocaleString(loc); }
+function escH_(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function getPinProof_(){ try { return sessionStorage.getItem('tni_sale_pin_proof') || ''; } catch(e) { return ''; } }
 function fd(d){if(!d)return '';try{return new Date(d).toLocaleDateString('vi-VN');}catch{return d;}}
 function v(id){return document.getElementById(id)?.value?.trim()||'';}
 
@@ -8138,8 +8140,8 @@ const DICT = {
     tk_search_ph: '🔍 Tìm tên sản phẩm, model, danh mục...',
     d_recent_nhap: '📦 Nhập gần đây',
     d_recent_ban: '🛒 Bán gần đây',
-    d_low_stock: '⚠️ Cảnh báo tồn kho',
-    d_open_tu: '🧑‍💼 Tạm ứng đang mở',
+    d_low_stock: '⚠️ Cảnh báo tồn kho thấp',
+    d_open_tu: '🧑‍💼 Tạm ứng nhân viên đang mở',
     nhap_bulk_h3: '📥 Import Hàng Loạt Bằng File .CSV Hoặc Dán Từ Excel',
     nhap_bulk_syntax: 'Cú pháp chuẩn: Tên SP | Model | Serial | Danh Mục | Số Lượng | Giá Gốc (83%) | Giá Bán | NCC | BH | Ghi Chú',
     nhap_bulk_guide: '<b>💡 Hướng dẫn 3 bước đơn giản cho nhân viên:</b><br/><b>1.</b> Bấm nút <button class="btn b-gn b-xs" onclick="downloadNhapTemplate()">📥 Tải File Mẫu (.CSV)</button> để tải file template song ngữ.<br/><b>2.</b> Mở file bằng <b>Excel</b> hoặc <b>Google Sheets</b>, nhập danh sách sản phẩm rồi lưu file.<br/><b>3.</b> Chọn file tải lên bằng nút <button class="btn b-bl b-xs" onclick="document.getElementById(\'bulk-file-input\').click()">📁 Chọn File</button> <b>HOẶC</b> bôi đen bảng trong Excel bấm <code>Ctrl+C</code> rồi <b>dán (Ctrl+V)</b> vào khung bên dưới:',
@@ -8652,11 +8654,11 @@ function updateRBACPanelStaticTexts() {
   if (smRoleSelect) {
     const roleOpts = [
       { val: 'admin', vi: '👑 Ban Giám Đốc (BOD / Admin)', en: '👑 BOD (Admin)' },
-      { val: 'finance', vi: '💰 Kế Toán Trưởng (Finance)', en: '💰 Finance / Chief Accountant' },
-      { val: 'sales', vi: '🧑‍💼 Nhân Viên Kinh Doanh (Sales)', en: '🧑‍💼 Sales Rep (Business)' },
+      { val: 'finance', vi: '💰 Kế Toán / Tài Chính (Finance)', en: '💰 Finance / Accounting' },
+      { val: 'sales', vi: '🧑‍💼 Nhân Viên Kinh Doanh (Sales)', en: '🧑‍💼 Sales Rep' },
       { val: 'tech', vi: '🚀 Kỹ Thuật Hiện Trường (Field Ops)', en: '🚀 Field Operations (Technical)' },
-      { val: 'warehouse', vi: '📦 Thủ Kho Vận Hành (Warehouse)', en: '📦 Warehouse & Inventory' },
-      { val: 'dealer', vi: '🏪 Đại Lý Phân Phối (Dealer)', en: '🏪 Tier 1 Authorized Dealer' }
+      { val: 'warehouse', vi: '📦 Thủ Kho Vận Hành (Warehouse)', en: '📦 Warehouse Operator' },
+      { val: 'dealer', vi: '🏪 Đại Lý Phân Phối (Dealer)', en: '🏪 Distribution Dealer' }
     ];
     roleOpts.forEach(o => {
       const opt = smRoleSelect.querySelector(`option[value="${o.val}"]`);
@@ -8687,7 +8689,7 @@ function applyLang(lang) {
   
   // 1. Update Lang button
   const btn = document.getElementById('lang-btn');
-  if (btn) btn.innerHTML = lang === 'vi' ? '🌐 🇻🇳 VN (Click to EN)' : '🌐 🇬🇧 EN (Click to VN)';
+  if (btn) btn.innerHTML = lang === 'vi' ? '🌐 🇻🇳 VN (Bấm để chuyển EN)' : '🌐 🇬🇧 EN (Click for VN)';
   
   // 2. Update Sidebar labels & nav links
   const navMap = NAV_TITLES[lang] || NAV_TITLES.en;
@@ -8720,9 +8722,9 @@ function applyLang(lang) {
   const dBanH3 = document.getElementById('d-ban-h3');
   if (dBanH3) dBanH3.textContent = lang === 'vi' ? '🛒 Bán gần đây' : '🛒 Recent Sales';
   const dWarnH3 = document.getElementById('d-warn-h3');
-  if (dWarnH3) dWarnH3.textContent = lang === 'vi' ? '⚠️ Cảnh báo tồn kho' : '⚠️ Low Stock Alert';
+  if (dWarnH3) dWarnH3.textContent = lang === 'vi' ? '⚠️ Cảnh báo tồn kho thấp' : '⚠️ Low Stock Alert';
   const dTuH3 = document.getElementById('d-tu-h3');
-  if (dTuH3) dTuH3.textContent = lang === 'vi' ? '🧑‍💼 Tạm ứng đang mở' : '🧑‍💼 Active Staff Advances';
+  if (dTuH3) dTuH3.textContent = lang === 'vi' ? '🧑‍💼 Tạm ứng nhân viên đang mở' : '🧑‍💼 Active Staff Advances';
 
   // 6. Update all [data-lang] elements
   document.querySelectorAll('[data-lang]').forEach(el => {
@@ -9159,7 +9161,9 @@ async function hashPin_(pin) {
 async function verifyPin_(input) {
   const hashed = await hashPin_(input);
   const stored = adminPinHash || DEFAULT_PIN_HASH;
-  return hashed === stored;
+  const ok = hashed === stored;
+  if (ok) { try { sessionStorage.setItem('tni_sale_pin_proof', hashed); } catch(e) {} }
+  return ok;
 }
 async function saveNewPin_(newPin) {
   const hashed = await hashPin_(newPin);
@@ -9589,7 +9593,7 @@ function syncStaffDirectoryToSheet(list, cb) {
   fetch(SALE_GAS_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'staff_save', data: cleanList })
+    body: JSON.stringify({ action: 'staff_save', data: cleanList, pinHash: getPinProof_() })
   })
   .then(r => r.json())
   .then(res => {
@@ -9678,7 +9682,7 @@ function renderStaffUsersTable(sourceOverride, _retry) {
   }
 
   // Ưu tiên gọi GAS endpoint trước
-  fetch(SALE_GAS_URL + '?action=staff_get')
+  fetch(SALE_GAS_URL + '?action=staff_get&pinHash=' + encodeURIComponent(getPinProof_()))
   .then(r => r.json())
   .then(res => {
     if (res && res.ok && Array.isArray(res.data) && res.data.length > 0) {
@@ -9751,18 +9755,19 @@ function _renderStaffTable_(users, source) {
   users.forEach((u, i) => {
     const roleMeta = ROLES[u.role] || ROLES.sales;
     const rName = ROLE_NAMES_BILINGUAL[u.role]?.[isVi ? 'shortVi' : 'shortEn'] || roleMeta.shortName;
-    const safeId = String(u.id || '').replace(/'/g, "\\'");
-    const safeName = String(u.name || '').replace(/'/g, "\\'");
-    const safeRole = String(u.role || 'sales').replace(/'/g, "\\'");
+    // JS string literals, HTML-attribute-escaped: a name like  x');alert(1);//  can no longer break out
+    const safeId = escH_(JSON.stringify(String(u.id || '')));
+    const safeName = escH_(JSON.stringify(String(u.name || '')));
+    const safeRole = escH_(JSON.stringify(String(u.role || 'sales')));
 
     html += `<tr style="border-bottom:1px solid #f1f5f9">`;
     html += `<td style="padding:8px">`;
-    html += `<div style="font-weight:700;color:#1e293b">${u.name}</div>`;
-    html += `<div style="font-size:11px;color:#64748b">${u.email || u.phone || ''}</div>`;
+    html += `<div style="font-weight:700;color:#1e293b">${escH_(u.name)}</div>`;
+    html += `<div style="font-size:11px;color:#64748b">${escH_(u.email || u.phone || '')}</div>`;
     html += `</td>`;
-    html += `<td style="padding:8px;font-size:11.5px;color:#475569">${u.title || '-'}</td>`;
+    html += `<td style="padding:8px;font-size:11.5px;color:#475569">${escH_(u.title || '-')}</td>`;
     html += `<td style="padding:8px;text-align:center">`;
-    html += `<select onchange="updateStaffAssignedRole('${safeId}', this.value)" style="padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:11.5px;font-weight:700;color:${roleMeta.color}">`;
+    html += `<select onchange="updateStaffAssignedRole(${safeId}, this.value)" style="padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:11.5px;font-weight:700;color:${roleMeta.color}">`;
     Object.keys(ROLES).forEach(rk => {
       const optName = ROLE_NAMES_BILINGUAL[rk]?.[isVi ? 'shortVi' : 'shortEn'] || ROLES[rk].shortName;
       html += `<option value="${rk}" ${u.role === rk ? 'selected' : ''}>${ROLES[rk].icon} ${optName}</option>`;
@@ -9770,9 +9775,9 @@ function _renderStaffTable_(users, source) {
     html += `</select></td>`;
     html += `<td style="padding:6px;text-align:center;white-space:nowrap">`;
     html += `<div style="display:flex;gap:5px;justify-content:center;align-items:center;flex-wrap:wrap">`;
-    html += `<button class="btn b-xs" onclick="openAddStaffModal('${safeId}')" title="${isVi ? 'Chỉnh sửa thông tin nhân sự' : 'Edit staff info'}" style="background:#f1f5f9;color:#334155;border:1.5px solid #cbd5e1;cursor:pointer;font-weight:700">✏️ ${isVi ? 'Sửa' : 'Edit'}</button>`;
-    html += `<button class="btn b-xs b-bl" onclick="selectStaffForLinkGen('${safeName}', '${safeRole}')" title="${isVi ? 'Tạo link gửi cho nhân viên' : 'Generate personal login link'}">🔗 Link</button>`;
-    html += `<button class="btn b-xs" onclick="deleteStaffUser('${safeId}','${safeName}')" title="${isVi ? 'Xóa nhân sự này khỏi danh sách' : 'Delete staff member'}" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;font-weight:700;cursor:pointer">🗑 ${isVi ? 'Xóa' : 'Delete'}</button>`;
+    html += `<button class="btn b-xs" onclick="openAddStaffModal(${safeId})" title="${isVi ? 'Chỉnh sửa thông tin nhân sự' : 'Edit staff info'}" style="background:#f1f5f9;color:#334155;border:1.5px solid #cbd5e1;cursor:pointer;font-weight:700">✏️ ${isVi ? 'Sửa' : 'Edit'}</button>`;
+    html += `<button class="btn b-xs b-bl" onclick="selectStaffForLinkGen(${safeName}, ${safeRole})" title="${isVi ? 'Tạo link gửi cho nhân viên' : 'Generate personal login link'}">🔗 Link</button>`;
+    html += `<button class="btn b-xs" onclick="deleteStaffUser(${safeId},${safeName})" title="${isVi ? 'Xóa nhân sự này khỏi danh sách' : 'Delete staff member'}" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;font-weight:700;cursor:pointer">🗑 ${isVi ? 'Xóa' : 'Delete'}</button>`;
     html += `</div></td></tr>`;
   });
 
@@ -9849,7 +9854,7 @@ function deleteStaffUser(userId, userName) {
 
   // Gọi thêm staff_delete trực tiếp nếu có userId hoặc userName
   if ((userId && userId !== 'undefined') || (userName && userName !== 'undefined')) {
-    const delUrl = SALE_GAS_URL + '?action=staff_delete&id=' + encodeURIComponent(userId || '') + '&name=' + encodeURIComponent(userName || '');
+    const delUrl = SALE_GAS_URL + '?action=staff_delete&id=' + encodeURIComponent(userId || '') + '&name=' + encodeURIComponent(userName || '') + '&pinHash=' + encodeURIComponent(getPinProof_());
     fetch(delUrl, { method: 'GET' }).catch(() => {});
   }
 }

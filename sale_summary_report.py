@@ -30,9 +30,8 @@ logger = logging.getLogger("SaleTrain")
 
 TZ_MM = timezone(timedelta(hours=6, minutes=30))
 SALE_SS_ID = "1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA"
-DEFAULT_BOT_TOKEN = "8647102342:AAGwI95-xeyFfJZusOOrIPVBER-z6taZHZI"
 
-BOT_TOKEN = os.getenv("SALE_BOT_TOKEN") or os.getenv("SEND_BOT_TOKEN") or DEFAULT_BOT_TOKEN
+BOT_TOKEN = os.getenv("SALE_BOT_TOKEN") or os.getenv("SEND_BOT_TOKEN") or ""
 ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID", "6859790680")
 
 def fetch_gviz_rows(gid):
@@ -70,8 +69,19 @@ def send_telegram(chat_id, text):
         logger.error(f"Failed to send to {chat_id}: {e}")
         return False
 
+def _in_slot(now_mm):
+    """True within 4 min of 11:30 / 17:30 MMT. Prevents a re-run / late dispatch from double-sending."""
+    mins = now_mm.hour * 60 + now_mm.minute
+    return any(abs(mins - s) <= 4 for s in (11 * 60 + 30, 17 * 60 + 30))
+
 def run_sale_summary():
     now_mm = datetime.now(TZ_MM)
+    if not BOT_TOKEN:
+        logger.error("SALE_BOT_TOKEN not configured (GitHub Secret) - skipping Sale Summary")
+        return
+    if os.getenv("GITHUB_EVENT_NAME") != "workflow_dispatch" and not _in_slot(now_mm):
+        logger.info("Outside 11:30/17:30 MMT slot - skipping to avoid duplicate summary")
+        return
     date_str = now_mm.strftime("%d/%m/%Y")
     time_str = now_mm.strftime("%H:%M")
     logger.info(f"🚂 Starting Sale Summary Train Car at {date_str} {time_str} MMT")
@@ -102,7 +112,7 @@ def run_sale_summary():
         f"📊 <b>TNI SALE &amp; OPERATIONS SUMMARY</b>\n"
         f"📅 <b>Date:</b> {date_str} {time_str} MMT | 🏢 <b>Branch:</b> Tanintharyi\n"
         f"━━━━━━━━━━━━━━━━━━━━\n"
-        f"📦 <b>Warehouse Stock:</b> {stock_count} active product models\n"
+        f"📦 <b>Warehouse Stock:</b> {stock_count} stock-in records logged\n"
         f"👥 <b>Connected Groups:</b> {len(groups)} Solution Teams active\n"
         f"🛡️ <b>Collect &amp; Auto-Delete:</b> 100% operational on all groups\n"
         f"━━━━━━━━━━━━━━━━━━━━\n"

@@ -2168,6 +2168,27 @@ Reason: [Lý do]`
 > 3. **Bảo Tồn Toàn Vẹn Đồ Họa Không Bị Cắt (Lossless Unclipped Graphic Extraction)**: Với các slide đồ họa bị kéo ra ngoài khung viền trắng (off-canvas âm như Slide 4 cột 1), BẮT BUỘC trích xuất đối tượng đồ họa gốc (raw graphic object xref) thay vì chụp trang (page pixmap) để giữ nguyên vẹn 100% cột và nội dung.
 
 
+
+> ### 🔴 RULE PM-69: BỌC THÉP ĐOÀN TÀU SALE — KHÔNG SECRET TRONG SOURCE, KHÔNG ENDPOINT GHI CÔNG KHAI, MỌI GHI SHEET PHẢI CÓ LOCK + ESCAPE + AUDIT (STRICT SALE TRAIN HARDENING POLICY)
+> **Root Cause (Sự Cố 03/10/2026 — 4 chuyên gia rà soát + phúc tra live)**:
+> 1. **Secret hardcode làm fallback**: `|| '<bot-token>'` trong `sale_backend.gs` (3 chỗ), `train_5min.yml` (3 chỗ, 2 bot), `sale_summary_report.py`. Token Sale **trùng token bot Site Down Relay** (`8647102342`) nên một lần lộ là lộ cả hai phân hệ.
+> 2. **`staff_save` / `staff_delete` / `staff_get` public, không xác thực** + `staffSavePublic_` `clearContents()` rồi ghi lại từ danh sách do client gửi → danh sách rỗng/cũ làm mất toàn bộ nhân sự.
+> 3. **TDZ**: `ss` dùng trước `const ss` trong `handleTelegramSaleCollect_` → `catch` nuốt lỗi → mọi đơn bị gán sai team `Dawei`.
+> 4. **Xác thực lỏng**: `g.email === token.split(':')[0]` — chỉ cần biết email là qua auth. `SALE_API_KEY` chưa đặt trong Script Properties nên API có token trả 500 (chưa từng chạy được trên production).
+> 5. **Không LockService**, id `Date.now()` trùng, `saleAdd_` (cột `id`) và Telegram (`_id`) lệch khóa nên `update/delete` không thấy dòng Telegram; `_ts` lẫn UTC và MMT.
+> 6. **Không escape**: `parse_mode:HTML` với dữ liệu người nhập; `sale.html` ghi `u.name` thẳng vào `innerHTML` và `onclick="deleteStaffUser('${name}')"` (XSS qua tên nhân sự).
+>
+> **Quy Tắc Bắt Buộc**:
+> 1. **CẤM literal secret** (bot token, API key, PIN) trong `.gs/.py/.yml/.html/.md`. Chỉ đọc `ScriptProperties` (GAS) hoặc `${{ secrets.X }}` (Actions). Hàm lấy token chỉ trả `''` + log khi thiếu, TUYỆT ĐỐI CẤM `|| '<literal>'`. Trước khi thêm bot mới: kiểm token đó có dùng chung với phân hệ khóa thép (Site Down) không — nếu có thì xoay token cần `UNLOCK STEEL`.
+> 2. **Endpoint ghi dữ liệu nhạy cảm (`staff_*`, `sale_*`, `telegram_sale_collect`) CẤM public thuần**: bắt buộc ≥1 lớp: token hợp lệ khớp `g.token` (CẤM khớp theo email), hoặc bằng chứng PIN phía server (`SALE_ADMIN_PIN_HASH` + khóa 5 lần/10 phút), hoặc secret webhook (`SALE_COLLECT_SECRET`, fail-closed khi chưa cấu hình).
+> 3. **Ghi đè cả tab (`clearContents`) chỉ khi**: (a) danh sách không rỗng, (b) đã chụp snapshot sang tab `*_backup`, (c) nằm trong `LockService.getScriptLock()`. CẤM ghi đè từ dữ liệu cache client mà không có 3 điều kiện này.
+> 4. **Mọi hàm ghi Sheet** dùng `withScriptLock_`, id sinh bằng `uniqueId_()` (CẤM `Date.now()` trần), `_ts` luôn `Asia/Yangon` dạng `yyyy-MM-dd HH:mm:ss`, giá trị chuỗi đi qua `sanitizeCell_` (chặn formula injection), cột hệ thống `id/_ts/_by/_id` bất biến khi update, mỗi lần sửa/xóa ghi tab `Sale Audit`.
+> 5. **Mọi chuỗi người dùng vào Telegram HTML hoặc `innerHTML`** BẮT BUỘC qua `escHtml_()` (GAS) / `escH_()` (web). Với handler inline dùng `escH_(JSON.stringify(v))`, CẤM nối `'${name}'` vào `onclick`.
+> 6. **Biến dùng trước khai báo (`const`)**: khi thêm khối `try/catch` quanh logic mới, BẮT BUỘC khai báo mọi biến dùng trong khối đó TRƯỚC khối; CẤM `catch` chỉ `Logger.log` mà không kiểm tra giá trị mặc định có làm sai dữ liệu (như gán nhầm team).
+> 7. **Cấu hình thiếu phải báo rõ** (`Server auth not configured`), CẤM trả `500 Internal error` che nguyên nhân. Sau khi deploy GAS bảo mật, BẮT BUỘC chạy kiểm tra live: không token → 401, email-only → từ chối, `staff_save` rỗng → 400, `telegram_sale_collect` không secret → 403.
+> 8. **Hai bản HTML cùng chức năng (`sale.html`, `tni_sale.html`) CẤM lệch nhau**; sửa một bản thì đồng bộ bản kia và `Task and WO`, kiểm `Get-FileHash` giống nhau.
+> 9. **Thao tác thủ công còn lại sau PM-69** (AI không làm thay được): đặt `SALE_API_KEY`, `SALE_ADMIN_PIN_HASH`, `SALE_COLLECT_SECRET`, `BOT_TOKEN` trong Script Properties; thêm GitHub Secrets `SALE_BOT_TOKEN`, `ASSET_BOT_TOKEN`; xoay token bot Sale/Site Down (cần mật khẩu khóa thép vì dùng chung).
+
 ---
 
 # 📌 PM RULES — POST-MORTEM TỪ BUG THỰC TẾ (AUTO-INJECTED)

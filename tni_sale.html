@@ -198,10 +198,10 @@ tbody tr:hover{background:#fafcff}
           <select id="staff-modal-role" style="width:100%;padding:9px 10px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700;color:#1e3a8a;background:#fff;outline:none;box-sizing:border-box">
             <option value="admin">👑 BOD (Admin)</option>
             <option value="finance">💰 Finance / Chief Accountant</option>
-            <option value="sales" selected>🧑‍💼 Sales Rep (Business)</option>
+            <option value="sales" selected>🧑‍💼 Sales Rep</option>
             <option value="tech">🚀 Field Operations (Technical)</option>
             <option value="warehouse">📦 Warehouse &amp; Inventory</option>
-            <option value="dealer">🏪 Tier 1 Authorized Dealer</option>
+            <option value="dealer">🏪 Distribution Dealer</option>
           </select>
         </div>
       </div>
@@ -2385,7 +2385,9 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 function td(){return new Date().toISOString().slice(0,10);}
-function fn(n){return Number(n||0).toLocaleString('vi-VN');}
+function fn(n){ let loc='vi-VN'; try { if (currentLang==='en') loc='en-US'; } catch(e) {} return Number(n||0).toLocaleString(loc); }
+function escH_(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function getPinProof_(){ try { return sessionStorage.getItem('tni_sale_pin_proof') || ''; } catch(e) { return ''; } }
 function fd(d){if(!d)return '';try{return new Date(d).toLocaleDateString('vi-VN');}catch{return d;}}
 function v(id){return document.getElementById(id)?.value?.trim()||'';}
 
@@ -8138,8 +8140,8 @@ const DICT = {
     tk_search_ph: '🔍 Tìm tên sản phẩm, model, danh mục...',
     d_recent_nhap: '📦 Nhập gần đây',
     d_recent_ban: '🛒 Bán gần đây',
-    d_low_stock: '⚠️ Cảnh báo tồn kho',
-    d_open_tu: '🧑‍💼 Tạm ứng đang mở',
+    d_low_stock: '⚠️ Cảnh báo tồn kho thấp',
+    d_open_tu: '🧑‍💼 Tạm ứng nhân viên đang mở',
     nhap_bulk_h3: '📥 Import Hàng Loạt Bằng File .CSV Hoặc Dán Từ Excel',
     nhap_bulk_syntax: 'Cú pháp chuẩn: Tên SP | Model | Serial | Danh Mục | Số Lượng | Giá Gốc (83%) | Giá Bán | NCC | BH | Ghi Chú',
     nhap_bulk_guide: '<b>💡 Hướng dẫn 3 bước đơn giản cho nhân viên:</b><br/><b>1.</b> Bấm nút <button class="btn b-gn b-xs" onclick="downloadNhapTemplate()">📥 Tải File Mẫu (.CSV)</button> để tải file template song ngữ.<br/><b>2.</b> Mở file bằng <b>Excel</b> hoặc <b>Google Sheets</b>, nhập danh sách sản phẩm rồi lưu file.<br/><b>3.</b> Chọn file tải lên bằng nút <button class="btn b-bl b-xs" onclick="document.getElementById(\'bulk-file-input\').click()">📁 Chọn File</button> <b>HOẶC</b> bôi đen bảng trong Excel bấm <code>Ctrl+C</code> rồi <b>dán (Ctrl+V)</b> vào khung bên dưới:',
@@ -8652,11 +8654,11 @@ function updateRBACPanelStaticTexts() {
   if (smRoleSelect) {
     const roleOpts = [
       { val: 'admin', vi: '👑 Ban Giám Đốc (BOD / Admin)', en: '👑 BOD (Admin)' },
-      { val: 'finance', vi: '💰 Kế Toán Trưởng (Finance)', en: '💰 Finance / Chief Accountant' },
-      { val: 'sales', vi: '🧑‍💼 Nhân Viên Kinh Doanh (Sales)', en: '🧑‍💼 Sales Rep (Business)' },
+      { val: 'finance', vi: '💰 Kế Toán / Tài Chính (Finance)', en: '💰 Finance / Accounting' },
+      { val: 'sales', vi: '🧑‍💼 Nhân Viên Kinh Doanh (Sales)', en: '🧑‍💼 Sales Rep' },
       { val: 'tech', vi: '🚀 Kỹ Thuật Hiện Trường (Field Ops)', en: '🚀 Field Operations (Technical)' },
-      { val: 'warehouse', vi: '📦 Thủ Kho Vận Hành (Warehouse)', en: '📦 Warehouse & Inventory' },
-      { val: 'dealer', vi: '🏪 Đại Lý Phân Phối (Dealer)', en: '🏪 Tier 1 Authorized Dealer' }
+      { val: 'warehouse', vi: '📦 Thủ Kho Vận Hành (Warehouse)', en: '📦 Warehouse Operator' },
+      { val: 'dealer', vi: '🏪 Đại Lý Phân Phối (Dealer)', en: '🏪 Distribution Dealer' }
     ];
     roleOpts.forEach(o => {
       const opt = smRoleSelect.querySelector(`option[value="${o.val}"]`);
@@ -8687,7 +8689,7 @@ function applyLang(lang) {
   
   // 1. Update Lang button
   const btn = document.getElementById('lang-btn');
-  if (btn) btn.innerHTML = lang === 'vi' ? '🌐 🇻🇳 VN (Click to EN)' : '🌐 🇬🇧 EN (Click to VN)';
+  if (btn) btn.innerHTML = lang === 'vi' ? '🌐 🇻🇳 VN (Bấm để chuyển EN)' : '🌐 🇬🇧 EN (Click for VN)';
   
   // 2. Update Sidebar labels & nav links
   const navMap = NAV_TITLES[lang] || NAV_TITLES.en;
@@ -8720,9 +8722,9 @@ function applyLang(lang) {
   const dBanH3 = document.getElementById('d-ban-h3');
   if (dBanH3) dBanH3.textContent = lang === 'vi' ? '🛒 Bán gần đây' : '🛒 Recent Sales';
   const dWarnH3 = document.getElementById('d-warn-h3');
-  if (dWarnH3) dWarnH3.textContent = lang === 'vi' ? '⚠️ Cảnh báo tồn kho' : '⚠️ Low Stock Alert';
+  if (dWarnH3) dWarnH3.textContent = lang === 'vi' ? '⚠️ Cảnh báo tồn kho thấp' : '⚠️ Low Stock Alert';
   const dTuH3 = document.getElementById('d-tu-h3');
-  if (dTuH3) dTuH3.textContent = lang === 'vi' ? '🧑‍💼 Tạm ứng đang mở' : '🧑‍💼 Active Staff Advances';
+  if (dTuH3) dTuH3.textContent = lang === 'vi' ? '🧑‍💼 Tạm ứng nhân viên đang mở' : '🧑‍💼 Active Staff Advances';
 
   // 6. Update all [data-lang] elements
   document.querySelectorAll('[data-lang]').forEach(el => {
@@ -9103,13 +9105,44 @@ const SYSTEM_MODULES = [
 ];
 
 const DEFAULT_STAFF_USERS = [
-  { id: 'ST001', name: 'Ban Giám Đốc', email: 'director@tni.com', role: 'admin', title: 'Giám Đốc Chi Nhánh', phone: '0965 000 001' },
-  { id: 'ST002', name: 'Kế Toán Trưởng', email: 'accountant@tni.com', role: 'finance', title: 'Kế Toán & Tài Chính', phone: '0965 000 002' },
-  { id: 'ST003', name: 'Staff Sales 01', email: 'sales01@tni.com', role: 'sales', title: 'Chuyên Viên Kinh Doanh Solar', phone: '0965 000 003' },
-  { id: 'ST004', name: 'Staff Tech 01', email: 'tech01@tni.com', role: 'tech', title: 'Kỹ Sư Trưởng Hiện Trường', phone: '0965 000 004' },
-  { id: 'ST005', name: 'Staff Warehouse 01', email: 'warehouse01@tni.com', role: 'warehouse', title: 'Thủ Kho Chi Nhánh', phone: '0965 000 005' },
-  { id: 'ST006', name: 'Staff Sales 02', email: 'sales02@tni.com', role: 'sales', title: 'Nhân Viên Kinh Doanh', phone: '0965 000 006' },
-  { id: 'ST007', name: 'Đại Lý Ủy Quyền 01', email: 'dealer01@tni.com', role: 'dealer', title: 'Đại Lý Ủy Quyền Cấp 1', phone: '0965 000 007' }
+  { id: 'emp_001', name: 'Shing Wutt Hmone Oo', email: 'shingwutthmone776@gmail.com', role: 'sales', title: 'CM Enginner', phone: '09788329970\'09661815768' },
+  { id: 'emp_002', name: 'Hlaing Pyae Phyo', email: 'hlaing127592@gmail.com', role: 'finance', title: 'HR and Finance', phone: '09450991156\'09693355233' },
+  { id: 'emp_003', name: 'Poe Hmyin Thoun', email: 'ppoe56591@gmail.com', role: 'sales', title: 'Infrastructure', phone: '09661512987' },
+  { id: 'emp_004', name: 'Hein Nanda', email: 'heinnanda683@gmail.com', role: 'sales', title: 'M&E Enginner', phone: '09780677154\'09698456060' },
+  { id: 'emp_005', name: 'Naw Oh Nyaw', email: 'htoolaynyaw@gmail.com', role: 'sales', title: 'PM Enginner', phone: '0925473265009677462225' },
+  { id: 'emp_006', name: 'Bhone Htet Aung', email: 'bhonehtetaumg1521@gmail.com', role: 'sales', title: 'Team 01', phone: '09667877277' },
+  { id: 'emp_007', name: 'Aung Lwin Phyo', email: 'aung.lwin.phyo@company.com', role: 'sales', title: 'Team 01', phone: '09453069704\'09667416762' },
+  { id: 'emp_008', name: 'Paing Aung Soe', email: 'paingaungsoeayoo@gmail.com', role: 'sales', title: 'Team 01', phone: '09666625857\'09254370254' },
+  { id: 'emp_009', name: 'Thu Rain Naing', email: 'thureinnaingkla@gmail.com', role: 'sales', title: 'Team 01', phone: '09698806742' },
+  { id: 'emp_010', name: 'Phyo Ko Ko', email: 'phyokoko9320@email.com', role: 'sales', title: 'Team 01', phone: '09651315321, 09764847912' },
+  { id: 'emp_011', name: 'Sai Kar Kar Myo', email: 'saikarkarmyo6@gmail.com', role: 'sales', title: 'Team 01', phone: '09663202252' },
+  { id: 'emp_012', name: 'Phyo Htet Aung', email: 'phyohtetaung227567@gmail.com', role: 'sales', title: 'Team 01', phone: '09676116447' },
+  { id: 'emp_013', name: 'Aung Min Paing', email: 'aung.min.paing@company.com', role: 'sales', title: 'Team 01', phone: '09454995756, 09691527543' },
+  { id: 'emp_014', name: 'Win Htet Aung', email: 'winhtetaung851@gmail.com', role: 'sales', title: 'Team 02', phone: '09252088815\'09699011167' },
+  { id: 'emp_015', name: 'Maung Maung', email: 'mgmg25608mm@gmail.com', role: 'sales', title: 'Team 02', phone: '09672809127' },
+  { id: 'emp_016', name: 'Pyi Kyaw Aung', email: 'Pyikyaw101973@gmail.com', role: 'sales', title: 'Team 02', phone: '09692016722' },
+  { id: 'emp_017', name: 'Wanna Oo', email: 'wanaoo348@gmail.com', role: 'sales', title: 'Team 02', phone: '09687906307' },
+  { id: 'emp_018', name: 'Ye Lin', email: 'ye.lin@company.com', role: 'sales', title: 'Team 02', phone: '09677553749' },
+  { id: 'emp_019', name: 'Nay Myo Thu', email: 'naymyothu272016@gmail.com', role: 'sales', title: 'Team 02', phone: '09693031909\'09251001909' },
+  { id: 'emp_020', name: 'Min Paing Oo', email: 'mrminpaing@hotmail.com', role: 'sales', title: 'Team 02', phone: '09687922272\'09453354654' },
+  { id: 'emp_021', name: 'Aye Min Soe', email: 'aye.min.soe@company.com', role: 'sales', title: 'Team 02', phone: '0925600759909699580810' },
+  { id: 'emp_022', name: 'Si Thu Htun', email: 'ct500558@gmail.com', role: 'sales', title: 'Team 03', phone: '09650149222' },
+  { id: 'emp_023', name: 'Tin Naing Lin', email: 'ko748724@gmail.com', role: 'sales', title: 'Team 03', phone: '09250470549 \'09698177034' },
+  { id: 'emp_024', name: 'Pyae Phyo Zaw', email: 'pyaephyozaw2015@gmail.com', role: 'sales', title: 'Team 03', phone: '09678278066' },
+  { id: 'emp_025', name: 'Myint Ko Ko Aung', email: 'vaydarlay650@gmail.com', role: 'sales', title: 'Team 03', phone: '09691325891\'09783445475' },
+  { id: 'emp_026', name: 'Khant Si Thu', email: 'naungninage12@gamil.com', role: 'sales', title: 'Team 03', phone: '09677573391' },
+  { id: 'emp_027', name: 'Tin Maung Win', email: 'maungwintin75@gmail.com', role: 'sales', title: 'Team 04', phone: '09428363698\'09692245565' },
+  { id: 'emp_028', name: 'Khant Chaw Nyo', email: 'nyochaw2412@gmail.com', role: 'sales', title: 'Team 04', phone: '09677337705' },
+  { id: 'emp_029', name: 'Naing Myo Htun', email: 'myohtunn45@gmail.com', role: 'sales', title: 'Team 04', phone: '09691051525,09255804879' },
+  { id: 'emp_030', name: 'Pyae Phyo Hlaing', email: 'pyaephyo202126@gmail.com', role: 'sales', title: 'Team 04', phone: '09674983764' },
+  { id: 'emp_031', name: 'Htun Lin Oo', email: 'htun.lin.oo@company.com', role: 'sales', title: 'Team 04', phone: '09674001156' },
+  { id: 'emp_032', name: 'Ye Lwin', email: 'yelwin086683@gmail.com', role: 'sales', title: 'Technical Manager', phone: '09684002111' },
+  { id: 'emp_033', name: 'Aung La Pyae Oo', email: 'aunglapyaeoo664@gmail.com', role: 'sales', title: 'Team 01', phone: '09670568272' },
+  { id: 'emp_034', name: 'Ingyin Hmwe', email: 'ingyinhmwe49@gmail.com', role: 'sales', title: 'Asset', phone: '09794307646\'09680129666' },
+  { id: 'emp_035', name: 'Nyi Nyi', email: 'nyi.nyi@company.com', role: 'sales', title: 'Sales Rep', phone: '' },
+  { id: 'emp_036', name: 'Kyaw Myo Htwe', email: 'kyaw.myo.htwe@company.com', role: 'sales', title: 'Team 04', phone: '09674001156' },
+  { id: 'emp_037', name: 'Myo Aung', email: 'myo.aung@company.com', role: 'sales', title: 'Team 04', phone: '9691051525' },
+  { id: 'emp_038', name: 'Zin Ko Oo', email: 'zin.ko.oo@company.com', role: 'sales', title: 'Team 01', phone: '09667191528' }
 ];
 
 let currentAppRole = localStorage.getItem('tni_sale_role') || 'sales';
@@ -9128,7 +9161,9 @@ async function hashPin_(pin) {
 async function verifyPin_(input) {
   const hashed = await hashPin_(input);
   const stored = adminPinHash || DEFAULT_PIN_HASH;
-  return hashed === stored;
+  const ok = hashed === stored;
+  if (ok) { try { sessionStorage.setItem('tni_sale_pin_proof', hashed); } catch(e) {} }
+  return ok;
 }
 async function saveNewPin_(newPin) {
   const hashed = await hashPin_(newPin);
@@ -9517,7 +9552,7 @@ function renderRBACMatrix() {
   container.innerHTML = html;
 }
 
-const SALE_GAS_URL = 'https://script.google.com/macros/s/AKfycbylrXMEDKpBfvs9Wbr3kmoqrJ6UoWE1KaN-WC94mE2wm1V2MJUFu-zyYrzzm10Vo0Ue5Q/exec';
+const SALE_GAS_URL = 'https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec';
 
 // ── Chuẩn hóa đối tượng nhân sự (Chống rò rỉ undefined, tương thích cả Sheet lẫn local) ──
 function normalizeStaffUser(u, fallbackIdx) {
@@ -9558,7 +9593,7 @@ function syncStaffDirectoryToSheet(list, cb) {
   fetch(SALE_GAS_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'staff_save', data: cleanList })
+    body: JSON.stringify({ action: 'staff_save', data: cleanList, pinHash: getPinProof_() })
   })
   .then(r => r.json())
   .then(res => {
@@ -9582,30 +9617,107 @@ function renderStaffUsersTable(sourceOverride, _retry) {
     return;
   }
 
-  // BƯỚC 1: Render ngay từ localStorage (chuẩn hóa dữ liệu sạch, không rác)
-  const cached = DB.g('staff_directory');
+  // BƯỚC 1: Render ngay từ localStorage hoặc Default (Tự động dọn dẹp mock data cũ)
+  let cached = DB.g('staff_directory');
+  // Nếu cache còn dính mock cũ (chỉ có vài người mẫu hoặc chứa 'Ban Giám Đốc' làm user ID ST001), xóa cache để nhận 38 nhân sự thật từ Sheet
+  if (Array.isArray(cached) && (cached.length < 15 || cached.some(u => u && (u.name === 'Ban Giám Đốc' || u.name === 'Nguyen Van A')))) {
+    console.log('[STAFF] Phát hiện cache mock cũ, đặt lại về 38 nhân sự Sheet SSOT.');
+    DB.s('staff_directory', DEFAULT_STAFF_USERS);
+    cached = DEFAULT_STAFF_USERS;
+  }
   let users0 = (cached && cached.length > 0)
     ? cached.map((u, i) => normalizeStaffUser(u, i + 1)).filter(Boolean)
     : DEFAULT_STAFF_USERS;
   if (!users0 || users0.length === 0) users0 = DEFAULT_STAFF_USERS;
   _renderStaffTable_(users0, (cached && cached.length > 0) ? '💾 Local' : '📋 Default');
 
-  // BƯỚC 2: Cập nhật từ Sheet trong nền
-  const ctrl = new AbortController();
-  setTimeout(() => ctrl.abort(), 12000);
-  fetch(SALE_GAS_URL + '?action=staff_get', { method: 'GET', signal: ctrl.signal })
+  // BƯỚC 2: Cập nhật trực tiếp 100% dữ liệu sống từ Google Sheet 'input HR' (GID 255709958)
+  const HR_CSV_URL = 'https://docs.google.com/spreadsheets/d/1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA/export?format=csv&gid=255709958';
+  
+  // Hàm xử lý dữ liệu nhân viên mới từ Sheet:
+  // - Nếu có mới -> tự động thêm vào với vai trò mặc định 'sales' (để quản lý tự điều chỉnh sau)
+  // - Nếu trên Sheet không còn (nhân viên nghỉ việc) -> tự động xóa bỏ khỏi hệ thống
+  function applyLiveStaffSync(rawList) {
+    if (!Array.isArray(rawList) || rawList.length === 0) return;
+    const existing = DB.g('staff_directory') || [];
+    const roleMap = {};
+    existing.forEach(u => {
+      if (u && u.name) roleMap[u.name.toLowerCase().trim()] = u.role;
+    });
+
+    const activeLiveNames = new Set();
+    const updatedList = [];
+
+    rawList.forEach((r, idx) => {
+      const name = String(r.name || '').trim();
+      if (!name || name === 'undefined' || name.toLowerCase() === 'null') return;
+      activeLiveNames.add(name.toLowerCase());
+
+      // Giữ lại vai trò đã được điều chỉnh, nếu chưa có thì gán mặc định 'sales' (riêng HR and Finance gán 'finance')
+      let assignedRole = roleMap[name.toLowerCase()] || r.role || 'sales';
+      const titleLower = String(r.title || '').toLowerCase();
+      if (!roleMap[name.toLowerCase()]) {
+        if (titleLower.includes('hr and finance') || titleLower.includes('finance')) assignedRole = 'finance';
+        else if (titleLower.includes('director') || titleLower.includes('admin')) assignedRole = 'admin';
+        else assignedRole = 'sales';
+      }
+
+      updatedList.push({
+        id: r.id || ('ST' + String(idx + 1).padStart(4, '0')),
+        name: name,
+        title: r.title || 'Sales Rep',
+        role: assignedRole,
+        email: r.email || '',
+        phone: r.phone || '',
+        status: 'active',
+        note: r.note || r.title || ''
+      });
+    });
+
+    if (updatedList.length > 0) {
+      DB.s('staff_directory', updatedList);
+      _renderStaffTable_(updatedList, '☁️ Live Sheet (input HR)');
+      populateStaffUserSelect();
+    }
+  }
+
+  // Ưu tiên gọi GAS endpoint trước
+  fetch(SALE_GAS_URL + '?action=staff_get&pinHash=' + encodeURIComponent(getPinProof_()))
   .then(r => r.json())
   .then(res => {
-    if (res.ok && res.data && res.data.length > 0) {
-      const cleanData = res.data.map((u, i) => normalizeStaffUser(u, i + 1)).filter(Boolean);
-      if (cleanData.length > 0) {
-        DB.s('staff_directory', cleanData);
-        _renderStaffTable_(cleanData, '☁️ Google Sheet');
-        populateStaffUserSelect();
-      }
+    if (res && res.ok && Array.isArray(res.data) && res.data.length > 0) {
+      applyLiveStaffSync(res.data);
+    } else {
+      throw new Error('GAS empty, fallback CSV');
     }
   })
-  .catch(() => {});
+  .catch(() => {
+    // Fallback: Fetch trực tiếp CSV GID 255709958 nếu GAS đang triển khai
+    fetch(HR_CSV_URL)
+    .then(r => r.text())
+    .then(csvText => {
+      if (!csvText) return;
+      const lines = csvText.split(/\r?\n/).filter(l => l.trim());
+      const parsedList = [];
+      lines.forEach((line, idx) => {
+        // Simple CSV splitter handling quotes
+        const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"|"$/g, '').trim());
+        const name = parts[0] || '';
+        if (!name || name.toLowerCase().includes('name') || name.toLowerCase().includes('họ và tên')) return;
+        parsedList.push({
+          id: 'ST' + String(idx + 1).padStart(4, '0'),
+          name: name,
+          title: parts[1] || 'Sales Rep',
+          email: (parts[2] || '').replace(/[\r\n\t]/g, ''),
+          phone: (parts[3] || '').replace(/[\r\n\t]/g, ', ')
+        });
+      });
+      if (parsedList.length > 0) {
+        applyLiveStaffSync(parsedList);
+      }
+    })
+    .catch(e => console.warn('[STAFF_LIVE_CSV] Error:', e));
+  });
 }
 
 function _renderStaffTable_(users, source) {
@@ -9643,18 +9755,19 @@ function _renderStaffTable_(users, source) {
   users.forEach((u, i) => {
     const roleMeta = ROLES[u.role] || ROLES.sales;
     const rName = ROLE_NAMES_BILINGUAL[u.role]?.[isVi ? 'shortVi' : 'shortEn'] || roleMeta.shortName;
-    const safeId = String(u.id || '').replace(/'/g, "\\'");
-    const safeName = String(u.name || '').replace(/'/g, "\\'");
-    const safeRole = String(u.role || 'sales').replace(/'/g, "\\'");
+    // JS string literals, HTML-attribute-escaped: a name like  x');alert(1);//  can no longer break out
+    const safeId = escH_(JSON.stringify(String(u.id || '')));
+    const safeName = escH_(JSON.stringify(String(u.name || '')));
+    const safeRole = escH_(JSON.stringify(String(u.role || 'sales')));
 
     html += `<tr style="border-bottom:1px solid #f1f5f9">`;
     html += `<td style="padding:8px">`;
-    html += `<div style="font-weight:700;color:#1e293b">${u.name}</div>`;
-    html += `<div style="font-size:11px;color:#64748b">${u.email || u.phone || ''}</div>`;
+    html += `<div style="font-weight:700;color:#1e293b">${escH_(u.name)}</div>`;
+    html += `<div style="font-size:11px;color:#64748b">${escH_(u.email || u.phone || '')}</div>`;
     html += `</td>`;
-    html += `<td style="padding:8px;font-size:11.5px;color:#475569">${u.title || '-'}</td>`;
+    html += `<td style="padding:8px;font-size:11.5px;color:#475569">${escH_(u.title || '-')}</td>`;
     html += `<td style="padding:8px;text-align:center">`;
-    html += `<select onchange="updateStaffAssignedRole('${safeId}', this.value)" style="padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:11.5px;font-weight:700;color:${roleMeta.color}">`;
+    html += `<select onchange="updateStaffAssignedRole(${safeId}, this.value)" style="padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:11.5px;font-weight:700;color:${roleMeta.color}">`;
     Object.keys(ROLES).forEach(rk => {
       const optName = ROLE_NAMES_BILINGUAL[rk]?.[isVi ? 'shortVi' : 'shortEn'] || ROLES[rk].shortName;
       html += `<option value="${rk}" ${u.role === rk ? 'selected' : ''}>${ROLES[rk].icon} ${optName}</option>`;
@@ -9662,9 +9775,9 @@ function _renderStaffTable_(users, source) {
     html += `</select></td>`;
     html += `<td style="padding:6px;text-align:center;white-space:nowrap">`;
     html += `<div style="display:flex;gap:5px;justify-content:center;align-items:center;flex-wrap:wrap">`;
-    html += `<button class="btn b-xs" onclick="openAddStaffModal('${safeId}')" title="${isVi ? 'Chỉnh sửa thông tin nhân sự' : 'Edit staff info'}" style="background:#f1f5f9;color:#334155;border:1.5px solid #cbd5e1;cursor:pointer;font-weight:700">✏️ ${isVi ? 'Sửa' : 'Edit'}</button>`;
-    html += `<button class="btn b-xs b-bl" onclick="selectStaffForLinkGen('${safeName}', '${safeRole}')" title="${isVi ? 'Tạo link gửi cho nhân viên' : 'Generate personal login link'}">🔗 Link</button>`;
-    html += `<button class="btn b-xs" onclick="deleteStaffUser('${safeId}','${safeName}')" title="${isVi ? 'Xóa nhân sự này khỏi danh sách' : 'Delete staff member'}" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;font-weight:700;cursor:pointer">🗑 ${isVi ? 'Xóa' : 'Delete'}</button>`;
+    html += `<button class="btn b-xs" onclick="openAddStaffModal(${safeId})" title="${isVi ? 'Chỉnh sửa thông tin nhân sự' : 'Edit staff info'}" style="background:#f1f5f9;color:#334155;border:1.5px solid #cbd5e1;cursor:pointer;font-weight:700">✏️ ${isVi ? 'Sửa' : 'Edit'}</button>`;
+    html += `<button class="btn b-xs b-bl" onclick="selectStaffForLinkGen(${safeName}, ${safeRole})" title="${isVi ? 'Tạo link gửi cho nhân viên' : 'Generate personal login link'}">🔗 Link</button>`;
+    html += `<button class="btn b-xs" onclick="deleteStaffUser(${safeId},${safeName})" title="${isVi ? 'Xóa nhân sự này khỏi danh sách' : 'Delete staff member'}" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;font-weight:700;cursor:pointer">🗑 ${isVi ? 'Xóa' : 'Delete'}</button>`;
     html += `</div></td></tr>`;
   });
 
@@ -9741,7 +9854,7 @@ function deleteStaffUser(userId, userName) {
 
   // Gọi thêm staff_delete trực tiếp nếu có userId hoặc userName
   if ((userId && userId !== 'undefined') || (userName && userName !== 'undefined')) {
-    const delUrl = SALE_GAS_URL + '?action=staff_delete&id=' + encodeURIComponent(userId || '') + '&name=' + encodeURIComponent(userName || '');
+    const delUrl = SALE_GAS_URL + '?action=staff_delete&id=' + encodeURIComponent(userId || '') + '&name=' + encodeURIComponent(userName || '') + '&pinHash=' + encodeURIComponent(getPinProof_());
     fetch(delUrl, { method: 'GET' }).catch(() => {});
   }
 }

@@ -88,12 +88,12 @@ jobs:
           curl -s -f "https://tni-bot.vercel.app/api/search_bot" || true
 
           echo "2️⃣ Asset Collector (Vercel)..."
-          curl -s -f "https://api.telegram.org/bot8928677923:AAE_cJuEDH1tUf5v0q5Wf0UjDHlcp_k1lGM/getWebhookInfo" || true
+          curl -s -f "https://api.telegram.org/bot${{ secrets.ASSET_BOT_TOKEN }}/getWebhookInfo" || true
           curl -s -f "https://tni-bot.vercel.app/api/collector" || true
 
           echo "3️⃣ Site Down Relay (Vercel)..."
           curl -s -f "https://tni-sitedown.vercel.app/api/site_down_relay" || true
-          curl -s -f "https://api.telegram.org/bot8647102342:AAGwI95-xeyFfJZusOOrIPVBER-z6taZHZI/getWebhookInfo" || true
+          curl -s -f "https://api.telegram.org/bot${{ secrets.SALE_BOT_TOKEN }}/getWebhookInfo" || true
 
           echo "4️⃣ Main GAS Backend..."
           curl -s -L "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec?action=ping" || true
@@ -742,5 +742,5 @@ jobs:
           steps.sched.outputs.sale_sum == 'true' ||
           (github.event_name == 'workflow_dispatch' && inputs.report_type == 'Toa Sale - Sale Summary Report')
         env:
-          SALE_BOT_TOKEN: "8647102342:AAGwI95-xeyFfJZusOOrIPVBER-z6taZHZI"
+          SALE_BOT_TOKEN: ${{ secrets.SALE_BOT_TOKEN }}
         run: python sale_summary_report.py || true
