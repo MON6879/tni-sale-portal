@@ -1,4 +1,4 @@
-﻿# 🔒 STRICT STEEL-LOCK RULE: KHÓA THÉP PHÂN HỆ SITE DOWN — TUYỆT ĐỐI CẤM TỰ Ý VÀO XEM / SỬA KHI KHÔNG CÓ YÊU CẦU (STRICT SITE DOWN STEEL LOCK & ZERO-UNAUTHORIZED-ACCESS POLICY)
+# 🔒 STRICT STEEL-LOCK RULE: KHÓA THÉP PHÂN HỆ SITE DOWN — TUYỆT ĐỐI CẤM TỰ Ý VÀO XEM / SỬA KHI KHÔNG CÓ YÊU CẦU (STRICT SITE DOWN STEEL LOCK & ZERO-UNAUTHORIZED-ACCESS POLICY)
 
 > ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (SITE DOWN STEEL-LOCK POLICY)**:
 > 1. **Khóa Thép Tuyệt Đối (Absolute Steel Freeze)**: Phân hệ Site Down (`apps_script_sitedown`, Script ID `1fgIR_frjlOHBt4o3STTjGmHYaKfuiSb3zAtp7IrO__uLSIuRQGJ2Oc6X`, Version `@89`, `botlookup_relay.py`) đã hoàn thiện và được KHÓA THÉP 100%.
@@ -2216,4 +2216,17 @@ Reason: [Lý do]`
 >   1. **Dynamic Engine (SSOT)**: GAS `getDynamicSaleTemplates_()` và `templateSaleGet_()` tự động đọc các dòng dạng `Tên Mẫu : Cột 1 | Cột 2 | Cột 3` trong tab `Template Sale`.
 >   2. **Thu Thập & Xóa Tin Telegram**: Khi nhân viên gửi tin nhắn theo Template vào nhóm Telegram, Bot tự động bóc tách dữ liệu -> chèn vào **dòng 2** của Sheet đích tương ứng -> gọi Telegram API `deleteMessage` xóa sạch tin nhắn gốc của nhân viên trên nhóm -> bắn phản hồi xác nhận 2 dòng chuẩn.
 >   3. **Đồng Bộ Web Realtime**: Web `sale.html` bổ sung tab `📋 Mẫu Gửi Telegram` trong menu CRM & Survey, tự động pull danh sách mẫu từ Sheet kèm nút bấm "Sao Chép Mẫu" một chạm. Khi nhân viên mở các tab Bán Hàng, Khảo Sát, Tiếp Xúc, Web tự động pull dữ liệu sống từ Sheet để hiển thị ngay lập tức.
+
+> **PM-74 (03/10/2026) — Bán Hàng & Đại Lý Bulk Import Zero Cost-Price Leakage & Smart Auto-Link Protocol**:
+> - **Requirement & Context**: Người dùng yêu cầu bổ sung chức năng Import hàng loạt bằng file .CSV / Excel cho cả phân hệ **Bán Hàng & Xuất Kho (`#s-banhang`)** và **Đại Lý & Phân Phối (`#s-daily`)** (gồm cả Danh Sách Đại Lý `#td-ds` và Phân Phối Hàng Cho Đại Lý `#td-pp`), áp dụng chuẩn bảo mật giá vốn và quy trình UX 2 chế độ (Single & Bulk) như phân hệ Ký Gởi (`#s-kygoi`, Rule PM-72).
+> - **Root Cause & Rationale**:
+>   1. Nhân viên bán hàng và điều phối đại lý khi nhập file danh sách bán lẻ hoặc đơn giao hàng cho đại lý TUYỆT ĐỐI KHÔNG ĐƯỢC PHÉP và KHÔNG CẦN BIẾT giá vốn gốc (83%). File template Bán Hàng chỉ yêu cầu Đơn Giá Bán áp dụng; file template Phân Phối Đại Lý chỉ yêu cầu Giá Bỏ Sỉ thỏa thuận.
+>   2. Hệ thống tự động khớp kho thông minh theo `Model` hoặc `Tên Sản Phẩm` từ danh mục nhập kho (`DB.g('nhap')`) để trích xuất `spId`, `spN`, và `giagoc` ngầm phục vụ hạch toán tài chính (17% nộp Cty, LN Chi Nhánh). Sản phẩm mới được tự động gán cờ `⚠️ SP Mới` mà không chặn import.
+>   3. Khi import phân phối đại lý, nếu tên đại lý chưa có trong danh mục `DB.g('daily')`, hệ thống tự động tạo mới bản ghi đại lý để bảo đảm tính nhất quán dữ liệu toàn diện.
+> - **Rule**:
+>   1. **Tuyệt Đối Giấu Cột Giá Gốc Khỏi File Mẫu Bán Hàng & Phân Phối Đại Lý (Zero Cost In Sales & Dealer Distribution Import)**: Mọi template import (.CSV) và khung dán (paste area) của Bán Hàng và Phân Phối Đại Lý TUYỆT ĐỐI KHÔNG chứa cột giá gốc đầu vào (83%).
+>   2. **Cơ Chế Khớp Kho & Phân Bổ Ngầm Tự Động (Auto Cost-Allocation Engine)**: Tự động đối chiếu Model / Tên SP với `DB.g('nhap')` để lấy giá vốn ngầm tính 17% Cty và LN Chi Nhánh. Với sản phẩm mới, tự động tạo mã tạm và gán cờ `⚠️ SP Mới`.
+>   3. **Tự Động Tạo Đại Lý Mới (Auto-Create New Dealer On Import)**: Khi import phân phối đại lý, nếu tên đại lý chưa có trong `DB.g('daily')`, hệ thống tự động thêm đại lý vào danh mục để đồng bộ dữ liệu.
+>   4. **Chuẩn UX Đồng Nhất 2 Chế Độ (Single & Bulk Mode Parity)**: Mọi phân hệ có chức năng import hàng loạt BẮT BUỘC có thanh chuyển đổi chế độ (`➕ Tạo Đơn Lẻ` vs `📥 Import Hàng Loạt`), nút tải file mẫu chuẩn UTF-8 CSV BOM, khung dán từ Excel, khối 6 thẻ thống kê nhanh, và bảng preview chi tiết kèm badge kiểm tra tính hợp lệ trước khi xác nhận lưu.
+
 
