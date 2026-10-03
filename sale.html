@@ -3211,7 +3211,8 @@ function addBan(){
     tt,
     hoPaid: false,
     ngay: v('b-ngay') || td(),
-    gc: v('b-gc') || ''
+    gc: v('b-gc') || '',
+    source: 'web'
   };
 
   DB.add('ban', orderItem);
@@ -3265,25 +3266,35 @@ function rBan(){
   const isVi = currentLang === 'vi';
   const ban = DB.g('ban');
   const headers = isVi ?
-    ['#','Loại Xuất','Sản Phẩm','SL','Serial','Đơn Giá','Tổng Tiền','Đã Thu','Còn Nợ','Người Nhận','SĐT','Ngày',''] :
-    ['#','Target','Product','Qty','Serial','Unit Price','Total Amount','Paid','Debt','Recipient','Phone','Date',''];
+    ['#','Nguồn','Loại Xuất','Sản Phẩm','SL','Serial','Đơn Giá','Tổng Tiền','Đã Thu','Còn Nợ','Người Nhận','SĐT','Ngày',''] :
+    ['#','Source','Target','Product','Qty','Serial','Unit Price','Total Amount','Paid','Debt','Recipient','Phone','Date',''];
 
   document.getElementById('t-ban').innerHTML = tbl(headers,
     ban.map((r, i) => {
+      const sourceBadge = r.source === 'telegram' ? bk('📱 Telegram','pu') : bk('🌐 Web','bl');
       const targetBadge = r.target === 'dealer' ? bk('Đại Lý','bl') : (r.target === 'pos' ? bk('Ký Gởi','pu') : (r.target === 'staff' ? bk('NV','or') : bk('Khách Lẻ','gn')));
       const debtText = r.debt > 0 ? `<b style="color:var(--rd)">${fn(r.debt)}₫</b>` : '<span style="color:var(--gn)">0₫</span>';
+      const spName = r.spN || r.product || '-';
+      const customer = r.kh || r.customerName || '-';
+      const phone = r.dt || r.phone || '-';
+      const unitPrice = Number(r.gia || 0);
+      const qty = Number(r.sl || 1);
+      const total = Number(r.totalAmount || (unitPrice * qty));
+      const depositVal = r.deposit !== undefined ? Number(r.deposit) : total;
+
       return [
         i + 1,
+        sourceBadge,
         targetBadge,
-        `<b>${r.spN}</b>`,
-        r.sl,
+        `<b>${spName}</b>`,
+        qty,
         r.serial ? `<code>${r.serial}</code>` : '-',
-        fn(r.gia) + '₫',
-        `<b>${fn(r.totalAmount || r.gia * r.sl)}₫</b>`,
-        `<span style="color:var(--gn)">${fn(r.deposit !== undefined ? r.deposit : r.gia * r.sl)}₫</span>`,
+        fn(unitPrice) + '₫',
+        `<b>${fn(total)}₫</b>`,
+        `<span style="color:var(--gn)">${fn(depositVal)}₫</span>`,
         debtText,
-        r.kh || '-',
-        r.dt || '-',
+        customer,
+        phone,
         fd(r.ngay),
         `<button class="btn b-xs b-rd" onclick="del('ban',${r.id},()=>{rBan();popSP(['b-sp']);})">🗑</button>`
       ];
