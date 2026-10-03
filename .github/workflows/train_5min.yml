@@ -53,6 +53,7 @@ on:
           - 'Ghế AUDITOR-9.1 - Master System Audit'
           - 'Ghế giám sát đã kiểm tra không phát hiện lỗi'
           - 'Toa ETA - Share ETA Reminder'
+          - 'Toa Sale - Sale Summary Report'
           - 'Ghế BI-WO-SYNC - Sync WO Detail & BI Portal'
       skip_delay:
         description: 'Skip random delay (1=yes, 0=no)'
@@ -112,6 +113,10 @@ jobs:
           curl -s -f "https://tni-bot.vercel.app/api/attendance" || true
           curl -s -L "https://script.google.com/macros/s/AKfycbzSz_ISXgertxBDadw4BBQX1JdMjW650_o4He0o4Lh-uf1hV5O3YaE-ohlqI2CHyAcVFg/exec?action=get_headers" || true
 
+          echo "9️⃣ Refuel Collector Bot (@TNI_REFUEL_BOT)..."
+          curl -s -f "https://api.telegram.org/bot8811503647:AAEVIToiaPbDeNTUPLsoI5xhdnufKdChsME/getWebhookInfo" || true
+          curl -s -f "https://tni-bot.vercel.app/api/refuel_collector" || true
+
           echo "✅ Keepalive done"
 
       # ═══════════════════════════════════════════════
@@ -133,7 +138,7 @@ jobs:
           R6=false; R61=false; CABLE=false; REFUEL_REQ=false
           REFUEL_P1=false; REFUEL_P2=false; REFUEL_P21=false; REFUEL_P4=false
           AUDITOR91=false; SHARE_ETA=false; SITE_DOWN=false; CABLE_LD=false
-          BI_WO_SYNC=false
+          BI_WO_SYNC=false; SALE_SUM=false
 
           # check_time <hour> <target_minute> — dung sai ±4 phút (nới rộng do GitHub Actions delay thường xuyên 3-5p)
           check_time() {
@@ -206,6 +211,8 @@ jobs:
           # ═══════ 🌙 EVENING BLOCK (17:00-22:30) ═══════
           #  17:18 → Report 6 & Report 6.1
           check_time_exact 17 18 && R6=true && R61=true && NEED_PYTHON=true && echo "🚃 Toa 6+6.1: Report 6 + Report 6.1 Site Clear Today (17:18 MMT)"
+          #  11:30 & 17:30 → Toa Sale Summary Report (🛒 Live stock + group summary)
+          (check_time_exact 11 30 || check_time_exact 17 30) && SALE_SUM=true && NEED_PYTHON=true && echo "🛒 Toa Sale: Sale Summary Report (11:30/17:30 MMT)"
           #  18:06 → [DISABLED] Refuel — chuyển sang 20:56
           #  18:41 → Report 5 (Daily Plan - Ca Chiều / EOD Plan vs Actual) (📱 Telethon)
           check_time 18 41 && P5A=true && NEED_PYTHON=true && echo "🚃 Toa 3: Report 5 Daily Plan EOD (18:41 MMT)"
@@ -285,6 +292,7 @@ jobs:
           echo "auditor91=$AUDITOR91" >> $GITHUB_OUTPUT
           echo "share_eta=$SHARE_ETA" >> $GITHUB_OUTPUT
           echo "bi_wo_sync=$BI_WO_SYNC" >> $GITHUB_OUTPUT
+          echo "sale_sum=$SALE_SUM" >> $GITHUB_OUTPUT
 
           if [ "$NEED_PYTHON" = "false" ]; then
             echo "🏥 Keepalive-only tick, no reports to send."
@@ -723,6 +731,16 @@ jobs:
           APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
         run: python sweep_orphan_eta.py || true
 
-
-
-
+      # ═══════════════════════════════════════════════
+      # 🛒 TOA SALE: Sale Summary Report & Auto Stock Notify
+      # 🤖 Engine: Python Bot API
+      # ⏰ Schedule: 11:30 & 17:30 MMT (or workflow_dispatch)
+      # ═══════════════════════════════════════════════
+      - name: "🛒 Toa Sale — Sale Summary Report"
+        continue-on-error: true
+        if: |
+          steps.sched.outputs.sale_sum == 'true' ||
+          (github.event_name == 'workflow_dispatch' && inputs.report_type == 'Toa Sale - Sale Summary Report')
+        env:
+          SALE_BOT_TOKEN: "8647102342:AAGwI95-xeyFfJZusOOrIPVBER-z6taZHZI"
+        run: python sale_summary_report.py || true

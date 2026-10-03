@@ -1594,6 +1594,7 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
     <div class="tab on" onclick="sw(this,'tc-kh')">👤 Khách Hàng</div>
     <div class="tab" onclick="sw(this,'tc-ks')">📝 Khảo Sát Đại Lý</div>
     <div class="tab" onclick="sw(this,'tc-lk')">📞 Lịch Tiếp Xúc</div>
+    <div class="tab" onclick="sw(this,'tc-tpl');loadDynamicSaleTemplatesUI()">📋 Mẫu Gửi Telegram</div>
   </div>
   <div id="tc-kh">
     <div class="panel">
@@ -1651,6 +1652,60 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
       </div>
     </div>
     <div class="panel"><div class="ph"><h3>📋 Lịch Sử Tiếp Xúc</h3></div><div class="pb tw" id="t-lk"></div></div>
+  </div>
+
+  <!-- ════ SUB-TAB 4: MẪU GỬI BÁO CÁO TELEGRAM (DYNAMIC TEMPLATES) ════ -->
+  <div id="tc-tpl" style="display:none">
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 18px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <div>
+          <h3 style="color:#1e40af;margin:0;font-size:15px">📋 Mẫu Gửi Telegram Bán Hàng &amp; Dịch Vụ (Dynamic SSOT)</h3>
+          <div style="font-size:12px;color:#3b82f6;margin-top:3px">Dữ liệu đọc động 100% từ Google Sheet tab <b>Template Sale</b>. Thêm / bớt / sửa trên Sheet tự động cập nhật tại đây!</div>
+        </div>
+        <button class="btn b-bl b-sm" onclick="loadDynamicSaleTemplatesUI()">🔄 Tải Lại Mẫu Mới</button>
+      </div>
+    </div>
+
+    <!-- Nhóm nhận tin theo Team -->
+    <div class="panel" style="margin-bottom:14px">
+      <div class="ph" style="background:#f8fafc">
+        <h3 style="color:#1e293b">👥 Danh Sách Nhóm Tiếp Nhận Báo Cáo (List Group Telegram)</h3>
+      </div>
+      <div class="pb">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px" id="sale-group-chips">
+          <div style="padding:10px 14px;border-radius:8px;background:#f1f5f9;border:1px solid #cbd5e1">
+            <div style="font-weight:700;color:#1e293b;font-size:12.5px">5 VCM - Blule Net - Dawei</div>
+            <div style="font-size:11px;color:#64748b;margin-top:2px">ID: <code>-5590266380</code> (Trung tâm)</div>
+          </div>
+          <div style="padding:10px 14px;border-radius:8px;background:#eff6ff;border:1px solid #bfdbfe">
+            <div style="font-weight:700;color:#1d4ed8;font-size:12.5px">Team 1: Solution Sales</div>
+            <div style="font-size:11px;color:#3b82f6;margin-top:2px">ID: <code>-5308067993</code> (Đội 1)</div>
+          </div>
+          <div style="padding:10px 14px;border-radius:8px;background:#f0fdf4;border:1px solid #bbf7d0">
+            <div style="font-weight:700;color:#15803d;font-size:12.5px">Team 2: Solution Sales</div>
+            <div style="font-size:11px;color:#22c55e;margin-top:2px">ID: <code>-5466847037</code> (Đội 2)</div>
+          </div>
+          <div style="padding:10px 14px;border-radius:8px;background:#fffbeb;border:1px solid #fde68a">
+            <div style="font-weight:700;color:#b45309;font-size:12.5px">Team 3: Solution Sales</div>
+            <div style="font-size:11px;color:#f59e0b;margin-top:2px">ID: <code>-5274392194</code> (Đội 3)</div>
+          </div>
+          <div style="padding:10px 14px;border-radius:8px;background:#faf5ff;border:1px solid #e9d5ff">
+            <div style="font-weight:700;color:#7e22ce;font-size:12.5px">Team 4: Solution Sales</div>
+            <div style="font-size:11px;color:#a855f7;margin-top:2px">ID: <code>-5514096394</code> (Đội 4)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Danh sách khung mẫu với nút 1-Click Copy -->
+    <div class="panel">
+      <div class="ph" style="background:#f8fafc">
+        <h3 style="color:#1e293b">📝 Danh Sách Mẫu Cú Pháp Gửi Lên Telegram (1-Click Copy)</h3>
+      </div>
+      <div class="pb" id="sale-templates-container" style="padding:16px">
+        <div style="text-align:center;padding:24px;color:#64748b">⏳ Đang nạp danh sách mẫu từ Google Sheet...</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -5190,6 +5245,84 @@ function addLK(){const ten=v('lk-ten');if(!ten){al('Nhập tên','er');return;}
 function rLK(){document.getElementById('t-lk').innerHTML=tbl(['#','Khách/ĐL','Hình Thức','Ngày','Hành Động Tiếp','Follow-up',''],
   DB.g('lienlac').map((r,i)=>[i+1,r.ten,bk(r.ht,'bl'),fd(r.ngay),r.hd||'-',fd(r.fu)||'-',
     `<button class="btn b-xs b-rd" onclick="del('lienlac',${r.id},rLK)">🗑</button>`]));}
+
+// ═══════════════════════════════════════════════════
+// 📋 DYNAMIC SALE TEMPLATES LOADER (1-CLICK COPY)
+// ═══════════════════════════════════════════════════
+let cachedSaleTemplates = [];
+
+async function loadDynamicSaleTemplatesUI() {
+  const container = document.getElementById('sale-templates-container');
+  if (!container) return;
+  container.innerHTML = '<div style="text-align:center;padding:24px;color:#3b82f6">⏳ Đang tải danh sách mẫu sống từ Google Sheet...</div>';
+
+  try {
+    let tpls = [];
+    // 1. Thử gọi API backend
+    try {
+      const resp = await fetch('https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec?action=template_sale_get');
+      const json = await resp.json();
+      if (json.ok && Array.isArray(json.data) && json.data.length > 0) {
+        tpls = json.data;
+      }
+    } catch(apiErr) {
+      console.warn('Backend template fetch error:', apiErr);
+    }
+
+    // 2. Fallback đọc trực tiếp Google Sheet GViz API (GID 361917018)
+    if (!tpls.length) {
+      const gvizUrl = 'https://docs.google.com/spreadsheets/d/1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA/gviz/tq?tqx=out:json&gid=361917018';
+      const gRes = await fetch(gvizUrl);
+      const txt = await gRes.text();
+      const rawJson = JSON.parse(txt.substring(txt.indexOf('{'), txt.lastIndexOf('}') + 1));
+      const rows = rawJson.table.rows || [];
+      rows.forEach((r, idx) => {
+        const line = String((r.c[0] || {}).v || '').trim();
+        if (!line || line.toLowerCase().startsWith('tin gởi') || line.toLowerCase().startsWith('tin gửi')) return;
+        const colonIdx = line.indexOf(':');
+        if (colonIdx === -1) return;
+        const key = line.substring(0, colonIdx).trim();
+        const cols = line.substring(colonIdx + 1).trim().split('|').map(c => c.trim()).filter(c => c);
+        tpls.push({
+          id: 'tpl_' + (idx + 1),
+          rawLine: line,
+          keyword: key,
+          fields: cols
+        });
+      });
+    }
+
+    cachedSaleTemplates = tpls;
+    if (!tpls.length) {
+      container.innerHTML = '<div style="padding:16px;color:#dc2626">⚠️ Chưa có mẫu nào được định nghĩa trên Sheet tab "Template Sale".</div>';
+      return;
+    }
+
+    let html = '<div style="display:grid;gap:12px">';
+    tpls.forEach((t, i) => {
+      const fieldTags = t.fields.map(f => `<span style="display:inline-block;padding:2px 8px;background:#f1f5f9;border-radius:4px;font-size:11.5px;color:#334155;border:1px solid #cbd5e1">${f}</span>`).join(' <span style="color:#94a3b8">|</span> ');
+      const cleanLine = t.rawLine.replace(/"/g, '&quot;');
+      html += `
+        <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,0.04);display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+            <span style="font-weight:800;color:#1e40af;font-size:13.5px">🔹 [${i+1}] ${t.keyword}</span>
+            <button class="btn b-sm b-bl" onclick="navigator.clipboard.writeText('${cleanLine}').then(()=>al('📋 Đã sao chép mẫu [${t.keyword}] vào bộ nhớ tạm!'))" style="font-weight:700">📋 Sao Chép Mẫu</button>
+          </div>
+          <div style="background:#f8fafc;padding:8px 12px;border-radius:6px;font-family:monospace;font-size:12px;color:#0f172a;word-break:break-all;border:1px solid #e2e8f0">
+            ${cleanLine}
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11.5px;color:#64748b">
+            <span>Cột trích xuất:</span> ${fieldTags}
+          </div>
+        </div>
+      `;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+  } catch(err) {
+    container.innerHTML = `<div style="padding:16px;color:#dc2626">❌ Lỗi nạp mẫu: ${err.message}</div>`;
+  }
+}
 
 // ═══════════════════════════════════════════════════
 // LỢI NHUẬN (BÁN TRỰC TIẾP & KÝ GỞI 17%)
