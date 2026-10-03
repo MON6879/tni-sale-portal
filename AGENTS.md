@@ -143,7 +143,12 @@ bac) BẮT BUỘC chỉ nằm trong danh sách được phép (llowedTabs) củ
 bac.
 > 4. **Tự Động Nhận Diện Vai Trò Theo Nhân Sự (Staff Auto-Role Resolution & Safe Fallback)**: Khi mở trang bằng tham số link cá nhân hóa (?staff=... hoặc ?email=...), hệ thống BẮT BUỘC tra cứu danh bạ nhân sự (staff_directory) để gán chính xác vai trò tương ứng của nhân viên đó. Nếu truy cập trang công khai không có tham số xác thực, vai trò mặc định an toàn BẮT BUỘC là sales (không tự ý gán dmin).
 
-> 5. **Đồng Bộ 2 Chiều SSOT Nhân Sự Web UI <-> Google Sheet (Strict Staff Directory Bi-Directional SSOT)**: Mọi thao tác quản lý nhân sự (Thêm mới, Cập nhật thông tin, Gán/Đổi vai trò, Xóa nhân sự, Import/Reset) trên Web UI BẮT BUỘC phải đồng bộ trực tiếp 2 chiều với Google Sheet tab staff (Sheet ID: 1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA) qua endpoint staff_save. TUYỆT ĐỐI CẤM chỉ lưu localStorage cục bộ hoặc rào cản token client-side khiến dữ liệu không vào Google Sheet. Ngược lại, khi người dùng nhập dữ liệu trực tiếp bằng tay trên Google Sheet (dù dùng tiêu đề cột tiếng Việt hay tiếng Anh), Backend Apps Script (staffGet_) BẮT BUỘC phải nhận diện cột thông minh và tự động map chuẩn hóa để Web UI đồng bộ sống 100%.
+> 5. **Đồng Bộ 2 Chiều SSOT Nhân Sự Web UI <-> Google Sheet & Tự Động Thêm Mới / Xóa Nghỉ Việc (Strict Staff Directory Live SSOT & Auto-Sync Policy)**:
+>    - **Nguồn Dữ Liệu Nhân Sự Sống (SSOT Source)**: Tab `input HR` (GID `255709958`, Spreadsheet `1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA`) là nguồn duy nhất ghi nhận danh sách nhân sự thực tế.
+>    - **Tự Động Cập Nhật Mặc Định (Auto Add New with Default Role Sales)**: Bất kỳ nhân sự mới nào được thêm vào tab `input HR`, hệ thống BẮT BUỘC tự động ghi nhận vào danh bạ và gán vai trò mặc định ban đầu là `sales` (Kinh Doanh), để Ban Giám Đốc tự do điều chỉnh sau. Riêng nhân sự có chức danh `HR and Finance` được tự động gán `finance`.
+>    - **Tự Động Triệt Tiêu Nhân Viên Nghỉ Việc (Auto Purge Resigned Staff)**: Nếu một nhân sự bị xóa khỏi bảng tính trên Google Sheet (nghỉ việc), hệ thống BẮT BUỘC tự động nhận diện và xóa hoàn toàn khỏi danh bạ Web UI, không để lại dữ liệu rác hay hàng trống.
+>    - **Bảo Lưu Phân Quyền Đã Điều Chỉnh (Preserve Custom Overrides)**: Khi đồng bộ dữ liệu mới, hệ thống BẮT BUỘC bảo lưu các vai trò mà Ban Giám Đốc đã tùy chỉnh trước đó, không được tự ý ghi đè lại về `sales`.
+>    - **Ghế Giám Sát Tự Động (SUPERVISOR-HR-SYNC)**: Cả Web UI (`sale.html`) và Backend Apps Script (`staffGet_`) cùng giám sát chặt chẽ luồng đồng bộ, bảo đảm dữ liệu luôn tươi mới 100%.
 
 ---
 
