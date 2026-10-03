@@ -1031,6 +1031,7 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
           <span id="voiceText">AI Audio Briefing</span>
         </button>
       </div>
+      <div id="user-identity-badge" style="display:inline-flex; align-items:center; margin-left:0.6rem;"></div>
     </div>
   </header>
 
@@ -3630,52 +3631,69 @@ Team04>> 2Box</td>
       </div>
 
       <!-- Quick Summary Cards for Permissions with Copy Buttons -->
-      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
-        <div class="card" style="border-left:4px solid var(--emerald); background:rgba(16,185,129,0.08); padding:1rem; display:flex; flex-direction:column; justify-content:space-between;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:0.85rem; margin-bottom:1.5rem;">
+        
+        <!-- Card 1: Full Access -->
+        <div class="card" style="border-left:4px solid var(--emerald); background:rgba(16,185,129,0.08); padding:0.9rem; display:flex; flex-direction:column; justify-content:space-between;">
           <div>
-            <div style="font-size:0.8rem; color:var(--text-sub);"><i class="fa-solid fa-crown"></i> 🌟 Full Access (Admin)</div>
-            <div style="font-size:1.4rem; font-weight:800; color:var(--emerald); margin-top:0.3rem;" id="count-full-access">1 Account</div>
-            <div style="font-size:0.72rem; color:#94a3b8; margin-top:0.2rem;">Toàn quyền xem tất cả 5 Thẻ &amp; Phân quyền</div>
+            <div style="font-size:0.78rem; color:var(--text-sub);"><i class="fa-solid fa-crown"></i> 🌟 Full Access (Admin)</div>
+            <div style="font-size:1.35rem; font-weight:800; color:var(--emerald); margin-top:0.3rem;" id="count-full-access">2 Accounts</div>
+            <div style="font-size:0.72rem; color:#94a3b8; margin-top:0.2rem;">Toàn quyền xem tất cả 10 Thẻ &amp; Phân quyền</div>
           </div>
-          <button class="filter-btn" style="margin-top:0.8rem; width:100%; padding:0.35rem; font-size:0.75rem; background:rgba(16,185,129,0.15); color:var(--emerald); border:1px solid rgba(16,185,129,0.3); border-radius:6px; cursor:pointer;" onclick="copyGroupEmails('FULL')">
-            <i class="fa-solid fa-copy"></i> Copy Gmail Nhóm Full Access
+          <button class="filter-btn" style="margin-top:0.7rem; width:100%; padding:0.35rem; font-size:0.72rem; background:rgba(16,185,129,0.15); color:var(--emerald); border:1px solid rgba(16,185,129,0.3); border-radius:6px; cursor:pointer;" onclick="copyGroupEmails('FULL')">
+            <i class="fa-solid fa-copy"></i> Copy Gmail Full Access
           </button>
         </div>
 
-        <div class="card" style="border-left:4px solid var(--cyan); background:rgba(6,182,212,0.08); padding:1rem; display:flex; flex-direction:column; justify-content:space-between;">
+        <!-- Card 2: BOD Assign -->
+        <div class="card" style="border-left:4px solid var(--cyan); background:rgba(6,182,212,0.08); padding:0.9rem; display:flex; flex-direction:column; justify-content:space-between;">
           <div>
-            <div style="font-size:0.8rem; color:var(--text-sub);"><i class="fa-solid fa-user-shield"></i> 👑 BOD Assign Group</div>
-            <div style="font-size:1.4rem; font-weight:800; color:var(--cyan); margin-top:0.3rem;" id="count-bod-access">1 Account</div>
-            <div style="font-size:0.72rem; color:#94a3b8; margin-top:0.2rem;">Quyền xem Thẻ BOD Directives</div>
+            <div style="font-size:0.78rem; color:var(--text-sub);"><i class="fa-solid fa-user-shield"></i> 👑 BOD Assign Group</div>
+            <div style="font-size:1.35rem; font-weight:800; color:var(--cyan); margin-top:0.3rem;" id="count-bod-access">1 Account</div>
+            <div style="font-size:0.72rem; color:#94a3b8; margin-top:0.2rem;">Quyền xem Thẻ BOD Directives &amp; Báo Cáo</div>
           </div>
-          <button class="filter-btn" style="margin-top:0.8rem; width:100%; padding:0.35rem; font-size:0.75rem; background:rgba(6,182,212,0.15); color:var(--cyan); border:1px solid rgba(6,182,212,0.3); border-radius:6px; cursor:pointer;" onclick="copyGroupEmails('BOD')">
+          <button class="filter-btn" style="margin-top:0.7rem; width:100%; padding:0.35rem; font-size:0.72rem; background:rgba(6,182,212,0.15); color:var(--cyan); border:1px solid rgba(6,182,212,0.3); border-radius:6px; cursor:pointer;" onclick="copyGroupEmails('BOD')">
             <i class="fa-solid fa-copy"></i> Copy Gmail Nhóm BOD
           </button>
         </div>
 
-        <div class="card" style="border-left:4px solid #a78bfa; background:rgba(167,139,250,0.08); padding:1rem; display:flex; flex-direction:column; justify-content:space-between;">
+        <!-- Card 3: Dept Assign -->
+        <div class="card" style="border-left:4px solid #a78bfa; background:rgba(167,139,250,0.08); padding:0.9rem; display:flex; flex-direction:column; justify-content:space-between;">
           <div>
-            <div style="font-size:0.8rem; color:var(--text-sub);"><i class="fa-solid fa-building"></i> 🏢 Dept Assign Group</div>
-            <div style="font-size:1.4rem; font-weight:800; color:#a78bfa; margin-top:0.3rem;" id="count-dept-access">5 Accounts</div>
-            <div style="font-size:0.72rem; color:#94a3b8; margin-top:0.2rem;">Quyền xem Thẻ Phòng Ban &amp; WO</div>
+            <div style="font-size:0.78rem; color:var(--text-sub);"><i class="fa-solid fa-building"></i> 🏢 Dept Assign Group</div>
+            <div style="font-size:1.35rem; font-weight:800; color:#a78bfa; margin-top:0.3rem;" id="count-dept-access">5 Accounts</div>
+            <div style="font-size:0.72rem; color:#94a3b8; margin-top:0.2rem;">Quyền xem Thẻ Phòng Ban &amp; Kế Hoạch Tuần</div>
           </div>
-          <button class="filter-btn" style="margin-top:0.8rem; width:100%; padding:0.35rem; font-size:0.75rem; background:rgba(167,139,250,0.15); color:#a78bfa; border:1px solid rgba(167,139,250,0.3); border-radius:6px; cursor:pointer;" onclick="copyGroupEmails('DEPT')">
+          <button class="filter-btn" style="margin-top:0.7rem; width:100%; padding:0.35rem; font-size:0.72rem; background:rgba(167,139,250,0.15); color:#a78bfa; border:1px solid rgba(167,139,250,0.3); border-radius:6px; cursor:pointer;" onclick="copyGroupEmails('DEPT')">
             <i class="fa-solid fa-copy"></i> Copy Gmail Nhóm Dept
           </button>
         </div>
 
-        <div class="card" style="border-left:4px solid #f59e0b; background:rgba(245,158,11,0.08); padding:1rem; display:flex; flex-direction:column; justify-content:space-between;">
+        <!-- Card 4: Field Staff & Guide (NEW) -->
+        <div class="card" style="border-left:4px solid #f59e0b; background:rgba(245,158,11,0.08); padding:0.9rem; display:flex; flex-direction:column; justify-content:space-between;">
           <div>
-            <div style="font-size:0.8rem; color:var(--text-sub);"><i class="fa-solid fa-chart-pie"></i> 📊 Executive Only</div>
-            <div style="font-size:1.4rem; font-weight:800; color:#f59e0b; margin-top:0.3rem;" id="count-exec-access">1 Account</div>
-            <div style="font-size:0.72rem; color:#94a3b8; margin-top:0.2rem;">Quyền xem Báo Cáo Tổng Quan</div>
+            <div style="font-size:0.78rem; color:var(--text-sub);"><i class="fa-solid fa-person-digging"></i> 👷 Field Staff &amp; Guide</div>
+            <div style="font-size:1.35rem; font-weight:800; color:#f59e0b; margin-top:0.3rem;" id="count-staff-access">5 Accounts</div>
+            <div style="font-size:0.72rem; color:#94a3b8; margin-top:0.2rem;">Quyền xem Guide For Staff, Note &amp; WO</div>
           </div>
-          <button class="filter-btn" style="margin-top:0.8rem; width:100%; padding:0.35rem; font-size:0.75rem; background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); border-radius:6px; cursor:pointer;" onclick="copyGroupEmails('EXEC')">
+          <button class="filter-btn" style="margin-top:0.7rem; width:100%; padding:0.35rem; font-size:0.72rem; background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); border-radius:6px; cursor:pointer;" onclick="copyGroupEmails('STAFF')">
+            <i class="fa-solid fa-copy"></i> Copy Gmail Kỹ Sư Hiện Trường
+          </button>
+        </div>
+
+        <!-- Card 5: Executive Only -->
+        <div class="card" style="border-left:4px solid #38bdf8; background:rgba(56,189,248,0.08); padding:0.9rem; display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <div style="font-size:0.78rem; color:var(--text-sub);"><i class="fa-solid fa-chart-pie"></i> 📊 Executive Only</div>
+            <div style="font-size:1.35rem; font-weight:800; color:#38bdf8; margin-top:0.3rem;" id="count-exec-access">3 Accounts</div>
+            <div style="font-size:0.72rem; color:#94a3b8; margin-top:0.2rem;">Quyền xem Báo Cáo Tổng Quan BI WO</div>
+          </div>
+          <button class="filter-btn" style="margin-top:0.7rem; width:100%; padding:0.35rem; font-size:0.72rem; background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.3); border-radius:6px; cursor:pointer;" onclick="copyGroupEmails('EXEC')">
             <i class="fa-solid fa-copy"></i> Copy Gmail Nhóm Exec
           </button>
         </div>
-      </div>
 
+      </div>
       <!-- Access Control Table Card -->
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.8rem;">
@@ -4547,7 +4565,7 @@ Team04>> 2Box</td>
         </label>
         <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
           <button type="button" class="filter-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(16, 185, 129, 0.15); color:var(--emerald); border:1px solid rgba(16, 185, 129, 0.3); border-radius:6px; cursor:pointer;" onclick="applyPermissionPreset('FULL')">
-            🌟 Full Access (5 Thẻ)
+            🌟 Full Access (10 Thẻ)
           </button>
           <button type="button" class="filter-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(6, 182, 212, 0.15); color:var(--cyan); border:1px solid rgba(6, 182, 212, 0.3); border-radius:6px; cursor:pointer;" onclick="applyPermissionPreset('BOD')">
             👑 Nhóm BOD
@@ -4555,11 +4573,14 @@ Team04>> 2Box</td>
           <button type="button" class="filter-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(167, 139, 250, 0.15); color:#a78bfa; border:1px solid rgba(167, 139, 250, 0.3); border-radius:6px; cursor:pointer;" onclick="applyPermissionPreset('DEPT')">
             🏢 Nhóm Trưởng Phòng
           </button>
-          <button type="button" class="filter-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(249, 115, 22, 0.15); color:#FB923C; border:1px solid rgba(249, 115, 22, 0.3); border-radius:6px; cursor:pointer;" onclick="applyPermissionPreset('ENGINEER')">
-            👷 Nhóm Kỹ Sư
+          <button type="button" class="filter-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(245, 158, 11, 0.2); color:#fbbf24; border:1px solid rgba(245, 158, 11, 0.4); border-radius:6px; cursor:pointer; font-weight:700;" onclick="applyPermissionPreset('STAFF')">
+            👷 Kỹ Sư Hiện Trường (Staff Guide + Note + WO)
           </button>
-          <button type="button" class="filter-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(245, 158, 11, 0.15); color:#f59e0b; border:1px solid rgba(245, 158, 11, 0.3); border-radius:6px; cursor:pointer;" onclick="applyPermissionPreset('EXEC')">
+          <button type="button" class="filter-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(56, 189, 248, 0.15); color:#38bdf8; border:1px solid rgba(56, 189, 248, 0.3); border-radius:6px; cursor:pointer;" onclick="applyPermissionPreset('EXEC')">
             📊 Nhóm Báo Cáo
+          </button>
+          <button type="button" class="filter-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(234, 179, 8, 0.15); color:#eab308; border:1px solid rgba(234, 179, 8, 0.3); border-radius:6px; cursor:pointer;" onclick="applyPermissionPreset('GUIDE_ONLY')">
+            📖 Chỉ Xem Hướng Dẫn
           </button>
         </div>
       </div>
@@ -4567,43 +4588,75 @@ Team04>> 2Box</td>
       <div class="form-group">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
           <label style="font-weight:700; color:#F8FAFC; font-size:0.88rem;">
-            <i class="fa-solid fa-square-check" style="color:var(--emerald);"></i> Tích chọn chi tiết các Thẻ được phép xem (Permissions):
+            <i class="fa-solid fa-square-check" style="color:var(--emerald);"></i> Tích chọn chi tiết 10 Thẻ được phép xem (Permissions):
           </label>
           <button type="button" class="filter-btn" style="padding:0.25rem 0.7rem; font-size:0.75rem; background:rgba(56, 189, 248, 0.15); color:var(--cyan); border:1px solid rgba(56, 189, 248, 0.3); border-radius:6px; cursor:pointer;" onclick="toggleSelectAllPermissions()">
             <span id="selectAllBtnText">Bỏ Chọn Tất Cả</span>
           </button>
         </div>
 
-        <div style="display:grid; grid-template-columns:1fr; gap:0.55rem; background:#1E293B; border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0.9rem;">
-          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.88rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
+        <div style="display:grid; grid-template-columns:1fr; gap:0.5rem; background:#1E293B; border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0.85rem; max-height:360px; overflow-y:auto;">
+          
+          <!-- Tab 1: Executive Summary -->
+          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.85rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
             <input type="checkbox" id="perm_exec" class="perm-checkbox" value="EXEC" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
-            <span>📊 <b>Executive Summary</b> (Báo Cáo Tổng Quan &amp; AI Audio)</span>
+            <span>📊 <b>Executive Summary</b> (Báo Cáo Tổng Quan &amp; AI Audio &amp; Ghế Giám Sát BI WO)</span>
           </label>
 
-          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.88rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
+          <!-- Tab 2: Department Assign -->
+          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.85rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
             <input type="checkbox" id="perm_dept" class="perm-checkbox" value="DEPT" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
             <span>🏢 <b>Department Assign</b> (Giao Việc Phòng Ban TNI)</span>
           </label>
 
-          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.88rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
+          <!-- Tab 3: WO Detail -->
+          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.85rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
             <input type="checkbox" id="perm_wo" class="perm-checkbox" value="WO" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
             <span>📋 <b>WO Detail</b> (Chi Tiết 9 Bảng Work Orders &amp; Kỹ Sư)</span>
           </label>
 
-          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.88rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
+          <!-- Tab 4: BOD Assign -->
+          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.85rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
             <input type="checkbox" id="perm_bod" class="perm-checkbox" value="BOD" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
             <span>👑 <b>BOD Assign</b> (Chỉ Đạo &amp; Giao Việc Ban Giám Đốc)</span>
           </label>
 
-          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.88rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
+          <!-- Tab 5: Plan Week -->
+          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.85rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
             <input type="checkbox" id="perm_plan" class="perm-checkbox" value="PLAN" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
             <span>📅 <b>Plan Week</b> (Kế Hoạch Phòng Ban Theo Tuần)</span>
           </label>
 
-          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.88rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
+          <!-- Tab 6: Note Đầu Việc -->
+          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.85rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.25);">
+            <input type="checkbox" id="perm_note" class="perm-checkbox" value="NOTE" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
+            <span>📝 <b>Note Đầu Việc</b> (Ghi Chú &amp; Theo Dõi Tiến Độ Đầu Việc)</span>
+          </label>
+
+          <!-- Tab 7: Guide For Staff (NEW) -->
+          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.85rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.35);">
+            <input type="checkbox" id="perm_staff_guide" class="perm-checkbox" value="STAFF_GUIDE" checked style="width:18px; height:18px; accent-color:#f59e0b; cursor:pointer;" />
+            <span style="color:#fde68a;">📖 <b>Guide For Staff</b> (Cẩm Nang Kỹ Thuật, Cáp, An Toàn &amp; Xe Công Tác)</span>
+          </label>
+
+          <!-- Tab 8: System Guide -->
+          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.85rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
+            <input type="checkbox" id="perm_sys_guide" class="perm-checkbox" value="SYS_GUIDE" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
+            <span>📚 <b>System Guide</b> (Hướng Dẫn Bot Telegram &amp; Quy Trình Vận Hành)</span>
+          </label>
+
+          <!-- Tab 9: Gmail Access List -->
+          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.85rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
             <input type="checkbox" id="perm_auth" class="perm-checkbox" value="AUTH" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
             <span>🔒 <b>Gmail Access List</b> (Quản Lý Phân Quyền Hệ Thống)</span>
           </label>
+
+          <!-- Tab 10: Virtual Secretary -->
+          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.85rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25);">
+            <input type="checkbox" id="perm_secretary" class="perm-checkbox" value="SECRETARY" checked style="width:18px; height:18px; accent-color:var(--emerald); cursor:pointer;" />
+            <span>🤖 <b>Virtual Secretary</b> (Trợ Lý Ảo Điều Hành &amp; AI Sentinel)</span>
+          </label>
+
         </div>
       </div>
 
@@ -4835,15 +4888,16 @@ Team04>> 2Box</td>
 
     /* 🔐 GMAIL ACCESS CONTROL & MULTI-PERMISSION PERSISTENCE */
     const DEFAULT_GMAIL_ACCOUNTS = [
-      { email: "admin@tni.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "AUTH"], date: "15/08/2026" },
-      { email: "coadmin@tni.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "AUTH"], date: "15/08/2026" },
-      { email: "bod.director@mytel.com.mm", perms: ["EXEC", "BOD"], date: "15/08/2026" },
-      { email: "tni.technical@gmail.com", perms: ["DEPT", "WO", "PLAN"], date: "15/08/2026" },
-      { email: "tni.operations@mytel.com.mm", perms: ["EXEC", "DEPT", "WO", "PLAN"], date: "15/08/2026" },
-      { email: "team1.dawei@mytel.com.mm", perms: ["DEPT", "WO", "PLAN"], date: "15/08/2026" },
-      { email: "team2.myeik@mytel.com.mm", perms: ["DEPT", "WO", "PLAN"], date: "15/08/2026" },
-      { email: "team3.bokpyin@mytel.com.mm", perms: ["DEPT", "WO", "PLAN"], date: "15/08/2026" },
-      { email: "team4.kawthoung@mytel.com.mm", perms: ["DEPT", "WO", "PLAN"], date: "15/08/2026" }
+      { email: "admin@tni.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "03/10/2026" },
+      { email: "coadmin@tni.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "03/10/2026" },
+      { email: "bod.director@mytel.com.mm", perms: ["EXEC", "BOD", "PLAN", "NOTE", "STAFF_GUIDE"], date: "03/10/2026" },
+      { email: "tni.technical@gmail.com", perms: ["DEPT", "WO", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE"], date: "03/10/2026" },
+      { email: "tni.operations@mytel.com.mm", perms: ["EXEC", "DEPT", "WO", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE"], date: "03/10/2026" },
+      { email: "team1.dawei@mytel.com.mm", perms: ["WO", "NOTE", "STAFF_GUIDE", "SYS_GUIDE"], date: "03/10/2026" },
+      { email: "team2.myeik@mytel.com.mm", perms: ["WO", "NOTE", "STAFF_GUIDE", "SYS_GUIDE"], date: "03/10/2026" },
+      { email: "team3.bokpyin@mytel.com.mm", perms: ["WO", "NOTE", "STAFF_GUIDE", "SYS_GUIDE"], date: "03/10/2026" },
+      { email: "team4.kawthoung@mytel.com.mm", perms: ["WO", "NOTE", "STAFF_GUIDE", "SYS_GUIDE"], date: "03/10/2026" },
+      { email: "field.engineer@tni.com.mm", perms: ["WO", "NOTE", "STAFF_GUIDE", "SYS_GUIDE"], date: "03/10/2026" }
     ];
 
     function getStoredGmailAccounts() {
@@ -4868,24 +4922,56 @@ Team04>> 2Box</td>
     }
 
     function renderPermBadges(perms) {
-      if (!perms || !perms.length) return '<span style="color:var(--rose);">❌ No Access</span>';
-      if (perms.length >= 6 || (perms.includes("EXEC") && perms.includes("DEPT") && perms.includes("WO") && perms.includes("BOD") && perms.includes("PLAN") && perms.includes("AUTH"))) {
-        return '<span class="team-tag tag-t2" style="font-weight:800; font-size:0.8rem;">🌟 Full Access (Tất Cả Các Thẻ)</span>';
+      if (!perms || !perms.length) return '<span style="color:var(--rose); font-size:0.75rem;">❌ No Access</span>';
+      
+      const all10 = ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"];
+      const isFull = perms.length >= 10 || (all10.every(p => perms.includes(p)));
+      if (isFull) {
+        return '<span class="team-tag tag-t2" style="font-weight:800; font-size:0.78rem; cursor:pointer;" title="Toàn quyền tất cả 10 Thẻ">🌟 Full Access (Tất Cả 10 Thẻ)</span>';
       }
 
       const map = {
-        'EXEC': { label: '📊 Exec Summary', cls: 'tag-t4' },
-        'DEPT': { label: '🏢 Dept Assign', cls: 'tag-t3' },
-        'WO':   { label: '📋 WO Detail', cls: 'tag-t1' },
-        'BOD':  { label: '👑 BOD Assign', cls: 'tag-t1' },
-        'PLAN': { label: '📅 Plan Week', cls: 'tag-t3' },
-        'AUTH': { label: '🔒 Access Control', cls: 'tag-t2' }
+        'EXEC':        { label: '📊 Exec Summary', cls: 'tag-t4', panel: 'exec-summary-panel' },
+        'DEPT':        { label: '🏢 Dept Assign',  cls: 'tag-t3', panel: 'dept-assign-panel' },
+        'WO':          { label: '📋 WO Detail',    cls: 'tag-t1', panel: 'wo-detail-panel' },
+        'BOD':         { label: '👑 BOD Assign',   cls: 'tag-t1', panel: 'bod-assign-panel' },
+        'PLAN':        { label: '📅 Plan Week',    cls: 'tag-t3', panel: 'plan-week-panel' },
+        'NOTE':        { label: '📝 Note Đầu Việc', cls: 'tag-t2', panel: 'task-notes-panel' },
+        'STAFF_GUIDE': { label: '📖 Guide For Staff', cls: 'tag-t4', panel: 'guide-for-staff-panel' },
+        'SYS_GUIDE':   { label: '📚 System Guide', cls: 'tag-t3', panel: 'system-guide-panel' },
+        'AUTH':        { label: '🔒 Access Control', cls: 'tag-t2', panel: 'access-control-panel' },
+        'SECRETARY':   { label: '🤖 Secretary',    cls: 'tag-t1', panel: 'secretary-panel' }
       };
 
       return perms.map(p => {
-        const item = map[p] || { label: p, cls: 'tag-t1' };
-        return `<span class="team-tag ${item.cls}" style="margin:2px 3px; font-size:0.75rem; display:inline-block;">${item.label}</span>`;
+        const item = map[p] || { label: p, cls: 'tag-t1', panel: 'exec-summary-panel' };
+        return `<span class="team-tag ${item.cls}" style="margin:2px 3px; font-size:0.73rem; display:inline-block; cursor:pointer;" onclick="jumpToAllowedTab('${item.panel}')" title="Click để chuyển tới thẻ ${item.label}">${item.label}</span>`;
       }).join(' ');
+    }
+
+    function jumpToAllowedTab(panelId) {
+      const btn = document.querySelector(`button[onclick*="${panelId}"]`);
+      if (typeof showTab === 'function') {
+        showTab(panelId, btn || document.body);
+      }
+    }
+
+    function copyPersonalizedLink(email) {
+      const baseUrl = window.location.origin + window.location.pathname;
+      const staffUrl = baseUrl + '?email=' + encodeURIComponent(email);
+      navigator.clipboard.writeText(staffUrl).then(function() {
+        if (typeof al === 'function') {
+          al(`Đã sao chép link cá nhân hóa cho ${email}! Gửi link này cho nhân viên, hệ thống sẽ tự động khóa đúng các thẻ được phép đọc.`, 'ok');
+        } else {
+          alert(`✅ Đã sao chép link cá nhân hóa cho ${email} vào Clipboard!
+
+Link: ${staffUrl}
+
+Gửi link này cho nhân viên qua Telegram/Zalo, khi họ bấm vào hệ thống sẽ tự động khóa đúng các thẻ được phép đọc.`);
+        }
+      }).catch(function() {
+        prompt('Sao chép link cá nhân hóa cho nhân viên dưới đây:', staffUrl);
+      });
     }
 
     function renderGmailList() {
@@ -4894,25 +4980,29 @@ Team04>> 2Box</td>
       const accounts = getStoredGmailAccounts();
       tbody.innerHTML = '';
 
-      let cFull = 0, cBod = 0, cDept = 0, cExec = 0;
+      let cFull = 0, cBod = 0, cDept = 0, cStaff = 0, cExec = 0;
 
       accounts.forEach((acc, idx) => {
         const perms = Array.isArray(acc.perms) ? acc.perms : (acc.role ? [acc.role] : []);
-        if (perms.includes("AUTH") || perms.length >= 4) cFull++;
+        if (perms.includes("AUTH") || perms.length >= 8) cFull++;
         if (perms.includes("BOD")) cBod++;
         if (perms.includes("DEPT") || perms.includes("WO")) cDept++;
+        if (perms.includes("STAFF_GUIDE") || perms.includes("NOTE")) cStaff++;
         if (perms.includes("EXEC")) cExec++;
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${idx + 1}</td>
-          <td style="text-align:left !important;"><strong style="color:var(--cyan); font-size:0.92rem;">${acc.email}</strong></td>
+          <td style="text-align:left !important;">
+            <strong style="color:var(--cyan); font-size:0.92rem;">${acc.email}</strong>
+          </td>
           <td style="text-align:left !important;">${renderPermBadges(perms)}</td>
           <td><span class="status-pill-check sp-verified">✓ Active Authorized</span></td>
-          <td style="font-size:0.8rem; color:var(--text-sub);">${acc.date || '15/08/2026'}</td>
+          <td style="font-size:0.8rem; color:var(--text-sub);">${acc.date || '03/10/2026'}</td>
           <td style="white-space:nowrap;">
-            <button class="filter-btn" style="color:var(--cyan); padding:0.25rem 0.6rem; font-size:0.75rem; cursor:pointer; margin-right:4px;" onclick="editGmailIndex(${idx})"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
-            <button class="filter-btn" style="color:var(--rose); padding:0.25rem 0.6rem; font-size:0.75rem; cursor:pointer;" onclick="removeGmailIndex(${idx})"><i class="fa-solid fa-trash"></i> Remove</button>
+            <button class="filter-btn" style="color:#10b981; padding:0.25rem 0.55rem; font-size:0.75rem; cursor:pointer; margin-right:4px;" onclick="copyPersonalizedLink('${acc.email}')" title="Sao chép link cá nhân hóa cho Gmail này"><i class="fa-solid fa-link"></i> Link</button>
+            <button class="filter-btn" style="color:var(--cyan); padding:0.25rem 0.55rem; font-size:0.75rem; cursor:pointer; margin-right:4px;" onclick="editGmailIndex(${idx})"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+            <button class="filter-btn" style="color:var(--rose); padding:0.25rem 0.55rem; font-size:0.75rem; cursor:pointer;" onclick="removeGmailIndex(${idx})"><i class="fa-solid fa-trash"></i> Del</button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -4921,48 +5011,44 @@ Team04>> 2Box</td>
       if (document.getElementById('count-full-access')) document.getElementById('count-full-access').textContent = `${cFull} Account${cFull !== 1 ? 's' : ''}`;
       if (document.getElementById('count-bod-access')) document.getElementById('count-bod-access').textContent = `${cBod} Account${cBod !== 1 ? 's' : ''}`;
       if (document.getElementById('count-dept-access')) document.getElementById('count-dept-access').textContent = `${cDept} Account${cDept !== 1 ? 's' : ''}`;
+      if (document.getElementById('count-staff-access')) document.getElementById('count-staff-access').textContent = `${cStaff} Account${cStaff !== 1 ? 's' : ''}`;
       if (document.getElementById('count-exec-access')) document.getElementById('count-exec-access').textContent = `${cExec} Account${cExec !== 1 ? 's' : ''}`;
     }
 
     function applyPermissionPreset(preset) {
-      const cbExec = document.getElementById('perm_exec');
-      const cbDept = document.getElementById('perm_dept');
-      const cbWo   = document.getElementById('perm_wo');
-      const cbBod  = document.getElementById('perm_bod');
-      const cbPlan = document.getElementById('perm_plan');
-      const cbAuth = document.getElementById('perm_auth');
-
+      const permIds = ['exec', 'dept', 'wo', 'bod', 'plan', 'note', 'staff_guide', 'sys_guide', 'auth', 'secretary'];
+      
       // Reset all first
-      cbExec.checked = false;
-      cbDept.checked = false;
-      cbWo.checked   = false;
-      cbBod.checked  = false;
-      if (cbPlan) cbPlan.checked = false;
-      cbAuth.checked = false;
+      permIds.forEach(p => {
+        const cb = document.getElementById('perm_' + p);
+        if (cb) cb.checked = false;
+      });
 
-      if (preset === 'FULL') {
-        cbExec.checked = true;
-        cbDept.checked = true;
-        cbWo.checked   = true;
-        cbBod.checked  = true;
-        if (cbPlan) cbPlan.checked = true;
-        cbAuth.checked = true;
-      } else if (preset === 'BOD') {
-        cbExec.checked = true;
-        cbBod.checked  = true;
-      } else if (preset === 'DEPT') {
-        cbExec.checked = true;
-        cbDept.checked = true;
-        cbWo.checked   = true;
-        if (cbPlan) cbPlan.checked = true;
-      } else if (preset === 'ENGINEER') {
-        cbDept.checked = true;
-        cbWo.checked   = true;
-      } else if (preset === 'EXEC') {
-        cbExec.checked = true;
+      function setChecked(list) {
+        list.forEach(p => {
+          const cb = document.getElementById('perm_' + p);
+          if (cb) cb.checked = true;
+        });
       }
 
-      const allCheckedNow = cbExec.checked && cbDept.checked && cbWo.checked && cbBod.checked && cbAuth.checked;
+      if (preset === 'FULL') {
+        setChecked(permIds);
+      } else if (preset === 'BOD') {
+        setChecked(['exec', 'bod', 'plan', 'note', 'staff_guide']);
+      } else if (preset === 'DEPT') {
+        setChecked(['dept', 'wo', 'plan', 'note', 'staff_guide', 'sys_guide']);
+      } else if (preset === 'STAFF') {
+        setChecked(['staff_guide', 'note', 'wo', 'sys_guide']);
+      } else if (preset === 'EXEC') {
+        setChecked(['exec']);
+      } else if (preset === 'GUIDE_ONLY') {
+        setChecked(['staff_guide', 'sys_guide']);
+      }
+
+      const allCheckedNow = permIds.every(p => {
+        const cb = document.getElementById('perm_' + p);
+        return cb ? cb.checked : true;
+      });
       const btnText = document.getElementById('selectAllBtnText');
       if (btnText) btnText.textContent = allCheckedNow ? "Bỏ Chọn Tất Cả" : "Chọn Tất Cả";
     }
@@ -4974,6 +5060,28 @@ Team04>> 2Box</td>
       checkboxes.forEach(cb => cb.checked = allChecked);
       const btnText = document.getElementById('selectAllBtnText');
       if (btnText) btnText.textContent = allChecked ? "Bỏ Chọn Tất Cả" : "Chọn Tất Cả";
+    }
+
+    function editGmailIndex(index) {
+      const accounts = getStoredGmailAccounts();
+      if (index < 0 || index >= accounts.length) return;
+      const acc = accounts[index];
+      const perms = Array.isArray(acc.perms) ? acc.perms : [];
+
+      // Pre-fill email
+      const emailInput = document.getElementById('newGmailInput');
+      if (emailInput) emailInput.value = acc.email;
+
+      // Set checkboxes to current permissions
+      const allPerms = ['exec', 'dept', 'wo', 'bod', 'plan', 'note', 'staff_guide', 'sys_guide', 'auth', 'secretary'];
+      allPerms.forEach(p => {
+        const cb = document.getElementById('perm_' + p);
+        if (cb) cb.checked = perms.includes(p.toUpperCase());
+      });
+
+      // Open modal
+      const modal = document.getElementById('gmailModal');
+      if (modal) modal.classList.add('active');
     }
 
     function copyGroupEmails(group) {
@@ -4989,6 +5097,8 @@ Team04>> 2Box</td>
         } else if (group === 'BOD' && perms.includes('BOD')) {
           matchedEmails.push(acc.email);
         } else if (group === 'DEPT' && (perms.includes('DEPT') || perms.includes('WO'))) {
+          matchedEmails.push(acc.email);
+        } else if (group === 'STAFF' && (perms.includes('STAFF_GUIDE') || perms.includes('NOTE'))) {
           matchedEmails.push(acc.email);
         } else if (group === 'EXEC' && perms.includes('EXEC')) {
           matchedEmails.push(acc.email);
@@ -5112,7 +5222,111 @@ Team04>> 2Box</td>
       });
     }
 
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       🔒 TAB PERMISSION ENFORCEMENT & IDENTITY MANAGEMENT
+       ══════════════════════════════════════════════════════════════ */
+    function getCurrentUserEmail() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const emailParam = urlParams.get('email') || urlParams.get('staff');
+      if (emailParam) {
+        localStorage.setItem('tni_current_user_email', emailParam.trim().toLowerCase());
+        return emailParam.trim().toLowerCase();
+      }
+      return (localStorage.getItem('tni_current_user_email') || 'admin@tni.com').trim().toLowerCase();
+    }
+
+    function setCurrentUserEmail(email) {
+      if (email) localStorage.setItem('tni_current_user_email', email.trim().toLowerCase());
+      renderUserIdentityBadge();
+    }
+
+    function isTabAllowedForUser(panelId) {
+      const email = getCurrentUserEmail();
+      const accounts = getStoredGmailAccounts();
+      const acc = accounts.find(a => a.email.toLowerCase() === email);
+
+      // Admin bypass
+      if (email === 'admin@tni.com' || email === 'coadmin@tni.com') return true;
+      if (acc && (acc.perms.includes('AUTH') || acc.perms.includes('FULL') || acc.perms.length >= 10)) return true;
+
+      const panelMap = {
+        'exec-summary-panel':   'EXEC',
+        'dept-assign-panel':    'DEPT',
+        'wo-detail-panel':      'WO',
+        'bod-assign-panel':     'BOD',
+        'plan-week-panel':      'PLAN',
+        'task-notes-panel':     'NOTE',
+        'guide-for-staff-panel':'STAFF_GUIDE',
+        'system-guide-panel':   'SYS_GUIDE',
+        'access-control-panel': 'AUTH',
+        'secretary-panel':      'SECRETARY'
+      };
+
+      const requiredPerm = panelMap[panelId];
+      if (!requiredPerm) return true;
+
+      if (!acc) return false;
+      const perms = Array.isArray(acc.perms) ? acc.perms : [];
+      return perms.includes(requiredPerm);
+    }
+
+    function renderUserIdentityBadge() {
+      const email = getCurrentUserEmail();
+      const accounts = getStoredGmailAccounts();
+      const acc = accounts.find(a => a.email.toLowerCase() === email);
+      const badgeContainer = document.getElementById('user-identity-badge');
+      if (!badgeContainer) return;
+
+      const perms = acc ? (Array.isArray(acc.perms) ? acc.perms : []) : [];
+      const isAdmin = email === 'admin@tni.com' || perms.includes('AUTH') || perms.length >= 10;
+
+      badgeContainer.innerHTML = `
+        <div style="display:flex; align-items:center; gap:0.5rem; background:rgba(30,41,59,0.7); border:1px solid rgba(56,189,248,0.3); border-radius:10px; padding:0.35rem 0.75rem; font-size:0.75rem;">
+          <i class="fa-solid fa-user-check" style="color:${isAdmin ? '#10B981' : '#F59E0B'};"></i>
+          <span><b>${email}</b> <span style="color:#94a3b8;">(${isAdmin ? 'Full Access' : perms.length + ' Thẻ'})</span></span>
+          <button onclick="promptSwitchUserEmail()" style="background:rgba(255,255,255,0.1); border:none; color:#38bdf8; font-size:0.72rem; padding:0.2rem 0.45rem; border-radius:4px; cursor:pointer;" title="Đổi tài khoản Gmail">Đổi</button>
+        </div>
+      `;
+    }
+
+    function promptSwitchUserEmail() {
+      const current = getCurrentUserEmail();
+      const newEmail = prompt('Nhập địa chỉ Gmail để kiểm tra quyền truy cập (hoặc nhập "admin" / PIN "7979"):', current);
+      if (newEmail !== null) {
+        if (newEmail.trim() === '7979' || newEmail.trim().toLowerCase() === 'admin') {
+          setCurrentUserEmail('admin@tni.com');
+          alert('✅ Đã kích hoạt quyền Ban Giám Đốc (Admin Full Access)!');
+        } else if (newEmail.trim()) {
+          setCurrentUserEmail(newEmail.trim());
+          alert(`✅ Đang xem dưới quyền: ${newEmail.trim()}`);
+        }
+        location.reload();
+      }
+    }
+
+    // Intercept showTab to guard unauthorized access
+    const nativeShowTab = window.showTab;
+    window.showTab = function(panelId, tabBtn) {
+      if (!isTabAllowedForUser(panelId)) {
+        const email = getCurrentUserEmail();
+        alert(`🔒 TRUY CẬP BỊ KHÓA:\nTài khoản "${email}" chưa được cấp quyền xem thẻ này.\n\nVui lòng liên hệ Admin (@admin@tni.com) hoặc vào thẻ Gmail Access List để được tích chọn quyền!`);
+        return;
+      }
+      if (typeof nativeShowTab === 'function') {
+        nativeShowTab(panelId, tabBtn);
+      } else {
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+        const target = document.getElementById(panelId);
+        if (target) target.classList.add('active');
+        if (tabBtn && tabBtn.classList) tabBtn.classList.add('active');
+      }
+    };
+
+
     document.addEventListener('DOMContentLoaded', () => {
+      renderUserIdentityBadge();
       renderGmailList();
     });
 
