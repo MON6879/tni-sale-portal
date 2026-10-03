@@ -2237,6 +2237,7 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
       <div class="ph" style="display:flex;justify-content:space-between;align-items:center">
         <h3 id="rbac-staff-h3" style="margin:0;font-size:14px">👥 Danh Sách Nhân Sự &amp; Vai Trò Đã Gán</h3>
         <div style="display:flex;gap:5px;flex-wrap:wrap">
+          <button id="rbac-btn-sync-staff" class="btn b-bl b-xs" onclick="syncStaffWithGoogleSheet(true)" title="Đồng bộ 2 chiều tức thì với Google Sheet tab 'staff'">☁️ <span id="rbac-sync-lbl">Đồng Bộ Sheet</span></button>
           <button id="rbac-btn-clean-staff" class="btn b-out b-xs" onclick="resetStaffDirectoryToClean()" title="Khôi phục danh sách nhân sự mẫu chuẩn">🔄 <span id="rbac-clean-lbl">Làm Sạch Mẫu</span></button>
           <button id="rbac-btn-tpl-staff" class="btn b-xs" onclick="downloadStaffTemplate()" title="Tải file Excel mẫu để điền nhân sự" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-weight:700">📋 <span id="rbac-tpl-lbl">Template</span></button>
           <button id="rbac-btn-export-staff" class="btn b-xs" onclick="exportStaffToExcel()" title="Xuất danh sách nhân sự hiện tại ra Excel" style="background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;font-weight:700">⬇ <span id="rbac-export-lbl">Export</span></button>
@@ -5185,6 +5186,746 @@ function confirmKGBulkImport() {
   rKG();
   renderTK();
   rDash();
+}
+
+// ═══════════════════════════════════════════════════
+// BÁN HÀNG & XUẤT KHO HÀNG LOẠT (BULK SALES IMPORT)
+// ═══════════════════════════════════════════════════
+let parsedBanBulkItems = [];
+
+function switchBanMode(mode) {
+  const singleC = document.getElementById('ban-single-container');
+  const bulkC = document.getElementById('ban-bulk-container');
+  const btnSingle = document.getElementById('btn-ban-mode-single');
+  const btnBulk = document.getElementById('btn-ban-mode-bulk');
+
+  if (mode === 'bulk') {
+    if (singleC) singleC.style.display = 'none';
+    if (bulkC) bulkC.style.display = 'block';
+    if (btnSingle) btnSingle.className = 'btn b-out';
+    if (btnBulk) btnBulk.className = 'btn b-or';
+  } else {
+    if (singleC) singleC.style.display = 'block';
+    if (bulkC) bulkC.style.display = 'none';
+    if (btnSingle) btnSingle.className = 'btn b-or';
+    if (btnBulk) btnBulk.className = 'btn b-out';
+  }
+}
+
+function downloadBanTemplate() {
+  const isVi = currentLang === 'vi';
+  // Chuẩn Song Ngữ: KHÔNG CÓ GIÁ GỐC, CHỈ CÓ ĐƠN GIÁ BÁN ÁP DỤNG
+  const headers = [
+    "Đối Tượng / Target (retail/dealer/pos/staff)",
+    "Tên Khách Hàng hoặc Đại Lý / Customer or Dealer Name (Bắt buộc)",
+    "Số Điện Thoại / Phone",
+    "Tên Sản Phẩm / Product Name (Bắt buộc)",
+    "Model / Item Code",
+    "Số Lượng / Quantity (Bắt buộc)",
+    "Đơn Giá Bán / Selling Price (₫) (Bắt buộc)",
+    "Hình Thức TT / Payment (cash/credit/consignment)",
+    "Tiền Đã Trả Trước / Deposit (₫)",
+    "Serial Number / Mã SP",
+    "Ghi Chú / Notes"
+  ];
+  const sampleRows = [
+    ["retail", "Anh Tuấn Q.1", "0988111222", "Bộ Lưu Điện UPS Santak 1200VA", "TG-1200", "2", "2450000", "cash", "2450000", "SN-TG1200-01", "Giao hàng lắp đặt tận nơi"],
+    ["dealer", "Cửa Hàng Hòa Phát", "0977333444", "Tấm Pin Năng Lượng Mặt Trời Jinko 400W", "JK-400M", "10", "2350000", "credit", "10000000", "SN-JK400-01...10", "Đại lý cấp 1 thanh toán 50% gối đầu"],
+    ["pos", "Shop Năng Lượng Xanh", "0912345678", "Biến Tần Inverter Growatt 5kW", "SPF-5000", "1", "16500000", "consignment", "0", "SN-GW5K-01", "Ký gởi showroom trưng bày"],
+    ["staff", "Nguyễn Văn Hùng (Kỹ thuật)", "0909000111", "Ắc Quy GEL Chuyên Dụng 12V 100Ah", "GEL-100", "4", "3950000", "cash", "3950000", "SN-GEL100-01", "Xuất đi lắp công trình trạm BTS"]
+  ];
+
+  let csvContent = "\uFEFF" + headers.join(",") + "\n" + sampleRows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Mau_Ban_Hang_Xuat_Kho_TNI_${td()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  al(isVi ? '📥 Đã tải file mẫu Bán Hàng & Xuất Kho!' : '📥 Sales dispatch template downloaded!');
+}
+
+function handleBanBulkFile(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    document.getElementById('ban-bulk-paste-area').value = text;
+    switchBanMode('bulk');
+    parseBanBulkInput();
+    al(`📁 Đã đọc file "${file.name}"!`);
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+function parseBanBulkInput() {
+  const raw = (document.getElementById('ban-bulk-paste-area')?.value || '').trim();
+  const cards = document.getElementById('ban-bulk-stats-cards');
+  const wrap = document.getElementById('ban-bulk-preview-wrap');
+  const btn = document.getElementById('btn-ban-confirm-bulk');
+
+  if (!raw) {
+    parsedBanBulkItems = [];
+    if (cards) cards.style.display = 'none';
+    if (wrap) wrap.style.display = 'none';
+    if (btn) { btn.disabled = true; btn.textContent = '🚀 Xác Nhận Import Bán Hàng Hàng Loạt (0 Đơn)'; }
+    return;
+  }
+
+  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+  if (lines.length === 0) return;
+
+  // Kiểm tra header dòng 1
+  let startIndex = 0;
+  const firstLine = lines[0].toLowerCase();
+  if (firstLine.includes('đối tượng') || firstLine.includes('target') || firstLine.includes('khách hàng') || firstLine.includes('customer') || firstLine.includes('sản phẩm') || firstLine.includes('product') || firstLine.includes('đơn giá') || firstLine.includes('price')) {
+    startIndex = 1;
+  }
+
+  const nhapList = DB.g('nhap') || [];
+  parsedBanBulkItems = [];
+
+  for (let i = startIndex; i < lines.length; i++) {
+    const line = lines[i];
+    let parts = [];
+    if (line.includes('\t')) {
+      parts = line.split('\t').map(p => p.trim());
+    } else if (line.includes('|')) {
+      parts = line.split('|').map(p => p.trim());
+    } else {
+      parts = parseCSVLine(line);
+    }
+
+    if (!parts || parts.length === 0 || (!parts[1] && !parts[3])) continue;
+
+    // Cột: Đối Tượng | Tên Khách/Đại Lý | SĐT | Tên SP | Model | Số Lượng | Đơn Giá Bán | Thanh Toán | Trả Trước | Serial | Ghi Chú
+    let rawTarget = (parts[0] || '').toLowerCase().trim();
+    let target = 'retail';
+    if (rawTarget.includes('đại lý') || rawTarget.includes('dealer') || rawTarget.includes('sỉ') || rawTarget.includes('wholesale')) target = 'dealer';
+    else if (rawTarget.includes('ký gởi') || rawTarget.includes('ky goi') || rawTarget.includes('pos') || rawTarget.includes('điểm bán')) target = 'pos';
+    else if (rawTarget.includes('nhân viên') || rawTarget.includes('staff') || rawTarget.includes('công trình') || rawTarget.includes('tạm ứng')) target = 'staff';
+    else target = 'retail';
+
+    const kh = parts[1] || '';
+    const dt = parts[2] || '-';
+    const ten = parts[3] || '';
+    const model = parts[4] || '-';
+    const sl = parseInt((parts[5] || '1').replace(/\D/g, ''), 10) || 1;
+    const gia = parseFloat((parts[6] || '0').replace(/[^0-9.]/g, '')) || 0;
+
+    let rawTT = (parts[7] || '').toLowerCase().trim();
+    let tt = 'cash';
+    if (rawTT.includes('nợ') || rawTT.includes('gối đầu') || rawTT.includes('credit') || rawTT.includes('chưa đủ')) tt = 'credit';
+    else if (rawTT.includes('ký gởi') || rawTT.includes('consignment') || rawTT.includes('tạm ứng')) tt = 'consignment';
+    else tt = 'cash';
+
+    const totalAmount = gia * sl;
+    let depositVal = parseFloat((parts[8] || '').replace(/[^0-9.]/g, ''));
+    let deposit = isNaN(depositVal) ? (tt === 'credit' ? 0 : (tt === 'consignment' ? 0 : totalAmount)) : depositVal;
+    if (tt === 'cash' && isNaN(depositVal)) deposit = totalAmount;
+    const debt = Math.max(0, totalAmount - deposit);
+
+    const serial = parts[9] || '-';
+    const gc = parts.slice(10).join(' | ') || 'Import bán hàng';
+
+    // Đối chiếu sản phẩm trong kho (DB.g('nhap'))
+    let matchedSp = null;
+    if (model && model !== '-') {
+      matchedSp = nhapList.find(n => (n.model || '').toLowerCase().trim() === model.toLowerCase().trim());
+    }
+    if (!matchedSp && ten) {
+      matchedSp = nhapList.find(n => (n.ten || '').toLowerCase().trim() === ten.toLowerCase().trim());
+    }
+    if (!matchedSp && ten) {
+      matchedSp = nhapList.find(n => (n.ten || '').toLowerCase().includes(ten.toLowerCase().trim()) || ten.toLowerCase().includes((n.ten || '').toLowerCase().trim()));
+    }
+
+    let spId, spN, finalModel, cost;
+    let hasStockMatch = false;
+
+    if (matchedSp) {
+      spId = matchedSp.id;
+      spN = matchedSp.ten;
+      finalModel = matchedSp.model || model;
+      cost = Number(matchedSp.gg || 0);
+      hasStockMatch = true;
+    } else {
+      spId = Date.now() + Math.random();
+      spN = ten;
+      finalModel = model;
+      cost = Math.round(gia * 0.70); // Tạm tính 70% giá bán nếu chưa có trong kho
+      hasStockMatch = false;
+    }
+
+    const rate = Number(v('cfg-cty-rate') || 17);
+    const lnCtyUnit = cost > 0 && rate < 100 ? Math.round(cost / (100 - rate) * rate) : 0;
+    const cost83 = cost * sl;
+    const lnCty = lnCtyUnit * sl;
+    const lnBranch = totalAmount - cost83 - lnCty;
+
+    const isValid = kh.length > 0 && spN.length > 0 && sl > 0 && gia > 0;
+
+    parsedBanBulkItems.push({
+      target, kh, dt,
+      spId, spN, model: finalModel,
+      sl, gia, totalAmount,
+      tt, deposit, debt,
+      serial, gc,
+      cost, cost83, lnCty, lnBranch,
+      hasStockMatch,
+      valid: isValid
+    });
+  }
+
+  renderBanBulkPreview(parsedBanBulkItems);
+}
+
+function renderBanBulkPreview(items) {
+  const cards = document.getElementById('ban-bulk-stats-cards');
+  const wrap = document.getElementById('ban-bulk-preview-wrap');
+  const btn = document.getElementById('btn-ban-confirm-bulk');
+  const tableDiv = document.getElementById('ban-bulk-preview-table');
+
+  if (!items || items.length === 0) {
+    if (cards) cards.style.display = 'none';
+    if (wrap) wrap.style.display = 'none';
+    if (btn) { btn.disabled = true; btn.textContent = '🚀 Xác Nhận Import Bán Hàng Hàng Loạt (0 Đơn)'; }
+    return;
+  }
+
+  const validItems = items.filter(it => it.valid);
+  const ordersCount = validItems.length;
+  const uniqueItemsCount = new Set(validItems.map(it => it.spN)).size;
+  const totQty = validItems.reduce((s, it) => s + it.sl, 0);
+  const totRevenue = validItems.reduce((s, it) => s + it.totalAmount, 0);
+  const totCty = validItems.reduce((s, it) => s + it.lnCty, 0);
+  const totBranch = validItems.reduce((s, it) => s + it.lnBranch, 0);
+
+  const isVi = currentLang === 'vi';
+
+  // Thống kê
+  const elOrders = document.getElementById('ban-bs-orders');
+  const elItems = document.getElementById('ban-bs-items');
+  const elQty = document.getElementById('ban-bs-qty');
+  const elRev = document.getElementById('ban-bs-rev');
+  const elCty = document.getElementById('ban-bs-cty');
+  const elBranch = document.getElementById('ban-bs-branch');
+
+  if (elOrders) elOrders.textContent = ordersCount;
+  if (elItems) elItems.textContent = `${uniqueItemsCount} (${validItems.length}/${items.length})`;
+  if (elQty) elQty.textContent = totQty;
+  if (elRev) elRev.textContent = fn(totRevenue) + ' ₫';
+  if (elCty) elCty.textContent = fn(totCty) + ' ₫';
+  if (elBranch) elBranch.textContent = fn(totBranch) + ' ₫';
+
+  if (cards) cards.style.display = 'grid';
+  if (wrap) wrap.style.display = 'block';
+  if (btn) {
+    btn.disabled = validItems.length === 0;
+    btn.textContent = isVi ? `🚀 Xác Nhận Import Bán Hàng (${validItems.length} Đơn)` : `🚀 Confirm Bulk Sales (${validItems.length} Orders)`;
+  }
+
+  // Bảng Preview
+  const headers = isVi ?
+    ['#', 'Trạng Thái', 'Đối Tượng & Tên Khách', 'SĐT', 'Sản Phẩm & Model', 'SL', 'Đơn Giá Bán', 'Tổng Tiền', 'Thanh Toán / Nợ', 'Phải Nộp Cty', 'LN Chi Nhánh', 'Ghi Chú'] :
+    ['#', 'Status', 'Target & Customer', 'Phone', 'Product & Model', 'Qty', 'Unit Price', 'Total Amount', 'Payment / Debt', 'HO Due', 'Branch Profit', 'Notes'];
+
+  const rows = items.map((it, idx) => {
+    let statusHtml = '';
+    if (!it.valid) {
+      statusHtml = `<span class="badge bk-rd">${isVi ? '❌ Thiếu TT' : '❌ Invalid'}</span>`;
+    } else if (it.hasStockMatch) {
+      statusHtml = `<span class="badge bk-gn">${isVi ? '✓ Khớp kho' : '✓ In Stock'}</span>`;
+    } else {
+      statusHtml = `<span class="badge bk-yw">${isVi ? '⚠️ SP Mới' : '⚠️ New Item'}</span>`;
+    }
+
+    const targetBadge = it.target === 'dealer' ? bk(isVi?'Đại Lý':'Dealer','bl') :
+                        it.target === 'pos' ? bk(isVi?'Điểm Ký Gởi':'POS','or') :
+                        it.target === 'staff' ? bk(isVi?'Nhân Viên':'Staff','pu') :
+                        bk(isVi?'Khách Lẻ':'Retail','gy');
+
+    const ttBadge = it.tt === 'credit' ? `<span style="color:#d97706;font-weight:600">⏳ Ghi nợ (Nợ: ${fn(it.debt)}₫)</span>` :
+                    it.tt === 'consignment' ? `<span style="color:#0284c7;font-weight:600">📋 Ký gởi</span>` :
+                    `<span style="color:#16a34a;font-weight:600">💵 Đã thu 100%</span>`;
+
+    return [
+      idx + 1,
+      statusHtml,
+      `${targetBadge} <b>${it.kh}</b>`,
+      it.dt || '-',
+      `<b>${it.spN}</b><br><small style="color:#0284c7">${it.model || '-'}</small>`,
+      `<b>${it.sl}</b>`,
+      `${fn(it.gia)} ₫`,
+      `<b style="color:#0284c7">${fn(it.totalAmount)} ₫</b>`,
+      ttBadge,
+      `<span style="color:#1e40af;font-weight:600">${fn(it.lnCty)} ₫</span>`,
+      `<b style="color:${it.lnBranch >= 0 ? 'var(--gn)' : 'var(--rd)'}">${fn(it.lnBranch)} ₫</b>`,
+      it.gc || '-'
+    ];
+  });
+
+  tableDiv.innerHTML = tbl(headers, rows);
+}
+
+function confirmBanBulkImport() {
+  const isVi = currentLang === 'vi';
+  const validItems = parsedBanBulkItems.filter(it => it.valid);
+  if (validItems.length === 0) {
+    al(isVi ? 'Không có đơn bán hàng hợp lệ để import!' : 'No valid sales orders to import!', 'er');
+    return;
+  }
+
+  const btn = document.getElementById('btn-ban-confirm-bulk');
+  if (btn) { btn.disabled = true; btn.textContent = isVi ? '⏳ Đang lưu vào hệ thống...' : '⏳ Saving...'; }
+
+  // Lưu từng đơn hàng vào DB
+  validItems.forEach(it => {
+    DB.add('ban', {
+      spId: +it.spId,
+      spN: it.spN,
+      sl: +it.sl,
+      serial: it.serial || '-',
+      gia: +it.gia,
+      totalAmount: it.totalAmount,
+      deposit: it.deposit,
+      debt: it.debt,
+      cost83: it.cost83,
+      lnCty: it.lnCty,
+      lnBranch: it.lnBranch,
+      target: it.target,
+      kh: it.kh,
+      dt: it.dt,
+      tt: it.tt,
+      hoPaid: false,
+      ngay: td(),
+      gc: it.gc || 'Import bán hàng hàng loạt',
+      source: 'web_bulk'
+    });
+  });
+
+  al(isVi ? `✅ Đã import thành công ${validItems.length} đơn xuất bán hàng!` : `✅ Successfully imported ${validItems.length} sales orders!`);
+
+  document.getElementById('ban-bulk-paste-area').value = '';
+  parsedBanBulkItems = [];
+  renderBanBulkPreview([]);
+  switchBanMode('single');
+  rBan();
+  renderTK();
+  rDash();
+  renderLN();
+  popSP(['b-sp','pp-sp','kg-sp','tu-sp']);
+}
+
+// ═══════════════════════════════════════════════════
+// PHÂN PHỐI ĐẠI LÝ HÀNG LOẠT (BULK DEALER DISTRIBUTION)
+// ═══════════════════════════════════════════════════
+let parsedPPBulkItems = [];
+
+function switchPPMode(mode) {
+  const singleC = document.getElementById('pp-single-container');
+  const bulkC = document.getElementById('pp-bulk-container');
+  const btnSingle = document.getElementById('btn-pp-mode-single');
+  const btnBulk = document.getElementById('btn-pp-mode-bulk');
+
+  if (mode === 'bulk') {
+    if (singleC) singleC.style.display = 'none';
+    if (bulkC) bulkC.style.display = 'block';
+    if (btnSingle) btnSingle.className = 'btn b-out';
+    if (btnBulk) btnBulk.className = 'btn b-or';
+  } else {
+    if (singleC) singleC.style.display = 'block';
+    if (bulkC) bulkC.style.display = 'none';
+    if (btnSingle) btnSingle.className = 'btn b-or';
+    if (btnBulk) btnBulk.className = 'btn b-out';
+  }
+}
+
+function downloadPPTemplate() {
+  const isVi = currentLang === 'vi';
+  // Chuẩn Song Ngữ: KHÔNG CÓ GIÁ GỐC, CHỈ CÓ GIÁ BỎ SỈ ĐẠI LÝ
+  const headers = [
+    "Tên Đại Lý / Dealer Name (Bắt buộc)",
+    "Người Liên Hệ & SĐT / Contact & Phone",
+    "Khu Vực / Region (TP.HCM/Hà Nội/Miền Nam/Miền Bắc/Miền Trung/Khác)",
+    "Tên Sản Phẩm / Product Name (Bắt buộc)",
+    "Model / Item Code",
+    "Số Lượng Phân Phối / Quantity (Bắt buộc)",
+    "Giá Bỏ Sỉ / Wholesale Price (₫) (Bắt buộc)",
+    "Ngày Giao / Dispatch Date (YYYY-MM-DD)",
+    "Ghi Chú Phân Phối / Notes"
+  ];
+  const sampleRows = [
+    ["Đại Lý Ánh Dương", "Anh Tuấn - 0988111222", "TP.HCM", "Bộ Lưu Điện UPS Santak 1200VA", "TG-1200", "5", "1850000", td(), "Phân phối đợt 1 showroom"],
+    ["Solar Miền Trung", "Chị Hằng - 0977333444", "Miền Trung", "Tấm Pin Năng Lượng Mặt Trời Jinko 400W", "JK-400M", "20", "2150000", td(), "Đại lý cấp 1 phân phối dự án"],
+    ["Điện Năng Lượng Xanh", "Anh Hải - 0912345678", "Hà Nội", "Biến Tần Inverter Growatt 5kW", "SPF-5000", "3", "14800000", td(), "Phân phối trọn gói"],
+    ["Cửa Hàng Điện Gia Dụng Minh Phát", "Bác Ba - 0909000111", "Miền Nam", "Ắc Quy GEL Chuyên Dụng 12V 100Ah", "GEL-100", "8", "3750000", td(), "Giao hàng tại kho"]
+  ];
+
+  let csvContent = "\uFEFF" + headers.join(",") + "\n" + sampleRows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Mau_Phan_Phoi_Dai_Ly_TNI_${td()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  al(isVi ? '📥 Đã tải file mẫu Phân Phối Đại Lý!' : '📥 Dealer distribution template downloaded!');
+}
+
+function handlePPBulkFile(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    document.getElementById('pp-bulk-paste-area').value = text;
+    switchPPMode('bulk');
+    parsePPBulkInput();
+    al(`📁 Đã đọc file "${file.name}"!`);
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+function parsePPBulkInput() {
+  const raw = (document.getElementById('pp-bulk-paste-area')?.value || '').trim();
+  const cards = document.getElementById('pp-bulk-stats-cards');
+  const wrap = document.getElementById('pp-bulk-preview-wrap');
+  const btn = document.getElementById('btn-pp-confirm-bulk');
+
+  if (!raw) {
+    parsedPPBulkItems = [];
+    if (cards) cards.style.display = 'none';
+    if (wrap) wrap.style.display = 'none';
+    if (btn) { btn.disabled = true; btn.textContent = '🚀 Xác Nhận Import Phân Phối (0 Lô)'; }
+    return;
+  }
+
+  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+  if (lines.length === 0) return;
+
+  // Kiểm tra header dòng 1
+  let startIndex = 0;
+  const firstLine = lines[0].toLowerCase();
+  if (firstLine.includes('đại lý') || firstLine.includes('dealer') || firstLine.includes('sản phẩm') || firstLine.includes('product') || firstLine.includes('giá') || firstLine.includes('price') || firstLine.includes('số lượng')) {
+    startIndex = 1;
+  }
+
+  const dailyList = DB.g('daily') || [];
+  const nhapList = DB.g('nhap') || [];
+  parsedPPBulkItems = [];
+
+  for (let i = startIndex; i < lines.length; i++) {
+    const line = lines[i];
+    let parts = [];
+    if (line.includes('\t')) {
+      parts = line.split('\t').map(p => p.trim());
+    } else if (line.includes('|')) {
+      parts = line.split('|').map(p => p.trim());
+    } else {
+      parts = parseCSVLine(line);
+    }
+
+    if (!parts || parts.length === 0 || (!parts[0] && !parts[3])) continue;
+
+    // Cột: Tên Đại Lý | Người Liên Hệ & SĐT | Khu Vực | Tên SP | Model | Số Lượng | Giá Bỏ Sỉ | Ngày Giao | Ghi Chú
+    const dlName = parts[0] || '';
+    const contactPhone = parts[1] || '';
+    const area = parts[2] || 'TP.HCM';
+    const ten = parts[3] || '';
+    const model = parts[4] || '-';
+    const sl = parseInt((parts[5] || '1').replace(/\D/g, ''), 10) || 1;
+    const gia = parseFloat((parts[6] || '0').replace(/[^0-9.]/g, '')) || 0;
+    const ngay = parts[7] || td();
+    const gc = parts.slice(8).join(' | ') || 'Import phân phối đại lý';
+
+    // 1. Đối chiếu đại lý trong DB.g('daily')
+    let matchedDL = null;
+    if (dlName) {
+      matchedDL = dailyList.find(d => (d.ten || '').toLowerCase().trim() === dlName.toLowerCase().trim());
+      if (!matchedDL) {
+        matchedDL = dailyList.find(d => (d.ten || '').toLowerCase().includes(dlName.toLowerCase().trim()) || dlName.toLowerCase().includes((d.ten || '').toLowerCase().trim()));
+      }
+    }
+
+    let dlId, dlN, isNewDealer = false;
+    if (matchedDL) {
+      dlId = matchedDL.id;
+      dlN = matchedDL.ten;
+    } else {
+      dlId = Date.now() + Math.random();
+      dlN = dlName;
+      isNewDealer = true;
+    }
+
+    // 2. Đối chiếu sản phẩm trong kho (DB.g('nhap'))
+    let matchedSp = null;
+    if (model && model !== '-') {
+      matchedSp = nhapList.find(n => (n.model || '').toLowerCase().trim() === model.toLowerCase().trim());
+    }
+    if (!matchedSp && ten) {
+      matchedSp = nhapList.find(n => (n.ten || '').toLowerCase().trim() === ten.toLowerCase().trim());
+    }
+    if (!matchedSp && ten) {
+      matchedSp = nhapList.find(n => (n.ten || '').toLowerCase().includes(ten.toLowerCase().trim()) || ten.toLowerCase().includes((n.ten || '').toLowerCase().trim()));
+    }
+
+    let spId, spN, finalModel, cost;
+    let hasStockMatch = false;
+
+    if (matchedSp) {
+      spId = matchedSp.id;
+      spN = matchedSp.ten;
+      finalModel = matchedSp.model || model;
+      cost = Number(matchedSp.gg || 0);
+      hasStockMatch = true;
+    } else {
+      spId = Date.now() + Math.random();
+      spN = ten;
+      finalModel = model;
+      cost = Math.round(gia * 0.70); // Tạm tính 70% giá sỉ nếu chưa có trong kho
+      hasStockMatch = false;
+    }
+
+    const rate = Number(v('cfg-cty-rate') || 17);
+    const lnCtyUnit = cost > 0 && rate < 100 ? Math.round(cost / (100 - rate) * rate) : 0;
+    const tongGiaTri = gia * sl;
+    const tongLNCty = lnCtyUnit * sl;
+
+    const isValid = dlN.length > 0 && spN.length > 0 && sl > 0 && gia > 0;
+
+    parsedPPBulkItems.push({
+      dlId, dlN, isNewDealer,
+      contactPhone, area,
+      spId, spN, model: finalModel,
+      sl, gia,
+      tongGiaTri, tongLNCty,
+      ngay, gc,
+      hasStockMatch,
+      valid: isValid
+    });
+  }
+
+  renderPPBulkPreview(parsedPPBulkItems);
+}
+
+function renderPPBulkPreview(items) {
+  const cards = document.getElementById('pp-bulk-stats-cards');
+  const wrap = document.getElementById('pp-bulk-preview-wrap');
+  const btn = document.getElementById('btn-pp-confirm-bulk');
+  const tableDiv = document.getElementById('pp-bulk-preview-table');
+
+  if (!items || items.length === 0) {
+    if (cards) cards.style.display = 'none';
+    if (wrap) wrap.style.display = 'none';
+    if (btn) { btn.disabled = true; btn.textContent = '🚀 Xác Nhận Import Phân Phối (0 Lô)'; }
+    return;
+  }
+
+  const validItems = items.filter(it => it.valid);
+  const dealersCount = new Set(validItems.map(it => it.dlN)).size;
+  const totQty = validItems.reduce((s, it) => s + it.sl, 0);
+  const totVal = validItems.reduce((s, it) => s + it.tongGiaTri, 0);
+  const totLNCty = validItems.reduce((s, it) => s + it.tongLNCty, 0);
+
+  const isVi = currentLang === 'vi';
+
+  // Thống kê
+  const elDealers = document.getElementById('pp-bs-dealers');
+  const elItems = document.getElementById('pp-bs-items');
+  const elQty = document.getElementById('pp-bs-qty');
+  const elVal = document.getElementById('pp-bs-val');
+  const elProf = document.getElementById('pp-bs-profit');
+
+  if (elDealers) elDealers.textContent = dealersCount;
+  if (elItems) elItems.textContent = `${validItems.length} / ${items.length}`;
+  if (elQty) elQty.textContent = totQty;
+  if (elVal) elVal.textContent = fn(totVal) + ' ₫';
+  if (elProf) elProf.textContent = fn(totLNCty) + ' ₫';
+
+  if (cards) cards.style.display = 'grid';
+  if (wrap) wrap.style.display = 'block';
+  if (btn) {
+    btn.disabled = validItems.length === 0;
+    btn.textContent = isVi ? `🚀 Xác Nhận Import Phân Phối (${validItems.length} Lô)` : `🚀 Confirm Bulk Distribution (${validItems.length} Lots)`;
+  }
+
+  // Bảng Preview
+  const headers = isVi ?
+    ['#', 'Trạng Thái', 'Đại Lý & SĐT', 'Khu Vực', 'Sản Phẩm & Model', 'SL', 'Giá Bỏ Sỉ', 'Thành Tiền', 'Ngày Giao', 'Ghi Chú'] :
+    ['#', 'Status', 'Dealer & Phone', 'Region', 'Product & Model', 'Qty', 'Wholesale Price', 'Total Value', 'Date', 'Notes'];
+
+  const rows = items.map((it, idx) => {
+    let statusHtml = '';
+    if (!it.valid) {
+      statusHtml = `<span class="badge bk-rd">${isVi ? '❌ Thiếu TT' : '❌ Invalid'}</span>`;
+    } else {
+      let tags = [];
+      if (it.hasStockMatch) tags.push(`<span class="badge bk-gn">${isVi ? '✓ Khớp kho' : '✓ Stock OK'}</span>`);
+      else tags.push(`<span class="badge bk-yw">${isVi ? '⚠️ SP Mới' : '⚠️ New Item'}</span>`);
+      if (it.isNewDealer) tags.push(`<span class="badge bk-or">${isVi ? '🏪 ĐL Mới' : '🏪 New DL'}</span>`);
+      statusHtml = tags.join(' ');
+    }
+
+    return [
+      idx + 1,
+      statusHtml,
+      `<b>${it.dlN}</b><br><small style="color:#64748b">${it.contactPhone || '-'}</small>`,
+      `<span class="badge bk-bl">${it.area || 'TP.HCM'}</span>`,
+      `<b>${it.spN}</b><br><small style="color:#0284c7">${it.model || '-'}</small>`,
+      `<b>${it.sl}</b>`,
+      `${fn(it.gia)} ₫`,
+      `<b style="color:#2563eb">${fn(it.tongGiaTri)} ₫</b>`,
+      fd(it.ngay),
+      it.gc || '-'
+    ];
+  });
+
+  tableDiv.innerHTML = tbl(headers, rows);
+}
+
+function confirmPPBulkImport() {
+  const isVi = currentLang === 'vi';
+  const validItems = parsedPPBulkItems.filter(it => it.valid);
+  if (validItems.length === 0) {
+    al(isVi ? 'Không có lô phân phối hợp lệ để import!' : 'No valid distribution lots to import!', 'er');
+    return;
+  }
+
+  const btn = document.getElementById('btn-pp-confirm-bulk');
+  if (btn) { btn.disabled = true; btn.textContent = isVi ? '⏳ Đang lưu vào hệ thống...' : '⏳ Saving...'; }
+
+  // 1. Tự động thêm đại lý mới vào danh mục nếu chưa có
+  validItems.forEach(it => {
+    if (it.isNewDealer) {
+      const dailyList = DB.g('daily') || [];
+      const already = dailyList.some(d => (d.ten || '').toLowerCase().trim() === it.dlN.toLowerCase().trim());
+      if (!already) {
+        DB.add('daily', {
+          id: +it.dlId,
+          ten: it.dlN,
+          chu: it.contactPhone || '',
+          dt: it.contactPhone || '',
+          dc: '',
+          kv: it.area || 'TP.HCM',
+          loai: 'Đại lý cấp 1',
+          ck: 0
+        });
+      }
+    }
+  });
+
+  // 2. Lưu từng phiếu phân phối vào DB
+  validItems.forEach(it => {
+    DB.add('pp', {
+      dlId: +it.dlId,
+      dlN: it.dlN,
+      spId: +it.spId,
+      spN: it.spN,
+      sl: +it.sl,
+      gia: +it.gia,
+      ngay: it.ngay || td(),
+      gc: it.gc || 'Import phân phối hàng loạt'
+    });
+  });
+
+  al(isVi ? `✅ Đã import thành công ${validItems.length} lô phân phối hàng cho đại lý!` : `✅ Successfully imported ${validItems.length} distribution lots!`);
+  document.getElementById('pp-bulk-paste-area').value = '';
+  parsedPPBulkItems = [];
+  renderPPBulkPreview([]);
+  switchPPMode('single');
+  renderPP();
+  rDL();
+  popDL();
+  renderTK();
+  rDash();
+  popSP(['b-sp','pp-sp','kg-sp','tu-sp']);
+}
+
+// ═══════════════════════════════════════════════════
+// DANH SÁCH ĐẠI LÝ IMPORT (BULK DEALER DIRECTORY IMPORT)
+// ═══════════════════════════════════════════════════
+function downloadDLTemplate() {
+  const isVi = currentLang === 'vi';
+  const headers = [
+    "Tên Đại Lý / Dealer Name (Bắt buộc)",
+    "Người Đại Diện / Contact Person",
+    "Số Điện Thoại / Phone",
+    "Địa Chỉ / Address",
+    "Khu Vực / Region (TP.HCM/Hà Nội/Miền Nam/Miền Bắc/Miền Trung/Khác)",
+    "Loại Đại Lý / Tier (Đại lý cấp 1/Đại lý cấp 2/Điểm bán lẻ)",
+    "Chiết Khấu % / Discount (%)"
+  ];
+  const sampleRows = [
+    ["Đại Lý Ánh Dương", "Anh Tuấn", "0988111222", "123 Lê Lợi, Q.1", "TP.HCM", "Đại lý cấp 1", "15"],
+    ["Solar Miền Trung", "Chị Hằng", "0977333444", "45 Nguyễn Tất Thành, Đà Nẵng", "Miền Trung", "Đại lý cấp 1", "12"],
+    ["Điện Năng Lượng Xanh", "Anh Hải", "0912345678", "78 Cầu Giấy, Hà Nội", "Hà Nội", "Đại lý cấp 2", "10"]
+  ];
+  let csvContent = "\uFEFF" + headers.join(",") + "\n" + sampleRows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Mau_Danh_Sach_Dai_Ly_TNI_${td()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  al(isVi ? '📥 Đã tải file mẫu Danh Sách Đại Lý!' : '📥 Dealer list template downloaded!');
+}
+
+function handleDLBulkFile(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+    if (lines.length <= 1) return;
+
+    let startIndex = 0;
+    const firstLine = lines[0].toLowerCase();
+    if (firstLine.includes('tên đại lý') || firstLine.includes('dealer') || firstLine.includes('người đại diện') || firstLine.includes('điện thoại')) {
+      startIndex = 1;
+    }
+
+    let addedCount = 0;
+    const dailyList = DB.g('daily') || [];
+
+    for (let i = startIndex; i < lines.length; i++) {
+      const line = lines[i];
+      let parts = line.includes('\t') ? line.split('\t').map(p => p.trim()) : (line.includes('|') ? line.split('|').map(p => p.trim()) : parseCSVLine(line));
+      if (!parts || parts.length === 0 || !parts[0]) continue;
+
+      const ten = parts[0];
+      const chu = parts[1] || '';
+      const dt = parts[2] || '';
+      const dc = parts[3] || '';
+      const kv = parts[4] || 'TP.HCM';
+      const loai = parts[5] || 'Đại lý cấp 1';
+      const ck = parseInt((parts[6] || '0').replace(/\D/g, ''), 10) || 0;
+
+      const exists = dailyList.some(d => (d.ten || '').toLowerCase().trim() === ten.toLowerCase().trim());
+      if (!exists) {
+        DB.add('daily', { ten, chu, dt, dc, kv, loai, ck });
+        addedCount++;
+      }
+    }
+
+    rDL();
+    popDL();
+    al(`✅ Đã import thành công ${addedCount} đại lý mới!`);
+  };
+  reader.readAsText(file, 'utf-8');
 }
 
 // ═══════════════════════════════════════════════════
@@ -8154,6 +8895,20 @@ const DICT = {
     btn_choose_kg_csv: '📁 Choose .CSV File',
     kg_bulk_h3: '📥 Bulk Consignment Import via .CSV File or Paste from Excel',
     kg_bulk_syntax: 'Standard syntax: Store POS | Contact | Phone | Product / Model | Qty | Wholesale/Consignment Price | Terms (days) | Notes',
+    btn_ban_mode_single: '➕ Single Sales Order',
+    btn_ban_mode_bulk: '📥 Bulk Sales Import (.CSV / Excel)',
+    btn_download_ban_tpl: '📥 Download Sales CSV Template',
+    btn_choose_ban_csv: '📁 Choose Sales .CSV File',
+    ban_bulk_h3: '📥 Bulk Sales & Dispatch Import via .CSV File or Paste from Excel',
+    ban_bulk_syntax: 'Standard syntax: Target | Customer/Dealer Name | Phone | Product | Model | Qty | Selling Price | Payment | Deposit | Serial | Notes',
+    btn_pp_mode_single: '➕ Single Distribution',
+    btn_pp_mode_bulk: '📥 Bulk Dealer Distribution (.CSV / Excel)',
+    btn_download_pp_tpl: '📥 Download Wholesale CSV Template',
+    btn_choose_pp_csv: '📁 Choose Dealer .CSV File',
+    pp_bulk_h3: '📥 Bulk Dealer Distribution Import via .CSV File or Paste from Excel',
+    pp_bulk_syntax: 'Standard syntax: Dealer Name | Phone/Contact | Region | Product | Model | Qty | Wholesale Price | Date | Notes',
+    btn_download_dl_tpl: '📥 Download Dealer Template (.CSV)',
+    btn_choose_dl_csv: '📁 Import Dealers (.CSV)',
     qu_title: '📄 Device Quotation',
     lbl_old_quote_select: '📋 Copy / Edit Previous Quote:',
     opt_old_quote_select: '-- Select previous quote to Copy / Edit --',
@@ -8246,6 +9001,20 @@ const DICT = {
     btn_choose_kg_csv: '📁 Chọn File .CSV',
     kg_bulk_h3: '📥 Import Phiếu Ký Gởi / Bỏ Sỉ Hàng Loạt (.CSV / Excel)',
     kg_bulk_syntax: 'Cú pháp chuẩn: Điểm Bán | Người Nhận | SĐT | Tên SP / Model | Số Lượng | Giá Bỏ Sỉ / Ký Gởi | Hạn (ngày) | Ghi Chú',
+    btn_ban_mode_single: '➕ Tạo Đơn Lẻ',
+    btn_ban_mode_bulk: '📥 Import Bán Hàng Hàng Loạt (.CSV / Excel)',
+    btn_download_ban_tpl: '📥 Tải File Mẫu Bán Hàng (.CSV)',
+    btn_choose_ban_csv: '📁 Chọn File Bán Hàng .CSV',
+    ban_bulk_h3: '📥 Import Đơn Bán Hàng & Xuất Kho Hàng Loạt (.CSV / Excel)',
+    ban_bulk_syntax: 'Cú pháp chuẩn: Đối Tượng | Tên Khách/Đại Lý | Số ĐT | Tên SP | Model | Số Lượng | Đơn Giá Bán | Thanh Toán | Trả Trước | Serial | Ghi Chú',
+    btn_pp_mode_single: '➕ Phân Phối Đơn Lẻ',
+    btn_pp_mode_bulk: '📥 Import Phân Phối Hàng Loạt (.CSV / Excel)',
+    btn_download_pp_tpl: '📥 Tải File Mẫu Phân Phối (.CSV)',
+    btn_choose_pp_csv: '📁 Chọn File Phân Phối .CSV',
+    pp_bulk_h3: '📥 Import Phân Phối Đại Lý Hàng Loạt (.CSV / Excel)',
+    pp_bulk_syntax: 'Cú pháp chuẩn: Tên Đại Lý | SĐT / Liên Hệ | Khu Vực | Tên SP | Model | Số Lượng | Giá Bỏ Sỉ (₫) | Ngày Giao | Ghi Chú',
+    btn_download_dl_tpl: '📥 Tải Mẫu DS Đại Lý (.CSV)',
+    btn_choose_dl_csv: '📁 Import DS Đại Lý (.CSV)',
     qu_title: '📄 Tạo Báo Giá Thiết Bị',
     lbl_old_quote_select: '📋 Copy / Sửa Báo Giá Cũ:',
     opt_old_quote_select: '-- Chọn báo giá cũ để Copy / Sửa --',
@@ -9572,7 +10341,46 @@ function renderRBACMatrix() {
   container.innerHTML = html;
 }
 
-const SALE_GAS_URL = 'https://script.google.com/macros/s/AKfycbylrXMEDKpBfvs9Wbr3kmoqrJ6UoWE1KaN-WC94mE2wm1V2MJUFu-zyYrzzm10Vo0Ue5Q/exec';
+const SALE_GAS_URL = GAS_SALE_URL;
+
+function syncStaffWithGoogleSheet(manualNotify) {
+  const isVi = currentLang === 'vi';
+  if (manualNotify) al(isVi ? '⏳ Đang đồng bộ với Google Sheet...' : '⏳ Syncing with Google Sheet...', 'in');
+
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 15000);
+
+  fetch(GAS_SALE_URL + '?action=staff_get', { method: 'GET', signal: ctrl.signal })
+    .then(r => r.json())
+    .then(res => {
+      clearTimeout(timer);
+      if (res.ok && Array.isArray(res.data) && res.data.length > 0) {
+        DB.s('staff_directory', res.data);
+        _renderStaffTable_(res.data, '☁️ Google Sheet');
+        populateStaffUserSelect();
+        if (manualNotify) al(isVi ? `✅ Đã đồng bộ thành công ${res.data.length} nhân sự từ Google Sheet!` : `✅ Synced ${res.data.length} staff from Google Sheet!`, 'ok');
+      } else {
+        // Nếu Sheet rỗng mà local có dữ liệu, tự động đẩy lên khởi tạo Sheet
+        const currentList = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
+        if (currentList && currentList.length > 0) {
+          fetch(GAS_SALE_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'staff_save', data: currentList })
+          }).then(r2 => r2.json()).then(res2 => {
+            if (res2.ok && manualNotify) {
+              al(isVi ? `☁️ Sheet chưa có dữ liệu — đã khởi tạo ${res2.saved} nhân sự lên Sheet!` : `☁️ Initialized ${res2.saved} staff to Google Sheet!`, 'ok');
+            }
+          }).catch(() => {});
+        }
+        if (manualNotify) al(isVi ? 'ℹ️ Google Sheet đã được kết nối và kiểm tra.' : 'ℹ️ Google Sheet connected and verified.', 'in');
+      }
+    })
+    .catch(err => {
+      clearTimeout(timer);
+      console.warn('[STAFF] Sync error:', err);
+      if (manualNotify) al(isVi ? '⚠️ Không thể kết nối Google Sheet, đang dùng dữ liệu lưu bộ nhớ.' : '⚠️ Cannot connect to Google Sheet, using local data.', 'er');
+    });
+}
 
 function renderStaffUsersTable(sourceOverride, _retry) {
   const container = document.getElementById('rbac-staff-table-container');
@@ -9588,18 +10396,8 @@ function renderStaffUsersTable(sourceOverride, _retry) {
   const users0 = (cached && cached.length > 0) ? cached : DEFAULT_STAFF_USERS;
   _renderStaffTable_(users0, (cached && cached.length > 0) ? '💾 Local' : '📋 Default');
 
-  // BƯỚC 2: Cập nhật từ Sheet trong nền
-  const ctrl = new AbortController();
-  setTimeout(() => ctrl.abort(), 12000);
-  fetch(SALE_GAS_URL + '?action=staff_get', { method: 'GET', signal: ctrl.signal })
-  .then(r => r.json())
-  .then(res => {
-    if (res.ok && res.data && res.data.length > 0) {
-      DB.s('staff_directory', res.data);
-      _renderStaffTable_(res.data, '☁️ Google Sheet');
-    }
-  })
-  .catch(() => {});
+  // BƯỚC 2: Cập nhật tự động 2 chiều từ Google Sheet trong nền
+  syncStaffWithGoogleSheet(false);
 }
 
 function _renderStaffTable_(users, source) {
@@ -9664,6 +10462,11 @@ function resetStaffDirectoryToClean() {
   populateStaffUserSelect();
   renderStaffUsersTable();
   al(isVi ? '✅ Đã làm sạch và khôi phục danh sách nhân sự mẫu!' : '✅ Staff directory reset to clean standard list!', 'ok');
+  // 🔄 Đồng bộ lên Google Sheet tab 'staff'
+  fetch(GAS_SALE_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'staff_save', data: DEFAULT_STAFF_USERS })
+  }).catch(() => {});
 }
 const resetStaffDirectoryClean = resetStaffDirectoryToClean;
 
@@ -9676,6 +10479,11 @@ function updateStaffAssignedRole(userId, newRole) {
   al(isVi ? 'Đã cập nhật vai trò nhân sự thành công!' : 'Staff role updated successfully!', 'ok');
   populateStaffUserSelect();
   renderStaffUsersTable();
+  // 🔄 Đồng bộ lên Google Sheet tab 'staff'
+  fetch(GAS_SALE_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'staff_save', data: list })
+  }).catch(() => {});
 }
 
 // 🗑 Xóa nhân sự (khi nghỉ việc)
@@ -9689,6 +10497,11 @@ function deleteStaffUser(userId, userName) {
   al(isVi ? `Đã xóa nhân sự "${userName}" khỏi hệ thống.` : `Deleted staff member "${userName}".`, 'ok');
   populateStaffUserSelect();
   renderStaffUsersTable();
+  // 🔄 Đồng bộ lên Google Sheet tab 'staff'
+  fetch(GAS_SALE_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'staff_save', data: list })
+  }).catch(() => {});
 }
 
 // 🔄 Toggle thủ công Được Xem / Bị Khóa trong bảng RBAC
@@ -9890,21 +10703,17 @@ function saveStaffUserModal() {
   
   DB.s('staff_directory', list);
 
-  // 🔄 Sync lên Google Sheet nếu admin đã unlock (có token)
-  const adminToken = localStorage.getItem('tni_sale_admin_token') || '';
-  if (adminToken) {
-    fetch(SALE_GAS_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'staff_save', token: adminToken, data: list })
-    })
-    .then(r => r.json())
-    .then(res => {
-      if (res.ok) al(isVi ? `✅ Đã lưu lên Google Sheet (${res.saved} nhân sự)!` : `✅ Synced to Google Sheet (${res.saved} staff)!`, 'ok');
-      else al(isVi ? `⚠️ Lưu local OK nhưng Sheet chưa sync: ${res.error}` : `⚠️ Local OK but Sheet sync failed: ${res.error}`, 'er');
-    })
-    .catch(() => al(isVi ? '⚠️ Lưu local OK. Sheet offline — sẽ sync lần sau.' : '⚠️ Local saved. Sheet offline — will sync later.', 'er'));
-  }
+  // 🔄 Tự động đồng bộ 2 chiều lên Google Sheet ngay lập tức
+  fetch(GAS_SALE_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'staff_save', data: list })
+  })
+  .then(r => r.json())
+  .then(res => {
+    if (res.ok) al(isVi ? `☁️ Đã đồng bộ lên Google Sheet (${res.saved} nhân sự)!` : `☁️ Synced to Google Sheet (${res.saved} staff)!`, 'ok');
+    else console.warn('Sheet sync response:', res);
+  })
+  .catch(err => console.warn('Sheet sync offline/network error:', err));
   closeAddStaffModal();
   renderStaffUsersTable();
   populateStaffUserSelect();
@@ -10010,6 +10819,11 @@ function importStaffFromFile(input) {
       renderStaffUsersTable();
       populateStaffUserSelect();
       al(isVi ? `✅ Import xong! Thêm ${added} mới, cập nhật ${updated} nhân sự.` : `✅ Import done! Added ${added} new, updated ${updated} staff.`, 'ok');
+      // 🔄 Đồng bộ lên Google Sheet tab 'staff'
+      fetch(GAS_SALE_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'staff_save', data: existing })
+      }).catch(() => {});
     } catch(err) {
       al(isVi ? `❌ Lỗi đọc file: ${err.message}` : `❌ File read error: ${err.message}`, 'er');
     }
