@@ -2192,3 +2192,11 @@ Reason: [Lý do]`
 > **PM-R4 (03/10/2026) — Hòa Chung Kênh Bán Hàng Web và Telegram (Unified Sales SSOT Policy)**:
 > - **Root Cause**: Phân hệ Bán Hàng trước đây bị chia cắt thành 2 luồng độc lập: Web UI lưu vào tab `Ban Hang` (qua `sale_backend.gs`), trong khi Telegram Bot lại lưu vào các tab riêng `Sales Record` / `Sales to dealers` (qua `TNI Sale.js`). Hậu quả là đơn hàng chốt trên Telegram không xuất hiện trên Web UI (Lịch Sử Bán Hàng bị rỗng), còn đơn bán trên Web thì không gửi thông báo cho đội ngũ trên Telegram.
 > - **Rule**: Mọi đơn bán hàng phát sinh từ Telegram (bán lẻ, bán sỉ đại lý, ký gởi) BẮT BUỘC phải được hàm `saveOrderToSheet` tự động đồng bộ chèn dòng trực tiếp vào tab `Ban Hang` (với `source = 'telegram'`) để Web UI đọc được ngay lập tức. Ngược lại, khi Web UI xuất kho qua `saleAdd_`, BẮT BUỘC gọi `notifyTelegramNewSale_` để bắn thông báo tự động lên Telegram Group bán hàng.
+
+> **PM-73 (03/10/2026) — Cơ Chế Mở: Dynamic Template Thu Thập Bán Hàng & Khảo Sát Tự Động Theo Tab Template Sale & Xóa Tin Telegram (Dynamic Template SSOT & Auto-Clean Protocol)**:
+> - **Yêu Cầu & Bối Cảnh**: Người dùng yêu cầu cơ chế mở 100%: mọi mẫu tin nhắn khảo sát, tiếp xúc khách hàng, bán hàng, ký gởi, bảo hành được cấu hình trực tiếp trong Tab `Template Sale` trên Google Sheet. Khi người dùng thêm, bớt, xóa, sửa mẫu trên Sheet thì toàn bộ hệ thống Bot và Web phải tự động nhận diện và cập nhật mà không cần sửa code.
+> - **Quy Trình Chuẩn (3 Bước Tự Động)**:
+>   1. **Dynamic Engine (SSOT)**: GAS `getDynamicSaleTemplates_()` và `templateSaleGet_()` tự động đọc các dòng dạng `Tên Mẫu : Cột 1 | Cột 2 | Cột 3` trong tab `Template Sale`.
+>   2. **Thu Thập & Xóa Tin Telegram**: Khi nhân viên gửi tin nhắn theo Template vào nhóm Telegram, Bot tự động bóc tách dữ liệu -> chèn vào **dòng 2** của Sheet đích tương ứng -> gọi Telegram API `deleteMessage` xóa sạch tin nhắn gốc của nhân viên trên nhóm -> bắn phản hồi xác nhận 2 dòng chuẩn.
+>   3. **Đồng Bộ Web Realtime**: Web `sale.html` bổ sung tab `📋 Mẫu Gửi Telegram` trong menu CRM & Survey, tự động pull danh sách mẫu từ Sheet kèm nút bấm "Sao Chép Mẫu" một chạm. Khi nhân viên mở các tab Bán Hàng, Khảo Sát, Tiếp Xúc, Web tự động pull dữ liệu sống từ Sheet để hiển thị ngay lập tức.
+

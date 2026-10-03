@@ -1594,6 +1594,7 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
     <div class="tab on" onclick="sw(this,'tc-kh')">👤 Khách Hàng</div>
     <div class="tab" onclick="sw(this,'tc-ks')">📝 Khảo Sát Đại Lý</div>
     <div class="tab" onclick="sw(this,'tc-lk')">📞 Lịch Tiếp Xúc</div>
+    <div class="tab" onclick="sw(this,'tc-tpl');renderSaleTemplatesView()">📋 Mẫu Gửi Telegram</div>
   </div>
   <div id="tc-kh">
     <div class="panel">
@@ -1652,7 +1653,26 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
     </div>
     <div class="panel"><div class="ph"><h3>📋 Lịch Sử Tiếp Xúc</h3></div><div class="pb tw" id="t-lk"></div></div>
   </div>
+
+  <!-- Tab Mẫu Gửi Telegram (Đọc động 100% từ Sheet Tab 'Template Sale') -->
+  <div id="tc-tpl" style="display:none">
+    <div class="panel">
+      <div class="ph">
+        <h3>📋 Danh Sách Template Gửi Telegram (Thu thập & Xóa Tự Động)</h3>
+        <button class="btn b-bl b-sm" onclick="renderSaleTemplatesView(true)">🔄 Tải Lại Từ Sheet</button>
+      </div>
+      <div class="pb">
+        <p style="font-size:13px;color:#475569;margin-bottom:14px">
+          💡 <b>Cơ chế hoạt động:</b> Khi nhân viên gửi đúng cú pháp mẫu vào nhóm Telegram, Bot sẽ <b>thu thập ngay vào dòng 2 của Sheet tương ứng</b> và <b>tự động xóa tin nhắn gốc</b> trên nhóm để tránh trôi tin. Bấm <b>Sao Chép</b> để copy mẫu và gửi nhanh!
+        </p>
+        <div id="sale-templates-list" style="display:grid;gap:12px">
+          <div style="padding:16px;text-align:center;color:#94a3b8">⏳ Đang tải mẫu từ Google Sheet...</div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
 
 <!-- ══ QUẢNG CÁO ══ -->
 <div class="sec" id="s-quangcao">
@@ -5190,6 +5210,79 @@ function addLK(){const ten=v('lk-ten');if(!ten){al('Nhập tên','er');return;}
 function rLK(){document.getElementById('t-lk').innerHTML=tbl(['#','Khách/ĐL','Hình Thức','Ngày','Hành Động Tiếp','Follow-up',''],
   DB.g('lienlac').map((r,i)=>[i+1,r.ten,bk(r.ht,'bl'),fd(r.ngay),r.hd||'-',fd(r.fu)||'-',
     `<button class="btn b-xs b-rd" onclick="del('lienlac',${r.id},rLK)">🗑</button>`]));}
+
+// ── DYNAMIC SALE TEMPLATES RENDERER (CƠ CHẾ MỞ: TAB TEMPLATE SALE) ──
+let _cachedSaleTemplates = null;
+
+async function renderSaleTemplatesView(force = false) {
+  const container = document.getElementById('sale-templates-list');
+  if (!container) return;
+
+  if (force || !_cachedSaleTemplates) {
+    container.innerHTML = '<div style="padding:16px;text-align:center;color:#64748b">⏳ Đang đọc cấu hình mẫu từ Google Sheet...</div>';
+    try {
+      const res = await fetch(GAS_SALE_URL + '?action=template_sale_get');
+      const json = await res.json();
+      if (json.ok && Array.isArray(json.data)) {
+        _cachedSaleTemplates = json.data;
+      }
+    } catch(e) {
+      console.warn('[SaleTemplates] Fetch error:', e);
+    }
+  }
+
+  const list = _cachedSaleTemplates || [];
+  if (list.length === 0) {
+    container.innerHTML = '<div style="padding:16px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:8px">' +
+      '⚠️ Chưa có mẫu nào được thiết lập trong Tab <b>Template Sale</b> trên Google Sheet.<br>' +
+      '💡 Anh có thể mở Google Sheet và thêm các dòng mẫu theo cú pháp: <code>Tên Mẫu : Cột 1 | Cột 2 | Cột 3</code>' +
+      '</div>';
+    return;
+  }
+
+  let html = '';
+  list.forEach((t, idx) => {
+    const rawEsc = t.rawLine.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    html += `
+      <div style="background:#ffffff;border:1.5px solid #e2e8f0;border-radius:10px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,0.05);display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="background:#eff6ff;color:#2563eb;font-weight:700;font-size:12px;padding:3px 8px;border-radius:6px">#${idx + 1}</span>
+            <span style="font-weight:800;color:#0f172a;font-size:14.5px">${t.keyword}</span>
+            <span style="background:#f1f5f9;color:#475569;font-size:11.5px;padding:2px 8px;border-radius:12px">Tab đích: <b>${t.targetTab}</b></span>
+          </div>
+          <button class="btn b-bl b-sm" onclick="copySaleTemplateToClipboard('${rawEsc}')" style="display:flex;align-items:center;gap:4px">
+            📋 Sao Chép Mẫu
+          </button>
+        </div>
+        <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;padding:10px 12px;font-family:monospace;font-size:13px;color:#1e293b;word-break:break-word">
+          ${t.rawLine}
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <span style="font-size:11px;color:#64748b">Cột dữ liệu (${t.fields.length}):</span>
+          ${t.fields.map(f => `<span style="background:#e0f2fe;color:#0369a1;font-size:11px;padding:1px 6px;border-radius:4px">${f}</span>`).join('')}
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function copySaleTemplateToClipboard(text) {
+  if (!navigator.clipboard) {
+    const el = document.createElement('textarea');
+    el.value = text;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+  } else {
+    navigator.clipboard.writeText(text);
+  }
+  al('📋 Đã sao chép mẫu! Bạn chỉ cần dán vào nhóm Telegram.');
+}
+
 
 // ═══════════════════════════════════════════════════
 // LỢI NHUẬN (BÁN TRỰC TIẾP & KÝ GỞI 17%)
