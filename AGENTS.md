@@ -2318,6 +2318,16 @@ Reason: [Lý do]`
 >      - Mọi tin nhắn Telegram phản hồi chốt đơn / nộp ảnh BẮT BUỘC kèm theo link thư mục Google Drive để người dùng mở xem toàn bộ ảnh chỉ với 1 chạm.
 >      - Cột 11 trong bảng tính Bán Hàng (`Download All Link`) tự động điền URL thư mục Template trên Google Drive.
 >      - Trên thanh điều hướng Web UI (`sale.html`), nút `#role-selector-box` được thay thế bằng nút nổi bật: `📁 Kho Ảnh Drive (Photos)` trỏ trực tiếp đến thư mục ảnh chung `https://drive.google.com/drive/folders/12V-UaZM1cSha8LihCjBHTOU_BEAk74p-`.
+>
+> > ### 🔴 RULE PM-71: BỌC THÉP PHÂN HỆ SITE DOWN & CƠ CHẾ QUÉT DỌN TIN MỒ CÔI THEO BATCH-WINDOW (STRICT SITE DOWN DELETION & TELETHON BATCH-WINDOW SWEEP PROTOCOL)
+> > 
+> > ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (SITE DOWN DELETION & BATCH-WINDOW SWEEP POLICY)**:
+> > 1. **Triệt Tiêu Tuyệt Đối Trigger Ngầm Trên GAS (Strict Zero GAS Independent Trigger Policy)**: BẮT BUỘC xóa sạch trigger `checkAndSend_1min` và `checkAndSend` trên Apps Script qua `teardownGasTrain1min()` và endpoint `action=teardown_gas_train`. Tuyệt đối CẤM tạo time-driven trigger 1 phút chạy ngầm trên GAS gây xung đột race condition với webhook `store_site_down` làm phát 2 đợt tin trùng lặp trong vòng 1-2 giây.
+> > 2. **Bảo Toàn & Retry Message ID Trong GAS (Persistent MsgID Retention & Auto-Merge)**: Trong `deleteOldMessages_`, CHỈ ĐƯỢC PHÉP xóa ID khỏi `PropertiesService` khi API đã trả về thành công (hoặc tin không tồn tại / quá 48h). TUYỆT ĐỐI CẤM dùng `finally { deleteProperty }` vô điều kiện. Nếu xóa thất bại do lỗi mạng tạm thời hoặc rate limit 429, BẮT BUỘC giữ lại ID trong mảng lưu trữ. Khi phát tin mới trong `sendOrEditTelegramPre` / `sendOrEditTelegram`, BẮT BUỘC gộp (`Set([...unremoved, ...newIds])`) để lần gửi tiếp theo tự động dọn sạch cả tin cũ lẫn tin mới!
+> > 3. **Chunk Fallback Độc Lập (Safe Chunk-Preserving Fallback)**: Khi gửi tin `<pre>` thất bại, nhánh retry khi plain text BẮT BUỘC gửi theo từng biến `chunk` hiện tại, TUYỆT ĐỐI CẤM gửi cả khối `plainContent` thô dài tránh lỗi Telegram 400 Message Too Long (>4096 ký tự).
+> > 4. **Cơ Chế Quét Dọn Theo Batch Window 120s Trong Telethon (Batch-Window Sweep Protocol)**: Trong `sweep_orphan_eta.py`, toàn bộ tin Site Down phát trong vòng 120 giây tính từ tin mới nhất (`age_from_newest <= 120s`) được coi là 1 đợt phát hợp lệ (bảo toàn trọn vẹn cả Part 1, Part 2, và Tin 2). Chỉ các tin cũ hơn 120s mới bị coi là tin mồ côi và bị xóa sạch bằng `client.delete_messages(chat_id, chunk, revoke=True)`. Đồng thời tự động khử trùng lặp (dedup) nếu có hai chunk giống hệt nhau trong cùng một batch window.
+> > 5. **Nhận Diện Bot 5T Bọc Thép (Triple-Identifier Bot Guard)**: Nhận diện Bot 5T qua 3 tầng: `sender_id == 8647102342` (ID gốc bất biến), username (`tni_site_down_cell_alarmbot`), tiêu đề (`BOT_5T_NAMES`) và nội dung (`Total Site down`, `Dont Forget`, `HUB site TNI`, `SUMMARY — Team`). BẮT BUỘC loại trừ ID cá nhân Admin (`6859790680`) để không bao giờ xóa nhầm tin nhắn của con người.
+
 >   3. **Xóa Bỏ Rào Cản Phân Quyền Web UI Khi Đã Quản Trị Qua Gmail**:
 >      - Loại bỏ hoàn toàn dropdown vai trò `#app-role-select` và khóa PIN chuyển vai trò trên Web UI.
 >      - Mặc định khởi tạo `currentAppRole = 'admin'` và `isTabAllowedForRole = () => true` để toàn bộ nhân viên được chia sẻ quyền qua Gmail đều truy cập thông suốt 100% tất cả các tab chức năng.
