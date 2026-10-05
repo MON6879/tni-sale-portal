@@ -418,19 +418,10 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
 <div id="topbar">
   <h2 id="ptitle">📊 Dashboard</h2>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-    <!-- 🛡️ BỘ CHUYỂN ĐỔI & HIỂN THỊ VAI TRÒ (RBAC ROLE SELECTOR) -->
-    <div id="role-selector-box" style="display:flex;align-items:center;gap:6px;background:#f8fafc;border:1.5px solid #cbd5e1;padding:4px 10px;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,0.04)">
-      <span style="font-size:11.5px;font-weight:700;color:#334155;white-space:nowrap">👤 <span data-lang="lbl_active_role">Vai Trò:</span></span>
-      <select id="app-role-select" onchange="changeAppRole(this.value)" style="border:none;background:transparent;font-size:12px;font-weight:800;color:#1e40af;cursor:pointer;outline:none;padding:2px 4px">
-        <option value="admin">👑 Ban Giám Đốc (BOD / Admin)</option>
-        <option value="finance">💰 Kế Toán / Tài Chính (Finance)</option>
-        <option value="sales">🧑‍💼 Nhân Viên Kinh Doanh (Sales)</option>
-        <option value="tech">🚀 Kỹ Thuật / Hiện Trường (Field Ops)</option>
-        <option value="warehouse">📦 Thủ Kho / Quản Lý Kho (Warehouse)</option>
-        <option value="dealer">🏪 Đại Lý Phân Phối (Dealer)</option>
-      </select>
-      <span id="role-badge-pill" style="font-size:10px;padding:2px 8px;border-radius:12px;font-weight:800;background:#dcfce7;color:#15803d;white-space:nowrap">Toàn Quyền</span>
-    </div>
+    <!-- 📁 NÚT XEM KHO ẢNH DRIVE (1 LINK XEM HẾT TẤT CẢ HÌNH ẢNH) -->
+    <a href="https://drive.google.com/drive/folders/12V-UaZM1cSha8LihCjBHTOU_BEAk74p-" target="_blank" class="btn b-sm" style="background:#fef3c7;color:#92400e;border:1.5px solid #fde68a;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:6px" title="Xem tất cả hình ảnh thu thập theo template trên Google Drive">
+      📁 <span>Kho Ảnh Drive (Photos)</span>
+    </a>
     <!-- Cài đặt % Lợi Nhuận & Thuế Nộp Tổng Công Ty (Ẩn UI theo yêu cầu người dùng) -->
     <input id="cfg-cty-rate" type="hidden" value="17"/>
     <a href="https://docs.google.com/spreadsheets/d/1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA" target="_blank" class="btn b-bl b-sm" style="text-decoration:none">📊 Google Sheet</a>
@@ -9145,193 +9136,78 @@ const DEFAULT_STAFF_USERS = [
   { id: 'emp_038', name: 'Zin Ko Oo', email: 'zin.ko.oo@company.com', role: 'sales', title: 'Team 01', phone: '09667191528' }
 ];
 
-let currentAppRole = localStorage.getItem('tni_sale_role') || 'sales';
+let currentAppRole = 'admin'; // Đã chia sẻ qua Gmail: Mở toàn quyền 100% tất cả các phân hệ
 let currentStaffUser = localStorage.getItem('tni_sale_staff') || '';
-// PIN stored as SHA-256 hash only — never plaintext
 let adminPinHash = localStorage.getItem('tni_sale_admin_pin_hash') || null;
-let adminSessionUnlocked = false; // in-memory only, reset on page reload
-const DEFAULT_PIN_HASH = '83E35ECB553AB49C80D163541253CA5161B6D6E6EBBBAC2E77A72A6E90DA15D6'; // SHA-256('7979')
+let adminSessionUnlocked = true; // Luôn mở khóa vì đã chia sẻ qua Gmail
 
-// Hash PIN using Web Crypto API
 async function hashPin_(pin) {
   const enc = new TextEncoder();
   const buf = await crypto.subtle.digest('SHA-256', enc.encode(pin.trim()));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
 }
 async function verifyPin_(input) {
-  const hashed = await hashPin_(input);
-  const stored = adminPinHash || DEFAULT_PIN_HASH;
-  const ok = hashed === stored;
-  if (ok) { try { sessionStorage.setItem('tni_sale_pin_proof', hashed); } catch(e) {} }
-  return ok;
+  return true;
 }
 async function saveNewPin_(newPin) {
   const hashed = await hashPin_(newPin);
   localStorage.setItem('tni_sale_admin_pin_hash', hashed);
   adminPinHash = hashed;
 }
-// Migrate old plaintext pin if found, then delete it
-(function migratePinStorage_() {
-  const old = localStorage.getItem('tni_sale_admin_pin');
-  if (old) {
-    hashPin_(old).then(h => { localStorage.setItem('tni_sale_admin_pin_hash', h); adminPinHash = h; });
-    localStorage.removeItem('tni_sale_admin_pin');
-  }
-})();
 
 function getRBACOverrides() {
-  try {
-    const raw = localStorage.getItem('tni_rbac_overrides');
-    if (!raw) return {};
-    const parsed = JSON.parse(raw);
-    return (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : {};
-  } catch(e) {
-    return {};
-  }
+  return {};
 }
 
 function saveRBACOverrides(obj) {
-  try {
-    localStorage.setItem('tni_rbac_overrides', JSON.stringify(obj || {}));
-  } catch(e) {
-    console.error('Failed to save rbac overrides', e);
-  }
+  // Không cần ghi đè
 }
 
+// 🌐 ĐÃ CHIA SẺ QUA GMAIL: Mở toàn quyền 100% tất cả các phân hệ, không giới hạn vai trò
 function isTabAllowedForRole(tabId, roleId) {
-  const overrides = getRBACOverrides();
-  const overrideKey = `${roleId}__${tabId}`;
-  if (overrideKey in overrides) {
-    return overrides[overrideKey];
-  }
-  const r = ROLES[roleId] || ROLES.admin;
-  return r.allowedTabs.includes(tabId);
+  return true;
 }
 
 function changeAppRole(newRole, staffName, bypassPin) {
-  if (!ROLES[newRole]) newRole = 'sales';
-
-  // 🔒 SECURITY GATE: Chuyển sang quyền Quản Trị hoặc Tài Chính BẮT BUỘC phải qua mã PIN nếu chưa mở khóa
-  if ((newRole === 'admin' || newRole === 'finance') && !adminSessionUnlocked && !bypassPin) {
-    const isVi = currentLang === 'vi';
-    const roleTitle = ROLES[newRole].name;
-    const pin = prompt(isVi ? `🔒 VAI TRÒ BẢO MẬT CAO CẤP: ${roleTitle}\nVui lòng nhập mã PIN Quản Trị để truy cập:` : `🔒 PRIVILEGED ROLE: ${roleTitle}\nPlease enter Admin PIN to access:`);
-    if (pin === null) {
-      // Người dùng bấm Hủy -> Trả lại dropdown vai trò hiện tại
-      const sel = document.getElementById('app-role-select');
-      if (sel) sel.value = currentAppRole;
-      return;
-    }
-    verifyPin_(pin).then(ok => {
-      if (ok) {
-        adminSessionUnlocked = true;
-        changeAppRole(newRole, staffName, true);
-        al(isVi ? `✅ Mở khóa thành công vai trò: ${roleTitle}` : `✅ Access unlocked for: ${roleTitle}`, 'ok');
-      } else {
-        const sel = document.getElementById('app-role-select');
-        if (sel) sel.value = currentAppRole;
-        al(isVi ? '❌ Mã PIN không chính xác! Không thể chuyển sang vai trò này.' : '❌ Incorrect PIN! Cannot switch to this privileged role.', 'er');
-      }
-    });
-    return;
-  }
-
-  currentAppRole = newRole;
-  localStorage.setItem('tni_sale_role', newRole);
+  currentAppRole = 'admin';
+  localStorage.setItem('tni_sale_role', 'admin');
 
   if (staffName) {
     currentStaffUser = staffName;
     localStorage.setItem('tni_sale_staff', staffName);
   }
 
-  // Update Topbar select
   const sel = document.getElementById('app-role-select');
-  if (sel) sel.value = newRole;
+  if (sel) sel.value = 'admin';
 
-  // Update badge pill
   const pill = document.getElementById('role-badge-pill');
   if (pill) {
-    const roleMeta = ROLES[newRole];
-    pill.textContent = roleMeta.shortName;
-    if (newRole === 'admin') {
-      pill.style.background = '#fef2f2'; pill.style.color = '#dc2626';
-    } else if (newRole === 'finance') {
-      pill.style.background = '#e0f2fe'; pill.style.color = '#0284c7';
-    } else if (newRole === 'sales' || newRole === 'tech') {
-      pill.style.background = '#dcfce7'; pill.style.color = '#15803d';
-    } else if (newRole === 'warehouse') {
-      pill.style.background = '#fef3c7'; pill.style.color = '#d97706';
-    } else {
-      pill.style.background = '#f3e8ff'; pill.style.color = '#9333ea';
-    }
-  }
-
-  // Update Quick cards in RBAC panel
-  document.querySelectorAll('.role-quick-card').forEach(c => {
-    c.style.borderColor = 'rgba(255,255,255,0.2)';
-    c.style.background = 'rgba(255,255,255,0.12)';
-  });
-  const activeQc = document.getElementById('rqc-' + newRole);
-  if (activeQc) {
-    activeQc.style.borderColor = '#fff';
-    activeQc.style.background = 'rgba(255,255,255,0.28)';
+    pill.textContent = 'Toàn Quyền';
+    pill.style.background = '#fef2f2'; pill.style.color = '#dc2626';
   }
 
   // Update Sidebar items & section categories
-  updateSidebarAccessState(newRole);
-
-  // If currently on a blocked tab, redirect to access denied
-  const curSec = document.querySelector('.sec.on');
-  if (curSec) {
-    const secId = curSec.id.replace(/^s-/, '');
-    if (secId !== 'access-denied' && !isTabAllowedForRole(secId, newRole)) {
-      showAccessDenied(secId, newRole);
-    }
-  }
+  updateSidebarAccessState('admin');
 
   // Re-render RBAC matrix if active
   if (document.getElementById('s-rbac')?.classList.contains('on')) {
     renderRBACMatrix();
   }
-
-  al('Đã chuyển sang vai trò: ' + ROLES[newRole].name, 'ok');
 }
 
 function updateSidebarAccessState(roleId) {
-  const allowed = (ROLES[roleId] || ROLES.admin).allowedTabs;
-
-  // 1. Cập nhật từng liên kết menu (ẩn hoàn toàn nếu không được phép)
+  // 1. Hiển thị 100% tất cả các liên kết menu (Đã chia sẻ qua Gmail, không ẩn mục nào)
   document.querySelectorAll('#sb nav a[data-nav-a]').forEach(a => {
-    const tabId = a.getAttribute('data-nav-a');
-    const isAllowed = isTabAllowedForRole(tabId, roleId);
-
-    // Xóa badge lock cũ nếu có
     const oldLock = a.querySelector('.nav-lock-badge');
     if (oldLock) oldLock.remove();
-
-    if (!isAllowed) {
-      // 🔒 KHÓA TRIỆT ĐỂ: Ẩn hoàn toàn khỏi sidebar, không để lại dấu vết
-      a.style.display = 'none';
-      a.title = '';
-    } else {
-      a.style.display = '';
-      a.style.opacity = '1.0';
-      a.title = '';
-    }
+    a.style.display = '';
+    a.style.opacity = '1.0';
+    a.title = '';
   });
 
-  // 2. Ẩn tiêu đề phân mục (lbl) nếu toàn bộ liên kết con bên dưới mục đó đều bị ẩn
+  // 2. Hiển thị 100% tất cả các tiêu đề phân mục (lbl)
   document.querySelectorAll('#sb nav .lbl[data-nav-lbl]').forEach(lbl => {
-    let nextEl = lbl.nextElementSibling;
-    let hasVisibleChild = false;
-    while (nextEl && !nextEl.classList.contains('lbl')) {
-      if (nextEl.tagName === 'A' && nextEl.style.display !== 'none') {
-        hasVisibleChild = true;
-        break;
-      }
-      nextEl = nextEl.nextElementSibling;
-    }
-    lbl.style.display = hasVisibleChild ? '' : 'none';
+    lbl.style.display = '';
   });
 }
 
@@ -10208,35 +10084,11 @@ function exportRBACMatrixCSV() {
 // 🌐 RBAC INITIALIZATION HOOK ON LOAD
 // ═══════════════════════════════════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => {
-  const params = new URLSearchParams(window.location.search);
-  const paramRole = params.get('role');
-  const paramStaff = params.get('staff') || params.get('user') || params.get('email');
-
-  let resolvedRole = paramRole;
-  let resolvedStaff = paramStaff || '';
-
-  // 🔍 Tự động tra cứu nhân sự trong danh bạ nếu có tên hoặc email
-  if (resolvedStaff) {
-    const list = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
-    const found = list.find(u => 
-      (u.name && u.name.toLowerCase() === resolvedStaff.toLowerCase()) || 
-      (u.email && u.email.toLowerCase() === resolvedStaff.toLowerCase()) ||
-      (u.id && u.id.toLowerCase() === resolvedStaff.toLowerCase())
-    );
-    if (found) {
-      resolvedRole = found.role;
-      resolvedStaff = found.name;
-    }
-  }
-
-  if (resolvedRole && ROLES[resolvedRole]) {
-    // Nếu vào bằng link gán role nhân viên hoặc được gán role
-    changeAppRole(resolvedRole, resolvedStaff, false);
-  } else {
-    // Không có param -> sử dụng role đã lưu hoặc an toàn mặc định là sales
-    const safeSavedRole = (currentAppRole === 'admin' || currentAppRole === 'finance') ? 'sales' : currentAppRole;
-    changeAppRole(safeSavedRole, currentStaffUser, false);
-  }
+  // 🌐 ĐÃ CHIA SẺ QUA GMAIL: Mặc định toàn quyền 100% tất cả các phân hệ cho mọi người
+  currentAppRole = 'admin';
+  localStorage.setItem('tni_sale_role', 'admin');
+  changeAppRole('admin', currentStaffUser, true);
+  updateSidebarAccessState('admin');
 
   // Populate staff selects and render matrix
   setTimeout(() => {
