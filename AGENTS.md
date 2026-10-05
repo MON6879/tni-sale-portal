@@ -2301,5 +2301,23 @@ Reason: [Lý do]`
 >      - Đồng thời gọi endpoint `staff_delete` (hỗ trợ cả GET và POST) để xóa triệt để dòng tương ứng và dọn sạch mọi dòng rác/undefined trên Google Sheet.
 >   3. **Tự Động Đồng Bộ Khi Thêm / Sửa / Đổi Vai Trò / Import**: Mọi hành động làm thay đổi danh sách nhân sự (`saveStaffUserModal`, `updateStaffAssignedRole`, `resetStaffDirectoryToClean`, `importStaffFromFile`) đều BẮT BUỘC gọi `syncStaffDirectoryToSheet` để bảo đảm tính nhất quán hai chiều (Web UI <-> Google Sheet tab `staff`) 100% thời gian thực.
 >   4. **Khóa Thép Deploy Đồng Nhất Cho Cả 2 Deployment ID GAS**: Khi sửa backend GAS (`QLTC_GAS`), AI BẮT BUỘC phải deploy cho CẢ 2 deployment ID (`AKfycbylrX...` và `AKfycbz-NZ...`) bằng lệnh `npx clasp deploy -i <id>`, bảo đảm Web UI luôn chạy trên phiên bản backend mới nhất (@467+).
-
-
+> **PM-77 (05/10/2026) — Thu Thập Ảnh Telegram Phân Loại Theo Template Trên Google Drive & Loại Bỏ Rào Cản Phân Quyền Khi Đã Quản Trị Qua Gmail (Template-Based Photo Drive Directory & Zero-Role-Barrier Policy)**:
+> - **Yêu Cầu & Bối Cảnh**:
+>   1. Người dùng yêu cầu thu thập hình ảnh gửi lên Telegram theo từng template vào thư mục Drive cụ thể (`12V-UaZM1cSha8LihCjBHTOU_BEAk74p-` trong thư mục `1.9.1 Photo Sale solution`) và cung cấp 1 link xem tất cả hình ảnh.
+>   2. Người dùng yêu cầu bỏ lựa chọn vai trò (role selector / PIN gate) trên giao diện Web UI vì quyền truy cập đã được quản trị và chia sẻ trực tiếp qua Google Account / Gmail.
+> - **Nguyên Nhân Gốc (Root Cause)**:
+>   1. *Thiếu cấu trúc lưu trữ phân theo mẫu*: Trước đây, ảnh gửi kèm đơn hàng qua Telegram được lưu phân tán hoặc đưa vào thư mục chung, chưa tự động gom nhóm theo tên từng Template bán hàng (`1.9.1 Photo Sale solution/<Template Name>`).
+>   2. *Ảnh gửi trực tiếp trong caption chưa được bóc tách tức thì*: Khi nhân viên gửi ảnh kèm caption chứa cấu trúc template bán hàng, hệ thống trước đây phải đợi đến luồng xử lý ảnh riêng hoặc lưu đơn trước rồi đợi ảnh sau, dễ dẫn đến mất liên kết ảnh với đơn hàng.
+>   3. *Rào cản phân quyền trùng lặp trên Web UI*: Giao diện web trước đây duy trì dropdown chọn vai trò (`#role-selector-box`) kèm xác thực mã PIN quản trị, làm gián đoạn trải nghiệm của nhân viên dù người dùng đã được cấp quyền truy cập qua Gmail.
+> - **Quy Trình & Biện Pháp Khắc Phục Bọc Thép (The 3-Pillar Template Photo & Zero-Barrier Protocol)**:
+>   1. **Tự Động Phân Loại Thư Mục Ảnh Drive Theo Template**:
+>      - Cấu hình thư mục gốc `PHOTO_DRIVE_FOLDER_ID = "12V-UaZM1cSha8LihCjBHTOU_BEAk74p-"`.
+>      - Hàm `getOrCreateTemplateFolder(templateName)` tự động tìm hoặc tạo thư mục con `1.9.1 Photo Sale solution` bên trong thư mục gốc, và tạo các thư mục con theo tên từng Template (ví dụ: `1.9.1 Photo Sale solution/Bán lẻ UPS Solar`, `1.9.1 Photo Sale solution/Báo giá đại lý`...).
+>      - Cả ảnh gửi kèm caption đơn hàng lẫn ảnh gửi bổ sung trong phiên 10 phút BẮT BUỘC được tải về và lưu đúng thư mục template đó.
+>   2. **1 Link Xem Toàn Bộ Ảnh (Single Drive Viewer Link)**:
+>      - Mọi tin nhắn Telegram phản hồi chốt đơn / nộp ảnh BẮT BUỘC kèm theo link thư mục Google Drive để người dùng mở xem toàn bộ ảnh chỉ với 1 chạm.
+>      - Cột 11 trong bảng tính Bán Hàng (`Download All Link`) tự động điền URL thư mục Template trên Google Drive.
+>      - Trên thanh điều hướng Web UI (`sale.html`), nút `#role-selector-box` được thay thế bằng nút nổi bật: `📁 Kho Ảnh Drive (Photos)` trỏ trực tiếp đến thư mục ảnh chung `https://drive.google.com/drive/folders/12V-UaZM1cSha8LihCjBHTOU_BEAk74p-`.
+>   3. **Xóa Bỏ Rào Cản Phân Quyền Web UI Khi Đã Quản Trị Qua Gmail**:
+>      - Loại bỏ hoàn toàn dropdown vai trò `#app-role-select` và khóa PIN chuyển vai trò trên Web UI.
+>      - Mặc định khởi tạo `currentAppRole = 'admin'` và `isTabAllowedForRole = () => true` để toàn bộ nhân viên được chia sẻ quyền qua Gmail đều truy cập thông suốt 100% tất cả các tab chức năng.
