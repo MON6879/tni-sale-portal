@@ -195,8 +195,13 @@ bac.
 >    - (a) **Phân Hệ Ký Gởi / Bỏ Sỉ (Consignment)**: BẮT BUỘC phải hỗ trợ trường `Serial Number` (mã serial thiết bị) và trường `Ngày Ký Gởi` (`ngay_kg` / `Consignment Date`) trên cả 3 luồng: ① Form tạo phiếu đơn lẻ (`#kg-serial`, `#kg-ngay`), ② Bảng hiển thị danh sách ký gởi (`#t-kygoi`), ③ Khung import hàng loạt (`#kg-bulk-paste-area`) và Bảng xem trước (`#kg-bulk-preview-table`).
 >    - (b) **File Mẫu CSV Ký Gởi (`Mau_Ky_Goi_Ban_Si_TNI_*.csv`)**: BẮT BUỘC phải có đầy đủ 2 cột: `Serial Number / Mã Serial` và `Ngày Ký Gởi / Consignment Date (YYYY-MM-DD)` kèm dữ liệu mẫu thực tế.
 >    - (c) **Tương Thích Ngược Thông Minh (Dual-Format Backward Compatibility)**: Hàm phân tích import `parseKGBulkInput()` BẮT BUỘC phải hỗ trợ cả dữ liệu format mới (11 cột có Serial & Ngày Ký Gởi) lẫn dữ liệu cũ (9 cột), tự động nhận diện vị trí cột ngày và fallback serial an toàn từ kho hàng (`nhapList`) nếu dòng import để trống!
-
-
+> 12. **RULE PM-37 — Chuyển Trực Tuyến 100% Lên Web BI, Xác Thực Google Mail Whitelist, Quản Lý Đối Tác Gmail Đầu Bảng & Bắt Buộc Ảnh/Link Drive Hồ Sơ (Strict Web BI Shift, Google Mail Whitelist, Partner Gmail Top, Serial Autocomplete & Mandatory Media Audit Policy)**:
+>    - (a) **Bãi Bỏ Thu Thập Bán Hàng Từ Telegram (Abolish Telegram Order Collection)**: Toàn bộ quy trình bán hàng, xuất kho, ký gởi, nghiệm thu, thu nợ và quản lý tồn kho BẮT BUỘC thực hiện 100% trên Web BI Portal. Telegram chỉ dùng để liên lạc, trao đổi và nhận thông báo định kỳ. Hàm backend `telegram_sale_collect` bị bãi bỏ (trả HTTP 410) và các hướng dẫn cú pháp bán hàng trên Telegram bị loại bỏ hoàn toàn.
+>    - (b) **Bảo Mật Google Mail Cá Nhân Qua Whitelist SSOT (Google Mail Whitelist SSOT)**: Xác thực đăng nhập hệ thống bằng Google Mail cá nhân. Chỉ những email có trong danh sách tab `staff` hoặc tab `input HR` (GID 255709958) với trạng thái hoạt động mới được cấp quyền truy cập. Nhân viên nghỉ việc tự động bị tước quyền truy cập.
+>    - (c) **Quản Lý Đối Tác Gmail Đầu Bảng (Partner Gmail Top Row Policy)**: Chức năng thêm đối tác (`staff_partner_add`) đưa đối tác lên vị trí Hàng 2 (Top list `staff`), mặc định vai trò `sales` (Kinh Doanh / Ký Gởi) để đối tác và nhân viên dễ dàng tự theo dõi tồn kho, hàng ký gởi và lịch sử bán hàng.
+>    - (d) **Tự Động Điền Gợi Ý Serial Theo Các Số Cuối (Serial Autocomplete by Trailing Digits)**: Khi nhập mã Serial cho đơn bán hàng hoặc phiếu ký gởi, chỉ cần gõ 2-4 ký tự cuối, hệ thống tự động lọc và gợi ý danh sách Serial khả dụng còn tồn trong kho, ngăn ngừa nhầm lẫn và sai sót thủ công.
+>    - (e) **Bắt Buộc Ảnh Xác Thực & Link Google Drive Folder Lưu Trữ (Mandatory Proof Photos & Drive Folder Link)**: Mọi đơn bán hàng (`#s-banhang`), phiếu ký gởi (`#s-kygoi`) và biên bản nghiệm thu bàn giao (`#s-acceptance`) BẮT BUỘC phải tải lên ít nhất 1 ảnh hiện trường/serial hoặc nhập Link thư mục Google Drive lưu trữ hồ sơ. Hệ thống chặn lưu nếu không có ảnh hoặc link Drive.
+>    - (f) **Mở Rộng Thêm Bớt Chức Danh Linh Hoạt (Dynamic Role Management with '+' Button)**: Thanh công cụ RBAC và modal nhân sự có nút '+' để quản trị viên dễ dàng thêm mới các chức danh, vị trí công tác tùy chỉnh mà không cần can thiệp vào mã nguồn gốc.
 
 ---
 
@@ -2385,4 +2390,29 @@ Reason: [Lý do]`
 >      - Tự động duy trì cơ chế Fallback về Sheet GID 0 nếu tab `1839820494` tạm thời không truy cập được.
 >   3. **Đồng Bộ Song Mã Repositories (`Task and WO` & `tni-search`)**:
 >      - Đồng bộ 100% `search_bot.py` qua cả hai kho mã nguồn và triển khai kiểm tra live trên Vercel.
-
+> **PM-80 (06/10/2026) — Giám Sát Toàn Trình 4 Ca (Full-Lifecycle Continuous Multi-Shift Monitoring) & Dung Sai Kháng Trễ Hàng Đợi (Queue-Delay-Resilient Scheduling Protocol)**:
+> - **Yêu Cầu & Bối Cảnh**:
+>   1. Người dùng thắc mắc: *"Kiểm tra tin nhắn 6 sao không có gởi vậy sao ghế giám sát không biết? Thêm rule giám sát phải toàn trình làm đi!"*
+>   2. Phúc tra thực tế:
+>      - Report 6 ca 17:18 MMT ĐÃ GỬI THÀNH CÔNG lúc 17:20:04 - 17:20:49 MMT hôm nay (Msg ID: T1 `12001`, T2 `10925`, T3 `10286`, T4 `8663`, CONTROL `108796`). Lúc người dùng hỏi vào lúc 17:15:59 MMT thì chưa tới giờ tàu chạy (17:18 MMT).
+>      - Tuy nhiên, ca 14:58 MMT trước đó đã bị trượt không gửi được, và Ghế Giám Sát AUDITOR-9.1 hoàn toàn không cảnh báo!
+> - **Nguyên Nhân Gốc (Root Cause)**:
+>   1. **Ghế Giám Sát Bị "Mù Ca Chiều/Tối/Đêm"**: Ghế AUDITOR-9.1 (`system_auditor.py`) chỉ được lên lịch chạy duy nhất 1 lần vào buổi sáng lúc `09:00 MMT` (`check_time_exact 09 00`). Toàn bộ hoạt động chiều, tối và đêm (14:58, 17:18, 17:30, 19:41, 20:56) hoàn toàn không có ai giám sát!
+>   2. **Dung Sai Quá Hẹp (Narrow Window Trap)**: Trong `train_5min.yml`, hàm `check_time_exact` có dung sai `DIFF <= 2` phút. Vì các mốc giờ kết thúc bằng số 8 (như 14:58, 07:18, 08:48, 10:18, 14:18, 17:18) cách các nhịp cron 5 phút ít nhất 2 đến 3 phút, khi máy ảo GitHub Actions runner bị delay khởi động hàng đợi 2-4 phút, cả 2 nhịp cron trước và sau đều rơi vào `DIFF >= 3` phút, dẫn đến việc bỏ sót hoàn toàn chuyến tàu!
+>   3. **Lệch Regex Tiêu Đề Báo Cáo**: Trong `system_auditor.py`, `SCHEDULE_RULES` dùng regex `r"6\.\s*Daily\s*Note\s*Read"`, không khớp với tiêu đề tin nhắn thực tế gửi trong nhóm: `📋 6. Report — Daily Note Read Report — Summary`.
+>   4. **Thiếu Giám Sát Toa Sale Summary (17:30 MMT)**: Toa Sale Summary chưa được đưa vào bộ luật kiểm toán `SCHEDULE_RULES`.
+> - **Quy Trình & Biện Pháp Khắc Phục Bọc Thép (The 4-Pillar Full-Lifecycle Monitoring Protocol)**:
+>   1. **Giám Sát Toàn Trình 4 Ca Bắt Buộc (4 Daily Mandatory Audit Shifts)**:
+>      - Cấu hình Ghế AUDITOR-9.1 chạy 4 ca định kỳ mỗi ngày trên `train_5min.yml`:
+>        - 🌅 **Ca Sáng (09:00 MMT)**: Hậu kiểm Báo cáo 1, 2, 3, 4, BOD, Plan 5C, Report 6 ca 1 (08:48), Report 6.1 ca 1 & 2 (07:18 & 10:18).
+>        - ☀️ **Ca Trưa / Đầu Chiều (14:35 MMT)**: Hậu kiểm Refuel ca 1 (10:06), Site Clear ca 3 (14:18), Refuel ca 2 (14:11).
+>        - 🌆 **Ca Chiều Tối (17:40 MMT)**: Hậu kiểm Report 6 ca 2 & 3 (14:58 & 17:18), Report 6.1 ca 4 (17:18), Toa Sale Summary (17:30).
+>        - 🌙 **Ca Đêm Chốt Ngày (21:15 MMT)**: Hậu kiểm Plan 5A (18:41), Plan 5B (19:11), Report 6 ca 4 (19:41), Refuel EOD (20:56).
+>   2. **Hàm Dung Sai Kháng Trễ Hàng Đợi (Queue-Delay-Resilient `check_time_tolerance_4m`)**:
+>      - Thiết lập hàm `check_time_tolerance_4m` với dung sai `DIFF <= 4` phút cho các mốc đơn lẻ không chia hết cho 5 (07:18, 08:48, 10:18, 14:18, 14:58, 17:18, 19:41), đảm bảo không bao giờ bị bỏ rơi chuyến tàu dù runner có bị nghẽn queue.
+>   3. **Tầng Chống Gửi Trùng In-Script (In-Script Dedup Gate < 20 Minutes)**:
+>      - Bổ sung tầng khóa an toàn trong `daily_read_report.py`: kiểm tra lịch sử 5 tin nhắn gần nhất trong CONTROL; nếu Report 6 đã được gửi trong vòng 20 phút qua, script lập tức thoát êm (`return`) với thông báo `Skipping duplicate run`, triệt tiêu 100% rủi ro gửi lặp tin nhắn khi nới dung sai.
+>   4. **Chuẩn Hóa Bộ Lọc Regex & Tích Hợp Toa Bán Hàng**:
+>      - Cập nhật pattern Report 6 thành `[r"6\.\s*(?:Report\s*—\s*)?Daily\s*Note\s*Read", r"Daily\s*Note\s*Read", r"Read\s*Report"]`.
+>      - Thêm Toa Sale Summary Report (17:30 MMT) vào `SCHEDULE_RULES`.
+>      - Toa Sale Summary gửi bản tổng hợp vào nhóm `CONTROL (-5251698940)` song song với nhóm bán hàng để Ban Điều Hành và Auditor đồng bộ theo dõi.
