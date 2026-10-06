@@ -486,6 +486,7 @@ def setup_bot_menu_commands():
 # ── ETA Site Down ──────────────────────────────────────────────────────────────
 SD_SHEET_ID = "1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow"
 SD_GID = "0"
+ALARM_GID = "1839820494"
 
 def get_eta_site_down(team_filter="ALL"):
     """Đọc ETA từ Site Down sheet. Col E = nội dung, Col G = team."""
@@ -552,42 +553,84 @@ def get_eta_site_down(team_filter="ALL"):
 
 def get_eta_share_templates(team_filter="ALL"):
     """Build pre-filled ETA update templates per team/subteam.
-    Sections (4):
-      1.1 🔴 Cell Down                 (Row with label 'Cell down' in Sheet GID 0)
-      1.2 ⚙️ DG Abnormal              (Row with label 'DG Abnormal' in Sheet GID 0)
-      1.3 ❌ DG Run >16H               (Row with label 'DG Run>16H' in Sheet GID 0)
-      1.4 📡 Site Down                (Row with label 'Site down' in Sheet GID 0)
-    Reads separated columns BP..BW (rows 5..9) where each team and subteam has its own column.
+    Sections:
+      1.1 🔴 Cell Down                 (Clean Tab ALARM_GID 1839820494, Col A..E)
+      1.2 ⚙️ DG Abnormal              (Clean Tab ALARM_GID 1839820494, Col F..J)
+      1.3 ❌ DG Run >16H               (Clean Tab ALARM_GID 1839820494, Col O..S)
+      1.4 📡 Site Down                (Site Down Row in Sheet SD_GID 0, Col BP..BW)
+      1.5 🌡️ Battery Temp High        (Clean Tab ALARM_GID 1839820494, Col K..N)
+    Fallback to legacy columns BP..BW in SD_GID 0 if ALARM_GID is unavailable.
     Returns list of (team_name, template_text).
     """
     try:
-        csv_url = f"https://docs.google.com/spreadsheets/d/{SD_SHEET_ID}/export?format=csv&gid={SD_GID}"
-        resp = requests.get(csv_url, timeout=15)
-        resp.raise_for_status()
+        # 1. Fetch SD_GID 0 for timestamp and Site Down
+        csv_url_sd = f"https://docs.google.com/spreadsheets/d/{SD_SHEET_ID}/export?format=csv&gid={SD_GID}"
+        resp_sd = requests.get(csv_url_sd, timeout=15)
+        resp_sd.raise_for_status()
         import csv as _csv, io as _io
-        reader = _csv.reader(_io.StringIO(resp.text))
-        rows = list(reader)
-        if len(rows) < 6:
-            return []
+        rows_sd = list(_csv.reader(_io.StringIO(resp_sd.text)))
 
-        # 1. Update timestamp from Row 0 Col 0
+        # Update timestamp from Row 0 Col 0
         update_ts = ""
-        if len(rows) > 0 and len(rows[0]) > 0:
-            m_ts = re.search(r'(\d{2}/\d{2}/\d{4}\s+\d{2}:\d{2})', rows[0][0])
+        if len(rows_sd) > 0 and len(rows_sd[0]) > 0:
+            m_ts = re.search(r'(\d{2}/\d{2}/\d{4}\s+\d{2}:\d{2})', rows_sd[0][0])
             if m_ts:
                 update_ts = m_ts.group(1)
         if not update_ts:
             update_ts = datetime.now(TZ_MM).strftime("%d/%m/%Y %H:%M")
 
-        # 2. Dynamically locate header row containing team names
+        teams_all = ["T1", "T1 S1", "T2", "T2 S1", "T3", "T3 S1", "T4"]
+        team_data = {t: {"cell_down": [], "dg_abnormal": [], "dg_run": [], "site_down": [], "bat_temp": []} for t in teams_all}
+
+        # 2. Fetch clean alarms from tab ALARM_GID (1839820494)
+        has_alarm_data = False
+        try:
+            csv_url_alarm = f"https://docs.google.com/spreadsheets/d/{SD_SHEET_ID}/export?format=csv&gid={ALARM_GID}"
+            resp_alarm = requests.get(csv_url_alarm, timeout=15)
+            if resp_alarm.status_code == 200:
+                rows_alarm = list(_csv.reader(_io.StringIO(resp_alarm.text)))
+                if len(rows_alarm) >= 3:
+                    for r in rows_alarm[2:]:
+                        # Col 0-4: Cell down (Site ID: 0, Team: 1)
+                        if len(r) > 1:
+                            s_id, t_col = (r[0] or "").strip().upper(), (r[1] or "").strip().upper()
+                            t_norm = re.sub(r'\s+', ' ', t_col)
+                            if re.match(r'^TNI\d+$', s_id) and t_norm in team_data:
+                                if s_id not in team_data[t_norm]["cell_down"]:
+                                    team_data[t_norm]["cell_down"].append(s_id)
+                                    has_alarm_data = True
+                        # Col 5-9: DG Abnormal (Site ID: 5, Team: 6)
+                        if len(r) > 6:
+                            s_id, t_col = (r[5] or "").strip().upper(), (r[6] or "").strip().upper()
+                            t_norm = re.sub(r'\s+', ' ', t_col)
+                            if re.match(r'^TNI\d+$', s_id) and t_norm in team_data:
+                                if s_id not in team_data[t_norm]["dg_abnormal"]:
+                                    team_data[t_norm]["dg_abnormal"].append(s_id)
+                        # Col 10-13: Battery Temp High (Site ID: 10, Team: 11)
+                        if len(r) > 11:
+                            s_id, t_col = (r[10] or "").strip().upper(), (r[11] or "").strip().upper()
+                            t_norm = re.sub(r'\s+', ' ', t_col)
+                            if re.match(r'^TNI\d+$', s_id) and t_norm in team_data:
+                                if s_id not in team_data[t_norm]["bat_temp"]:
+                                    team_data[t_norm]["bat_temp"].append(s_id)
+                        # Col 14-18: DG Run >16H (Site ID: 14, Team: 15)
+                        if len(r) > 15:
+                            s_id, t_col = (r[14] or "").strip().upper(), (r[15] or "").strip().upper()
+                            t_norm = re.sub(r'\s+', ' ', t_col)
+                            if re.match(r'^TNI\d+$', s_id) and t_norm in team_data:
+                                if s_id not in team_data[t_norm]["dg_run"]:
+                                    team_data[t_norm]["dg_run"].append(s_id)
+        except Exception as ex_alarm:
+            logger.warning(f"Fetch ALARM_GID ({ALARM_GID}) warning: {ex_alarm}")
+
+        # 3. Read Site Down from SD_GID 0 (Row with label 'Site down')
         header_row_idx = None
         team_col_map = {}
-        for r_idx in range(min(15, len(rows))):
-            row = rows[r_idx]
+        for r_idx in range(min(15, len(rows_sd))):
+            row = rows_sd[r_idx]
             found_teams = {}
             for c_idx, val in enumerate(row):
-                v = (val or "").strip()
-                v_norm = re.sub(r'\s+', ' ', v).upper()
+                v_norm = re.sub(r'\s+', ' ', (val or "").strip()).upper()
                 if v_norm in ('T1', 'T1 S1', 'T2', 'T2 S1', 'T3', 'T3 S1', 'T4'):
                     found_teams[v_norm] = c_idx
             if len(found_teams) >= 4:
@@ -601,33 +644,46 @@ def get_eta_share_templates(team_filter="ALL"):
 
         label_col = min(team_col_map.values()) - 1
 
-        section_defs = [
-            ("1.1", "🔴", "Cell Down", [r'cell\s*down']),
-            ("1.2", "⚙️", "DG Abnormal", [r'dg\s*abnormal']),
-            ("1.3", "❌", "DG Run >16H", [r'dg\s*run']),
-            ("1.4", "📡", "Site Down", [r'site\s*down']),
-        ]
-
-        sec_rows = {}
-        for r_idx in range(header_row_idx + 1, min(header_row_idx + 8, len(rows))):
-            row = rows[r_idx]
+        site_down_r_idx = None
+        for r_idx in range(header_row_idx + 1, min(header_row_idx + 8, len(rows_sd))):
+            row = rows_sd[r_idx]
             lbl = (row[label_col] if label_col < len(row) else "").strip()
-            for sec_num, icon, title, patterns in section_defs:
-                if sec_num in sec_rows:
-                    continue
-                for pat in patterns:
-                    if re.search(pat, lbl, re.IGNORECASE):
-                        sec_rows[sec_num] = r_idx
-                        break
+            if re.search(r'site\s*down', lbl, re.IGNORECASE):
+                site_down_r_idx = r_idx
+                break
+        if site_down_r_idx is None and (header_row_idx + 4) < len(rows_sd):
+            site_down_r_idx = header_row_idx + 4
 
-        # Fallback if section rows not found by label
-        default_sec_offsets = {"1.1": 1, "1.2": 2, "1.3": 3, "1.4": 4}
-        for sec_num, off in default_sec_offsets.items():
-            if sec_num not in sec_rows and (header_row_idx + off) < len(rows):
-                sec_rows[sec_num] = header_row_idx + off
+        if site_down_r_idx is not None and site_down_r_idx < len(rows_sd):
+            for t_name, c_idx in team_col_map.items():
+                if c_idx < len(rows_sd[site_down_r_idx]):
+                    cell_val = rows_sd[site_down_r_idx][c_idx]
+                    tnis = re.findall(r'(TNI\d+)', cell_val, re.IGNORECASE)
+                    seen = set()
+                    team_data[t_name]["site_down"] = [x.upper() for x in tnis if not (x.upper() in seen or seen.add(x.upper()))]
 
-        # Determine target teams
-        teams_all = ["T1", "T1 S1", "T2", "T2 S1", "T3", "T3 S1", "T4"]
+        # Fallback to GID 0 legacy columns if ALARM_GID had no data
+        if not has_alarm_data:
+            logger.info("Falling back to GID 0 legacy columns for alarm data")
+            section_defs_legacy = [
+                ("cell_down", [r'cell\s*down']),
+                ("dg_abnormal", [r'dg\s*abnormal']),
+                ("dg_run", [r'dg\s*run']),
+            ]
+            for r_idx in range(header_row_idx + 1, min(header_row_idx + 8, len(rows_sd))):
+                row = rows_sd[r_idx]
+                lbl = (row[label_col] if label_col < len(row) else "").strip()
+                for key, patterns in section_defs_legacy:
+                    for pat in patterns:
+                        if re.search(pat, lbl, re.IGNORECASE):
+                            for t_name, c_idx in team_col_map.items():
+                                if c_idx < len(row):
+                                    tnis = re.findall(r'(TNI\d+)', row[c_idx], re.IGNORECASE)
+                                    seen = set()
+                                    team_data[t_name][key] = [x.upper() for x in tnis if not (x.upper() in seen or seen.add(x.upper()))]
+                            break
+
+        # 4. Filter target teams
         if team_filter == "ALL":
             target_teams = teams_all
         else:
@@ -641,28 +697,55 @@ def get_eta_share_templates(team_filter="ALL"):
 
         results = []
         for t_name in target_teams:
-            c_idx = team_col_map.get(t_name)
-            if c_idx is None:
-                continue
-
             lines = [f"📋 {t_name} — ETA Update {update_ts}"]
             total_sites = 0
 
-            for sec_num, icon, title, _ in section_defs:
-                r_idx = sec_rows.get(sec_num)
-                items = []
-                if r_idx is not None and r_idx < len(rows) and c_idx < len(rows[r_idx]):
-                    cell_val = rows[r_idx][c_idx]
-                    tnis = re.findall(r'(TNI\d+)', cell_val, re.IGNORECASE)
-                    seen = set()
-                    items = [x.upper() for x in tnis if not (x.upper() in seen or seen.add(x.upper()))]
-                total_sites += len(items)
-                if items:
-                    lines.append(f"{sec_num} {icon} {title}: {len(items)} site")
-                    lines.extend([f"• {c} + FT + ETA:" for c in items])
-                else:
-                    lines.append(f"{sec_num} {icon} {title}:")
-                    lines.append("• (none)")
+            # 1.1 Cell Down
+            cd_items = team_data.get(t_name, {}).get("cell_down", [])
+            total_sites += len(cd_items)
+            if cd_items:
+                lines.append(f"1.1 🔴 Cell Down: {len(cd_items)} site")
+                lines.extend([f"• {c} + FT + ETA:" for c in cd_items])
+            else:
+                lines.append("1.1 🔴 Cell Down:")
+                lines.append("• (none)")
+
+            # 1.2 DG Abnormal
+            dg_items = team_data.get(t_name, {}).get("dg_abnormal", [])
+            total_sites += len(dg_items)
+            if dg_items:
+                lines.append(f"1.2 ⚙️ DG Abnormal: {len(dg_items)} site")
+                lines.extend([f"• {c} + FT + ETA:" for c in dg_items])
+            else:
+                lines.append("1.2 ⚙️ DG Abnormal:")
+                lines.append("• (none)")
+
+            # 1.3 DG Run >16H
+            dgr_items = team_data.get(t_name, {}).get("dg_run", [])
+            total_sites += len(dgr_items)
+            if dgr_items:
+                lines.append(f"1.3 ❌ DG Run >16H: {len(dgr_items)} site")
+                lines.extend([f"• {c} + FT + ETA:" for c in dgr_items])
+            else:
+                lines.append("1.3 ❌ DG Run >16H:")
+                lines.append("• (none)")
+
+            # 1.4 Site Down
+            sd_items = team_data.get(t_name, {}).get("site_down", [])
+            total_sites += len(sd_items)
+            if sd_items:
+                lines.append(f"1.4 📡 Site Down: {len(sd_items)} site")
+                lines.extend([f"• {c} + FT + ETA:" for c in sd_items])
+            else:
+                lines.append("1.4 📡 Site Down:")
+                lines.append("• (none)")
+
+            # 1.5 Battery Temp High (only show if team has sites)
+            bt_items = team_data.get(t_name, {}).get("bat_temp", [])
+            if bt_items:
+                total_sites += len(bt_items)
+                lines.append(f"1.5 🌡️ Battery Temp High: {len(bt_items)} site")
+                lines.extend([f"• {c} + FT + ETA:" for c in bt_items])
 
             # Skip subteam if 0 total sites in ALL mode to prevent spamming empty templates
             is_subteam = (" S" in t_name)
