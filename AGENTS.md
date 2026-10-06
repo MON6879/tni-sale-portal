@@ -2435,4 +2435,29 @@ Reason: [Lý do]`
 >      - Trong hàm `dispatchTrain5Min()` (`14_GITHUB_DISPATCH.gs`), bổ sung lệnh gọi POST nhẹ nhàng tới endpoint `process_aw_az` của Site Down Webhook (`https://script.google.com/macros/s/AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-/exec`).
 >   3. **Dự Phòng Kép Trong Toa 0 Keepalive (`train_5min.yml`)**:
 >      - Thêm lệnh `curl` kiểm tra `action=process_aw_az` tại Toa 0 Keepalive của Đoàn tàu 5 phút (`Task and WO` & `tni-sitedown`). Khi phát hiện dữ liệu mới, GAS gửi ngay Tin 2; khi chưa có dữ liệu mới, GAS trả `sent_tin2: false` mà không gửi bất kỳ tin rác nào.
+>
+> **PM-82 (06/10/2026) — Tách Biệt Tuyệt Đối AW7 Khỏi Cột A/Cột C & Định Dạng Danh Sách Site Down Xuống Hàng Theo Từng Nhân Viên (AW7 Pure Independence & Per-Staff Monospace Newlines)**:
+> - **Yêu Cầu & Bối Cảnh**:
+>   1. Người dùng yêu cầu mở khóa thép: `UNLOCK STEEL: Phucat@7979`.
+>   2. Người dùng chỉ thị rõ ràng:
+>      - *"ô AW7 này tuyệt đối không liên quan đến Cột A hay Cột C nó chỉ cần AW7 so sánh với tin trước của AW7 nếu khác thì gởi"*
+>      - *"AW7 trong phần Site down xuống hàng theo từng tên nhân viên cho dễ nhìn"*
+> - **Nguyên Nhân Gốc (Root Cause)**:
+>   1. **Ràng buộc chéo thừa thãi**: Trước đây hàm `processSummaryAwAz` kiểm tra chéo timestamp với Cột A (`minAw < minA1`), khiến ô AW7 dù có cập nhật mới nhưng nếu lệch giờ với Cột A thì bị chặn không cho gửi.
+>   2. **Trình bày khó theo dõi**: Trong Tin 2 (SUMMARY), toàn bộ trạm sập của tất cả nhân viên bị nối chung thành 1 dòng văn bản dài dằng dặc ngăn cách bởi dấu gạch ngang (`-`), khiến người điều hành và kỹ sư rất khó phân biệt trạm của từng nhân sự.
+> - **Quy Trình & Biện Pháp Khắc Phục Bọc Thép (Rule PM-82)**:
+>   1. **Độc Lập Thuần Túy 100% Cho AW7**:
+>      - Trong `site_down_v2.gs`, loại bỏ hoàn toàn việc so sánh với Cột A và Cột C.
+>      - So sánh độc lập hai chiều: `isChanged = (tsKey !== lastTs) || (currentContent !== lastContent)`.
+>      - Hễ phát hiện mốc giờ mới hoặc nội dung trong ô AW7 có sự thay đổi ➔ **GỬI NGAY**, cập nhật đồng thời `TS_KEY_AW7` và `SD_LAST_SENT_AW_CONTENT`.
+>      - Nếu không có gì thay đổi ➔ Bỏ qua trong êm đẹp (`sent_tin2: false`), bảo đảm zero spam.
+>   2. **Định Dạng Xuống Hàng Từng Nhân Viên Trong Site Down (`formatSiteDownStaffLines_`)**:
+>      - Bổ sung hàm helper `formatSiteDownStaffLines_` để tách từng nhân viên (`parts.split(/\s+-\s+(?:\/)?/)`) thành dòng riêng biệt với ký hiệu đầu dòng `• <Tên Nhân Viên> : <Danh sách trạm & số giờ down>`.
+>      - Áp dụng đồng bộ cho cả bản tin gửi riêng 4 Team (`buildAwAzTeamMessage`) và bản tin gửi nhóm CONTROL / DM (`buildAwAzControlMessage`).
+>   3. **Quy Trình Khóa Thép Bắt Buộc Trong Cùng 1 Phiên**:
+>      - Sửa code dứt điểm trong `apps_script_sitedown/site_down_v2.gs`.
+>      - `npx clasp push --force` & `npx clasp deploy -i AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-` lên Version **`@108`**.
+>      - Phúc tra live: POST `action=process_aw_az` thành công với `{"ok":true,"sent_tin2":true}` (lần 1) và `{"ok":true,"sent_tin2":false}` (lần 2).
+>      - Khóa Thép Site Down tự động đóng lại bảo vệ hệ thống.
+
 
