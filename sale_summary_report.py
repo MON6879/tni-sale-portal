@@ -107,16 +107,16 @@ def run_sale_summary():
     cols_nhap, rows_nhap = fetch_gviz_rows(491845137)
     stock_count = len(rows_nhap)
 
-    # 3. Tạo báo cáo tóm tắt vận hành cho Dawei Central Group
+    # 3. Tạo báo cáo tóm tắt vận hành cho Dawei Central Group (Web BI Portal Centric)
     central_msg = (
         f"📊 <b>TNI SALE &amp; OPERATIONS SUMMARY</b>\n"
         f"📅 <b>Date:</b> {date_str} {time_str} MMT | 🏢 <b>Branch:</b> Tanintharyi\n"
         f"━━━━━━━━━━━━━━━━━━━━\n"
         f"📦 <b>Warehouse Stock:</b> {stock_count} stock-in records logged\n"
         f"👥 <b>Connected Groups:</b> {len(groups)} Solution Teams active\n"
-        f"🛡️ <b>Collect &amp; Auto-Delete:</b> 100% operational on all groups\n"
+        f"🌐 <b>Web BI Portal:</b> 100% Operational for Orders, Serial &amp; Photos\n"
         f"━━━━━━━━━━━━━━━━━━━━\n"
-        f"💡 <i>Tip: Send <code>/template</code> or tap Web UI to copy report templates.</i>"
+        f"💡 <i>Notice: All Sales, Consignment &amp; Acceptance orders are now submitted exclusively on Web BI. Telegram is reserved for communications.</i>"
     )
 
     # 4. Gửi đến các Group
@@ -133,12 +133,17 @@ def run_sale_summary():
                 f"🛒 <b>[{gname.upper()}] SALE &amp; SERVICE DISPATCH</b>\n"
                 f"📅 <b>Time:</b> {time_str} MMT | ⚡ <b>System Active</b>\n"
                 f"━━━━━━━━━━━━━━━━━━━━\n"
-                f"✅ Sales, Warranty &amp; Consignment templates are live.\n"
-                f"🔒 All customer numbers and details are automatically protected.\n"
+                f"✅ Web BI Sales Portal is live for your team.\n"
+                f"📷 Please capture serial numbers and customer proof photos via Web BI.\n"
                 f"━━━━━━━━━━━━━━━━━━━━\n"
-                f"📋 <i>Use template format to submit orders directly in this group.</i>"
+                f"🌐 <i>Access Web BI Portal to submit orders and check real-time stock.</i>"
             )
             send_telegram(gid, team_msg)
+
+    # Gửi bản tổng hợp vận hành vào CONTROL SITE (-5251698940) phục vụ Ban Điều Hành & Auditor
+    control_chat_id = os.getenv("CONTROL_CHAT_ID", "-5251698940")
+    if control_chat_id:
+        send_telegram(control_chat_id, central_msg)
 
     # 5. Báo cáo Giám Đốc (Admin DM)
     if ADMIN_CHAT_ID:
