@@ -187,6 +187,11 @@ bac.
 >    - (a) BẮT BUỘC phải loại bỏ triệt để các lệnh gọi thủ công tương ứng (`/eta`, `/eta_t1`, `/eta_t2`...) ra khỏi Menu Lệnh của Bot Telegram (`setMyCommands`) trên TẤT CẢ các scope (toàn cục, `all_group_chats`, `all_private_chats` và từng nhóm chat cụ thể).
 >    - (b) TUYỆT ĐỐI CẤM để lại các lệnh gợi ý trùng lặp trong menu chat khiến người dùng phân vân bấm nhầm làm spam nhóm và chạy lặp dữ liệu không cần thiết.
 >    - (c) Khi sửa hàm `setupCommands`, BẮT BUỘC gọi ngay API `deleteMyCommands` trên từng scope và gọi `setupCommands` để kích hoạt Telegram cập nhật menu ngay lập tức.
+> 10. **RULE PM-35 — Lệnh Nghỉ Phép (/take_leave, /half_leave) Chỉ Đăng Ký Vào Duy Nhất Nhóm 10 (Strict Attendance Command Scope Isolation to Group 10 Only)**:
+>    - (a) Các lệnh xin nghỉ phép (`/take_leave`, `/half_leave`) của `@TNI_DAILY_ADDTENDANCE_BOT` BẮT BUỘC **CHỈ ĐƯỢC HIỂN THỊ TRONG DUY NHẤT NHÓM 10** (`10. TNI DAILY ADDTENDANCE`, Chat ID `-5465634644`).
+>    - (b) **TUYỆT ĐỐI CẤM** đăng ký các lệnh này vào scope mặc định (`default`), nhóm chung (`all_group_chats`), chat riêng (`all_private_chats`) hoặc trên 4 nhóm Team vận hành (`TNI TEAM 1-4`, ví dụ `-1004215695747`, `-1004480845549`, `-1004369170658`, `-1004293741999`).
+>    - (c) Khi cấu hình `setupAttendanceBotCommands()`, BẮT BUỘC phải gọi `deleteMyCommands` trên tất cả các scope chung và từng nhóm Team, và CHỈ gọi `setMyCommands` với scope `{ type: "chat", chat_id: DAILY_ATT_CHAT }`. Khi bấm `/` trong 4 nhóm Team, bot menu BẮT BUỘC phải trống hoàn toàn (0 commands)!
+
 
 ---
 
@@ -2355,4 +2360,24 @@ Reason: [Lý do]`
 >   2. **Khóa Chặt Điều Kiện Phản Hồi (Strict Reply Gate: status == "ok" AND valid def)**: Bot Python CHỈ ĐƯỢC PHÉP gửi tin nhắn phản hồi Telegram khi `result.get("status") == "ok" and result.get("def")`. Mọi trạng thái `"skip"`, `"error"` hoặc thiếu mã DEF BẮT BUỘC phải im lặng hoàn toàn, cấm gửi tin rác hoặc tag người dùng.
 >   3. **Đồng Bộ Song Mã Backend GAS (`apps_script_refuel_plan.gs`)**: Cập nhật hàm `collectMessage` trong GAS để dùng chung logic regex neo đầu dòng và nhận diện trường tường minh `"category"` từ Webhook truyền lên.
 >   4. **Triển Khai & Kiểm Chứng Live (Live Verification & Sweep)**: Dùng Telethon xóa tức thì tin bot nhắn sai trong nhóm Telegram, deploy mã nguồn Apps Script (`npx clasp push` & `npx clasp deploy -i AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA @478`), và push code Webhook Python lên Vercel.
+>
+> **PM-79 (06/10/2026) — Nguồn Dữ Liệu Báo Cáo Alarm Chia Sẻ ETA Chuẩn Xác Từ Tab GID 1839820494 & Khóa Chống Trộn Lẫn Trạm Site Down Vào Cell Down (Clean Alarm SSOT & Zero Cross-Contamination Protocol)**:
+> - **Yêu Cầu & Bối Cảnh**:
+>   1. Người dùng phản ánh số liệu Cell Down trên bản tin `📋 T2 S1 — ETA Update` hiển thị sai thành 12 trạm trong khi thực tế toàn bộ Team 2 chỉ có đúng 8 Cell Down (T2 chính có 5 trạm, T2 S1 có 3 trạm).
+>   2. Người dùng đã chuẩn hóa bảng dữ liệu cảnh báo sống tại tab chuyên biệt `1839820494` (`https://docs.google.com/spreadsheets/d/1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow/edit?gid=1839820494`), phân tách rành mạch theo cột `Team` cho từng đội (`T1`, `T1 S1`, `T2`, `T2 S1`, `T3`, `T3 S1`, `T4`).
+> - **Nguyên Nhân Gốc (Root Cause)**:
+>   1. Trước đây, hàm `get_eta_share_templates()` trong `search_bot.py` đọc từ bảng phân tách cột BP..BW trên Sheet GID 0 (ô `BT6` cho T2 S1).
+>   2. Trên Sheet GID 0, ô `BT6` (Cell down của T2 S1) đã bị công thức/người dùng dồn nhầm toàn bộ 7 trạm Site Down (`TNI0391, TNI0515, TNI0442, TNI0164, TNI0215, TNI0289, TNI0007`) cùng với các trạm khác vào chung ô Cell Down, làm số lượng trạm bị đội lên thành 12 trạm thay vì 3 trạm thật.
+> - **Quy Trình & Biện Pháp Khắc Phục Bọc Thép (The 3-Pillar Clean Alarm & Zero-Contamination Protocol)**:
+>   1. **Đọc Nguồn Dữ Liệu Sống Chuẩn Xác Từ Tab `ALARM_GID = "1839820494"`**:
+>      - Cấu hình `ALARM_GID = "1839820494"` để đọc trực tiếp bảng Alarm sạch:
+>        - Cột A..E: `1.1 🔴 Cell Down` (lọc theo cột `Team`: T1 3 trạm, T1 S1 8 trạm, T2 5 trạm, T2 S1 3 trạm, T3 2 trạm, T3 S1 2 trạm, T4 2 trạm).
+>        - Cột F..J: `1.2 ⚙️ DG Abnormal` (lọc theo cột `Team`: T1 4 trạm, T1 S1 2 trạm, T2 2 trạm, T2 S1 1 trạm).
+>        - Cột K..N: `1.5 🌡️ Battery Temp High` (lọc theo cột `Team`: T1 8 trạm, T1 S1 1 trạm, T2 2 trạm).
+>        - Cột O..S: `1.3 ❌ DG Run >16H` (lọc theo cột `Team`: T1 3 trạm, T2 2 trạm, T4 1 trạm).
+>   2. **Tách Bạch 100% Site Down Khỏi Cell Down**:
+>      - Mục `1.4 📡 Site Down` được đọc riêng biệt từ Hàng 9 Sheet GID 0 (`Site down`), TUYỆT ĐỐI CẤM gộp trạm Site Down vào Cell Down.
+>      - Tự động duy trì cơ chế Fallback về Sheet GID 0 nếu tab `1839820494` tạm thời không truy cập được.
+>   3. **Đồng Bộ Song Mã Repositories (`Task and WO` & `tni-search`)**:
+>      - Đồng bộ 100% `search_bot.py` qua cả hai kho mã nguồn và triển khai kiểm tra live trên Vercel.
 
