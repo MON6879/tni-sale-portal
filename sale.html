@@ -1509,11 +1509,12 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
           <div class="f"><label>Điểm Bán *</label><input id="kg-db" placeholder="Tên điểm bán"/></div>
           <div class="f"><label>Người Nhận</label><input id="kg-nn" placeholder="Họ tên"/></div>
           <div class="f"><label>Điện Thoại</label><input id="kg-dt" placeholder="0xxxxxxx"/></div>
-          <div class="f"><label>Sản Phẩm *</label><select id="kg-sp" onchange="autoPrice('kg-sp','kg-gia');calcKGProfit()"></select></div>
+          <div class="f"><label>Tên Sản Phẩm *</label><select id="kg-sp" onchange="autoPrice('kg-sp','kg-gia');calcKGProfit()"></select></div>
+          <div class="f"><label>Serial Number (Mã Serial)</label><input id="kg-serial" placeholder="VD: SN1200-001..."/></div>
           <div class="f"><label>Số Lượng *</label><input id="kg-sl" type="number" min="1" placeholder="0" oninput="calcKGProfit()"/></div>
           <div class="f"><label>Giá Bán Tại Điểm (₫)</label><input id="kg-gia" type="number" placeholder="0" oninput="calcKGProfit()"/></div>
-          <div class="f"><label>Ngày Gởi</label><input id="kg-ngay" type="date"/></div>
-          <div class="f"><label>Hạn (ngày)</label><input id="kg-han" type="number" placeholder="30"/></div>
+          <div class="f"><label>Ngày Ký Gởi *</label><input id="kg-ngay" type="date"/></div>
+          <div class="f"><label>Hạn Ký Gởi (ngày)</label><input id="kg-han" type="number" placeholder="30"/></div>
         </div>
 
         <!-- 💡 LIVE CONSIGNMENT 17% & COMPANY PROFIT PREVIEW -->
@@ -1537,17 +1538,17 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
     <div class="panel">
       <div class="ph">
         <h3 data-lang="kg_bulk_h3">📥 Import Phiếu Ký Gởi / Bỏ Sỉ Hàng Loạt (.CSV / Excel)</h3>
-        <span style="font-size:12px;color:#64748b" data-lang="kg_bulk_syntax">Cú pháp: Điểm Bán | Người Nhận | SĐT | Tên SP | Model | Số Lượng | Giá Bỏ Sỉ / Ký Gởi | Hạn (ngày) | Ghi Chú</span>
+        <span style="font-size:12px;color:#64748b" data-lang="kg_bulk_syntax">Cú pháp: Điểm Bán | Người Nhận | SĐT | Tên SP | Model | Serial | Ngày Ký Gởi (YYYY-MM-DD) | Số Lượng | Giá Bỏ Sỉ / Ký Gởi | Hạn (ngày) | Ghi Chú</span>
       </div>
       <div class="pb">
         <div style="background:#fff7ed;padding:12px 14px;border-radius:8px;border:1px solid #fed7aa;margin-bottom:12px;font-size:12.5px;line-height:1.6">
           <b>💡 Hướng dẫn 3 bước cho nhân viên kinh doanh / đại lý:</b><br/>
-          <b>1.</b> Bấm nút <button class="btn b-gn b-xs" onclick="downloadKGTemplate()">📥 Tải File Mẫu (.CSV)</button> để tải file mẫu (không yêu cầu giá gốc, chỉ cần giá sỉ/ký gởi).<br/>
+          <b>1.</b> Bấm nút <button class="btn b-gn b-xs" onclick="downloadKGTemplate()">📥 Tải File Mẫu (.CSV)</button> để tải file mẫu (đã có sẵn cột <b>Serial</b> và <b>Ngày Ký Gởi</b>, giá sỉ/ký gởi).<br/>
           <b>2.</b> Điền danh sách ký gởi trên Excel / Google Sheets rồi lưu file.<br/>
           <b>3.</b> Bấm <button class="btn b-or b-xs" onclick="document.getElementById('kg-bulk-file-input').click()">📁 Chọn File</button> <b>HOẶC</b> bôi đen trong Excel bấm <code>Ctrl+C</code> rồi <b>dán (Ctrl+V)</b> vào khung bên dưới:
         </div>
 
-        <textarea id="kg-bulk-paste-area" rows="6" style="width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;font-family:monospace;font-size:12px;line-height:1.5" placeholder="Dán (Ctrl+V) bảng ký gởi từ Excel / Google Sheets vào đây...&#10;Ví dụ:&#10;Điện Máy Hòa Phát	Anh Tuấn	0988111222	UPS Santak 1200VA	TG-1200	5	1950000	30	Ký gởi đợt 1 showroom&#10;Năng Lượng Xanh	Chị Mai	0977333444	Solar Panel 400W Jinko	JK-400M	10	2300000	45	Ký gởi đại lý cấp 1&#10;Cửa Hàng Điện Gia Dụng	Anh Minh	0912345678	Inverter Growatt 5kW	SPF-5000	2	15500000	60	Ký gởi dự án" oninput="parseKGBulkInput()"></textarea>
+        <textarea id="kg-bulk-paste-area" rows="6" style="width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;font-family:monospace;font-size:12px;line-height:1.5" placeholder="Dán (Ctrl+V) bảng ký gởi từ Excel / Google Sheets vào đây...&#10;Ví dụ:&#10;Điện Máy Hòa Phát	Anh Tuấn	0988111222	UPS Santak 1200VA	TG-1200	SN1200-01, SN1200-02	2026-10-06	5	1950000	30	Ký gởi đợt 1 showroom&#10;Năng Lượng Xanh	Chị Mai	0977333444	Solar Panel 400W Jinko	JK-400M	JK400-01, JK400-02	2026-10-06	10	2300000	45	Ký gởi đại lý cấp 1&#10;Cửa Hàng Điện Gia Dụng	Anh Minh	0912345678	Inverter Growatt 5kW	SPF-5000	GW5K-01	2026-10-06	2	15500000	60	Ký gởi dự án" oninput="parseKGBulkInput()"></textarea>
 
         <div style="display:flex;gap:8px;margin-top:10px;justify-content:space-between;flex-wrap:wrap">
           <div style="display:flex;gap:8px">
@@ -4800,6 +4801,8 @@ function addKG(){
   const giaGoc = Number(sp?.gg || 0);
   const hh17 = Math.round(giaBan * 0.17);
   const lnCty = (giaBan - giaGoc) - hh17;
+  const serial = v('kg-serial') || sp?.serial || '-';
+  const ngayKG = v('kg-ngay') || td();
 
   DB.add('kygoi',{
     db,
@@ -4808,6 +4811,7 @@ function addKG(){
     spId:+spId,
     spN:sp?.ten||'?',
     model:sp?.model||'-',
+    serial:serial,
     sl:+sl,
     giagoc: giaGoc,
     gia: giaBan,
@@ -4815,7 +4819,8 @@ function addKG(){
     lnCty: lnCty,
     tongHH17: hh17 * (+sl),
     tongLNCty: lnCty * (+sl),
-    ngay:v('kg-ngay')||td(),
+    ngay: ngayKG,
+    ngay_kg: ngayKG,
     han:v('kg-han')||30,
     ts:'Đang gởi'
   });
@@ -4828,7 +4833,7 @@ function rKG(){
   const d = DB.g('kygoi');
 
   document.getElementById('t-kygoi').innerHTML=tbl(
-    ['#','Điểm Bán','SP','SL','Giá Gốc','Giá Bán','17% Điểm Bán','LN Còn Lại Cty','Ngày','Hạn','Trạng Thái',''],
+    ['#','Điểm Bán','Sản Phẩm & Serial','SL','Giá Gốc','Giá Bán','17% Điểm Bán','LN Còn Lại Cty','Ngày Ký Gởi','Hạn','Trạng Thái',''],
     d.map((r,i)=>{
       const sp = nhap.find(n => n.id == r.spId);
       const gg = r.giagoc !== undefined ? r.giagoc : Number(sp?.gg || 0);
@@ -4837,17 +4842,19 @@ function rKG(){
       const lnCty = r.lnCty !== undefined ? r.lnCty : ((gb - gg) - hh17);
       const tongHH17 = r.tongHH17 !== undefined ? r.tongHH17 : (hh17 * r.sl);
       const tongLNCty = r.tongLNCty !== undefined ? r.tongLNCty : (lnCty * r.sl);
+      const displaySerial = r.serial && r.serial !== '-' ? r.serial : (sp?.serial || '-');
+      const displayDate = r.ngay_kg || r.ngay || td();
 
       return [
         i+1,
         `<b>${r.db}</b><br><small style="color:#64748b">${r.nn||'-'} (${r.dt||'-'})</small>`,
-        r.spN,
+        `<b>${r.spN}</b><br><small style="color:#0284c7">SN: ${displaySerial} | M: ${r.model||'-'}</small>`,
         `<b>${r.sl}</b>`,
         fn(gg)+'₫',
         fn(gb)+'₫',
         `<span style="color:var(--or);font-weight:600">${fn(tongHH17)}₫</span><br><small style="color:#64748b">(${fn(hh17)}₫/sp)</small>`,
         `<b style="color:${tongLNCty>=0?'var(--gn)':'var(--rd)'}">${fn(tongLNCty)}₫</b><br><small style="color:#64748b">(${fn(lnCty)}₫/sp)</small>`,
-        fd(r.ngay),
+        `<b>${fd(displayDate)}</b>`,
         r.han+'ng',
         bk(r.ts,r.ts==='Đang gởi'?'or':r.ts==='Đã bán'?'gn':'gy'),
         `<button class="btn b-xs b-gn" onclick="updKG(${r.id},'Đã bán')">✅ Bán</button>
@@ -4885,23 +4892,25 @@ function switchKGMode(mode) {
 
 function downloadKGTemplate() {
   const isVi = currentLang === 'vi';
-  // Chuẩn Song Ngữ: KHÔNG CÓ GIÁ GỐC, CHỈ CÓ GIÁ BỎ SỈ / GIÁ KÝ GỞI
+  // Chuẩn Song Ngữ ĐẦY ĐỦ CỘT SERIAL VÀ NGÀY KÝ GỞI
   const headers = [
     "Điểm Bán / Store POS (Bắt buộc)",
     "Người Nhận / Contact Person",
     "Số Điện Thoại / Phone",
     "Tên Sản Phẩm / Product Name (Bắt buộc)",
     "Model / Item Code",
+    "Serial Number / Mã Serial",
+    "Ngày Ký Gởi / Consignment Date (YYYY-MM-DD)",
     "Số Lượng / Quantity (Bắt buộc)",
     "Giá Bỏ Sỉ Hoặc Ký Gởi / Wholesale or Consignment Price (₫)",
     "Hạn Ký Gởi (ngày) / Term Days (Mặc định 30)",
     "Ghi Chú / Notes"
   ];
   const sampleRows = [
-    ["Điện Máy Hòa Phát", "Anh Tuấn", "0988111222", "UPS Santak 1200VA", "TG-1200", "5", "1950000", "30", "Ký gởi đợt 1 showroom"],
-    ["Năng Lượng Xanh", "Chị Mai", "0977333444", "Solar Panel 400W Jinko", "JK-400M", "10", "2300000", "45", "Ký gởi đại lý cấp 1"],
-    ["Cửa Hàng Điện Gia Dụng", "Anh Minh", "0912345678", "Inverter Growatt 5kW", "SPF-5000", "2", "15500000", "60", "Ký gởi dự án"],
-    ["Tạp Hóa Năng Lượng Mặt Trời", "Bác Ba", "0909000111", "Ắc Quy GEL 100Ah", "GEL-100", "8", "3900000", "30", "Ký gởi điểm bán xã"]
+    ["Điện Máy Hòa Phát", "Anh Tuấn", "0988111222", "UPS Santak 1200VA", "TG-1200", "SN1200-001, SN1200-002", td(), "5", "1950000", "30", "Ký gởi đợt 1 showroom"],
+    ["Năng Lượng Xanh", "Chị Mai", "0977333444", "Solar Panel 400W Jinko", "JK-400M", "JK400-01, JK400-02", td(), "10", "2300000", "45", "Ký gởi đại lý cấp 1"],
+    ["Cửa Hàng Điện Gia Dụng", "Anh Minh", "0912345678", "Inverter Growatt 5kW", "SPF-5000", "GW5K-001", td(), "2", "15500000", "60", "Ký gởi dự án"],
+    ["Tạp Hóa Năng Lượng Mặt Trời", "Bác Ba", "0909000111", "Ắc Quy GEL 100Ah", "GEL-100", "GEL100-01, GEL100-02", td(), "8", "3900000", "30", "Ký gởi điểm bán xã"]
   ];
 
   let csvContent = "\uFEFF" + headers.join(",") + "\n" + sampleRows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -4914,7 +4923,7 @@ function downloadKGTemplate() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  al(isVi ? '📥 Đã tải file mẫu Ký Gởi / Bỏ Sỉ!' : '📥 Consignment template downloaded!');
+  al(isVi ? '📥 Đã tải file mẫu Ký Gởi / Bỏ Sỉ (Có Serial & Ngày Ký Gởi)!' : '📥 Consignment template with Serial & Date downloaded!');
 }
 
 function handleKGBulkFile(event) {
@@ -4972,16 +4981,36 @@ function parseKGBulkInput() {
 
     if (!parts || parts.length === 0 || (!parts[0] && !parts[3])) continue;
 
-    // Cột: Điểm Bán | Người Nhận | SĐT | Tên SP | Model | Số Lượng | Giá Bỏ Sỉ/Ký Gởi | Hạn | Ghi Chú
+    // Hỗ trợ cả 2 định dạng:
+    // Mới (>= 10 cột): Điểm Bán | Người Nhận | SĐT | Tên SP | Model | Serial | Ngày Ký Gởi | Số Lượng | Giá Bỏ Sỉ/Ký Gởi | Hạn | Ghi Chú
+    // Cũ (9 cột):       Điểm Bán | Người Nhận | SĐT | Tên SP | Model | Số Lượng | Giá Bỏ Sỉ/Ký Gởi | Hạn | Ghi Chú
     const db = parts[0] || '';
     const nn = parts[1] || '';
     const dt = parts[2] || '';
     const ten = parts[3] || '';
     const model = parts[4] || '-';
-    const sl = parseInt((parts[5] || '1').replace(/\D/g, ''), 10) || 1;
-    const giaBan = parseFloat((parts[6] || '0').replace(/[^0-9.]/g, '')) || 0;
-    const han = parseInt((parts[7] || '30').replace(/\D/g, ''), 10) || 30;
-    const gc = parts.slice(8).join(' | ') || 'Import ký gởi';
+    let serial = '-';
+    let ngayKG = td();
+    let sl = 1;
+    let giaBan = 0;
+    let han = 30;
+    let gc = 'Import ký gởi';
+
+    if (parts.length >= 10 && (parts[6].includes('-') || parts[6].includes('/') || isNaN(Number(parts[6].replace(/\D/g, ''))))) {
+      // Format mới có Serial & Ngày Ký Gởi
+      serial = parts[5] || '-';
+      ngayKG = parts[6] ? parts[6].replace(/\//g, '-') : td();
+      sl = parseInt((parts[7] || '1').replace(/\D/g, ''), 10) || 1;
+      giaBan = parseFloat((parts[8] || '0').replace(/[^0-9.]/g, '')) || 0;
+      han = parseInt((parts[9] || '30').replace(/\D/g, ''), 10) || 30;
+      gc = parts.slice(10).join(' | ') || 'Import ký gởi';
+    } else {
+      // Format cũ 9 cột
+      sl = parseInt((parts[5] || '1').replace(/\D/g, ''), 10) || 1;
+      giaBan = parseFloat((parts[6] || '0').replace(/[^0-9.]/g, '')) || 0;
+      han = parseInt((parts[7] || '30').replace(/\D/g, ''), 10) || 30;
+      gc = parts.slice(8).join(' | ') || 'Import ký gởi';
+    }
 
     // Đối chiếu sản phẩm trong kho (DB.g('nhap'))
     let matchedSp = null;
@@ -5004,6 +5033,7 @@ function parseKGBulkInput() {
       finalModel = matchedSp.model || model;
       giagoc = Number(matchedSp.gg || 0);
       finalGia = giaBan > 0 ? giaBan : Number(matchedSp.gDiemban || matchedSp.gb || 0);
+      if (serial === '-' && matchedSp.serial) serial = matchedSp.serial;
       hasStockMatch = true;
     } else {
       spId = Date.now() + Math.random();
@@ -5025,6 +5055,8 @@ function parseKGBulkInput() {
     parsedKGBulkItems.push({
       db, nn, dt,
       spId, spN, model: finalModel,
+      serial,
+      ngay_kg: ngayKG,
       sl,
       giagoc,
       giaBan: finalGia,
@@ -5085,8 +5117,8 @@ function renderKGBulkPreview(items) {
 
   // Render bảng preview
   const headers = isVi ?
-    ['#', 'Trạng Thái', 'Điểm Bán', 'Người Nhận / SĐT', 'Sản Phẩm & Model', 'SL', 'Giá Ký Gởi / Sỉ', 'Thành Tiền', '17% Điểm Bán', 'LN Dự Kiến Cty', 'Hạn'] :
-    ['#', 'Status', 'Store POS', 'Contact / Phone', 'Product & Model', 'Qty', 'Wholesale Price', 'Total Value', '17% Store Fee', 'Est. HO Profit', 'Terms'];
+    ['#', 'Trạng Thái', 'Điểm Bán', 'Người Nhận / SĐT', 'Sản Phẩm & Serial', 'Ngày Ký Gởi', 'SL', 'Giá Ký Gởi / Sỉ', 'Thành Tiền', '17% Điểm Bán', 'LN Dự Kiến Cty', 'Hạn'] :
+    ['#', 'Status', 'Store POS', 'Contact / Phone', 'Product & Serial', 'Consign Date', 'Qty', 'Wholesale Price', 'Total Value', '17% Store Fee', 'Est. HO Profit', 'Terms'];
 
   const rows = items.map((it, idx) => {
     let statusHtml = '';
@@ -5103,7 +5135,8 @@ function renderKGBulkPreview(items) {
       statusHtml,
       `<b>${it.db}</b>`,
       `${it.nn || '-'}<br><small style="color:#64748b">${it.dt || '-'}</small>`,
-      `<b>${it.spN}</b><br><small style="color:#0284c7">${it.model || '-'}</small>`,
+      `<b>${it.spN}</b><br><small style="color:#0284c7">SN: ${it.serial || '-'} | M: ${it.model || '-'}</small>`,
+      `<b>${fd(it.ngay_kg)}</b>`,
       `<b>${it.sl}</b>`,
       `<b>${fn(it.giaBan)} ₫</b>`,
       `<span style="color:#2563eb;font-weight:700">${fn(it.tongDoanhThu)} ₫</span>`,
@@ -5136,6 +5169,7 @@ function confirmKGBulkImport() {
       spId: +it.spId,
       spN: it.spN,
       model: it.model,
+      serial: it.serial,
       sl: +it.sl,
       giagoc: it.giagoc,
       gia: it.giaBan,
@@ -5143,7 +5177,8 @@ function confirmKGBulkImport() {
       lnCty: it.lnCty,
       tongHH17: it.tongHH17,
       tongLNCty: it.tongLNCty,
-      ngay: td(),
+      ngay: it.ngay_kg || td(),
+      ngay_kg: it.ngay_kg || td(),
       han: +it.han,
       gc: it.gc || 'Import ký gởi hàng loạt',
       ts: 'Đang gởi'

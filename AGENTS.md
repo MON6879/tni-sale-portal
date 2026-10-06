@@ -191,6 +191,11 @@ bac.
 >    - (a) Các lệnh xin nghỉ phép (`/take_leave`, `/half_leave`) của `@TNI_DAILY_ADDTENDANCE_BOT` BẮT BUỘC **CHỈ ĐƯỢC HIỂN THỊ TRONG DUY NHẤT NHÓM 10** (`10. TNI DAILY ADDTENDANCE`, Chat ID `-5465634644`).
 >    - (b) **TUYỆT ĐỐI CẤM** đăng ký các lệnh này vào scope mặc định (`default`), nhóm chung (`all_group_chats`), chat riêng (`all_private_chats`) hoặc trên 4 nhóm Team vận hành (`TNI TEAM 1-4`, ví dụ `-1004215695747`, `-1004480845549`, `-1004369170658`, `-1004293741999`).
 >    - (c) Khi cấu hình `setupAttendanceBotCommands()`, BẮT BUỘC phải gọi `deleteMyCommands` trên tất cả các scope chung và từng nhóm Team, và CHỈ gọi `setMyCommands` với scope `{ type: "chat", chat_id: DAILY_ATT_CHAT }`. Khi bấm `/` trong 4 nhóm Team, bot menu BẮT BUỘC phải trống hoàn toàn (0 commands)!
+> 11. **RULE PM-36 — Quản Lý Serial & Ngày Ký Gởi Bắt Buộc Đồng Bộ Song Ngữ Trên Giao Diện Và Mẫu File (Strict Consignment Serial & Date Synchronization Policy)**:
+>    - (a) **Phân Hệ Ký Gởi / Bỏ Sỉ (Consignment)**: BẮT BUỘC phải hỗ trợ trường `Serial Number` (mã serial thiết bị) và trường `Ngày Ký Gởi` (`ngay_kg` / `Consignment Date`) trên cả 3 luồng: ① Form tạo phiếu đơn lẻ (`#kg-serial`, `#kg-ngay`), ② Bảng hiển thị danh sách ký gởi (`#t-kygoi`), ③ Khung import hàng loạt (`#kg-bulk-paste-area`) và Bảng xem trước (`#kg-bulk-preview-table`).
+>    - (b) **File Mẫu CSV Ký Gởi (`Mau_Ky_Goi_Ban_Si_TNI_*.csv`)**: BẮT BUỘC phải có đầy đủ 2 cột: `Serial Number / Mã Serial` và `Ngày Ký Gởi / Consignment Date (YYYY-MM-DD)` kèm dữ liệu mẫu thực tế.
+>    - (c) **Tương Thích Ngược Thông Minh (Dual-Format Backward Compatibility)**: Hàm phân tích import `parseKGBulkInput()` BẮT BUỘC phải hỗ trợ cả dữ liệu format mới (11 cột có Serial & Ngày Ký Gởi) lẫn dữ liệu cũ (9 cột), tự động nhận diện vị trí cột ngày và fallback serial an toàn từ kho hàng (`nhapList`) nếu dòng import để trống!
+
 
 
 ---

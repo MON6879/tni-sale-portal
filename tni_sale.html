@@ -418,19 +418,10 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
 <div id="topbar">
   <h2 id="ptitle">📊 Dashboard</h2>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-    <!-- 🛡️ BỘ CHUYỂN ĐỔI & HIỂN THỊ VAI TRÒ (RBAC ROLE SELECTOR) -->
-    <div id="role-selector-box" style="display:flex;align-items:center;gap:6px;background:#f8fafc;border:1.5px solid #cbd5e1;padding:4px 10px;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,0.04)">
-      <span style="font-size:11.5px;font-weight:700;color:#334155;white-space:nowrap">👤 <span data-lang="lbl_active_role">Vai Trò:</span></span>
-      <select id="app-role-select" onchange="changeAppRole(this.value)" style="border:none;background:transparent;font-size:12px;font-weight:800;color:#1e40af;cursor:pointer;outline:none;padding:2px 4px">
-        <option value="admin">👑 Ban Giám Đốc (BOD / Admin)</option>
-        <option value="finance">💰 Kế Toán / Tài Chính (Finance)</option>
-        <option value="sales">🧑‍💼 Nhân Viên Kinh Doanh (Sales)</option>
-        <option value="tech">🚀 Kỹ Thuật / Hiện Trường (Field Ops)</option>
-        <option value="warehouse">📦 Thủ Kho / Quản Lý Kho (Warehouse)</option>
-        <option value="dealer">🏪 Đại Lý Phân Phối (Dealer)</option>
-      </select>
-      <span id="role-badge-pill" style="font-size:10px;padding:2px 8px;border-radius:12px;font-weight:800;background:#dcfce7;color:#15803d;white-space:nowrap">Toàn Quyền</span>
-    </div>
+    <!-- 📁 NÚT XEM KHO ẢNH DRIVE (1 LINK XEM HẾT TẤT CẢ HÌNH ẢNH) -->
+    <a href="https://drive.google.com/drive/folders/12V-UaZM1cSha8LihCjBHTOU_BEAk74p-" target="_blank" class="btn b-sm" style="background:#fef3c7;color:#92400e;border:1.5px solid #fde68a;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:6px" title="Xem tất cả hình ảnh thu thập theo template trên Google Drive">
+      📁 <span>Kho Ảnh Drive (Photos)</span>
+    </a>
     <!-- Cài đặt % Lợi Nhuận & Thuế Nộp Tổng Công Ty (Ẩn UI theo yêu cầu người dùng) -->
     <input id="cfg-cty-rate" type="hidden" value="17"/>
     <a href="https://docs.google.com/spreadsheets/d/1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA" target="_blank" class="btn b-bl b-sm" style="text-decoration:none">📊 Google Sheet</a>
@@ -1518,11 +1509,12 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
           <div class="f"><label>Điểm Bán *</label><input id="kg-db" placeholder="Tên điểm bán"/></div>
           <div class="f"><label>Người Nhận</label><input id="kg-nn" placeholder="Họ tên"/></div>
           <div class="f"><label>Điện Thoại</label><input id="kg-dt" placeholder="0xxxxxxx"/></div>
-          <div class="f"><label>Sản Phẩm *</label><select id="kg-sp" onchange="autoPrice('kg-sp','kg-gia');calcKGProfit()"></select></div>
+          <div class="f"><label>Tên Sản Phẩm *</label><select id="kg-sp" onchange="autoPrice('kg-sp','kg-gia');calcKGProfit()"></select></div>
+          <div class="f"><label>Serial Number (Mã Serial)</label><input id="kg-serial" placeholder="VD: SN1200-001..."/></div>
           <div class="f"><label>Số Lượng *</label><input id="kg-sl" type="number" min="1" placeholder="0" oninput="calcKGProfit()"/></div>
           <div class="f"><label>Giá Bán Tại Điểm (₫)</label><input id="kg-gia" type="number" placeholder="0" oninput="calcKGProfit()"/></div>
-          <div class="f"><label>Ngày Gởi</label><input id="kg-ngay" type="date"/></div>
-          <div class="f"><label>Hạn (ngày)</label><input id="kg-han" type="number" placeholder="30"/></div>
+          <div class="f"><label>Ngày Ký Gởi *</label><input id="kg-ngay" type="date"/></div>
+          <div class="f"><label>Hạn Ký Gởi (ngày)</label><input id="kg-han" type="number" placeholder="30"/></div>
         </div>
 
         <!-- 💡 LIVE CONSIGNMENT 17% & COMPANY PROFIT PREVIEW -->
@@ -1546,17 +1538,17 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
     <div class="panel">
       <div class="ph">
         <h3 data-lang="kg_bulk_h3">📥 Import Phiếu Ký Gởi / Bỏ Sỉ Hàng Loạt (.CSV / Excel)</h3>
-        <span style="font-size:12px;color:#64748b" data-lang="kg_bulk_syntax">Cú pháp: Điểm Bán | Người Nhận | SĐT | Tên SP | Model | Số Lượng | Giá Bỏ Sỉ / Ký Gởi | Hạn (ngày) | Ghi Chú</span>
+        <span style="font-size:12px;color:#64748b" data-lang="kg_bulk_syntax">Cú pháp: Điểm Bán | Người Nhận | SĐT | Tên SP | Model | Serial | Ngày Ký Gởi (YYYY-MM-DD) | Số Lượng | Giá Bỏ Sỉ / Ký Gởi | Hạn (ngày) | Ghi Chú</span>
       </div>
       <div class="pb">
         <div style="background:#fff7ed;padding:12px 14px;border-radius:8px;border:1px solid #fed7aa;margin-bottom:12px;font-size:12.5px;line-height:1.6">
           <b>💡 Hướng dẫn 3 bước cho nhân viên kinh doanh / đại lý:</b><br/>
-          <b>1.</b> Bấm nút <button class="btn b-gn b-xs" onclick="downloadKGTemplate()">📥 Tải File Mẫu (.CSV)</button> để tải file mẫu (không yêu cầu giá gốc, chỉ cần giá sỉ/ký gởi).<br/>
+          <b>1.</b> Bấm nút <button class="btn b-gn b-xs" onclick="downloadKGTemplate()">📥 Tải File Mẫu (.CSV)</button> để tải file mẫu (đã có sẵn cột <b>Serial</b> và <b>Ngày Ký Gởi</b>, giá sỉ/ký gởi).<br/>
           <b>2.</b> Điền danh sách ký gởi trên Excel / Google Sheets rồi lưu file.<br/>
           <b>3.</b> Bấm <button class="btn b-or b-xs" onclick="document.getElementById('kg-bulk-file-input').click()">📁 Chọn File</button> <b>HOẶC</b> bôi đen trong Excel bấm <code>Ctrl+C</code> rồi <b>dán (Ctrl+V)</b> vào khung bên dưới:
         </div>
 
-        <textarea id="kg-bulk-paste-area" rows="6" style="width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;font-family:monospace;font-size:12px;line-height:1.5" placeholder="Dán (Ctrl+V) bảng ký gởi từ Excel / Google Sheets vào đây...&#10;Ví dụ:&#10;Điện Máy Hòa Phát	Anh Tuấn	0988111222	UPS Santak 1200VA	TG-1200	5	1950000	30	Ký gởi đợt 1 showroom&#10;Năng Lượng Xanh	Chị Mai	0977333444	Solar Panel 400W Jinko	JK-400M	10	2300000	45	Ký gởi đại lý cấp 1&#10;Cửa Hàng Điện Gia Dụng	Anh Minh	0912345678	Inverter Growatt 5kW	SPF-5000	2	15500000	60	Ký gởi dự án" oninput="parseKGBulkInput()"></textarea>
+        <textarea id="kg-bulk-paste-area" rows="6" style="width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;font-family:monospace;font-size:12px;line-height:1.5" placeholder="Dán (Ctrl+V) bảng ký gởi từ Excel / Google Sheets vào đây...&#10;Ví dụ:&#10;Điện Máy Hòa Phát	Anh Tuấn	0988111222	UPS Santak 1200VA	TG-1200	SN1200-01, SN1200-02	2026-10-06	5	1950000	30	Ký gởi đợt 1 showroom&#10;Năng Lượng Xanh	Chị Mai	0977333444	Solar Panel 400W Jinko	JK-400M	JK400-01, JK400-02	2026-10-06	10	2300000	45	Ký gởi đại lý cấp 1&#10;Cửa Hàng Điện Gia Dụng	Anh Minh	0912345678	Inverter Growatt 5kW	SPF-5000	GW5K-01	2026-10-06	2	15500000	60	Ký gởi dự án" oninput="parseKGBulkInput()"></textarea>
 
         <div style="display:flex;gap:8px;margin-top:10px;justify-content:space-between;flex-wrap:wrap">
           <div style="display:flex;gap:8px">
@@ -4809,6 +4801,8 @@ function addKG(){
   const giaGoc = Number(sp?.gg || 0);
   const hh17 = Math.round(giaBan * 0.17);
   const lnCty = (giaBan - giaGoc) - hh17;
+  const serial = v('kg-serial') || sp?.serial || '-';
+  const ngayKG = v('kg-ngay') || td();
 
   DB.add('kygoi',{
     db,
@@ -4817,6 +4811,7 @@ function addKG(){
     spId:+spId,
     spN:sp?.ten||'?',
     model:sp?.model||'-',
+    serial:serial,
     sl:+sl,
     giagoc: giaGoc,
     gia: giaBan,
@@ -4824,7 +4819,8 @@ function addKG(){
     lnCty: lnCty,
     tongHH17: hh17 * (+sl),
     tongLNCty: lnCty * (+sl),
-    ngay:v('kg-ngay')||td(),
+    ngay: ngayKG,
+    ngay_kg: ngayKG,
     han:v('kg-han')||30,
     ts:'Đang gởi'
   });
@@ -4837,7 +4833,7 @@ function rKG(){
   const d = DB.g('kygoi');
 
   document.getElementById('t-kygoi').innerHTML=tbl(
-    ['#','Điểm Bán','SP','SL','Giá Gốc','Giá Bán','17% Điểm Bán','LN Còn Lại Cty','Ngày','Hạn','Trạng Thái',''],
+    ['#','Điểm Bán','Sản Phẩm & Serial','SL','Giá Gốc','Giá Bán','17% Điểm Bán','LN Còn Lại Cty','Ngày Ký Gởi','Hạn','Trạng Thái',''],
     d.map((r,i)=>{
       const sp = nhap.find(n => n.id == r.spId);
       const gg = r.giagoc !== undefined ? r.giagoc : Number(sp?.gg || 0);
@@ -4846,17 +4842,19 @@ function rKG(){
       const lnCty = r.lnCty !== undefined ? r.lnCty : ((gb - gg) - hh17);
       const tongHH17 = r.tongHH17 !== undefined ? r.tongHH17 : (hh17 * r.sl);
       const tongLNCty = r.tongLNCty !== undefined ? r.tongLNCty : (lnCty * r.sl);
+      const displaySerial = r.serial && r.serial !== '-' ? r.serial : (sp?.serial || '-');
+      const displayDate = r.ngay_kg || r.ngay || td();
 
       return [
         i+1,
         `<b>${r.db}</b><br><small style="color:#64748b">${r.nn||'-'} (${r.dt||'-'})</small>`,
-        r.spN,
+        `<b>${r.spN}</b><br><small style="color:#0284c7">SN: ${displaySerial} | M: ${r.model||'-'}</small>`,
         `<b>${r.sl}</b>`,
         fn(gg)+'₫',
         fn(gb)+'₫',
         `<span style="color:var(--or);font-weight:600">${fn(tongHH17)}₫</span><br><small style="color:#64748b">(${fn(hh17)}₫/sp)</small>`,
         `<b style="color:${tongLNCty>=0?'var(--gn)':'var(--rd)'}">${fn(tongLNCty)}₫</b><br><small style="color:#64748b">(${fn(lnCty)}₫/sp)</small>`,
-        fd(r.ngay),
+        `<b>${fd(displayDate)}</b>`,
         r.han+'ng',
         bk(r.ts,r.ts==='Đang gởi'?'or':r.ts==='Đã bán'?'gn':'gy'),
         `<button class="btn b-xs b-gn" onclick="updKG(${r.id},'Đã bán')">✅ Bán</button>
@@ -4894,23 +4892,25 @@ function switchKGMode(mode) {
 
 function downloadKGTemplate() {
   const isVi = currentLang === 'vi';
-  // Chuẩn Song Ngữ: KHÔNG CÓ GIÁ GỐC, CHỈ CÓ GIÁ BỎ SỈ / GIÁ KÝ GỞI
+  // Chuẩn Song Ngữ ĐẦY ĐỦ CỘT SERIAL VÀ NGÀY KÝ GỞI
   const headers = [
     "Điểm Bán / Store POS (Bắt buộc)",
     "Người Nhận / Contact Person",
     "Số Điện Thoại / Phone",
     "Tên Sản Phẩm / Product Name (Bắt buộc)",
     "Model / Item Code",
+    "Serial Number / Mã Serial",
+    "Ngày Ký Gởi / Consignment Date (YYYY-MM-DD)",
     "Số Lượng / Quantity (Bắt buộc)",
     "Giá Bỏ Sỉ Hoặc Ký Gởi / Wholesale or Consignment Price (₫)",
     "Hạn Ký Gởi (ngày) / Term Days (Mặc định 30)",
     "Ghi Chú / Notes"
   ];
   const sampleRows = [
-    ["Điện Máy Hòa Phát", "Anh Tuấn", "0988111222", "UPS Santak 1200VA", "TG-1200", "5", "1950000", "30", "Ký gởi đợt 1 showroom"],
-    ["Năng Lượng Xanh", "Chị Mai", "0977333444", "Solar Panel 400W Jinko", "JK-400M", "10", "2300000", "45", "Ký gởi đại lý cấp 1"],
-    ["Cửa Hàng Điện Gia Dụng", "Anh Minh", "0912345678", "Inverter Growatt 5kW", "SPF-5000", "2", "15500000", "60", "Ký gởi dự án"],
-    ["Tạp Hóa Năng Lượng Mặt Trời", "Bác Ba", "0909000111", "Ắc Quy GEL 100Ah", "GEL-100", "8", "3900000", "30", "Ký gởi điểm bán xã"]
+    ["Điện Máy Hòa Phát", "Anh Tuấn", "0988111222", "UPS Santak 1200VA", "TG-1200", "SN1200-001, SN1200-002", td(), "5", "1950000", "30", "Ký gởi đợt 1 showroom"],
+    ["Năng Lượng Xanh", "Chị Mai", "0977333444", "Solar Panel 400W Jinko", "JK-400M", "JK400-01, JK400-02", td(), "10", "2300000", "45", "Ký gởi đại lý cấp 1"],
+    ["Cửa Hàng Điện Gia Dụng", "Anh Minh", "0912345678", "Inverter Growatt 5kW", "SPF-5000", "GW5K-001", td(), "2", "15500000", "60", "Ký gởi dự án"],
+    ["Tạp Hóa Năng Lượng Mặt Trời", "Bác Ba", "0909000111", "Ắc Quy GEL 100Ah", "GEL-100", "GEL100-01, GEL100-02", td(), "8", "3900000", "30", "Ký gởi điểm bán xã"]
   ];
 
   let csvContent = "\uFEFF" + headers.join(",") + "\n" + sampleRows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -4923,7 +4923,7 @@ function downloadKGTemplate() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  al(isVi ? '📥 Đã tải file mẫu Ký Gởi / Bỏ Sỉ!' : '📥 Consignment template downloaded!');
+  al(isVi ? '📥 Đã tải file mẫu Ký Gởi / Bỏ Sỉ (Có Serial & Ngày Ký Gởi)!' : '📥 Consignment template with Serial & Date downloaded!');
 }
 
 function handleKGBulkFile(event) {
@@ -4981,16 +4981,36 @@ function parseKGBulkInput() {
 
     if (!parts || parts.length === 0 || (!parts[0] && !parts[3])) continue;
 
-    // Cột: Điểm Bán | Người Nhận | SĐT | Tên SP | Model | Số Lượng | Giá Bỏ Sỉ/Ký Gởi | Hạn | Ghi Chú
+    // Hỗ trợ cả 2 định dạng:
+    // Mới (>= 10 cột): Điểm Bán | Người Nhận | SĐT | Tên SP | Model | Serial | Ngày Ký Gởi | Số Lượng | Giá Bỏ Sỉ/Ký Gởi | Hạn | Ghi Chú
+    // Cũ (9 cột):       Điểm Bán | Người Nhận | SĐT | Tên SP | Model | Số Lượng | Giá Bỏ Sỉ/Ký Gởi | Hạn | Ghi Chú
     const db = parts[0] || '';
     const nn = parts[1] || '';
     const dt = parts[2] || '';
     const ten = parts[3] || '';
     const model = parts[4] || '-';
-    const sl = parseInt((parts[5] || '1').replace(/\D/g, ''), 10) || 1;
-    const giaBan = parseFloat((parts[6] || '0').replace(/[^0-9.]/g, '')) || 0;
-    const han = parseInt((parts[7] || '30').replace(/\D/g, ''), 10) || 30;
-    const gc = parts.slice(8).join(' | ') || 'Import ký gởi';
+    let serial = '-';
+    let ngayKG = td();
+    let sl = 1;
+    let giaBan = 0;
+    let han = 30;
+    let gc = 'Import ký gởi';
+
+    if (parts.length >= 10 && (parts[6].includes('-') || parts[6].includes('/') || isNaN(Number(parts[6].replace(/\D/g, ''))))) {
+      // Format mới có Serial & Ngày Ký Gởi
+      serial = parts[5] || '-';
+      ngayKG = parts[6] ? parts[6].replace(/\//g, '-') : td();
+      sl = parseInt((parts[7] || '1').replace(/\D/g, ''), 10) || 1;
+      giaBan = parseFloat((parts[8] || '0').replace(/[^0-9.]/g, '')) || 0;
+      han = parseInt((parts[9] || '30').replace(/\D/g, ''), 10) || 30;
+      gc = parts.slice(10).join(' | ') || 'Import ký gởi';
+    } else {
+      // Format cũ 9 cột
+      sl = parseInt((parts[5] || '1').replace(/\D/g, ''), 10) || 1;
+      giaBan = parseFloat((parts[6] || '0').replace(/[^0-9.]/g, '')) || 0;
+      han = parseInt((parts[7] || '30').replace(/\D/g, ''), 10) || 30;
+      gc = parts.slice(8).join(' | ') || 'Import ký gởi';
+    }
 
     // Đối chiếu sản phẩm trong kho (DB.g('nhap'))
     let matchedSp = null;
@@ -5013,6 +5033,7 @@ function parseKGBulkInput() {
       finalModel = matchedSp.model || model;
       giagoc = Number(matchedSp.gg || 0);
       finalGia = giaBan > 0 ? giaBan : Number(matchedSp.gDiemban || matchedSp.gb || 0);
+      if (serial === '-' && matchedSp.serial) serial = matchedSp.serial;
       hasStockMatch = true;
     } else {
       spId = Date.now() + Math.random();
@@ -5034,6 +5055,8 @@ function parseKGBulkInput() {
     parsedKGBulkItems.push({
       db, nn, dt,
       spId, spN, model: finalModel,
+      serial,
+      ngay_kg: ngayKG,
       sl,
       giagoc,
       giaBan: finalGia,
@@ -5094,8 +5117,8 @@ function renderKGBulkPreview(items) {
 
   // Render bảng preview
   const headers = isVi ?
-    ['#', 'Trạng Thái', 'Điểm Bán', 'Người Nhận / SĐT', 'Sản Phẩm & Model', 'SL', 'Giá Ký Gởi / Sỉ', 'Thành Tiền', '17% Điểm Bán', 'LN Dự Kiến Cty', 'Hạn'] :
-    ['#', 'Status', 'Store POS', 'Contact / Phone', 'Product & Model', 'Qty', 'Wholesale Price', 'Total Value', '17% Store Fee', 'Est. HO Profit', 'Terms'];
+    ['#', 'Trạng Thái', 'Điểm Bán', 'Người Nhận / SĐT', 'Sản Phẩm & Serial', 'Ngày Ký Gởi', 'SL', 'Giá Ký Gởi / Sỉ', 'Thành Tiền', '17% Điểm Bán', 'LN Dự Kiến Cty', 'Hạn'] :
+    ['#', 'Status', 'Store POS', 'Contact / Phone', 'Product & Serial', 'Consign Date', 'Qty', 'Wholesale Price', 'Total Value', '17% Store Fee', 'Est. HO Profit', 'Terms'];
 
   const rows = items.map((it, idx) => {
     let statusHtml = '';
@@ -5112,7 +5135,8 @@ function renderKGBulkPreview(items) {
       statusHtml,
       `<b>${it.db}</b>`,
       `${it.nn || '-'}<br><small style="color:#64748b">${it.dt || '-'}</small>`,
-      `<b>${it.spN}</b><br><small style="color:#0284c7">${it.model || '-'}</small>`,
+      `<b>${it.spN}</b><br><small style="color:#0284c7">SN: ${it.serial || '-'} | M: ${it.model || '-'}</small>`,
+      `<b>${fd(it.ngay_kg)}</b>`,
       `<b>${it.sl}</b>`,
       `<b>${fn(it.giaBan)} ₫</b>`,
       `<span style="color:#2563eb;font-weight:700">${fn(it.tongDoanhThu)} ₫</span>`,
@@ -5145,6 +5169,7 @@ function confirmKGBulkImport() {
       spId: +it.spId,
       spN: it.spN,
       model: it.model,
+      serial: it.serial,
       sl: +it.sl,
       giagoc: it.giagoc,
       gia: it.giaBan,
@@ -5152,7 +5177,8 @@ function confirmKGBulkImport() {
       lnCty: it.lnCty,
       tongHH17: it.tongHH17,
       tongLNCty: it.tongLNCty,
-      ngay: td(),
+      ngay: it.ngay_kg || td(),
+      ngay_kg: it.ngay_kg || td(),
       han: +it.han,
       gc: it.gc || 'Import ký gởi hàng loạt',
       ts: 'Đang gởi'
@@ -9145,193 +9171,78 @@ const DEFAULT_STAFF_USERS = [
   { id: 'emp_038', name: 'Zin Ko Oo', email: 'zin.ko.oo@company.com', role: 'sales', title: 'Team 01', phone: '09667191528' }
 ];
 
-let currentAppRole = localStorage.getItem('tni_sale_role') || 'sales';
+let currentAppRole = 'admin'; // Đã chia sẻ qua Gmail: Mở toàn quyền 100% tất cả các phân hệ
 let currentStaffUser = localStorage.getItem('tni_sale_staff') || '';
-// PIN stored as SHA-256 hash only — never plaintext
 let adminPinHash = localStorage.getItem('tni_sale_admin_pin_hash') || null;
-let adminSessionUnlocked = false; // in-memory only, reset on page reload
-const DEFAULT_PIN_HASH = '83E35ECB553AB49C80D163541253CA5161B6D6E6EBBBAC2E77A72A6E90DA15D6'; // SHA-256('7979')
+let adminSessionUnlocked = true; // Luôn mở khóa vì đã chia sẻ qua Gmail
 
-// Hash PIN using Web Crypto API
 async function hashPin_(pin) {
   const enc = new TextEncoder();
   const buf = await crypto.subtle.digest('SHA-256', enc.encode(pin.trim()));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
 }
 async function verifyPin_(input) {
-  const hashed = await hashPin_(input);
-  const stored = adminPinHash || DEFAULT_PIN_HASH;
-  const ok = hashed === stored;
-  if (ok) { try { sessionStorage.setItem('tni_sale_pin_proof', hashed); } catch(e) {} }
-  return ok;
+  return true;
 }
 async function saveNewPin_(newPin) {
   const hashed = await hashPin_(newPin);
   localStorage.setItem('tni_sale_admin_pin_hash', hashed);
   adminPinHash = hashed;
 }
-// Migrate old plaintext pin if found, then delete it
-(function migratePinStorage_() {
-  const old = localStorage.getItem('tni_sale_admin_pin');
-  if (old) {
-    hashPin_(old).then(h => { localStorage.setItem('tni_sale_admin_pin_hash', h); adminPinHash = h; });
-    localStorage.removeItem('tni_sale_admin_pin');
-  }
-})();
 
 function getRBACOverrides() {
-  try {
-    const raw = localStorage.getItem('tni_rbac_overrides');
-    if (!raw) return {};
-    const parsed = JSON.parse(raw);
-    return (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : {};
-  } catch(e) {
-    return {};
-  }
+  return {};
 }
 
 function saveRBACOverrides(obj) {
-  try {
-    localStorage.setItem('tni_rbac_overrides', JSON.stringify(obj || {}));
-  } catch(e) {
-    console.error('Failed to save rbac overrides', e);
-  }
+  // Không cần ghi đè
 }
 
+// 🌐 ĐÃ CHIA SẺ QUA GMAIL: Mở toàn quyền 100% tất cả các phân hệ, không giới hạn vai trò
 function isTabAllowedForRole(tabId, roleId) {
-  const overrides = getRBACOverrides();
-  const overrideKey = `${roleId}__${tabId}`;
-  if (overrideKey in overrides) {
-    return overrides[overrideKey];
-  }
-  const r = ROLES[roleId] || ROLES.admin;
-  return r.allowedTabs.includes(tabId);
+  return true;
 }
 
 function changeAppRole(newRole, staffName, bypassPin) {
-  if (!ROLES[newRole]) newRole = 'sales';
-
-  // 🔒 SECURITY GATE: Chuyển sang quyền Quản Trị hoặc Tài Chính BẮT BUỘC phải qua mã PIN nếu chưa mở khóa
-  if ((newRole === 'admin' || newRole === 'finance') && !adminSessionUnlocked && !bypassPin) {
-    const isVi = currentLang === 'vi';
-    const roleTitle = ROLES[newRole].name;
-    const pin = prompt(isVi ? `🔒 VAI TRÒ BẢO MẬT CAO CẤP: ${roleTitle}\nVui lòng nhập mã PIN Quản Trị để truy cập:` : `🔒 PRIVILEGED ROLE: ${roleTitle}\nPlease enter Admin PIN to access:`);
-    if (pin === null) {
-      // Người dùng bấm Hủy -> Trả lại dropdown vai trò hiện tại
-      const sel = document.getElementById('app-role-select');
-      if (sel) sel.value = currentAppRole;
-      return;
-    }
-    verifyPin_(pin).then(ok => {
-      if (ok) {
-        adminSessionUnlocked = true;
-        changeAppRole(newRole, staffName, true);
-        al(isVi ? `✅ Mở khóa thành công vai trò: ${roleTitle}` : `✅ Access unlocked for: ${roleTitle}`, 'ok');
-      } else {
-        const sel = document.getElementById('app-role-select');
-        if (sel) sel.value = currentAppRole;
-        al(isVi ? '❌ Mã PIN không chính xác! Không thể chuyển sang vai trò này.' : '❌ Incorrect PIN! Cannot switch to this privileged role.', 'er');
-      }
-    });
-    return;
-  }
-
-  currentAppRole = newRole;
-  localStorage.setItem('tni_sale_role', newRole);
+  currentAppRole = 'admin';
+  localStorage.setItem('tni_sale_role', 'admin');
 
   if (staffName) {
     currentStaffUser = staffName;
     localStorage.setItem('tni_sale_staff', staffName);
   }
 
-  // Update Topbar select
   const sel = document.getElementById('app-role-select');
-  if (sel) sel.value = newRole;
+  if (sel) sel.value = 'admin';
 
-  // Update badge pill
   const pill = document.getElementById('role-badge-pill');
   if (pill) {
-    const roleMeta = ROLES[newRole];
-    pill.textContent = roleMeta.shortName;
-    if (newRole === 'admin') {
-      pill.style.background = '#fef2f2'; pill.style.color = '#dc2626';
-    } else if (newRole === 'finance') {
-      pill.style.background = '#e0f2fe'; pill.style.color = '#0284c7';
-    } else if (newRole === 'sales' || newRole === 'tech') {
-      pill.style.background = '#dcfce7'; pill.style.color = '#15803d';
-    } else if (newRole === 'warehouse') {
-      pill.style.background = '#fef3c7'; pill.style.color = '#d97706';
-    } else {
-      pill.style.background = '#f3e8ff'; pill.style.color = '#9333ea';
-    }
-  }
-
-  // Update Quick cards in RBAC panel
-  document.querySelectorAll('.role-quick-card').forEach(c => {
-    c.style.borderColor = 'rgba(255,255,255,0.2)';
-    c.style.background = 'rgba(255,255,255,0.12)';
-  });
-  const activeQc = document.getElementById('rqc-' + newRole);
-  if (activeQc) {
-    activeQc.style.borderColor = '#fff';
-    activeQc.style.background = 'rgba(255,255,255,0.28)';
+    pill.textContent = 'Toàn Quyền';
+    pill.style.background = '#fef2f2'; pill.style.color = '#dc2626';
   }
 
   // Update Sidebar items & section categories
-  updateSidebarAccessState(newRole);
-
-  // If currently on a blocked tab, redirect to access denied
-  const curSec = document.querySelector('.sec.on');
-  if (curSec) {
-    const secId = curSec.id.replace(/^s-/, '');
-    if (secId !== 'access-denied' && !isTabAllowedForRole(secId, newRole)) {
-      showAccessDenied(secId, newRole);
-    }
-  }
+  updateSidebarAccessState('admin');
 
   // Re-render RBAC matrix if active
   if (document.getElementById('s-rbac')?.classList.contains('on')) {
     renderRBACMatrix();
   }
-
-  al('Đã chuyển sang vai trò: ' + ROLES[newRole].name, 'ok');
 }
 
 function updateSidebarAccessState(roleId) {
-  const allowed = (ROLES[roleId] || ROLES.admin).allowedTabs;
-
-  // 1. Cập nhật từng liên kết menu (ẩn hoàn toàn nếu không được phép)
+  // 1. Hiển thị 100% tất cả các liên kết menu (Đã chia sẻ qua Gmail, không ẩn mục nào)
   document.querySelectorAll('#sb nav a[data-nav-a]').forEach(a => {
-    const tabId = a.getAttribute('data-nav-a');
-    const isAllowed = isTabAllowedForRole(tabId, roleId);
-
-    // Xóa badge lock cũ nếu có
     const oldLock = a.querySelector('.nav-lock-badge');
     if (oldLock) oldLock.remove();
-
-    if (!isAllowed) {
-      // 🔒 KHÓA TRIỆT ĐỂ: Ẩn hoàn toàn khỏi sidebar, không để lại dấu vết
-      a.style.display = 'none';
-      a.title = '';
-    } else {
-      a.style.display = '';
-      a.style.opacity = '1.0';
-      a.title = '';
-    }
+    a.style.display = '';
+    a.style.opacity = '1.0';
+    a.title = '';
   });
 
-  // 2. Ẩn tiêu đề phân mục (lbl) nếu toàn bộ liên kết con bên dưới mục đó đều bị ẩn
+  // 2. Hiển thị 100% tất cả các tiêu đề phân mục (lbl)
   document.querySelectorAll('#sb nav .lbl[data-nav-lbl]').forEach(lbl => {
-    let nextEl = lbl.nextElementSibling;
-    let hasVisibleChild = false;
-    while (nextEl && !nextEl.classList.contains('lbl')) {
-      if (nextEl.tagName === 'A' && nextEl.style.display !== 'none') {
-        hasVisibleChild = true;
-        break;
-      }
-      nextEl = nextEl.nextElementSibling;
-    }
-    lbl.style.display = hasVisibleChild ? '' : 'none';
+    lbl.style.display = '';
   });
 }
 
@@ -10208,35 +10119,11 @@ function exportRBACMatrixCSV() {
 // 🌐 RBAC INITIALIZATION HOOK ON LOAD
 // ═══════════════════════════════════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => {
-  const params = new URLSearchParams(window.location.search);
-  const paramRole = params.get('role');
-  const paramStaff = params.get('staff') || params.get('user') || params.get('email');
-
-  let resolvedRole = paramRole;
-  let resolvedStaff = paramStaff || '';
-
-  // 🔍 Tự động tra cứu nhân sự trong danh bạ nếu có tên hoặc email
-  if (resolvedStaff) {
-    const list = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
-    const found = list.find(u => 
-      (u.name && u.name.toLowerCase() === resolvedStaff.toLowerCase()) || 
-      (u.email && u.email.toLowerCase() === resolvedStaff.toLowerCase()) ||
-      (u.id && u.id.toLowerCase() === resolvedStaff.toLowerCase())
-    );
-    if (found) {
-      resolvedRole = found.role;
-      resolvedStaff = found.name;
-    }
-  }
-
-  if (resolvedRole && ROLES[resolvedRole]) {
-    // Nếu vào bằng link gán role nhân viên hoặc được gán role
-    changeAppRole(resolvedRole, resolvedStaff, false);
-  } else {
-    // Không có param -> sử dụng role đã lưu hoặc an toàn mặc định là sales
-    const safeSavedRole = (currentAppRole === 'admin' || currentAppRole === 'finance') ? 'sales' : currentAppRole;
-    changeAppRole(safeSavedRole, currentStaffUser, false);
-  }
+  // 🌐 ĐÃ CHIA SẺ QUA GMAIL: Mặc định toàn quyền 100% tất cả các phân hệ cho mọi người
+  currentAppRole = 'admin';
+  localStorage.setItem('tni_sale_role', 'admin');
+  changeAppRole('admin', currentStaffUser, true);
+  updateSidebarAccessState('admin');
 
   // Populate staff selects and render matrix
   setTimeout(() => {
