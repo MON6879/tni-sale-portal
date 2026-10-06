@@ -2483,6 +2483,21 @@ Reason: [Lý do]`
 >      - `clasp push` & `clasp deploy` cập nhật Web App Site Down lên **Version `@109`**.
 >      - Phúc tra live: Gọi POST `action: process_aw_az` trả về ngay `HTTP 200 {"ok":true,"sent_tin2":false}` (đã chặn đứng thành công, không gửi lại).
 >      - Khóa Thép Site Down tự động đóng lại bảo vệ hệ thống.
+>
+> **PM-84 (06/10/2026) — Ghế Tự Động Hóa NMS Nocpro Desktop Alarm (`DESK-NOCPRO-1`) & Ghế Giám Sát Độc Lập (`AUDITOR-NOCPRO-9.3`) (Desktop Automation SSOT, Datetime Preservation & Full Table Alignment)**:
+> - **Yêu Cầu & Bối Cảnh**:
+>   1. Người dùng yêu cầu tự động hóa trích xuất client NMS Nocpro (User: `phonghd`, Pass: `MytTNI@2026`): Đăng nhập tự động nếu chưa có, nếu đã đăng nhập sẵn thì không đăng nhập lại; đảm bảo tick chọn 4 mục trong `Alarm group` (`Downcell Alarm`, `Electromechanical monitoring`, `External Alarm BTS/NodeB/EnodeB`, `Flow Loss`), chọn `Export`, nhấp `Action`, chờ tải file Excel về.
+>   2. Dán toàn bộ dải dữ liệu từ cột `A:AA` vào Google Sheet tab `1. Input New` (GID `85422169`, Spreadsheet ID `1aAMxzyhiiYYZ1Hl8n8VYgXTfu3Cx_ivX6X-WSzXbFcI`).
+>   3. **Giữ trọn vẹn ô A1**: Ô A1 chứa thông tin thời gian xuất báo cáo gốc (`Exported Time: dd/MM/yyyy HH:mm:ss`), bắt buộc đọc và dán từ Dòng 1 để người dùng và các công thức downstream biết chính xác ngày giờ xuất file.
+>   4. **Xử lý triệt để cột J (`#####`)**: Cột J (`Start time`) trong file Excel gốc hiển thị `#####` do độ rộng cột hẹp. Khi đọc file bắt buộc lấy native datetime object và format chuẩn `dd/MM/yyyy HH:mm:ss`, tuyệt đối cấm dán thành chuỗi lỗi `#####`.
+>   5. **Phân định ghế & Lịch chạy 12 mốc**:
+>      - Ghế thực thi chính: `DESK-NOCPRO-1` (sẵn sàng mở rộng 4 thao tác tương tự `DESK-NOCPRO-2..5`).
+>      - Ghế giám sát độc lập: `AUDITOR-NOCPRO-9.3` (tích hợp vào `system_auditor.py`).
+>      - Lịch chạy Windows Task Scheduler (12 mốc giờ MMT): `05:46, 06:46, 07:46, 08:46, 11:46, 12:46, 15:46, 17:16, 17:46, 18:16, 19:16, 20:46`.
+> - **Nguyên Nhân Gốc & Giải Pháp Kỹ Thuật (Root Cause & Solution)**:
+>   1. **GUI Automation trên Java Client**: Client Nocpro là ứng dụng Java chạy trên desktop. Để nhấp chuột chính xác khi chạy tự động ngầm, cần dùng `OpenInputDesktop` và `SetThreadDesktop`, đồng thời đưa cửa sổ lên Foreground với kỹ thuật `AttachThreadInput` + `SetWindowPos(HWND_TOPMOST)`. Nút `Action` tại tọa độ logical chuẩn hóa `(324, 816)`.
+>   2. **Bảo tồn ô A1 & Cột J bằng openpyxl**: Đọc toàn bộ ma trận từ hàng 1 (`ws.cell(r, c).value`), chuyển đổi đối tượng `datetime.datetime` thành chuỗi định dạng `dd/MM/yyyy HH:mm:ss`, chuẩn hóa đủ 27 cột (A:AA) và gửi qua Web App GAS Hub (`handleNocproSyncSheet_`).
+>   3. **Endpoint kiểm toán độc lập**: GAS Web App cung cấp endpoint `?action=audit_nocpro` lưu trữ trạng thái phiên đồng bộ gần nhất, phục vụ Ghế Giám Sát `AUDITOR-NOCPRO-9.3` trong `system_auditor.py`.
 
 
 
