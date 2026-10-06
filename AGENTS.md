@@ -2459,5 +2459,30 @@ Reason: [Lý do]`
 >      - `npx clasp push --force` & `npx clasp deploy -i AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-` lên Version **`@108`**.
 >      - Phúc tra live: POST `action=process_aw_az` thành công với `{"ok":true,"sent_tin2":true}` (lần 1) và `{"ok":true,"sent_tin2":false}` (lần 2).
 >      - Khóa Thép Site Down tự động đóng lại bảo vệ hệ thống.
+>
+> **PM-83 (06/10/2026) — Khóa Dedup Ô AW7 Thuần Túy Bằng Mốc Giờ Timestamp & Triệt Tiêu Vòng Lặp Gửi Lại Do Nhảy Số Giờ (Pure Timestamp-Only Dedup & Elimination of Duration-Tick Loop)**:
+> - **Yêu Cầu & Bối Cảnh**:
+>   1. Người dùng thắc mắc: *"Sao AW7 lại 10 phút cập nhật dữ liệu cũ 1 lần vậy"* và gửi mật khẩu mở khóa: `UNLOCK STEEL: Phucat@7979`.
+>   2. Phúc tra thực tế: Bản tin `20:57` bị gửi lặp lại nhiều lần ra nhóm Telegram sau mỗi 10 phút.
+> - **Nguyên Nhân Gốc (Root Cause)**:
+>   1. Trong ô AW7, công thức Google Sheet tính toán **số giờ trạm sập (Duration)** theo thời gian thực (`STATION : DURATION`). Cứ sau mỗi 6-10 phút khi bảng tính tính toán lại, số giờ này tự động tăng lên 0.1h-0.2h (ví dụ `0.7h` -> `1.6h`, `213.3h` -> `214.1h`).
+>   2. Điều kiện dedup ở phiên trước: `isChanged = (tsKey !== lastTs) || (currentContent !== lastContent)`.
+>   3. Mặc dù mốc giờ `tsKey` không đổi (vẫn là `20:57`), nhưng chuỗi `currentContent` liên tục bị sai khác do số giờ trôi qua tăng lên, khiến `currentContent !== lastContent` luôn trả về `true`!
+>   4. Kết quả: Cứ mỗi 10 phút khi số giờ nhảy số, hệ thống lại hiểu nhầm là "nội dung cập nhật mới" và gửi lại bản tin cũ `20:57` ra nhóm!
+> - **Quy Trình & Biện Pháp Khắc Phục Bọc Thép (Rule PM-83)**:
+>   1. **Khóa Dedup Duy Nhất Bằng Mốc Giờ `tsKey`**:
+>      - Trong `site_down_v2.gs` (hàm `processSummaryAwAz`), **LOẠI BỎ HOÀN TOÀN** việc so sánh chuỗi nội dung `currentContent !== lastContent`.
+>      - Bản chất một bản tin Site Down mới CHỈ xuất hiện khi mốc giờ ô AW7 thay đổi (`tsKey !== lastTs`). Việc số giờ trạm trôi qua tăng lên KHÔNG PHẢI là dữ liệu mới!
+>      - Cấu trúc khóa chuẩn:
+>        ```javascript
+>        if (tsKey === lastTs && !isDirectPush) {
+>          return false; // Mốc giờ chưa đổi → Chặn đứng 100%, không gửi lại!
+>        }
+>        ```
+>   2. **Triển Khai & Kiểm Chứng Live (Live Verification)**:
+>      - `clasp push` & `clasp deploy` cập nhật Web App Site Down lên **Version `@109`**.
+>      - Phúc tra live: Gọi POST `action: process_aw_az` trả về ngay `HTTP 200 {"ok":true,"sent_tin2":false}` (đã chặn đứng thành công, không gửi lại).
+>      - Khóa Thép Site Down tự động đóng lại bảo vệ hệ thống.
+
 
 
