@@ -2416,3 +2416,23 @@ Reason: [Lý do]`
 >      - Cập nhật pattern Report 6 thành `[r"6\.\s*(?:Report\s*—\s*)?Daily\s*Note\s*Read", r"Daily\s*Note\s*Read", r"Read\s*Report"]`.
 >      - Thêm Toa Sale Summary Report (17:30 MMT) vào `SCHEDULE_RULES`.
 >      - Toa Sale Summary gửi bản tổng hợp vào nhóm `CONTROL (-5251698940)` song song với nhóm bán hàng để Ban Điều Hành và Auditor đồng bộ theo dõi.
+>
+> **PM-81 (06/10/2026) — Tự Động Hóa Kiểm Tra Và Gửi Cột AW (AW7 SUMMARY AW-AZ) Khi Có Dữ Liệu Mới (Event-Driven New-Data Auto-Send & Single-Train Integration Policy)**:
+> - **Yêu Cầu & Bối Cảnh**:
+>   1. Người dùng phản ánh: *"Tin nhắn của AW7 không chạy nữa là do đâu"*, *"Site down"*, *"Cột AW gởi khi có dữ liệu mới mà"*, *"AW7"*, *"tiếp"*.
+>   2. Bảng tính Sheet GID 0 (`1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow`) có các ô AW7, AX7, AY7, AZ7 chứa dữ liệu Tin 2 SUMMARY theo Team (T1-T4).
+>   3. Quy tắc cốt lõi: Cột AW BẮT BUỘC chỉ tự động gửi khi và chỉ khi có dữ liệu mới (`tsKey !== lastTs`).
+> - **Nguyên Nhân Gốc (Root Cause)**:
+>   1. Trong đợt dọn dẹp chống gửi trùng ở phiên v854 (`teardownGasTrain1min()`), trigger time-driven 1 phút trên GAS (`checkAndSend_1min`) đã bị xóa để triệt tiêu việc gửi tin nhắn lặp lại.
+>   2. Trước đó ở phiên v792, lời gọi `processSummaryAwAz` trong `store_site_down` đã bị loại bỏ vì khi Cột A vừa dán xong thì công thức AW7 của Google Sheets chưa kịp tính toán.
+>   3. Kết quả: **Không còn bất kỳ tiến trình nào định kỳ gọi kiểm tra ô AW7 nữa**. Khi Cột AW có dữ liệu mới hay giờ mới, hệ thống hoàn toàn không biết để gửi tự động.
+> - **Quy Trình & Biện Pháp Khắc Phục Bọc Thép (The 3-Pillar Event-Driven Auto-Send Protocol)**:
+>   1. **Khóa 3 Chốt Chặn Bất Biến trong Site Down GAS (`site_down_v2.gs` @100)**:
+>      - Chốt 1 (Chống trùng lặp): Timestamp ô AW7 phải khác với lần gửi trước (`tsKey !== lastTs`).
+>      - Chốt 2 (Tươi mới): Timestamp trong vòng 45 phút (`isDataFresh_(tsKey, 45)`).
+>      - Chốt 3 (Đồng bộ Cột A): Timestamp AW7 không được cũ hơn Cột A (`minAw >= minA1`).
+>   2. **Tích Hợp Nhịp 5 Phút Vào Đầu Tàu GAS (`QLTC_GAS` @482)**:
+>      - Trong hàm `dispatchTrain5Min()` (`14_GITHUB_DISPATCH.gs`), bổ sung lệnh gọi POST nhẹ nhàng tới endpoint `process_aw_az` của Site Down Webhook (`https://script.google.com/macros/s/AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-/exec`).
+>   3. **Dự Phòng Kép Trong Toa 0 Keepalive (`train_5min.yml`)**:
+>      - Thêm lệnh `curl` kiểm tra `action=process_aw_az` tại Toa 0 Keepalive của Đoàn tàu 5 phút (`Task and WO` & `tni-sitedown`). Khi phát hiện dữ liệu mới, GAS gửi ngay Tin 2; khi chưa có dữ liệu mới, GAS trả `sent_tin2: false` mà không gửi bất kỳ tin rác nào.
+
