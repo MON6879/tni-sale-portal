@@ -2527,3 +2527,30 @@ Reason: [Lý do]`
 >      - Cập nhật đồng bộ trên cả `Task and WO/api/search_bot.py` và `tni-search/api/search_bot.py`.
 >      - Chạy đối chiếu `Compare-Object` đạt 0 sai khác trước khi commit và push.
 >      - Tuyệt đối tuân thủ Khóa Thép Site Down: Không can thiệp vào `apps_script_sitedown`, `botlookup_relay.py` hay repo `tni-sitedown-relay`.
+>
+> **PM-86 (07/10/2026) — Ghế Tự Động Hóa NMS Nocpro Alarm Status Cleared (`DESK-NOCPRO-2`) & Ghế Giám Sát Độc Lập (`AUDITOR-NOCPRO-9.4`) (Cleared Flow Loss Automation, Append-Only History & 8 MMT Slots)**:
+> - **Yêu Cầu & Bối Cảnh (Requirement & Context)**:
+>   1. Người dùng chỉ thị tự động hóa trích xuất NMS Nocpro cho phân hệ **Alarm Status Clear** theo 8 mốc giờ MMT: `06:16, 07:16, 08:16, 09:16, 11:50, 15:50, 17:50, 20:36`.
+>   2. **Tham số đầu vào động từ Google Sheet**:
+>      - Tab nguồn & đích: `1.1 Input Site Clear+History` (GID: `379017693`, Spreadsheet ID: `1aAMxzyhiiYYZ1Hl8n8VYgXTfu3Cx_ivX6X-WSzXbFcI`).
+>      - Đọc ngày bắt đầu tìm kiếm từ ô `AF4` (`Date start search`, ví dụ `03/10/2026`).
+>      - Đọc giờ bắt đầu tìm kiếm từ ô `AG4` (`Time start search`, ví dụ `10:04:16`).
+>   3. **Cấu hình trên client NMS Nocpro**:
+>      - `Start time from`: dán `AF4` vào ô ngày (`dd/MM/yyyy`) và `AG4` vào ô giờ (`HH:mm:ss`).
+>      - `Start time to`: ô ngày là `today + 1` (ngày mai `dd/MM/yyyy`) và ô giờ là `00:00:00`.
+>      - `Alarm group`: mở hộp thoại Option dialog, bỏ chọn toàn bộ và CHỈ TICK CHỌN DUY NHẤT 1 mục: `Flow Loss` (như trong Hình 2).
+>      - `Alarm status`: chọn `Cleared alarm`.
+>      - Bấm `Action` -> Lưu file báo cáo Excel `ACCESS_ALARM_MONITORING_*.xlsx`.
+>   4. **Xử lý dữ liệu & Ghi nối tiếp (Append Only)**:
+>      - Đọc dải dữ liệu từ dòng 4 trở đi (`A4:AA`), lọc bỏ các dòng trống.
+>      - Cột J (`Start time`) chuẩn hóa triệt để thành chuỗi `dd/MM/yyyy HH:mm:ss`, tuyệt đối cấm lỗi hiển thị `#####`.
+>      - **GHI NỐI TIẾP (APPEND)**: Dán vào hàng tiếp theo còn trống trong dải A:AA của tab `1.1 Input Site Clear+History` (bắt đầu từ hàng 6 trở đi), TUYỆT ĐỐI BẢO TOÀN toàn bộ các hàng lịch sử cũ trước đó, cấm clear/ghi đè như tab 1. Input New!
+>   5. **Phân định ghế & Lịch chạy 8 mốc MMT**:
+>      - Ghế thực thi chính: `DESK-NOCPRO-2` (`ICT Fetch/auto_nocpro_site_clear.py`).
+>      - Ghế giám sát độc lập: `AUDITOR-NOCPRO-9.4` (GAS endpoint `?action=audit_nocpro_2`).
+>      - Lịch chạy Windows Task Scheduler (`NOCPRO_ALARM_CLEAR_SYNC_DESK2`): `06:16, 07:16, 08:16, 09:16, 11:50, 15:50, 17:50, 20:36 MMT`.
+> - **Nguyên Nhân Gốc & Giải Pháp Kỹ Thuật (Root Cause & Solution)**:
+>   1. **Phân biệt triệt để Overwrite vs Append**: `DESK-NOCPRO-1` xóa và ghi đè tab `1. Input New` mỗi ca để theo dõi cảnh báo hiện hành; trong khi `DESK-NOCPRO-2` phục vụ lưu trữ lịch sử trạm clear theo thời gian, do đó backend GAS `handleNocproSyncClearHistory_` quét tìm `firstBlankRow` từ dưới lên và ghi nối tiếp `setValues` vào cuối bảng.
+>   2. **Chuẩn hóa form input và UI Automation Java**: Xử lý đầy đủ vòng đời: Auto-login nếu gặp cửa sổ Login (`phonghd` / `MytTNI@2026`), bung thanh công cụ đáy nếu bị gập, xóa và điền chính xác 4 ô thời gian bằng keybd_event unicode, điều hướng Option dialog tick chuẩn `Flow Loss`, và chuyển dropdown sang `Cleared alarm`.
+>   3. **Endpoint đọc tham số trực tiếp (SSOT Fresh Read)**: GAS Web App cung cấp endpoint `?action=nocpro_get_clear_params` đọc trực tiếp giá trị sống hiển thị của `AF4` và `AG4` từ Google Sheet bằng `getDisplayValue()`, kèm fallback đọc CSV công khai.
+
