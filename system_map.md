@@ -232,6 +232,27 @@ grep -c 'continue-on-error: true' train_5min.yml                # Phải = tổn
 
 ---
 
+### 📝 2.0.1. Phân Hệ Note Chỉ Đạo Cuối Ngày & Báo Cáo Đọc Tin (Report 4d Note Reply & Report 6 Read Tracking)
+> ⚠️ **NGUYÊN TẮC ĐỒNG BỘ PHÂN HỆ NOTE**:
+> 1. **Nguồn Dữ Liệu Sống (SSOT)**: Master Sheet 1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8, tab Config (GID 1236389870), ô H1:H3.
+>    - Nội dung hiện hành (ô H2): Note: Team leader read /Report01  ,Report02, /Report03 ,Report04 and Assign /Name Site /Who do and sent /plan tomorrow
+> 2. **Toa Gửi Note Reply (05:51 & 15:51 MMT)**:
+>    - Script: cron_send.py (hàm get_control_note_from_sheet()).
+>    - Động 100%: Tự đọc ô H1:H3 từ Config Sheet, gửi dưới tên user Telethon @phongha79 reply trực tiếp vào tin 📦 4d. Asset progress for material (hoặc 4b).
+>    - *Bắt buộc dùng user Telethon*: Để Telegram API mở tính năng đếm lượt người đọc tin (GetMessageReadParticipantsRequest).
+> 3. **Toa Giám Sát Đọc Tin Report 6 (08:48, 14:58, 17:18, 19:41 MMT)**:
+>    - Script: daily_read_report.py (hàm is_note_msg()).
+>    - Nhận diện cả tiền tố Note: team leader read, 	eam leader read /report01, ssign /name site /who do and sent /plan tomorrow, các biến thể cũ, và bắt đầu bằng Note: kèm từ khóa chỉ đạo.
+> 4. **Cơ Chế Dọn Tin Cũ (Zero Stale Note)**:
+>    - Scripts: delete_old_helper.py & 	g_utils.py.
+>    - Quét và xóa các tin Note của ngày hôm trước (Note: Team leader read, Note: Above are the end-of-day...) bằng Telethon 
+evoke=True trước khi gửi báo cáo mới.
+> 5. **Chặn Xung Đột Báo Cáo Kỹ Thuật Viên**:
+>    - Script: pi/search_bot.py (hàm is_daily()).
+>    - Bỏ qua tin Note chỉ đạo, tuyệt đối không nhận nhầm thành bài nộp Daily Result của FT.
+
+---
+
 ### 📋 2.1. Hệ thống Auto Copy & Delete Processor (GAS-native):
 
 > **GAS Project**: TNI (cùng project với Construction Bot 10)
@@ -1387,7 +1408,7 @@ KHÔNG ĐỤNG:
 | **`Ghế AUDITOR-DM`** | Kênh Cảnh Báo Độc Quyền | Chat ID: `6859790680` (Ha Duc Phong) | **Tuyệt đối KHÔNG spam vào Group chung** |
 | **`Ghế GAS-OPS-1`** | Quản Trị GAS Tổng (QLTC_GAS) | 17 files .gs vận hành (Cable, MDG, Refuel, Daily, BOD) | Báo lỗi cú pháp / xung đột hàm về DM Admin |
 | **`Ghế EXT-OPS-HUB`** | Cổng Ngoại Giao GAS Tổng | Webhook Search Bot, Asset Collector, BI Portal Plan Dep | Báo đứt kết nối / Timeout 302 về DM Admin |
-| **`Ghế GAS-SITEDOWN-2`** | Quản Trị GAS Site Down | 1 file `site_down_v2.gs` độc lập trên `apps_script_sitedown` | Báo lỗi parse Cột C / AW7 về DM Admin |
+| **`Ghế GAS-SITEDOWN-2`** | Quản Trị GAS Site Down | 1 file `site_down_v2.gs` độc lập trên `apps_script_sitedown` (@110, bổ sung tin chuyên biệt Site Down cho Group Control tách Team & Sub Team) | Báo lỗi parse Cột C / AW7 về DM Admin |
 | **`Ghế EXT-SITEDOWN-RELAY`**| Cổng Ngoại Giao Site Down | Webhook `@tni_site_down_bot`, cào Cột A `:06/:36` MMT | Báo nghẽn cào / đứt tin về DM Admin |
 | **`Ghế GAS-CONSTRUCTION-3`**| Quản Trị GAS Xây Dựng | Logic tiến độ vật tư hạ tầng trên `apps_script_tc` | Báo lỗi Drive / Sheet TC về DM Admin |
 | **`Ghế EXT-TC-CONSTRUCTION`**| Cổng Ngoại Giao Construction | Webhook Bot `@8903841312` (`10 TNI_SITE`) | Báo Bot câm / mất phản hồi về DM Admin |
@@ -1396,8 +1417,11 @@ KHÔNG ĐỤNG:
 | **`Ghế BOT-CABLE-15`** | Bot 15 TNI CABLE Thu Thập Cáp | Webhook `/api/cable_bot`, `@TNI_CABLE_BOT` (8758104446), Nhóm `8 TNI CABLE BROKEN SOS` (-5531350787) | Phản hồi sự cố cáp kèm Note vật tư & bảo dưỡng, lưu ảnh Drive folder theo REF |
 | **`Ghế GAS-CABLE-15`** | Quản Trị GAS Cable | `apps_script_cable.gs` (@387), ghi Sheet `Detail cable`, trả link Drive Folder tải tất cả ảnh | Báo lỗi Drive / Sheet Cable về DM Admin |
 | **`Ghế WEB-SALE-16`** | Frontend TNI Sale Web App | `tni_sale.html` / `sale.html` (static SPA), 20 modules bán hàng, báo giá Solar/UPS, CRM, Ads, Tài chính 17%, Sổ cái quyết toán VCM, song ngữ VN/EN + **Hệ thống Phân Quyền Vai Trò (RBAC)** & **Đồng Bộ 2 Chiều SSOT Nhân Sự (Staff Directory)** trực tiếp với Google Sheet tab `staff` + **Hệ Thống Import Hàng Loạt 3 Phân Hệ (Ký Gởi, Bán Hàng, Đại Lý Phân Phối)** chuẩn bảo mật không lộ giá gốc (Rule PM-72 & PM-74, v852) | Cảnh báo khi localStorage rỗng hoặc truy cập trái quyền |
-| **`Ghế GAS-SALE-16`** | Backend GAS Sale CRUD + Collector | **Dedicated GAS**: `apps_script_ups_solar/TNI Sale.js` (1807 dòng) Deploy `AKfycbx09J8PPi...` + **Main GAS**: `QLTC_GAS/sale_backend.gs` (@465, CRUD `sale_*`, `staff_get` nhận diện cột song ngữ, `staff_save` ghi Sheet tab `staff`) | Sheet `1s-V0owHlwub...wQBA` (13 tabs: NhapHang, Sales Record, staff, Consignment, Warranty...) |
+| **`Ghế GAS-SALE-16`** | Backend GAS Sale CRUD + Collector | **Dedicated GAS**: `apps_script_ups_solar/TNI Sale.js` (1807 dòng) Deploy `AKfycbx09J8PPi...` + **Main GAS**: `QLTC_GAS/sale_backend.gs` (@474/@475, CRUD `sale_*`, `staff_get` nhận diện cột song ngữ, `staff_save` ghi Sheet tab `staff`) | Sheet `1s-V0owHlwub...wQBA` (13 tabs: NhapHang, Sales Record, staff, Consignment, Warranty...) |
 | **`Ghế BOT-SALE-16`** | Telegram Sale Collector Bot | Bot Token `8647102342` (ScriptProperties `BOT_TOKEN`), thu thập đơn hàng từ Telegram Groups, xóa tin gốc sau khi lưu, lưu ảnh vào Drive Folder `11HcMa63slXPOHrveHxmqZTZerzKPfjVt` | Báo lỗi thu thập / Drive quota hết về DM Admin |
+| **`Ghế TRAIN-SALE-1730`** | Toa Sale — Báo cáo ngày Tồn & Bán hàng | `train_5min.yml` → `sale_summary_report.py`, 1 lần/ngày 17:30 MMT, gửi lên GROUP chỉ định (`Cau Hinh.sale_report_group` ↔ `List Group Telegram`), dedup `SALE_SLOT_yyyyMMdd_1730` | Gửi trùng / thiếu group chỉ định / trễ > 4p về DM Admin |
+| **`Ghế DESK-NOCPRO-1`** | NMS Nocpro Desktop Alarm Sync | Tự động hóa trích xuất NMS Nocpro (Export -> Action) 12 mốc giờ MMT, đọc native datetime cột J, xóa và dán toàn bộ A:AA (giữ trọn vẹn A1 timestamp) vào Google Sheet tab `1. Input New` (GID `85422169`) | Sẵn sàng mở rộng 4 thao tác tương tự (`DESK-NOCPRO-2..5`) |
+| **`Ghế AUDITOR-NOCPRO-9.3`** | Nocpro Sentinel (Giám sát Nocpro Alarm) | Kiểm toán độc lập độ tươi của Sheet Alarm tab `1. Input New`, số dòng sync, tính toàn vẹn datetime cột J và báo cáo trạng thái trong `system_auditor.py` | Báo trễ ca / mất đồng bộ về DM Admin |
 | **`Ghế GAS-VERIFY-0`** | Xác Nhận Đủ File GAS | `QLTC_GAS` = 17 files, `apps_script_sitedown` = 1 file | DỪNG NGAY nếu thiếu file, KHÔNG push! |
 | **`Ghế GAS-PUSH-1`** | Đẩy Code Lên GAS Cloud | `npx clasp push` (theo đúng thư mục chuyên biệt) | Báo lỗi push / xung đột về DM Admin |
 | **`Ghế GAS-DEPLOY-2`** | Deploy Đè Đúng Deployment | `npx clasp deploy -i [DEPLOYMENT_ID_CHUẨN] -d "..."` | DỪNG nếu dùng sai Deployment ID! |

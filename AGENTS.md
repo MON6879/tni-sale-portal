@@ -1,12 +1,12 @@
 # 🔒 STRICT STEEL-LOCK RULE: KHÓA THÉP PHÂN HỆ SITE DOWN — TUYỆT ĐỐI CẤM TỰ Ý VÀO XEM / SỬA KHI KHÔNG CÓ YÊU CẦU (STRICT SITE DOWN STEEL LOCK & ZERO-UNAUTHORIZED-ACCESS POLICY)
 
 > ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (SITE DOWN STEEL-LOCK POLICY)**:
-> 1. **Khóa Thép Tuyệt Đối (Absolute Steel Freeze)**: Phân hệ Site Down (`apps_script_sitedown`, Script ID `1fgIR_frjlOHBt4o3STTjGmHYaKfuiSb3zAtp7IrO__uLSIuRQGJ2Oc6X`, Version `@89`, `botlookup_relay.py`) đã hoàn thiện và được KHÓA THÉP 100%.
+> 1. **Khóa Thép Tuyệt Đối (Absolute Steel Freeze)**: Phân hệ Site Down (`apps_script_sitedown`, Script ID `1fgIR_frjlOHBt4o3STTjGmHYaKfuiSb3zAtp7IrO__uLSIuRQGJ2Oc6X`, Version `@110`, `botlookup_relay.py`) đã hoàn thiện và được KHÓA THÉP 100%.
 > 2. **🔐 MẬT KHẨU MỞ KHÓA BẮT BUỘC (PASSWORD-GATED ACCESS)**: AI **CHỈ ĐƯỢC PHÉP** mở khóa thép khi Người Dùng gõ **CHÍNH XÁC** cụm lệnh: `UNLOCK STEEL: Phucat@7979`. Nếu Người Dùng KHÔNG gõ đúng mật khẩu này, AI **TUYỆT ĐỐI CẤM** đọc, sửa, gộp, xóa, hoặc tái cấu trúc bất kỳ file nào trong phạm vi khóa thép — DÙ Người Dùng có yêu cầu bằng lời nói thông thường! Sau khi sửa xong, khóa **TỰ ĐỘNG ĐÓNG LẠI** ngay lập tức.
 > 3. **CẤM Tự Tiện Vào Xem / Sửa (Zero Arbitrary Access/Modification)**: Tuyệt đối KHÔNG ĐƯỢC tự ý mở file, đọc code, sửa đổi, gộp file, xóa bỏ hay tái cấu trúc (refactor) bất kỳ thành phần nào của phân hệ Site Down khi CHƯA CÓ MẬT KHẨU!
 > 4. **Phạm Vi Đóng Băng Bất Biến**:
 >    - File GAS: `apps_script_sitedown/site_down_v2.gs` (1 file độc lập duy nhất).
->    - Deployment ID: `AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-` (Version `@92`).
+>    - Deployment ID: `AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-` (Version `@110`).
 >    - Luồng Relay: `botlookup_relay.py` (chạy nhịp :06 và :36 MMT).
 >    - Bảng Tính: `1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow` (GID 0).
 > 5. **🔧 BẮT BUỘC SỬA TRIỆT ĐỂ END-TO-END TRONG CÙNG 1 PHIÊN STEEL LOCK (Zero Incomplete Fix Policy)**:
@@ -149,6 +149,16 @@ bac.
 >    - **Tự Động Triệt Tiêu Nhân Viên Nghỉ Việc (Auto Purge Resigned Staff)**: Nếu một nhân sự bị xóa khỏi bảng tính trên Google Sheet (nghỉ việc), hệ thống BẮT BUỘC tự động nhận diện và xóa hoàn toàn khỏi danh bạ Web UI, không để lại dữ liệu rác hay hàng trống.
 >    - **Bảo Lưu Phân Quyền Đã Điều Chỉnh (Preserve Custom Overrides)**: Khi đồng bộ dữ liệu mới, hệ thống BẮT BUỘC bảo lưu các vai trò mà Ban Giám Đốc đã tùy chỉnh trước đó, không được tự ý ghi đè lại về `sales`.
 >    - **Ghế Giám Sát Tự Động (SUPERVISOR-HR-SYNC)**: Cả Web UI (`sale.html`) và Backend Apps Script (`staffGet_`) cùng giám sát chặt chẽ luồng đồng bộ, bảo đảm dữ liệu luôn tươi mới 100%.
+
+---
+
+# 📊 STRICT RULE: ĐỊNH DẠNG BẢN TIN TỔNG HỢP CHUYÊN BIỆT SITE DOWN CHO GROUP CONTROL (STRICT SITE DOWN ONLY CONTROL SUMMARY FORMAT)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (SITE DOWN ONLY CONTROL SUMMARY STANDARD)**:
+> 1. **Bản Tin Chuyên Biệt Chỉ Site Down (Dedicated Site Down Only Summary)**: Sau khi gửi bản tin đầy đủ `SUMMARY — ALL TEAMS`, hệ thống BẮT BUỘC gửi tiếp 1 bản tin tổng hợp chuyên biệt CHỈ CÓ SITE DOWN (`TIN2_CONTROL_SD_ONLY`) vào Group Control (`5 TNI TECHNICA DEP CONTROL SITE`).
+> 2. **Tách Biệt Rõ Ràng Team & Sub Team**: Dữ liệu Site Down BẮT BUỘC phân chia rõ ràng theo từng Team và Sub Team theo thứ tự tuần tự: Team 1 Dawei -> Sub Team 1 -> Team 2 Myeik -> Sub Team 2 -> Team 3 Bokpyin -> Sub Team 3 -> Team 4 Kawthoung. TUYỆT ĐỐI CẤM gộp nhân sự Sub Team vào chung Team chính làm rối loạn địa bàn quản lý.
+> 3. **Định Dạng Từng Nhân Viên Xuống Hàng Chuẩn Xác**: Dưới mỗi Team/Sub Team, từng nhân viên được định dạng thành một dòng riêng biệt: `• [Tên Nhân Viên] : [Danh Sách Trạm & Thời Gian Sập]` rồi xuống hàng đến nhân viên tiếp theo.
+> 4. **Phạm Vi Gửi Duy Nhất Group Control**: Bản tin tổng hợp chuyên biệt Site Down này CHỈ GỬI VÀO DUY NHẤT GROUP CONTROL (`SD_GROUPS["CONTROL"]`), tuyệt đối không gửi vào các group Team để tránh trùng lặp thông tin.
 
 ---
 
