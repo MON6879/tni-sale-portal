@@ -2498,6 +2498,22 @@ Reason: [Lý do]`
 >   1. **GUI Automation trên Java Client**: Client Nocpro là ứng dụng Java chạy trên desktop. Để nhấp chuột chính xác khi chạy tự động ngầm, cần dùng `OpenInputDesktop` và `SetThreadDesktop`, đồng thời đưa cửa sổ lên Foreground với kỹ thuật `AttachThreadInput` + `SetWindowPos(HWND_TOPMOST)`. Nút `Action` tại tọa độ logical chuẩn hóa `(324, 816)`.
 >   2. **Bảo tồn ô A1 & Cột J bằng openpyxl**: Đọc toàn bộ ma trận từ hàng 1 (`ws.cell(r, c).value`), chuyển đổi đối tượng `datetime.datetime` thành chuỗi định dạng `dd/MM/yyyy HH:mm:ss`, chuẩn hóa đủ 27 cột (A:AA) và gửi qua Web App GAS Hub (`handleNocproSyncSheet_`).
 >   3. **Endpoint kiểm toán độc lập**: GAS Web App cung cấp endpoint `?action=audit_nocpro` lưu trữ trạng thái phiên đồng bộ gần nhất, phục vụ Ghế Giám Sát `AUDITOR-NOCPRO-9.3` trong `system_auditor.py`.
-
-
-
+>
+> **PM-85 (07/10/2026) — Giới Hạn Cứng Bản Tin ETA Update Dừng Tại Mục 1.4 Site Down — Triệt Tiêu Mục 1.5 Battery Temp High & Các Mục Sau (Strict ETA Reminder 1.4-Cap & Zero-1.5 Policy)**:
+> - **Yêu Cầu & Bối Cảnh (Requirement & Context)**:
+>   1. Người dùng chỉ thị dứt khoát: *"chỉ lấy đến 1.4 là hết không gởi thêm 1,5 gì nữa"* kèm ảnh chụp màn hình bản tin `📋 TX — ETA Update`.
+>   2. Trước đây trong hàm `get_eta_share_templates()` (`search_bot.py`), hệ thống tự động sinh thêm mục `1.5 🌡️ Battery Temp High: X site` (lấy từ cột K..N tab `ALARM_GID` 1839820494).
+> - **Nguyên Nhân Gốc (Root Cause)**:
+>   1. Cấu trúc hàm `get_eta_share_templates()` đọc cả 5 loại cảnh báo và tự động thêm mục `1.5 🌡️ Battery Temp High` nếu team có trạm báo nhiệt độ ắc quy cao.
+>   2. Tuy nhiên, quy trình vận hành và báo cáo thực địa của các Đội Kỹ Thuật (Teams & Subteams) chỉ tập trung vào 4 nhóm sự cố vận hành cốt lõi: `1.1 Cell Down`, `1.2 DG Abnormal`, `1.3 DG Run >16H`, và `1.4 Site Down`.
+>   3. Việc gửi thêm mục 1.5 gây rối loạn thông tin, tạo áp lực giải trình không cần thiết tại các nhóm điều hành chung.
+> - **Quy Trình & Biện Pháp Khắc Phục Bọc Thép (Rule PM-85)**:
+>   1. **Khóa Cứng Bản Tin Dừng Tại 1.4 (Strict 1.4 Hard-Cap)**:
+>      - Cắt bỏ hoàn toàn khối logic sinh mục `1.5 🌡️ Battery Temp High` trong `get_eta_share_templates()`.
+>      - Bỏ parsing cột 10-13 (`bat_temp`) từ tab `ALARM_GID`.
+>      - Biến đếm `total_sites` chỉ tính tổng của 4 mục (1.1 đến 1.4).
+>      - Bản tin `📋 TX — ETA Update` (cả bản tin gửi tự động qua `cron_send.py` / `build_smart_eta_reminder` lẫn lệnh bot `/share_eta`) bắt buộc dừng chính xác sau danh sách các trạm của `1.4 📡 Site Down`. Tuyệt đối không sinh thêm bất kỳ mục 1.5 hay mục nào sau đó!
+>   2. **Đồng Bộ Tri-Repo Parity Tuyệt Đối**:
+>      - Cập nhật đồng bộ trên cả `Task and WO/api/search_bot.py` và `tni-search/api/search_bot.py`.
+>      - Chạy đối chiếu `Compare-Object` đạt 0 sai khác trước khi commit và push.
+>      - Tuyệt đối tuân thủ Khóa Thép Site Down: Không can thiệp vào `apps_script_sitedown`, `botlookup_relay.py` hay repo `tni-sitedown-relay`.

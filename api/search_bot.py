@@ -558,7 +558,7 @@ def get_eta_share_templates(team_filter="ALL"):
       1.2 ⚙️ DG Abnormal              (Clean Tab ALARM_GID 1839820494, Col F..J)
       1.3 ❌ DG Run >16H               (Clean Tab ALARM_GID 1839820494, Col O..S)
       1.4 📡 Site Down                (Site Down Row in Sheet SD_GID 0, Col BP..BW)
-      1.5 🌡️ Battery Temp High        (Clean Tab ALARM_GID 1839820494, Col K..N)
+    (Strict Rule PM-80: Hard cap at 1.4 Site Down — do NOT send 1.5 Battery Temp High or any subsequent section)
     Fallback to legacy columns BP..BW in SD_GID 0 if ALARM_GID is unavailable.
     Returns list of (team_name, template_text).
     """
@@ -580,7 +580,7 @@ def get_eta_share_templates(team_filter="ALL"):
             update_ts = datetime.now(TZ_MM).strftime("%d/%m/%Y %H:%M")
 
         teams_all = ["T1", "T1 S1", "T2", "T2 S1", "T3", "T3 S1", "T4"]
-        team_data = {t: {"cell_down": [], "dg_abnormal": [], "dg_run": [], "site_down": [], "bat_temp": []} for t in teams_all}
+        team_data = {t: {"cell_down": [], "dg_abnormal": [], "dg_run": [], "site_down": []} for t in teams_all}
 
         # 2. Fetch clean alarms from tab ALARM_GID (1839820494)
         has_alarm_data = False
@@ -606,13 +606,7 @@ def get_eta_share_templates(team_filter="ALL"):
                             if re.match(r'^TNI\d+$', s_id) and t_norm in team_data:
                                 if s_id not in team_data[t_norm]["dg_abnormal"]:
                                     team_data[t_norm]["dg_abnormal"].append(s_id)
-                        # Col 10-13: Battery Temp High (Site ID: 10, Team: 11)
-                        if len(r) > 11:
-                            s_id, t_col = (r[10] or "").strip().upper(), (r[11] or "").strip().upper()
-                            t_norm = re.sub(r'\s+', ' ', t_col)
-                            if re.match(r'^TNI\d+$', s_id) and t_norm in team_data:
-                                if s_id not in team_data[t_norm]["bat_temp"]:
-                                    team_data[t_norm]["bat_temp"].append(s_id)
+                        # Col 10-13: Battery Temp High (Skipped per Rule PM-80: template capped at 1.4)
                         # Col 14-18: DG Run >16H (Site ID: 14, Team: 15)
                         if len(r) > 15:
                             s_id, t_col = (r[14] or "").strip().upper(), (r[15] or "").strip().upper()
@@ -739,13 +733,6 @@ def get_eta_share_templates(team_filter="ALL"):
             else:
                 lines.append("1.4 📡 Site Down:")
                 lines.append("• (none)")
-
-            # 1.5 Battery Temp High (only show if team has sites)
-            bt_items = team_data.get(t_name, {}).get("bat_temp", [])
-            if bt_items:
-                total_sites += len(bt_items)
-                lines.append(f"1.5 🌡️ Battery Temp High: {len(bt_items)} site")
-                lines.extend([f"• {c} + FT + ETA:" for c in bt_items])
 
             # Skip subteam if 0 total sites in ALL mode to prevent spamming empty templates
             is_subteam = (" S" in t_name)
