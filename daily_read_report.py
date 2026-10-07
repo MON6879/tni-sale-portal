@@ -76,6 +76,13 @@ S_COL_EXIT = 13  # N: Ngày nghỉ / status — RỔNG = còn làm việc (activ
 
 # Keywords to identify EOD Report message (sent around 16:00-17:30 Myanmar)
 NOTE_KEYWORDS = [
+    # ── MỚI: Note chỉ đạo từ Master Sheet tab Config H1:H3 ──────────
+    "note: team leader read",
+    "team leader read /report01",
+    "team leader read",
+    "assign /name site /who do and sent /plan tomorrow",
+    "sent /plan tomorrow",
+    # ── Note cũ & các dạng biến thể ────────────────────────────────
     "note: above are the end-of-day work results, checks, and feedback.",
     "above are the end-of-day work results, checks, and feedback.",
     "note: above are the end-of-day work results",
@@ -112,6 +119,9 @@ def is_note_msg(text: str) -> bool:
     t = (text or "").lower()
     if any(ex in t for ex in EXCLUDE_KEYWORDS):
         return False
+    # Nhận diện thông minh: Bắt đầu bằng Note: và chứa từ khóa chỉ đạo
+    if t.strip().startswith("note:") and any(k in t for k in ("team leader", "report0", "plan tomorrow", "end-of-day", "work results")):
+        return True
     return any(kw in t for kw in NOTE_KEYWORDS)
 
 
@@ -554,6 +564,21 @@ async def main():
         print(f"[{myanmar_now()}] 🔑 Logged in: @{me.username} ({me.first_name})")
 
         now_mm = datetime.now(MYANMAR_TZ)
+
+        # 🛡️ DEDUP CHECK: Bỏ qua nếu Report 6 đã được gửi trong vòng 20 phút qua (chống gửi trùng do dung sai ±4p)
+        control_id = GROUPS.get("CONTROL")
+        if control_id and os.getenv("GITHUB_EVENT_NAME") != "workflow_dispatch":
+            try:
+                async for last_m in client.iter_messages(control_id, limit=5):
+                    if last_m.text and ("6. Report — Daily Note Read Report" in last_m.text or "Daily Note Read Report" in last_m.text):
+                        last_m_time = last_m.date.astimezone(MYANMAR_TZ)
+                        diff_minutes = (now_mm - last_m_time).total_seconds() / 60
+                        if 0 <= diff_minutes < 20:
+                            print(f"[{myanmar_now()}] ⏭️ Report 6 was already sent {diff_minutes:.1f}m ago in this shift. Skipping duplicate run.")
+                            return
+            except Exception as e_check:
+                print(f"[{myanmar_now()}] ⚠️ Dedup check skipped: {e_check}")
+
         cycle_start, cycle_end = get_cycle_range(now_mm)
         cycle_str = f"{cycle_start.strftime('%d/%m/%y')}-{cycle_end.strftime('%d/%m/%y')}"
         cycle_short_str = f"{cycle_start.strftime('%d/%m')}-{cycle_end.strftime('%d/%m')}"

@@ -203,7 +203,7 @@ def tg_delete_by_title(chat_id: str, title_prefix: str, search_limit: int = 300,
                         continue
 
                     # 1. Xóa Note reply gửi từ user @Phongha79 nếu có
-                    if any(k in msg.text for k in ["@Raja HO", "Refuel Team Sent Plan", "Aung MinPaing_VCM", "Note: Above are the end-of-day", "Note: 📋 1. Report"]):
+                    if any(k in msg.text for k in ["@Raja HO", "Refuel Team Sent Plan", "Aung MinPaing_VCM", "Note: Team leader read", "Note: Above are the end-of-day", "Note: 📋 1. Report"]):
                         try:
                             await client.delete_messages(int(chat_id), [msg.id], revoke=True)
                             deleted += 1

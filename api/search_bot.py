@@ -1165,7 +1165,7 @@ def is_daily(text: str) -> bool:
     # 🛑 1. CHẶN HẲN BÀI PLAN: Bài Plan của Team Leader BẮT BỘC bị loại trừ 100%
     if is_daily_plan(text):
         return False
-    if any(kw in text_l for kw in ("daily plan", "plan:", "kế hoạch", "i. hot task", "above are the end-of-day", "auto report", "ref:dp-", "đã lưu", "team leader assign")):
+    if any(kw in text_l for kw in ("daily plan", "plan:", "kế hoạch", "i. hot task", "above are the end-of-day", "team leader read", "auto report", "ref:dp-", "đã lưu", "team leader assign")):
         return False
 
     # 🟢 2. TỪ KHÓA NHẬN DẠNG CẤU TRÚC CHUẨN BÀI NỘP DAILY RESULT CỦA KỸ THUẬT VIÊN FT

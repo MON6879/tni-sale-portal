@@ -204,6 +204,7 @@ async def delete_by_titles_batch_telethon(
 
                 # Xóa các tin Note chỉ đạo gửi từ user (Telethon revoke=True)
                 if any(k in msg.text for k in [
+                    "Note: Team leader read",
                     "Note: Above are the end-of-day work results",
                     "Note: 📋 1. Report",
                     "@Raja HO",
@@ -252,7 +253,7 @@ async def delete_by_titles_batch_telethon(
                         )
                         if resp.json().get("ok"):
                             total_deleted += 1
-                            print(f"[delete_batch] 🗑️ Bot API xóa msg_id={msg.id} ('{first_line_clean[:30]}...')")
+                            print(f"[delete_batch] 🗑️ Bot API xóa msg_id={msg.id} ('{header_clean[:30]}...')")
                         else:
                             await client.delete_messages(cid, [msg.id], revoke=True)
                             total_deleted += 1
