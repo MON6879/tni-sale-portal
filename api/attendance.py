@@ -2,7 +2,7 @@ import requests
 from http.server import BaseHTTPRequestHandler
 import json
 
-GAS_ATTENDANCE_URL = "https://script.google.com/macros/s/AKfycbyFIDGDS5k7wy-hNp2p1PNvte0CQ6cSiNYLyBmNc00Yi1b6IueOob9bKmu4zoQ1A6Cs/exec"
+GAS_ATTENDANCE_URL = "https://script.google.com/macros/s/AKfycbzSz_ISXgertxBDadw4BBQX1JdMjW650_o4He0o4Lh-uf1hV5O3YaE-ohlqI2CHyAcVFg/exec"
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
@@ -23,7 +23,7 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(b'{"ok": true}')
         except Exception as e:
-            self.send_response(200)
+            self.send_response(504)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({"ok": False, "error": str(e)}).encode())

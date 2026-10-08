@@ -2600,4 +2600,48 @@ Reason: [Lý do]`
 >      - Cột J (`Start time`) luôn được format định dạng chuẩn `dd/MM/yyyy HH:mm:ss`, tuyệt đối cấm lỗi hiển thị `#####`.
 >   4. **Đồng Bộ Hoàn Trả Môi Trường Làm Việc (Clean Environment Restore)**:
 >      - Trước khi chạy: tự động chuyển sang Desktop chứa Nocpro hoặc đưa Nocpro lên foreground; sau khi hoàn tất: tự động đóng dialog phụ (nếu có bằng ESC) và hoàn trả quyền điều khiển bình thường cho người dùng.
+>
+> **PM-89 (08/10/2026) — Khóa Thép Bảo Vệ Dữ Liệu Zero-Wipe: Không Search & Không Có File Excel Export Thì Tuyệt Đối Không Được Xóa Dữ Liệu Trên Link Sheet (`DESK-NOCPRO-1` & Backend GAS) (Strict Zero-Wipe Data Protection & Dual-Guard Anti-Clear Policy)**:
+> - **Yêu Cầu & Bối Cảnh (Requirement & Context)**:
+>   1. Người dùng chỉ thị nghiêm ngặt: *"Thêm tính năng không search và không có file excel export thì không được xóa dữ liệu trên link"*.
+>   2. Trước đây, backend GAS `handleNocproSyncSheet_` chỉ kiểm tra `if (!rows || rows.length === 0)` rồi gọi `ws.getRange(1, 1, currentLastRow, 27).clearContent()`. Nếu client gặp lỗi không Search được, không tạo ra file Excel mới hoặc gửi payload rỗng/lỗi, lệnh `clearContent()` có nguy cơ xóa trắng toàn bộ dữ liệu đang có trên tab `1. Input New` (GID: `85422169`, Spreadsheet ID: `1aAMxzyhiiYYZ1Hl8n8VYgXTfu3Cx_ivX6X-WSzXbFcI`).
+> - **Nguyên Nhân Gốc & Giải Pháp Kỹ Thuật (Root Cause & Solution)**:
+>   1. **Nguyên Nhân Kỹ Thuật (Root Cause)**:
+>      - Thiếu chốt kiểm duyệt 2 đầu (Client & Backend) trước khi gọi hành động hủy dữ liệu `clearContent()`.
+>      - Khi Search thất bại, kẹt nút hoặc không tải được file Excel mới về đĩa, nếu script client vẫn tiếp tục chạy hoặc gửi payload thiếu dữ liệu thực sự sẽ làm mất toàn bộ dữ liệu lịch sử cảnh báo đang phục vụ giám sát.
+>   2. **Tầng Bảo Vệ 1 — Client Python (`auto_nocpro_desk1.py`)**:
+>      - Trong `trigger_export_and_wait_file`: Nếu sau `timeout_sec` (90s) không phát hiện file Excel xuất mới hợp lệ (`ACCESS_ALARM_MONITORING_*.xlsx`), script ném ngoại lệ `TimeoutError` và **DỪNG NGAY LẬP TỨC**, tuyệt đối không gọi `process_and_sync_sheet`.
+>      - Trong `process_and_sync_sheet`: Bắt buộc kiểm tra `excel_file_path` tồn tại trên đĩa và đọc file ra mảng `rows`. Cấu trúc chuẩn file Nocpro tối thiểu phải có: Dòng 1 (Exported time), Dòng 2 (Tiêu đề bảng), Dòng 3 (Header cột), và từ Dòng 4 trở đi là dữ liệu cảnh báo thực sự. Nếu `len(rows) < 4` $\rightarrow$ ném lỗi và hủy phiên ngay, tuyệt đối không gửi request lên Google Apps Script!
+>   3. **Tầng Bảo Vệ 2 — Backend GAS (`handleNocproSyncSheet_` trong `apps_script_collector.gs` @488)**:
+>      - Bắt buộc kiểm tra đồng thời:
+>        ① `source_file` xuất từ Nocpro phải tồn tại và không rỗng: `if (!sourceFile) return json({ status: "error", code: "ZERO_WIPE_GUARD_NO_SOURCE", ... })`.
+>        ② Số dòng `rows` phải $\ge 4$: `if (!rows || rows.length < 4) return json({ status: "error", code: "ZERO_WIPE_GUARD_EMPTY_ROWS", ... })`.
+>      - **TUYỆT ĐỐI CHẶN ĐỨNG `clearContent()`**: Nếu 1 trong 2 điều kiện trên không thỏa mãn, backend lập tức từ chối request, ghi log `Logger.log` cảnh báo, và giữ nguyên vẹn 100% dữ liệu đang có trên dải `A:AA` của tab `1. Input New`.
+>   4. **Tích Hợp Chuyển Đổi Virtual Desktop Tự Động Bằng Thư Viện Chuyên Dụng (`pyvda`)**:
+>      - Client sử dụng `pyvda.VirtualDesktop(2).go()` để điều khiển mượt mà sang Desktop 2 thực thi Nocpro mà không cướp chuột hay làm gián đoạn người dùng ở Desktop 1.
+>      - Sau khi Action xuất file xong, đóng tiến trình Excel ngay và lập tức hoàn trả Desktop 1 bằng `pyvda.VirtualDesktop(1).go()`, đảm bảo an toàn tuyệt đối ngay cả khi gặp ngoại lệ (`try...finally`).
+>
+> **PM-90 (08/10/2026) — Bọc Thép Concurrency Điểm Danh Nhóm 10: Tách Khối Rebuild Nặng Khỏi Webhook doPost, Bảo Vệ LockService 10s & Chống Timeout Nuốt Tin (Strict Attendance Concurrency Protection, Zero-Heavy-Webhook & Retry-Safe Policy)**:
+> - **Yêu Cầu & Bối Cảnh (Requirement & Context)**:
+>   1. Người dùng phản ánh sự cố: *"sao không thu thập có cái thu có cái không vậy"* kèm ảnh chụp màn hình nhóm **10. TNI DAILY ADDTENDANCE** vào sáng 08/10/2026 lúc 08:38 (PT), 08:39 (Khant Si Thu T3), 08:40 (Maung Maung T2) gửi ảnh nhưng hoàn toàn không được Bot ghi nhận vào Sheet `List Attendance`.
+>   2. Trong khi đó, các lượt điểm danh gửi riêng lẻ vào khung giờ sau đó (09:07, 09:11, 09:52, 10:31, 12:04, 12:11, 12:52, 13:48, 15:44) lại được ghi nhận bình thường.
+> - **Nguyên Nhân Gốc (Root Cause Analysis)**:
+>   1. **Anti-pattern gọi đồng bộ 2 hàm tái tạo toàn bộ Sheet trong luồng Webhook**: Trong `doPost(e)` của `TNI attendance.js`, mỗi khi có ảnh gửi đến, code tự động gọi `buildGeneralTab()` (quét toàn bộ lịch sử, tính toán 56 nhân sự, mất 17.36 giây) và `buildSumWorkTab()` (quét và tính toán lại công tháng của cả công ty, mất 10.55 giây). Tổng thời gian xử lý 1 ảnh lên tới 35-40 giây!
+>   2. **Vercel Proxy Timeout 25s nuốt chửng tin nhắn Telegram**: Vào giờ cao điểm sáng (08:30 - 08:45), các đội đồng loạt gửi ảnh điểm danh. Request thứ nhất chiếm dụng GAS 35s làm các request sau bị nghẽn và chờ quá 25s, khiến `api/attendance.py` văng `ReadTimeout`. Do khối `except` trả về HTTP 200 giả, Telegram coi như tin nhắn đã được giao và vĩnh viễn xóa bỏ các cập nhật đó khỏi hàng đợi (28 updates bị mất từ update 770994826 đến 770994854).
+>   3. **Thiếu LockService trên GAS**: Các luồng nhận ảnh đồng thời không có khóa độc quyền, dẫn đến xung đột khi ghi dòng số 2 trên `List Attendance`.
+>   4. **Định nghĩa khung giờ sáng bị hẹp (< 08:30)**: Hàm `getAttendanceSlot_` cắt mốc 08:30 làm các ảnh gửi 08:31 - 09:30 bị rơi vào `slot_custom_8`, gây sai lệch bộ đếm và nguy cơ bị chặn nhầm bởi `isAlreadyLoggedToday_`.
+> - **Quy Trình & Biện Pháp Khắc Phục Bọc Thép (Rule PM-90)**:
+>   1. **Tách Rời Hoàn Toàn Hàm Tái Tạo Bảng Khỏi doPost (Zero-Heavy-Webhook)**:
+>      - Cắt bỏ hoàn toàn lệnh gọi `buildGeneralTab()` và `buildSumWorkTab()` ra khỏi luồng `doPost` (cả luồng nhận ảnh và luồng text report). Luồng `doPost` CHỈ thực hiện tải ảnh, lưu Drive, chèn 1 dòng vào `List Attendance` và phản hồi Telegram (`✅ Recorded #...`). Thời gian xử lý rút từ 37s xuống chỉ còn **3 ~ 5 giây** (nhanh gấp 8 lần, không bao giờ lo chạm trần timeout).
+>      - Chuyển `buildGeneralTab()` và `buildSumWorkTab()` sang chạy định kỳ ở cuối batch của `sendDailyAttendanceTemplates()` (lúc 08:45 và 09:15 MMT) và `sendDailyAttendanceReport()` (lúc 09:00 MMT), hoặc khi người dùng gọi lệnh `/sum_work`.
+>   2. **Bọc Thép LockService Concurrency Cho Dòng Ghi Chú**:
+>      - Trang bị `LockService.getScriptLock()` với `waitLock(10000)` bọc chính xác quanh thao tác lấy `nextNum`, kiểm tra trùng lặp và ghi dòng `insertRowAfter(1)` + `setValues()` trong `doPost`.
+>   3. **Mở Rộng Khung Giờ Sáng (slot_morning_1 <= 09:30)**:
+>      - Chuẩn hóa `getAttendanceSlot_` để `slot_morning_1` bao phủ trọn vẹn từ đầu giờ sáng đến 09:30 MMT, khớp hoàn toàn với quy chế làm việc và cutoff 08:40 MMT.
+>   4. **Phản Hồi Lỗi 504 Để Telegram Tự Động Retry**:
+>      - Trong `api/attendance.py`, khi gặp ngoại lệ mạng hoặc timeout, trả về mã trạng thái HTTP 504 Gateway Timeout để Telegram giữ lại tin nhắn trong hàng đợi và tự động gửi lại thay vì xóa mất tin nhắn của nhân viên.
+>   5. **Tri-Repo Parity & Deploy Đồng Bộ**:
+>      - Deploy cả 2 deployment `@130` (`AKfycbzSz...`) và `@131` (`AKfycbyFID...`).
+>      - Đồng bộ file `api/attendance.py` sang `tni-search`. Không can thiệp sang `tni-sitedown` (tuân thủ Rule Repo Isolation).
+
 
