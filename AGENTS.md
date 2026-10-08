@@ -557,6 +557,16 @@ bac.
 > >    - Nếu chỉ có Bước 3 mà thiếu Bước 1 + 2 → **LỖI NGHIÊM TRỌNG**, phải sửa ngay!
 > > 4. **Kiểm Tra Trước Khi Deploy (Pre-Deploy Dead-Check Audit)**: Trước mỗi lần `clasp push` / deploy, BẮT BUỘC phải grep tìm tất cả các lệnh `setProperty("HASH_` hoặc `computeMd5_` trong code. Với mỗi lệnh tìm được, PHẢI xác nhận có dòng `getProperty("HASH_` tương ứng **TRƯỚC** vòng lặp gửi tin. Nếu không tìm thấy → CHẶN deploy, sửa ngay!
 > > 5. **Bài Học Thực Tế (Postmortem v26 — GAS-SOLUTION-CLEAR-6)**: Phiên bản cũ đã tính `computeMd5_(messageText)` và lưu `HASH_CLEAR_T1..T4` + `HASH_CLEAR_CONTROL` sau mỗi lần gửi, nhưng KHÔNG BAO GIỜ đọc lại hash cũ để so sánh trước khi gửi → Bot gửi tin trùng lặp mỗi khi ô E2 thay đổi dù danh sách trạm giống hệt lần trước. Đã sửa tại v26 bằng cách thêm Bước 1 (Read) + Bước 2 (Compare) đúng chuẩn.
+>
+> ---
+>
+> # 🛡️ STRICT RULE: BẢO VỆ WEBHOOK BỌC THÉP CHO TOÀN BỘ TELEGRAM BOT — TUYỆT ĐỐI CẤM ĐỂ TRỐNG WEBHOOK DẪN ĐẾN BỊ CHIẾM QUYỀN LONG-POLLING SPAM (STRICT BOT WEBHOOK LOCK & ZERO LONG-POLLING HIJACK POLICY)
+>
+> > ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (BOT WEBHOOK LOCK & ANTI-HIJACK POLICY)**:
+> > 1. **Bắt Buộc Luôn Kích Hoạt Webhook Cho Mọi Telegram Bot (Mandatory Active Webhook Lock)**: Tất cả Bot Telegram trong hệ thống (kể cả Bot nhận lệnh, Bot thu thập dữ liệu hay Bot chuyên gửi thông báo 1 chiều như `SEND_BOT`) BẮT BUỘC PHẢI LUÔN ĐƯỢC CÀI ĐẶT WEBHOOK HỢP LỆ trỏ về endpoint máy chủ an toàn của hệ thống (Vercel Proxy / Google Apps Script).
+> > 2. **TUYỆT ĐỐI CẤM Để Trống Webhook (`url: ""`)**: CẤM TUYỆT ĐỐI để trạng thái Webhook rỗng. Khi Webhook bị rỗng, Telegram sẽ mở cổng Long-Polling (`getUpdates`), tạo điều kiện cho các script bên ngoài hoặc kẻ gian chiếm quyền token để đọc tin nhắn và phát tán tin nhắn spam/phishing (ví dụ: ép tham gia kênh rác *"To use this bot, you must join our channel"*).
+> > 3. **Cơ Chế Khóa Cứng (Instant 409 Conflict Shield)**: Việc duy trì Webhook kích hoạt là cơ chế bọc thép tự nhiên của Telegram để ngắt lập tức 100% mọi kết nối Long-Polling bất hợp pháp từ bên ngoài (`409 Conflict: can't use getUpdates while webhook is active`).
+> > 4. **Ghế Giám Sát Tự Động Đối Soát Webhook (Auditor Webhook Enforcement)**: Ghế `AUDITOR-9.1` định kỳ quét kiểm tra trạng thái `getWebhookInfo` của toàn bộ Bot trong hệ thống. Nếu phát hiện bất kỳ Bot nào bị mất Webhook hoặc có `pending_update_count > 50`, Auditor BẮT BUỘC tự động kích hoạt lại Webhook và xóa sạch tin rác (`drop_pending_updates: true`)!
 
 ---
 > # 🎯 STRICT RULE: GAS NÀO SỬA GAS NẤY — TUYỆT ĐỐI CẤM TIỆN TAY GỘP CHUNG / SỬA CHÉO DỰ ÁN (STRICT DEDICATED GAS SCOPE ISOLATION)
