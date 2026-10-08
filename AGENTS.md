@@ -162,6 +162,23 @@ bac.
 
 ---
 
+# ⛽ STRICT RULE: NHẬN DIỆN ĐA BIỂU MẪU BÁO CÁO ĐÃ ĐỔ DẦU THỰC TẾ (RULE PM-86 & STRICT MULTI-FORMAT REFUEL REPORT DETECTION POLICY)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (MULTI-FORMAT REFUEL REPORT DETECTION STANDARD)**:
+> 1. **Bắt Buộc Hỗ Trợ Toàn Diện Các Dạng Mở Đầu Biểu Mẫu (Comprehensive Header Support)**: Khi phân loại báo cáo đã đổ dầu thực tế (`REFUELED`), hệ thống BẮT BUỘC phải hỗ trợ toàn diện các dạng mở đầu biểu mẫu gồm:
+>    - Bắt đầu bằng `DG Type` (chuẩn mẫu cũ).
+>    - Mẫu đánh số bắt đầu bằng Ngày: `(?:\d+[\.\:\-\)]\s*)?date\s*[=:]` (ví dụ: `1. Date=7/10/2026`, `1.Date =...`, `Date: ...`).
+>    - Mẫu đánh số bắt đầu bằng Mã Trạm / DG: `(?:\d+[\.\:\-\)]\s*)?(?:mytel\s*)?(?:site|dg)\s*id\b` (ví dụ: `2. Mytel site ID TNI0038`).
+>    - Bắt đầu trực tiếp bằng mã trạm `tni0*\d{1,4}\b` hoặc từ khóa `refuel(ed)`.
+> 2. **Xác Thực Đa Tầng Tránh Bắt Nhầm Hội Thoại (Multi-Tier Validation & Zero False Positives)**: Để đảm bảo không bao giờ nhận nhầm trò chuyện thông thường thành báo cáo, tin nhắn BẮT BUỘC phải thỏa mãn đồng thời:
+>    - Có mã trạm TNI hợp lệ (`\btni0*(\d{1,4})\b`).
+>    - Có ít nhất một chỉ số đo đạc thực tế (`actual filled`, `csu reading`, `running hour`, `level %`, `fuel level`, `fuel liter/cm`).
+>    - Có từ khóa nghiệp vụ đổ dầu (`dg type`, `actual filled`, `fuel filling team`, `power mode`) HOẶC có đầy đủ cả 2 khối `before` và `after`.
+> 3. **TUYỆT ĐỐI CẤM Neo Cứng `^\s*dg\s*type\b` Đầu Câu**: Cấm triệt để việc chỉ kiểm tra `dg type` ở đầu dòng số 0 làm bỏ sót các báo cáo thực tế được nhân viên kỹ thuật gửi theo mẫu đánh số `1. Date=...`.
+> 4. **Trích Xuất Chỉ Số cm Linh Hoạt**: Đối với dòng `Fuel Liter/cm`, phải hỗ trợ linh hoạt cả dạng có số trong ngoặc `-(10)44L` lẫn dạng dấu gạch ngang sau ngoặc `Fuel Liter/cm -(-)30 L` hoặc `-(30) L` để không bị rỗng giá trị `beforeCm`/`afterCm`.
+
+---
+
 # 🔒 STRICT SEARCH & MENU RULE: KHÓA CỨNG ANCHOR BẮT ĐẦU — TUYỆT ĐỐI KHÔNG TÌM Ở GIỮA CÂU (STRICT START-KEY ANCHORING & ZERO MID-SENTENCE MATCHING POLICY)
 
 > ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (ANTI-FALSE-POSITIVE COMMAND LOCK)**: 

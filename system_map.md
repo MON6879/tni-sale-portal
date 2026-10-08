@@ -1406,7 +1406,7 @@ KHÔNG ĐỤNG:
 | **`Ghế AUDITOR-9.1`** | Master System Sentinel | Sức khỏe 4 Webhooks, 3 GAS Endpoints, 3 Sheets | Gửi Alert đỏ 🚨 trực tiếp về DM Admin |
 | **`Ghế AUDITOR-9.2`** | Web BI Portal (19 Tables & Modals) | Đồng bộ 100% dữ liệu giữa Google Sheets vs Web DOM | Cảnh báo lệch ngày / đứt cáp DOM về DM Admin |
 | **`Ghế AUDITOR-DM`** | Kênh Cảnh Báo Độc Quyền | Chat ID: `6859790680` (Ha Duc Phong) | **Tuyệt đối KHÔNG spam vào Group chung** |
-| **`Ghế GAS-OPS-1`** | Quản Trị GAS Tổng (QLTC_GAS) | 17 files .gs vận hành (Cable, MDG, Refuel, Daily, BOD) | Báo lỗi cú pháp / xung đột hàm về DM Admin |
+| **`Ghế GAS-OPS-1`** | Quản Trị GAS Tổng (QLTC_GAS) | 20 files .gs vận hành (@487, Refuel Multi-format detection, Cable, MDG, Refuel, Daily, BOD) | Báo lỗi cú pháp / xung đột hàm về DM Admin |
 | **`Ghế EXT-OPS-HUB`** | Cổng Ngoại Giao GAS Tổng | Webhook Search Bot, Asset Collector, BI Portal Plan Dep | Báo đứt kết nối / Timeout 302 về DM Admin |
 | **`Ghế GAS-SITEDOWN-2`** | Quản Trị GAS Site Down | 1 file `site_down_v2.gs` độc lập trên `apps_script_sitedown` (@110, bổ sung tin chuyên biệt Site Down cho Group Control tách Team & Sub Team) | Báo lỗi parse Cột C / AW7 về DM Admin |
 | **`Ghế EXT-SITEDOWN-RELAY`**| Cổng Ngoại Giao Site Down | Webhook `@tni_site_down_bot`, cào Cột A `:06/:36` MMT | Báo nghẽn cào / đứt tin về DM Admin |
