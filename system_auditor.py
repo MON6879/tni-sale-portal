@@ -888,18 +888,51 @@ def audit_sale_inventory():
     SLOW_MOVER_DAYS = 30
     GAS_SALE_URL = os.getenv("GAS_SALE_URL", "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec")
     SALE_ADMIN_TOKEN = os.getenv("SALE_ADMIN_TOKEN", "")
+    SALE_SS_ID = "1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA"
 
     def fetch_col(col):
-        try:
-            payload = {"action": "sale_get", "col": col, "token": SALE_ADMIN_TOKEN}
-            resp = requests.post(GAS_SALE_URL, json=payload, timeout=20, allow_redirects=True)
-            data = resp.json()
-            if data.get("ok") and isinstance(data.get("data"), list):
-                return data["data"]
-            logger.warning(f"[AUDIT-INV] sale_get({col}) not ok: {data.get('error','?')}")
+        # 1. Thử qua GAS nếu có token
+        if SALE_ADMIN_TOKEN:
+            try:
+                payload = {"action": "sale_get", "col": col, "token": SALE_ADMIN_TOKEN}
+                resp = requests.post(GAS_SALE_URL, json=payload, timeout=20, allow_redirects=True)
+                data = resp.json()
+                if data.get("ok") and isinstance(data.get("data"), list):
+                    return data["data"]
+            except Exception as e:
+                logger.warning(f"[AUDIT-INV] sale_get({col}) GAS error: {e}")
+
+        # 2. Fallback: Đọc trực tiếp 100% từ Google Sheet SSOT qua GViz (Zero-Secret, SSOT Fresh Read)
+        tab_map = {"nhap": "Nhap Hang", "ban": "Ban Hang", "tamung": "Tam Ung"}
+        sheet_name = tab_map.get(col)
+        if not sheet_name:
             return []
+        try:
+            import urllib.parse
+            url = f"https://docs.google.com/spreadsheets/d/{SALE_SS_ID}/gviz/tq?tqx=out:json&sheet=" + urllib.parse.quote(sheet_name)
+            req = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=12)
+            res_text = req.text
+            raw_json = json.loads(res_text[res_text.find("{"):res_text.rfind("}") + 1])
+            cols = [c.get("label") or c.get("id") for c in raw_json.get("table", {}).get("cols", []) if c]
+            raw_rows = raw_json.get("table", {}).get("rows", [])
+            # Nếu cols rỗng hoặc dạng A, B -> lấy header từ dòng đầu tiên
+            header_offset = 0
+            if raw_rows and (not cols or all(len(c) == 1 and c.isalpha() for c in cols)):
+                first_row_vals = [c.get("v") if c else "" for c in raw_rows[0].get("c", [])]
+                if any(k in first_row_vals for k in ["id", "model", "ten", "sl"]):
+                    cols = [str(v).strip() for v in first_row_vals]
+                    header_offset = 1
+
+            rows = []
+            for r in raw_rows[header_offset:]:
+                row_dict = {}
+                for c_idx, cell in enumerate(r.get("c", [])):
+                    if c_idx < len(cols) and cols[c_idx]:
+                        row_dict[cols[c_idx]] = cell.get("v") if cell else None
+                rows.append(row_dict)
+            return rows
         except Exception as e:
-            logger.error(f"[AUDIT-INV] fetch_col({col}) error: {e}")
+            logger.error(f"[AUDIT-INV] fetch_col({col}) GViz fallback error: {e}")
             return []
 
     try:
@@ -912,7 +945,7 @@ def audit_sale_inventory():
                 "component": "Sale Inventory",
                 "status": "WARN",
                 "label": "⚠️ Không đọc được dữ liệu kho",
-                "detail": "GAS Sale Backend không trả dữ liệu nhap (có thể SALE_ADMIN_TOKEN chưa set trong Script Properties)"
+                "detail": "Không thể tải dữ liệu tab Nhập Hàng từ Google Sheet SSOT hoặc GAS Sale Backend"
             })
             return results
 
@@ -1270,6 +1303,17 @@ async def audit_telegram_messages_telethon():
                                 "status": "WARN",
                                 "label": "🟡 CAUGHT-UP",
                                 "detail": f"Toa bù lúc {catchup_msg['time_str']} đã gửi thành công (Toa 07:06 Catch-up | ID: {catchup_msg['id']})"
+                            })
+                        elif r_name == "Report 5C (Plan Sáng/Chiều)" and target_t == "06:06" and any(abs(m["total_min"] - (8 * 60 + 28)) <= 15 for _, m in matched_msgs):
+                            # Mốc 06:06 đã được cập nhật/thay thế bằng mốc 08:28 (theo cơ chế dọn tin cũ Rule PM-46)
+                            later_msg = [m for _, m in matched_msgs if abs(m["total_min"] - (8 * 60 + 28)) <= 15][0]
+                            schedule_results.append({
+                                "report": r_name,
+                                "target_time": target_t,
+                                "group": gkey,
+                                "status": "PASS",
+                                "label": "🟢 SUPERSEDED",
+                                "detail": f"Đã được cập nhật & thay thế bởi mốc 08:28 lúc {later_msg['time_str']} (ID: {later_msg['id']})"
                             })
                         else:
                             schedule_results.append({

@@ -2675,6 +2675,61 @@ Reason: [Lý do]`
 >      - Deploy `apps_script_sitedown` lên Version **`@111`** (Deployment `AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-`).
 >      - Live verify: Lần 1 trả về `{"ok":true,"sent_tin2":true}` (đã cập nhật thành công 3 trạm Team 3, 18 trạm Team 1, 11 trạm Team 2); Lần 2 trả về `{"ok":true,"sent_tin2":false}` (dedup chặn lặp thành công).
 >      - Khóa Thép Site Down tự động đóng lại bảo vệ hệ thống.
+>
+> **PM-92 (09/10/2026) — Khóa An Toàn Chống Chạy Nhầm Khi Khóa Màn Hình (`Win + L`) & Cơ Chế Fallback Đọc Kho Hàng SSOT Trong Sentinel Auditor (Strict Workstation Lock Guard & Zero-Secret Inventory GViz Fallback Policy)**:
+> - **Yêu Cầu & Bối Cảnh (Requirement & Context)**:
+>   1. Người dùng thắc mắc: *"khi tôi bấm Cửa sổ + L thì có chạy nhầm bên trong không"*.
+>   2. Hệ thống cảnh báo tự động phát hiện:
+>      - `MISSED Report 5C (06:06 MMT)`: Báo lệch 144p so với tin 08:30.
+>      - `Không đọc được dữ liệu kho (Sale Inventory)`: GAS backend không trả dữ liệu do thiếu token trong runner.
+>      - Cảnh báo dữ liệu `LỆCH BẤT THƯỜNG 369 vs 155 WOs` & `3 KỸ SƯ Ứ ĐỌNG > 50 WOs`: Cần phân định rõ cảnh báo nghiệp vụ phát hiện từ Sheet SSOT so với lỗi hệ thống.
+> - **Nguyên Nhân Gốc (Root Cause Analysis)**:
+>   1. **Rủi ro khi bấm `Win + L` (Workstation Lock Conflict)**: Khi người dùng bấm `Win + L`, Windows chuyển desktop hiển thị sang desktop bảo mật `Winlogon`. Toàn bộ GUI automation sử dụng chuột và phím (`SetCursorPos`, `mouse_event`, `keybd_event`, clipboard paste `pyperclip`) trên desktop người dùng bị mất context rendering, dẫn đến nguy cơ chuột click lệch tọa độ hoặc dán nhầm vào ô khác nếu Nocpro vô tình ở trạng thái không lường trước.
+>   2. **Cảnh Báo Giả MISSED Do Cơ Chế Dọn Tin Rác (Purged/Superseded Slot Blindspot)**: Theo Rule PM-46, Toa 5 (Report 5C Morning) tự động xóa tin nhắn cũ của mốc trước (`06:06`) khi mốc mới (`08:28`) gửi lên để tránh rác nhóm CONTROL. Khi Auditor 9.1 quét lúc 09:03, tin 06:06 không còn trong nhóm, Auditor chỉ thấy tin 08:30 (diff 144m) nên báo nhầm `🔴 MISSED`.
+>   3. **Môi Trường Cron Thiếu Token Bí Mật Cho Kiểm Kho**: Module `audit_sale_inventory` gọi endpoint `sale_get` yêu cầu `SALE_ADMIN_TOKEN`. Khi chạy trên runner không có token, backend trả HTTP 401 Unauthorized, làm auditor không đọc được tồn kho.
+> - **Quy Trình & Biện Pháp Khắc Phục Bọc Thép (Rule PM-92)**:
+>   1. **Bọc Khóa An Toàn Chống Lock Màn Hình (`is_workstation_locked`)**:
+>      - Tích hợp hàm `is_workstation_locked()` vào cả 2 script tự động hóa desktop (`auto_nocpro_desk1.py` và `auto_nocpro_site_clear.py`).
+>      - Nếu `user32.OpenInputDesktop(0, False, 0x01FF)` trả về NULL (màn hình bị khóa `Win + L`), script lập tức **HỦY PHIÊN AN TOÀN (Safe Abort)**, ghi log cảnh báo, tuyệt đối không gửi chuột/phím mù mờ gây click nhầm.
+>      - **Khuyến nghị chuẩn**: Khi rời máy tính, người dùng chỉ tắt màn hình vật lý (nút nguồn) hoặc để Display Sleep tự tắt đèn nền (với cài đặt Sleep: Never, Screen Lock: Never) để bot tự động chạy ngầm an toàn.
+>   2. **Fallback Đọc Trực Tiếp 100% Google Sheet SSOT Qua GViz Cho Module Kiểm Kho**:
+>      - Cập nhật `audit_sale_inventory` trong `system_auditor.py`: Nếu không có `SALE_ADMIN_TOKEN`, tự động fallback đọc trực tiếp từ Google Sheet SSOT `1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA` qua GViz (`sheet=Nhap Hang`, `sheet=Ban Hang`, `sheet=Tam Ung`).
+>      - Không phụ thuộc bất kỳ secret hay token nào, tuân thủ 100% quy tắc Live Sheet SSOT Fresh Read và Zero-Secret trong cron.
+>   3. **Xử Lý Mốc Report 5C 06:06 Bị Thay Thế Bởi 08:28**:
+>      - Cập nhật logic `system_auditor.py`: Nếu mốc `06:06` đã có mốc kế tiếp `08:28` gửi thành công trong ngày hôm nay, auditor tự động ghi nhận trạng thái `🟢 SUPERSEDED` (Đã được cập nhật & thay thế), triệt tiêu hoàn toàn cảnh báo giả `🔴 MISSED`.
+>   4. **Phân Định Rõ Cảnh Báo Nghiệp Vụ Vận Hành**:
+>      - Cảnh báo `LỆCH BẤT THƯỜNG 369 vs 155 WOs` và `3 KỸ SƯ Ứ ĐỌNG > 50 WOs` là **Báo cáo phát hiện nghiệp vụ thực tế** từ Sheet SSOT (Team 1 Dawei có 373 WOs, 298 remain, 3 kỹ sư Phyo Htet Aung, Phyo Ko Ko, Aung Lwin Phyo quá hạn > 50 WOs). Đây là bằng chứng Ghế Giám Sát `BI-WO-SYNC` hoạt động rất mẫn cán, giúp lãnh đạo phát hiện điểm nghẽn điều hành để nhắc nhở Team 1 Dawei.
+>
+> **PM-93 (09/10/2026) — Phân Hệ Điểm Danh: Cập Nhật Mẫu Xin Nghỉ Phép Mới 'Dear BOD and HR i want' & Tự Động Phân Giải Họ Tên Từ Telegram ID (Strict Attendance Telegram ID Identity Resolution & New Leave Template Policy)**:
+> - **Yêu Cầu & Bối Cảnh (Requirement & Context)**:
+>   1. Người dùng yêu cầu: *"sửa lại thu Template Take leave không cần ghi rõ họ tên vì đã có ID cá nhân rồi bạn sửa lại đi"* và *"sửa theo mẫu mới"*.
+>   2. Cú pháp mẫu xin nghỉ phép mới (được định nghĩa trên tab `Template Attendance` của Spreadsheet `18zQB4i0Fu4QfKKkkUZUd6SKWlEbdWDiwdpgNSaL9v54`):
+>      `Dear BOD and HR i want : Take leave / half day Date : Reason`
+>   3. Nhân viên gửi tin nhắn xin nghỉ phép cá nhân không cần gõ họ tên bằng tay, bot tự động nhận diện danh tính qua Telegram User ID (`msg.from.id` / `senderId`) để điền tên vào Google Sheet.
+> - **Nguyên Nhân Gốc (Root Cause Analysis)**:
+>   1. **Phụ Thuộc Thủ Công Vào Tên Trong Tin Nhắn (Manual Name Dependency Anti-pattern)**: Trước đây, template yêu cầu `Full Name: Take leave\nReason: `. Nhân viên phải tự gõ hoặc sửa chuỗi "Full Name" thành tên mình. Rất nhiều nhân viên để nguyên chữ "Full Name" hoặc viết sai chính tả, dẫn đến Sheet ghi nhận "Full Name" hoặc ghi nhầm tên.
+>   2. **Không Khai Thác Định Danh Telegram ID (Underutilizing Telegram ID SSOT)**: Telegram ID (`msg.from.id`) là định danh số bất biến, không thể giả mạo (unforgeable). Trong tab `Staff attendance`, Cột A chứa Telegram ID và Cột F chứa Full Name chính thức. Do đó, việc bắt nhân viên gõ tên là thừa thãi và gây rủi ro sai lệch dữ liệu.
+>   3. **Regex Cũ Cứng Nhắc (Rigid Regex Syntax)**: Hàm `isAttendanceReportText_` và `processAttendanceReportText_` trước đây chỉ bắt dạng `^[^:\n]+:\s*take\s*leave`. Khi nhân viên gửi cú pháp mới `Dear BOD and HR i want : Take leave Date : ...`, regex cũ hoàn toàn bỏ qua hoặc bắt nhầm `Dear BOD and HR i want` thành tên nhân viên!
+> - **Quy Trình & Biện Pháp Khắc Phục Bọc Thép (Rule PM-93)**:
+>   1. **Cập Nhật Cú Pháp Mẫu Chuẩn Cho `/take_leave` và `/half_leave` (`handleAttendanceTemplateQuery_`)**:
+>      - Nghỉ cả ngày (`/take_leave`):
+>        `Dear BOD and HR i want : Take leave Date : \nReason : `
+>      - Nghỉ nửa ngày (`/half_leave`):
+>        `Dear BOD and HR i want : half day Date : \nReason : `
+>      - Hướng dẫn đi kèm: *"💡 Instruction: Tap text in box to copy, fill Date & Reason, then send to group."* (Không cần điền họ tên).
+>   2. **Mở Rộng Nhận Diện Cú Pháp Mới (`isAttendanceReportText_`)**:
+>      - Bổ sung regex: `/dear\s+bod(?:\s+and\s+hr)?(?:\s+i\s+want)?\s*:\s*(?:take\s*leave|half\s*day)/i` và `/(?:take\s*leave|half\s*day)\s*(?:date\s*:|reason\s*:)/i`.
+>   3. **Tự Động Phân Giải Danh Tính Từ Telegram ID (`processAttendanceReportText_`)**:
+>      - Xây dựng map tra cứu ngược `idToStaffMap[tgId] = fullName || tgName` từ tab `Staff attendance` (Col A: Telegram ID -> Col F: Full Name).
+>      - Khi nhân viên gửi tin theo mẫu mới: Trích xuất `Date` (nếu để trống tự động lấy ngày hiện tại múi giờ Yangon `dd/MM/yyyy`), `Reason`, phân loại `Take leave` vs `Half day`. Họ tên được lấy tự động 100% từ `idToStaffMap[senderId]`, fallback sang `senderName` hoặc `Staff (ID)` nếu ID chưa có trong danh sách.
+>   4. **Hỗ Trợ Tương Thích Ngược & Tự Động Thay Thế Placeholder**:
+>      - Nếu nhân viên vẫn gửi cú pháp cũ `Họ Tên: Take leave`, bot vẫn xử lý bình thường.
+>      - Nếu người gửi để nguyên placeholder `Full Name: Take leave`, bot tự động phát hiện placeholder và thay thế bằng họ tên thật tra cứu từ Telegram ID.
+>   5. **Triển Khai Đủ 2 Lệnh Clasp Deploy Cho Phân Hệ Điểm Danh**:
+>      - Deploy thành công lên cả 2 deployment: Primary Webhook `AKfycbzSz_ISXgertxBDadw4BBQX1JdMjW650_o4He0o4Lh-uf1hV5O3YaE-ohlqI2CHyAcVFg` (@132) và Secondary `AKfycbyFIDGDS5k7wy-hNp2p1PNvte0CQ6cSiNYLyBmNc00Yi1b6IueOob9bKmu4zoQ1A6Cs` (@133).
+>      - Live ping `?action=ping` phản hồi `PONG` (HTTP 200).
+
+
 
 
 
