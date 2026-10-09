@@ -285,17 +285,31 @@ async def main():
         raw_text = "\n".join(bot_messages) if bot_messages else ""
 
         # 🛡️ LỌC CHỈ LẤY TANINTHARYI REGION — Không lấy tỉnh khác (Ayeyarwady, Sagaing, v.v.)
-        # Bot /down_tni trả về nhiều tin cho nhiều region. Chỉ giữ tin chứa "Tanintharyi Region".
+        # ✅ PM-60 FIX v843: Nhận diện tin TNI data bằng 2 điều kiện OR:
+        #   (1) Tin có chứa "tanintharyi" → header bản tin đầu tiên
+        #   (2) Tin có ≥1 dòng mà left(3) = "TNI" → các phần tiếp theo (Tin 2, Tin 3)
+        # Cả 2 điều kiện đảm bảo gom đủ 172 dòng kể cả khi bot chia thành N tin split.
+        # TUYỆT ĐỐI CẤM chỉ filter "tanintharyi" — Tin 2+3 không có header, sẽ bị bỏ sót!
         if bot_messages:
-            tni_messages = [m for m in bot_messages if "tanintharyi" in m.lower()]
-            if tni_messages:
-                raw_text = tni_messages[-1]  # ✅ Chỉ lấy ĐÚNG 1 BẢN TIN Tanintharyi MỚI NHẤT, không ghép trùng lặp
-                print(f"[{myanmar_now()}] 🎯 Lọc lấy 1 bản tin Tanintharyi mới nhất: {len(raw_text)} ký tự")
+            def is_tni_data_msg(m):
+                if "tanintharyi" in m.lower():
+                    return True  # Tin đầu: có header region
+                # Tin tiếp theo: có ít nhất 1 dòng bắt đầu bằng "TNI" (station ID)
+                return any(
+                    line.strip()[:3].upper() == "TNI"
+                    for line in m.split("\n") if line.strip()
+                )
+
+            tni_parts = [m for m in bot_messages if is_tni_data_msg(m)]
+            if tni_parts:
+                raw_text = "\n".join(tni_parts)
+                print(f"[{myanmar_now()}] 🎯 Gom {len(tni_parts)}/{len(bot_messages)} phần TNI data → {len(raw_text)} ký tự tổng")
             else:
-                print(f"[{myanmar_now()}] ⚠️ Không tìm thấy tin Tanintharyi trong {len(bot_messages)} tin bot — bỏ qua!")
+                print(f"[{myanmar_now()}] ⚠️ Không tìm thấy tin Tanintharyi/TNI trong {len(bot_messages)} tin bot — bỏ qua!")
                 raw_text = ""
         else:
             raw_text = ""
+
 
         PRIMARY_GAS_URL = "https://script.google.com/macros/s/AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-/exec"
         gas_url = os.environ.get("SD_APPS_SCRIPT_URL") or os.environ.get("APPS_SCRIPT_URL") or PRIMARY_GAS_URL

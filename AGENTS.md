@@ -2653,5 +2653,28 @@ Reason: [Lý do]`
 >   5. **Tri-Repo Parity & Deploy Đồng Bộ**:
 >      - Deploy cả 2 deployment `@130` (`AKfycbzSz...`) và `@131` (`AKfycbyFID...`).
 >      - Đồng bộ file `api/attendance.py` sang `tni-search`. Không can thiệp sang `tni-sitedown` (tuân thủ Rule Repo Isolation).
+>
+> **PM-91 (09/10/2026) — Bảo Vệ Kép Luồng Dedup Summary Site Down: Chống Lặp Duration Và Chống Nghẽn Bỏ Sót Khi Bổ Sung Trạm (Strict Site Signature Dedup & Zero Bot Split-Part Loss Policy)**:
+> - **Yêu Cầu & Bối Cảnh (Requirement & Context)**:
+>   1. Người dùng thắc mắc: *"sao không thu thập có cái thu có cái không vậy"* và *"sao file gốc có 3 Site Team 3 mà hai báo cáo tổng hợp sai là sao"* kèm ảnh chụp màn hình ô `AY7` có 3 trạm (`TNI0416 : 7.9, TNI0105 : 283.8, TNI0402 : 285.7`) nhưng 2 bản tin Telegram (`SUMMARY — SITE DOWN ALL TEAMS` và `SUMMARY — ALL TEAMS`) chỉ báo 1 trạm (`TNI0416 : 7.5`).
+>   2. Người dùng cung cấp mật khẩu mở khóa: `UNLOCK STEEL: Phucat@7979`.
+> - **Nguyên Nhân Gốc (Root Cause Analysis)**:
+>   1. **Cào Thiếu Data Do Chatbot Chia Nhiều Tin (Scraping Loss)**: Khi số lượng trạm sự cố lớn (29 trạm), bot `/down_tni@auto_nocpro_bot` trả về nhiều tin. Tin 1 chứa header `"Tanintharyi Region"` và các trạm sập gần nhất. Tin 2+ chứa các trạm sập lâu ngày (>100h) và KHÔNG chứa từ khóa `"tanintharyi"`. Code `botlookup_relay.py` trong repo `Task and WO` bị trôi phiên bản (chỉ filter `tni_messages = [m for m in bot_messages if "tanintharyi" in m.lower()]` và lấy `tni_messages[-1]`), làm rớt toàn bộ Tin 2 (trong đó có `TNI0105` và `TNI0402` của Team 3).
+>   2. **Khóa Dedup Quá Chặt Chặn Cả Cập Nhật Dữ Liệu Thực Tế (Over-Strict Timestamp-Only Dedup Blindspot)**: Để chống spam lặp tin khi công thức Duration nhảy số (`7.5h` -> `7.6h`), Rule PM-83 chỉ dedup bằng mốc giờ `tsKey` của ô AW7 (`09/10/2026 05:46`). Tuy nhiên, khi dữ liệu trạm được bổ sung vào Sheet (từ 1 trạm lên 3 trạm: `TNI0416` -> `TNI0416, TNI0105, TNI0402`), mốc giờ `tsKey` trong ô AW7 vẫn giữ nguyên `05:46`. Kết quả: `processSummaryAwAz` kiểm tra `tsKey === lastTs` thấy trùng nhau nên chặn 100% không cho gửi cập nhật, làm 2 báo cáo tổng hợp trên Telegram bị kẹt cứng ở số liệu cũ (1 trạm) dù Sheet đã có đủ 3 trạm!
+> - **Quy Trình & Biện Pháp Khắc Phục Bọc Thép (Rule PM-91)**:
+>   1. **Đồng Bộ Hoá 100% Multi-Part Scraping (Tri-Repo Parity for `botlookup_relay.py`)**:
+>      - Bắt buộc dùng dual-condition `is_tni_data_msg(m)` (`"tanintharyi" in m` OR `any(line[:3] == "TNI")`) và gom `\n.join(tni_parts)` đồng bộ qua cả 3 repos (`Task and WO`, `tni-search`, `tni-sitedown`).
+>      - Tuyệt đối cấm dùng `tni_messages[-1]` hay chỉ filter bằng chữ "tanintharyi".
+>   2. **Dedup Bằng Station Signature Chống Nhảy Số Mà Vẫn Nhận Cập Nhật Trạm**:
+>      - Tạo signature `sigKey = tsKey + "__CNT:" + counts + "__SITES:" + sitesSig`.
+>      - Khi chỉ nhảy số giờ Duration (`7.5` -> `7.6`): `sitesSig` và `counts` không đổi $\rightarrow$ Chặn lặp 100% (tuân thủ PM-83).
+>      - Khi số lượng trạm hoặc mã trạm thay đổi (bổ sung từ 1 lên 3 trạm): `sigKey` thay đổi $\rightarrow$ Cho phép gửi cập nhật in-place ngay lập tức!
+>   3. **Tự Động Kích Hoạt `processSummaryAwAz` Trong `store_site_down`**:
+>      - Mỗi khi có đợt cào dữ liệu mới đẩy vào Cột A, sau khi flush tính toán xong Cột C, GAS tự động kiểm tra `processSummaryAwAz(sheet, false)` để đồng bộ Tin 2 ngay lập tức nếu danh sách trạm thay đổi.
+>   4. **Triển Khai & Kiểm Chứng Live (Live Verification)**:
+>      - Deploy `apps_script_sitedown` lên Version **`@111`** (Deployment `AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-`).
+>      - Live verify: Lần 1 trả về `{"ok":true,"sent_tin2":true}` (đã cập nhật thành công 3 trạm Team 3, 18 trạm Team 1, 11 trạm Team 2); Lần 2 trả về `{"ok":true,"sent_tin2":false}` (dedup chặn lặp thành công).
+>      - Khóa Thép Site Down tự động đóng lại bảo vệ hệ thống.
+
 
 
