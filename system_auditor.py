@@ -273,14 +273,15 @@ def audit_telegram_webhooks():
                 is_wrong_url = bool(curr_url and expected_url and curr_url.lower() != expected_url.lower())
                 if (not curr_url or pending >= 5 or is_wrong_url) and expected_url:
                     action_name = f"Auto-Rehook URL đúng (Cũ: {curr_url[:30]}...)" if is_wrong_url else ("Khôi phục Webhook" if not curr_url else f"Auto-Flush hàng đợi ({pending} tin)")
-                    logger.warning(f"🚨 {name}: {action_name}...")
                     try:
-                        if pending >= 5 or is_wrong_url:
+                        # Luôn drop_pending_updates khi URL bị rỗng, sai URL, hoặc kẹt hàng đợi để diệt sạch spam
+                        if pending >= 1 or is_wrong_url or not curr_url:
                             requests.post(f"https://api.telegram.org/bot{token}/deleteWebhook", json={"drop_pending_updates": True}, timeout=8)
                             time.sleep(1.5)
                         set_resp = requests.post(f"https://api.telegram.org/bot{token}/setWebhook", json={
                             "url": expected_url,
-                            "allowed_updates": ["message", "edited_message", "channel_post"]
+                            "allowed_updates": ["message", "edited_message", "channel_post"],
+                            "drop_pending_updates": True
                         }, timeout=8)
                         if set_resp.status_code == 200 and set_resp.json().get("ok"):
                             curr_url = expected_url

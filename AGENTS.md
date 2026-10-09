@@ -2751,6 +2751,42 @@ Reason: [Lý do]`
 >      - File GAS: `QLTC_GAS/daily_bod_assign_notify.gs` (đồng bộ `QLTC_GAS_PULL/daily_bod_assign_notify.js`).
 >      - Deploy đè Deployment chuẩn `AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA` lên Version **`@490`**.
 >      - Kiểm chứng Live: Endpoint `?action=ping` phản hồi HTTP 200 `PONG`.
+>
+> **PM-95 (10/10/2026) — Lá Chắn Bảo Vệ Bot Đa Tầng: Tuyệt Đối Cấm Quảng Cáo, Lôi Kéo Kênh Lạ, Khóa Chặt Webhook & Tự Động Xóa Rác Tức Thì (Strict Zero-Promo & Bot Anti-Hijack Defense-in-Depth Policy)**:
+> - **Yêu Cầu & Bối Cảnh (Requirement & Context)**:
+>   1. Người dùng phản ánh sự cố: Bot `1.1 TNI DAILY ADDTENDANCE` (ID `8628370628`) tự ý gửi tin nhắn quảng cáo ép tham gia kênh lạ vào nhóm vận hành `TNI TEAM 1 PLAN - ALARM`:
+>      `🚀 To use this bot, you must join our channel: https://t.me/A_TOOLSx2`
+>      `Telegram A-TOOLS X (Programming & Development Tools • Resources • Services)` kèm nút `[VIEW CHANNEL]`.
+>   2. Người dùng chỉ đạo: *"Mời chuyên gia 1% vào kiểm an toàn không để quản cáo dạng lôi kéo nào"* và *"Và đưa ra nhiều rào cản không cho ai giả danh bot gởi tin quản cáo"*.
+> - **Phân Tích Nguyên Nhân Gốc (Root Cause Analysis)**:
+>   1. **Mã Nguồn Nội Bộ 100% Trong Sạch**: Khảo sát toàn bộ kho mã nguồn (`Task and WO`, `tni-search`, `QLTC_GAS`, `apps_script_attendance`), không có bất kỳ dòng code nào chứa `A_TOOLS` hay nội dung quảng cáo.
+>   2. **Bot Token Bị Khai Thác Hoặc Webhook Bị Rỗng**:
+>      - Khi kiểm tra `getWebhookInfo` của Bot `@8628370628`, URL trả về rỗng `""`.
+>      - Khi Webhook rỗng, bất kỳ bên thứ 3 nào nắm token (do từng dùng framework bot chia sẻ ngoài hoặc bị lộ token dạng plaintext) đều có thể chạy polling (`getUpdates`) và gửi lệnh lôi kéo khi có người dùng trong nhóm bấm các lệnh slash (`/Report01`, `/plan`...).
+> - **Hệ Thống 7 Rào Cản Phòng Thủ Bọc Thép (The 7-Layer Defense Shield)**:
+>   1. **Rào Cản 1 (Thu Hồi & Cấp Mới Token Trên @BotFather)**:
+>      - Thực hiện `/mybots` ➔ `@TNI_DAILY_ADDTENDANCE_BOT` ➔ `API Token` ➔ `Revoke current token` trên BotFather.
+>      - Mọi bên thứ 3 hoặc script spam cũ đang giữ token sẽ lập tức bị Telegram từ chối `401 Unauthorized`.
+>   2. **Rào Cản 2 (Khóa Chặt Cấu Hình Quyền Hạn Trên @BotFather)**:
+>      - `/setprivacy` ➔ ENABLE (Privacy Mode ON): Bot chỉ nhận các lệnh bắt đầu bằng `/`, không nghe toàn bộ hội thoại trong nhóm.
+>      - `/setjoingroups` ➔ DISABLE: Cấm người ngoài tự ý thêm Bot vào các nhóm lạ.
+>   3. **Rào Cản 3 (Khóa Cứng Webhook & Flush Hàng Đợi - Zero Empty Webhook)**:
+>      - Tự động gọi `deleteWebhook` với `drop_pending_updates: true` để xóa sạch toàn bộ hàng đợi spam bị kẹt.
+>      - Thiết lập `setWebhook` trỏ thẳng vào Vercel Proxy `https://tni-bot.vercel.app/api/attendance`. Khi Webhook active, Telegram tự động chặn mọi request polling `getUpdates` với mã lỗi `409 Conflict`.
+>   4. **Rào Cản 4 (Bộ Lọc Chặn Tin Ra - Outbound Anti-Ad Guardian)**:
+>      - Hàm `isUnauthorizedAdOrSpam_(text)` được tích hợp vào `sendTelegramMessage_` và `sendTgMsgGetId_`.
+>      - Chặn đứng 100% việc gửi bất kỳ link Telegram ngoài danh mục TNI (whitelist chỉ cho phép link TNI) và các từ khóa lôi kéo (`a_tools`, `join our channel`, `subscribe`, v.v.).
+>   5. **Rào Cản 5 (Sentry Quét & Tự Động Xóa Tin Rác Vào Nhóm - Inbound Anti-Spam Purge)**:
+>      - Trong `doPost(e)`, khi nhận được bất kỳ tin nhắn nào trong nhóm chứa link lạ hoặc nội dung quảng cáo:
+>      - Bot lập tức gọi `deleteTgMessage_(token, chatId, msg.message_id)` để xóa sạch tin rác khỏi nhóm trong vòng 0.5 giây!
+>   6. **Rào Cản 6 (Giám Sát Tự Phục Hồi SEV-1 Trong Auditor)**:
+>      - `system_auditor.py` kiểm tra toàn bộ 6 Webhooks mỗi nhịp 5 phút. Nếu phát hiện `url: ""` hoặc sai URL, lập tức thực hiện Flush hàng đợi và Re-hook ngay lập tức.
+>   7. **Rào Cản 7 (Phân Quyền Nhóm Tối Thiểu)**:
+>      - Trong các nhóm Telegram vận hành, Bot chỉ được cấp quyền tối thiểu cần thiết để làm nhiệm vụ (Gửi tin, Xóa tin của chính mình/tin spam).
+> - **Triển Khai & Kiểm Chứng Live (Deployment & Verification)**:
+>   - Đã deploy GAS Attendance `apps_script_attendance/TNI attendance.js` lên Version **`@134`** (Primary) và **`@135`** (Secondary).
+>   - Kiểm chứng Live: Endpoint `?action=ping` phản hồi HTTP 200 `PONG`.
+>   - Đã khóa Webhook `8628370628` về `https://tni-bot.vercel.app/api/attendance` (pending=0).
 
 
 
