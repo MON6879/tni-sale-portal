@@ -2728,6 +2728,30 @@ Reason: [Lý do]`
 >   5. **Triển Khai Đủ 2 Lệnh Clasp Deploy Cho Phân Hệ Điểm Danh**:
 >      - Deploy thành công lên cả 2 deployment: Primary Webhook `AKfycbzSz_ISXgertxBDadw4BBQX1JdMjW650_o4He0o4Lh-uf1hV5O3YaE-ohlqI2CHyAcVFg` (@132) và Secondary `AKfycbyFIDGDS5k7wy-hNp2p1PNvte0CQ6cSiNYLyBmNc00Yi1b6IueOob9bKmu4zoQ1A6Cs` (@133).
 >      - Live ping `?action=ping` phản hồi `PONG` (HTTP 200).
+>
+> **PM-94 (09/10/2026) — Phân Hệ BOD Assign: Khóa Chặt Cột R ("Control") Là Điều Kiện Bắt Buộc Gửi Cho Nhóm Control — Tuyệt Đối Cấm Fallback Sang Cột A/B/C Khi Cột R Rỗng (Strict BOD Assign Column R Control Gating & Zero-Fallback Policy)**:
+> - **Yêu Cầu & Bối Cảnh (Requirement & Context)**:
+>   1. Người dùng phản ánh sự cố: *"Dữ liệu không có tại cột R tại sao gởi tin nhắn"* kèm ảnh chụp màn hình Sheet tab `BOD assign` (Cột R mang tiêu đề "Control" hoàn toàn trống không có dữ liệu) và ảnh tin nhắn Telegram từ `2. TNI Auto Report Daily` gửi lúc 18:37:
+>      `📋 BOD assign New task: Admin - Rule need follow: Regularly check the cameras of the teams and send daily alerts.`
+> - **Nguyên Nhân Gốc (Root Cause Analysis)**:
+>   1. **Lỗi Fallback Sai Nghiệp Vụ Tại `checkBodAssign`**:
+>      Trong file GAS `daily_bod_assign_notify.gs`, dòng code cũ đã viết:
+>      `const notifyContent = colR || (`${colA} - ${colB}: ${colC}`.trim());`
+>      Khi Cột R ("Control") hoàn toàn trống rỗng, code tự ý lấy Cột A (Role/Dep) - Cột B (PIC): Cột C (Task Content) làm nội dung rồi gửi lên nhóm Control qua template `"📋 BOD assign New task: " + notifyContent`.
+>   2. **Kích Hoạt Sai Toàn Bộ Dòng Tĩnh Do Thiếu Ràng Buộc Ngày Tháng**:
+>      Đoạn code: `if (!dateStr && (row[0] || row[1] || row[2])) { isToday = true; }` đã biến toàn bộ 450 dòng nhiệm vụ tĩnh (các dòng "Rule need follow" hoặc task quá khứ không ghi ngày) thành "công việc của ngày hôm nay", dẫn đến việc quét trúng dòng 2 và tự động bắn tin nhắn lên Control.
+> - **Quy Trình & Biện Pháp Khắc Phục Bọc Thép (Rule PM-94)**:
+>   1. **Cột R Là Cột Duy Nhất Định Tuyến Cho Control (Strict Col R Gating)**:
+>      - Chỉ gửi tin nhắn `"📋 BOD assign New task"` lên nhóm Control khi và chỉ khi Cột R có dữ liệu thực tế:
+>        `const hasTaskForControl = Boolean(colR && colR.length >= 2 && colR !== "- : -" && !colR.endsWith(": - : -") && !colR.endsWith(":"));`
+>      - **TUYỆT ĐỐI CẤM FALLBACK**: Nếu Cột R rỗng (`!hasTaskForControl`), hệ thống BỎ QUA HOÀN TOÀN, không bao giờ lấy Cột A, B, C để gửi cho Control! Nội dung gửi cho Control bắt buộc 100% lấy từ Cột R: `const msgText = "📋 BOD assign New task: " + colR;`.
+>   2. **Khóa Chặt Điều Kiện Ngày Giao Việc**:
+>      - Bãi bỏ hoàn toàn logic tự coi `row[0] || row[1] || row[2]` là hôm nay. Chỉ xử lý dòng nếu có ngày khớp với hôm nay (`isToday`), hoặc nếu ngày trống thì chỉ cho phép khi dòng đó có Cột R hoặc Cột T được nhập dữ liệu task mới.
+>   3. **Triển Khai & Kiểm Chứng Live (Deployment & Verification)**:
+>      - File GAS: `QLTC_GAS/daily_bod_assign_notify.gs` (đồng bộ `QLTC_GAS_PULL/daily_bod_assign_notify.js`).
+>      - Deploy đè Deployment chuẩn `AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA` lên Version **`@490`**.
+>      - Kiểm chứng Live: Endpoint `?action=ping` phản hồi HTTP 200 `PONG`.
+
 
 
 
