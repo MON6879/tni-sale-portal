@@ -1,3 +1,15 @@
+# 🔒 STRICT NOCPRO SCOPE & ZERO-DATA-LEAK RULE: CHỈ THAO TÁC ĐÚNG QUY TRÌNH XUẤT ALARM — CẤM BẤM CHỖ KHÁC & CẤM ĐỌC LỆCH / LỘ THÔNG TIN (STRICT NOCPRO ZERO-LEAK & EXACT FLOW POLICY)
+
+> ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (NOCPRO ZERO-LEAK & SCOPE RESTRICTION POLICY)**:
+> 1. **Chỉ Làm Theo Đúng Các Bước Yêu Cầu (Strict Flow Only)**: Trên phần mềm NMS Nocpro, AI CHỈ ĐƯỢC PHÉP thực hiện đúng chuỗi thao tác xuất báo cáo theo yêu cầu:
+>    - (a) Đăng nhập đúng tài khoản / mật khẩu và giữ nguyên ngôn ngữ English mặc định (TUYỆT ĐỐI CẤM đổi sang tiếng Việt).
+>    - (b) Đưa cửa sổ lên Desktop 2.
+>    - (c) Thao tác đúng trên thanh công cụ đáy (`Advanced`): Chọn `Export` trong dropdown `--Select--`, bấm `Search` nạp cảnh báo, tick chọn Checkbox All đầu bảng, bấm nút `Action` xuất file Excel và xác nhận hộp thoại Save.
+> 2. **Tuyệt Đối Cấm Bấm Vào Chỗ Khác (Zero Arbitrary Clicks)**: TUYỆT ĐỐI CẤM tự ý click vào thân bảng, không double click hay right click mở các popup chi tiết cảnh báo (`Detail alarm`), không bấm vào các menu thanh tiêu đề (`Monitoring`, `Report`, `Setting`, `Topo`, `Help`), không bấm các nút thêm bớt dashlet làm xáo trộn giao diện của người dùng.
+> 3. **Cấm Đọc Lệch & Cấm Lộ Thông Tin Ra Ngoài (Zero Data Leak & Strict Scope Isolation)**: Toàn bộ thông tin hạ tầng viễn thông, địa bàn, mã trạm, số điện thoại, tên nhân sự trên NMS Nocpro BẮT BUỘC phải được bảo mật tuyệt đối. AI TUYỆT ĐỐI CẤM đọc lan man, cấm xuất/ghi log các thông tin không liên quan, và TUYỆT ĐỐI CẤM gửi dữ liệu ra bất kỳ kênh bên ngoài nào ngoại trừ dán trực tiếp vào đúng tab `1. Input New` trên Google Sheet được chỉ định theo quy trình!
+
+---
+
 # 🔒 STRICT STEEL-LOCK RULE: KHÓA THÉP PHÂN HỆ SITE DOWN — TUYỆT ĐỐI CẤM TỰ Ý VÀO XEM / SỬA KHI KHÔNG CÓ YÊU CẦU (STRICT SITE DOWN STEEL LOCK & ZERO-UNAUTHORIZED-ACCESS POLICY)
 
 > ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (SITE DOWN STEEL-LOCK POLICY)**:
@@ -2787,6 +2799,26 @@ Reason: [Lý do]`
 >   - Đã deploy GAS Attendance `apps_script_attendance/TNI attendance.js` lên Version **`@134`** (Primary) và **`@135`** (Secondary).
 >   - Kiểm chứng Live: Endpoint `?action=ping` phản hồi HTTP 200 `PONG`.
 >   - Đã khóa Webhook `8628370628` về `https://tni-bot.vercel.app/api/attendance` (pending=0).
+>
+> **PM-96 (10/10/2026) — Bọc Thép Bảo Mật Đoàn Tàu GitHub Actions Public, Tuyệt Đối Cấm Lộ Secret Dạng Plaintext, Thiết Lập 3 Ghế An Ninh Mới & Báo Cáo Tình Trạng Từng Bot (Strict Public GitHub Hardening, Zero Plaintext Secrets, Multi-Sentinel Defense & Individual Bot Audit Policy)**:
+> - **Yêu Cầu & Bối Cảnh (Requirement & Context)**:
+>   1. Người dùng chỉ đạo: *"Đưa vào quy tắt bảo mật lưu đi và Mời chuyên gia về bảo mật chống quảng cáo giả danh trên telegram và tìm chi tiết từng cái bot báo cao thụ thể chắc chắn bọc thép 100% không để lộ lọt bot hay thông tin quang trọng ra ngoài, Đoàn tàu githut 5 phút public bắt bột vì đang dùng miễn phí, nên đoàn tàu này mời chuyên gia vào bọc thép và mã hóa không để lọt thông tin cá nhân và chat bot ra ngoài, và mời chuyên gia đua nhiều ghế an ninh và giám sát chốt chặn và đưa vào báo cáo ghế giám sát luôn"*.
+> - **Nguyên Nhân & Thách Thức Kỹ Thuật (Engineering Challenge)**:
+>   1. **Đoàn Tàu 5 Phút Public Để Tối Ưu Chi Phí Runner Miễn Phí**: GitHub Actions cung cấp phút chạy runner hoàn toàn miễn phí không giới hạn cho repository Public. Do đó, việc duy trì repo public là một chiến lược kinh tế hợp lý.
+>   2. **Mối Nguy Khi Repo Public**: Bất kỳ dòng code nào chứa token bot Telegram dạng plaintext (`\d{8,10}:...`) hoặc secret trong file workflow (`train_5min.yml`), mã nguồn Python hay Markdown đều sẽ bị các bot scanner tự động trên Internet cào quét chỉ sau vài giây.
+> - **Quy Trình Khắc Phục Bọc Thép Bắt Buộc (Rule PM-96)**:
+>   1. **Loại Bỏ 100% Plaintext Telegram Bot Token Khỏi Toàn Bộ File Workflow & Mã Nguồn**:
+>      - Trong `train_5min.yml`, phần Keepalive TUYỆT ĐỐI CẤM gọi `curl` trực tiếp đến `https://api.telegram.org/bot<PLAINTEXT_TOKEN>/...`.
+>      - Thay thế hoàn toàn bằng việc ping vào Vercel Proxy endpoints (`https://tni-bot.vercel.app/api/...`) và Google Apps Script ping endpoints (`?action=ping`), vừa giữ ấm serverless hiệu quả 100%, vừa không lộ bất kỳ chuỗi token nào.
+>   2. **Toàn Bộ Bí Mật Đều Phải Lưu Trữ Qua GitHub Secrets / ScriptProperties / Environment Variables**:
+>      - Mọi Token Bot Telegram, Chat ID, API ID/Hash, Session string bắt buộc được mã hóa qua GitHub Repository Secrets (`${{ secrets.... }}`) hoặc ScriptProperties của Google Apps Script.
+>      - Code Python đọc qua `os.environ.get("...")`, tuyệt đối không hardcode chuỗi token thật trong mã nguồn đẩy lên Git.
+>   3. **Thiết Lập 3 Ghế An Ninh Mới Trong Hệ Thống & Đưa Vào Báo Cáo Giám Sát**:
+>      - **`Ghế AUDITOR-SECURITY-9.4` (An ninh & Chống Mạo danh Bot 24/7)**: Giám sát toàn bộ 8 Webhooks của các Bot, phát hiện rỗng/kẹt tin/mất kết nối, kích hoạt cơ chế tự phục hồi khẩn cấp và bảo vệ Privacy Mode ON.
+>      - **`Ghế AUDITOR-AD-GUARD-9.5` (Lá chắn Diệt Quảng Cáo & Lôi Kéo Telegram)**: Duy trì bộ lọc hai chiều Outbound Block (`isUnauthorizedAdOrSpam_`) và Inbound Purge Sentry (xóa sạch bài viết quảng cáo/lôi kéo khỏi nhóm trong vòng 0.5 giây).
+>      - **`Ghế AUDITOR-SECRETS-9.6` (Bọc Thép Secrets GitHub Actions Public)**: Giám sát và ngăn chặn rò rỉ secret/PII trong kho GitHub Public.
+>   4. **Báo Cáo Tình Trạng Từng Bot Trong Báo Cáo Kiểm Toán**:
+>      - Báo cáo giám sát định kỳ gửi về DM Admin bắt buộc hiển thị đầy đủ trạng thái của các ghế an ninh mới và tình trạng sống của các Bot.
 
 
 

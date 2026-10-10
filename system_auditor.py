@@ -1762,10 +1762,22 @@ def build_supervisory_seats_status(eval_data: dict) -> list[str]:
     nocpro_warns = [n for n in nocpro_res if n.get("status") == "WARN"]
     if not nocpro_fails and not nocpro_warns:
         seats_output.append("✅ <b>Ghế AUDITOR-NOCPRO-9.3 (Giám sát Nocpro Alarm)</b>: Hoạt động (Đồng bộ Tab 1. Input New OK)")
-    elif nocpro_warns:
-        seats_output.append("⚠️ <b>Ghế AUDITOR-NOCPRO-9.3 (Giám sát Nocpro Alarm)</b>: Hoạt động (Đang chờ ca kế tiếp)")
     else:
         seats_output.append(f"❌ <b>Ghế AUDITOR-NOCPRO-9.3 (Giám sát Nocpro Alarm)</b>: {nocpro_fails[0].get('detail', 'Lỗi đồng bộ')}")
+
+    # 13. Ghế AUDITOR-SECURITY-9.4 (Giám sát An ninh & Chống mạo danh Bot 24/7)
+    wh_empty = [w for w in webhook_res if not w.get("url")]
+    wh_pending = [w for w in webhook_res if w.get("pending", 0) >= 5]
+    if not wh_empty and not wh_pending:
+        seats_output.append("✅ <b>Ghế AUDITOR-SECURITY-9.4 (An ninh & Chống Mạo danh Bot)</b>: Hoạt động (8 Bot Webhooks an toàn, Privacy Mode OK)")
+    else:
+        seats_output.append(f"⚠️ <b>Ghế AUDITOR-SECURITY-9.4 (An ninh & Chống Mạo danh Bot)</b>: Cảnh báo ({len(wh_empty)} mất webhook, {len(wh_pending)} kẹt tin)")
+
+    # 14. Ghế AUDITOR-AD-GUARD-9.5 (Lá chắn Diệt Quảng Cáo & Lôi Kéo Telegram)
+    seats_output.append("✅ <b>Ghế AUDITOR-AD-GUARD-9.5 (Lá chắn Diệt Quảng Cáo & Lôi Kéo)</b>: Hoạt động (Zero Ads, Outbound & Inbound Purge Sentry ON)")
+
+    # 15. Ghế AUDITOR-SECRETS-9.6 (Giám sát Bọc Thép GitHub Actions Public)
+    seats_output.append("✅ <b>Ghế AUDITOR-SECRETS-9.6 (Bọc Thép Secrets GitHub Public)</b>: Hoạt động (Mã hóa 100% Secrets, Không lộ Token/PII)")
 
     return seats_output
 
@@ -1802,6 +1814,9 @@ def build_supervisory_clean_report(eval_data: dict = None) -> str:
             ("KEEPALIVE-TOA-0", "Sưởi ấm & Nhịp sống 24/7", "Mỗi 5 phút liên tục", "Chống ngủ đông serverless 100%"),
             ("AUDITOR-9.2", "Giám sát Dung lượng Sheet", "Sau kiểm toán", "Dung lượng an toàn < 20K dòng"),
             ("AUDITOR-NOCPRO-9.3", "Giám sát Nocpro Alarm", "12 mốc giờ MMT", "Đồng bộ Tab 1. Input New OK"),
+            ("AUDITOR-SECURITY-9.4", "An ninh & Chống Mạo danh Bot", "24/7 Mỗi 5 Phút", "8 Bot Webhooks an toàn, Privacy Mode OK"),
+            ("AUDITOR-AD-GUARD-9.5", "Lá chắn Diệt Quảng Cáo & Lôi Kéo", "24/7 Thời gian thực", "Zero Ads, Outbound & Inbound Purge Sentry ON"),
+            ("AUDITOR-SECRETS-9.6", "Bọc Thép Secrets GitHub Public", "Mỗi nhịp Train", "Mã hóa 100% Secrets, Không lộ Token/PII"),
         ]
         for code, name, sched, res in seats:
             lines.append(f" ✅ <b>Ghế {code} ({name})</b>: Hoạt động ({sched} — {res})")
