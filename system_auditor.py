@@ -87,7 +87,7 @@ BOT_REGISTRY = {
         "ping_url": "https://tni-bot.vercel.app/api/cable_bot"
     },
     "Attendance Bot (@TNI_DAILY_ADDTENDANCE_BOT)": {
-        "token": "8628370628:AAE43wwogCzuFDKc0izu5DEuqlkud7ID7Sw",
+        "token": "8628370628:AAERg3gwPH-2r4PcKw3hjIgb0jwIHsJvZ5U",
         "expected_url": "https://tni-bot.vercel.app/api/attendance",
         "ping_url": "https://tni-bot.vercel.app/api/attendance"
     },
