@@ -40,7 +40,7 @@ Thay thế toàn bộ `ASK-FIRST POLICY` mơ hồ cũ bằng **RULE PM-25: STRIC
 AI CHỈ ĐƯỢC PHÉP dừng lại hỏi Người Dùng khi rơi vào đúng 3 tình huống:
 1. Lệnh yêu cầu **XÓA file mã nguồn gốc** (`.gs`, `.yml`, `.py` — phòng ngừa sự cố v599).
 2. Viết hàm Reorder/Migration thay đổi **CẤU TRÚC cột** của Google Sheet đang chứa dữ liệu sống (phòng ngừa sự cố v786).
-3. Yêu cầu đụng vào **phân hệ Khóa Thép Site Down** khi chưa có mật khẩu `UNLOCK STEEL: Phucat@7979`.
+3. Yêu cầu đụng vào **phân hệ Khóa Thép Site Down** khi chưa có mật khẩu `UNLOCK STEEL: ‹mật-khẩu-đã-thu-hồi›`.
 
 ### D. Chuẩn Mẫu Hỏi 1-Phím (One-Key Confirmation)
 Khi thuộc 3 kịch bản trên, CẤM hỏi Yes/No dài dòng. BẮT BUỘC dùng form:

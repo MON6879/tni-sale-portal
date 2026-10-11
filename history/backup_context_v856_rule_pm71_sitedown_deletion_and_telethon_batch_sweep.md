@@ -1,7 +1,7 @@
 # Backup Context v856: Bọc Thép Phân Hệ Site Down & Cơ Chế Quét Dọn Tin Mồ Côi Theo Batch-Window (Rule PM-71)
 **Thời gian**: 05/10/2026 ~17:40 Myanmar Time (MMT)  
 **Tác vụ**: Giải quyết triệt để lỗi không xóa tin nhắn cũ Site Down Alarm trong nhóm Telegram (`TNI TEAM 1 PLAN - ALARM`, `T2`, `T3`, `T4`).  
-**Mật khẩu mở khóa thép**: `UNLOCK STEEL: Phucat@7979`  
+**Mật khẩu mở khóa thép**: `UNLOCK STEEL: ‹mật-khẩu-đã-thu-hồi›`  
 
 ---
 

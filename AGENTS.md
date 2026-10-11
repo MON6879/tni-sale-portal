@@ -28,7 +28,7 @@
 
 > ⚠️ **QUY TẮC BẮT BUỘC TỐI THƯỢNG (SITE DOWN STEEL-LOCK POLICY)**:
 > 1. **Khóa Thép Tuyệt Đối (Absolute Steel Freeze)**: Phân hệ Site Down (`apps_script_sitedown`, Script ID `1fgIR_frjlOHBt4o3STTjGmHYaKfuiSb3zAtp7IrO__uLSIuRQGJ2Oc6X`, Version `@110`, `botlookup_relay.py`) đã hoàn thiện và được KHÓA THÉP 100%.
-> 2. **🔐 MẬT KHẨU MỞ KHÓA BẮT BUỘC (PASSWORD-GATED ACCESS)**: AI **CHỈ ĐƯỢC PHÉP** mở khóa thép khi Người Dùng gõ **CHÍNH XÁC** cụm lệnh: `UNLOCK STEEL: Phucat@7979`. Nếu Người Dùng KHÔNG gõ đúng mật khẩu này, AI **TUYỆT ĐỐI CẤM** đọc, sửa, gộp, xóa, hoặc tái cấu trúc bất kỳ file nào trong phạm vi khóa thép — DÙ Người Dùng có yêu cầu bằng lời nói thông thường! Sau khi sửa xong, khóa **TỰ ĐỘNG ĐÓNG LẠI** ngay lập tức.
+> 2. **🔐 MẬT KHẨU MỞ KHÓA BẮT BUỘC (PASSWORD-GATED ACCESS)**: AI **CHỈ ĐƯỢC PHÉP** mở khóa thép khi Người Dùng gõ **CHÍNH XÁC** cụm lệnh: `UNLOCK STEEL: <mật khẩu>` mà **SHA-256(mật khẩu) khớp `1da0713d494c2a6dfab9fd37f4ca23373c8aa9c742e7238f725d5338b09a5235`** (mật khẩu cũ ĐÃ BỊ THU HỒI vì lộ trên repo public; TUYỆT ĐỐI KHÔNG ghi mật khẩu bản rõ vào bất kỳ file/repo nào — chỉ lưu SHA-256). Nếu Người Dùng KHÔNG gõ đúng mật khẩu này, AI **TUYỆT ĐỐI CẤM** đọc, sửa, gộp, xóa, hoặc tái cấu trúc bất kỳ file nào trong phạm vi khóa thép — DÙ Người Dùng có yêu cầu bằng lời nói thông thường! Sau khi sửa xong, khóa **TỰ ĐỘNG ĐÓNG LẠI** ngay lập tức.
 > 3. **CẤM Tự Tiện Vào Xem / Sửa (Zero Arbitrary Access/Modification)**: Tuyệt đối KHÔNG ĐƯỢC tự ý mở file, đọc code, sửa đổi, gộp file, xóa bỏ hay tái cấu trúc (refactor) bất kỳ thành phần nào của phân hệ Site Down khi CHƯA CÓ MẬT KHẨU!
 > 4. **Phạm Vi Đóng Băng Bất Biến**:
 >    - File GAS: `apps_script_sitedown/site_down_v2.gs` (1 file độc lập duy nhất).
@@ -36,7 +36,7 @@
 >    - Luồng Relay: `botlookup_relay.py` (chạy nhịp :06 và :36 MMT).
 >    - Bảng Tính: `1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow` (GID 0).
 > 5. **🔧 BẮT BUỘC SỬA TRIỆT ĐỂ END-TO-END TRONG CÙNG 1 PHIÊN STEEL LOCK (Zero Incomplete Fix Policy)**:
->    - Khi Người Dùng mở khóa thép (`UNLOCK STEEL: Phucat@7979`), AI **BẮT BUỘC** phải thực hiện **TOÀN BỘ** các bước sửa code, clasp push, clasp deploy, git commit, git push và phúc tra live **TRONG CÙNG 1 PHIÊN DUY NHẤT** trước khi khóa đóng lại.
+>    - Khi Người Dùng mở khóa thép (`UNLOCK STEEL: ‹mật-khẩu-đã-thu-hồi›`), AI **BẮT BUỘC** phải thực hiện **TOÀN BỘ** các bước sửa code, clasp push, clasp deploy, git commit, git push và phúc tra live **TRONG CÙNG 1 PHIÊN DUY NHẤT** trước khi khóa đóng lại.
 >    - **TUYỆT ĐỐI CẤM** chỉ ghi Rule / phân tích root cause rồi đóng khóa khi code vẫn còn lỗi chưa được sửa — đây là anti-pattern "sửa nửa chừng" buộc Người Dùng phải gõ lại mật khẩu thêm lần nữa một cách vô nghĩa.
 >    - **Thứ tự bắt buộc trong 1 phiên**: ① Đọc code hiểu đủ → ② Sửa code triệt để tất cả điểm lỗi → ③ `clasp push --force` → ④ `clasp deploy -i <id>` → ⑤ git commit + push 3 repos → ⑥ Ghi Rule PM vào AGENTS.md → ⑦ Sync AGENTS.md → ⑧ Báo "ĐÃ LƯU ĐI ✅". TUYỆT ĐỐI CẤM đảo thứ tự: ghi Rule trước → đóng khóa → để code lỗi còn đó!
 ---
@@ -87,7 +87,7 @@
 > 3. **CHỈ 3 KỊCH BẢN SINH TỬ DUY NHẤT ĐƯỢC PHÉP HỎI (The 3 Hard Stops)**: AI CHỈ ĐƯỢC PHÉP dừng lại hỏi Người Dùng khi rơi vào đúng 3 tình huống:
 >    - (a) Lệnh yêu cầu **XÓA file mã nguồn gốc** (`.gs`, `.yml`, `.py` — phòng ngừa sự cố v599).
 >    - (b) Viết hàm Reorder/Migration thay đổi **CẤU TRÚC cột** của Google Sheet đang chứa dữ liệu sống (phòng ngừa sự cố v786).
->    - (c) Yêu cầu đụng vào **phân hệ Khóa Thép Site Down** khi chưa có mật khẩu `UNLOCK STEEL: Phucat@7979`.
+>    - (c) Yêu cầu đụng vào **phân hệ Khóa Thép Site Down** khi chưa có mật khẩu `UNLOCK STEEL: ‹mật-khẩu-đã-thu-hồi›`.
 > 4. **Chuẩn Mẫu Hỏi 1-Phím — CẤM Yes/No Dài Dòng (One-Key Confirmation)**: Khi bắt buộc phải hỏi (thuộc 3 kịch bản trên), TUYỆT ĐỐI CẤM hỏi Yes/No hay mở modal phức tạp. BẮT BUỘC dùng form:
 >    > ⚠️ **[CẢNH BÁO RỦI RO SINH TỬ]**: Thao tác này sẽ [Xóa file X / Đổi cấu trúc cột Sheet Y].
 >    > - **Gõ `1`** (hoặc `ok`): Để tôi thực thi ngay.
@@ -1873,7 +1873,7 @@ Reason: [Lý do]`
 > - **Root Cause**:
 >   1. Khi cấu hình lịch gửi báo cáo vận hành mới (Team Operation Progress Report - TPR), việc đặt giờ chạy chiều vào 17:06 MMT đã vi phạm nghiêm trọng Mục 0.3 và Mục 9.1 của `system_map.md`. Khung giờ :06 và :36 MMT mỗi giờ là vùng cấm tuyệt đối, dành riêng cho Toa Site Down Relay và Toa ETA Update. Hậu quẢ: Báo cáo TPR (Bot 2D) gửi lúc 17:07, chỉ 2 phút sau Site Down (Bot 5T) gửi lúc 17:09 và ETA Update (Bot 2D) gửi ngay sau đó, gây nên hiện tượng "tin nhắn chồng chéo" và làm trôi tin vận hành của nhau.
 >   2. QuẢn lý danh sách ID tin cũ dạng mảng (`TPR_MSG_IDS_<groupKey>`): Sau khi gọi xóa từng `mid` trong danh sách, nếu không reset mảng về `[]` ngay lập tức, lần quét tiếp theo có thể tiếp tục lặp lại các ID đã xóa hoặc xỗ trí sót nếu tin gửi bị ngắt nhiều phần.
->   3. Về tin nhắn cũ Site Down lúc 16:39 chưa được xóa: Phân hệ Site Down thuộc quyền quản lý của Script riêng biệt (`apps_script_sitedown`), hiện được bảo vệ bởi STRICT STEEL-LOCK RULE. AI tuyệt đối tuân thủ không tự ý can thiệp khi chưa có mật khẩu mở khóa `UNLOCK STEEL: Phucat@7979`.
+>   3. Về tin nhắn cũ Site Down lúc 16:39 chưa được xóa: Phân hệ Site Down thuộc quyền quản lý của Script riêng biệt (`apps_script_sitedown`), hiện được bảo vệ bởi STRICT STEEL-LOCK RULE. AI tuyệt đối tuân thủ không tự ý can thiệp khi chưa có mật khẩu mở khóa `UNLOCK STEEL: ‹mật-khẩu-đã-thu-hồi›`.
 >
 > ### 🔴 RULE PM-49: 3 NGUYÊN TẮC BỌC THÉP CHO ĐỊNH GIỜ BÁO CÁO VÀ PURGE MULTI-MESSAGE
 > 1. **Cấm Tuyệt Đối Đặt Lịch Báo Cáo Tại Phút :06 Và :36 MMT (Zero Collision on Site Down Windows)**:
@@ -1883,7 +1883,7 @@ Reason: [Lý do]`
 >    - Khi một phân hệ gửi báo cáo có khả năng chia tách nhiều phần (multi-part / chunked messages), toàn bộ `message_id` trả về BẨT BUỘC phải được lưu trữ dưới dạng mảng JSON trong `ScriptProperties`.
 >    - Hàm dọn tin cũ (`deleteOldMessages_`) BẨT BUỘC phải duyệt qua từng ID trong mảng để gọi `deleteMessage`, và NGAY SAU KHI duyệt xong PHẢI gán lại `props.setProperty(key, "[]")` một cách nguyên tử (atomic) để tránh tồn đọng ID cũ.
 > 3. **Ranh Giới Bất Xâm Phạm Của Khóa Thép Site Down (Strict Steel-Lock Boundary Respect)**:
->    - Nếu phát hiện tin nhắn cũ chưa xóa thuộc về bot Site Down (`5 TNI_SITE_DOWN_CELL_ALARM`), AI BẨT BUỘC phải tôn trọng Khóa Thép, báo cáo rõ ranh giới cho người dùng và CHỈ ĐƯỢC PHÉP xỗ trí khi người dùng cung cấp đúng mật khẩu: `UNLOCK STEEL: Phucat@7979`.
+>    - Nếu phát hiện tin nhắn cũ chưa xóa thuộc về bot Site Down (`5 TNI_SITE_DOWN_CELL_ALARM`), AI BẨT BUỘC phải tôn trọng Khóa Thép, báo cáo rõ ranh giới cho người dùng và CHỈ ĐƯỢC PHÉP xỗ trí khi người dùng cung cấp đúng mật khẩu: `UNLOCK STEEL: ‹mật-khẩu-đã-thu-hồi›`.
 
 
 # 🛡️ POST-MORTEM RULE — 21/09/2026: BỌC THÉP HỆ THỐNG PHÂN QUYỀN VAI TRÒ (RBAC) — TUYỆT ĐỐI KHÓA SỐ LIỆU TÀI CHÍNH Với NHÂN VIÊN (RULE PM-50)
@@ -2501,7 +2501,7 @@ Reason: [Lý do]`
 >
 > **PM-82 (06/10/2026) — Tách Biệt Tuyệt Đối AW7 Khỏi Cột A/Cột C & Định Dạng Danh Sách Site Down Xuống Hàng Theo Từng Nhân Viên (AW7 Pure Independence & Per-Staff Monospace Newlines)**:
 > - **Yêu Cầu & Bối Cảnh**:
->   1. Người dùng yêu cầu mở khóa thép: `UNLOCK STEEL: Phucat@7979`.
+>   1. Người dùng yêu cầu mở khóa thép: `UNLOCK STEEL: ‹mật-khẩu-đã-thu-hồi›`.
 >   2. Người dùng chỉ thị rõ ràng:
 >      - *"ô AW7 này tuyệt đối không liên quan đến Cột A hay Cột C nó chỉ cần AW7 so sánh với tin trước của AW7 nếu khác thì gởi"*
 >      - *"AW7 trong phần Site down xuống hàng theo từng tên nhân viên cho dễ nhìn"*
@@ -2525,7 +2525,7 @@ Reason: [Lý do]`
 >
 > **PM-83 (06/10/2026) — Khóa Dedup Ô AW7 Thuần Túy Bằng Mốc Giờ Timestamp & Triệt Tiêu Vòng Lặp Gửi Lại Do Nhảy Số Giờ (Pure Timestamp-Only Dedup & Elimination of Duration-Tick Loop)**:
 > - **Yêu Cầu & Bối Cảnh**:
->   1. Người dùng thắc mắc: *"Sao AW7 lại 10 phút cập nhật dữ liệu cũ 1 lần vậy"* và gửi mật khẩu mở khóa: `UNLOCK STEEL: Phucat@7979`.
+>   1. Người dùng thắc mắc: *"Sao AW7 lại 10 phút cập nhật dữ liệu cũ 1 lần vậy"* và gửi mật khẩu mở khóa: `UNLOCK STEEL: ‹mật-khẩu-đã-thu-hồi›`.
 >   2. Phúc tra thực tế: Bản tin `20:57` bị gửi lặp lại nhiều lần ra nhóm Telegram sau mỗi 10 phút.
 > - **Nguyên Nhân Gốc (Root Cause)**:
 >   1. Trong ô AW7, công thức Google Sheet tính toán **số giờ trạm sập (Duration)** theo thời gian thực (`STATION : DURATION`). Cứ sau mỗi 6-10 phút khi bảng tính tính toán lại, số giờ này tự động tăng lên 0.1h-0.2h (ví dụ `0.7h` -> `1.6h`, `213.3h` -> `214.1h`).
@@ -2683,7 +2683,7 @@ Reason: [Lý do]`
 > **PM-91 (09/10/2026) — Bảo Vệ Kép Luồng Dedup Summary Site Down: Chống Lặp Duration Và Chống Nghẽn Bỏ Sót Khi Bổ Sung Trạm (Strict Site Signature Dedup & Zero Bot Split-Part Loss Policy)**:
 > - **Yêu Cầu & Bối Cảnh (Requirement & Context)**:
 >   1. Người dùng thắc mắc: *"sao không thu thập có cái thu có cái không vậy"* và *"sao file gốc có 3 Site Team 3 mà hai báo cáo tổng hợp sai là sao"* kèm ảnh chụp màn hình ô `AY7` có 3 trạm (`TNI0416 : 7.9, TNI0105 : 283.8, TNI0402 : 285.7`) nhưng 2 bản tin Telegram (`SUMMARY — SITE DOWN ALL TEAMS` và `SUMMARY — ALL TEAMS`) chỉ báo 1 trạm (`TNI0416 : 7.5`).
->   2. Người dùng cung cấp mật khẩu mở khóa: `UNLOCK STEEL: Phucat@7979`.
+>   2. Người dùng cung cấp mật khẩu mở khóa: `UNLOCK STEEL: ‹mật-khẩu-đã-thu-hồi›`.
 > - **Nguyên Nhân Gốc (Root Cause Analysis)**:
 >   1. **Cào Thiếu Data Do Chatbot Chia Nhiều Tin (Scraping Loss)**: Khi số lượng trạm sự cố lớn (29 trạm), bot `/down_tni@auto_nocpro_bot` trả về nhiều tin. Tin 1 chứa header `"Tanintharyi Region"` và các trạm sập gần nhất. Tin 2+ chứa các trạm sập lâu ngày (>100h) và KHÔNG chứa từ khóa `"tanintharyi"`. Code `botlookup_relay.py` trong repo `Task and WO` bị trôi phiên bản (chỉ filter `tni_messages = [m for m in bot_messages if "tanintharyi" in m.lower()]` và lấy `tni_messages[-1]`), làm rớt toàn bộ Tin 2 (trong đó có `TNI0105` và `TNI0402` của Team 3).
 >   2. **Khóa Dedup Quá Chặt Chặn Cả Cập Nhật Dữ Liệu Thực Tế (Over-Strict Timestamp-Only Dedup Blindspot)**: Để chống spam lặp tin khi công thức Duration nhảy số (`7.5h` -> `7.6h`), Rule PM-83 chỉ dedup bằng mốc giờ `tsKey` của ô AW7 (`09/10/2026 05:46`). Tuy nhiên, khi dữ liệu trạm được bổ sung vào Sheet (từ 1 trạm lên 3 trạm: `TNI0416` -> `TNI0416, TNI0105, TNI0402`), mốc giờ `tsKey` trong ô AW7 vẫn giữ nguyên `05:46`. Kết quả: `processSummaryAwAz` kiểm tra `tsKey === lastTs` thấy trùng nhau nên chặn 100% không cho gửi cập nhật, làm 2 báo cáo tổng hợp trên Telegram bị kẹt cứng ở số liệu cũ (1 trạm) dù Sheet đã có đủ 3 trạm!
@@ -2879,3 +2879,15 @@ Reason: [Lý do]`
 - **Chưa xoay (đã ghi nhận)**: Vercel `GH_PAT_TOKEN` và `daily_report_trigger.gs` trỏ repo `phonghdpxd-cmd/tni-bot` (tài khoản khác) — PAT mới không có quyền ở đó; xử lý riêng.
 - **Bài học 2**: người dùng dán PAT thiếu tiền tố `KEY=` → script đọc rỗng; luôn in tên khóa + độ dài (không in giá trị) để chẩn đoán trước khi kết luận.
 - **Còn mở**: xóa PAT cũ còn sót trên github.com/settings/tokens; `TECHNICAL_DEP_BOT_TOKEN` chưa xác định bot; `/setjoingroups` Disable; mật khẩu Steel mới (chỉ lưu SHA-256); sửa Site Down (cần `UNLOCK STEEL`); tách repo public chạy tàu khỏi mã nguồn (P2).
+
+
+---
+
+# 🛡️ PM-98 — SITE DOWN: GỠ TOKEN CỐ ĐỊNH, KHÓA ENDPOINT, KÝ WEBHOOK (phiên Steel 2026-10-11, mật khẩu mới SHA-256 `1da0713d494c2a6dfab9fd37f4ca23373c8aa9c742e7238f725d5338b09a5235`)
+- **Đã mở khóa 1 phiên, sửa trọn end-to-end, KHÓA ĐÃ ĐÓNG LẠI.** Script `1fgIR…`: `clasp push` + `deploy -i AKfycbyCibIj…` → **@113** (sạch, không hook; @111/@112 là bản trung gian có hook nonce).
+- **Mã nguồn**: gỡ literal token `SD_BOT_TOKEN` (L230, tự gán từ code); `admin_audit_sitedown` chỉ hiện `bot_id:***` (trước đây lộ 15 ký tự đầu = id + 4 ký tự bí mật); `teardown_gas_train` (xóa trigger) cần `SD_ADMIN_KEY` (fail-closed); nhánh webhook Telegram trong `doPost` cần `SD_RELAY_KEY`.
+- **Proxy `api/site_down_relay.py`**: kiểm `X-Telegram-Bot-Api-Secret-Token` (= `SITEDOWN_WEBHOOK_SECRET`) TRƯỚC khi trả 200, fail-closed 403; đính `SITEDOWN_RELAY_KEY` khi forward sang GAS; bỏ URL GAS mặc định cũ; không log id/tên nhóm.
+- **Vercel `tni-sitedown`**: trước đó project giữ bản deploy NGUYÊN REPO cũ 72 ngày (collector/search_bot/attendance… với token cũ, không chữ ký = bề mặt tấn công). Đã deploy thư mục TỐI GIẢN chỉ `api/site_down_relay.py` → các endpoint cũ trả 404. Env: gỡ `SD_BOT_TOKEN`, đặt `SD_APPS_SCRIPT_URL`, `SITEDOWN_WEBHOOK_SECRET`, `SITEDOWN_RELAY_KEY`.
+- **ScriptProperties Site Down** (58 mục): `SD_BOT_TOKEN`, `GITHUB_PAT` thay bằng giá trị mới; thêm `SD_RELAY_KEY`, `SD_ADMIN_KEY`. Webhook bot Site Down đặt lại có `secret_token`. Kiểm live: không ký→403, sai khóa→403, ký đúng→200; GAS: update giả→`forbidden`, update có khóa→processed, teardown không khóa→`forbidden`.
+- **Bài học**: (1) KHÔNG suy mapping secret từ giá trị mặc định trong code — phải đối chiếu `.env` (đã gán nhầm `SEND_BOT_TOKEN`, sửa lại). (2) Token `@TNITECHINICALDEPREPORT_BOT` nằm trong 3 commit lịch sử repo public → phải `/revoke`. (3) Project Vercel cũ giữ deploy nguyên repo → luôn deploy thư mục tối giản. (4) Mật khẩu Steel bản rõ trong tài liệu = lộ; chỉ lưu SHA-256.
+- **Chưa làm (P2)**: repo public `tni-sitedown-relay` vẫn chứa AGENTS.md/history/scratch/chat-id/lịch sử cũ; tách repo runner; xóa bản rõ mật khẩu cũ trong lịch sử git công khai là không thể → mật khẩu cũ đã thu hồi.
