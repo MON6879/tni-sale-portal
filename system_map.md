@@ -319,11 +319,15 @@ evoke=True trước khi gửi báo cáo mới.
 
 | Repo | Owner / URL | Loại | Chức năng chính | Khi nào push vào đây |
 |---|---|---|---|---|
-| `tni-bot` | `phonghdpxd-cmd/tni-bot` | Private | **Vercel API** (`api/search_bot.py`, `api/collector.py`, `api/refuel_collector.py`, `api/site_down_relay.py`) | Khi sửa bất kỳ file `api/*.py` (Vercel handler) |
-| `TNI-SITE-DOWN` | `phonghdpxd-cmd/TNI-SITE-DOWN` | Public | Public mirror cho `tni_site_down_repo/`, keepalive workflows, docs | Khi sửa `telegram_bot.py`, `botlookup_relay.py`, `keepalive_*.yml`, `docs/` |
-| `tni-sitedown-relay` | `MON6879/tni-sitedown-relay` | Public | **GitHub Actions CHÍNH**: `train_5min.yml` và `botlookup_relay.yml` | Khi sửa `train_5min.yml`, `cron_send.py`, `daily_read_report.py`, `daily_plan_report.py`, `refuel_plan_report.py`, `backlog_send.py`, `botlookup_relay.yml` |
+| `tni-bot` | `phonghdpxd-cmd/tni-bot` | Private | **Vercel API** (`api/*.py`) + bản code gốc của Tàu (Task and WO) | Khi sửa bất kỳ file `api/*.py` hoặc code Tàu |
+| `tni-bot` (bản sao) | `MON6879/tni-bot` | **Private** | **Nguồn code cho runner công khai** — bản sao của `Task and WO`. Runner checkout bằng deploy key chỉ-đọc `CODE_DEPLOY_KEY` (PM-99). Remote local: `mon6879-bot` | Sau MỌI lần sửa code Tàu: push cùng lúc vào `origin` và `mon6879-bot` (chống lệch bản) |
+| `tni-sitedown-relay` | `MON6879/tni-sitedown-relay` | Public | **Runner GitHub Actions duy nhất**: chỉ cần `train_5min.yml` (checkout code từ `MON6879/tni-bot`). Cron tắt; GAS dispatch mỗi 5 phút. Mục tiêu: không chứa code/lịch sử nhạy cảm | Chỉ khi sửa `train_5min.yml` |
+| `TNI-DONE` | `MON6879/TNI-DONE` | Private | `tni-search`: Web UI / Hub tìm kiếm (+ bản đối chứng một số file Tàu) | Khi sửa web UI |
+| `tni-sale-portal` | `MON6879/tni-sale-portal` | Public | Frontend Sale Portal (4 file, đã quét sạch bí mật) | Khi sửa giao diện Sale |
+| `ict-auto-fetch` | `phonghdpxd-cmd/ict-auto-fetch` | Private | `ICT Fetch` chạy Local PC | Khi sửa ICT Fetch |
+| `TNI-SITE-DOWN` | `phonghdpxd-cmd/TNI-SITE-DOWN` | Private (đã kiểm 11/10/2026) | Mirror cũ cho `tni_site_down_repo/` | Khi sửa `telegram_bot.py`, `docs/` |
 
-> ⚠️ **NGUYÊN TẮC PHÂN CHIA:** Vercel API = `phonghdpxd-cmd/tni-bot`. GitHub Actions Reports = `MON6879/tni-sitedown-relay`. Mirror + Tools = `phonghdpxd-cmd/TNI-SITE-DOWN`.
+> ⚠️ **NGUYÊN TẮC PHÂN CHIA (cập nhật PM-99, 11/10/2026):** Vercel API = `phonghdpxd-cmd/tni-bot`. GitHub Actions chạy ở `MON6879/tni-sitedown-relay` (chỉ workflow) nhưng **code lấy từ `MON6879/tni-bot` (private)**. Hai bản private (`phonghdpxd-cmd/tni-bot` và `MON6879/tni-bot`) PHẢI luôn cùng commit — kiểm bằng `git rev-parse` hai remote.
 
 ---
 
@@ -694,7 +698,7 @@ Trong `apps_script_collector.js`:
   - `MDG_CHAT_ID`
 
 ### GitHub Actions (Scheduled sending)
-- **Repo:** `phonghdpxd-cmd/tni-bot`
+- **Repo chạy Actions:** `MON6879/tni-sitedown-relay` (runner công khai, chỉ có workflow); **code lấy từ** `MON6879/tni-bot` (private) qua `CODE_DEPLOY_KEY` (PM-99)
 - **Branch:** `main` (⚠️ KHÔNG PHẢI master!)
 
 | Workflow | File | Schedule | Script |
@@ -863,7 +867,7 @@ Bot gửi tin nhắn xác nhận hoàn thành điểm danh về cho người dù
 - **Spreadsheet ID:** `18zQB4i0Fu4QfKKkkUZUd6SKWIEbdWDiwdpgNSaL9v54` (Attendance sheet)
 - **Drive Folder ID:** `1qT8RxGKgVyUo-EG7PwVvH2MSE5bxPUJb`
 - **Script Properties cần thiết (Trong Apps Script Editor):**
-  - `SEND_BOT_TOKEN` = `8628370628:AAE43wwogCzuFDKc0izu5DEuqlkud7ID7Sw` (Token bot điểm danh)
+  - `SEND_BOT_TOKEN` = `<ĐÃ THU HỒI - xem GitHub Secrets>` (Token bot điểm danh)
   - `ATTENDANCE_SS_ID` = `18zQB4i0Fu4QfKKkkUZUd6SKWIEbdWDiwdpgNSaL9v54` (ID bảng tính điểm danh)
   - `DRIVE_FOLDER_ID` = `1qT8RxGKgVyUo-EG7PwVvH2MSE5bxPUJb` (ID thư mục lưu ảnh)
   - `GEMINI_API_KEY` = *(API Key kết nối Gemini AI)*
@@ -1005,7 +1009,7 @@ python get_session.py
 # 5. Chạy thủ công workflow "Botlookup TNI Relay" để test
 ```
 
-> **Script:** [`get_session.py`](file:///d:/6.%20AI/1.%20QLTC/Task%20and%20WO/get_session.py) — API_ID: `38060453` | API_HASH: `49dbb07f2d226a968571b11eab076d73`
+> **Script:** [`get_session.py`](file:///d:/6.%20AI/1.%20QLTC/Task%20and%20WO/get_session.py) — API_ID: `<xem .env>` | API_HASH: `<xem .env>`
 
 ---
 
