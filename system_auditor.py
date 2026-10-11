@@ -1225,6 +1225,10 @@ async def audit_telegram_messages_telethon():
     try:
         async with TelegramClient(StringSession(TELEGRAM_SESSION), TELEGRAM_API_ID, TELEGRAM_API_HASH) as client:
             logger.info("📡 Đã kết nối Telethon Client để quét kiểm toán tin nhắn...")
+            try:
+                await client.get_dialogs(limit=300)  # PM-98: điền cache thực thể cho session mới
+            except Exception as _e_dlg:
+                logger.warning(f"get_dialogs priming lỗi (bỏ qua): {type(_e_dlg).__name__}")
 
             # Lưu cache tin nhắn từng nhóm trong 24 giờ qua
             group_messages = {}
@@ -1781,7 +1785,9 @@ def build_supervisory_seats_status(eval_data: dict) -> list[str]:
     if not nocpro_fails and not nocpro_warns:
         seats_output.append("✅ <b>Ghế AUDITOR-NOCPRO-9.3 (Giám sát Nocpro Alarm)</b>: Hoạt động (Đồng bộ Tab 1. Input New OK)")
     else:
-        seats_output.append(f"❌ <b>Ghế AUDITOR-NOCPRO-9.3 (Giám sát Nocpro Alarm)</b>: {nocpro_fails[0].get('detail', 'Lỗi đồng bộ')}")
+        _np_first = (nocpro_fails or nocpro_warns or [{}])[0]
+        _np_icon = "❌" if nocpro_fails else "⚠️"
+        seats_output.append(f"{_np_icon} <b>Ghế AUDITOR-NOCPRO-9.3 (Giám sát Nocpro Alarm)</b>: {_np_first.get('detail', 'Lỗi đồng bộ')}")
 
     # 13. Ghế AUDITOR-SECURITY-9.4 (Giám sát An ninh & Chống mạo danh Bot 24/7)
     wh_empty = [w for w in webhook_res if not w.get("url")]

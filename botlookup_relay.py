@@ -177,6 +177,13 @@ async def main():
         me = await client.get_me()
         print(f"[{myanmar_now()}] Dang nhap: @{me.username} ({me.first_name})")
 
+        # 🔒 PM-98: session Telethon MỚI có cache thực thể rỗng → get_entity(<id số>) báo "Could not find the input entity".
+        # Nạp danh sách hội thoại 1 lần để điền cache (best-effort, không chặn luồng nếu lỗi).
+        try:
+            await client.get_dialogs(limit=300)
+        except Exception as e_dlg:
+            print(f"[{myanmar_now()}] ⚠️ get_dialogs priming lỗi (bỏ qua): {type(e_dlg).__name__}")
+
         # ── 3. Lấy entity nhóm Botlookup trực tiếp (Siêu tốc < 0.2s) ──
         try:
             source = await client.get_entity(SOURCE_GROUP)
