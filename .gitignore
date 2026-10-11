@@ -10,3 +10,7 @@ CHAY_TAO_KEY_TELEGRAM.bat
 
 .vercel
 .env*
+
+# PM-97: secret rotation staging file - NEVER commit
+.env.rotate
+*.session
