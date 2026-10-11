@@ -682,6 +682,21 @@ jobs:
           TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
           TELEGRAM_SESSION: ${{ secrets.TELEGRAM_SESSION }}
           APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
+          # PM-97: token + webhook secret_token của từng bot (chỉ qua GitHub Secrets, KHÔNG hardcode)
+          SEARCH_BOT_TOKEN: ${{ secrets.SEARCH_BOT_TOKEN }}
+          COLLECTOR_BOT_TOKEN: ${{ secrets.COLLECTOR_BOT_TOKEN }}
+          SITEDOWN_BOT_TOKEN: ${{ secrets.SITEDOWN_BOT_TOKEN }}
+          CONSTRUCTION_BOT_TOKEN: ${{ secrets.CONSTRUCTION_BOT_TOKEN }}
+          CABLE_BOT_TOKEN: ${{ secrets.CABLE_BOT_TOKEN }}
+          ATTENDANCE_BOT_TOKEN: ${{ secrets.ATTENDANCE_BOT_TOKEN }}
+          REFUEL_BOT_TOKEN: ${{ secrets.REFUEL_BOT_TOKEN }}
+          WH_SEARCH: ${{ secrets.WH_SEARCH }}
+          WH_ASSET: ${{ secrets.WH_ASSET }}
+          WH_SITEDOWN: ${{ secrets.WH_SITEDOWN }}
+          WH_CONSTRUCTION: ${{ secrets.WH_CONSTRUCTION }}
+          WH_CABLE: ${{ secrets.WH_CABLE }}
+          WH_ATTENDANCE: ${{ secrets.WH_ATTENDANCE }}
+          WH_REFUEL: ${{ secrets.WH_REFUEL }}
         run: |
           if [ "${{ inputs.report_type }}" = "Ghế giám sát đã kiểm tra không phát hiện lỗi" ]; then
             python system_auditor.py --clean-report || true

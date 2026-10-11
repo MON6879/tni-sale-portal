@@ -36,7 +36,7 @@ TZ_MM = timezone(timedelta(hours=6, minutes=30))
 
 # ── CẤU HÌNH GỬI RIÊNG VỀ DM CÁ NHÂN ADMIN (KHÔNG GỬI VÀO GROUP) ────────────
 ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID", "6859790680")  # Ha Duc Phong
-SEND_BOT_TOKEN = os.getenv("SEND_BOT_TOKEN", "8647102342:AAGwI95-xeyFfJZusOOrIPVBER-z6taZHZI")
+SEND_BOT_TOKEN = os.getenv("SEND_BOT_TOKEN", "")
 
 # Telethon Secrets
 TELEGRAM_API_ID = int(os.getenv("TELEGRAM_API_ID", "0")) if str(os.getenv("TELEGRAM_API_ID", "0")).strip().isdigit() else 0
@@ -62,37 +62,37 @@ ALL_MONITORED_GROUPS = {
 # ── 1. DANH MỤC WEBHOOKS & ENDPOINTS ────────────────────────────────────────
 BOT_REGISTRY = {
     "Search Bot (@SEARCHTNITASKWOBOT)": {
-        "token": "8606383435:AAEstcN4Om6_9ZAjs4OoFV2uVlRALgae2Ac",
+        "token": os.environ.get("SEARCH_BOT_TOKEN", ""),
         "expected_url": "https://tni-bot.vercel.app/api/search_bot",
         "ping_url": "https://tni-bot.vercel.app/api/search_bot"
     },
     "Asset Collector (@TNIASSETorderREQUEST_BOT)": {
-        "token": "8928677923:AAE_cJuEDH1tUf5v0q5Wf0UjDHlcp_k1lGM",
+        "token": os.environ.get("COLLECTOR_BOT_TOKEN", ""),
         "expected_url": "https://tni-bot.vercel.app/api/collector",
         "ping_url": "https://tni-bot.vercel.app/api/collector"
     },
     "Site Down Relay (@TNI_SITE_DOWN_CELL_ALARMBOT)": {
-        "token": "8647102342:AAGwI95-xeyFfJZusOOrIPVBER-z6taZHZI",
+        "token": os.environ.get("SITEDOWN_BOT_TOKEN", ""),
         "expected_url": "https://tni-sitedown.vercel.app/api/site_down_relay",
         "ping_url": "https://tni-sitedown.vercel.app/api/site_down_relay"
     },
     "Construction Bot 10 (@8903841312)": {
-        "token": "8903841312:AAHQ_LeI19gs2nrqBSInTsgzJXOuv6H8LmE",
+        "token": os.environ.get("CONSTRUCTION_BOT_TOKEN", ""),
         "expected_url": "https://tni-bot.vercel.app/api/construction",
         "ping_url": "https://tni-bot.vercel.app/api/construction"
     },
     "Cable Bot 15 (@TNI_CABLE_BOT)": {
-        "token": "8758104446:AAH3o7lMCxBXn70ThAXweH1DddmRkJrgwWo",
+        "token": os.environ.get("CABLE_BOT_TOKEN", ""),
         "expected_url": "https://tni-bot.vercel.app/api/cable_bot",
         "ping_url": "https://tni-bot.vercel.app/api/cable_bot"
     },
     "Attendance Bot (@TNI_DAILY_ADDTENDANCE_BOT)": {
-        "token": "8628370628:AAERg3gwPH-2r4PcKw3hjIgb0jwIHsJvZ5U",
+        "token": os.environ.get("ATTENDANCE_BOT_TOKEN", ""),
         "expected_url": "https://tni-bot.vercel.app/api/attendance",
         "ping_url": "https://tni-bot.vercel.app/api/attendance"
     },
     "Refuel Collector Bot (@TNI_REFUEL_BOT)": {
-        "token": "8811503647:AAEVIToiaPbDeNTUPLsoI5xhdnufKdChsME",
+        "token": os.environ.get("REFUEL_BOT_TOKEN", ""),
         "expected_url": "https://tni-bot.vercel.app/api/refuel_collector",
         "ping_url": "https://tni-bot.vercel.app/api/refuel_collector"
     }
@@ -251,6 +251,19 @@ SCHEDULE_RULES = [
 
 
 # ── 3. KIỂM TRA WEBHOOKS & ENDPOINTS TĨNH ───────────────────────────────────
+_WH_SECRET_ENV = {
+    "search_bot": "WH_SEARCH", "collector": "WH_ASSET", "site_down_relay": "WH_SITEDOWN",
+    "construction": "WH_CONSTRUCTION", "cable_bot": "WH_CABLE", "attendance": "WH_ATTENDANCE",
+    "refuel_collector": "WH_REFUEL",
+}
+
+
+def _wh_secret(expected_url):
+    """PM-97 R5: secret_token cho setWebhook, lấy từ env (GitHub Secrets). Thiếu -> '' (fail-closed, không re-hook)."""
+    ep = (expected_url or "").rstrip("/").split("/")[-1]
+    return os.environ.get(_WH_SECRET_ENV.get(ep, ""), "").strip()
+
+
 def audit_telegram_webhooks():
     """Kiểm tra từng Telegram Bot Webhook xem có sống, đúng URL hay bị mất kết nối. Tự động phục hồi nếu rớt."""
     results = []
@@ -258,6 +271,7 @@ def audit_telegram_webhooks():
         token = cfg["token"]
         expected_url = cfg["expected_url"]
         ping_url = cfg["ping_url"]
+        wh_secret = _wh_secret(expected_url)
         info_url = f"https://api.telegram.org/bot{token}/getWebhookInfo"
         try:
             t0 = time.time()
@@ -271,7 +285,9 @@ def audit_telegram_webhooks():
                 
                 # Auto-recovery: Nếu mất Webhook, kết nối SAI địa chỉ, hoặc kẹt hàng đợi >= 5 tin -> Tự động Flush & Re-Hook
                 is_wrong_url = bool(curr_url and expected_url and curr_url.lower() != expected_url.lower())
-                if (not curr_url or pending >= 5 or is_wrong_url) and expected_url:
+                if (not curr_url or pending >= 5 or is_wrong_url) and expected_url and not wh_secret:
+                    logger.error(f"⛔ {name}: cần Re-Hook nhưng thiếu secret_token trong env (PM-97 R5) — KHÔNG đăng ký webhook không chữ ký")
+                if (not curr_url or pending >= 5 or is_wrong_url) and expected_url and wh_secret:
                     action_name = f"Auto-Rehook URL đúng (Cũ: {curr_url[:30]}...)" if is_wrong_url else ("Khôi phục Webhook" if not curr_url else f"Auto-Flush hàng đợi ({pending} tin)")
                     try:
                         # Luôn drop_pending_updates khi URL bị rỗng, sai URL, hoặc kẹt hàng đợi để diệt sạch spam
@@ -280,6 +296,7 @@ def audit_telegram_webhooks():
                             time.sleep(1.5)
                         set_resp = requests.post(f"https://api.telegram.org/bot{token}/setWebhook", json={
                             "url": expected_url,
+                            "secret_token": wh_secret,
                             "allowed_updates": ["message", "edited_message", "channel_post"],
                             "drop_pending_updates": True
                         }, timeout=8)
@@ -290,7 +307,7 @@ def audit_telegram_webhooks():
                             logger.info(f"✅ Đã {action_name} thành công cho {name}!")
                     except Exception as rec_err:
                         logger.error(f"❌ {action_name} thất bại: {rec_err}")
-                elif last_err and pending == 0 and curr_url.lower() == expected_url.lower():
+                elif last_err and pending == 0 and curr_url.lower() == expected_url.lower() and wh_secret:
                     # Telegram giữ last_error_message vĩnh viễn dù sau đó đã gửi thành công.
                     # Tự động clear lỗi cũ bằng deleteWebhook(drop=False) + setWebhook để tránh báo động giả
                     try:
@@ -298,6 +315,7 @@ def audit_telegram_webhooks():
                         time.sleep(0.5)
                         set_resp = requests.post(f"https://api.telegram.org/bot{token}/setWebhook", json={
                             "url": expected_url,
+                            "secret_token": wh_secret,
                             "allowed_updates": ["message", "edited_message", "channel_post"]
                         }, timeout=8)
                         if set_resp.status_code == 200 and set_resp.json().get("ok"):
@@ -1454,7 +1472,7 @@ def audit_construction_menu_sync():
     Nếu lệch → Tự động đồng bộ lại bằng setMyCommands API.
     """
     results = []
-    CONS_TOKEN = "8903841312:AAHQ_LeI19gs2nrqBSInTsgzJXOuv6H8LmE"
+    CONS_TOKEN = os.environ.get("CONSTRUCTION_BOT_TOKEN", "")
     CONS_SHEET_ID = "1ViXXv5P8jSgx5heBqEP419ZkSR77C3OsflK0xpHMoi8"
 
     try:

@@ -33,8 +33,7 @@ def _bot_token(bot_token: str = None):
         return str(bot_token).strip()
     return (
         os.environ.get("REFUEL_BOT_TOKEN") or
-        os.environ.get("SEND_BOT_TOKEN") or
-        "8811503647:AAEVIToiaPbDeNTUPLsoI5xhdnufKdChsME"
+        os.environ.get("SEND_BOT_TOKEN") or ""
     ).strip()
 
 PRIMARY_GAS_URL = "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"

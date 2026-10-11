@@ -11,8 +11,10 @@ load_dotenv()
 
 from tg_utils import get_msg_id, set_msg_id, tg_delete, tg_delete_by_title
 
+import openpyxl
+
 # Cấu hình bot và chat ID mặc định của group 9 TNI REQUEST REFUEL
-REFUEL_BOT_TOKEN = os.getenv("REFUEL_BOT_TOKEN", "8811503647:AAEVIToiaPbDeNTUPLsoI5xhdnufKdChsME")
+REFUEL_BOT_TOKEN = os.getenv("REFUEL_BOT_TOKEN", "")
 REFUEL_CHAT_ID   = os.getenv("REFUEL_CHAT_ID", "-5469544739")
 # URL Apps Script của bảng tính Refuel riêng, nếu không có sẽ tự động dùng chung APPS_SCRIPT_URL
 REFUEL_APPS_SCRIPT_URL = os.getenv("APPS_SCRIPT_URL", os.getenv("REFUEL_APPS_SCRIPT_URL", ""))
@@ -21,35 +23,214 @@ TZ_MM = timezone(timedelta(hours=6, minutes=30))  # Múi giờ Myanmar UTC+6:30
 
 
 def fetch_refuel_data() -> list[str] | None:
-    """Tải trực tiếp nội dung các ô Y2 trở đi (Column Y) của tab Need Refuel từ Google Sheets CSV Export."""
-    csv_url = "https://docs.google.com/spreadsheets/d/1JxrA4pJo92Xx_SpwLnOQxphVYwE2iFhLrCOHmyVVuuM/export?format=csv&gid=0"
-    try:
-        resp = requests.get(csv_url, timeout=30, headers={"User-Agent": "Mozilla/5.0"})
-        resp.raise_for_status()
-        resp.encoding = "utf-8"
-        reader = list(csv.reader(io.StringIO(resp.text)))
-        data = []
-        for r in reader[1:10]:  # Read rows 2 to 10 (Y2:Y10)
-            if len(r) > 24 and r[24].strip():
-                data.append(r[24].strip())
-        if data:
-            return data
-    except Exception as e:
-        print(f"⚠️ Direct CSV fetch warning: {e}", file=sys.stderr)
+    """
+    Tải trực tiếp 100% dữ liệu sống từ Google Sheet:
+    - Tab 'Request Partner Auto' (GID 1188751570):
+      + Ô AL5: Header App Approved & Ngày cập nhật
+      + Cột B: DG ID (chỉ lấy mã DG cột B, giữ nguyên _1, _2 không gộp)
+      + Cột V: Ngày yêu cầu (chỉ lấy dòng khi Cột V có ngày)
+      + Cột W (fallback Q): Số lít yêu cầu
+      + Cột AB: Phân đội (Team 1, T1 S1, Team 2, T2 S1, Team 3, T3 S1, Team 4)
+    - Tab 'Team request': Các yêu cầu bổ sung của thành viên chưa hoàn thành
+    - Tab 'Refueled': Loại trừ các trạm/máy phát đã đổ dầu
+    """
+    SPREADSHEET_ID = "1JxrA4pJo92Xx_SpwLnOQxphVYwE2iFhLrCOHmyVVuuM"
+    xlsx_url = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/export?format=xlsx"
+    xlsx_path = "scratch/sheet_refuel.xlsx"
 
-    # Fallback qua Apps Script API
-    gas_url = (
-        REFUEL_APPS_SCRIPT_URL or
-        "https://script.google.com/macros/s/AKfycbwHyzulEMVGjslfjN_m38HzpFZHRfk2qwbQmdwb6MMqBM8xNm20JJxxzW_4zTNzp3n24Q/exec"
-    )
-    if gas_url:
-        try:
-            resp = requests.get(gas_url, params={"action": "get_refuel_data"}, timeout=30)
-            if resp.status_code == 200 and resp.json().get("status") == "ok":
-                return resp.json()["data"]
-        except Exception as ex:
-            print(f"⚠️ GAS fallback warning: {ex}", file=sys.stderr)
-    return None
+    # 1. Tải mới nhất từ Google Sheets
+    try:
+        os.makedirs("scratch", exist_ok=True)
+        resp = requests.get(xlsx_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=40)
+        resp.raise_for_status()
+        with open(xlsx_path, "wb") as f:
+            f.write(resp.content)
+        print(f"📥 Downloaded fresh {xlsx_path} ({len(resp.content)} bytes)")
+    except Exception as e:
+        print(f"⚠️ Warning downloading spreadsheet: {e}", file=sys.stderr)
+        if not os.path.exists(xlsx_path):
+            print("❌ No spreadsheet available, exiting", file=sys.stderr)
+            return None
+
+    try:
+        wb = openpyxl.load_workbook(xlsx_path, data_only=True)
+        if "Request Partner Auto" not in wb.sheetnames:
+            print("❌ Sheet 'Request Partner Auto' not found", file=sys.stderr)
+            return None
+        ws_req = wb["Request Partner Auto"]
+
+        # Master DG ID map
+        all_dgs = set()
+        site_to_dg = {}
+        dg_to_team = {}
+        for r in range(6, ws_req.max_row + 1):
+            b = str(ws_req.cell(row=r, column=2).value or "").strip().upper()
+            c = str(ws_req.cell(row=r, column=3).value or "").strip().upper()
+            ab = str(ws_req.cell(row=r, column=28).value or "").strip()
+            if b and b.startswith("TNI"):
+                all_dgs.add(b)
+                if ab and ab != "0":
+                    dg_to_team[b] = ab
+                if c:
+                    site_to_dg.setdefault(c, []).append(b)
+
+        def norm_dg(name: str, team: str = "") -> str:
+            s = str(name or "").strip().upper()
+            if s in all_dgs:
+                return s
+            m = re.search(r"\(DG\s*([12])\)", s)
+            if m:
+                cand = re.sub(r"\(DG\s*[12]\)", "", s).strip() + "_" + m.group(1)
+                if cand in all_dgs:
+                    return cand
+            if s in site_to_dg:
+                dgs = site_to_dg[s]
+                if len(dgs) == 1:
+                    return dgs[0]
+                for dg in dgs:
+                    if dg_to_team.get(dg) == team:
+                        return dg
+                return dgs[0]
+            return f"{s}_1" if s.startswith("TNI") and not re.search(r"_\d+$", s) else s
+
+        def normalize_team(raw_team: str) -> str:
+            """Chuẩn hóa tên team theo Cột AB (Team 1, Team 1 S1, Team 2, Team 2 S1, Team 3, Team 3 S1, Team 4)."""
+            s = str(raw_team or "").strip().upper()
+            if re.search(r"\b(TEAM\s*1\s*S1|T1\s*S1)\b", s) or s == "T1 S1":
+                return "Team 1 S1"
+            if re.search(r"\b(TEAM\s*2\s*S1|T2\s*S1)\b", s) or s == "Team 2 S1" or s == "T2 S1":
+                return "Team 2 S1"
+            if re.search(r"\b(TEAM\s*3\s*S1|T3\s*S1)\b", s) or s == "Team 3 S1" or s == "T3 S1":
+                return "Team 3 S1"
+            if re.search(r"\b(TEAM\s*4\s*S1|T4\s*S1)\b", s) or s == "Team 4 S1" or s == "T4 S1":
+                return "Team 4 S1"
+            if re.search(r"\b(TEAM\s*1|T1)\b", s) or s == "T1":
+                return "Team 1"
+            if re.search(r"\b(TEAM\s*2|T2)\b", s) or s == "T2":
+                return "Team 2"
+            if re.search(r"\b(TEAM\s*3|T3)\b", s) or s == "T3":
+                return "Team 3"
+            if re.search(r"\b(TEAM\s*4|T4)\b", s) or s == "T4":
+                return "Team 4"
+            return "Team 1"
+
+        def to_date_obj(v):
+            if isinstance(v, datetime):
+                return v.date()
+            s = str(v or "").strip()
+            if len(s) >= 10 and s[2] == "/" and s[5] == "/":
+                try:
+                    return datetime.strptime(s[:10], "%d/%m/%Y").date()
+                except Exception:
+                    pass
+            for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d"):
+                try:
+                    return datetime.strptime(s[:len(fmt)], fmt).date()
+                except Exception:
+                    pass
+            return None
+
+        # Đọc danh sách đã đổ dầu (Refueled)
+        latest_refueled = {}
+        if "Refueled" in wb.sheetnames:
+            ws_ref = wb["Refueled"]
+            for r in range(2, ws_ref.max_row + 1):
+                dt = to_date_obj(ws_ref.cell(row=r, column=2).value)
+                if not dt:
+                    continue
+                dg_c = norm_dg(ws_ref.cell(row=r, column=3).value)
+                site_d = norm_dg(ws_ref.cell(row=r, column=4).value)
+                for dg in (dg_c, site_d):
+                    if dg:
+                        if dg not in latest_refueled or dt > latest_refueled[dg]:
+                            latest_refueled[dg] = dt
+
+        req_by_team_date = {}
+
+        # 1. Đọc trực tiếp 100% từ Request Partner Auto: Cột V (Ngày) -> Cột B (DG ID) : Cột W (Lít)
+        for r in range(6, ws_req.max_row + 1):
+            dg_id = str(ws_req.cell(row=r, column=2).value or "").strip().upper()
+            if not dg_id or not dg_id.startswith("TNI"):
+                continue
+            dt_req = to_date_obj(ws_req.cell(row=r, column=22).value)  # Col V: Date
+            if not dt_req:
+                continue
+
+            # Bỏ qua nếu Cột Y đã có ngày đổ dầu (đã refuel xong)
+            val_y = str(ws_req.cell(row=r, column=25).value or "").strip()  # Col Y
+            if val_y and val_y not in ("-", "none", "0", ""):
+                continue
+
+            if dg_id in latest_refueled and latest_refueled[dg_id] >= dt_req:
+                continue
+
+            team_raw = str(ws_req.cell(row=r, column=28).value or "").strip()  # Col AB
+            team = normalize_team(team_raw)
+
+            qty_val = ws_req.cell(row=r, column=23).value  # Col W
+            if not qty_val or str(qty_val).strip() in ("", "0"):
+                qty_val = ws_req.cell(row=r, column=17).value  # Col Q
+            try:
+                qty = int(float(str(qty_val).strip()))
+            except Exception:
+                qty = 440
+
+            dt_str = dt_req.strftime("%d/%m/%Y")
+            req_by_team_date.setdefault(team, {}).setdefault(dt_str, []).append((dg_id, qty))
+
+        # Đếm tổng số site duy nhất
+        all_unique_sites = set()
+        for team, dates in req_by_team_date.items():
+            for dt, items in dates.items():
+                for dg_id, qty in items:
+                    all_unique_sites.add(dg_id)
+
+        total_sites_count = len(all_unique_sites)
+
+        # Xây dựng các khối nội dung báo cáo
+        output_rows = []
+
+        # Header từ ô AL5
+        al5 = str(ws_req["AL5"].value or "").strip()
+        if not al5:
+            al5 = "🟣 /No /Approved App: /41 case < + > /Last updated: /04/09/26"
+        header_line = f"{al5} => /Needs updating /Need request Refuel: /{total_sites_count} Site"
+        output_rows.append(header_line)
+
+        team_emojis = {
+            "Team 1": "🔴",
+            "Team 1 S1": "🔴",
+            "Team 2": "🔵",
+            "Team 2 S1": "🔵",
+            "Team 3": "🟢",
+            "Team 3 S1": "🟢",
+            "Team 4": "🟡"
+        }
+
+        teams_order = ["Team 1", "Team 1 S1", "Team 2", "Team 2 S1", "Team 3", "Team 3 S1", "Team 4"]
+
+        for team in teams_order:
+            dates = req_by_team_date.get(team, {})
+            if not dates:
+                continue
+            sorted_dates = sorted(dates.keys(), key=lambda d: datetime.strptime(d, "%d/%m/%Y"))
+            emoji = team_emojis.get(team, "🔴")
+
+            team_lines = [f"{emoji} {team}"]
+            for dt in sorted_dates:
+                items = dates[dt]
+                item_str = " ".join([f"/{dg}: {q}" for dg, q in items])
+                team_lines.append(f"{dt}: {item_str}")
+            output_rows.append("\n".join(team_lines))
+
+        # Footer
+        footer = "/Note: According to the list of stations and the required number of liters, refuel at the correct station with the correct number of liters. ❓ /No request on group 9 TNI REQUEST REFUEL = ❌ /No refueling allowed."
+        output_rows.append(footer)
+
+        return output_rows
+    except Exception as ex:
+        print(f"❌ Error parsing refuel spreadsheet: {ex}", file=sys.stderr)
+        return None
 
 
 def send_telegram(chat_id: str, text: str) -> tuple[bool, int | None]:
@@ -211,22 +392,10 @@ def delete_refuel_msg(chat_id: str, msg_id: int | str, timeout: int = 3) -> bool
     return False
 
 def delete_all_previous_refuel_msgs(chat_id: str, key: str):
-    """Xóa triệt để 100% tất cả các tin nhắn Refuel cũ trong nhóm."""
+    """Xóa đúng 100% các tin nhắn Refuel cũ đã lưu theo key (TIN NÀO XÓA TIN NẤY - tuyệt đối không xóa offset lân cận)."""
     saved_ids = get_saved_msg_ids(key)
-    deleted_set = set()
-
     for msg_id in saved_ids:
-        if delete_refuel_msg(chat_id, msg_id, timeout=3):
-            deleted_set.add(str(msg_id))
-        try:
-            base_id = int(msg_id)
-            for offset in range(-3, 4):
-                target_id = base_id + offset
-                if target_id > 0 and str(target_id) not in deleted_set:
-                    if delete_refuel_msg(chat_id, target_id, timeout=3):
-                        deleted_set.add(str(target_id))
-        except Exception:
-            pass
+        delete_refuel_msg(chat_id, msg_id, timeout=3)
 
 
 def format_and_send_report(rows: list[str]) -> list[int]:
@@ -256,14 +425,6 @@ def format_and_send_report(rows: list[str]) -> list[int]:
                 clean_lines.append(l)
 
             clean = "\n".join(clean_lines).strip()
-
-            # 2. CHỈ CHO DUY NHẤT 'Team 1 request' xuống dòng mới bên dưới văn bản header
-            clean = re.sub(r'([^\n])\s*(?:🔴|🔵|🟢|🟡|🟠|🟣)?\s*(Team\s*1\s*request)', r'\1\n\n🔴 \2', clean, flags=re.IGNORECASE)
-
-            # Đảm bảo dòng bắt đầu bằng Team 1 có chấm đỏ 🔴
-            if re.search(r'^Team\s*1\b', clean, re.IGNORECASE) and not clean.startswith("🔴"):
-                clean = "🔴 " + clean
-
             msg_lines.append(clean)
             msg_lines.append("")  # Dòng trống giữa các Team
             
@@ -291,15 +452,14 @@ def format_and_send_report(rows: list[str]) -> list[int]:
     sent_ids = []
     STATE_KEY = f"refuel_msg_ids_{REFUEL_CHAT_ID}"
 
-    # 1. XÓA TRIỆT ĐỂ 100% TẤT CẢ TIN CỦ BẰNG SMART SCANNER & REFUEL_BOT_TOKEN
+    # 1. XÓA TRIỆT ĐỂ TIN CŨ CỦA CHÍNH BẢN TIN NÀY (TIN NÀO XÓA TIN NẤY - KHÔNG XÓA CHÉO SANG PLAN & PROGRESS)
     delete_all_previous_refuel_msgs(REFUEL_CHAT_ID, STATE_KEY)
     tg_delete_by_title(REFUEL_CHAT_ID, "TNI REQUEST REFUEL", bot_token=REFUEL_BOT_TOKEN)
-    tg_delete_by_title(REFUEL_CHAT_ID, "Report 1", bot_token=REFUEL_BOT_TOKEN)
 
     for idx, chunk_lines in enumerate(chunks):
         title = "🔄 <b>[Report 1] TNI REQUEST REFUEL — Daily Report</b>"
         if len(chunks) > 1:
-            title += f" (Phần {idx + 1}/{len(chunks)})"
+            title += f" (Part {idx + 1}/{len(chunks)})"
 
         lines = [
             title,
@@ -373,6 +533,12 @@ def send_note_reply_as_phongha79(reply_to_msg_id: int):
 
 
 def main():
+    # ⛔ VÔ HIỆU HÓA: Report này đã được gộp vào refuel_plan_report.py report_1()
+    # Tin gộp: [Report 1] TNI REQUEST REFUEL (6 cột: DG ID | Date | Req | Plan | Ref | Diff)
+    # Disabled: 06/09/2026
+    print("⛔ refuel_send.py DISABLED — merged into refuel_plan_report.py report_1()")
+    return
+
     print(f"⛽ Refuel Report — {datetime.now(TZ_MM).strftime('%d/%m/%Y %H:%M')} Myanmar")
 
     if not REFUEL_BOT_TOKEN:

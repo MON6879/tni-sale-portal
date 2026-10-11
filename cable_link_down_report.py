@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ── Cấu hình ─────────────────────────────────────────────────────────────
-CABLE_BOT_TOKEN = os.getenv("CABLE_BOT_TOKEN") or "8758104446:AAH3o7lMCxBXn70ThAXweH1DddmRkJrgwWo"
+CABLE_BOT_TOKEN = os.getenv("CABLE_BOT_TOKEN")
 MAIN_GAS_FALLBACK = "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
 _raw_url = os.getenv("APPS_SCRIPT_URL", "").strip()
 if not _raw_url or "AKfycbzGFdnE" in _raw_url or "AKfycbz-" not in _raw_url:

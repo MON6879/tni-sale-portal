@@ -21,18 +21,20 @@ import os, sys, argparse, requests, re
 import openpyxl
 from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
-from tg_utils import tg_send_fresh
+from tg_utils import tg_send_fresh, tg_delete_by_title
 
 load_dotenv()  # Load .env local (GitHub Actions đã có env vars sẵn)
 
 # Cấu hình bot và chat ID mặc định của group 9 TNI REQUEST REFUEL
-REFUEL_BOT_TOKEN    = os.getenv("REFUEL_BOT_TOKEN", "8811503647:AAEVIToiaPbDeNTUPLsoI5xhdnufKdChsME")
+REFUEL_BOT_TOKEN    = os.getenv("REFUEL_BOT_TOKEN", "")
 REFUEL_CHAT_ID      = "-5469544739"   # Group 9 TNI REQUEST REFUEL
 SPREADSHEET_ID      = "1JxrA4pJo92Xx_SpwLnOQxphVYwE2iFhLrCOHmyVVuuM"
 XLSX_DOWNLOAD_URL   = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/export?format=xlsx"
 XLSX_FILE_PATH      = "scratch/sheet_refuel.xlsx"
 
 TZ_MM = timezone(timedelta(hours=6, minutes=30))  # Myanmar UTC+6:30
+
+
 
 
 # ── Helper functions ─────────────────────────────────────────────────────────
@@ -46,27 +48,88 @@ REFUEL_GAS_URL = (
 
 # Map report_key → title prefix dòng đầu tiên (dùng cho Telethon delete-by-title)
 REPORT_TITLE_PREFIX = {
-    "report1": "🔄 [Report 1]",
+    "report1": "TNI REQUEST REFUEL",
     "report2": "📊 [Report 2]",
     "report5": "📋 [Report 5]",
 }
 
 def tg_send(text: str, report_key: str = "") -> bool:
-    """Gửi tin nhắn báo cáo lên Telegram group và TỰ ĐỘNG XÓA TIN NHẮN CŨ."""
+    """Gửi tin nhắn báo cáo lên Telegram group (tự động chia phần nếu > 3800 ký tự) và TỰ ĐỘNG XÓA TIN NHẮN CŨ."""
     title_pfx = REPORT_TITLE_PREFIX.get(report_key, "[Report 1]")
     state_k = f"refuel_{report_key}" if report_key else "refuel_report1"
-    msg_id = tg_send_fresh(
+
+    # Đảm bảo xóa sạch 100% tin cũ cùng tiêu đề trước khi gửi tin mới
+    tg_delete_by_title(REFUEL_CHAT_ID, title_pfx, bot_token=REFUEL_BOT_TOKEN)
+
+    if len(text) <= 3800:
+        msg_id = tg_send_fresh(
+            chat_id=REFUEL_CHAT_ID,
+            text=text,
+            state_key=state_k,
+            parse_mode="HTML",
+            title_prefix="",  # Đã xóa sạch ở trên
+            bot_token=REFUEL_BOT_TOKEN
+        )
+        if msg_id:
+            print(f"✅ Report {report_key} (msg_id={msg_id}) sent to {REFUEL_CHAT_ID} (old messages cleaned)")
+            return True
+        return False
+
+    # Nếu văn bản > 3800 ký tự -> Chia nhỏ theo từng dòng để tránh lỗi Telegram 4096 chars
+    lines = text.split("\n")
+    chunks = []
+    current_chunk = []
+    current_len = 0
+
+    for line in lines:
+        if current_len + len(line) + 1 > 3500:
+            chunks.append("\n".join(current_chunk))
+            current_chunk = [line]
+            current_len = len(line)
+        else:
+            current_chunk.append(line)
+            current_len += len(line) + 1
+    if current_chunk:
+        chunks.append("\n".join(current_chunk))
+
+    all_ok = True
+    token = REFUEL_BOT_TOKEN
+    first_chunk = chunks[0] + f"\n\n<i>(Part 1/{len(chunks)})</i>"
+    first_id = tg_send_fresh(
         chat_id=REFUEL_CHAT_ID,
-        text=text,
+        text=first_chunk,
         state_key=state_k,
         parse_mode="HTML",
         title_prefix=title_pfx,
-        bot_token=REFUEL_BOT_TOKEN
+        bot_token=token
     )
-    if msg_id:
-        print(f"✅ Report {report_key} (msg_id={msg_id}) sent to {REFUEL_CHAT_ID} (old messages cleaned)")
-        return True
-    return False
+    if not first_id:
+        all_ok = False
+
+    for idx, chunk in enumerate(chunks[1:], start=2):
+        chunk_text = f"🔄 <b>{title_pfx} (Cont. - Part {idx}/{len(chunks)})</b>\n\n" + chunk
+        try:
+            r = requests.post(
+                f"https://api.telegram.org/bot{token}/sendMessage",
+                json={"chat_id": REFUEL_CHAT_ID, "text": chunk_text, "parse_mode": "HTML"},
+                timeout=20
+            )
+            res = r.json()
+            if res.get("ok"):
+                print(f"✅ Sent part {idx}/{len(chunks)} (msg_id={res['result']['message_id']})")
+            else:
+                print(f"❌ Failed to send part {idx}: {res.get('description')}")
+                all_ok = False
+        except Exception as ex:
+            print(f"❌ Exception sending part {idx}: {ex}")
+            all_ok = False
+
+    return all_ok
+
+
+def fmt_row_compare_mobile(col_site: str, col_b: str, col_c: str, col_d: str) -> str:
+    """Format dòng so sánh hiển thị siêu gọn trên 1 dòng điện thoại (Site | Plan | Ref= Diff)."""
+    return f"<code>{col_site} | {col_b:>3} | {col_c:>3}= {col_d}</code>"
 
 
 def fmt_row_compare_5(col_team: str, col_site: str, col_b: str, col_c: str, col_d: str) -> str:
@@ -165,6 +228,21 @@ def fmt_row_compare(col_a: str, col_b: str, col_c: str, col_d: str) -> str:
     return f"<code>{col_a:<12} | {col_b:>5} | {col_c:>6} | {col_d:>6}</code>"
 
 
+def normalize_team(raw_team: str) -> str:
+    """Chuẩn hóa tên team (T1, T1 S1, T2, T2 S1, T3, T3 S1, T4)."""
+    s = str(raw_team or "").strip()
+    s_lower = s.lower()
+    if re.search(r"\b(team\s*1\s*s1|t1\s*s1)\b", s_lower): return "T1 S1"
+    if re.search(r"\b(team\s*2\s*s1|t2\s*s1)\b", s_lower): return "T2 S1"
+    if re.search(r"\b(team\s*3\s*s1|t3\s*s1)\b", s_lower): return "T3 S1"
+    if re.search(r"\b(team\s*4\s*s1|t4\s*s1)\b", s_lower): return "T4 S1"
+    if re.search(r"\b(team\s*1|t1)\b", s_lower): return "T1"
+    if re.search(r"\b(team\s*2|t2)\b", s_lower): return "T2"
+    if re.search(r"\b(team\s*3|t3)\b", s_lower): return "T3"
+    if re.search(r"\b(team\s*4|t4)\b", s_lower): return "T4"
+    return "T1"
+
+
 # ── Load spreadsheet data ───────────────────────────────────────────────────
 
 class RefuelData:
@@ -177,6 +255,11 @@ class RefuelData:
         self.letter_approved = ""  # ngày Government Approved mới nhất (col C)
         self.letter_submitted = "" # ngày Letter Submitted mới nhất (col B)
         self.ft_monitors = []      # list of dict: {date, ft_name, site_id, qty} — từ sheet "FT follow monitor"
+        self.site_to_dg = {}       # map Site code (Col C) -> list of DG ID (Col B)
+        self.dg_to_team = {}       # map DG ID (Col B) -> Team (Col AB)
+        self.all_dgs = set()       # tập hợp tất cả DG ID chuẩn từ Col B
+        self.app_header = ""       # ô AL5 từ Request Partner Auto (App Approved header)
+        self.dg_to_col_r = {}      # map DG ID -> Col R value (Littel need refuel)
  
         if not os.path.exists(XLSX_FILE_PATH):
             if not download_spreadsheet():
@@ -189,9 +272,65 @@ class RefuelData:
             self._parse_lettel(wb)
             self._parse_lettel_progress(wb)
             self._parse_ft_monitors(wb)
+            self._parse_master_col_b(wb)
+            self._parse_app_header(wb)
             self._parse_records(wb)
         except Exception as e:
             print(f"❌ Error loading Excel data: {e}", file=sys.stderr)
+
+    def _parse_master_col_b(self, wb):
+        """Xây dựng bản đồ chuẩn hóa tên Site về duy nhất Cột B (DG ID) từ Sheet 'Request Partner Auto' và 'Need Refuel'."""
+        self.site_to_dg = {}
+        self.dg_to_team = {}
+        self.all_dgs = set()
+        
+        sheet_names = [s for s in ["Request Partner Auto", "Need Refuel"] if s in wb.sheetnames]
+        for sname in sheet_names:
+            ws = wb[sname]
+            start_r = 6 if sname == "Request Partner Auto" else 3
+            for r in range(start_r, ws.max_row + 1):
+                col_b = str(ws.cell(row=r, column=2).value or "").strip().upper()
+                col_c = str(ws.cell(row=r, column=3).value or "").strip().upper()
+                col_ab = str(ws.cell(row=r, column=28).value or "").strip() if ws.max_column >= 28 else ""
+                if col_b and col_b.startswith("TNI"):
+                    self.all_dgs.add(col_b)
+                    if col_ab and col_ab != "0":
+                        self.dg_to_team[col_b] = normalize_team(col_ab)
+                    if col_c and col_c.startswith("TNI"):
+                        if col_c not in self.site_to_dg:
+                            self.site_to_dg[col_c] = []
+                        if col_b not in self.site_to_dg[col_c]:
+                            self.site_to_dg[col_c].append(col_b)
+
+    def normalize_to_col_b(self, raw_name: str, team: str = "") -> str:
+        """Chuẩn hóa tên trạm về DUY NHẤT tên Cột B (DG ID, ví dụ TNI0035_1, TNI0012_1)."""
+        s = str(raw_name or "").strip().upper()
+        if not s:
+            return ""
+        if s in self.all_dgs:
+            return s
+        m_dg = re.search(r"\(DG\s*([12])\)", s)
+        if m_dg:
+            base = re.sub(r"\(DG\s*[12]\)", "", s).strip()
+            cand = f"{base}_{m_dg.group(1)}"
+            if cand in self.all_dgs:
+                return cand
+            s = base
+        if s in self.site_to_dg:
+            dgs = self.site_to_dg[s]
+            if len(dgs) == 1:
+                return dgs[0]
+            if team:
+                norm_t = normalize_team(team)
+                for dg in dgs:
+                    if self.dg_to_team.get(dg) == norm_t:
+                        return dg
+            return dgs[0]
+        if re.search(r"_\d+$", s):
+            return s
+        if s.startswith("TNI"):
+            return f"{s}_1"
+        return s
 
     def _parse_members(self, wb):
         if "Telegram ID" in wb.sheetnames:
@@ -322,6 +461,15 @@ class RefuelData:
                     "qty": str(qty).strip() if qty else ""
                 })
  
+    def _parse_app_header(self, wb):
+        """Đọc ô AL5 từ sheet Request Partner Auto — header App Approved."""
+        if "Request Partner Auto" in wb.sheetnames:
+            ws = wb["Request Partner Auto"]
+            al5 = ws["AL5"].value
+            raw = str(al5 or "").strip()
+            # Escape HTML để tránh lỗi Telegram parse (ô AL5 có thể chứa < + >)
+            self.app_header = raw.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
     def _parse_records(self, wb):
         # 1. Parse Plan refuel sheet
         if "Plan refuel" in wb.sheetnames:
@@ -336,109 +484,135 @@ class RefuelData:
                 
                 if site:
                     team_val = ws.cell(row=r, column=3).value  # col C: Name Team Plan
+                    norm_team = normalize_team(team_val)
+                    site_id = self.normalize_to_col_b(str(site).strip().upper(), norm_team)
                     self.records.append({
                         "ts": ts,
                         "date": parse_date_str(date_val),
                         "cat": "PLAN",
-                        "team": str(team_val).strip() if team_val else "",
+                        "team": norm_team,
                         "sender": str(sender).strip() if sender else "",
                         "sender_id": str(sender_id).strip() if sender_id else "",
-                        "site": str(site).strip() if site else "",
+                        "site": site_id,
                         "qty": safe_int(qty)
                     })
                     
-        # 2. Parse Team request sheet
+        # 2. Parse Request Partner Auto (nguồn Request chính, chỉ lấy khi Cột V có ngày)
+        # BẮT BUỘC CHỈ LẤY TÊN CỘT B (DG ID, ví dụ TNI0035_1, TNI0012_1)
+        if "Request Partner Auto" in wb.sheetnames:
+            ws = wb["Request Partner Auto"]
+            for r in range(4, min(ws.max_row + 1, 350)):
+                col_v = ws.cell(row=r, column=22).value  # Col V: Date request refuel
+                v_str = parse_date_str(col_v)
+                if v_str and v_str != "-":
+                    dg = str(ws.cell(row=r, column=2).value or "").strip()
+                    site = str(ws.cell(row=r, column=3).value or "").strip()
+                    team_ab = str(ws.cell(row=r, column=28).value or "").strip()
+                    team_e = str(ws.cell(row=r, column=5).value or "").strip()
+                    raw_team = team_ab if team_ab and team_ab != "0" else team_e
+                    team = normalize_team(raw_team)
+                    site_id = self.normalize_to_col_b(dg if dg else site, team)
+                    if not site_id.startswith("TNI"):
+                        continue
+                    lit_w = ws.cell(row=r, column=23).value  # Col W: Littel request
+                    lit_q = ws.cell(row=r, column=17).value  # Col Q: Fuel Remain
+                    lit_r = ws.cell(row=r, column=18).value  # Col R: Littel need refuel
+                    qty = safe_int(lit_w) if safe_int(lit_w) > 0 else (safe_int(lit_q) if safe_int(lit_q) > 0 else 440)
+                    # Lưu col R cho site để dùng icon ưu tiên
+                    if site_id:
+                        self.dg_to_col_r[site_id] = safe_int(lit_r)
+                    self.records.append({
+                        "ts": datetime.now(TZ_MM),
+                        "date": v_str,
+                        "cat": "REQUEST",
+                        "team": team,
+                        "sender": "Request Partner Auto",
+                        "sender_id": "",
+                        "site": site_id,
+                        "qty": qty
+                    })
+
+        # 3. Parse Team request sheet (kết hợp lấy thêm yêu cầu hôm nay do người khác gửi lên)
         if "Team request" in wb.sheetnames:
             ws = wb["Team request"]
-            for r in range(2, ws.max_row + 1):
-                date_val = ws.cell(row=r, column=2).value
-                team_val = ws.cell(row=r, column=4).value  # col D: Name Team
-                site = ws.cell(row=r, column=5).value
-                qty = ws.cell(row=r, column=6).value
-                ts = parse_datetime(ws.cell(row=r, column=7).value) or datetime.now(TZ_MM)
-                sender = ws.cell(row=r, column=8).value
-                sender_id = ws.cell(row=r, column=9).value
-                
-                if site:
-                    self.records.append({
-                        "ts": ts,
-                        "date": parse_date_str(date_val),
-                        "cat": "REQUEST",
-                        "team": str(team_val).strip() if team_val else "",
-                        "sender": str(sender).strip() if sender else "",
-                        "sender_id": str(sender_id).strip() if sender_id else "",
-                        "site": str(site).strip() if site else "",
-                        "qty": safe_int(qty)
-                    })
-                    
-        # 3. Parse Refueled sheet
+            seen_request_sites = {r["site"] for r in self.records if r.get("cat") == "REQUEST"}
+            today_now_str = datetime.now(TZ_MM).strftime("%d/%m/%Y")
+            for r in range(2, min(ws.max_row + 1, 200)):
+                d_val = parse_date_str(ws.cell(row=r, column=2).value)
+                if d_val == today_now_str:
+                    team_val = ws.cell(row=r, column=4).value  # col D: Name Team
+                    site = str(ws.cell(row=r, column=5).value or "").strip().upper()
+                    qty = safe_int(ws.cell(row=r, column=6).value)
+                    ts = parse_datetime(ws.cell(row=r, column=7).value) or datetime.now(TZ_MM)
+                    sender = ws.cell(row=r, column=8).value
+                    sender_id = ws.cell(row=r, column=9).value
+                    if site and site.startswith("TNI"):
+                        norm_team = normalize_team(team_val)
+                        site_id = self.normalize_to_col_b(site, norm_team)
+                        if site_id not in seen_request_sites:
+                            seen_request_sites.add(site_id)
+                            self.records.append({
+                                "ts": ts,
+                                "date": d_val,
+                                "cat": "REQUEST",
+                                "team": norm_team,
+                                "sender": str(sender).strip() if sender else "",
+                                "sender_id": str(sender_id).strip() if sender_id else "",
+                                "site": site_id,
+                                "qty": qty
+                            })
+
+        # 4. Parse Refueled sheet
         if "Refueled" in wb.sheetnames:
             ws = wb["Refueled"]
             for r in range(2, ws.max_row + 1):
                 date_val = ws.cell(row=r, column=2).value
+                dg_val = ws.cell(row=r, column=3).value    # col C: DG ID
+                site_val = ws.cell(row=r, column=4).value  # col D: Site ID
                 team_val = ws.cell(row=r, column=5).value  # col E: Team
-                site = ws.cell(row=r, column=4).value
                 qty = ws.cell(row=r, column=14).value       # col N: Actual Filled Qty(L)
                 ts = parse_datetime(ws.cell(row=r, column=17).value) or datetime.now(TZ_MM)
                 sender = ws.cell(row=r, column=18).value
                 sender_id = ws.cell(row=r, column=19).value
                 
-                if site:
+                raw_site = str(dg_val or site_val or "").strip().upper()
+                if raw_site:
+                    norm_team = normalize_team(team_val)
+                    site_id = self.normalize_to_col_b(raw_site, norm_team)
                     self.records.append({
                         "ts": ts,
                         "date": parse_date_str(date_val),
                         "cat": "REFUELED",
-                        "team": str(team_val).strip() if team_val else "",
+                        "team": norm_team,
                         "sender": str(sender).strip() if sender else "",
                         "sender_id": str(sender_id).strip() if sender_id else "",
-                        "site": str(site).strip() if site else "",
+                        "site": site_id,
                         "qty": safe_int(qty)
                     })
-
-        # 4. Parse Need Refuel sheet (Col Y - Y2:Y15) for active Team Requests
-        if "Need Refuel" in wb.sheetnames:
-            ws = wb["Need Refuel"]
-            today_now_str = datetime.now(TZ_MM).strftime("%d/%m/%Y")
-            for r in range(2, min(ws.max_row + 1, 15)):
-                val = ws.cell(row=r, column=25).value  # Col Y
-                if val and str(val).strip():
-                    text = str(val).strip()
-                    cur_team = ""
-                    if "team 1" in text.lower(): cur_team = "Team 1"
-                    elif "team 2" in text.lower(): cur_team = "Team 2"
-                    elif "team 3" in text.lower(): cur_team = "Team 3"
-                    elif "team 4" in text.lower(): cur_team = "Team 4"
-                    matches = re.findall(r'/(TNI\d+)[^\:]*:\s*(\d+)', text)
-                    for s, q in matches:
-                        self.records.append({
-                            "ts": datetime.now(TZ_MM),
-                            "date": today_now_str,
-                            "cat": "REQUEST",
-                            "team": cur_team or "Team 1",
-                            "sender": "Need Refuel Sheet",
-                            "sender_id": "",
-                            "site": s.upper(),
-                            "qty": safe_int(q)
-                        })
-
 
 # ── Reports implementation ──────────────────────────────────────────────────
 
 def report_1(data: RefuelData):
     """
-    Báo cáo tổng hợp kết hợp:
+    Báo cáo tổng hợp gộp — 1 tin nhắn duy nhất cho Group 9:
     1. Letter Progress + FT follow monitor
-    2. Bảng đối soát 5 cột phân theo Team kèm tổng số Sites: 🏷️ Team X (N Sites)
-    3. Thống kê trạm lệch (Diff sites summary)
-    4. Thống kê trạm Team Request chưa có Plan hoặc chưa Refuel (Pending requests)
+    2. App Approved header (ô AL5)
+    3. Bảng đối soát 6 cột: DG ID | Date Req | Request | Plan | Refueled | Diff(Req−Ref)
+    4. Thống kê trạng thái + Note footer
     """
-    print("🔄 Generating Combined Refuel Plan & Progress Daily Report...")
+    print("🔄 Generating Merged Refuel Report (Request + Plan & Progress)...")
     now = datetime.now(TZ_MM)
     today_str = now.strftime("%d/%m/%Y")
+    # Nếu trong khung giờ đêm / rạng sáng (00:00 - 05:00) và chưa có dữ liệu ngày mới -> lấy ngày hôm qua
+    if now.hour < 5:
+        yesterday_str = (now - timedelta(days=1)).strftime("%d/%m/%Y")
+        has_today = any(r.get("date") == today_str for r in data.records if r.get("cat") in ("PLAN", "REFUELED"))
+        if not has_today:
+            today_str = yesterday_str
 
     # ── Letter Progress ──
-    submit_line   = f"  📤 The letter was submitted to the Government for approval on: <b>{data.letter_submitted or 'N/A'}</b>"
-    approved_line = f"  ✅ The government approved the oil transport letter on: <b>{data.letter_approved or 'N/A'}</b>"
+    submit_line   = f"  📤 Submitted: <b>{data.letter_submitted or 'N/A'}</b>"
+    approved_line = f"  ✅ Approved: <b>{data.letter_approved or 'N/A'}</b>"
 
     # ── FT follow monitor ──
     ft_today = []
@@ -463,45 +637,92 @@ def report_1(data: RefuelData):
     ft_str = ", ".join(ft_names_today) if ft_names_today else "None"
 
     # ── Gather data for today by Team ──
-    teams_list = ["Team 1", "Team 2", "Team 3", "Team 4"]
-    team_map: dict[str, dict[str, dict[str, int]]] = {t: {} for t in teams_list}
+    teams_list = ["T1", "T1 S1", "T2", "T2 S1", "T3", "T3 S1", "T4"]
+    # team_map[team][site] = {plan, refueled, req, req_date, plan_date, ref_date}
+    team_map: dict[str, dict[str, dict]] = {t: {} for t in teams_list}
+
+    def new_site():
+        return {"plan": 0, "refueled": 0, "req": 0, "req_date": "", "plan_date": "", "ref_date": ""}
 
     def get_team_key(raw_team: str) -> str:
-        s = raw_team.lower()
-        if "team 1" in s or "team1" in s: return "Team 1"
-        if "team 2" in s or "team2" in s: return "Team 2"
-        if "team 3" in s or "team3" in s: return "Team 3"
-        if "team 4" in s or "team4" in s: return "Team 4"
-        return "Team 1"
+        return normalize_team(raw_team)
 
+    # 1. Nạp tất cả REQUEST từ Sheet 'Request Partner Auto' và 'Team request'
     for r in data.records:
-        if r["date"] != today_str or not r["site"]:
+        if r.get("cat") != "REQUEST" or not r.get("site"):
             continue
         team = get_team_key(r.get("team", ""))
-        site = r["site"]
+        site = r["site"].upper()
         if site not in team_map[team]:
-            team_map[team][site] = {"plan": 0, "refueled": 0, "req": 0}
+            team_map[team][site] = new_site()
+        team_map[team][site]["req"] = max(team_map[team][site]["req"], r.get("qty", 0))
+        rd = r.get("date", "")
+        if rd and (not team_map[team][site]["req_date"] or rd > team_map[team][site]["req_date"]):
+            team_map[team][site]["req_date"] = rd
+
+    # 2. Nạp PLAN và REFUELED của ngày hôm nay
+    for r in data.records:
+        if r.get("cat") not in ("PLAN", "REFUELED") or not r.get("site"):
+            continue
+        if r.get("date") != today_str:
+            continue
+        team = get_team_key(r.get("team", ""))
+        raw_site = r["site"].upper()
+
+        target_site = raw_site
+        if raw_site not in team_map[team]:
+            candidates = [s for s in team_map[team].keys() if re.sub(r'_\d+$', '', s) == re.sub(r'_\d+$', '', raw_site)]
+            if len(candidates) == 1:
+                target_site = candidates[0]
+
+        if target_site not in team_map[team]:
+            team_map[team][target_site] = new_site()
 
         if r["cat"] == "PLAN":
-            team_map[team][site]["plan"] += r["qty"]
+            team_map[team][target_site]["plan"] += r.get("qty", 0)
+            team_map[team][target_site]["plan_date"] = r.get("date", "")
         elif r["cat"] == "REFUELED":
-            team_map[team][site]["refueled"] += r["qty"]
-        elif r["cat"] == "REQUEST":
-            team_map[team][site]["req"] += r["qty"]
+            team_map[team][target_site]["refueled"] += r.get("qty", 0)
+            team_map[team][target_site]["ref_date"] = r.get("date", "")
 
-    # Header
+    # ── Đếm tổng số site request ──
+    total_req_sites = sum(1 for t in teams_list for s in team_map[t] if team_map[t][s]["req"] > 0)
+
+    # ── App Approved header ──
+    app_hdr = data.app_header if data.app_header else ""
+    if app_hdr:
+        app_line = f"{app_hdr}\n=&gt; Need request Refuel: /{total_req_sites} Site"
+    else:
+        app_line = f"📊 Total request: <b>{total_req_sites}</b> Sites"
+
+    # ── Format ngày ngắn dd/mm ──
+    def short_date(d: str) -> str:
+        """Rút gọn dd/mm/yyyy -> dd/mm"""
+        if not d:
+            return "—"
+        parts = d.split("/")
+        if len(parts) >= 2:
+            return f"{parts[0]}/{parts[1]}"
+        return d
+
+    # ── Header ──
+    team_display = {
+        "T1": "Team 1", "T1 S1": "Team 1 S1",
+        "T2": "Team 2", "T2 S1": "Team 2 S1",
+        "T3": "Team 3", "T3 S1": "Team 3 S1",
+        "T4": "Team 4",
+    }
+
     lines = [
-        f"🔄 <b>[Report 1] PLAN & PROGRESS DAILY REPORT — {today_str}</b>",
+        f"🔄 <b>[Report 1] TNI REQUEST REFUEL — {today_str}</b>",
         f"⏰ {now.strftime('%H:%M')} Myanmar",
-        "",
+        "━━━━━━━━━━━━━━━━━━━━━",
         "📝 <b>Letter Progress:</b>",
         submit_line,
         approved_line,
         f"  👥 FT follow monitor: <b>{ft_str}</b>",
-        "",
-        "🟩 Refueled  🟨 No Plan (In Request)  🟥 Unlisted (Plan/Refuel without Req)",
-        fmt_row_compare_5("Team", "Site ID", "Plan", "Refueled", "Diff"),
-        "<code>" + "───────┼───────────┼───────┼───────┼──────" + "</code>",
+        app_line,
+        "🟩 Refueled  🟦 Planned  🟨≤200 🟣>200 🔥>400(ColR)  🟥 Unlisted",
     ]
 
     green_total = yellow_total = red_total = blue_total = 0
@@ -511,58 +732,70 @@ def report_1(data: RefuelData):
         if not sites_data:
             continue
 
-        # Split into 2 groups: Group 1 (Planned/Refueled/Unlisted) and Group 2 (No Plan - Yellow)
         group_planned = []
         group_no_plan = []
 
         for site in sorted(sites_data.keys()):
-            p = sites_data[site]["plan"]
-            fill = sites_data[site]["refueled"]
-            q = sites_data[site]["req"]
-            diff = p - fill
+            sd = sites_data[site]
+            p = sd["plan"]
+            fill = sd["refueled"]
+            q = sd["req"]
+            # Diff = Request - Refueled
+            diff = q - fill
 
-            # NEW COLOR RULES:
-            # 1. 🟥 ĐỎ: Không có trong danh sách Request mà lại có Plan hoặc Refuel (Unlisted)
+            rd = short_date(sd["req_date"])
+            pd = short_date(sd["plan_date"])
+            fd = short_date(sd["ref_date"])
+
+            def fmt_row(icon_: str) -> str:
+                diff_s = f"{diff:+d}" if diff != 0 else "0"
+                req_s = f" {rd}:{q}" if q > 0 else " —"
+                plan_s = f" {pd}:{p}" if p > 0 else " —"
+                ref_s = f" {fd}:{fill}" if fill > 0 else " —"
+                return f"{icon_}<code>{site}|{req_s}|{plan_s}|{ref_s}|{diff_s}L</code>"
+
+            # Color rules:
             if q == 0 and (p > 0 or fill > 0):
-                icon = "🟥"
                 red_total += 1
-                diff_str = "=" if diff == 0 else f"{diff:+d}L"
-                group_planned.append(f"{icon} {fmt_row_compare_5(team, site, f'{p}L', f'{fill}L', diff_str)}")
-            # 2. 🟩 XANH LÁ: Có trong Request, có Plan và ĐÃ REFUEL
+                group_planned.append(fmt_row("🟥"))
             elif fill > 0:
-                icon = "🟩"
                 green_total += 1
-                diff_str = "=" if diff == 0 else f"{diff:+d}L"
-                group_planned.append(f"{icon} {fmt_row_compare_5(team, site, f'{p}L', f'{fill}L', diff_str)}")
-            # 3. 🟦 XANH DƯƠNG: Có trong Request, có Plan nhưng CHƯA REFUEL
+                group_planned.append(fmt_row("🟩"))
             elif p > 0 and fill == 0:
-                icon = "🟦"
                 blue_total += 1
-                diff_str = f"+{p}L"
-                group_planned.append(f"{icon} {fmt_row_compare_5(team, site, f'{p}L', f'{fill}L', diff_str)}")
-            # 4. 🟨 VÀNG: Có trong Request nhưng CHƯA CÓ PLAN (No Plan)
+                group_planned.append(fmt_row("🟦"))
             elif q > 0 and p == 0 and fill == 0:
-                icon = "🟨"
                 yellow_total += 1
-                diff_str = f"-{q}L"
-                group_no_plan.append(f"{icon} {fmt_row_compare_5(team, site, f'{p}L', f'{fill}L', diff_str)}")
+                col_r_val = data.dg_to_col_r.get(site, 0)
+                if col_r_val > 400:
+                    no_plan_icon = "🟨🔥"   # R > 400L
+                elif col_r_val > 200:
+                    no_plan_icon = "🟨🟣"   # 200 < R ≤ 400L
+                else:
+                    no_plan_icon = "🟨"     # R ≤ 200L
+                group_no_plan.append(fmt_row(no_plan_icon))
 
         if group_planned or group_no_plan:
             total_sites = len(group_planned) + len(group_no_plan)
-            lines.append(f"\n🏷 <b>{team} ({total_sites} Sites)</b>")
-            # In các trạm có Plan / Đã đổ / Ngoài danh sách trước
+            name = team_display.get(team, team)
+            site_word = "Site" if total_sites == 1 else "Sites"
+            lines.append(f"<b>{name} ({total_sites} {site_word})</b>")
+            if team in ("T1", "T3"):
+                lines.append("<code>Site|Request|Plan|Refueled|Diff</code>")
             for row in group_planned:
                 lines.append(row)
-            # In các trạm có Request nhưng chưa có Plan (Vàng) ở phía dưới
             for row in group_no_plan:
                 lines.append(row)
 
-    lines.append("<code>" + "───────┴───────────┴───────┴───────┴──────" + "</code>")
-    lines.append(f"\n🟩 <b>{green_total}</b> (Refueled)  🟨 <b>{yellow_total}</b> (No Plan)  🟥 <b>{red_total}</b> (Unlisted)")
-    lines.append("\n🤖 <i>Auto report — Refuel Plan System</i>")
+    lines.append(f"🟩 <b>{green_total}</b>  🟦 <b>{blue_total}</b>  🟨 <b>{yellow_total}</b>  🟥 <b>{red_total}</b>")
+
+    # Note footer
+    lines.append("/Note: According to the list of stations and the required number of liters, refuel at the correct station with the correct number of liters. ❓ /No request on group 9 TNI REQUEST REFUEL = ❌ /No refueling allowed.")
+    lines.append("━━━━━━━━━━━━━━━━━━━━━")
+    lines.append("🤖 <i>Auto report — Refuel Plan System</i>")
 
     tg_send("\n".join(lines), "report1")
-    print("✅ Combined Report 1 sent.")
+    print("✅ Merged Report 1 sent.")
 
 
 def report_2(data: RefuelData):
@@ -614,38 +847,7 @@ def report_5(data: RefuelData):
             t_norm = t_raw
         teams_dict.setdefault(t_norm, []).append(m)
 
-    # 1. Ghi nhận log vào tab 'Read Group Refuel' qua GAS API
-    gas_records = []
-    for m in all_members:
-        has_id = m.get("has_id", False)
-        gas_records.append({
-            "date": date_str,
-            "time": time_str,
-            "team": m.get("team", "Group 9 Refuel"),
-            "name": m.get("name", "Unknown"),
-            "telegram_id": str(m.get("id", "")),
-            "status": "Read" if has_id else "Not Joined",
-            "trend_3day": "'1/1/1" if has_id else "'0/0/0",
-            "count_7day": 7 if has_id else 0,
-            "count_month": 30 if has_id else 0,
-            "note_msg": "Group 9 Refuel Dynamic Sheet"
-        })
-
-    gas_url = (
-        os.getenv("APPS_SCRIPT_URL") or
-        "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
-    ).strip()
-    if gas_url and gas_records:
-        try:
-            r_log = requests.post(gas_url, json={
-                "action": "log_read_group_refuel",
-                "records": gas_records
-            }, timeout=30)
-            print(f"  💾 Logged {len(gas_records)} records to 'Read Group Refuel' tab (Status: {r_log.status_code})")
-        except Exception as ex_gas:
-            print(f"  ⚠️ Error logging to Read Group Refuel: {ex_gas}")
-
-    # 2. Xây dựng tin nhắn báo cáo chuẩn phân tầng động từ Sheet
+    # 1. Xây dựng tin nhắn báo cáo chuẩn phân tầng động từ Sheet
     divider = "━━━━━━━━━━━━━━━━━━━━━"
     lines = [
         f"📋 <b>6. Report — Refuel Note Read Report — Group 9</b>",
@@ -680,7 +882,7 @@ def report_5(data: RefuelData):
     ]
 
     # Gửi qua Bot 2 (2. TNI Auto Report Daily) về DM Admin (6859790680)
-    BOT_2_TOKEN = os.getenv("SEND_BOT_TOKEN", "8647102342:AAGwI95-xeyFfJZusOOrIPVBER-z6taZHZI")
+    BOT_2_TOKEN = os.getenv("SEND_BOT_TOKEN", "")
     ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID", "6859790680")
     report_text = "\n".join(lines)
 

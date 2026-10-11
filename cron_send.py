@@ -2229,7 +2229,7 @@ def send_share_eta_reminders(force: bool = False):
         _gas_fallback = str(_raw_gas).strip().lstrip('\ufeff\u200b\u200c\u200d\u200e\u200f\xa0')
         def tg_delete(chat_id, mid, bot_token=None):
             if not mid or not chat_id: return
-            tok = bot_token or os.getenv("SEND_BOT_TOKEN") or "8897800070:AAHcG2eHlPsE0KpZAGjcFTe7ndn8gjpQi-A"
+            tok = bot_token or os.getenv("SEND_BOT_TOKEN")
             try:
                 requests.post(f"https://api.telegram.org/bot{tok}/deleteMessage", json={"chat_id": int(chat_id), "message_id": int(mid)}, timeout=8)
             except Exception: pass
@@ -2334,7 +2334,7 @@ def send_share_eta_reminders(force: bool = False):
     }
 
     # Bot 2D (2. TNI Auto Report Daily - SEND_BOT_TOKEN)
-    token = os.getenv("SEND_BOT_TOKEN") or "8897800070:AAHcG2eHlPsE0KpZAGjcFTe7ndn8gjpQi-A"
+    token = os.getenv("SEND_BOT_TOKEN")
 
     # 1. TỐC ĐỘ CAO: Nạp toàn bộ State của tất cả các Team trong 1 HTTP request duy nhất (<300ms)
     target_keys = [f"eta_reminder_{t_name.replace(' ', '_')}" for t_name, _, _ in results]

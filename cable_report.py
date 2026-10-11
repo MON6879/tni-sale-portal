@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-CABLE_BOT_TOKEN      = os.getenv("CABLE_BOT_TOKEN") or "8758104446:AAH3o7lMCxBXn70ThAXweH1DddmRkJrgwWo"
+CABLE_BOT_TOKEN      = os.getenv("CABLE_BOT_TOKEN")
 CABLE_CHAT_ID        = os.getenv("CABLE_CHAT_ID", "-5531350787")
 CABLE_APPS_SCRIPT_URL = os.getenv("CABLE_APPS_SCRIPT_URL", "")
 TZ_MM = timezone(timedelta(hours=6, minutes=30))               # Myanmar UTC+6:30
