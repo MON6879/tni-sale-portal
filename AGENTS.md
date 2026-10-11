@@ -7,6 +7,9 @@
 >    - (c) Thao tác đúng trên thanh công cụ đáy (`Advanced`): Chọn `Export` trong dropdown `--Select--`, bấm `Search` nạp cảnh báo, tick chọn Checkbox All đầu bảng, bấm nút `Action` xuất file Excel và xác nhận hộp thoại Save.
 > 2. **Tuyệt Đối Cấm Bấm Vào Chỗ Khác (Zero Arbitrary Clicks)**: TUYỆT ĐỐI CẤM tự ý click vào thân bảng, không double click hay right click mở các popup chi tiết cảnh báo (`Detail alarm`), không bấm vào các menu thanh tiêu đề (`Monitoring`, `Report`, `Setting`, `Topo`, `Help`), không bấm các nút thêm bớt dashlet làm xáo trộn giao diện của người dùng.
 > 3. **Cấm Đọc Lệch & Cấm Lộ Thông Tin Ra Ngoài (Zero Data Leak & Strict Scope Isolation)**: Toàn bộ thông tin hạ tầng viễn thông, địa bàn, mã trạm, số điện thoại, tên nhân sự trên NMS Nocpro BẮT BUỘC phải được bảo mật tuyệt đối. AI TUYỆT ĐỐI CẤM đọc lan man, cấm xuất/ghi log các thông tin không liên quan, và TUYỆT ĐỐI CẤM gửi dữ liệu ra bất kỳ kênh bên ngoài nào ngoại trừ dán trực tiếp vào đúng tab `1. Input New` trên Google Sheet được chỉ định theo quy trình!
+> 4. **🔒 Khóa Thép Zero-Stale Guard — Cấm Lấy File Cũ Dán Đè Khi Xuất Mới Thất Bại (Zero-Stale File Guard Policy)**:
+>    - Khi thực hiện xuất báo cáo cảnh báo từ NMS Nocpro, hệ thống BẮT BUỘC phải kiểm tra nghiêm ngặt: file Excel tải về PHẢI là file mới sinh ra sau thời điểm click nút `Action` (`mtime >= t_click - 2.0` hoặc `file not in before_files`).
+>    - Nếu sau thời gian timeout (90s) không thấy file Excel mới xuất hiện, hệ thống **BẮT BUỘC PHẢI DỪNG LẠI NGAY LẬP TỨC VÀ BÁO LỖI**, TUYỆT ĐỐI CẤM fallback lấy file cũ có sẵn trong thư mục để dán đè lên Google Sheet làm sai lệch mốc giờ dữ liệu sống của người dùng!
 
 ---
 
