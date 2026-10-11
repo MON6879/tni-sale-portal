@@ -22,6 +22,7 @@
 >    - Tài khoản/mật khẩu Nocpro CHỈ đọc từ `.env` (`NOCPRO_USER`/`NOCPRO_PASS`, `.env` đã gitignore); TUYỆT ĐỐI CẤM hardcode mật khẩu trong mã nguồn (đã từng lộ trong `auto_nocpro_desk1.py` → phải đổi mật khẩu). CẤM lưu ảnh chụp màn hình có dữ liệu cảnh báo.
 > 7. **🎯 Scope Guard Bộ Lọc Province & Re-assert Desktop 2 (PM 2026-10-11)**: Trước khi đẩy lên Sheet, script BẮT BUỘC kiểm tra mọi dòng thuộc Tanintharyi Region (mất bộ lọc Province sau khi người dùng thao tác tay → xuất ~23.800 dòng toàn vùng làm bẩn Sheet); có dòng lạ → DỪNG, không đẩy. Trước mỗi click phải xác nhận đang ở Desktop 2 (người dùng chuyển desktop giữa chừng làm click trúng cửa sổ khác / lớp phủ Task View) → chuyển lại + chờ, sai thì DỪNG. KHÔNG kill tiến trình đang gửi GAS giữa chừng (request đã tới GAS vẫn ghi đè Sheet).
 
+> 8. **📤 Gửi Sheet Đúng 1 Lần, Cấm Gửi Lại Chồng GAS & Cấm Tự Mở Chrome (Single-POST & Audit-Poll Policy — PM 2026-10-11)**: `handleNocproSyncSheet_` ghi cả Sheet mất ~80-150s (có thể timeout); mỗi lần gửi lại tạo thêm 1 tiến trình GAS chạy chồng làm Sheet ghi dở/lẫn dữ liệu. Script CHỈ POST 1 lần; lỗi kết nối/timeout → CẤM gửi lại, phải hỏi `?action=audit_nocpro` (status OK + đúng `source_file` + timestamp sau lúc gửi) tối đa ~7 phút, không có xác nhận → DỪNG báo lỗi. Link Google Sheet do người dùng tự mở ở Desktop 2 và để yên; script KHÔNG tự mở Chrome/tab mới.
 ---
 
 # 🔒 STRICT STEEL-LOCK RULE: KHÓA THÉP PHÂN HỆ SITE DOWN — TUYỆT ĐỐI CẤM TỰ Ý VÀO XEM / SỬA KHI KHÔNG CÓ YÊU CẦU (STRICT SITE DOWN STEEL LOCK & ZERO-UNAUTHORIZED-ACCESS POLICY)
