@@ -297,7 +297,6 @@ def audit_telegram_webhooks():
                         set_resp = requests.post(f"https://api.telegram.org/bot{token}/setWebhook", json={
                             "url": expected_url,
                             "secret_token": wh_secret,
-                            "allowed_updates": ["message", "edited_message", "channel_post"],
                             "drop_pending_updates": True
                         }, timeout=8)
                         if set_resp.status_code == 200 and set_resp.json().get("ok"):
@@ -315,8 +314,7 @@ def audit_telegram_webhooks():
                         time.sleep(0.5)
                         set_resp = requests.post(f"https://api.telegram.org/bot{token}/setWebhook", json={
                             "url": expected_url,
-                            "secret_token": wh_secret,
-                            "allowed_updates": ["message", "edited_message", "channel_post"]
+                            "secret_token": wh_secret
                         }, timeout=8)
                         if set_resp.status_code == 200 and set_resp.json().get("ok"):
                             last_err = None
