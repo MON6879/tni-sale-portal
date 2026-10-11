@@ -10,6 +10,16 @@
 > 4. **🔒 Khóa Thép Zero-Stale Guard — Cấm Lấy File Cũ Dán Đè Khi Xuất Mới Thất Bại (Zero-Stale File Guard Policy)**:
 >    - Khi thực hiện xuất báo cáo cảnh báo từ NMS Nocpro, hệ thống BẮT BUỘC phải kiểm tra nghiêm ngặt: file Excel tải về PHẢI là file mới sinh ra sau thời điểm click nút `Action` (`mtime >= t_click - 2.0` hoặc `file not in before_files`).
 >    - Nếu sau thời gian timeout (90s) không thấy file Excel mới xuất hiện, hệ thống **BẮT BUỘC PHẢI DỪNG LẠI NGAY LẬP TỨC VÀ BÁO LỖI**, TUYỆT ĐỐI CẤM fallback lấy file cũ có sẵn trong thư mục để dán đè lên Google Sheet làm sai lệch mốc giờ dữ liệu sống của người dùng!
+> 5. **🛡️ Click Có Chốt Chặn & Tọa Độ Neo Đáy — Cấm Click Mù, Cấm Chọn Nhầm `Create ticket` (Guarded-Click & Bottom-Anchored Coordinates Policy — PM 2026-10-11)**:
+>    - *Root cause*: script chọn mục dropdown bằng tọa độ co giãn theo chiều cao cửa sổ; cửa sổ Nocpro thấp hơn 84px (1516 thay vì 1600) nên click trúng `Create ticket` thay vì `Export`. Ngoài ra thanh Advanced được nhận diện sai (đếm điểm ảnh xanh trong thân bảng) nên bấm sai hộp thoại `Option`.
+>    - Khi click bất kỳ điểm nào trên Nocpro, BẮT BUỘC dùng `guard_click` (`WindowFromPoint` + `GetAncestor(GA_ROOT)` phải thuộc tập cửa sổ cho phép: Nocpro / hộp thoại cụ thể / popup dropdown vừa mở), sai thì DỪNG, TUYỆT ĐỐI CẤM click mù.
+>    - Tọa độ thanh công cụ (Advanced) BẮT BUỘC neo theo ĐÁY cửa sổ (`y = bottom - (1600 - y_ref)`), CẤM co giãn theo chiều cao. Mục trong dropdown `--Select--` BẮT BUỘC tính theo hình học của chính popup (283x378, `Export` ở y≈245), kiểm tra kích thước popup, CẤM tính theo cửa sổ chính. TUYỆT ĐỐI CẤM chọn `Create ticket`/`Confirm alarm`/`Group alarm`/các mục khác ngoài `Export`.
+>    - Trạng thái thanh Advanced (mở/thu gọn) BẮT BUỘC nhận diện bằng dải góc trái-đáy (mũi tên `^^` vs nhãn ô lọc), CẤM đếm pixel trong thân bảng dữ liệu; luôn mở rộng thanh Advanced TRƯỚC khi bấm nút Alarm group.
+> 6. **🖥️ Desktop 2, Hộp Thoại Lưu File & Đóng Excel (Desktop-Attach, Save-Dialog & Excel-Close Policy — PM 2026-10-11)**:
+>    - Gắn input desktop (`SetProcessWindowStation`/`SetThreadDesktop`, GIỮ tham chiếu handle) BẮT BUỘC làm TRƯỚC khi `import pyvda`/`win32ui`; mọi click/phím chỉ khi đã `go()` sang Desktop 2 và luôn trả về Desktop 1 trong `finally`. CẤM click khi đang ở Desktop 1.
+>    - Hộp thoại `selectSaveFile`: xử lý bằng thông điệp cửa sổ (`WM_SETTEXT` điền đường dẫn đầy đủ + `BM_CLICK` nút Save), CẤM Alt+S/Enter mù.
+>    - Đóng Excel: Excel có thể hiện `Document Recovery` (class `bosa_sdm_XL9`) → chọn `Yes` (giữ file phục hồi, KHÔNG xóa) + OK; sau đó `Don't Save` (`N`) trên hộp thoại `NUIDialog`. Chỉ gửi phím khi hộp thoại đang là foreground. CẤM `Alt+F4` mù, CẤM chọn `No, remove the files`.
+>    - Tài khoản/mật khẩu Nocpro CHỈ đọc từ `.env` (`NOCPRO_USER`/`NOCPRO_PASS`, `.env` đã gitignore); TUYỆT ĐỐI CẤM hardcode mật khẩu trong mã nguồn (đã từng lộ trong `auto_nocpro_desk1.py` → phải đổi mật khẩu). CẤM lưu ảnh chụp màn hình có dữ liệu cảnh báo.
 
 ---
 
