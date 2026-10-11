@@ -2892,3 +2892,26 @@ Reason: [Lý do]`
 - **ScriptProperties Site Down** (58 mục): `SD_BOT_TOKEN`, `GITHUB_PAT` thay bằng giá trị mới; thêm `SD_RELAY_KEY`, `SD_ADMIN_KEY`. Webhook bot Site Down đặt lại có `secret_token`. Kiểm live: không ký→403, sai khóa→403, ký đúng→200; GAS: update giả→`forbidden`, update có khóa→processed, teardown không khóa→`forbidden`.
 - **Bài học**: (1) KHÔNG suy mapping secret từ giá trị mặc định trong code — phải đối chiếu `.env` (đã gán nhầm `SEND_BOT_TOKEN`, sửa lại). (2) Token `@TNITECHINICALDEPREPORT_BOT` nằm trong 3 commit lịch sử repo public → phải `/revoke`. (3) Project Vercel cũ giữ deploy nguyên repo → luôn deploy thư mục tối giản. (4) Mật khẩu Steel bản rõ trong tài liệu = lộ; chỉ lưu SHA-256.
 - **Chưa làm (P2)**: repo public `tni-sitedown-relay` vẫn chứa AGENTS.md/history/scratch/chat-id/lịch sử cũ; tách repo runner; xóa bản rõ mật khẩu cũ trong lịch sử git công khai là không thể → mật khẩu cũ đã thu hồi.
+
+# 🚂 PM-99 — TÁCH RUNNER CÔNG KHAI & NGUỒN CODE BẢO MẬT: BỌC THÉP TOÀN DIỆN KHỎI DATA LEAK (2026-10-11, phiên Steel kết thúc)
+- **Bối cảnh & Nguy cơ**: Repo MON6879/tni-sitedown-relay được cấu hình Public để tận dụng phút chạy GitHub Actions miễn phí. Tuy nhiên, việc để mã nguồn Python, Apps Script, documentation, history và scratch files trong repo public tiềm ẩn nguy cơ rò rỉ thông tin hạ tầng và bí mật lịch sử.
+- **Kiến trúc Bọc Thép (Runner Tối Giản + Repo Code Riêng Tư)**:
+  1. **Repo Runner Công Khai (MON6879/tni-sitedown-relay)**:
+     - Toàn bộ lịch sử cũ với 507 files và hơn 200 commit đã được thay thế triệt để bằng **1 orphan commit duy nhất** (25970c). Nhánh master trên remote bị xóa hoàn toàn.
+     - Repo công khai hiện CHỈ CHỨA DUY NHẤT 2 file: .github/workflows/train_5min.yml và README.md.
+     - **TUYỆT ĐỐI KHÔNG CÓ BẤT KỲ FILE MÃ NGUỒN PYTHON/GAS HAY DOCUMENTATION NÀO TỒN TẠI TRÊN REPO PUBLIC.**
+  2. **Repo Mã Nguồn Riêng Tư (MON6879/tni-bot - Private)**:
+     - Toàn bộ codebase hoàn chỉnh của đoàn tàu (Task and WO) được lưu trữ an toàn trong repo Private MON6879/tni-bot.
+     - Runner công khai sử dụng Deploy Key chỉ-đọc (CODE_DEPLOY_KEY lưu trong GitHub Secrets) để checkout code từ MON6879/tni-bot vào runner ở nhịp chạy.
+     - Sau khi checkout, các toa tàu (Site Down, Cable, Daily Reports, Refuel, Auditor, ETA, Sale) thực thi bình thường từ workspace runner mà không làm lộ code ra ngoài.
+  3. **Bổ Sung Secrets Hoàn Chỉnh (28 Secrets)**:
+     - Bổ sung đầy đủ 28 Secrets trên MON6879/tni-sitedown-relay (bao gồm CODE_DEPLOY_KEY, ADMIN_CHAT_ID, SALE_BOT_TOKEN, tất cả bot tokens và webhook secret tokens WH_*).
+     - Bot Sale @TNI_solution_bulding_bot (id: 8737134521) đã được rotate token mới qua @BotFather, nạp vào GitHub Secret SALE_BOT_TOKEN, xác thực getMe HTTP 200.
+     - ADMIN_CHAT_ID: 6859790680 được cấu hình đầy đủ.
+  4. **Làm Sạch Tài Liệu & System Map**:
+     - system_map.md được rà soát và xóa sạch toàn bộ API_HASH, API_ID, token tĩnh bị sót.
+     - Cập nhật bảng phân định vai trò Repo rõ ràng: Vercel = phonghdpxd-cmd/tni-bot, Code nguồn Tàu = MON6879/tni-bot (private), Runner Actions = MON6879/tni-sitedown-relay (chỉ chứa workflow).
+  5. **Đồng Bộ & Khóa Thép**:
+     - Tất cả file backup lịch sử và mã nguồn được lưu trữ trọn vẹn tại Task and WO và 	ni-search.
+     - Quy trình kiểm tra live chứng minh nhịp chạy 38158669680 trên commit sạch 25970c hoàn thành thành công 100% (completed success).
+     - **KHÓA THÉP SITE DOWN ĐÓNG LẠI NGAY LẬP TỨC.** Mật khẩu bảo vệ giữ nguyên hash SHA-256.
