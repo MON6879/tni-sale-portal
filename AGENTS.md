@@ -2923,7 +2923,20 @@ Reason: [Lý do]`
 > - **Quy tắc (Rule PM-101)**:
 >   1. Nguồn chi tiết WO: tab `WO Close progress` (gid `930147334`, file `1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8`). Mục `1. Work Orders Completed` CHỈ gồm WO có `Closed Time` (cột K, idx 10) rơi vào HÔM QUA hoặc HÔM NAY (Asia/Rangoon); mỗi dòng ghi `(closed dd/MM)`. CẤM liệt kê cả chu kỳ tháng trong TPR.
 >   2. Nhãn: `Period: Closed on <hôm qua> & <hôm nay> (yesterday + today, MMT) | sheet export: ...`. Ô mốc `WO Close day =>` (T1) chỉ dùng để CẢNH BÁO `Sheet day ... is not today - export not refreshed yet` khi ≠ hôm nay.
->   3. Mục MỚI `6. Site Down Clear`: nguồn spreadsheet `1d9D719TmLsrcCxozEgZ0CUm7NXi_lVZaPtBX9WF5b8M` tab `Site down Clear` (cột A mã trạm, B team, D nhân viên, E/G chuỗi `/TNIxxxx : dd/MM/yy HH:mm - dd/MM/yy HH:mm = số giờ`, I Solution). Nằm dưới các tác vụ khác (mục 6), đưa tổng Site clear phía trước theo từng nhân viên (`• 👤 <Tên nhân viên> : <N> Site clear`) và đưa NGUYÊN NỘI DUNG chi tiết từng trạm theo từng dòng (`    /TNIxxxx : ...`). Đọc toàn bộ các trạm đã clear có trong tab `Site down Clear` của snapshot xuất mới nhất (không lọc bỏ sót ngày giữa chu kỳ). Tại Section 1 cũng gắn badge `(X WO | Y Site clear)` cho nhân viên có WO. Ma trận CONTROL tổng hợp `SiteClear`.
+>   3. Cấu Trúc Phương Án 2 (Gom Trọn Gói Theo Từng Nhân Viên — 360° Staff View):
+>      - Trong từng Subteam (T1, T1 S1, T2, T2 S1, T3, T3 S1, T4):
+>        a) Header Subteam: Tổng hợp nhanh (WO, Site clear, Refuel, Dept, Cable restored, Cable broken).
+>        b) Khối từng nhân viên: `👤 Staff: <Tên nhân viên> (<X> WO | <Y> Site clear | <Z> Refuel)`. Liệt kê theo thứ tự:
+>           - `📑 Work Orders Completed (<X> WO):` (danh sách WO đóng hôm qua + hôm nay kèm station backlog nếu có, hoặc `0 WO`).
+>           - `⛽ Follow Refuel Monitoring (<Z> site(s)):` (nếu có refuel).
+>           - `🚨 <Tên nhân viên> : <Y> Site clear` (phía trước là tổng số Site clear, nằm dưới các tác vụ khác theo từng người, bên dưới thụt lề 4 dấu cách là NGUYÊN NỘI DUNG chi tiết từng trạm `/TNIxxxx : ...` lấy ưu tiên từ col6 để giữ trọn vẹn tag `/Flaping`).
+>        c) Team Shared Tasks (các tác vụ chung nằm dưới cùng):
+>           - `🏛️ Department Assigned Tasks`
+>           - `🔗 Cable Link Up (Restored)`
+>           - `⚠️ Cable Broken Now (Ongoing)`
+>           - `🚨 Unassigned Site Down Clear` (nếu có trạm chưa gán FT)
+>           - `📑 Unassigned Work Orders` (nếu có WO chưa gán staff)
+>      - Nhóm CONTROL: Giữ Overview Matrix tổng hợp các Subteam + Dòng TOTAL toàn tỉnh.
 >   4. Giới hạn: khối Dept / Refuel / Cable Link Up trong `WO Close progress` do công thức Sheet lọc theo ô ngày riêng (không có mốc thời gian từng dòng) → code không lọc 2 ngày được; muốn 2 ngày phải sửa công thức Sheet. `Cable Broken Now` là trạng thái hiện hành.
 >   5. GViz trả `Date(Y,M,D)` với THÁNG TÍNH TỪ 0 — luôn +1 tháng khi đối soát. Cột Team ở `Task remain` KHÔNG tin cậy → ghép theo tên nhân viên. Khi người dùng hỏi "số liệu khác nhau", BẮT BUỘC đối soát 3 nguồn bằng dữ liệu live trước khi kết luận; khi đổi phạm vi báo cáo (ngày/chu kỳ) phải hỏi người dùng chọn.
 >   6. Kiến Trúc Chống Gãy Bền Vững (Robust TPR Architecture):
@@ -2931,5 +2944,5 @@ Reason: [Lý do]`
 >      - `tprParseDay_`: Chuẩn hóa ngày vạn năng (nhận Date object, số serial Excel/Sheets, GViz `Date(y,m,d)`, định dạng ISO, DMY 2/4 số năm) sang `dd/MM/yyyy` (Asia/Rangoon).
 >      - `tprSanityCheck_`: Chốt chặn Fail-Loud — nếu >30% ngày đóng WO không parse được hoặc gãy cấu trúc, lập tức gửi cảnh báo về nhóm CONTROL và DỪNG gửi tin 0 giả về 4 team.
 >      - `Send-Then-Delete`: Chỉ xóa tin cũ khi tin mới đã gửi thành công qua Telegram (zero tin nhắn bị mất khi mạng chập chờn).
-> - **Triển khai**: `QLTC_GAS` (Script ID `1rvgW...`) `clasp push --force` + deploy `@510` (Deployment `AKfycbz-NZlBk8q2...`); gửi live `send_team_progress_reports` → `ok:true`: T1 [12969, 12970, 12971], T2 [11858, 11859, 11860, 11861], T3 [11159], T4 [9361], CONTROL [15643].
+> - **Triển khai**: `QLTC_GAS` (Script ID `1rvgW...`) `clasp.cmd push --force` + deploy `@511` (Deployment `AKfycbz-NZlBk8q2...`); gửi live `send_team_progress_reports` → `ok:true`: T1 (2 parts: [12976, 12977]), T2 (4 parts: [11866, 11867, 11868, 11869]), T3 (1 part: [11164]), T4 (1 part: [9365]), CONTROL (1 part: [15644]).
 
