@@ -30,12 +30,8 @@ logger = logging.getLogger(__name__)
 BOT_VERSION = "v4.7"
 
 # ── Config ────────────────────────────────────────────────────────────────────
-SEARCH_BOT_TOKEN_SSOT = "8606383435:AAEstcN4Om6_9ZAjs4OoFV2uVlRALgae2Ac"
 raw_tok = (os.environ.get("TELEGRAM_TOKEN") or os.environ.get("BOT_TOKEN") or os.environ.get("SEARCH_BOT_TOKEN") or "").strip().strip("\ufeff")
-if not raw_tok or not raw_tok.startswith("8606383435"):
-    TOKEN = SEARCH_BOT_TOKEN_SSOT
-else:
-    TOKEN = raw_tok
+TOKEN = raw_tok  # PM-97 R3: env only, no hardcoded SSOT token
 PRIMARY_GAS_URL       = "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
 DAILY_APPS_SCRIPT_URL = os.environ.get("DAILY_APPS_SCRIPT_URL", "").strip().strip("\ufeff")
 APPS_SCRIPT_URL       = os.environ.get("APPS_SCRIPT_URL", "").strip().strip("\ufeff")
@@ -2508,16 +2504,41 @@ def ensure_webhook_locked_bg():
     def _do():
         try:
             target_url = "https://tni-bot.vercel.app/api/search_bot"
-            requests.get(f"https://api.telegram.org/bot{TOKEN}/setWebhook?url={target_url}", timeout=5)
+            sec = os.environ.get("TELEGRAM_SECRET_TOKEN", "") or os.environ.get("WH_SEARCH", "")
+            payload = {
+                "url": target_url,
+                "allowed_updates": ["message", "edited_message", "channel_post"],
+                "drop_pending_updates": False
+            }
+            if sec:
+                payload["secret_token"] = sec
+            requests.post(f"https://api.telegram.org/bot{TOKEN}/setWebhook", json=payload, timeout=8)
         except Exception as e:
             logger.error(f"ensure_webhook_locked_bg error: {e}")
     threading.Thread(target=_do, daemon=True).start()
 
+
 _processed_updates = {}   # update_id -> timestamp
 
 # ── Vercel entry point (redeploy triggered) ──────────────────────────────────
+def _tg_secret_ok(headers, env_name):
+    """PM-97 R5: constant-time Telegram webhook secret check when configured; allow if env not set."""
+    import hmac as _hmac
+    import os as _os
+    exp = _os.environ.get(env_name, "").strip()
+    if not exp:
+        return True
+    got = headers.get("X-Telegram-Bot-Api-Secret-Token", "").strip()
+    return bool(got) and _hmac.compare_digest(got.encode("utf-8"), exp.encode("utf-8"))
+
+
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
+        if not _tg_secret_ok(self.headers, "TELEGRAM_SECRET_TOKEN"):
+            self.send_response(403)
+            self.end_headers()
+            self.wfile.write(b'{"error":"Forbidden"}')
+            return
         try:
             length = int(self.headers.get("Content-Length", 0))
             if length > 2 * 1024 * 1024:  # 2MB Limit protection
@@ -2526,15 +2547,6 @@ class handler(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(b'{"error":"Payload Too Large"}')
                 return
-
-            if TELEGRAM_SECRET_TOKEN:
-                secret_header = self.headers.get("X-Telegram-Bot-Api-Secret-Token", "")
-                if secret_header != TELEGRAM_SECRET_TOKEN:
-                    logger.warning("Rejected POST request: Secret token mismatch.")
-                    self.send_response(403)
-                    self.end_headers()
-                    self.wfile.write(b'{"error":"Forbidden"}')
-                    return
 
             raw  = self.rfile.read(length)
             data = json.loads(raw)
@@ -2614,14 +2626,18 @@ class handler(BaseHTTPRequestHandler):
         if action == "reset":
             try:
                 expected = "https://tni-bot.vercel.app/api/search_bot"
+                sec = os.environ.get("TELEGRAM_SECRET_TOKEN", "") or os.environ.get("WH_SEARCH", "")
                 r1 = requests.post(f"{TG_API}/deleteWebhook",
                     json={"drop_pending_updates": False}, timeout=10).json()
+                set_payload = {
+                    "url": expected,
+                    "allowed_updates": ["message", "edited_message", "channel_post"],
+                    "drop_pending_updates": False
+                }
+                if sec:
+                    set_payload["secret_token"] = sec
                 r2 = requests.post(f"{TG_API}/setWebhook",
-                    json={
-                        "url": expected,
-                        "allowed_updates": ["message", "edited_message", "channel_post"],
-                        "drop_pending_updates": False
-                    }, timeout=10).json()
+                    json=set_payload, timeout=10).json()
                 r3 = requests.get(f"{TG_API}/getWebhookInfo", timeout=10).json()
                 setup_bot_menu_commands()
                 result = {
@@ -2707,15 +2723,6 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(result, indent=2).encode("utf-8"))
             return
 
-        if TOKEN and not action:
-            try:
-                requests.post(
-                    f"https://api.telegram.org/bot{TOKEN}/setWebhook",
-                    json={"url": "https://tni-bot.vercel.app/api/search_bot", "allowed_updates": ["message", "edited_message", "channel_post"]},
-                    timeout=5
-                )
-            except Exception:
-                pass
 
         tok_ok  = "SET" if TOKEN else "MISSING"
         gas_ok  = "SET" if DAILY_APPS_SCRIPT_URL else "MISSING"

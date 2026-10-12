@@ -92,6 +92,32 @@ def fetch_config_templates(force: bool = False) -> dict:
         return _config_templates_cache
     return {"all": [], "map": {}}
 
+# ── Dynamic Sale Templates (Tab 'Template Sale' - Sheet 1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA) ──
+_sale_templates_cache = None
+_sale_templates_ts = 0
+
+def fetch_sale_templates(force: bool = False) -> list:
+    """Fetch Dynamic Sale Templates from GAS / Sheet tab 'Template Sale'.
+    Auto refresh every 3 minutes.
+    """
+    global _sale_templates_cache, _sale_templates_ts
+    now = time.time()
+    if not force and _sale_templates_cache and (now - _sale_templates_ts < 180):
+        return _sale_templates_cache
+
+    try:
+        url = f"{APPS_SCRIPT_URL}?action=template_sale_get"
+        resp = requests.get(url, timeout=10).json()
+        if resp.get("ok") and isinstance(resp.get("data"), list):
+            _sale_templates_cache = resp.get("data")
+            _sale_templates_ts = now
+            logger.info(f"Loaded {len(_sale_templates_cache)} dynamic sale templates from GAS")
+            return _sale_templates_cache
+    except Exception as e:
+        logger.warning(f"Sale templates load failed: {e}")
+
+    return _sale_templates_cache or []
+
 _change_oil_template_cache = None
 _change_oil_template_ts = 0
 
@@ -667,11 +693,17 @@ async def handle_mdg(msg, bot, now, user, sender_name, sender_id):
             await bot.send_message(chat_id, f"⚠️ Failed to record: {err}", parse_mode="HTML")
         return
 
-    # ── Inventory Report message (Strict Rule: Requires "inventory fuel" AND "dg id: tni") ──
-    has_inv_kw = "inventory fuel" in text_l
-    has_dg_tni = "dg id: tni" in text_l or "dg id:tni" in text_l or ("dg id:" in text_l and "tni" in text_l)
+    # ── Inventory Report message ──
+    # Strict: "inventory fuel" header present
+    # Relaxed: DG ID: TNIXXXX + Fuel cm + Fuel % (user sent without header line)
+    has_inv_kw  = "inventory fuel" in text_l
+    has_dg_tni  = "dg id: tni" in text_l or "dg id:tni" in text_l or ("dg id:" in text_l and "tni" in text_l)
+    has_fuel_cm = "fuel cm" in text_l
+    has_fuel_pct = "fuel %" in text_l
+    # Accept if (header + DG TNI) OR (DG TNI + fuel cm + fuel %)
+    is_inv_report = (has_inv_kw and has_dg_tni) or (has_dg_tni and has_fuel_cm and has_fuel_pct)
 
-    if has_inv_kw and has_dg_tni:
+    if is_inv_report:
         # FIX: forward từ Viber → trim text từ dòng đầu có "inventory fuel"
         lines_inv = text.splitlines()
         inv_start_idx = next(
@@ -763,10 +795,16 @@ async def handle_mdg(msg, bot, now, user, sender_name, sender_id):
 async def handle(data: dict):
     async with Bot(token=COLLECTOR_BOT_TOKEN) as bot:
         update = Update.de_json(data, bot)
-        if not update.message:
+        # FIX PM-COLL-01: Process both new messages AND edited messages
+        # When user edits a report text → Telegram sends edited_message (not message)
+        # → must handle edited_message or anchor never gets saved → photos rejected
+        if update.message:
+            msg = update.message
+        elif update.edited_message:
+            msg = update.edited_message
+            logger.info(f"[EDIT] Processing edited_message from {msg.from_user.id if msg.from_user else '?'}")
+        else:
             return
-
-        msg         = update.message
         user        = msg.from_user
         if not user or user.is_bot:
             logger.info("Ignoring message from bot or missing user")
@@ -910,12 +948,17 @@ async def handle(data: dict):
             else:
                 tpl_txt = get_template_text(cmd)
                 if tpl_txt:
-                    await bot.send_message(chat_id, tpl_txt, parse_mode="HTML")
-                    return
+                    parts = text.split(maxsplit=1)
+                    if len(parts) == 1:
+                        await bot.send_message(chat_id, tpl_txt, parse_mode="HTML")
+                        return
+                    else:
+                        first_kw = tpl_txt.split(":")[0].strip() if ":" in tpl_txt else cmd
+                        text = f"{first_kw}: {parts[1]}"
 
         # ── Done ──────────────────────────────────────────────────────────
-        if re.match(r"^done\b", text, re.IGNORECASE):
-            # 1) Extract #ID from user's text: "Done: #00008" or "Done: #8"
+        if re.match(r"^/?done\b", text, re.IGNORECASE):
+            # 1) Extract #ID from user's text: "Done: #00008" or "/done #8"
             id_in_text = re.search(r"#(\d+)", text)
             ref_id = None
 
@@ -988,8 +1031,37 @@ async def handle(data: dict):
             return
 
 
-        # ── Daily Plan → Handled exclusively by Search Bot (@SEARCHTNITASKWOBOT) ──
-        if is_daily_plan(text):
+        # ── Dynamic Sale / Survey / Dealer Template (Tab 'Template Sale' - Auto Collect & Delete) ──
+        sale_tpls = fetch_sale_templates()
+        matched_sale_tpl = None
+        for st in sale_tpls:
+            prefix = st.get("keyword", "").lower()
+            if prefix and text.lower().startswith(prefix):
+                matched_sale_tpl = st
+                break
+
+        if matched_sale_tpl:
+            logger.info(f"[SALE_COLLECT] Matched template '{matched_sale_tpl['keyword']}' -> forwarding to GAS")
+            sale_payload = {
+                "action": "telegram_sale_collect",
+                "text": text,
+                "chat_id": str(chat_id),
+                "message_id": msg.message_id,
+                "sender": sender_name or username,
+            }
+            try:
+                res_gas = requests.post(APPS_SCRIPT_URL, json=sale_payload, timeout=20).json()
+                if res_gas.get("ok"):
+                    # Xóa tin nhắn gốc của nhân viên trên Telegram (Collect & Delete Protocol)
+                    try:
+                        await bot.delete_message(chat_id=chat_id, message_id=msg.message_id)
+                        logger.info(f"[SALE_COLLECT] Deleted original message {msg.message_id} on chat {chat_id}")
+                    except Exception as del_err:
+                        logger.warning(f"[SALE_COLLECT] Could not delete telegram message: {del_err}")
+                else:
+                    logger.warning(f"[SALE_COLLECT] GAS returned not ok: {res_gas}")
+            except Exception as post_err:
+                logger.error(f"[SALE_COLLECT] Error posting to GAS: {post_err}")
             return
 
         # ── Collector commands ─────────────────────────────────────────────
@@ -1056,8 +1128,24 @@ def ensure_collector_webhook_active() -> None:
 _processed_collector_updates = {}   # update_id -> timestamp
 
 # ── Vercel entry point ────────────────────────────────────────────────────
+def _tg_secret_ok(headers, env_name):
+    """PM-97 R5: constant-time Telegram webhook secret check when configured; allow if env not set."""
+    import hmac as _hmac
+    import os as _os
+    exp = _os.environ.get(env_name, "").strip()
+    if not exp:
+        return True
+    got = headers.get("X-Telegram-Bot-Api-Secret-Token", "").strip()
+    return bool(got) and _hmac.compare_digest(got.encode("utf-8"), exp.encode("utf-8"))
+
+
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
+        if not _tg_secret_ok(self.headers, "COLLECTOR_WEBHOOK_SECRET"):
+            self.send_response(403)
+            self.end_headers()
+            self.wfile.write(b'{"error":"Forbidden"}')
+            return
         try:
             length = int(self.headers.get("Content-Length", 0))
             data   = json.loads(self.rfile.read(length))
