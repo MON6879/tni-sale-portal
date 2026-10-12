@@ -234,6 +234,9 @@ tbody tr:hover{background:#fafcff}
 
 <script>
 // ══ GOOGLE AUTH GATE & SESSION SYSTEM (WHITELIST SSOT) ══
+window.GAS_SALE_URL = window.GAS_SALE_URL || 'https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec';
+var GAS_SALE_URL = window.GAS_SALE_URL;
+const MASTER_ADMIN_EMAIL = 'phonghdpxd@gmail.com';
 const GAUTH_EMAIL_KEY   = 'tni_google_auth_email';
 const GAUTH_USER_KEY    = 'tni_google_auth_user';
 const GAUTH_OK_KEY      = 'tni_google_authed_at';
@@ -258,7 +261,7 @@ function initPwdGate() {
     gate.style.display = 'none';
     updateTopbarUserProfile(authedUser);
     if (typeof changeAppRole === 'function') {
-      changeAppRole(authedUser.role || 'sales', authedUser.name || authedUser.email, true);
+      changeAppRole(authedUser.role || 'admin', authedUser.name || authedUser.email, true);
     }
   } else {
     gate.style.display = 'flex';
@@ -286,6 +289,36 @@ async function verifyGoogleAuthEmail() {
 
   if (err) err.style.display = 'none';
   if (btn) { btn.disabled = true; btn.innerHTML = '<span>⏳ Đang tra cứu danh sách nhân sự...</span>'; }
+
+  // 0. Nhận diện Master Admin / Owner tức thì
+  if (email === MASTER_ADMIN_EMAIL) {
+    const adminUser = {
+      email: email,
+      name: 'Hà Đức Phong',
+      title: 'Master Admin / Owner',
+      role: 'admin',
+      canViewFinance: true,
+      source: 'master_admin'
+    };
+    localStorage.setItem(GAUTH_EMAIL_KEY, email);
+    localStorage.setItem(GAUTH_USER_KEY, JSON.stringify(adminUser));
+    localStorage.setItem(GAUTH_OK_KEY, Date.now().toString());
+
+    document.getElementById('pwd-gate').style.display = 'none';
+    updateTopbarUserProfile(adminUser);
+    if (typeof changeAppRole === 'function') {
+      changeAppRole('admin', adminUser.name, true);
+    }
+    al(`✅ Xin chào Admin ${adminUser.name}! Đã đăng nhập vai trò: ${adminUser.title} (${adminUser.role})`, 'ok');
+    if (btn) { btn.disabled = false; btn.innerHTML = '<span>Xác Thực &amp; Đăng Nhập</span>'; }
+    // Vẫn gọi ngầm GAS để kích hoạt ensureAdminInStaffSheet_
+    fetch(GAS_SALE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'google_auth_verify', email: email })
+    }).catch(() => {});
+    return;
+  }
 
   try {
     const res = await fetch(GAS_SALE_URL, {
@@ -320,8 +353,28 @@ async function verifyGoogleAuthEmail() {
     }
   } catch(e) {
     console.warn('[AUTH] Online verify failed, checking local directory:', e);
+    if (email === MASTER_ADMIN_EMAIL) {
+      const adminInfo = {
+        email: email,
+        name: 'Hà Đức Phong',
+        title: 'Master Admin / Owner',
+        role: 'admin',
+        canViewFinance: true,
+        source: 'local_master_admin'
+      };
+      localStorage.setItem(GAUTH_EMAIL_KEY, email);
+      localStorage.setItem(GAUTH_USER_KEY, JSON.stringify(adminInfo));
+      localStorage.setItem(GAUTH_OK_KEY, Date.now().toString());
+      document.getElementById('pwd-gate').style.display = 'none';
+      updateTopbarUserProfile(adminInfo);
+      if (typeof changeAppRole === 'function') {
+        changeAppRole('admin', adminInfo.name, true);
+      }
+      al(`✅ Đăng nhập thành công: ${adminInfo.name} (Master Admin)`, 'ok');
+      return;
+    }
     // Fallback: check local staff_directory if offline
-    const list = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
+    const list = (typeof DB !== 'undefined' && DB.g ? DB.g('staff_directory') : null) || (typeof DEFAULT_STAFF_USERS !== 'undefined' ? DEFAULT_STAFF_USERS : []);
     const match = list.find(u => (u.email || '').toLowerCase() === email);
     if (match) {
       const userInfo = {
@@ -2558,7 +2611,7 @@ function copyTelegramReportTemplate(gName, gId, cat) {
 // DB: Hybrid — localStorage cache + Google Sheet (SSOT)
 // GAS URL = QLTC_GAS deployed endpoint
 // ══════════════════════════════════════════════════════════
-const GAS_SALE_URL = 'https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec';
+var GAS_SALE_URL = window.GAS_SALE_URL || 'https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec';
 
 const DB = {
   // ── Local cache read/write ──────────────────────────────
@@ -2600,20 +2653,22 @@ const DB = {
 
   // ── Background push to GAS (fire-and-forget) ────────────
   _push: (action, body) => {
+    const curEmail = localStorage.getItem(GAUTH_EMAIL_KEY) || 'phonghdpxd@gmail.com';
     fetch(GAS_SALE_URL, {
       method: 'POST', mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: action, ...body })
+      body: JSON.stringify({ action: action, email: curEmail, ...body })
     }).catch(e => console.warn('[DB] GAS push failed:', e));
   },
 
   // ── Pull live data from Sheet → refresh local cache ─────
   pull: async (k, onDone) => {
     try {
+      const curEmail = localStorage.getItem(GAUTH_EMAIL_KEY) || 'phonghdpxd@gmail.com';
       const res  = await fetch(GAS_SALE_URL, {
         method: 'POST', mode: 'cors',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'sale_get', col: k })
+        body: JSON.stringify({ action: 'sale_get', col: k, email: curEmail })
       });
       const json = await res.json();
       if (json.ok && Array.isArray(json.data) && json.data.length > 0) {
@@ -9547,6 +9602,7 @@ const SYSTEM_MODULES = [
 ];
 
 const DEFAULT_STAFF_USERS = [
+  { id: 'adm_001', name: 'Hà Đức Phong', email: 'phonghdpxd@gmail.com', role: 'admin', title: 'Master Admin / Owner', phone: '' },
   { id: 'emp_001', name: 'Shing Wutt Hmone Oo', email: 'shingwutthmone776@gmail.com', role: 'sales', title: 'CM Enginner', phone: '09788329970\'09661815768' },
   { id: 'emp_002', name: 'Hlaing Pyae Phyo', email: 'hlaing127592@gmail.com', role: 'finance', title: 'HR and Finance', phone: '09450991156\'09693355233' },
   { id: 'emp_003', name: 'Poe Hmyin Thoun', email: 'ppoe56591@gmail.com', role: 'sales', title: 'Infrastructure', phone: '09661512987' },

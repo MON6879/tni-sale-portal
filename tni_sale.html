@@ -130,38 +130,37 @@ tbody tr:hover{background:#fafcff}
 <body>
 <div id="alert"></div>
 
-<!-- ══ PASSWORD GATE ══ -->
+<!-- ══ GOOGLE AUTH GATE (WHITELIST VERIFICATION) ══ -->
 <div id="pwd-gate" style="display:none;position:fixed;inset:0;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#0f172a 100%);z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column">
-  <div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:48px 40px;max-width:420px;width:90%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.5)">
-    <div style="font-size:48px;margin-bottom:12px">⚡</div>
-    <div style="font-size:26px;font-weight:800;color:#fff;margin-bottom:4px">TNI Sale Portal</div>
-    <div style="font-size:13px;color:#94a3b8;margin-bottom:32px">Vui lòng nhập mật khẩu để tiếp tục</div>
-    <input id="pwd-input" type="password" placeholder="Nhập mật khẩu..." maxlength="50"
-      style="width:100%;padding:14px 18px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:#fff;font-size:15px;outline:none;box-sizing:border-box;margin-bottom:12px;letter-spacing:2px"
-      onkeydown="if(event.key==='Enter')checkPwd()"
-      oninput="document.getElementById('pwd-err').style.display='none'">
-    <div id="pwd-err" style="display:none;color:#f87171;font-size:12.5px;margin-bottom:10px">❌ Mật khẩu không đúng. Thử lại!</div>
-    <button onclick="checkPwd()" style="width:100%;padding:14px;border-radius:10px;border:none;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:16px">
-      🔓 Đăng Nhập
-    </button>
-    <div style="font-size:11px;color:#475569">TNI Operations System • Restricted Access</div>
-  </div>
-</div>
+  <div style="background:rgba(255,255,255,0.06);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.15);border-radius:24px;padding:48px 40px;max-width:440px;width:90%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.6)">
+    <div style="font-size:52px;margin-bottom:12px">⚡</div>
+    <div style="font-size:26px;font-weight:900;color:#fff;margin-bottom:4px;letter-spacing:0.5px">TNI Sale Portal</div>
+    <div style="font-size:13px;color:#94a3b8;margin-bottom:28px">Hệ Thống Quản Lý Bán Hàng &amp; Vận Hành Khép Kín</div>
+    
+    <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:16px;margin-bottom:20px;text-align:left">
+      <div style="font-size:12px;font-weight:700;color:#38bdf8;margin-bottom:4px">🔐 Đăng nhập bảo mật bằng Google Mail:</div>
+      <div style="font-size:11.5px;color:#cbd5e1;line-height:1.5">
+        Chỉ các tài khoản Google cá nhân có trong danh sách <b>Nhân Sự (Sheet 'staff')</b> hoặc <b>Danh sách Nhân Sự 'input HR'</b> mới được phép truy cập.
+      </div>
+    </div>
 
-<!-- ══ CHANGE PASSWORD MODAL ══ -->
-<div id="change-pwd-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99998;align-items:center;justify-content:center">
-  <div style="background:#fff;border-radius:16px;padding:36px 32px;max-width:400px;width:90%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.3)">
-    <div style="font-size:36px;margin-bottom:8px">🔑</div>
-    <div style="font-size:20px;font-weight:800;color:#1e293b;margin-bottom:6px">Đã đến lúc đổi mật khẩu!</div>
-    <div style="font-size:13px;color:#64748b;margin-bottom:24px">Mật khẩu của bạn đã dùng hơn <b id="pwd-days-used">30</b> ngày.<br>Vui lòng đổi mật khẩu mới để bảo mật.</div>
-    <input id="new-pwd-1" type="password" placeholder="Mật khẩu mới (tối thiểu 6 ký tự)" maxlength="50"
-      style="width:100%;padding:12px 14px;border-radius:8px;border:1.5px solid #e2e8f0;font-size:14px;margin-bottom:10px;box-sizing:border-box;outline:none">
-    <input id="new-pwd-2" type="password" placeholder="Nhập lại mật khẩu mới" maxlength="50"
-      style="width:100%;padding:12px 14px;border-radius:8px;border:1.5px solid #e2e8f0;font-size:14px;margin-bottom:10px;box-sizing:border-box;outline:none">
-    <div id="change-pwd-err" style="display:none;color:#ef4444;font-size:12px;margin-bottom:10px"></div>
-    <div style="display:flex;gap:10px">
-      <button onclick="skipChangePwd()" style="flex:1;padding:12px;border-radius:8px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#64748b;font-size:13px;cursor:pointer;font-weight:600">Để sau</button>
-      <button onclick="doChangePwd()" style="flex:2;padding:12px;border-radius:8px;border:none;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-size:14px;font-weight:700;cursor:pointer">✅ Đổi Mật Khẩu</button>
+    <div class="f" style="text-align:left;margin-bottom:12px">
+      <label style="font-size:12px;font-weight:700;color:#e2e8f0;margin-bottom:6px">📧 Nhập Email Google Của Bạn:</label>
+      <input id="google-auth-email" type="email" placeholder="VD: yourname@gmail.com" 
+        style="width:100%;padding:13px 16px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.1);color:#fff;font-size:14.5px;outline:none;box-sizing:border-box"
+        onkeydown="if(event.key==='Enter')verifyGoogleAuthEmail()"
+        oninput="document.getElementById('pwd-err').style.display='none'"/>
+    </div>
+
+    <div id="pwd-err" style="display:none;color:#f87171;font-size:12.5px;margin-bottom:12px;background:rgba(239,68,68,0.15);padding:10px;border-radius:8px;border:1px solid rgba(239,68,68,0.3);text-align:left"></div>
+
+    <button id="btn-google-login" onclick="verifyGoogleAuthEmail()" style="width:100%;padding:13px 16px;border-radius:10px;border:none;background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;font-size:14.5px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 14px rgba(37,99,235,0.4);transition:all 0.2s">
+      <svg style="width:18px;height:18px" viewBox="0 0 24 24"><path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#fff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+      <span>Xác Thực &amp; Đăng Nhập</span>
+    </button>
+
+    <div style="margin-top:20px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:11.5px;color:#94a3b8">
+      <span>🛡️ Bảo Mật Google Whitelist SSOT</span> &bull; <span>Restricted Internal Access</span>
     </div>
   </div>
 </div>
@@ -194,7 +193,10 @@ tbody tr:hover{background:#fafcff}
           <input id="staff-modal-title-input" placeholder="e.g. Field Engineer, Sales Rep..." style="width:100%;padding:9px 12px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#cbd5e1'"/>
         </div>
         <div class="f">
-          <label id="lbl-staff-modal-role" style="font-size:12px;font-weight:700;color:#334155;margin-bottom:4px">System Role (RBAC) <span style="color:#ef4444">*</span></label>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <label id="lbl-staff-modal-role" style="font-size:12px;font-weight:700;color:#334155">System Role (RBAC) <span style="color:#ef4444">*</span></label>
+            <button type="button" onclick="promptAddNewJobTitle()" style="background:none;border:none;color:#2563eb;font-size:11px;font-weight:700;cursor:pointer;padding:0">➕ Thêm chức danh</button>
+          </div>
           <select id="staff-modal-role" style="width:100%;padding:9px 10px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700;color:#1e3a8a;background:#fff;outline:none;box-sizing:border-box">
             <option value="admin">👑 BOD (Admin)</option>
             <option value="finance">💰 Finance / Chief Accountant</option>
@@ -208,8 +210,8 @@ tbody tr:hover{background:#fafcff}
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div class="f">
-          <label id="lbl-staff-modal-email" style="font-size:12px;font-weight:700;color:#334155;margin-bottom:4px">Email / Account</label>
-          <input id="staff-modal-email" type="email" placeholder="e.g. staff@tni.com" style="width:100%;padding:9px 12px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#cbd5e1'"/>
+          <label id="lbl-staff-modal-email" style="font-size:12px;font-weight:700;color:#334155;margin-bottom:4px">Email Google Mail <span style="color:#ef4444">*</span></label>
+          <input id="staff-modal-email" type="email" placeholder="e.g. staff@gmail.com" required style="width:100%;padding:9px 12px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#cbd5e1'"/>
         </div>
         <div class="f">
           <label id="lbl-staff-modal-phone" style="font-size:12px;font-weight:700;color:#334155;margin-bottom:4px">Phone Number</label>
@@ -231,143 +233,391 @@ tbody tr:hover{background:#fafcff}
 </div>
 
 <script>
-// ══ PASSWORD GATE SYSTEM ══
-const PWD_KEY      = 'tni_portal_pwd_hash';
-const PWD_SET_KEY  = 'tni_portal_pwd_set_at';
-const PWD_OK_KEY   = 'tni_portal_authed_at';
-const PWD_DAYS     = 30;    // Nhắc đổi sau 30 ngày
-const SESSION_MINS = 480;   // Session tự hết sau 8 tiếng (480 phút)
-const DEFAULT_PWD  = 'TNI@2026';
+// ══ GOOGLE AUTH GATE & SESSION SYSTEM (WHITELIST SSOT) ══
+window.GAS_SALE_URL = window.GAS_SALE_URL || 'https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec';
+var GAS_SALE_URL = window.GAS_SALE_URL;
+const MASTER_ADMIN_EMAIL = 'phonghdpxd@gmail.com';
+const GAUTH_EMAIL_KEY   = 'tni_google_auth_email';
+const GAUTH_USER_KEY    = 'tni_google_auth_user';
+const GAUTH_OK_KEY      = 'tni_google_authed_at';
+const SESSION_MINS      = 480; // 8 tiếng tự động gia hạn session
 
-async function sha256(str) {
-  if (typeof crypto !== 'undefined' && crypto.subtle && typeof crypto.subtle.digest === 'function') {
-    try {
-      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-      return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-    } catch (e) {}
-  }
-  function rotr(n, x) { return (x >>> n) | (x << (32 - n)); }
-  function ch(x, y, z) { return (x & y) ^ (~x & z); }
-  function maj(x, y, z) { return (x & y) ^ (x & z) ^ (y & z); }
-  function sigma0(x) { return rotr(2, x) ^ rotr(13, x) ^ rotr(22, x); }
-  function sigma1(x) { return rotr(6, x) ^ rotr(11, x) ^ rotr(25, x); }
-  function gamma0(x) { return rotr(7, x) ^ rotr(18, x) ^ (x >>> 3); }
-  function gamma1(x) { return rotr(17, x) ^ rotr(19, x) ^ (x >>> 10); }
-  const K = [
-    0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
-    0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
-    0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
-    0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
-    0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
-    0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
-    0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
-    0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
-  ];
-  let H = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
-  const utf8 = unescape(encodeURIComponent(str));
-  const words = [];
-  for (let i = 0; i < utf8.length; i++) {
-    words[i >> 2] |= (utf8.charCodeAt(i) & 0xff) << (24 - (i % 4) * 8);
-  }
-  const bitLen = utf8.length * 8;
-  words[bitLen >> 5] |= 0x80 << (24 - (bitLen % 32));
-  words[(((bitLen + 64) >> 9) << 4) + 15] = bitLen;
-  for (let i = 0; i < words.length; i += 16) {
-    const W = new Array(64);
-    for (let t = 0; t < 16; t++) W[t] = words[i + t] | 0;
-    for (let t = 16; t < 64; t++) W[t] = (gamma1(W[t - 2]) + W[t - 7] + gamma0(W[t - 15]) + W[t - 16]) | 0;
-    let [a, b, c, d, e, f, g, h] = H;
-    for (let t = 0; t < 64; t++) {
-      const T1 = (h + sigma1(e) + ch(e, f, g) + K[t] + W[t]) | 0;
-      const T2 = (sigma0(a) + maj(a, b, c)) | 0;
-      h = g; g = f; f = e; e = (d + T1) | 0;
-      d = c; c = b; b = a; a = (T1 + T2) | 0;
-    }
-    H = [(H[0] + a) | 0, (H[1] + b) | 0, (H[2] + c) | 0, (H[3] + d) | 0, (H[4] + e) | 0, (H[5] + f) | 0, (H[6] + g) | 0, (H[7] + h) | 0];
-  }
-  return H.map(x => (x >>> 0).toString(16).padStart(8, '0')).join('');
+function getAuthedGoogleUser() {
+  try {
+    const raw = localStorage.getItem(GAUTH_USER_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
 }
 
-async function initPwdGate() {
+function initPwdGate() {
   const gate = document.getElementById('pwd-gate');
-  // Khởi tạo hash mặc định nếu chưa có
-  if (!localStorage.getItem(PWD_KEY)) {
-    const h = await sha256(DEFAULT_PWD);
-    localStorage.setItem(PWD_KEY, h);
-    localStorage.setItem(PWD_SET_KEY, Date.now().toString());
-  }
+  if (!gate) return;
 
-  // Kiểm tra session còn hạn không
-  const authedAt = parseInt(localStorage.getItem(PWD_OK_KEY) || '0');
+  const authedAt = parseInt(localStorage.getItem(GAUTH_OK_KEY) || '0');
   const sessionOk = authedAt && (Date.now() - authedAt) < SESSION_MINS * 60 * 1000;
+  const authedUser = getAuthedGoogleUser();
 
-  if (sessionOk) {
+  if (sessionOk && authedUser && authedUser.email) {
     gate.style.display = 'none';
-    checkPwdExpiry();
+    updateTopbarUserProfile(authedUser);
+    if (typeof changeAppRole === 'function') {
+      changeAppRole(authedUser.role || 'admin', authedUser.name || authedUser.email, true);
+    }
   } else {
     gate.style.display = 'flex';
-    setTimeout(()=>document.getElementById('pwd-input').focus(), 100);
+    setTimeout(() => {
+      const inp = document.getElementById('google-auth-email');
+      if (inp) {
+        inp.value = localStorage.getItem(GAUTH_EMAIL_KEY) || '';
+        inp.focus();
+      }
+    }, 150);
   }
 }
 
-async function checkPwd() {
-  const input = document.getElementById('pwd-input').value;
-  if (!input) return;
-  const h = await sha256(input);
-  const stored = localStorage.getItem(PWD_KEY);
-  if (h === stored) {
-    localStorage.setItem(PWD_OK_KEY, Date.now().toString());
+async function verifyGoogleAuthEmail() {
+  const inp = document.getElementById('google-auth-email');
+  const err = document.getElementById('pwd-err');
+  const btn = document.getElementById('btn-google-login');
+  const email = (inp?.value || '').trim().toLowerCase();
+
+  if (!email || !email.includes('@')) {
+    if (err) { err.textContent = '⚠️ Vui lòng nhập địa chỉ Google Mail hợp lệ!'; err.style.display = 'block'; }
+    if (inp) inp.focus();
+    return;
+  }
+
+  if (err) err.style.display = 'none';
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span>⏳ Đang tra cứu danh sách nhân sự...</span>'; }
+
+  // 0. Nhận diện Master Admin / Owner tức thì
+  if (email === MASTER_ADMIN_EMAIL) {
+    const adminUser = {
+      email: email,
+      name: 'Hà Đức Phong',
+      title: 'Master Admin / Owner',
+      role: 'admin',
+      canViewFinance: true,
+      source: 'master_admin'
+    };
+    localStorage.setItem(GAUTH_EMAIL_KEY, email);
+    localStorage.setItem(GAUTH_USER_KEY, JSON.stringify(adminUser));
+    localStorage.setItem(GAUTH_OK_KEY, Date.now().toString());
+
     document.getElementById('pwd-gate').style.display = 'none';
-    checkPwdExpiry();
-  } else {
-    const err = document.getElementById('pwd-err');
-    err.style.display = 'block';
-    document.getElementById('pwd-input').value = '';
-    document.getElementById('pwd-input').focus();
+    updateTopbarUserProfile(adminUser);
+    if (typeof changeAppRole === 'function') {
+      changeAppRole('admin', adminUser.name, true);
+    }
+    al(`✅ Xin chào Admin ${adminUser.name}! Đã đăng nhập vai trò: ${adminUser.title} (${adminUser.role})`, 'ok');
+    if (btn) { btn.disabled = false; btn.innerHTML = '<span>Xác Thực &amp; Đăng Nhập</span>'; }
+    // Vẫn gọi ngầm GAS để kích hoạt ensureAdminInStaffSheet_
+    fetch(GAS_SALE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'google_auth_verify', email: email })
+    }).catch(() => {});
+    return;
+  }
+
+  try {
+    const res = await fetch(GAS_SALE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'google_auth_verify', email: email })
+    });
+    const data = await res.json();
+
+    if (data && data.ok && data.authorized) {
+      const userInfo = {
+        email: email,
+        name: data.name || email.split('@')[0],
+        title: data.title || 'Staff Member',
+        role: data.role || 'sales',
+        canViewFinance: !!data.canViewFinance,
+        source: data.source || 'whitelist'
+      };
+      localStorage.setItem(GAUTH_EMAIL_KEY, email);
+      localStorage.setItem(GAUTH_USER_KEY, JSON.stringify(userInfo));
+      localStorage.setItem(GAUTH_OK_KEY, Date.now().toString());
+
+      document.getElementById('pwd-gate').style.display = 'none';
+      updateTopbarUserProfile(userInfo);
+      if (typeof changeAppRole === 'function') {
+        changeAppRole(userInfo.role, userInfo.name, true);
+      }
+      al(`✅ Xin chào ${userInfo.name}! Đã đăng nhập vai trò: ${userInfo.title} (${userInfo.role})`, 'ok');
+    } else {
+      const errMsg = data?.error || `Tài khoản [${email}] không có trong danh sách được phép truy cập. Vui lòng liên hệ Quản trị viên để được thêm vào danh sách!`;
+      if (err) { err.textContent = '❌ ' + errMsg; err.style.display = 'block'; }
+    }
+  } catch(e) {
+    console.warn('[AUTH] Online verify failed, checking local directory:', e);
+    if (email === MASTER_ADMIN_EMAIL) {
+      const adminInfo = {
+        email: email,
+        name: 'Hà Đức Phong',
+        title: 'Master Admin / Owner',
+        role: 'admin',
+        canViewFinance: true,
+        source: 'local_master_admin'
+      };
+      localStorage.setItem(GAUTH_EMAIL_KEY, email);
+      localStorage.setItem(GAUTH_USER_KEY, JSON.stringify(adminInfo));
+      localStorage.setItem(GAUTH_OK_KEY, Date.now().toString());
+      document.getElementById('pwd-gate').style.display = 'none';
+      updateTopbarUserProfile(adminInfo);
+      if (typeof changeAppRole === 'function') {
+        changeAppRole('admin', adminInfo.name, true);
+      }
+      al(`✅ Đăng nhập thành công: ${adminInfo.name} (Master Admin)`, 'ok');
+      return;
+    }
+    // Fallback: check local staff_directory if offline
+    const list = (typeof DB !== 'undefined' && DB.g ? DB.g('staff_directory') : null) || (typeof DEFAULT_STAFF_USERS !== 'undefined' ? DEFAULT_STAFF_USERS : []);
+    const match = list.find(u => (u.email || '').toLowerCase() === email);
+    if (match) {
+      const userInfo = {
+        email: email,
+        name: match.name || email.split('@')[0],
+        title: match.title || 'Staff Member',
+        role: match.role || 'sales',
+        canViewFinance: (match.role === 'admin' || match.role === 'finance'),
+        source: 'local_cache'
+      };
+      localStorage.setItem(GAUTH_EMAIL_KEY, email);
+      localStorage.setItem(GAUTH_USER_KEY, JSON.stringify(userInfo));
+      localStorage.setItem(GAUTH_OK_KEY, Date.now().toString());
+      document.getElementById('pwd-gate').style.display = 'none';
+      updateTopbarUserProfile(userInfo);
+      if (typeof changeAppRole === 'function') {
+        changeAppRole(userInfo.role, userInfo.name, true);
+      }
+      al(`✅ Đăng nhập offline thành công: ${userInfo.name}`, 'ok');
+    } else {
+      if (err) { err.textContent = `❌ Không tìm thấy tài khoản [${email}] trong danh sách nhân sự! Vui lòng liên hệ Admin.`; err.style.display = 'block'; }
+    }
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<span>Xác Thực &amp; Đăng Nhập</span>'; }
   }
 }
 
-function checkPwdExpiry() {
-  const setAt = parseInt(localStorage.getItem(PWD_SET_KEY) || '0');
-  if (!setAt) return;
-  const days = Math.floor((Date.now() - setAt) / 86400000);
-  if (days >= PWD_DAYS) {
-    document.getElementById('pwd-days-used').textContent = days;
-    const m = document.getElementById('change-pwd-modal');
-    m.style.display = 'flex';
-  }
+function googleSignOut() {
+  if (!confirm('Xác nhận đăng xuất khỏi TNI Sale Portal?')) return;
+  localStorage.removeItem(GAUTH_OK_KEY);
+  localStorage.removeItem(GAUTH_USER_KEY);
+  location.reload();
 }
 
-function skipChangePwd() {
-  document.getElementById('change-pwd-modal').style.display = 'none';
-}
-
-async function doChangePwd() {
-  const p1 = document.getElementById('new-pwd-1').value;
-  const p2 = document.getElementById('new-pwd-2').value;
-  const err = document.getElementById('change-pwd-err');
-  if (p1.length < 6) { err.textContent='Mật khẩu tối thiểu 6 ký tự!'; err.style.display='block'; return; }
-  if (p1 !== p2)     { err.textContent='Hai mật khẩu không khớp!'; err.style.display='block'; return; }
-  const h = await sha256(p1);
-  localStorage.setItem(PWD_KEY, h);
-  localStorage.setItem(PWD_SET_KEY, Date.now().toString());
-  document.getElementById('change-pwd-modal').style.display = 'none';
-  document.getElementById('new-pwd-1').value = '';
-  document.getElementById('new-pwd-2').value = '';
-  if (typeof al === 'function') al('✅ Đã đổi mật khẩu thành công!', 'ok');
-  else alert('✅ Đổi mật khẩu thành công!');
-}
-
-// Hàm cho phép admin đổi mật khẩu từ menu
-window.openChangePwdModal = function() {
-  document.getElementById('new-pwd-1').value = '';
-  document.getElementById('new-pwd-2').value = '';
-  document.getElementById('change-pwd-err').style.display = 'none';
-  document.getElementById('change-pwd-modal').style.display = 'flex';
+function updateTopbarUserProfile(u) {
+  const p = document.getElementById('user-profile-badge');
+  if (!p || !u) return;
+  p.innerHTML = `
+    <div style="display:flex;align-items:center;gap:7px;background:#f1f5f9;border:1px solid #cbd5e1;padding:3px 10px;border-radius:20px;font-size:12px">
+      <span style="font-size:14px">👤</span>
+      <span style="font-weight:700;color:#1e293b">${u.name}</span>
+      <span class="bk ${u.role === 'admin' ? 'bk-rd' : u.role === 'finance' ? 'bk-bl' : 'bk-gn'}" style="font-size:10px">${u.role.toUpperCase()}</span>
+      <button onclick="googleSignOut()" title="Đăng xuất" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:12px;padding:0 2px;margin-left:2px">✕</button>
+    </div>
+  `;
 }
 
 // Khởi động gate khi DOM ready
 document.addEventListener('DOMContentLoaded', initPwdGate);
+
+// ═══════════════════════════════════════════════════
+// 💬 TELEGRAM GROUPS MODULE (9 CONNECTED GROUPS)
+// ═══════════════════════════════════════════════════
+let TG_GROUPS_DATA = [];
+let TG_ACTIVE_FILTER = 'all';
+
+async function rTelegram() {
+  const container = document.getElementById('tg-groups-list');
+  if (!container) return;
+  if (!TG_GROUPS_DATA || TG_GROUPS_DATA.length === 0) {
+    container.innerHTML = '<div style="padding:20px;text-align:center;color:#64748b">⏳ Đang đồng bộ 9 nhóm Telegram sống từ Google Sheets...</div>';
+    await fetchTelegramGroups(false);
+  } else {
+    renderTelegramGroupsUI();
+  }
+}
+
+async function fetchTelegramGroups(forceRefresh = false) {
+  const badge = document.getElementById('tg-count-badge');
+  if (badge) badge.textContent = 'Đang đồng bộ...';
+  try {
+    const res = await fetch(GAS_SALE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'telegram_groups_get' })
+    });
+    const data = await res.json();
+    if (data && data.ok && Array.isArray(data.groups) && data.groups.length > 0) {
+      TG_GROUPS_DATA = data.groups;
+      if (forceRefresh) al('✅ Đã đồng bộ 9 nhóm Telegram mới nhất từ Google Sheets!', 'ok');
+    }
+  } catch(e) {
+    console.warn('[TG_GROUPS] fetch error, using built-in SSOT list:', e);
+  }
+
+  if (!TG_GROUPS_DATA || TG_GROUPS_DATA.length === 0) {
+    TG_GROUPS_DATA = [
+      { name: "Team 1: Solution Sales", id: "-5308067993", note: "Solution Sales & Technical Team 1" },
+      { name: "Team 2: Solution Sales", id: "-5466847037", note: "Solution Sales & Technical Team 2" },
+      { name: "Team 3: Solution Sales", id: "-5274392194", note: "Solution Sales & Technical Team 3" },
+      { name: "Team 4: Solution Sales", id: "-5514096394", note: "Solution Sales & Technical Team 4" },
+      { name: "5 VCM - Blule Net - Dawei", id: "-5590266380", note: "Central Dawei Operations Hub" },
+      { name: "Team 1 - Construction", id: "-5405517986", note: "Construction & Infrastructure Team 1" },
+      { name: "Team 2 - Construction", id: "-5439533132", note: "Construction & Infrastructure Team 2" },
+      { name: "Team 3 - Construction", id: "-5139781298", note: "Construction & Infrastructure Team 3" },
+      { name: "Team 4 - Construction", id: "-5450062802", note: "Construction & Infrastructure Team 4" }
+    ];
+  }
+  renderTelegramGroupsUI();
+}
+
+function getTgGroupCategory(g) {
+  const n = (g.name || '').toLowerCase();
+  if (n.includes('dawei') || n.includes('blule') || g.id === '-5590266380') return 'central';
+  if (n.includes('construction') || n.includes('thi công')) return 'cons';
+  return 'sales';
+}
+
+function renderTelegramGroupsUI() {
+  const container = document.getElementById('tg-groups-list');
+  const countBadge = document.getElementById('tg-count-badge');
+  if (!container) return;
+
+  const searchVal = (document.getElementById('tg-search-inp')?.value || '').trim().toLowerCase();
+  const filtered = TG_GROUPS_DATA.filter(g => {
+    const cat = getTgGroupCategory(g);
+    if (TG_ACTIVE_FILTER !== 'all' && cat !== TG_ACTIVE_FILTER) return false;
+    if (searchVal) {
+      const matchName = (g.name || '').toLowerCase().includes(searchVal);
+      const matchId = (g.id || '').toLowerCase().includes(searchVal);
+      const matchNote = (g.note || '').toLowerCase().includes(searchVal);
+      return matchName || matchId || matchNote;
+    }
+    return true;
+  });
+
+  if (countBadge) countBadge.textContent = `Hiển thị: ${filtered.length} / ${TG_GROUPS_DATA.length} nhóm`;
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div style="padding:24px;text-align:center;color:#94a3b8">Không tìm thấy nhóm Telegram nào phù hợp.</div>';
+    return;
+  }
+
+  let html = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:14px">
+  `;
+
+  filtered.forEach(g => {
+    const cat = getTgGroupCategory(g);
+    let catBadge = '';
+    let borderClr = '#cbd5e1';
+    let icon = '🛒';
+    if (cat === 'central') {
+      catBadge = '<span class="bk bk-rd" style="font-size:10.5px">🏢 Central Hub</span>';
+      borderClr = '#f87171';
+      icon = '🏢';
+    } else if (cat === 'cons') {
+      catBadge = '<span class="bk bk-or" style="font-size:10.5px">🏗️ Construction</span>';
+      borderClr = '#fb923c';
+      icon = '🏗️';
+    } else {
+      catBadge = '<span class="bk bk-bl" style="font-size:10.5px">🛒 Solution Sales</span>';
+      borderClr = '#60a5fa';
+      icon = '🛒';
+    }
+
+    html += `
+      <div style="background:#ffffff;border:1.5px solid ${borderClr};border-radius:10px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,0.05);display:flex;flex-direction:column;justify-content:space-between">
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px">
+            <div style="font-size:14.5px;font-weight:700;color:#0f172a;line-height:1.3">
+              ${icon} ${escH_(g.name)}
+            </div>
+            ${catBadge}
+          </div>
+          <div style="background:#f1f5f9;padding:6px 10px;border-radius:6px;font-family:monospace;font-size:12px;color:#334155;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+            <span>ID: <b>${escH_(g.id)}</b></span>
+            <button class="btn b-out b-xs" onclick="copyTextToClipboard('${g.id}', 'Đã copy Chat ID: ${g.id}')" title="Copy Chat ID">📋 Copy ID</button>
+          </div>
+          <div style="font-size:12px;color:#64748b;margin-bottom:12px;line-height:1.4">
+            ${escH_(g.note || 'Nhóm tác nghiệp vận hành TNI')}
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;border-top:1px solid #f1f5f9;padding-top:10px">
+          <button class="btn b-gn b-xs" onclick="copyTelegramReportTemplate('${escH_(g.name)}', '${g.id}', '${cat}')" title="Copy mẫu tin nhắn báo cáo chuẩn cho nhóm này">
+            📋 Copy Mẫu Báo Cáo
+          </button>
+          <a href="https://drive.google.com/drive/folders/12V-UaZM1cSha8LihCjBHTOU_BEAk74p-" target="_blank" class="btn b-sm b-xs" style="background:#fef3c7;color:#92400e;text-decoration:none;display:inline-flex;align-items:center;gap:4px">
+            📁 Kho Ảnh
+          </a>
+        </div>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+function filterTgGroups(type, btn) {
+  TG_ACTIVE_FILTER = type;
+  document.querySelectorAll('.tg-fbtn').forEach(b => {
+    b.classList.remove('b-bl', 'active');
+    b.classList.add('b-out');
+  });
+  if (btn) {
+    btn.classList.remove('b-out');
+    btn.classList.add('b-bl', 'active');
+  }
+  renderTelegramGroupsUI();
+}
+
+function searchTgGroups(val) {
+  renderTelegramGroupsUI();
+}
+
+function copyTextToClipboard(text, successMsg) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      al(successMsg || 'Đã copy vào bộ nhớ tạm!', 'ok');
+    }).catch(() => {
+      fallbackCopyText(text, successMsg);
+    });
+  } else {
+    fallbackCopyText(text, successMsg);
+  }
+}
+
+function fallbackCopyText(text, successMsg) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand('copy');
+    al(successMsg || 'Đã copy vào bộ nhớ tạm!', 'ok');
+  } catch(e) {
+    prompt('Copy nội dung:', text);
+  }
+  document.body.removeChild(ta);
+}
+
+function copyTelegramReportTemplate(gName, gId, cat) {
+  const dStr = new Date().toLocaleDateString('vi-VN');
+  let tpl = '';
+  if (cat === 'cons') {
+    tpl = `📋 BÁO CÁO THI CÔNG HẠ TẦNG — ${gName.toUpperCase()}\n📅 Ngày: ${dStr}\n• Trạm: TNI0...\n• Hạng mục: Kéo cáp / Bảo dưỡng DG / Thay ắc quy\n• Tình trạng: Hoàn tất 100%\n• Hình ảnh: Đã tải lên Google Drive (Folder Photos)\n• Kỹ thuật phụ trách: ...`;
+  } else {
+    tpl = `🛒 BÁO CÁO BÁN HÀNG & PHÂN BỔ — ${gName.toUpperCase()}\n📅 Ngày: ${dStr}\n• Tên Khách Hàng / Điểm Bán: ...\n• Sản phẩm: ...\n• Mã Serial: SN...\n• Số lượng: ...\n• Giá bán: ... ₫\n• Ảnh nghiệm thu & Serial: Đã tải lên Web BI / Drive Photos\n• Nhân viên phụ trách: ...`;
+  }
+  copyTextToClipboard(tpl.replace(/\\n/g, '\n'), `Đã copy Mẫu Báo Cáo cho nhóm ${gName}!`);
+}
+
 </script>
 
 <!-- ══ SIDEBAR ══ -->
@@ -390,6 +640,7 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
     <a onclick="go('acceptance')" data-nav-a="acceptance">⚡ Handover &amp; Acceptance</a>
     <a onclick="go('daily')" data-nav-a="daily">🏪 Distribution</a>
     <a onclick="go('kygoi')" data-nav-a="kygoi">📋 Consignment</a>
+    <a onclick="go('telegram')" data-nav-a="telegram" style="color:#0284c7;font-weight:700">💬 <span data-lang="nav_tg_groups">Nhóm Telegram</span> <small style="background:#e0f2fe;color:#0284c7;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:auto;font-weight:700">9 Groups</small></a>
 
     <div class="lbl" data-nav-lbl="clients">Clients</div>
     <a onclick="go('crm')" data-nav-a="crm">👥 CRM &amp; Survey</a>
@@ -425,6 +676,8 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
     <!-- Cài đặt % Lợi Nhuận & Thuế Nộp Tổng Công Ty (Ẩn UI theo yêu cầu người dùng) -->
     <input id="cfg-cty-rate" type="hidden" value="17"/>
     <a href="https://docs.google.com/spreadsheets/d/1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA" target="_blank" class="btn b-bl b-sm" style="text-decoration:none">📊 Google Sheet</a>
+    <!-- 👤 USER PROFILE BADGE (GOOGLE AUTH) -->
+    <div id="user-profile-badge"></div>
     <button class="btn b-sm" id="lang-btn" onclick="toggleLang()" style="background:#e0f2fe;color:#0369a1;font-weight:600">🌐 EN / VN</button>
     <span id="clk" style="font-size:11.5px;color:#94a3b8"></span>
     <button class="btn b-out b-sm" onclick="exportCSV()">⬇ CSV</button>
@@ -635,8 +888,9 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
           <input id="b-dt" placeholder="09xx xxx xxx"/>
         </div>
         <div class="f">
-          <label data-lang="p_serial">Serial Number / Mã SP</label>
-          <input id="b-serial" placeholder="SN123456..."/>
+          <label data-lang="p_serial">Serial Number / Mã SP (Gõ vài số cuối để gợi ý)</label>
+          <input id="b-serial" placeholder="SN123456... hoặc gõ 2-4 số cuối" list="b-serial-list" oninput="updateSerialSuggestions('b-sp', this.value, 'b-serial-list')"/>
+          <datalist id="b-serial-list"></datalist>
         </div>
         <div class="f">
           <label data-lang="payment_method">Hình Thức Thanh Toán</label>
@@ -657,6 +911,22 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
         <div class="f" style="grid-column:1/-1">
           <label data-lang="notes">Ghi Chú Phiếu Xuất</label>
           <textarea id="b-gc" placeholder="Ghi chú người giao, địa chỉ giao hàng, dự án..."></textarea>
+        </div>
+
+        <!-- 📷 HÌNH ẢNH XÁC THỰC BÁN HÀNG & LINK FOLDER DRIVE (BẮT BUỘC) -->
+        <div class="f" style="grid-column:1/-1;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px">
+          <div style="font-size:12.5px;font-weight:700;color:#166534;margin-bottom:6px">📷 Hình Ảnh Xuất Bán Hàng &amp; Link Folder Drive (Bắt buộc):</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label style="font-size:11.5px;color:#166534;font-weight:600">Chọn ảnh serial / giao hàng:</label>
+              <input type="file" id="b-photo-input" accept="image/*" multiple onchange="handleBPhotoUpload(this)" style="font-size:12px;margin-top:4px"/>
+              <div id="b-photos-preview" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>
+            </div>
+            <div>
+              <label style="font-size:11.5px;color:#166534;font-weight:600">Link Google Drive lưu trữ hồ sơ KH:</label>
+              <input id="b-drive-link" placeholder="https://drive.google.com/drive/folders/..." style="width:100%;padding:6px 10px;border:1px solid #86efac;border-radius:6px;font-size:12px;margin-top:4px"/>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1510,11 +1780,27 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
           <div class="f"><label>Người Nhận</label><input id="kg-nn" placeholder="Họ tên"/></div>
           <div class="f"><label>Điện Thoại</label><input id="kg-dt" placeholder="0xxxxxxx"/></div>
           <div class="f"><label>Tên Sản Phẩm *</label><select id="kg-sp" onchange="autoPrice('kg-sp','kg-gia');calcKGProfit()"></select></div>
-          <div class="f"><label>Serial Number (Mã Serial)</label><input id="kg-serial" placeholder="VD: SN1200-001..."/></div>
+          <div class="f"><label>Serial Number (Gõ vài số cuối để gợi ý)</label><input id="kg-serial" placeholder="VD: SN1200-001... hoặc 2-4 số cuối" list="kg-serial-list" oninput="updateSerialSuggestions('kg-sp', this.value, 'kg-serial-list')"/><datalist id="kg-serial-list"></datalist></div>
           <div class="f"><label>Số Lượng *</label><input id="kg-sl" type="number" min="1" placeholder="0" oninput="calcKGProfit()"/></div>
           <div class="f"><label>Giá Bán Tại Điểm (₫)</label><input id="kg-gia" type="number" placeholder="0" oninput="calcKGProfit()"/></div>
           <div class="f"><label>Ngày Ký Gởi *</label><input id="kg-ngay" type="date"/></div>
           <div class="f"><label>Hạn Ký Gởi (ngày)</label><input id="kg-han" type="number" placeholder="30"/></div>
+
+          <!-- 📷 HÌNH ẢNH BIÊN BẢN KÝ GỞI & LINK DRIVE -->
+          <div class="f" style="grid-column:1/-1;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:12px;margin-top:6px">
+            <div style="font-size:12.5px;font-weight:700;color:#9a3412;margin-bottom:6px">📷 Hình Ảnh Phiếu Ký Gởi / Serial &amp; Link Folder Drive (Bắt buộc):</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div>
+                <label style="font-size:11.5px;color:#9a3412;font-weight:600">Chọn ảnh serial / điểm bán ký gởi:</label>
+                <input type="file" id="kg-photo-input" accept="image/*" multiple onchange="handleKGPhotoUpload(this)" style="font-size:12px;margin-top:4px"/>
+                <div id="kg-photos-preview" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>
+              </div>
+              <div>
+                <label style="font-size:11.5px;color:#9a3412;font-weight:600">Link Google Drive lưu trữ hồ sơ ký gởi:</label>
+                <input id="kg-drive-link" placeholder="https://drive.google.com/drive/folders/..." style="width:100%;padding:6px 10px;border:1px solid #fdba74;border-radius:6px;font-size:12px;margin-top:4px"/>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- 💡 LIVE CONSIGNMENT 17% & COMPANY PROFIT PREVIEW -->
@@ -1579,6 +1865,53 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
 
   <div class="panel"><div class="ph"><h3>📦 Danh Sách Ký Gởi</h3></div><div class="pb tw" id="t-kygoi"></div></div>
 </div>
+
+
+<!-- ══ NHÓM TELEGRAM (SALES & OPS GROUPS) ══ -->
+<div class="sec" id="s-telegram">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+    <div>
+      <h3 style="margin:0;font-size:18px;color:#0f172a;display:flex;align-items:center;gap:8px">
+        <span>💬 9 Nhóm Telegram Bán Hàng &amp; Vận Hành</span>
+        <span class="bk bk-bl" style="font-size:11px">9 Groups Connected</span>
+      </h3>
+      <div style="font-size:12.5px;color:#64748b;margin-top:3px">
+        Liên kết dữ liệu sống từ Google Sheets (tab <code>List Group Telegram</code>), tra cứu Chat ID, 1-click copy mẫu báo cáo &amp; truy cập Kho Ảnh Google Drive.
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn b-bl b-sm" onclick="fetchTelegramGroups(true)">🔄 Đồng Bộ Sống (Sync Live)</button>
+      <a href="https://drive.google.com/drive/folders/12V-UaZM1cSha8LihCjBHTOU_BEAk74p-" target="_blank" class="btn b-sm" style="background:#fef3c7;color:#92400e;border:1.5px solid #fde68a;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:6px" title="Xem tất cả hình ảnh trên Google Drive">
+        📁 Kho Ảnh Drive (All Photos)
+      </a>
+    </div>
+  </div>
+
+  <!-- Filter & Search Toolbar -->
+  <div style="display:flex;gap:10px;margin-bottom:14px;align-items:center;flex-wrap:wrap;background:#f8fafc;padding:10px 14px;border-radius:8px;border:1px solid #e2e8f0">
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn b-bl b-xs tg-fbtn active" onclick="filterTgGroups('all', this)">Tất Cả (9)</button>
+      <button class="btn b-out b-xs tg-fbtn" onclick="filterTgGroups('sales', this)">🛒 Solution Sales (4)</button>
+      <button class="btn b-out b-xs tg-fbtn" onclick="filterTgGroups('central', this)">🏢 Dawei Central (1)</button>
+      <button class="btn b-out b-xs tg-fbtn" onclick="filterTgGroups('cons', this)">🏗️ Construction (4)</button>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
+      <input id="tg-search-inp" oninput="searchTgGroups(this.value)" placeholder="🔍 Tìm tên nhóm / Chat ID..." style="font-size:12px;padding:4px 10px;border-radius:6px;border:1px solid #cbd5e1;width:220px"/>
+    </div>
+  </div>
+
+  <!-- Group Cards Container -->
+  <div class="panel">
+    <div class="ph" style="display:flex;justify-content:space-between;align-items:center">
+      <h3 style="margin:0;font-size:14px">📋 Danh Sách Nhóm Đã Liên Kết</h3>
+      <span id="tg-count-badge" style="font-size:12px;color:#64748b;font-weight:600">Đang tải...</span>
+    </div>
+    <div class="pb" id="tg-groups-list" style="padding:14px">
+      <!-- Dynamic list rendered here -->
+    </div>
+  </div>
+</div>
+
 
 <!-- ══ CRM ══ -->
 <div class="sec" id="s-crm">
@@ -2213,6 +2546,7 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
           <button id="rbac-btn-tpl-staff" class="btn b-xs" onclick="downloadStaffTemplate()" title="Tải file Excel mẫu để điền nhân sự" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-weight:700">📋 <span id="rbac-tpl-lbl">Template</span></button>
           <button id="rbac-btn-export-staff" class="btn b-xs" onclick="exportStaffToExcel()" title="Xuất danh sách nhân sự hiện tại ra Excel" style="background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;font-weight:700">⬇ <span id="rbac-export-lbl">Export</span></button>
           <label id="rbac-btn-import-staff" class="btn b-xs" title="Nhập danh sách nhân sự từ file Excel CSV" style="background:#f0fdf4;color:#166534;border:1px solid #86efac;font-weight:700;cursor:pointer">⬆ <span id="rbac-import-lbl">Import</span><input type="file" accept=".csv,.xlsx,.xls" onchange="importStaffFromFile(this)" style="display:none"/></label>
+          <button id="rbac-btn-add-partner" class="btn b-xs" onclick="promptAddPartnerGmail()" title="Thêm đối tác Gmail đưa lên đầu danh sách" style="background:#fef3c7;color:#92400e;border:1.5px solid #f59e0b;font-weight:800">➕ <span id="rbac-partner-lbl">Thêm Đối Tác Gmail (Top)</span></button>
           <button id="rbac-btn-add-staff" class="btn b-gn b-xs" onclick="openAddStaffModal()">+ <span id="rbac-add-lbl">Thêm Nhân Sự</span></button>
         </div>
       </div>
@@ -2277,7 +2611,7 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
 // DB: Hybrid — localStorage cache + Google Sheet (SSOT)
 // GAS URL = QLTC_GAS deployed endpoint
 // ══════════════════════════════════════════════════════════
-const GAS_SALE_URL = 'https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec';
+var GAS_SALE_URL = window.GAS_SALE_URL || 'https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec';
 
 const DB = {
   // ── Local cache read/write ──────────────────────────────
@@ -2319,20 +2653,22 @@ const DB = {
 
   // ── Background push to GAS (fire-and-forget) ────────────
   _push: (action, body) => {
+    const curEmail = localStorage.getItem(GAUTH_EMAIL_KEY) || 'phonghdpxd@gmail.com';
     fetch(GAS_SALE_URL, {
       method: 'POST', mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: action, ...body })
+      body: JSON.stringify({ action: action, email: curEmail, ...body })
     }).catch(e => console.warn('[DB] GAS push failed:', e));
   },
 
   // ── Pull live data from Sheet → refresh local cache ─────
   pull: async (k, onDone) => {
     try {
+      const curEmail = localStorage.getItem(GAUTH_EMAIL_KEY) || 'phonghdpxd@gmail.com';
       const res  = await fetch(GAS_SALE_URL, {
         method: 'POST', mode: 'cors',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'sale_get', col: k })
+        body: JSON.stringify({ action: 'sale_get', col: k, email: curEmail })
       });
       const json = await res.json();
       if (json.ok && Array.isArray(json.data) && json.data.length > 0) {
@@ -2388,7 +2724,7 @@ function v(id){return document.getElementById(id)?.value?.trim()||'';}
 // ═══════════════════════════════════════════════════
 const ptitles={dashboard:'📊 Dashboard',nhap:'📦 Goods Intake',tonkho:'🗄️ Inventory',tamung:'🧑‍💼 Stock Advance',
   banhang:'🛒 Sales Orders',baogiaups:'📄 Device Quotation',baogiasolar:'☀️ Solar Quotation',thucthi:'🚀 Team Thực Thi (Field Operations Hub)',acceptance:'⚡ Handover & Acceptance',
-  daily:'🏪 Distribution & Dealers',kygoi:'📋 Consignment',crm:'👥 CRM & Survey',
+  daily:'🏪 Distribution & Dealers',kygoi:'📋 Consignment',telegram:'💬 Nhóm Telegram (Sales Groups)',crm:'👥 CRM & Survey',
   quangcao:'📢 Ads Campaigns',leads:'🎯 Leads & Conversion',
   loinhuan:'💰 Financial & Cashflow',statement:'📑 VCM Payment Statement',baocao:'📈 Reports',
   mystats:'📊 My Performance',myquotes:'📄 My Quotations',mysurvey:'📝 My Surveys',rbac:'🛡️ Role Permissions (RBAC)','access-denied':'🔒 Access Restricted'};
@@ -2401,7 +2737,7 @@ const renders={
   thucthi:()=>{initFieldOps();},
   acceptance:()=>{rAcceptances();populateAccSources();calcAccFinancials();initAccCanvas();if(!document.getElementById('acc-mat-items')?.children.length)loadDefaultAccMaterials();},
   daily:()=>{rDL();popSP(['pp-sp']);popDL();},
-  kygoi:()=>{popSP(['kg-sp','tu-sp']);rKG();},
+  kygoi:()=>{popSP(['kg-sp','tu-sp']);rKG();},telegram:rTelegram,
   crm:()=>{rKH();rKS();rLK();},
   quangcao:()=>{rCampaigns();popCamps(['adr-camp']);rAdsResults();renderAdsSummary();},
   leads:()=>{popCamps(['ld-camp']);rLeads();popLeadSel();renderFunnel();renderLeadsCards();},
@@ -2464,17 +2800,62 @@ function getTK(){
   const nhap=DB.g('nhap'),ban=DB.g('ban'),pp=DB.g('pp'),kg=DB.g('kygoi'),tu=DB.g('tamung');
   const m={};
   nhap.forEach(r=>{
-    if(!m[r.id]) m[r.id]={id:r.id,ten:r.ten,model:r.model||'',dm:r.dm,giagoc:r.gg,giaban:r.gb,nhap:0,ban:0,pp:0,kg:0,tu:0,bh:r.bh};
+    if(!m[r.id]) m[r.id]={id:r.id,ten:r.ten,model:r.model||'',dm:r.dm,giagoc:r.gg,giaban:r.gb,nhap:0,ban:0,pp:0,kg:0,tu:0,bh:r.bh,allSerials:[]};
     m[r.id].nhap+=Number(r.sl);
+    if(r.serial){
+      const sArr = String(r.serial).split(/[,;\n\r]+/).map(s=>s.trim()).filter(Boolean);
+      m[r.id].allSerials.push(...sArr);
+    }
   });
-  ban.forEach(r=>{if(m[r.spId]) m[r.spId].ban+=Number(r.sl);});
+
+  const soldSerials = {};
+  ban.forEach(r=>{
+    if(m[r.spId]) m[r.spId].ban+=Number(r.sl);
+    if(r.serial){
+      String(r.serial).split(/[,;\n\r]+/).forEach(s=>{
+        const clean = s.trim().toLowerCase();
+        if(clean && clean !== '-') soldSerials[clean] = true;
+      });
+    }
+  });
+
   pp.forEach(r=>{if(m[r.spId]) m[r.spId].pp+=Number(r.sl);});
   kg.forEach(r=>{if(m[r.spId]&&r.ts!=='Đã thu hồi') m[r.spId].kg+=Number(r.sl);});
   tu.forEach(r=>{if(m[r.spId]&&r.ts==='Đang ứng') m[r.spId].tu+=Number(r.sl);});
+
   return Object.values(m).map(r=>{
     const tonTong = r.nhap - r.ban - r.pp;
     const khaDung = Math.max(0, tonTong - r.kg - r.tu);
-    return {...r, ton: tonTong, tonTong: tonTong, khaDung: khaDung, giaTriTon: tonTong * Number(r.giagoc||0)};
+    const availableSerials = (r.allSerials || []).filter(s => !soldSerials[s.toLowerCase()]);
+    return {...r, ton: tonTong, tonTong: tonTong, khaDung: khaDung, giaTriTon: tonTong * Number(r.giagoc||0), availableSerials};
+  });
+}
+
+/**
+ * 🔍 GỢI Ý MÃ SERIAL THEO VÀI SỐ CUỐI (SERIAL AUTOCOMPLETE HELPER)
+ */
+function updateSerialSuggestions(spSelId, query, datalistId) {
+  const dl = document.getElementById(datalistId);
+  if (!dl) return;
+  const spId = document.getElementById(spSelId)?.value;
+  const q = String(query || '').trim().toLowerCase();
+  dl.innerHTML = '';
+  if (!spId) return;
+
+  const sp = getTK().find(r => r.id == spId);
+  const serials = sp?.availableSerials || [];
+
+  const matched = serials.filter(s => {
+    if (!q) return true;
+    const sLower = s.toLowerCase();
+    return sLower.includes(q) || sLower.endsWith(q);
+  }).slice(0, 15);
+
+  matched.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.label = `[Tồn kho: ${sp.ten}] SN: ${s}`;
+    dl.appendChild(opt);
   });
 }
 
@@ -3186,6 +3567,13 @@ function addBan(){
   const tt = v('b-tt') || 'cash';
   const deposit = tt === 'credit' ? (Number(v('b-deposit')) || 0) : (tt === 'consignment' ? 0 : totalAmount);
   const debt = Math.max(0, totalAmount - deposit);
+  const driveUrl = v('b-drive-link') || '';
+
+  // Mandatory photo or Drive link check
+  if (bUploadedPhotos.length === 0 && !driveUrl) {
+    al(isVi ? '⚠️ Vui lòng tải ít nhất 1 ảnh xác thực hoặc nhập Link Google Drive folder lưu trữ hồ sơ!' : '⚠️ Please upload at least 1 proof photo or enter Google Drive folder link!', 'er');
+    return;
+  }
 
   const orderItem = {
     spId: +spId,
@@ -3204,6 +3592,8 @@ function addBan(){
     dt: v('b-dt') || '-',
     tt,
     hoPaid: false,
+    photos: [...bUploadedPhotos],
+    driveUrl: driveUrl,
     ngay: v('b-ngay') || td(),
     gc: v('b-gc') || '',
     source: 'web'
@@ -3211,12 +3601,42 @@ function addBan(){
 
   DB.add('ban', orderItem);
 
-  al(isVi ? '✅ Đã xác nhận xuất kho & lưu đơn!' : '✅ Stock dispatch & order confirmed!');
+  al(isVi ? '✅ Đã xác nhận xuất kho & lưu đơn kèm hồ sơ ảnh!' : '✅ Stock dispatch & order confirmed with photo proof!');
   clrForm('b-');
+  clearBPhotos();
   onDispatchTargetChange();
   rBan();
   popSP(['b-sp','pp-sp','kg-sp','tu-sp']);
   renderLN();
+}
+
+let bUploadedPhotos = [];
+function handleBPhotoUpload(input) {
+  if (!input || !input.files) return;
+  const files = Array.from(input.files);
+  const container = document.getElementById('b-photos-preview');
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const dataUrl = e.target.result;
+      bUploadedPhotos.push(dataUrl);
+      if (container) {
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'position:relative;width:55px;height:55px;border-radius:6px;overflow:hidden;border:1px solid #86efac';
+        wrap.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover"/>
+          <button style="position:absolute;top:1px;right:1px;background:#ef4444;color:#fff;border:none;border-radius:99px;width:15px;height:15px;font-size:9px;cursor:pointer" onclick="this.parentElement.remove();bUploadedPhotos=bUploadedPhotos.filter(u=>u!=='${dataUrl}')">&times;</button>`;
+        container.appendChild(wrap);
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function clearBPhotos() {
+  bUploadedPhotos = [];
+  const c = document.getElementById('b-photos-preview');
+  if (c) c.innerHTML = '';
+  const inp = document.getElementById('b-photo-input');
+  if (inp) inp.value = '';
 }
 
 function printDispatchNote(){
@@ -4793,9 +5213,39 @@ function calcKGProfit(){
   if (lnEl) lnEl.innerHTML = `<span style="color:${tongLNCty >= 0 ? 'var(--gn)' : 'var(--rd)'}">${fn(tongLNCty)} ₫</span> <small style="font-weight:normal;color:#64748b">(${fn(lnCtyDonVi)}₫/SP ~ ${pctCty}%)</small>`;
 }
 
+let kgUploadedPhotos = [];
+function handleKGPhotoUpload(input) {
+  if (!input || !input.files) return;
+  const files = Array.from(input.files);
+  const container = document.getElementById('kg-photos-preview');
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const dataUrl = e.target.result;
+      kgUploadedPhotos.push(dataUrl);
+      if (container) {
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'position:relative;width:55px;height:55px;border-radius:6px;overflow:hidden;border:1px solid #fdba74';
+        wrap.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover"/>
+          <button style="position:absolute;top:1px;right:1px;background:#ef4444;color:#fff;border:none;border-radius:99px;width:15px;height:15px;font-size:9px;cursor:pointer" onclick="this.parentElement.remove();kgUploadedPhotos=kgUploadedPhotos.filter(u=>u!=='${dataUrl}')">&times;</button>`;
+        container.appendChild(wrap);
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function clearKGPhotos() {
+  kgUploadedPhotos = [];
+  const c = document.getElementById('kg-photos-preview');
+  if (c) c.innerHTML = '';
+  const inp = document.getElementById('kg-photo-input');
+  if (inp) inp.value = '';
+}
+
 function addKG(){
+  const isVi = currentLang === 'vi';
   const db=v('kg-db'),spId=v('kg-sp'),sl=v('kg-sl');
-  if(!db||!spId||!sl){al('Điền đủ điểm bán, SP, SL','er');return;}
+  if(!db||!spId||!sl){al(isVi ? 'Điền đủ điểm bán, SP, SL' : 'Please enter POS name, product, quantity','er');return;}
   const sp=DB.g('nhap').find(r=>r.id==spId);
   const giaBan = Number(v('kg-gia')) || Number(sp?.gb || 0);
   const giaGoc = Number(sp?.gg || 0);
@@ -4803,6 +5253,13 @@ function addKG(){
   const lnCty = (giaBan - giaGoc) - hh17;
   const serial = v('kg-serial') || sp?.serial || '-';
   const ngayKG = v('kg-ngay') || td();
+  const driveUrl = v('kg-drive-link') || '';
+
+  // Bắt buộc ảnh xác thực hoặc link Google Drive folder
+  if (kgUploadedPhotos.length === 0 && !driveUrl) {
+    al(isVi ? '⚠️ Vui lòng tải ít nhất 1 ảnh xác thực hoặc nhập Link Google Drive folder lưu trữ hồ sơ ký gởi!' : '⚠️ Please upload at least 1 photo or enter Google Drive folder link!', 'er');
+    return;
+  }
 
   DB.add('kygoi',{
     db,
@@ -4822,9 +5279,15 @@ function addKG(){
     ngay: ngayKG,
     ngay_kg: ngayKG,
     han:v('kg-han')||30,
+    photos: [...kgUploadedPhotos],
+    driveUrl: driveUrl,
     ts:'Đang gởi'
   });
-  al('✅ Đã tạo phiếu ký gởi!'); clrForm('kg-'); calcKGProfit(); rKG();
+  al(isVi ? '✅ Đã tạo phiếu ký gởi!' : '✅ Consignment created successfully!'); 
+  clrForm('kg-'); 
+  clearKGPhotos();
+  calcKGProfit(); 
+  rKG();
 }
 
 function rKG(){
@@ -6517,10 +6980,18 @@ function resetAccForm() {
 }
 
 function saveAcceptanceRecord(andPrint) {
+  const isVi = currentLang === 'vi';
   const code = (v('acc-code') || '').trim();
   const kh = (v('acc-kh') || '').trim();
   if (!code || !kh) {
-    al('Vui lòng nhập Mã Dự Án và Tên Khách Hàng!', 'er');
+    al(isVi ? 'Vui lòng nhập Mã Dự Án và Tên Khách Hàng!' : 'Please enter Project Code and Customer Name!', 'er');
+    return;
+  }
+
+  const driveUrl = (v('acc-drive-link') || '').trim();
+  // Bắt buộc ảnh hiện trường hoặc link folder Google Drive lưu trữ hồ sơ
+  if (accUploadedPhotos.length === 0 && !driveUrl) {
+    al(isVi ? '⚠️ Vui lòng tải ít nhất 1 ảnh hiện trường nghiệm thu hoặc nhập Link Google Drive folder lưu trữ hồ sơ!' : '⚠️ Please upload at least 1 acceptance photo or enter Google Drive folder link!', 'er');
     return;
   }
 
@@ -9131,6 +9602,7 @@ const SYSTEM_MODULES = [
 ];
 
 const DEFAULT_STAFF_USERS = [
+  { id: 'adm_001', name: 'Hà Đức Phong', email: 'phonghdpxd@gmail.com', role: 'admin', title: 'Master Admin / Owner', phone: '' },
   { id: 'emp_001', name: 'Shing Wutt Hmone Oo', email: 'shingwutthmone776@gmail.com', role: 'sales', title: 'CM Enginner', phone: '09788329970\'09661815768' },
   { id: 'emp_002', name: 'Hlaing Pyae Phyo', email: 'hlaing127592@gmail.com', role: 'finance', title: 'HR and Finance', phone: '09450991156\'09693355233' },
   { id: 'emp_003', name: 'Poe Hmyin Thoun', email: 'ppoe56591@gmail.com', role: 'sales', title: 'Infrastructure', phone: '09661512987' },
@@ -9292,34 +9764,85 @@ const ROLE_NAMES_BILINGUAL = {
   warehouse: { vi: 'Thủ Kho / Vận Hành', en: 'Warehouse & Operations', shortVi: 'Thủ Kho', shortEn: 'Warehouse' },
 };
 
+function getCustomRoles() {
+  try {
+    const raw = localStorage.getItem('tni_custom_roles');
+    return raw ? JSON.parse(raw) : [];
+  } catch(e) { return []; }
+}
+
+function promptAddNewJobTitle() {
+  const isVi = currentLang === 'vi';
+  const roleName = prompt(isVi ? 'Nhập tên chức danh / vai trò mới (Ví dụ: Giám Sát Thi Công, Đại Diện Đối Tác, Vận Hành Trạm...):' : 'Enter new job title / role name:');
+  if (!roleName || !roleName.trim()) return;
+
+  const cleanName = roleName.trim();
+  const slug = 'role_' + cleanName.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').slice(0, 20);
+  
+  // Lưu vào danh sách custom roles
+  const customList = getCustomRoles();
+  if (customList.some(r => r.id === slug || r.name.toLowerCase() === cleanName.toLowerCase())) {
+    al(isVi ? '⚠️ Chức danh này đã tồn tại!' : '⚠️ This role already exists!', 'er');
+    return;
+  }
+
+  const newRoleObj = {
+    id: slug,
+    name: cleanName,
+    shortName: cleanName,
+    icon: '🏷️',
+    color: '#6366f1',
+    badgeClass: 'b-bl',
+    desc: 'Chức danh tùy chỉnh được thêm bởi Quản Trị Viên',
+    canViewFinance: false,
+    canViewCostPrice: false,
+    allowedTabs: ['dashboard', 'banhang', 'baogiaups', 'baogiasolar', 'mystats', 'myquotes']
+  };
+
+  customList.push(newRoleObj);
+  localStorage.setItem('tni_custom_roles', JSON.stringify(customList));
+
+  // Cập nhật ROLES runtime
+  ROLES[slug] = newRoleObj;
+  ROLE_NAMES_BILINGUAL[slug] = { vi: cleanName, en: cleanName, shortVi: cleanName, shortEn: cleanName };
+
+  // Thêm vào modal select nếu có
+  const modalRole = document.getElementById('staff-modal-role');
+  if (modalRole) {
+    const opt = document.createElement('option');
+    opt.value = slug;
+    opt.textContent = `🏷️ ${cleanName}`;
+    modalRole.appendChild(opt);
+    modalRole.value = slug;
+  }
+
+  // Tự động mở hiển thị cột mới
+  let curVis = getVisibleRoleKeys();
+  if (!curVis.includes(slug)) {
+    curVis.push(slug);
+    localStorage.setItem('tni_rbac_visible_cols', JSON.stringify(curVis));
+  }
+
+  renderRBACColToggles();
+  renderRBACMatrix();
+  al(isVi ? `✅ Đã thêm chức danh mới: "${cleanName}"` : `✅ Added new role: "${cleanName}"`, 'ok');
+}
+
 function getVisibleRoleKeys() {
   const saved = localStorage.getItem('tni_rbac_visible_cols');
+  const baseRoles = ['admin', 'finance', 'sales', 'tech', 'warehouse', 'dealer'];
+  const custom = getCustomRoles().map(r => r.id);
+  const allAvailable = [...baseRoles, ...custom];
+  
   if (saved) {
     try {
       const arr = JSON.parse(saved);
-      if (Array.isArray(arr) && arr.length > 0) return arr;
+      if (Array.isArray(arr) && arr.length > 0) {
+        return arr.filter(k => allAvailable.includes(k));
+      }
     } catch(e) {}
   }
-  return ['admin', 'finance', 'sales', 'tech', 'warehouse', 'dealer'];
-}
-
-function toggleRoleColumnVisibility(rk) {
-  let cur = getVisibleRoleKeys();
-  const isVi = currentLang === 'vi';
-  if (cur.includes(rk)) {
-    if (cur.length <= 1) {
-      al(isVi ? '⚠️ Phải giữ lại ít nhất 1 cột vai trò!' : '⚠️ Must keep at least 1 role column visible!', 'er');
-      return;
-    }
-    cur = cur.filter(k => k !== rk);
-    al((isVi ? '👁️ Đã ẩn cột: ' : '👁️ Hidden column: ') + (ROLE_NAMES_BILINGUAL[rk]?.[isVi?'shortVi':'shortEn'] || rk), 'ok');
-  } else {
-    cur.push(rk);
-    al((isVi ? '👁️ Đã hiện cột: ' : '👁️ Shown column: ') + (ROLE_NAMES_BILINGUAL[rk]?.[isVi?'shortVi':'shortEn'] || rk), 'ok');
-  }
-  localStorage.setItem('tni_rbac_visible_cols', JSON.stringify(cur));
-  renderRBACMatrix();
-  renderRBACColToggles();
+  return allAvailable;
 }
 
 function renderRBACColToggles() {
@@ -9327,7 +9850,18 @@ function renderRBACColToggles() {
   if (!bar) return;
   const isVi = currentLang === 'vi';
   const visible = getVisibleRoleKeys();
-  const allRoles = ['admin', 'finance', 'sales', 'tech', 'warehouse', 'dealer'];
+  const baseRoles = ['admin', 'finance', 'sales', 'tech', 'warehouse', 'dealer'];
+  const custom = getCustomRoles();
+  
+  // Merge custom roles into runtime ROLES and ROLE_NAMES_BILINGUAL
+  custom.forEach(cr => {
+    if (!ROLES[cr.id]) ROLES[cr.id] = cr;
+    if (!ROLE_NAMES_BILINGUAL[cr.id]) {
+      ROLE_NAMES_BILINGUAL[cr.id] = { vi: cr.name, en: cr.name, shortVi: cr.shortName || cr.name, shortEn: cr.shortName || cr.name };
+    }
+  });
+
+  const allRoles = [...baseRoles, ...custom.map(c => c.id)];
 
   let html = `<div style="font-weight:700;color:#1e293b;display:flex;align-items:center;gap:6px;margin-right:4px">
     <span>👁️</span> <span>${isVi ? 'Bật/Tắt Cột Hiển Thị:' : 'Toggle Visible Columns:'}</span>
@@ -9336,7 +9870,7 @@ function renderRBACColToggles() {
   allRoles.forEach(rk => {
     const isVis = visible.includes(rk);
     const rMeta = ROLES[rk] || ROLES.admin;
-    const rName = ROLE_NAMES_BILINGUAL[rk]?.[isVi ? 'shortVi' : 'shortEn'] || rMeta.shortName;
+    const rName = ROLE_NAMES_BILINGUAL[rk]?.[isVi ? 'shortVi' : 'shortEn'] || rMeta.shortName || rk;
     const isFinance = rk === 'finance';
     
     if (isVis) {
@@ -9353,6 +9887,13 @@ function renderRBACColToggles() {
       </button>`;
     }
   });
+
+  // Nút Thêm Chức Danh Mới (+)
+  html += `<button type="button" onclick="promptAddNewJobTitle()" 
+    title="${isVi ? 'Thêm chức danh / vị trí công tác mới' : 'Add custom job title / role'}"
+    style="padding:4px 10px;border-radius:20px;font-size:11.5px;font-weight:800;border:1.5px solid #10b981;background:#ecfdf5;color:#047857;cursor:pointer;display:inline-flex;align-items:center;gap:4px">
+    <span>➕</span> <span>${isVi ? 'Thêm Chức Danh' : 'Add Title'}</span>
+  </button>`;
 
   html += `<button type="button" onclick="localStorage.removeItem('tni_rbac_visible_cols');renderRBACMatrix();renderRBACColToggles();al('${isVi ? 'Đã hiện đủ tất cả các cột' : 'All columns restored'}','ok')" 
     style="margin-left:auto;padding:3px 8px;border-radius:6px;font-size:11px;border:1px solid #cbd5e1;background:#fff;color:#475569;cursor:pointer">
@@ -9996,11 +10537,72 @@ function saveStaffUserModal() {
         setTimeout(() => { lastRow.style.background = ''; }, 2000);
       }
     }
-  }, 100);
+// ➕ Thêm Đối Tác Gmail đưa lên đầu danh sách (Top row 2)
+function promptAddPartnerGmail() {
+  const isVi = currentLang === 'vi';
+  const email = prompt(isVi ? 'Nhập địa chỉ Google Mail của đối tác (bắt buộc):' : 'Enter Partner Google Mail address (required):');
+  if (!email || !email.trim()) return;
+  const cleanEmail = email.trim().toLowerCase();
+
+  const name = prompt(isVi ? 'Nhập Tên Đối Tác / Cửa Hàng / Đại Lý:' : 'Enter Partner Name / Store / Dealer:');
+  if (!name || !name.trim()) return;
+  const cleanName = name.trim();
+
+  const phone = prompt(isVi ? 'Nhập Số Điện Thoại đối tác (tùy chọn):' : 'Enter Partner Phone number (optional):') || '';
+  const note = prompt(isVi ? 'Ghi chú / Khu vực (tùy chọn):' : 'Notes / Region (optional):') || '';
+
+  const partnerId = 'PARTNER_' + String(Date.now()).slice(-6);
+  const newPartner = {
+    id: partnerId,
+    name: cleanName,
+    title: isVi ? 'Đối Tác Ký Gởi / Bán Hàng' : 'Consignment Partner',
+    role: 'sales',
+    email: cleanEmail,
+    phone: phone.trim(),
+    note: (note.trim() ? note.trim() + ' | ' : '') + 'Đối Tác (Top List)',
+    status: 'active'
+  };
+
+  let list = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
+  // Đưa đối tác lên vị trí đầu tiên (Index 0 = Hàng 2 trong Google Sheet)
+  list = list.filter(u => (u.email || '').toLowerCase() !== cleanEmail);
+  list.unshift(newPartner);
+
+  DB.s('staff_directory', list);
+  renderStaffUsersTable();
+  populateStaffUserSelect();
+  al(isVi ? `Đang đưa đối tác "${cleanName}" lên đầu danh sách Google Sheet...` : `Adding partner "${cleanName}" to top of Google Sheet...`, 'ok');
+
+  // Gọi API backend staff_partner_add
+  const payload = {
+    action: 'staff_partner_add',
+    name: cleanName,
+    email: cleanEmail,
+    phone: phone.trim(),
+    title: newPartner.title,
+    note: newPartner.note
+  };
+
+  fetch(SALE_GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(res => {
+    if (res && res.ok) {
+      al(isVi ? `✅ Đã đưa đối tác "${cleanName}" lên đầu danh sách thành công!` : `✅ Partner "${cleanName}" added to top of list!`, 'ok');
+      syncStaffDirectoryFromSheet();
+    } else {
+      al(isVi ? `⚠️ Đã lưu trên máy, đồng bộ Sheet: ${res?.error || 'OK'}` : `⚠️ Saved locally, Sheet sync: ${res?.error || 'OK'}`, 'ok');
+    }
+  })
+  .catch(err => {
+    al(isVi ? `⚠️ Đã lưu trên máy (kết nối Sheet nền)` : `⚠️ Saved locally (background Sheet sync)`, 'ok');
+  });
 }
 
 
-// ── Staff Template / Export / Import (Excel) ──────────────────
 function _staffToExcelBlob(rows, filename) {
   // Build Excel-compatible HTML table (no lib needed — opens in Excel)
   const ROLE_LIST = Object.keys(ROLES).join(' / ');
