@@ -237,9 +237,12 @@ tbody tr:hover{background:#fafcff}
 window.GAS_SALE_URL = window.GAS_SALE_URL || 'https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec';
 var GAS_SALE_URL = window.GAS_SALE_URL;
 const MASTER_ADMIN_EMAIL = 'phonghdpxd@gmail.com';
-const GAUTH_EMAIL_KEY   = 'tni_google_auth_email';
-const GAUTH_USER_KEY    = 'tni_google_auth_user';
-const GAUTH_OK_KEY      = 'tni_google_authed_at';
+window.GAUTH_EMAIL_KEY   = 'tni_google_auth_email';
+window.GAUTH_USER_KEY    = 'tni_google_auth_user';
+window.GAUTH_OK_KEY      = 'tni_google_authed_at';
+var GAUTH_EMAIL_KEY      = window.GAUTH_EMAIL_KEY;
+var GAUTH_USER_KEY       = window.GAUTH_USER_KEY;
+var GAUTH_OK_KEY         = window.GAUTH_OK_KEY;
 const SESSION_MINS      = 480; // 8 tiếng tự động gia hạn session
 
 function getAuthedGoogleUser() {
@@ -2612,6 +2615,9 @@ function copyTelegramReportTemplate(gName, gId, cat) {
 // GAS URL = QLTC_GAS deployed endpoint
 // ══════════════════════════════════════════════════════════
 var GAS_SALE_URL = window.GAS_SALE_URL || 'https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec';
+var GAUTH_EMAIL_KEY = window.GAUTH_EMAIL_KEY || 'tni_google_auth_email';
+var GAUTH_USER_KEY  = window.GAUTH_USER_KEY  || 'tni_google_auth_user';
+var GAUTH_OK_KEY    = window.GAUTH_OK_KEY    || 'tni_google_authed_at';
 
 const DB = {
   // ── Local cache read/write ──────────────────────────────
@@ -2737,7 +2743,7 @@ const renders={
   thucthi:()=>{initFieldOps();},
   acceptance:()=>{rAcceptances();populateAccSources();calcAccFinancials();initAccCanvas();if(!document.getElementById('acc-mat-items')?.children.length)loadDefaultAccMaterials();},
   daily:()=>{rDL();popSP(['pp-sp']);popDL();},
-  kygoi:()=>{popSP(['kg-sp','tu-sp']);rKG();},telegram:rTelegram,
+  kygoi:()=>{popSP(['kg-sp','tu-sp']);rKG();},telegram:()=>{if(typeof rTelegram==='function')rTelegram();else if(typeof window.rTelegram==='function')window.rTelegram();},
   crm:()=>{rKH();rKS();rLK();},
   quangcao:()=>{rCampaigns();popCamps(['adr-camp']);rAdsResults();renderAdsSummary();},
   leads:()=>{popCamps(['ld-camp']);rLeads();popLeadSel();renderFunnel();renderLeadsCards();},
@@ -3813,7 +3819,9 @@ function calcQ(cid){
   const tid = cid.replace('items', 'total');
   const el = document.getElementById(tid);
   if (el) {
-    el.querySelector('.big').textContent = fn(total) + ' ₫';
+    const big = el.querySelector('.big');
+    if (big) big.textContent = fn(total) + ' ₫';
+    else el.textContent = fn(total) + ' ₫';
     const note = el.querySelector('#qs-note');
     if (note && total > 0) {
       note.textContent = `≈ ${fn(Math.round(total / 1000000))} triệu | Thu hồi vốn ~${Math.round(60 / ((total / 1000000) * 0.15))} năm (giả định)`;
@@ -10537,6 +10545,9 @@ function saveStaffUserModal() {
         setTimeout(() => { lastRow.style.background = ''; }, 2000);
       }
     }
+  }, 100);
+}
+
 // ➕ Thêm Đối Tác Gmail đưa lên đầu danh sách (Top row 2)
 function promptAddPartnerGmail() {
   const isVi = currentLang === 'vi';
