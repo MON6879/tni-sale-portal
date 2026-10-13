@@ -23,6 +23,21 @@
 > 7. **🎯 Scope Guard Bộ Lọc Province & Re-assert Desktop 2 (PM 2026-10-11)**: Trước khi đẩy lên Sheet, script BẮT BUỘC kiểm tra mọi dòng thuộc Tanintharyi Region (mất bộ lọc Province sau khi người dùng thao tác tay → xuất ~23.800 dòng toàn vùng làm bẩn Sheet); có dòng lạ → DỪNG, không đẩy. Trước mỗi click phải xác nhận đang ở Desktop 2 (người dùng chuyển desktop giữa chừng làm click trúng cửa sổ khác / lớp phủ Task View) → chuyển lại + chờ, sai thì DỪNG. KHÔNG kill tiến trình đang gửi GAS giữa chừng (request đã tới GAS vẫn ghi đè Sheet).
 
 > 8. **📤 Gửi Sheet Đúng 1 Lần, Cấm Gửi Lại Chồng GAS & Cấm Tự Mở Chrome (Single-POST & Audit-Poll Policy — PM 2026-10-11)**: `handleNocproSyncSheet_` ghi cả Sheet mất ~80-150s (có thể timeout); mỗi lần gửi lại tạo thêm 1 tiến trình GAS chạy chồng làm Sheet ghi dở/lẫn dữ liệu. Script CHỈ POST 1 lần; lỗi kết nối/timeout → CẤM gửi lại, phải hỏi `?action=audit_nocpro` (status OK + đúng `source_file` + timestamp sau lúc gửi) tối đa ~7 phút, không có xác nhận → DỪNG báo lỗi. Link Google Sheet do người dùng tự mở ở Desktop 2 và để yên; script KHÔNG tự mở Chrome/tab mới.
+>
+> 9. **🪑 Phân Định 3 Ghế Độc Lập Chuẩn Xác — Quy Tắc Alarm Group & Alarm Name (3 Dedicated Seats Policy — PM 2026-10-12/13)**:
+>    - **Ghế 1 (`DESK-NOCPRO-1` / `nocpro_run.py new`)**: Xuất cảnh báo New Alarm ghi đè toàn bộ tab `1. Input New` (GID `85422169`). `Alarm group` = **TICK CHỌN `Select all` (toàn bộ các nhóm cảnh báo, KHÔNG giới hạn 4 nhóm)**, `Alarm name` = **BỎ TRỐNG (`--Select--`)**, TUYỆT ĐỐI KHÔNG có End time.
+>    - **Ghế 2 (`DESK-NOCPRO-2` / `nocpro_run.py flow_loss`)**: Xuất cảnh báo Cleared Flow Loss dán nối tiếp vào tab `1.1 Input  Site Clear+History` (GID `379017693`). Start time đọc từ `AM3:AN3`, to `today + 1` `00:00:00`. Status = `Cleared alarm`. `Alarm group` = **CHỈ TICK 1 CÁI `Flow Loss`**, `Alarm name` = **BỎ TRỐNG (`--Select--`)**.
+>    - **Ghế 3 (`DESK-NOCPRO-3` / `nocpro_run.py door`)**: Xuất cảnh báo Cleared Door dán nối tiếp vào tab `1.1.2 Input Clear + History open the door` (GID `2099413230`). Start time đọc từ `AF3:AG3`, to `today + 1` `00:00:00`. Status = `Cleared alarm`. `Alarm group` = `Select all`. **CHỈ CÓ DOOR MỚI CHỌN ALARM NAME**: chọn đúng 5 loại Door (`Battery Cabinet Door Alarm`, `DG Door Alarm`, `Door Alarm`, `Door open alarm`, `Door open alarm.`). Sau khi xuất xong, **BẮT BUỘC** khôi phục `Alarm name` về `--Select--` và trả bộ lọc về `New` (`Alarm group` = `Select all`). Lịch chạy tự động hàng ngày: **12:22**.
+>
+> 10. **🖱️ Tối Ưu Chuột & Trải Nghiệm Người Dùng (Mouse & UX Non-Interference Policy — PM 2026-10-12)**:
+>    - **Rê chuột / Chạm chuột**: Người dùng vô tình rê/chạm chuột trên máy, AI **vẫn tiếp tục làm**, KHÔNG dừng.
+>    - **Click chuột (Cần can thiệp gấp)**: Khi người dùng bấm click chuột (`GetAsyncKeyState(0x01)` hoặc `0x02`), AI **tạm dừng chờ đúng 60 giây**, sau 60s tự động chuyển lại Desktop 2 và tiếp tục quy trình. Biến `_ai_clicking` bảo vệ click của chính AI không bị tự kích hoạt tạm dừng.
+>    - **Bỏ tick All**: Nocpro tự động xuất toàn bộ kết quả tìm kiếm khi bấm `Action` -> **BỎ QUA HOÀN TOÀN** bước tick checkbox All gần No đầu bảng để tránh làm đơ bảng JavaFX.
+>    - **Luôn trả về Desktop 1**: Dù hoàn thành thành công hay dừng an toàn (`finally`), hệ thống **BẮT BUỘC luôn trả màn hình về Desktop 1**.
+>
+> 11. **⏳ Hàng Đợi FIFO Xếp Lần Lượt (FIFO Queue Policy — PM 2026-10-12)**:
+>    - Mọi tác vụ xuất cảnh báo (New, Flow Loss, Door) đều được xếp hàng qua `nocpro_queue.py`. Tác vụ vào trước chạy trước, tác vụ sau nằm chờ, TUYỆT ĐỐI KHÔNG mở 2 tiến trình Nocpro cùng lúc gây xung đột giao diện.
+>    - Trạng thái hàng đợi và lịch sử thực thi được ghi nhận và cập nhật thời gian thực tại `nocpro_queue_status.txt`.
 ---
 
 # 🔒 STRICT STEEL-LOCK RULE: KHÓA THÉP PHÂN HỆ SITE DOWN — TUYỆT ĐỐI CẤM TỰ Ý VÀO XEM / SỬA KHI KHÔNG CÓ YÊU CẦU (STRICT SITE DOWN STEEL LOCK & ZERO-UNAUTHORIZED-ACCESS POLICY)
@@ -2945,4 +2960,30 @@ Reason: [Lý do]`
 >      - `tprSanityCheck_`: Chốt chặn Fail-Loud — nếu >30% ngày đóng WO không parse được hoặc gãy cấu trúc, lập tức gửi cảnh báo về nhóm CONTROL và DỪNG gửi tin 0 giả về 4 team.
 >      - `Send-Then-Delete`: Chỉ xóa tin cũ khi tin mới đã gửi thành công qua Telegram (zero tin nhắn bị mất khi mạng chập chờn).
 > - **Triển khai**: `QLTC_GAS` (Script ID `1rvgW...`) `clasp.cmd push --force` + deploy `@511` (Deployment `AKfycbz-NZlBk8q2...`); gửi live `send_team_progress_reports` → `ok:true`: T1 (2 parts: [12976, 12977]), T2 (4 parts: [11866, 11867, 11868, 11869]), T3 (1 part: [11164]), T4 (1 part: [9365]), CONTROL (1 part: [15644]).
+>
+> **PM-102 (13/10/2026) — Khắc Phục Triệt Để Độ Trễ Gửi Tin AW7 Site Down & Kích Hoạt Lại GAS 1-Minute Train Kèm Khóa ScriptLock (Zero AW7 Latency & Dual-Track Realtime Dispatch Engine)**:
+> - **Yêu Cầu & Bối Cảnh (Requirement & Context)**:
+>   1. Người dùng phản ánh: *"Site down AW7 lúc trước có tin mới là gởi liền tại sao giờ hơn 10 phút mới gởi"* kèm ảnh chụp bản tin Telegram nhóm `5 TNI_SITE_DOWN_CELL_ALARM` có mốc dữ liệu `07:56` nhưng tin nhắn đến lúc `08:08` (trễ 12 phút).
+>   2. Người dùng gửi lệnh mở khóa thép: `UNLOCK STEEL: Phucat@6879lo`.
+> - **Nguyên Nhân Gốc (Root Cause Analysis)**:
+>   1. **Trigger 1 Phút Trên GAS Bị Xóa**: Ở đợt dọn dẹp chống trùng lặp phiên trước (Rule PM-71), trigger time-driven 1 phút trên GAS (`checkAndSend_1min`) đã bị hủy (`teardownGasTrain1min`) để tránh race condition, dồn việc phát hiện sang Đoàn tàu GitHub Actions.
+>   2. **Lệnh `curl` trong Toa 0 Keepalive Bị Lỗi HTTP 411 Length Required**: Trong `train_5min.yml`, lệnh kiểm tra AW7 được viết:
+>      `curl -s -L -X POST "https://script.google.com/macros/s/.../exec" -H "Content-Type: application/json" -d '{"action":"process_aw_az"}' || true`
+>      Khi curl theo cờ `-X POST` follow redirect HTTP 302 từ Google Apps Script sang `script.googleusercontent.com`, máy chủ Google từ chối request chuyển hướng vì thiếu header Content-Length (mã lỗi 411) và bị `|| true` nuốt trọn lỗi. Toa 0 Keepalive mỗi 5 phút **hoàn toàn không gọi được `process_aw_az`**.
+>   3. **Chỉ Còn Toa Site Down Relay (:06/:36 MMT) Gọi Được `processSummaryAwAz`**: Do Toa 0 bị chặn, chỉ còn script `botlookup_relay.py` (chạy Python `requests` có xử lý redirect chuẩn) ở các nhịp :06 và :36 là kích hoạt được hàm gửi Tin 2 trong `store_site_down`. Khi dữ liệu AW7 nhảy số lúc `07:56`, hệ thống phải đợi tới chuyến tàu lúc `08:06` (chạy relay lúc `08:08`) mới gửi tin, tạo ra độ trễ 12 phút!
+> - **Quy Trình & Biện Pháp Khắc Phục Bọc Thép (Rule PM-102)**:
+>   1. **Hỗ Trợ GET Cho `process_aw_az` trong `doGet` (`site_down_v2.gs` @114)**:
+>      - Mở rộng hàm `doGet(e)` để hỗ trợ trực tiếp `action === "process_aw_az"`. Lệnh gọi GET qua curl và `UrlFetchApp` không bao giờ gặp lỗi HTTP 411, không gặp lỗi parse JSON body trên curl Windows/Linux.
+>   2. **Bọc Thép Chống Gửi Trùng Bằng `LockService.getScriptLock()` Trong `processSummaryAwAz`**:
+>      - Thêm khóa nguyên tử `lock.tryLock(5000)` trước khi đọc và gửi dữ liệu AW7. Mọi tiến trình chạy song song (nếu có) sẽ tự động bỏ qua nếu đã có tiến trình khác đang xử lý, triệt tiêu 100% nguy cơ race condition / gửi trùng mà không cần tắt trigger.
+>   3. **Kích Hoạt Lại GAS 1-Minute Train (`checkAndSend_1min`)**:
+>      - Khởi chạy lại time-driven trigger 1 phút trên GAS qua `setupGasTrain1min()` (khung giờ 03:30 - 22:00 MMT). Ô AW7 hễ có dữ liệu mới là được quét và gửi ngay trong vòng < 60 giây ("có tin mới là gửi liền").
+>   4. **Đồng Bộ Lệnh Gọi GET Trên Toa 0 Keepalive & Đầu Tàu GAS**:
+>      - Trong `train_5min.yml`: Đổi sang `curl -s -L "https://script.google.com/macros/s/.../exec?action=process_aw_az" || true`.
+>      - Trong `14_GITHUB_DISPATCH.gs`: Đổi `UrlFetchApp.fetch` sang phương thức GET `?action=process_aw_az`.
+>   5. **Triển Khai & Kiểm Chứng Live**:
+>      - Push & Deploy `apps_script_sitedown` lên Version **`@114`** (Deployment `AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-`).
+>      - Live verify `GET ?action=process_aw_az`: trả lời ngay `HTTP 200 {"ok":true,"sent_tin2":false}`.
+>      - Live verify `GET ?action=status_gas_train`: trả về `{"ok":true,"has_1min_train":true,"triggers":[{"fn":"checkAndSend_1min","type":"CLOCK"}]}`.
+>      - Khóa Thép Site Down tự động đóng lại bảo vệ hệ thống.
 
