@@ -2986,4 +2986,19 @@ Reason: [Lý do]`
 >      - Live verify `GET ?action=process_aw_az`: trả lời ngay `HTTP 200 {"ok":true,"sent_tin2":false}`.
 >      - Live verify `GET ?action=status_gas_train`: trả về `{"ok":true,"has_1min_train":true,"triggers":[{"fn":"checkAndSend_1min","type":"CLOCK"}]}`.
 >      - Khóa Thép Site Down tự động đóng lại bảo vệ hệ thống.
+>
+> **PM-103 (13/10/2026) — Bổ Sung Hàng Dữ Liệu `DG.Low Oil Pressure` Kèm Icon Chấm Màu Tím `🟣` & Mở Rộng Bảng AW7:AZ18 Trong Site Down Summary (Strict DG.Low Oil Pressure Parsing & Dynamic Label Prefix Policy)**:
+> - **Yêu Cầu & Bối Cảnh (Requirement & Context)**:
+>   1. Người dùng chỉ thị: *"Có thêm 1 hàng dữ liệu DG.Low Oil Pressure: /1 =Khant Chaw Nyo: TNI0120 : 0 bạn vào thêm icon chấm màu Tím cho tôi"* kèm ảnh chụp màn hình ô `AW11` có hàng dữ liệu `DG.Low Oil Pressure: /0 =` trên tab `1 Input Site down Telegram` (Sheet GID 0).
+>   2. Người dùng cung cấp mật khẩu mở khóa: `UNLOCK STEEL: Phucat@6879lo`.
+> - **Nguyên Nhân & Điểm Cần Xử Lý**:
+>   1. Bảng dữ liệu `AW7:AZ16` (10 dòng) trước đây chỉ bao gồm: Site down, Cell down, DG Abnormal, DG Run>16H, Link down, Battery Temperature High, Smoke, DOOR.
+>   2. Khi chèn thêm hàng `DG.Low Oil Pressure` tại dòng 11, các hàng bên dưới bị đẩy xuống 1 dòng (DOOR chuyển xuống dòng 15). Cần mở rộng dải ô đọc thành `AW7:AZ18` (12 dòng) để đảm bảo không bị cắt đuôi.
+>   3. Cần bổ sung nhãn `{ emoji: "🟣", name: "DG.Low Oil Pressure" }` vào `AWAZ_LABELS` và nâng cấp cơ chế khớp nhãn: ưu tiên tìm theo tiền tố tên (`AWAZ_LABELS.find(l => cleanRaw.toLowerCase().startsWith(l.name.toLowerCase()))`) thay vì phụ thuộc cứng vào chỉ số dòng `r`, giúp bản tin luôn khớp đúng emoji dù vị trí các hàng trên Sheet có bị xáo trộn.
+>   4. Cập nhật hàm tách inline `bodyRaw.replace(/\|\s*DG\.?Low Oil Pressure:/gi, "\n🟣 DG.Low Oil Pressure:")` và hàm `addKeywordIcons`.
+> - **Triển Khai & Kiểm Chứng Live**:
+>   - Đã push và deploy `apps_script_sitedown` lên Version **`@115`** (Deployment `AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-`).
+>   - Live verify `GET ?action=process_aw_az`: trả lời ngay `HTTP 200 {"ok":true,"sent_tin2":false}`.
+>   - Đồng bộ commit và push toàn bộ 3 repository (`Task and WO`, `tni-sitedown`, `tni-search`).
+>   - Khóa Thép Site Down tự động đóng lại bảo vệ hệ thống.
 
