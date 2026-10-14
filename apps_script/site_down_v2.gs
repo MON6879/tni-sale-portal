@@ -48,6 +48,7 @@ const AWAZ_LABELS = [
   { emoji: "🔴", name: "Cell down"                },
   { emoji: "⚙️", name: "DG Abnormal"              },
   { emoji: "⏱️", name: "DG Run>16H"               },
+  { emoji: "🟣", name: "DG.Low Oil Pressure"      },
   { emoji: "🔗", name: "Link down"                },
   { emoji: "🌡️", name: "Battery Temperature High" },
   { emoji: "💨", name: "Smoke"                    },
@@ -281,8 +282,19 @@ function doGet(e) {
       return _json({ ok: true, msgids: msgids });
     }
 
-    // ── Kích hoạt / Kiểm tra GAS 1-Minute Train ──────────────────────────
-    if (action === "setup_gas_train_1min") {
+    // ── Xử lý Luồng AW7 Summary (Tin 2) qua GET ─────────────────────────
+    if (action === "process_aw_az") {
+      ensureGasTrain1min_();
+      const ss    = SpreadsheetApp.openById(SD_SHEET_ID);
+      const sheet = getSheetByGid(ss, SD_SHEET_GID);
+      if (!sheet) return _json({ ok: false, msg: "Sheet not found" });
+      const force = (e.parameter && e.parameter.force === "true");
+      const sent2 = processSummaryAwAz(sheet, force);
+      return _json({ ok: true, sent_tin2: sent2, has_1min_train: true });
+    }
+
+    // ── Kích hoạt / Kiểm tra GAS 1-Minute Train (Hỗ trợ cả 2 alias) ──────
+    if (action === "setup_gas_train_1min" || action === "setup_gas_train") {
       const deleted = [];
       ScriptApp.getProjectTriggers().forEach(t => {
         const fn = t.getHandlerFunction();
@@ -301,7 +313,11 @@ function doGet(e) {
 
     if (action === "status_gas_train") {
       const triggers = ScriptApp.getProjectTriggers().map(t => ({ fn: t.getHandlerFunction(), type: t.getTriggerSource().toString() }));
-      const has1min = triggers.some(t => t.fn === "checkAndSend_1min");
+      let has1min = triggers.some(t => t.fn === "checkAndSend_1min");
+      if (!has1min) {
+        ensureGasTrain1min_();
+        has1min = true;
+      }
       return _json({ ok: true, triggers: triggers, has_1min_train: has1min });
     }
 
@@ -536,117 +552,128 @@ function triggerBot2dEta_(skipDelay) {
 // ✅ Restore logic d9f8bfd: đọc thẳng AW7, không wrapper, không freshness/A1 guard
 // ============================================================
 function processSummaryAwAz(sheet, isDirectPush) {
-  const rawVal = sheet.getRange("AW7").getValue();
-  Logger.log("[Luồng AW7] rawVal type=" + typeof rawVal + " | instanceof Date=" + (rawVal instanceof Date) + " | raw=" + String(rawVal).substring(0, 60));
-
-  let rawTs;
-  if (rawVal instanceof Date) {
-    rawTs = Utilities.formatDate(rawVal, "Asia/Rangoon", "dd/MM/yyyy HH:mm");
-  } else {
-    rawTs = String(rawVal).trim();
-  }
-
-  if (!rawTs) {
-    Logger.log("[Luồng AW7] Ô AW7 rỗng — Bỏ qua Luồng 2");
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(5000)) {
+    Logger.log("[Luồng AW7] ⏳ Đang có tiến trình khác xử lý AW7 → Bỏ qua tránh trùng lặp");
     return false;
   }
+  try {
+    const rawVal = sheet.getRange("AW7").getValue();
+    Logger.log("[Luồng AW7] rawVal type=" + typeof rawVal + " | instanceof Date=" + (rawVal instanceof Date) + " | raw=" + String(rawVal).substring(0, 60));
 
-  const m = rawTs.match(/(\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2})/);
-  const tsKey = m ? m[1] : rawTs.substring(0, 16).trim();
-
-  if (!tsKey) {
-    Logger.log("[Luồng AW7] Không bóc tách được timestamp từ AW7 — Bỏ qua Luồng 2");
-    return false;
-  }
-
-  // ✅ Đọc trực tiếp bảng AW:AZ và kiểm tra signature trạm
-  let awaz = readAwAz(sheet);
-
-  // 🛑 DEDUP BẢO VỆ KÉP (RULE PM-83 + RULE PM-91):
-  // 1. Chống gửi lại liên tục do nhảy số Duration (PM-83): Tuyệt đối KHÔNG so sánh chuỗi số giờ nhảy.
-  // 2. Chống bỏ sót trạm cập nhật mới/bổ sung (PM-91): Trích xuất signature gồm:
-  //    Mốc giờ + Tổng số trạm khai báo từng Team + Danh sách mã trạm TNIxxxx.
-  const allSites = (awaz[0] || []).join(" ").match(/TNI\d{4}/g) || [];
-  const sitesSig = Array.from(new Set(allSites)).sort().join(",");
-  const counts = (awaz[0] || []).map(function(c) {
-    var cm = String(c || "").match(/=\s*\/([0-9]+)\s*=/);
-    return cm ? cm[1] : "0";
-  }).join(",");
-  const sigKey = tsKey + "__CNT:" + counts + "__SITES:" + sitesSig;
-
-  const props   = PropertiesService.getScriptProperties();
-  const lastSig = props.getProperty(TS_KEY_AW7) || "";
-
-  Logger.log("[Luồng AW7] sigKey=[" + sigKey + "] lastSig=[" + lastSig + "] match=" + (sigKey === lastSig));
-
-  if (sigKey === lastSig && !isDirectPush) {
-    Logger.log("[Luồng AW7] Dữ liệu AW7 chưa đổi (Mốc giờ & Trạm không đổi) → Chặn 100%, bỏ qua Luồng 2");
-    return false;
-  }
-
-  // ✅ Có mốc giờ mới hoặc danh sách trạm thay đổi → gửi ngay!
-  Logger.log("[Luồng AW7] 🆕 AW7 có dữ liệu mới/thay đổi: " + sigKey + " (cũ: " + lastSig + ") → Gửi ngay!");
-
-  // ✅ ĐỘC LẬP: Lưu ngay khóa signature AW7
-  props.setProperty(TS_KEY_AW7, sigKey);
-  Logger.log("[Luồng AW7] 🆕 Đã lưu khóa TS_KEY_AW7: " + sigKey + " → Đang xử lý Tin 2 (SUMMARY)...");
-
-  const teams = ["T1", "T2", "T3", "T4"];
-  let sentCount = 0;
-
-  // Gửi sang 4 nhóm Team (Gửi nguyên vẹn 100% nội dung ô kèm Icon)
-  for (const team of teams) {
-    try {
-      const chatId = SD_GROUPS[team];
-      if (!chatId) continue;
-      const colIdx = AWAZ_COL[team];
-      if (colIdx === undefined) continue;
-      const msg = buildAwAzTeamMessage(team, tsKey, awaz, colIdx);
-      if (!msg) continue;
-      sendOrEditTelegram(chatId, msg, "TIN2_" + team, "[Tin2][" + team + "]");
-      sentCount++;
-    } catch (err) {
-      Logger.log("[Luồng AW7][" + team + "] ❌ " + err.message);
-    }
-  }
-
-  // Gửi nhóm CONTROL (Tổng hợp cả 4 Team nguyên vẹn 100%)
-  const controlId = SD_GROUPS["CONTROL"];
-  if (controlId) {
-    try {
-      const msg = buildAwAzControlMessage(tsKey, awaz);
-      if (msg) {
-        sendOrEditTelegram(controlId, msg, "TIN2_CONTROL", "[Tin2][CONTROL]");
-      }
-    } catch(e) {
-      Logger.log("[Luồng AW7][CONTROL] ❌ " + e.message);
+    let rawTs;
+    if (rawVal instanceof Date) {
+      rawTs = Utilities.formatDate(rawVal, "Asia/Rangoon", "dd/MM/yyyy HH:mm");
+    } else {
+      rawTs = String(rawVal).trim();
     }
 
-    // 🔹 TIN THỨ 2 DÀNH RIÊNG CHO GROUP CONTROL: CHỈ TỔNG HỢP SITE DOWN (T1 -> SUB 1 -> T2 -> SUB 2...)
-    try {
-      Utilities.sleep(500); // Khoảng đệm nhẹ chống rate limit của Telegram
-      const sdOnlyMsg = buildSiteDownOnlyControlMessage(tsKey, awaz, sheet);
-      if (sdOnlyMsg) {
-        sendOrEditTelegram(controlId, sdOnlyMsg, "TIN2_CONTROL_SD_ONLY", "[Tin2][CONTROL_SD_ONLY]");
-      }
-    } catch(eSd) {
-      Logger.log("[Luồng AW7][CONTROL_SD_ONLY] ❌ " + eSd.message);
+    if (!rawTs) {
+      Logger.log("[Luồng AW7] Ô AW7 rỗng — Bỏ qua Luồng 2");
+      return false;
     }
-  }
 
-  // Gửi DM cá nhân
-  const ctrlMsg = buildAwAzControlMessage(tsKey, awaz);
-  if (ctrlMsg) {
-    for (const pid of SD_PERSONAL_IDS) {
+    const m = rawTs.match(/(\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2})/);
+    const tsKey = m ? m[1] : rawTs.substring(0, 16).trim();
+
+    if (!tsKey) {
+      Logger.log("[Luồng AW7] Không bóc tách được timestamp từ AW7 — Bỏ qua Luồng 2");
+      return false;
+    }
+
+    // ✅ Đọc trực tiếp bảng AW:AZ và kiểm tra signature trạm
+    let awaz = readAwAz(sheet);
+
+    // 🛑 DEDUP BẢO VỆ KÉP (RULE PM-83 + RULE PM-91):
+    // 1. Chống gửi lại liên tục do nhảy số Duration (PM-83): Tuyệt đối KHÔNG so sánh chuỗi số giờ nhảy.
+    // 2. Chống bỏ sót trạm cập nhật mới/bổ sung (PM-91): Trích xuất signature gồm:
+    //    Mốc giờ + Tổng số trạm khai báo từng Team + Danh sách mã trạm TNIxxxx.
+    const allSites = (awaz || []).map(r => (r || []).join(" ")).join(" ").match(/TNI\d{4}/g) || [];
+    const sitesSig = Array.from(new Set(allSites)).sort().join(",");
+    const counts = (awaz || []).map(function(r) {
+      return (r || []).map(function(c) {
+        var cm = String(c || "").match(/=\s*\/([0-9]+)\s*=/);
+        return cm ? cm[1] : "0";
+      }).join(",");
+    }).join(";");
+    const sigKey = tsKey + "__CNT:" + counts + "__SITES:" + sitesSig;
+
+    const props   = PropertiesService.getScriptProperties();
+    const lastSig = props.getProperty(TS_KEY_AW7) || "";
+
+    Logger.log("[Luồng AW7] sigKey=[" + sigKey + "] lastSig=[" + lastSig + "] match=" + (sigKey === lastSig));
+
+    if (sigKey === lastSig && !isDirectPush) {
+      Logger.log("[Luồng AW7] Dữ liệu AW7 chưa đổi (Mốc giờ & Trạm không đổi) → Chặn 100%, bỏ qua Luồng 2");
+      return false;
+    }
+
+    // ✅ Có mốc giờ mới hoặc danh sách trạm thay đổi → gửi ngay!
+    Logger.log("[Luồng AW7] 🆕 AW7 có dữ liệu mới/thay đổi: " + sigKey + " (cũ: " + lastSig + ") → Gửi ngay!");
+
+    // ✅ ĐỘC LẬP: Lưu ngay khóa signature AW7
+    props.setProperty(TS_KEY_AW7, sigKey);
+    Logger.log("[Luồng AW7] 🆕 Đã lưu khóa TS_KEY_AW7: " + sigKey + " → Đang xử lý Tin 2 (SUMMARY)...");
+
+    const teams = ["T1", "T2", "T3", "T4"];
+    let sentCount = 0;
+
+    // Gửi sang 4 nhóm Team (Gửi nguyên vẹn 100% nội dung ô kèm Icon)
+    for (const team of teams) {
       try {
-        sendOrEditTelegram(pid, ctrlMsg, "TIN2_P_" + pid, "[Tin2][DM]");
-      } catch(e) {}
-      Utilities.sleep(200);
+        const chatId = SD_GROUPS[team];
+        if (!chatId) continue;
+        const colIdx = AWAZ_COL[team];
+        if (colIdx === undefined) continue;
+        const msg = buildAwAzTeamMessage(team, tsKey, awaz, colIdx);
+        if (!msg) continue;
+        sendOrEditTelegram(chatId, msg, "TIN2_" + team, "[Tin2][" + team + "]");
+        sentCount++;
+      } catch (err) {
+        Logger.log("[Luồng AW7][" + team + "] ❌ " + err.message);
+      }
     }
-  }
 
-  Logger.log("[Luồng AW7] ✅ Hoàn tất xử lý Tin 2 SUMMARY (Đã gửi " + sentCount + " nhóm)!");
-  return sentCount > 0;
+    // Gửi nhóm CONTROL (Tổng hợp cả 4 Team nguyên vẹn 100%)
+    const controlId = SD_GROUPS["CONTROL"];
+    if (controlId) {
+      try {
+        const msg = buildAwAzControlMessage(tsKey, awaz);
+        if (msg) {
+          sendOrEditTelegram(controlId, msg, "TIN2_CONTROL", "[Tin2][CONTROL]");
+        }
+      } catch(e) {
+        Logger.log("[Luồng AW7][CONTROL] ❌ " + e.message);
+      }
+
+      // 🔹 TIN THỨ 2 DÀNH RIÊNG CHO GROUP CONTROL: CHỈ TỔNG HỢP SITE DOWN (T1 -> SUB 1 -> T2 -> SUB 2...)
+      try {
+        Utilities.sleep(500); // Khoảng đệm nhẹ chống rate limit của Telegram
+        const sdOnlyMsg = buildSiteDownOnlyControlMessage(tsKey, awaz, sheet);
+        if (sdOnlyMsg) {
+          sendOrEditTelegram(controlId, sdOnlyMsg, "TIN2_CONTROL_SD_ONLY", "[Tin2][CONTROL_SD_ONLY]");
+        }
+      } catch(eSd) {
+        Logger.log("[Luồng AW7][CONTROL_SD_ONLY] ❌ " + eSd.message);
+      }
+    }
+
+    // Gửi DM cá nhân
+    const ctrlMsg = buildAwAzControlMessage(tsKey, awaz);
+    if (ctrlMsg) {
+      for (const pid of SD_PERSONAL_IDS) {
+        try {
+          sendOrEditTelegram(pid, ctrlMsg, "TIN2_P_" + pid, "[Tin2][DM]");
+        } catch(e) {}
+        Utilities.sleep(200);
+      }
+    }
+
+    Logger.log("[Luồng AW7] ✅ Hoàn tất xử lý Tin 2 SUMMARY (Đã gửi " + sentCount + " nhóm)!");
+    return sentCount > 0;
+  } finally {
+    try { lock.releaseLock(); } catch(eL) {}
+  }
 }
 
 
@@ -772,8 +799,8 @@ function formatSiteDownStaffLines_(bodyRaw) {
 }
 
 function readAwAz(sheet) {
-  // ✅ Mở rộng dải ô AW7:AZ16 (10 dòng từ dòng 7 đến dòng 16)
-  return sheet.getRange(7, 49, 10, 4).getValues();
+  // ✅ Mở rộng dải ô AW7:AZ18 (12 dòng từ dòng 7 đến dòng 18 bao trọn DG.Low Oil Pressure)
+  return sheet.getRange(7, 49, 12, 4).getValues();
 }
 
 function buildAwAzTeamMessage(teamKey, ts, awaz, colIdx) {
@@ -788,16 +815,20 @@ function buildAwAzTeamMessage(teamKey, ts, awaz, colIdx) {
     const txt = ((awaz[r] || [])[colIdx] || "").toString().trim();
     if (!txt || txt === "..." || txt === "null" || txt === "undefined" || txt === "-" || txt === "0") continue;
     const cleanRaw = txt.replace(/[*_`]/g, "");
-    if (r < AWAZ_LABELS.length) {
-      const labelDef = AWAZ_LABELS[r];
+    let labelDef = AWAZ_LABELS.find(l => cleanRaw.toLowerCase().startsWith(l.name.toLowerCase()));
+    if (!labelDef && r < AWAZ_LABELS.length) {
+      labelDef = AWAZ_LABELS[r];
+    }
+    if (labelDef) {
       const labelName = labelDef.name;
       const prefixRegex = new RegExp("^" + labelName.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&") + "\\s*:\\s*", "i");
       let bodyRaw = cleanRaw.replace(prefixRegex, "").trim();
       // Xuống hàng theo từng tên nhân viên trong phần Site down cho dễ nhìn
-      if (r === 0 || labelName === "Site down") {
+      if (labelName === "Site down") {
         bodyRaw = formatSiteDownStaffLines_(bodyRaw);
       }
-      // Tách | Battery Temperature High / Smoke / DOOR thành dòng riêng + icon
+      // Tách | DG.Low Oil Pressure / Battery Temperature High / Smoke / DOOR thành dòng riêng + icon
+      bodyRaw = bodyRaw.replace(/\|\s*DG\.?Low Oil Pressure:/gi, "\n🟣 DG.Low Oil Pressure:");
       bodyRaw = bodyRaw.replace(/\|\s*Battery Temperature High:/gi, "\n🌡️ Battery Temperature High:");
       bodyRaw = bodyRaw.replace(/\|\s*Smoke:/gi, "\n💨 Smoke:");
       bodyRaw = bodyRaw.replace(/\|\s*DOOR:/gi, "\n🚪 DOOR:");
@@ -835,16 +866,20 @@ function buildAwAzControlMessage(ts, awaz) {
       const txt = ((awaz[r] || [])[t.col] || "").toString().trim();
       if (!txt || txt === "..." || txt === "null" || txt === "undefined" || txt === "-" || txt === "0") continue;
       const cleanRaw = txt.replace(/[*_`]/g, "");
-      if (r < AWAZ_LABELS.length) {
-        const labelDef = AWAZ_LABELS[r];
+      let labelDef = AWAZ_LABELS.find(l => cleanRaw.toLowerCase().startsWith(l.name.toLowerCase()));
+      if (!labelDef && r < AWAZ_LABELS.length) {
+        labelDef = AWAZ_LABELS[r];
+      }
+      if (labelDef) {
         const labelName = labelDef.name;
         const prefixRegex = new RegExp("^" + labelName.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&") + "\\s*:\\s*", "i");
         let bodyRaw = cleanRaw.replace(prefixRegex, "").trim();
         // Xuống hàng theo từng tên nhân viên trong phần Site down cho dễ nhìn
-        if (r === 0 || labelName === "Site down") {
+        if (labelName === "Site down") {
           bodyRaw = formatSiteDownStaffLines_(bodyRaw);
         }
-        // Tách | Battery Temperature High / Smoke / DOOR thành dòng riêng + icon
+        // Tách | DG.Low Oil Pressure / Battery Temperature High / Smoke / DOOR thành dòng riêng + icon
+        bodyRaw = bodyRaw.replace(/\|\s*DG\.?Low Oil Pressure:/gi, "\n🟣 DG.Low Oil Pressure:");
         bodyRaw = bodyRaw.replace(/\|\s*Battery Temperature High:/gi, "\n🌡️ Battery Temperature High:");
         bodyRaw = bodyRaw.replace(/\|\s*Smoke:/gi, "\n💨 Smoke:");
         bodyRaw = bodyRaw.replace(/\|\s*DOOR:/gi, "\n🚪 DOOR:");
@@ -1257,7 +1292,8 @@ function addKeywordIcons(text) {
      return "\n" + icon + " " + keyword + " " + dataStr;
   });
 
-  // Battery Temperature High, Smoke, DOOR — xuống hàng + icon riêng
+  // DG.Low Oil Pressure, Battery Temperature High, Smoke, DOOR — xuống hàng + icon riêng
+  s = s.replace(/(?:(?:^|\n|\s*)>|\|)\s*(DG\.?Low Oil Pressure:)/gi, "\n🟣 DG.Low Oil Pressure:");
   s = s.replace(/(?:(?:^|\n|\s*)>|\|)\s*(Battery Temperature High:)/gi, "\n🌡️ Battery Temperature High:");
   s = s.replace(/(?:(?:^|\n|\s*)>|\|)\s*(Smoke:)/gi, "\n💨 Smoke:");
   s = s.replace(/(?:(?:^|\n|\s*)>|\|)\s*(DOOR:)/gi, "\n🚪 DOOR:");
@@ -1303,19 +1339,38 @@ function triggerBotlookupRelay() {
 // ============================================================
 
 /**
+ * 🛡️ Self-healing watchdog: Luôn tự kiểm tra và tái lập trigger 1 phút checkAndSend_1min nếu bị mất.
+ */
+function ensureGasTrain1min_() {
+  try {
+    const triggers = ScriptApp.getProjectTriggers();
+    const has1min = triggers.some(t => t.getHandlerFunction() === "checkAndSend_1min");
+    if (!has1min) {
+      ScriptApp.newTrigger("checkAndSend_1min")
+        .timeBased()
+        .everyMinutes(1)
+        .create();
+      Logger.log("[ensureGasTrain1min_] 🔄 Đã tự động phục hồi trigger 1 phút checkAndSend_1min!");
+    }
+  } catch (err) {
+    Logger.log("[ensureGasTrain1min_] ⚠️ Lỗi tạo trigger 1 phút: " + err.message);
+  }
+}
+
+/**
  * ⏱️ Wrapper 1 phút — được gọi bởi GAS time-driven trigger.
- * Kiểm tra khung giờ 03:30–22:00 Myanmar trước khi chạy checkAndSend().
+ * Kiểm tra khung giờ 03:30–22:30 Myanmar trước khi chạy checkAndSend().
  */
 function checkAndSend_1min() {
   const now    = new Date();
   const hour   = parseInt(Utilities.formatDate(now, "Asia/Rangoon", "H"),  10);
   const minute = parseInt(Utilities.formatDate(now, "Asia/Rangoon", "m"),  10);
 
-  // Khung giờ hoạt động 03:30 – 22:00 Myanmar
+  // Khung giờ hoạt động 03:30 – 22:30 Myanmar
   const afterStart  = (hour > 3) || (hour === 3 && minute >= 30);
-  const beforeEnd   = (hour < 22) || (hour === 22 && minute === 0);
+  const beforeEnd   = (hour < 22) || (hour === 22 && minute <= 30);
   if (!afterStart || !beforeEnd) {
-    Logger.log("[1min-train] 🌙 Ngoài khung giờ 03:30–22:00 MMT (" + hour + ":" + (minute < 10 ? "0" : "") + minute + ") — Bỏ qua.");
+    Logger.log("[1min-train] 🌙 Ngoài khung giờ 03:30–22:30 MMT (" + hour + ":" + (minute < 10 ? "0" : "") + minute + ") — Bỏ qua.");
     return;
   }
 
