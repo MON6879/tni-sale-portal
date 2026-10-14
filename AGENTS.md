@@ -3001,4 +3001,29 @@ Reason: [Lý do]`
 >   - Live verify `GET ?action=process_aw_az`: trả lời ngay `HTTP 200 {"ok":true,"sent_tin2":false}`.
 >   - Đồng bộ commit và push toàn bộ 3 repository (`Task and WO`, `tni-sitedown`, `tni-search`).
 >   - Khóa Thép Site Down tự động đóng lại bảo vệ hệ thống.
+>
+> **PM-104 (14/10/2026) — Tự Động Phục Hồi Trigger 1 Phút (Self-Healing 1-Min Train) & Bắn Tin AW7 Dưới 60 Giây (Zero AW7 Delay & Resilient Watchdog Policy)**:
+> - **Yêu Cầu & Bối Cảnh (Requirement & Context)**:
+>   1. Người dùng chỉ thị: *"sửa lại AW7 có tin mới là gởi liền sao bảo sửa dưới 60s rồi sao giờ hơn 15 phút"* kèm ảnh chụp màn hình bản tin Tin 2 Summary nhóm `TNI TEAM 1 PLAN - ALARM` có mốc giờ `19:47` nhưng đến `20:00` mới gửi đến Telegram (~13-15 phút độ trễ).
+>   2. Người dùng cung cấp mật khẩu mở khóa: `UNLOCK STEEL: Phucat@6879lo`.
+> - **Nguyên Nhân Gốc (Root Cause Analysis)**:
+>   1. **Trigger 1 Phút Bị Mất (`has_1min_train: false`)**: Sau khi nâng cấp Version `@115`, trigger time-driven `checkAndSend_1min` trên GAS không được tự động tạo lại / bị thiếu do thiếu cơ chế watchdog tự phục hồi (self-healing). Kiểm tra live `?action=status_gas_train` trả về `{"ok":true,"triggers":[],"has_1min_train":false}`.
+>   2. **Phụ Thuộc Fallback Chậm**: Khi trigger 1 phút vắng mặt, AW7 chỉ được kiểm tra khi Đoàn tàu 5 phút (`train_5min.yml` / `14_GITHUB_DISPATCH.gs`) chạy hoặc nhịp relay :06/:36. Độ lệch pha và thời gian khởi tạo runner khiến tin bị trễ ~15 phút.
+>   3. **Khung Giờ Lệch 30 Phút**: `checkAndSend_1min` ngắt lúc 22:00 trong khi hàm chính `checkAndSend` hoạt động đến 22:30.
+>   4. **Signature Chỉ Quét Hàng 7**: `awaz[0]` trước đó chỉ trích xuất trạm ở hàng Site down, nếu trạm ở hàng khác (Cell down, DG Abnormal, DG.Low Oil Pressure) thay đổi mà mốc giờ chưa nhảy thì signature có thể bị bỏ qua.
+> - **Quy Trình & Biện Pháp Khắc Phục Bọc Thép (Rule PM-104)**:
+>   1. **Hàm Tự Phục Hồi `ensureGasTrain1min_()` Trên GAS (`site_down_v2.gs` @116)**:
+>      - Tự động kiểm tra danh sách trigger của project; nếu `checkAndSend_1min` chưa tồn tại, tự động tạo mới `ScriptApp.newTrigger("checkAndSend_1min").timeBased().everyMinutes(1).create()`.
+>      - Tích hợp gọi `ensureGasTrain1min_()` ngay trong `doGet` (`process_aw_az`, `status_gas_train`, `setup_gas_train`), đảm bảo MỌI request ping từ bên ngoài đều tự động hồi sinh trigger 1 phút nếu bị rụng.
+>   2. **Tự Động Arm Trigger Mỗi 5 Phút Tại Toa 0 Keepalive**:
+>      - Thêm bước `3️⃣.2 Site Down Ensure 1-Min Train` trong `train_5min.yml` (trên cả `Task and WO` và `tni-sitedown`) gọi `?action=setup_gas_train_1min`, biến đoàn tàu thành chốt bảo vệ kép (dual-layer guard).
+>   3. **Mở Rộng Signature Toàn Diện AW:AZ (12 Hàng)**:
+>      - Nâng cấp `sitesSig` và `counts` quét qua toàn bộ 12 hàng `awaz`, đảm bảo bất kỳ thay đổi nào tại bất kỳ danh mục sự cố nào cũng kích hoạt gửi tin ngay.
+>   4. **Đồng Bộ Khung Giờ Đến 22:30 MMT**: Khung giờ chạy của `checkAndSend_1min` nâng lên 03:30 - 22:30 MMT.
+> - **Triển Khai & Kiểm Chứng Live**:
+>   - Đã push và deploy `apps_script_sitedown` lên Version **`@116`** (Deployment `AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-`).
+>   - Live verify `GET ?action=status_gas_train`: `{"ok":true,"triggers":[{"fn":"checkAndSend_1min","type":"CLOCK"}],"has_1min_train":true}`.
+>   - Live verify `GET ?action=process_aw_az`: `{"ok":true,"sent_tin2":true,"has_1min_train":true}`.
+>   - Đồng bộ commit và push toàn bộ 3 repository (`Task and WO`, `tni-sitedown`, `tni-search`).
+>   - Khóa Thép Site Down tự động đóng lại bảo vệ hệ thống.
 
