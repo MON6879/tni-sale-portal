@@ -1013,6 +1013,9 @@ document.addEventListener('DOMContentLoaded', initPwdGate);
       <button class="nav-tab" id="tab-btn-secretary" onclick="showTab('secretary-panel', this)" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(6, 182, 212, 0.25)); border: 1px solid rgba(16, 185, 129, 0.45); color: #38bdf8; font-weight: 700;">
         <i class="fa-solid fa-robot"></i> Virtual Secretary
       </button>
+      <button class="nav-tab" id="tab-btn-site-link-down" onclick="showTab('site-link-down-panel', this)" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(245, 158, 11, 0.25)); border: 1px solid rgba(239, 68, 68, 0.45); color: #f87171; font-weight: 700;">
+        <i class="fa-solid fa-tower-broadcast"></i> Site &amp; Link Down
+      </button>
     </nav>
 
     <!-- AI Voice & Security Header Actions -->
@@ -6460,6 +6463,211 @@ Team04>> 2Box</td>
             <span class="agent-pulse"></span>
             <div><strong style="color:#38BDF8;">AI-CHIEF-EXEC</strong><div style="font-size:0.68rem; color:#94A3B8;">👑 Thư Ký Trưởng</div></div>
           </div>
+
+
+    <!-- ══════════════════════════════════════════════════════════════════════════════════════
+         🚨 TAB PANEL: SITE & LINK DOWN GIÁM SÁT TỔNG HỢP CẢNH BÁO 4 TEAMS (AW7 MATRIX & DETAIL)
+         ══════════════════════════════════════════════════════════════════════════════════════ -->
+    <div id="site-link-down-panel" class="tab-panel">
+      
+      <!-- Top Command & Live Sentinel Verification Card -->
+      <div class="card" style="background: rgba(15, 23, 42, 0.94); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 18px; padding: 1.4rem; margin-bottom: 1.5rem; box-shadow: 0 10px 32px rgba(239, 68, 68, 0.15);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 1rem;">
+          <div style="display:flex; align-items:center; gap:0.9rem;">
+            <div style="width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg, #ef4444, #f97316); display:flex; align-items:center; justify-content:center; font-size:1.4rem; color:#fff; box-shadow:0 0 20px rgba(239, 68, 68, 0.45);">
+              <i class="fa-solid fa-tower-broadcast"></i>
+            </div>
+            <div>
+              <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+                <h2 style="font-size:1.3rem; font-weight:800; color:#fff; margin:0;">
+                  Giám Sát Tổng Hợp Site Down, Link Down & Hạ Tầng 4 Teams
+                </h2>
+                <span id="sd-live-pulse" style="display:inline-flex; align-items:center; gap:0.35rem; padding:0.25rem 0.65rem; border-radius:999px; background:rgba(239,68,68,0.18); border:1px solid rgba(239,68,68,0.4); color:#fca5a5; font-size:0.75rem; font-weight:700;">
+                  <span style="width:8px; height:8px; border-radius:50%; background:#ef4444; box-shadow:0 0 8px #ef4444;" class="agent-pulse"></span>
+                  Live SSOT GID 0
+                </span>
+                <span id="sd-sentinel-status-pill" style="display:inline-flex; align-items:center; gap:0.35rem; padding:0.25rem 0.65rem; border-radius:999px; background:rgba(16,185,129,0.18); border:1px solid rgba(16,185,129,0.4); color:#34d399; font-size:0.75rem; font-weight:700;">
+                  🛡️ Ghế Giám Sát SD-SUMMARY-2: Khóa Thép Hoạt Động
+                </span>
+              </div>
+              <p style="font-size:0.78rem; color:#94A3B8; margin-top:0.25rem; margin-bottom:0;">
+                <i class="fa-solid fa-database"></i> Dữ liệu gốc Google Sheet SSOT GID 0 (Cột AW..AZ & Cột C) · Tự động tổng hợp 9 chỉ số cảnh báo · Giám sát 4 Đội vận hành Tanintharyi
+              </p>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+            <div id="sd-last-update-time" style="font-size:0.75rem; color:#38BDF8; font-weight:700; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.3); padding:0.45rem 0.75rem; border-radius:8px;">
+              <i class="fa-solid fa-clock"></i> Đang nạp dữ liệu...
+            </div>
+            <button class="filter-btn active" onclick="window.SiteDownManager.loadData(true)" style="background:linear-gradient(135deg, #ef4444, #f97316); color:#fff; border:none; padding:0.45rem 0.95rem; border-radius:8px; font-size:0.78rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:0.4rem;">
+              <i class="fa-solid fa-rotate"></i> Làm Mới Data Sống
+            </button>
+            <button class="filter-btn" onclick="window.SiteDownManager.copySummaryReport()" style="background:rgba(16,185,129,0.18); color:#34D399; border:1px solid rgba(16,185,129,0.4); padding:0.45rem 0.85rem; border-radius:8px; font-size:0.78rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:0.4rem;">
+              <i class="fa-solid fa-clipboard-check"></i> Sao Chép Báo Cáo
+            </button>
+            <button class="filter-btn" onclick="window.SiteDownManager.exportCSV()" style="background:rgba(56,189,248,0.18); color:#38BDF8; border:1px solid rgba(56,189,248,0.4); padding:0.45rem 0.85rem; border-radius:8px; font-size:0.78rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:0.4rem;">
+              <i class="fa-solid fa-file-csv"></i> Xuất CSV
+            </button>
+          </div>
+        </div>
+
+        <!-- 9 AW7 KPI Summary Cards Strip -->
+        <div style="margin-top:1.2rem;">
+          <div style="font-size:0.8rem; font-weight:800; color:#F8FAFC; margin-bottom:0.65rem; display:flex; align-items:center; justify-content:space-between;">
+            <span style="display:flex; align-items:center; gap:0.4rem;">
+              <i class="fa-solid fa-chart-pie" style="color:#ef4444;"></i> <b>TỔNG QUAN 9 CHỈ SỐ CẢNH BÁO TOÀN VÙNG (AW7..AZ SUMMARY):</b>
+            </span>
+            <span id="sd-matrix-timestamp-badge" style="font-size:0.72rem; color:#94A3B8;">Mốc giờ Sheet: Đang đọc...</span>
+          </div>
+
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:0.65rem;" id="sd-kpi-cards-grid">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Tower Company Distribution Bar -->
+        <div id="sd-tower-co-strip" style="margin-top:1rem; background:rgba(30,41,59,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:0.65rem 1rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.6rem;">
+          <div style="font-size:0.75rem; color:#94A3B8; display:flex; align-items:center; gap:0.4rem;">
+            <i class="fa-solid fa-broadcast-tower" style="color:#f59e0b;"></i> <b>Phân Bổ Cột Site Down (TowerCo):</b>
+          </div>
+          <div id="sd-tower-pills" style="display:flex; flex-wrap:wrap; gap:0.4rem;">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Team Filter Strip -->
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.8rem; margin-bottom:1rem;">
+        <div style="display:flex; gap:0.4rem; flex-wrap:wrap;" id="sd-team-filters">
+          <button class="filter-btn active" data-team="all" onclick="window.SiteDownManager.setTeamFilter('all', this)" style="border-radius:8px; font-size:0.78rem; font-weight:700; padding:0.4rem 0.85rem;">
+            🌐 Tất Cả 4 Teams (<span id="sd-filter-cnt-all">0</span> Sites)
+          </button>
+          <button class="filter-btn" data-team="team1" onclick="window.SiteDownManager.setTeamFilter('team1', this)" style="border-radius:8px; font-size:0.78rem; font-weight:700; padding:0.4rem 0.85rem;">
+            🔴 Team 1 Dawei (<span id="sd-filter-cnt-t1">0</span>)
+          </button>
+          <button class="filter-btn" data-team="team2" onclick="window.SiteDownManager.setTeamFilter('team2', this)" style="border-radius:8px; font-size:0.78rem; font-weight:700; padding:0.4rem 0.85rem;">
+            🟡 Team 2 Myeik (<span id="sd-filter-cnt-t2">0</span>)
+          </button>
+          <button class="filter-btn" data-team="team3" onclick="window.SiteDownManager.setTeamFilter('team3', this)" style="border-radius:8px; font-size:0.78rem; font-weight:700; padding:0.4rem 0.85rem;">
+            🟢 Team 3 Bokpyin (<span id="sd-filter-cnt-t3">0</span>)
+          </button>
+          <button class="filter-btn" data-team="team4" onclick="window.SiteDownManager.setTeamFilter('team4', this)" style="border-radius:8px; font-size:0.78rem; font-weight:700; padding:0.4rem 0.85rem;">
+            🔵 Team 4 Kawthoung (<span id="sd-filter-cnt-t4">0</span>)
+          </button>
+        </div>
+
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+          <input type="text" id="sd-search-input" placeholder="🔍 Tìm mã trạm, kỹ sư, huyện, tower co..." style="background:#1E293B; border:1px solid rgba(255,255,255,0.15); border-radius:8px; padding:0.4rem 0.8rem; color:#fff; font-size:0.78rem; width:260px;" oninput="window.SiteDownManager.handleSearch(this.value)" />
+          <button class="filter-btn" onclick="window.SiteDownManager.resetFilters()" style="background:rgba(255,255,255,0.06); color:#94A3B8; border:1px solid rgba(255,255,255,0.12); padding:0.4rem 0.7rem; border-radius:8px; font-size:0.78rem; cursor:pointer;" title="Xóa bộ lọc">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Section 1: AW7..AZ Matrix Comparison Table -->
+      <div class="card" style="background:rgba(15,23,42,0.85); border:1px solid rgba(56,189,248,0.25); border-radius:16px; padding:1.2rem; margin-bottom:1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.6rem; margin-bottom:0.8rem;">
+          <div style="font-weight:800; font-size:0.95rem; color:#F8FAFC; display:flex; align-items:center; gap:0.5rem;">
+            <i class="fa-solid fa-table-cells" style="color:#38BDF8;"></i> BẢNG MA TRẬN ĐỐI CHIẾU CẢNH BÁO AW7..AZ (TỪNG TEAM & TOÀN VÙNG)
+          </div>
+          <div style="font-size:0.72rem; color:#94A3B8;">
+            <i class="fa-solid fa-circle-info"></i> Bấm vào số lượng cảnh báo để xem chi tiết danh sách trạm & kỹ sư phụ trách
+          </div>
+        </div>
+
+        <div class="table-container" style="overflow-x:auto;">
+          <table class="data-table" id="sd-matrix-table" style="width:100%; border-collapse:collapse; font-size:0.8rem;">
+            <thead>
+              <tr style="background:rgba(30,41,59,0.9); border-bottom:2px solid rgba(56,189,248,0.3); color:#94A3B8; text-align:left;">
+                <th style="padding:0.65rem 0.8rem; width:220px;">CHỈ SỐ CẢNH BÁO (ALARM)</th>
+                <th style="padding:0.65rem 0.8rem; text-align:center; color:#f87171;">TEAM 1 DAWEI (AW)</th>
+                <th style="padding:0.65rem 0.8rem; text-align:center; color:#fbbf24;">TEAM 2 MYEIK (AX)</th>
+                <th style="padding:0.65rem 0.8rem; text-align:center; color:#34d399;">TEAM 3 BOKPYIN (AY)</th>
+                <th style="padding:0.65rem 0.8rem; text-align:center; color:#38bdf8;">TEAM 4 KAWTHOUNG (AZ)</th>
+                <th style="padding:0.65rem 0.8rem; text-align:center; color:#e2e8f0; font-weight:800; background:rgba(56,189,248,0.12);">TOÀN VÙNG</th>
+              </tr>
+            </thead>
+            <tbody id="sd-matrix-tbody">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Section 2: 4 Team Breakdown Cards Grid -->
+      <div style="margin-bottom:1.5rem;">
+        <div style="font-weight:800; font-size:0.95rem; color:#F8FAFC; margin-bottom:0.8rem; display:flex; align-items:center; gap:0.5rem;">
+          <i class="fa-solid fa-users-viewfinder" style="color:#f59e0b;"></i> TỔNG HỢP CHI TIẾT TỪNG TEAM VẬN HÀNH (4 REGIONAL TEAMS)
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1rem;" id="sd-team-cards-grid">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Section 3: Detailed Active Site Down Table (Col C) -->
+      <div class="card" style="background:rgba(15,23,42,0.85); border:1px solid rgba(239,68,68,0.25); border-radius:16px; padding:1.2rem; margin-bottom:1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.6rem; margin-bottom:0.8rem;">
+          <div>
+            <div style="font-weight:800; font-size:0.95rem; color:#F8FAFC; display:flex; align-items:center; gap:0.5rem;">
+              <i class="fa-solid fa-list-check" style="color:#ef4444;"></i> DANH SÁCH CHI TIẾT SỰ CỐ SITE DOWN ĐANG HOẠT ĐỘNG (COL C LIVE)
+            </div>
+            <div style="font-size:0.72rem; color:#94A3B8; margin-top:0.2rem;">
+              Hiển thị <span id="sd-active-sites-shown-cnt" style="color:#ef4444; font-weight:700;">0</span> / <span id="sd-active-sites-total-cnt">0</span> trạm đang mất liên lạc
+            </div>
+          </div>
+          <div style="display:flex; gap:0.5rem; align-items:center; font-size:0.75rem;">
+            <span style="color:#94A3B8;">Mức độ:</span>
+            <span style="padding:0.2rem 0.5rem; border-radius:4px; background:rgba(234,179,8,0.15); color:#facc15; font-size:0.7rem; font-weight:700;">&lt; 24h</span>
+            <span style="padding:0.2rem 0.5rem; border-radius:4px; background:rgba(249,115,22,0.15); color:#fb923c; font-size:0.7rem; font-weight:700;">24h - 72h</span>
+            <span style="padding:0.2rem 0.5rem; border-radius:4px; background:rgba(239,68,68,0.2); color:#f87171; font-size:0.7rem; font-weight:700;">&gt; 72h</span>
+            <span style="padding:0.2rem 0.5rem; border-radius:4px; background:rgba(147,51,234,0.25); color:#c084fc; font-size:0.7rem; font-weight:700;">&gt; 500h</span>
+          </div>
+        </div>
+
+        <div class="table-container" style="overflow-x:auto; max-height:550px;">
+          <table class="data-table" id="sd-active-sites-table" style="width:100%; border-collapse:collapse; font-size:0.78rem;">
+            <thead>
+              <tr style="background:rgba(30,41,59,0.9); border-bottom:2px solid rgba(239,68,68,0.3); color:#94A3B8; position:sticky; top:0; z-index:2;">
+                <th style="padding:0.6rem 0.6rem; text-align:center; width:40px;">#</th>
+                <th style="padding:0.6rem 0.7rem; cursor:pointer;" onclick="window.SiteDownManager.sortBy('siteId')">MÃ TRẠM <i class="fa-solid fa-sort"></i></th>
+                <th style="padding:0.6rem 0.7rem; cursor:pointer;" onclick="window.SiteDownManager.sortBy('team')">ĐỘI <i class="fa-solid fa-sort"></i></th>
+                <th style="padding:0.6rem 0.7rem; cursor:pointer;" onclick="window.SiteDownManager.sortBy('downHours')">THỜI GIAN DOWN <i class="fa-solid fa-sort"></i></th>
+                <th style="padding:0.6rem 0.7rem;">TOWER CO</th>
+                <th style="padding:0.6rem 0.7rem;">NGUỒN ĐIỆN</th>
+                <th style="padding:0.6rem 0.7rem;">HUYỆN / KHU VỰC</th>
+                <th style="padding:0.6rem 0.7rem; cursor:pointer;" onclick="window.SiteDownManager.sortBy('engineer')">KỸ SƯ PHỤ TRÁCH <i class="fa-solid fa-sort"></i></th>
+                <th style="padding:0.6rem 0.7rem;">PHƯƠNG ÁN / LÝ DO / ETA</th>
+              </tr>
+            </thead>
+            <tbody id="sd-active-sites-tbody">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SITE DOWN DETAIL MODAL -->
+    <div id="sdDetailModal" class="modal-backdrop">
+      <div class="modal-box" style="max-width: 680px; background:#0F172A; border:1px solid rgba(56,189,248,0.4); border-radius:18px; padding:1.5rem; box-shadow:0 25px 50px -12px rgba(0,0,0,0.85);">
+        <div class="modal-header" style="margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.7rem;">
+          <div>
+            <h3 id="sd-modal-title" style="color:#38BDF8; font-weight:800; font-size:1.15rem; margin:0; display:flex; align-items:center; gap:0.5rem;">
+              <i class="fa-solid fa-circle-info"></i> Chi Tiết Cảnh Báo
+            </h3>
+            <p id="sd-modal-subtitle" style="font-size:0.75rem; color:var(--text-sub); margin:0.25rem 0 0 0;"></p>
+          </div>
+          <button type="button" class="close-btn" onclick="window.SiteDownManager.closeModal()">&times;</button>
+        </div>
+        <div id="sd-modal-body" style="max-height:450px; overflow-y:auto; font-size:0.8rem; line-height:1.5;">
+          <!-- Content rendered by JS -->
+        </div>
+      </div>
+    </div>
+    
           <div class="agent-seat-badge" title="Trợ Lý Work Orders & 4 Regional Teams (29 Kỹ sư)">
             <span class="agent-pulse"></span>
             <div><strong style="color:#34D399;">AI-AGENT-WO</strong><div style="font-size:0.68rem; color:#94A3B8;">📋 WO & 4 Đội (29 Engs)</div></div>
@@ -7172,6 +7380,9 @@ Team04>> 2Box</td>
       document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
       document.getElementById(panelId).classList.add('active');
       tabBtn.classList.add('active');
+      if (panelId === 'site-link-down-panel' && window.SiteDownManager) {
+        window.SiteDownManager.loadData(false);
+      }
     }
 
     function setPeriodFilter(period, btn) {
@@ -9936,6 +10147,758 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 });
+
+
+
+    /* ══════════════════════════════════════════════════════════════════════════════════════
+       🚨 SITE DOWN & LINK DOWN MANAGER (AW7..AZ MATRIX & COL C LIVE PARSER)
+       ══════════════════════════════════════════════════════════════════════════════════════ */
+    window.SiteDownManager = (function() {
+      var API_URL = '/api/bi_data?action=site_down';
+      var FALLBACK_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow/export?format=csv&gid=0';
+
+      var state = {
+        data: null,
+        activeTeamFilter: 'all',
+        searchTerm: '',
+        sortField: 'downHours',
+        sortAsc: false,
+        isLoading: false
+      };
+
+      var TEAM_KEYS = ['team1', 'team2', 'team3', 'team4'];
+      var TEAM_INFO = {
+        'team1': { name: 'Team 1 Dawei', color: '#ef4444', icon: 'fa-location-dot', badgeClass: 'kpi-red' },
+        'team2': { name: 'Team 2 Myeik', color: '#f59e0b', icon: 'fa-location-dot', badgeClass: 'kpi-yellow' },
+        'team3': { name: 'Team 3 Bokpyin', color: '#10b981', icon: 'fa-location-dot', badgeClass: 'kpi-green' },
+        'team4': { name: 'Team 4 Kawthoung', color: '#38bdf8', icon: 'fa-location-dot', badgeClass: 'kpi-blue' }
+      };
+
+      function init() {
+        // Load data on first tab view or initialization
+        var siteTabBtn = document.getElementById('tab-btn-site-link-down');
+        if (siteTabBtn) {
+          siteTabBtn.addEventListener('click', function() {
+            if (!state.data && !state.isLoading) {
+              loadData(false);
+            }
+          });
+        }
+      }
+
+      function loadData(forceRefresh) {
+        state.isLoading = true;
+        updateLoadingUI(true);
+
+        var url = API_URL + '&_t=' + Date.now();
+        fetch(url)
+          .then(function(res) {
+            if (!res.ok) throw new Error('API HTTP ' + res.status);
+            return res.json();
+          })
+          .then(function(json) {
+            if (json && json.status === 'ok') {
+              state.data = json;
+              render();
+            } else {
+              throw new Error(json.message || 'API returned non-ok status');
+            }
+          })
+          .catch(function(err) {
+            console.warn('[SiteDownManager] API failed, falling back to direct Sheet GID 0 CSV:', err);
+            loadFallbackCSV();
+          })
+          .finally(function() {
+            state.isLoading = false;
+            updateLoadingUI(false);
+          });
+      }
+
+      function loadFallbackCSV() {
+        var url = FALLBACK_SHEET_URL + '&_t=' + Date.now();
+        fetch(url)
+          .then(function(res) {
+            if (!res.ok) throw new Error('Sheet CSV HTTP ' + res.status);
+            return res.text();
+          })
+          .then(function(csvText) {
+            var parsed = parseSheetCSV(csvText);
+            state.data = parsed;
+            render();
+          })
+          .catch(function(err) {
+            console.error('[SiteDownManager] Fallback CSV also failed:', err);
+            var lastUpdateEl = document.getElementById('sd-last-update-time');
+            if (lastUpdateEl) lastUpdateEl.innerHTML = '<span style="color:#ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> Lỗi kết nối Google Sheet GID 0</span>';
+          });
+      }
+
+      function parseSheetCSV(text) {
+        var lines = text.split(/\r?\n/);
+        var rows = lines.map(function(l) {
+          // Quick csv parse
+          var res = [], cur = '', inQ = false;
+          for (var i = 0; i < l.length; i++) {
+            var c = l[i];
+            if (c === '"') { inQ = !inQ; }
+            else if (c === ',' && !inQ) { res.push(cur.trim()); cur = ''; }
+            else { cur += c; }
+          }
+          res.push(cur.trim());
+          return res;
+        });
+
+        var metrics_def = [
+          { key: "site_down", label: "Site Down", icon: "fa-tower-broadcast", color: "#ef4444" },
+          { key: "cell_down", label: "Cell Down", icon: "fa-signal", color: "#f97316" },
+          { key: "dg_abnormal", label: "DG Abnormal", icon: "fa-bolt", color: "#eab308" },
+          { key: "dg_run_16h", label: "DG Run > 16H", icon: "fa-clock", color: "#f59e0b" },
+          { key: "dg_low_oil", label: "DG Low Oil Pressure", icon: "fa-oil-can", color: "#ec4899" },
+          { key: "link_down", label: "Link Down", icon: "fa-network-wired", color: "#8b5cf6" },
+          { key: "batt_temp_high", label: "Battery Temp High", icon: "fa-temperature-arrow-up", color: "#06b6d4" },
+          { key: "smoke", label: "Smoke Alarm", icon: "fa-smog", color: "#64748b" },
+          { key: "door", label: "Door Alarm", "icon": "fa-door-open", color: "#14b8a6" }
+        ];
+
+        var metrics = {};
+        metrics_def.forEach(function(m) {
+          metrics[m.key] = {
+            key: m.key, label: m.label, icon: m.icon, color: m.color, total: 0,
+            teams: { team1: {count:0, raw:'', items:[]}, team2: {count:0, raw:'', items:[]}, team3: {count:0, raw:'', items:[]}, team4: {count:0, raw:'', items:[]} }
+          };
+        });
+
+        var latest_ts = '';
+        var tower_summary = {};
+
+        // Parse Tower summary from row 2
+        if (rows.length > 1 && rows[1].length > 2) {
+          var r2 = rows[1][2];
+          var reTw = /([A-Za-z0-9_-]+)\s*:\s*(\d+)/g, mTw;
+          while ((mTw = reTw.exec(r2)) !== null) {
+            if (mTw[1].toLowerCase() !== 'down') tower_summary[mTw[1]] = parseInt(mTw[2], 10);
+          }
+        }
+
+        // Parse AW..AZ
+        for (var r = 6; r < Math.min(35, rows.length); r++) {
+          var row = rows[r];
+          var col_aw_az = [row[48] || '', row[49] || '', row[50] || '', row[51] || ''];
+          var first = col_aw_az.find(function(c) { return c && c.trim(); });
+          if (!first) continue;
+
+          var low = first.toLowerCase();
+          var mKey = null;
+          if (low.indexOf('site down') !== -1) mKey = 'site_down';
+          else if (low.indexOf('cell down') !== -1) mKey = 'cell_down';
+          else if (low.indexOf('dg.low oil') !== -1 || low.indexOf('low oil') !== -1) mKey = 'dg_low_oil';
+          else if (low.indexOf('dg run') !== -1) mKey = 'dg_run_16h';
+          else if (low.indexOf('dg abnormal') !== -1) mKey = 'dg_abnormal';
+          else if (low.indexOf('link down') !== -1) mKey = 'link_down';
+          else if (low.indexOf('battery temp') !== -1 || low.indexOf('battery temperature') !== -1) mKey = 'batt_temp_high';
+          else if (low.indexOf('smoke') !== -1) mKey = 'smoke';
+          else if (low.indexOf('door') !== -1) mKey = 'door';
+
+          if (!mKey) continue;
+
+          for (var tIdx = 0; tIdx < 4; tIdx++) {
+            var tk = TEAM_KEYS[tIdx];
+            var cTxt = col_aw_az[tIdx] || '';
+            if (!cTxt) continue;
+
+            if (mKey === 'site_down' && !latest_ts) {
+              var mTs = cTxt.match(/(\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2})/);
+              if (mTs) latest_ts = mTs[1];
+            }
+
+            var cnt = 0;
+            if (mKey === 'link_down') {
+              var cl = cTxt.trim().toLowerCase();
+              if (cl === '0' || cl === 'link down: 0') {
+                cnt = 0;
+              } else {
+                var matches = cl.match(/link\s*down:/g);
+                cnt = matches ? (matches.length > 1 ? matches.length - 1 : 1) : 1;
+              }
+            } else {
+              var cleanTxt = cTxt.replace(/\d{1,2}\/\d{1,2}\/\d{2,4}/g, '');
+              var mCnt = cleanTxt.match(/\/\s*(\d+)/);
+              if (mCnt) cnt = parseInt(mCnt[1], 10);
+            }
+
+            metrics[mKey].teams[tk].count = cnt;
+            metrics[mKey].teams[tk].raw = cTxt;
+            metrics[mKey].total += cnt;
+          }
+        }
+
+        // Parse Active Sites from Col C
+        var active_sites = [];
+        for (var r = 0; r < rows.length; r++) {
+          var val = rows[r][2] || '';
+          if (!val) continue;
+          var m = val.match(/^\d+:\s*(TNI\d+)\s*\|\s*([^|]+)\|\s*([0-9.]+)\s*\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|\s*(.*)$/);
+          if (m) {
+            var tStr = m[2].trim();
+            var tClean = tStr.indexOf('T1') !== -1 ? 'Team 1' : (tStr.indexOf('T2') !== -1 ? 'Team 2' : (tStr.indexOf('T3') !== -1 ? 'Team 3' : (tStr.indexOf('T4') !== -1 ? 'Team 4' : tStr)));
+            active_sites.push({
+              siteId: m[1].trim(),
+              team: tClean,
+              teamRaw: tStr,
+              downHours: parseFloat(m[3].trim()) || 0,
+              towerCo: m[4].trim(),
+              powerType: m[5].trim(),
+              township: m[6].trim(),
+              engineer: m[7].trim(),
+              eta: m[9].trim()
+            });
+          }
+        }
+        active_sites.sort(function(a, b) { return b.downHours - a.downHours; });
+
+        return {
+          status: 'ok',
+          updatedAt: new Date().toLocaleString('vi-VN'),
+          matrixTimestamp: latest_ts || '15/10/2026 11:51',
+          metrics: metrics,
+          metricsList: metrics_def,
+          activeSites: active_sites,
+          totalActiveSites: active_sites.length,
+          towerSummary: tower_summary
+        };
+      }
+
+      function updateLoadingUI(loading) {
+        var lastUpdateEl = document.getElementById('sd-last-update-time');
+        if (lastUpdateEl) {
+          if (loading) {
+            lastUpdateEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="color:#f59e0b;"></i> Đang đồng bộ dữ liệu SSOT...';
+          } else if (state.data) {
+            lastUpdateEl.innerHTML = '<i class="fa-solid fa-clock-rotate-left"></i> Cập nhật: ' + (state.data.updatedAt || 'Vừa xong');
+          }
+        }
+      }
+
+      function render() {
+        if (!state.data) return;
+        renderKpis();
+        renderTowerPills();
+        renderMatrixTable();
+        renderTeamCards();
+        renderActiveSitesTable();
+        updateFilterCounts();
+
+        var tsBadge = document.getElementById('sd-matrix-timestamp-badge');
+        if (tsBadge && state.data.matrixTimestamp) {
+          tsBadge.innerHTML = '🕒 Mốc giờ Sheet: <strong style="color:#F8FAFC;">' + state.data.matrixTimestamp + '</strong>';
+        }
+      }
+
+      function renderKpis() {
+        var grid = document.getElementById('sd-kpi-cards-grid');
+        if (!grid || !state.data || !state.data.metrics) return;
+
+        var mDef = state.data.metricsList || [
+          { key: "site_down", label: "Site Down", icon: "fa-tower-broadcast", color: "#ef4444" },
+          { key: "cell_down", label: "Cell Down", icon: "fa-signal", color: "#f97316" },
+          { key: "dg_abnormal", label: "DG Abnormal", icon: "fa-bolt", color: "#eab308" },
+          { key: "dg_run_16h", label: "DG Run > 16H", icon: "fa-clock", color: "#f59e0b" },
+          { key: "dg_low_oil", label: "DG Low Oil", icon: "fa-oil-can", color: "#ec4899" },
+          { key: "link_down", label: "Link Down", icon: "fa-network-wired", color: "#8b5cf6" },
+          { key: "batt_temp_high", label: "Battery High", icon: "fa-temperature-arrow-up", color: "#06b6d4" },
+          { key: "smoke", label: "Smoke", icon: "fa-smog", color: "#64748b" },
+          { key: "door", label: "Door", icon: "fa-door-open", color: "#14b8a6" }
+        ];
+
+        var html = '';
+        mDef.forEach(function(m) {
+          var item = state.data.metrics[m.key] || { total: 0, teams: {} };
+          var total = item.total || 0;
+          var t1 = (item.teams && item.teams.team1) ? item.teams.team1.count : 0;
+          var t2 = (item.teams && item.teams.team2) ? item.teams.team2.count : 0;
+          var t3 = (item.teams && item.teams.team3) ? item.teams.team3.count : 0;
+          var t4 = (item.teams && item.teams.team4) ? item.teams.team4.count : 0;
+
+          var isSiteDown = m.key === 'site_down';
+          var isZero = total === 0;
+
+          html += `
+            <div class="kpi-card" style="background:rgba(30,41,59,0.7); border:1px solid ${isSiteDown ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.08)'}; border-radius:12px; padding:0.75rem; display:flex; flex-direction:column; justify-content:space-between; position:relative; overflow:hidden;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:0.72rem; font-weight:700; color:#94A3B8;">${m.label}</span>
+                <span style="color:${m.color}; font-size:0.85rem;"><i class="fa-solid ${m.icon}"></i></span>
+              </div>
+              <div style="font-size:1.45rem; font-weight:900; color:${isZero ? '#94A3B8' : (isSiteDown ? '#ef4444' : '#F8FAFC')}; margin:0.3rem 0;">
+                ${total}
+              </div>
+              <div style="font-size:0.65rem; color:#64748B; display:flex; gap:0.25rem; flex-wrap:wrap;">
+                <span style="color:#f87171;" title="Team 1 Dawei">T1:<b>${t1}</b></span>·
+                <span style="color:#fbbf24;" title="Team 2 Myeik">T2:<b>${t2}</b></span>·
+                <span style="color:#34d399;" title="Team 3 Bokpyin">T3:<b>${t3}</b></span>·
+                <span style="color:#38bdf8;" title="Team 4 Kawthoung">T4:<b>${t4}</b></span>
+              </div>
+            </div>
+          `;
+        });
+        grid.innerHTML = html;
+      }
+
+      function renderTowerPills() {
+        var container = document.getElementById('sd-tower-pills');
+        if (!container || !state.data || !state.data.towerSummary) return;
+
+        var tw = state.data.towerSummary;
+        var keys = Object.keys(tw);
+        if (keys.length === 0) {
+          container.innerHTML = '<span style="color:#64748B; font-size:0.72rem;">Không có dữ liệu phân bổ cột</span>';
+          return;
+        }
+
+        var html = '';
+        keys.forEach(function(k) {
+          var count = tw[k];
+          html += `
+            <span style="background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.3); color:#fbbf24; font-size:0.72rem; font-weight:700; padding:0.2rem 0.55rem; border-radius:6px;">
+              ${k}: <b style="color:#fff;">${count}</b> trạm
+            </span>
+          `;
+        });
+        container.innerHTML = html;
+      }
+
+      function renderMatrixTable() {
+        var tbody = document.getElementById('sd-matrix-tbody');
+        if (!tbody || !state.data || !state.data.metrics) return;
+
+        var mDef = state.data.metricsList || [];
+        var html = '';
+
+        mDef.forEach(function(m) {
+          var item = state.data.metrics[m.key] || { total: 0, teams: {} };
+          var total = item.total || 0;
+
+          html += `
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.06); transition:background 0.2s;" onmouseover="this.style.background='rgba(56,189,248,0.04)'" onmouseout="this.style.background='transparent'">
+              <td style="padding:0.65rem 0.8rem; font-weight:700; color:#F8FAFC; display:flex; align-items:center; gap:0.5rem;">
+                <span style="color:${m.color}; width:20px; text-align:center;"><i class="fa-solid ${m.icon}"></i></span>
+                ${m.label}
+              </td>
+          `;
+
+          TEAM_KEYS.forEach(function(tk) {
+            var tData = (item.teams && item.teams[tk]) ? item.teams[tk] : { count: 0, raw: '' };
+            var cnt = tData.count || 0;
+            var hasRaw = tData.raw && tData.raw.trim().length > 0;
+            var isZero = cnt === 0;
+
+            html += `
+              <td style="padding:0.65rem 0.8rem; text-align:center;">
+                <div style="display:inline-flex; align-items:center; gap:0.35rem;">
+                  <span style="padding:0.2rem 0.6rem; border-radius:6px; font-weight:800; font-size:0.8rem; background:${isZero ? 'rgba(255,255,255,0.04)' : (m.key === 'site_down' ? 'rgba(239,68,68,0.2)' : 'rgba(56,189,248,0.15)')}; color:${isZero ? '#64748B' : (m.key === 'site_down' ? '#f87171' : '#38BDF8')}; border:1px solid ${isZero ? 'transparent' : 'rgba(56,189,248,0.3)'};">
+                    ${cnt}
+                  </span>
+                  ${hasRaw && cnt > 0 ? `
+                    <button class="filter-btn" style="padding:0.15rem 0.35rem; font-size:0.65rem; border-radius:4px; background:rgba(255,255,255,0.06); color:#94A3B8; border:1px solid rgba(255,255,255,0.1);" onclick="window.SiteDownManager.openMetricModal('${m.key}', '${tk}')" title="Xem chi tiết kỹ sư & trạm">
+                      <i class="fa-solid fa-eye"></i>
+                    </button>
+                  ` : ''}
+                </div>
+              </td>
+            `;
+          });
+
+          // Total column
+          html += `
+              <td style="padding:0.65rem 0.8rem; text-align:center; background:rgba(56,189,248,0.06);">
+                <span style="padding:0.25rem 0.75rem; border-radius:8px; font-weight:900; font-size:0.88rem; background:${total > 0 ? (m.key === 'site_down' ? '#ef4444' : 'rgba(56,189,248,0.25)') : 'rgba(255,255,255,0.05)'}; color:${total > 0 ? '#fff' : '#64748B'};">
+                  ${total}
+                </span>
+              </td>
+            </tr>
+          `;
+        });
+
+        tbody.innerHTML = html;
+      }
+
+      function renderTeamCards() {
+        var grid = document.getElementById('sd-team-cards-grid');
+        if (!grid || !state.data || !state.data.metrics) return;
+
+        var html = '';
+        TEAM_KEYS.forEach(function(tk) {
+          var tInfo = TEAM_INFO[tk];
+          var sd = state.data.metrics.site_down ? state.data.metrics.site_down.teams[tk] : { count: 0, items: [] };
+          var cell = state.data.metrics.cell_down ? state.data.metrics.cell_down.teams[tk] : { count: 0 };
+          var dg = state.data.metrics.dg_abnormal ? state.data.metrics.dg_abnormal.teams[tk] : { count: 0 };
+          var link = state.data.metrics.link_down ? state.data.metrics.link_down.teams[tk] : { count: 0, raw: '' };
+
+          // Count active sites for this team from activeSites array
+          var teamSites = (state.data.activeSites || []).filter(function(s) {
+            return s.team.toLowerCase().replace(/\s+/g, '') === tk;
+          });
+
+          var isHighlighted = state.activeTeamFilter === 'all' || state.activeTeamFilter === tk;
+
+          html += `
+            <div class="seat-card" style="background:rgba(30,41,59,0.65); border:1px solid ${isHighlighted ? tInfo.color : 'rgba(255,255,255,0.08)'}; border-radius:14px; padding:1.1rem; opacity:${isHighlighted ? 1 : 0.45}; transition:all 0.25s;">
+              <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.7rem; margin-bottom:0.8rem;">
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                  <span style="font-size:1.2rem; color:${tInfo.color};"><i class="fa-solid ${tInfo.icon}"></i></span>
+                  <div>
+                    <strong style="color:#F8FAFC; font-size:0.92rem;">${tInfo.name}</strong>
+                    <div style="font-size:0.7rem; color:#94A3B8;">${teamSites.length} Trạm Down Đang Xử Lý</div>
+                  </div>
+                </div>
+                <span class="seat-status-pill" style="background:${sd.count > 0 ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)'}; color:${sd.count > 0 ? '#f87171' : '#34D399'}; font-weight:800; font-size:0.72rem; padding:0.25rem 0.6rem; border-radius:6px; border:1px solid ${sd.count > 0 ? 'rgba(239,68,68,0.4)' : 'rgba(16,185,129,0.4)'};">
+                  ${sd.count} Sites Down
+                </span>
+              </div>
+
+              <!-- Mini KPI Strip -->
+              <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:0.4rem; margin-bottom:0.8rem;">
+                <div style="background:rgba(15,23,42,0.6); padding:0.4rem 0.5rem; border-radius:8px; text-align:center;">
+                  <div style="font-size:0.65rem; color:#94A3B8;">Cell Down</div>
+                  <strong style="font-size:0.95rem; color:#f97316;">${cell.count}</strong>
+                </div>
+                <div style="background:rgba(15,23,42,0.6); padding:0.4rem 0.5rem; border-radius:8px; text-align:center;">
+                  <div style="font-size:0.65rem; color:#94A3B8;">DG Abn</div>
+                  <strong style="font-size:0.95rem; color:#eab308;">${dg.count}</strong>
+                </div>
+                <div style="background:rgba(15,23,42,0.6); padding:0.4rem 0.5rem; border-radius:8px; text-align:center;">
+                  <div style="font-size:0.65rem; color:#94A3B8;">Link Down</div>
+                  <strong style="font-size:0.95rem; color:#8b5cf6;">${link.count}</strong>
+                </div>
+              </div>
+
+              <!-- Top Down Sites in Team -->
+              <div style="font-size:0.72rem; color:#94A3B8; margin-bottom:0.4rem; font-weight:700;">
+                <i class="fa-solid fa-list"></i> Trạm Down Gần Nhất:
+              </div>
+              <div style="display:flex; flex-direction:column; gap:0.35rem; max-height:160px; overflow-y:auto;">
+          `;
+
+          if (teamSites.length === 0) {
+            html += `<div style="font-size:0.72rem; color:#10b981; padding:0.4rem; text-align:center;"><i class="fa-solid fa-circle-check"></i> Không có trạm nào down!</div>`;
+          } else {
+            teamSites.slice(0, 5).forEach(function(s) {
+              var hourBadgeColor = s.downHours > 500 ? '#c084fc' : (s.downHours > 72 ? '#f87171' : (s.downHours > 24 ? '#fb923c' : '#facc15'));
+              html += `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(15,23,42,0.5); padding:0.35rem 0.55rem; border-radius:6px; font-size:0.72rem;">
+                  <div>
+                    <strong style="color:#F8FAFC;">${s.siteId}</strong>
+                    <span style="color:#64748B; margin-left:0.3rem;">${s.engineer || '-'}</span>
+                  </div>
+                  <span style="color:${hourBadgeColor}; font-weight:700;">${s.downHours}h</span>
+                </div>
+              `;
+            });
+            if (teamSites.length > 5) {
+              html += `<div style="font-size:0.68rem; color:#38BDF8; text-align:center; padding-top:0.2rem;">+ ${teamSites.length - 5} trạm khác bên dưới...</div>`;
+            }
+          }
+
+          html += `
+              </div>
+            </div>
+          `;
+        });
+        grid.innerHTML = html;
+      }
+
+      function renderActiveSitesTable() {
+        var tbody = document.getElementById('sd-active-sites-tbody');
+        if (!tbody || !state.data || !state.data.activeSites) return;
+
+        var sites = state.data.activeSites.slice();
+
+        // 1. Team filter
+        if (state.activeTeamFilter !== 'all') {
+          sites = sites.filter(function(s) {
+            return s.team.toLowerCase().replace(/\s+/g, '') === state.activeTeamFilter;
+          });
+        }
+
+        // 2. Search filter
+        if (state.searchTerm) {
+          var t = state.searchTerm.toLowerCase();
+          sites = sites.filter(function(s) {
+            return s.siteId.toLowerCase().indexOf(t) !== -1 ||
+                   s.team.toLowerCase().indexOf(t) !== -1 ||
+                   s.towerCo.toLowerCase().indexOf(t) !== -1 ||
+                   s.powerType.toLowerCase().indexOf(t) !== -1 ||
+                   s.township.toLowerCase().indexOf(t) !== -1 ||
+                   s.engineer.toLowerCase().indexOf(t) !== -1 ||
+                   s.eta.toLowerCase().indexOf(t) !== -1;
+          });
+        }
+
+        // 3. Sort
+        sites.sort(function(a, b) {
+          var valA = a[state.sortField];
+          var valB = b[state.sortField];
+          if (typeof valA === 'number') {
+            return state.sortAsc ? valA - valB : valB - valA;
+          }
+          valA = (valA || '').toString().toLowerCase();
+          valB = (valB || '').toString().toLowerCase();
+          return state.sortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        });
+
+        // Update counts
+        var shownEl = document.getElementById('sd-active-sites-shown-cnt');
+        var totalEl = document.getElementById('sd-active-sites-total-cnt');
+        if (shownEl) shownEl.textContent = sites.length;
+        if (totalEl) totalEl.textContent = state.data.activeSites.length;
+
+        if (sites.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="9" style="text-align:center; padding:2rem; color:#94A3B8; font-size:0.85rem;">
+                <i class="fa-solid fa-circle-check" style="color:#10b981; font-size:1.5rem; margin-bottom:0.5rem; display:block;"></i>
+                Không tìm thấy sự cố nào phù hợp với bộ lọc hiện tại.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        var html = '';
+        sites.forEach(function(s, idx) {
+          var hourBg = s.downHours > 500 ? 'rgba(147,51,234,0.25)' : (s.downHours > 72 ? 'rgba(239,68,68,0.25)' : (s.downHours > 24 ? 'rgba(249,115,22,0.2)' : 'rgba(234,179,8,0.2)'));
+          var hourColor = s.downHours > 500 ? '#c084fc' : (s.downHours > 72 ? '#f87171' : (s.downHours > 24 ? '#fb923c' : '#facc15'));
+          var teamBadgeClass = s.team.indexOf('1') !== -1 ? 'kpi-red' : (s.team.indexOf('2') !== -1 ? 'kpi-yellow' : (s.team.indexOf('3') !== -1 ? 'kpi-green' : 'kpi-blue'));
+
+          html += `
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.06); transition:background 0.2s;" onmouseover="this.style.background='rgba(56,189,248,0.04)'" onmouseout="this.style.background='transparent'">
+              <td style="padding:0.6rem 0.6rem; text-align:center; color:#64748B;">${idx + 1}</td>
+              <td style="padding:0.6rem 0.7rem; font-weight:800; color:#F8FAFC;">
+                <span style="display:inline-flex; align-items:center; gap:0.35rem;">
+                  <span style="width:6px; height:6px; border-radius:50%; background:#ef4444;"></span>
+                  ${s.siteId}
+                </span>
+              </td>
+              <td style="padding:0.6rem 0.7rem;">
+                <span class="kpi-pill ${teamBadgeClass}" style="font-size:0.7rem; padding:0.18rem 0.5rem;">
+                  ${s.team}
+                </span>
+              </td>
+              <td style="padding:0.6rem 0.7rem;">
+                <span style="background:${hourBg}; color:${hourColor}; font-weight:800; padding:0.25rem 0.6rem; border-radius:6px; font-size:0.78rem;">
+                  ${s.downHours}h
+                </span>
+              </td>
+              <td style="padding:0.6rem 0.7rem; color:#94A3B8; font-weight:600;">${s.towerCo || '-'}</td>
+              <td style="padding:0.6rem 0.7rem; color:#94A3B8;">${s.powerType || '-'}</td>
+              <td style="padding:0.6rem 0.7rem; color:#CBD5E1;">${s.township || '-'}</td>
+              <td style="padding:0.6rem 0.7rem; color:#38BDF8; font-weight:700;">${s.engineer || '-'}</td>
+              <td style="padding:0.6rem 0.7rem; color:#94A3B8; font-size:0.74rem; max-width:320px; white-space:normal;">
+                ${s.eta || '-'}
+              </td>
+            </tr>
+          `;
+        });
+        tbody.innerHTML = html;
+      }
+
+      function updateFilterCounts() {
+        if (!state.data || !state.data.activeSites) return;
+        var allSites = state.data.activeSites;
+
+        var elAll = document.getElementById('sd-filter-cnt-all');
+        var elT1 = document.getElementById('sd-filter-cnt-t1');
+        var elT2 = document.getElementById('sd-filter-cnt-t2');
+        var elT3 = document.getElementById('sd-filter-cnt-t3');
+        var elT4 = document.getElementById('sd-filter-cnt-t4');
+
+        if (elAll) elAll.textContent = allSites.length;
+        if (elT1) elT1.textContent = allSites.filter(function(s){ return s.team.indexOf('1') !== -1; }).length;
+        if (elT2) elT2.textContent = allSites.filter(function(s){ return s.team.indexOf('2') !== -1; }).length;
+        if (elT3) elT3.textContent = allSites.filter(function(s){ return s.team.indexOf('3') !== -1; }).length;
+        if (elT4) elT4.textContent = allSites.filter(function(s){ return s.team.indexOf('4') !== -1; }).length;
+      }
+
+      function setTeamFilter(tk, btn) {
+        state.activeTeamFilter = tk;
+        var filterBtns = document.querySelectorAll('#sd-team-filters .filter-btn');
+        filterBtns.forEach(function(b) { b.classList.remove('active'); });
+        if (btn) btn.classList.add('active');
+        renderTeamCards();
+        renderActiveSitesTable();
+      }
+
+      function handleSearch(term) {
+        state.searchTerm = (term || '').trim();
+        renderActiveSitesTable();
+      }
+
+      function resetFilters() {
+        state.searchTerm = '';
+        state.activeTeamFilter = 'all';
+        var searchInput = document.getElementById('sd-search-input');
+        if (searchInput) searchInput.value = '';
+        var filterBtns = document.querySelectorAll('#sd-team-filters .filter-btn');
+        filterBtns.forEach(function(b) {
+          if (b.getAttribute('data-team') === 'all') b.classList.add('active');
+          else b.classList.remove('active');
+        });
+        renderTeamCards();
+        renderActiveSitesTable();
+      }
+
+      function sortBy(field) {
+        if (state.sortField === field) {
+          state.sortAsc = !state.sortAsc;
+        } else {
+          state.sortField = field;
+          state.sortAsc = (field === 'siteId' || field === 'engineer');
+        }
+        renderActiveSitesTable();
+      }
+
+      function openMetricModal(metricKey, teamKey) {
+        if (!state.data || !state.data.metrics) return;
+        var metric = state.data.metrics[metricKey];
+        if (!metric) return;
+        var tData = metric.teams[teamKey];
+        var tInfo = TEAM_INFO[teamKey] || { name: teamKey };
+
+        var titleEl = document.getElementById('sd-modal-title');
+        var subEl = document.getElementById('sd-modal-subtitle');
+        var bodyEl = document.getElementById('sd-modal-body');
+
+        if (titleEl) titleEl.innerHTML = `<i class="fa-solid ${metric.icon}" style="color:${metric.color};"></i> ${metric.label} — ${tInfo.name}`;
+        if (subEl) subEl.textContent = 'Dữ liệu trích xuất từ cột ' + (teamKey === 'team1' ? 'AW' : (teamKey === 'team2' ? 'AX' : (teamKey === 'team3' ? 'AY' : 'AZ')));
+
+        var html = '';
+        if (tData.items && tData.items.length > 0) {
+          html += '<div style="display:flex; flex-direction:column; gap:0.6rem;">';
+          tData.items.forEach(function(item) {
+            html += `
+              <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:0.75rem;">
+                <div style="font-weight:700; color:#38BDF8; font-size:0.82rem; margin-bottom:0.3rem;">
+                  <i class="fa-solid fa-user-gear"></i> ${item.engineer || 'Chưa phân công'}
+                </div>
+                <div style="color:#CBD5E1; font-size:0.78rem; word-break:break-word; line-height:1.4;">
+                  ${item.content}
+                </div>
+              </div>
+            `;
+          });
+          html += '</div>';
+        } else {
+          html += `
+            <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:1rem; font-family:monospace; color:#CBD5E1; white-space:pre-wrap; word-break:break-word;">
+              ${tData.raw || 'Không có dữ liệu chi tiết.'}
+            </div>
+          `;
+        }
+
+        if (bodyEl) bodyEl.innerHTML = html;
+
+        var modal = document.getElementById('sdDetailModal');
+        if (modal) modal.classList.add('active');
+      }
+
+      function closeModal() {
+        var modal = document.getElementById('sdDetailModal');
+        if (modal) modal.classList.remove('active');
+      }
+
+      function copySummaryReport() {
+        if (!state.data) {
+          if (typeof al === 'function') al('Chưa có dữ liệu để sao chép!', 'warn');
+          else alert('Chưa có dữ liệu để sao chép!');
+          return;
+        }
+
+        var lines = [];
+        lines.push('🚨 BÁO CÁO TỔNG HỢP SITE DOWN & LINK DOWN TOÀN VÙNG TANINTHARYI');
+        lines.push('🕒 Mốc giờ Sheet: ' + (state.data.matrixTimestamp || '15/10/2026 11:51'));
+        lines.push('🛡️ Ghế Giám Sát: SD-SUMMARY-2 & SD-DETAIL-1 (Khóa Thép Active)');
+        lines.push('═══════════════════════════════════════════════════');
+        lines.push('📊 TỔNG HỢP 9 CHỈ SỐ CẢNH BÁO AW7..AZ:');
+
+        var mDef = state.data.metricsList || [];
+        mDef.forEach(function(m) {
+          var item = state.data.metrics[m.key];
+          if (item) {
+            lines.push(`• ${m.label}: ${item.total} (T1: ${item.teams.team1.count} | T2: ${item.teams.team2.count} | T3: ${item.teams.team3.count} | T4: ${item.teams.team4.count})`);
+          }
+        });
+
+        lines.push('═══════════════════════════════════════════════════');
+        lines.push(`🚨 DANH SÁCH ${state.data.activeSites ? state.data.activeSites.length : 0} TRẠM DOWN ĐANG XỬ LÝ (COL C):`);
+        (state.data.activeSites || []).forEach(function(s, i) {
+          lines.push(`${i+1}. ${s.siteId} | ${s.team} | ${s.downHours}h | ${s.towerCo} | ${s.township} | ${s.engineer} | ${s.eta}`);
+        });
+
+        var reportText = lines.join('\n');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(reportText).then(function() {
+            if (typeof al === 'function') al('Đã sao chép Báo Cáo Tổng Hợp Site Down vào clipboard!', 'ok');
+            else alert('✅ Đã sao chép Báo Cáo Tổng Hợp Site Down vào clipboard!');
+          });
+        } else {
+          var ta = document.createElement('textarea');
+          ta.value = reportText;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          if (typeof al === 'function') al('Đã sao chép Báo Cáo Tổng Hợp Site Down vào clipboard!', 'ok');
+          else alert('✅ Đã sao chép Báo Cáo Tổng Hợp Site Down vào clipboard!');
+        }
+      }
+
+      function exportCSV() {
+        if (!state.data || !state.data.activeSites) return;
+        var csvRows = [
+          ['No', 'Site ID', 'Team', 'Down Hours', 'Tower Co', 'Power Type', 'Township', 'Engineer', 'ETA Reason']
+        ];
+        state.data.activeSites.forEach(function(s, i) {
+          csvRows.push([
+            i + 1,
+            s.siteId,
+            s.team,
+            s.downHours,
+            s.towerCo,
+            s.powerType,
+            s.township,
+            s.engineer,
+            '"' + (s.eta || '').replace(/"/g, '""') + '"'
+          ]);
+        });
+        var csvContent = 'data:text/csv;charset=utf-8,﻿' + csvRows.map(function(e){ return e.join(','); }).join('\n');
+        var encodedUri = encodeURI(csvContent);
+        var link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', 'TNI_Site_Down_Report_' + (new Date().toISOString().slice(0,10)) + '.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
+      return {
+        init: init,
+        loadData: loadData,
+        setTeamFilter: setTeamFilter,
+        handleSearch: handleSearch,
+        resetFilters: resetFilters,
+        sortBy: sortBy,
+        openMetricModal: openMetricModal,
+        closeModal: closeModal,
+        copySummaryReport: copySummaryReport,
+        exportCSV: exportCSV
+      };
+    })();
+
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.SiteDownManager) {
+        window.SiteDownManager.init();
+      }
+    });
+    
 </script>
 
 </body>

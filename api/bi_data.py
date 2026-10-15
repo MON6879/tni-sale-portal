@@ -228,6 +228,228 @@ def get_bi_stats():
 
 
 
+SITE_DOWN_SPREADSHEET_ID = "1FvDhIwq8HxKfS2MqrwZMapIEsv7dwafaAVVnK0lpXow"
+SITE_DOWN_GID = "0"
+
+
+def parse_site_down_details(raw_text):
+    """
+    Parses strings like:
+    '/Phyo Htet Aung : /TNI0360 : 14.7, TNI0146 : 62.4 - /Aung La Pyae Oo : /TNI0115 : 6.6'
+    or
+    '/Aung Min Paing: TNI0427 :3 / + /TNI0322 :105 /Not yet check onsite'
+    into structured items.
+    """
+    if not raw_text or raw_text.strip() in ("0", "Link down: 0"):
+        return []
+    
+    parts = re.split(r"(?<=\=)\s*(?=/)", raw_text)
+    tail = parts[-1] if len(parts) > 1 else raw_text
+
+    engineer_blocks = re.split(r"\s+-\s+/?", tail)
+    items = []
+    for block in engineer_blocks:
+        block = block.strip().lstrip("/")
+        if not block:
+            continue
+        colon_idx = block.find(":")
+        if colon_idx != -1:
+            eng_name = block[:colon_idx].strip().lstrip("/")
+            rest = block[colon_idx+1:].strip()
+            items.append({"engineer": eng_name, "content": rest})
+        else:
+            items.append({"engineer": "", "content": block})
+    return items
+
+
+def get_site_down_stats():
+    now_mm = datetime.now(TZ_MM)
+    now_str = now_mm.strftime("%d/%m/%Y %H:%M")
+
+    metrics_def = [
+        {"key": "site_down", "label": "Site Down", "icon": "fa-tower-broadcast", "color": "#ef4444", "order": 1},
+        {"key": "cell_down", "label": "Cell Down", "icon": "fa-signal", "color": "#f97316", "order": 2},
+        {"key": "dg_abnormal", "label": "DG Abnormal", "icon": "fa-bolt", "color": "#eab308", "order": 3},
+        {"key": "dg_run_16h", "label": "DG Run > 16H", "icon": "fa-clock", "color": "#f59e0b", "order": 4},
+        {"key": "dg_low_oil", "label": "DG Low Oil Pressure", "icon": "fa-oil-can", "color": "#ec4899", "order": 5},
+        {"key": "link_down", "label": "Link Down", "icon": "fa-network-wired", "color": "#8b5cf6", "order": 6},
+        {"key": "batt_temp_high", "label": "Battery Temp High", "icon": "fa-temperature-arrow-up", "color": "#06b6d4", "order": 7},
+        {"key": "smoke", "label": "Smoke Alarm", "icon": "fa-smog", "color": "#64748b", "order": 8},
+        {"key": "door", "label": "Door Alarm", "icon": "fa-door-open", "color": "#14b8a6", "order": 9}
+    ]
+
+    metrics = {}
+    for m in metrics_def:
+        metrics[m["key"]] = {
+            "key": m["key"],
+            "label": m["label"],
+            "icon": m["icon"],
+            "color": m["color"],
+            "order": m["order"],
+            "total": 0,
+            "teams": {tk: {"count": 0, "raw": "", "items": []} for tk in TEAM_ORDER}
+        }
+
+    latest_timestamp = ""
+    tower_summary = {}
+    active_sites = []
+
+    try:
+        url = f"https://docs.google.com/spreadsheets/d/{SITE_DOWN_SPREADSHEET_ID}/export?format=csv&gid={SITE_DOWN_GID}"
+        resp = requests.get(url, timeout=12)
+        resp.raise_for_status()
+        content = resp.content.decode("utf-8-sig", errors="replace")
+        rows = list(csv.reader(io.StringIO(content)))
+
+        # 1. Tower Summary from Row 2
+        if len(rows) > 1 and len(rows[1]) > 2:
+            r2 = str(rows[1][2]).strip()
+            m_towers = re.findall(r"([A-Za-z0-9_-]+)\s*:\s*(\d+)", r2)
+            for tw_name, tw_cnt in m_towers:
+                if tw_name.lower() != "down":
+                    tower_summary[tw_name] = int(tw_cnt)
+
+        # 2. Parse AW..AZ columns (48 to 51)
+        for r_idx in range(6, min(35, len(rows))):
+            row = rows[r_idx]
+            col_aw_az = [str(row[c]).strip() if c < len(row) else '' for c in range(48, 52)]
+            first_non_empty = next((c for c in col_aw_az if c), "")
+            if not first_non_empty:
+                continue
+
+            lower_txt = first_non_empty.lower()
+            metric_key = None
+            if "site down" in lower_txt:
+                metric_key = "site_down"
+            elif "cell down" in lower_txt:
+                metric_key = "cell_down"
+            elif "dg.low oil" in lower_txt or "low oil" in lower_txt:
+                metric_key = "dg_low_oil"
+            elif "dg run" in lower_txt:
+                metric_key = "dg_run_16h"
+            elif "dg abnormal" in lower_txt:
+                metric_key = "dg_abnormal"
+            elif "link down" in lower_txt:
+                metric_key = "link_down"
+            elif "battery temperature" in lower_txt or "battery temp" in lower_txt:
+                metric_key = "batt_temp_high"
+            elif "smoke" in lower_txt:
+                metric_key = "smoke"
+            elif "door" in lower_txt:
+                metric_key = "door"
+
+            if not metric_key:
+                continue
+
+            for t_idx, tk in enumerate(TEAM_ORDER):
+                cell_txt = col_aw_az[t_idx] if t_idx < len(col_aw_az) else ""
+                if not cell_txt:
+                    continue
+
+                if metric_key == "site_down" and not latest_timestamp:
+                    m_ts = re.search(r"(\d{2}/\d{2}/\d{4}\s+\d{2}:\d{2})", cell_txt)
+                    if m_ts:
+                        latest_timestamp = m_ts.group(1)
+
+                cnt = 0
+                if metric_key == "link_down":
+                    cl = cell_txt.strip().lower()
+                    if cl in ("0", "link down: 0") or re.search(r"link\s*down:\s*0\b", cl):
+                        cnt = 0
+                    else:
+                        cnt = max(1, len(re.findall(r"link\s*down:", cl)) - (1 if cl.startswith("link down:") else 0))
+                        if cnt == 0 and "link down:" in cl:
+                            cnt = 1
+                else:
+                    # Strip date expressions so '/10/2026' is not mistaken for a count
+                    clean_for_cnt = re.sub(r"\d{1,2}/\d{1,2}/\d{2,4}", "", cell_txt)
+                    m_cnt = re.search(r"/\s*(\d+)", clean_for_cnt)
+                    if m_cnt:
+                        cnt = int(m_cnt.group(1))
+
+                items = parse_site_down_details(cell_txt)
+
+                metrics[metric_key]["teams"][tk]["count"] = cnt
+                metrics[metric_key]["teams"][tk]["raw"] = cell_txt
+                metrics[metric_key]["teams"][tk]["items"] = items
+                metrics[metric_key]["total"] += cnt
+
+        # 3. Parse Active Site Down list from Col C
+        for r_idx in range(len(rows)):
+            row = rows[r_idx]
+            val = str(row[2]).strip() if len(row) > 2 else ""
+            if not val:
+                continue
+
+            m = re.match(r"^\d+:\s*(TNI\d+)\s*\|\s*([^|]+)\|\s*([0-9.]+)\s*\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|\s*(.*)$", val)
+            if m:
+                site_id = m.group(1).strip()
+                team_str = m.group(2).strip()
+                duration_h = float(m.group(3).strip())
+                tower_co = m.group(4).strip()
+                power_type = m.group(5).strip()
+                township = m.group(6).strip()
+                engineer = m.group(7).strip()
+                eta_raw = m.group(9).strip()
+
+                team_clean = "Team 1" if "T1" in team_str else ("Team 2" if "T2" in team_str else ("Team 3" if "T3" in team_str else ("Team 4" if "T4" in team_str else team_str)))
+
+                active_sites.append({
+                    "siteId": site_id,
+                    "team": team_clean,
+                    "teamRaw": team_str,
+                    "downHours": duration_h,
+                    "towerCo": tower_co,
+                    "powerType": power_type,
+                    "township": township,
+                    "engineer": engineer,
+                    "eta": eta_raw
+                })
+
+        active_sites.sort(key=lambda x: x["downHours"], reverse=True)
+
+        # Team Summary aggregation
+        team_summary = {}
+        for tk in TEAM_ORDER:
+            team_summary[tk] = {
+                "name": TEAM_LABELS[tk],
+                "site_down": metrics["site_down"]["teams"][tk]["count"],
+                "cell_down": metrics["cell_down"]["teams"][tk]["count"],
+                "dg_abnormal": metrics["dg_abnormal"]["teams"][tk]["count"],
+                "dg_run_16h": metrics["dg_run_16h"]["teams"][tk]["count"],
+                "dg_low_oil": metrics["dg_low_oil"]["teams"][tk]["count"],
+                "link_down": metrics["link_down"]["teams"][tk]["count"],
+                "batt_temp_high": metrics["batt_temp_high"]["teams"][tk]["count"],
+                "smoke": metrics["smoke"]["teams"][tk]["count"],
+                "door": metrics["door"]["teams"][tk]["count"],
+                "total_alarms": sum(metrics[m["key"]]["teams"][tk]["count"] for m in metrics_def)
+            }
+
+        return {
+            "status": "ok",
+            "updatedAt": now_str,
+            "matrixTimestamp": latest_timestamp or now_str,
+            "metrics": metrics,
+            "metricsList": metrics_def,
+            "teamSummary": team_summary,
+            "activeSites": active_sites,
+            "totalActiveSites": len(active_sites),
+            "towerSummary": tower_summary,
+            "sourceSheet": f"Sheet GID {SITE_DOWN_GID} ({SITE_DOWN_SPREADSHEET_ID})"
+        }
+
+    except Exception as e:
+        logger.error(f"Error parsing Site Down sheet: {e}")
+        return {
+            "status": "error",
+            "message": str(e),
+            "updatedAt": now_str,
+            "metrics": metrics,
+            "teamSummary": {},
+            "activeSites": []
+        }
+
+
 class handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
@@ -237,7 +459,9 @@ class handler(BaseHTTPRequestHandler):
             query = parse_qs(parsed.query)
             action = query.get("action", [None])[0]
 
-            if action in ("wo_detail", "wo"):
+            if action in ("site_down", "site_link_down", "sitedown"):
+                payload = get_site_down_stats()
+            elif action in ("wo_detail", "wo"):
                 cache_file = os.path.join(os.path.dirname(__file__), "wo_detail_cache.json")
                 if os.path.exists(cache_file):
                     with open(cache_file, "r", encoding="utf-8") as f:
@@ -261,4 +485,5 @@ class handler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(err_body)
+
 
