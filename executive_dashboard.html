@@ -10081,7 +10081,8 @@ Gửi link này cho nhân viên qua Telegram/Zalo, khi họ bấm vào hệ th�
         'guide-for-staff-panel':'STAFF_GUIDE',
         'system-guide-panel':   'SYS_GUIDE',
         'access-control-panel': 'AUTH',
-        'secretary-panel':      'SECRETARY'
+        'secretary-panel':      'SECRETARY',
+        'site-link-down-panel': 'EXEC'
       };
       document.querySelectorAll('.nav-tab').forEach(btn => {
         const onclickAttr = btn.getAttribute('onclick') || '';
@@ -10130,6 +10131,9 @@ Gửi link này cho nhân viên qua Telegram/Zalo, khi họ bấm vào hệ th�
       }
       if (panelId === 'access-control-panel' && typeof loadGoogleClientIdSetting === 'function') {
         loadGoogleClientIdSetting();
+      }
+      if (panelId === 'site-link-down-panel' && window.SiteDownManager) {
+        window.SiteDownManager.loadData(false);
       }
     };
 
