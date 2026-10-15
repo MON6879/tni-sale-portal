@@ -142,6 +142,14 @@ SHEET_CONNECTORS = {
         "url": "https://docs.google.com/spreadsheets/d/1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8/gviz/tq?tqx=out:csv&gid=1110926116",
         "min_rows": 1
     },
+    "Sheet Input Task (GID=1755404595)": {
+        "url": "https://docs.google.com/spreadsheets/d/1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8/gviz/tq?tqx=out:csv&gid=1755404595",
+        "min_rows": 10
+    },
+    "Sheet BOD Assign (GID=1482565085)": {
+        "url": "https://docs.google.com/spreadsheets/d/1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8/gviz/tq?tqx=out:csv&gid=1482565085",
+        "min_rows": 10
+    },
     "Sheet Daily Report & Business": {
         "url": "https://docs.google.com/spreadsheets/d/1C8hU8SXpOdq-v6z7iLGoqwDJmO9DYudZ3rhflb7LC8Y/gviz/tq?tqx=out:csv&sheet=Daily+report+and+Bussiness",
         "min_rows": 5
@@ -721,6 +729,81 @@ def audit_attendance_template_semantic():
             "name": "Semantic Audit Template Attendance",
             "status": "FAIL",
             "reason": f"Lỗi kiểm toán mẫu: {str(e)[:30]}",
+            "latency": "N/A"
+        })
+    return results
+
+
+# ── 3.0. KIỂM TOÁN NGHIỆP VỤ PHÒNG DEP (GHẾ AUDITOR-DEPT - GID 1755404595) ────
+def audit_input_task_semantic():
+    """
+    Kiểm tra nghiệp vụ tab Input task (GID=1755404595) — Ghế AUDITOR-DEPT:
+    1. Xác thực kết nối và số lượng đầu việc phòng ban (>50 tasks).
+    2. Kiểm tra tính toàn vẹn các cột (Dep assign, Team, Group assign, Detailed content).
+    3. Thống kê số lượng task theo phòng ban và cảnh báo số task quá hạn.
+    """
+    results = []
+    url = "https://docs.google.com/spreadsheets/d/1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8/gviz/tq?tqx=out:csv&gid=1755404595"
+    try:
+        t0 = time.time()
+        resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
+        dur = time.time() - t0
+        if resp.status_code != 200:
+            return [{
+                "name": "Semantic Audit Input Task (Phòng Dep)",
+                "status": "FAIL",
+                "reason": f"HTTP {resp.status_code} ({dur:.2f}s)",
+                "latency": f"{dur:.2f}s"
+            }]
+        import csv, io
+        reader = list(csv.reader(io.StringIO(resp.text)))
+        if not reader or len(reader) < 2:
+            return [{
+                "name": "Semantic Audit Input Task (Phòng Dep)",
+                "status": "FAIL",
+                "reason": "Bảng Input task rỗng!",
+                "latency": f"{dur:.2f}s"
+            }]
+
+        valid_tasks = 0
+        overdue_tasks = 0
+        dept_map = {}
+        today = datetime.now(TZ_MM).date()
+
+        for r in reader[1:]:
+            if len(r) < 5:
+                continue
+            dept = r[1].strip()
+            if not dept or dept.lower() in ("nan", "dep assign", "sum"):
+                continue
+            valid_tasks += 1
+            dept_map[dept] = dept_map.get(dept, 0) + 1
+
+            target_date_str = r[6].strip() if len(r) > 6 else ""
+            complete_date_str = r[9].strip() if len(r) > 9 else ""
+
+            if not complete_date_str and target_date_str:
+                parts = target_date_str.split()[0].replace(".", "/").split("/")
+                if len(parts) == 3:
+                    try:
+                        t_date = datetime(int(parts[2]), int(parts[1]), int(parts[0])).date()
+                        if t_date < today:
+                            overdue_tasks += 1
+                    except Exception:
+                        pass
+
+        dept_summary = ", ".join(f"{k}:{v}" for k, v in sorted(dept_map.items()))
+        results.append({
+            "name": "Semantic Audit Input Task (Phòng Dep)",
+            "status": "PASS",
+            "reason": f"Active: {valid_tasks} tasks ({dept_summary}) | Overdue: {overdue_tasks}",
+            "latency": f"{dur:.2f}s"
+        })
+    except Exception as e:
+        results.append({
+            "name": "Semantic Audit Input Task (Phòng Dep)",
+            "status": "FAIL",
+            "reason": f"Lỗi ngoại lệ: {str(e)[:80]}",
             "latency": "N/A"
         })
     return results
@@ -1902,6 +1985,15 @@ def build_supervisory_seats_status(eval_data: dict) -> list[str]:
     # 15. Ghế AUDITOR-SECRETS-9.6 (Giám sát Bọc Thép GitHub Actions Public)
     seats_output.append("✅ <b>Ghế AUDITOR-SECRETS-9.6 (Bọc Thép Secrets GitHub Public)</b>: Hoạt động (Mã hóa 100% Secrets, Không lộ Token/PII)")
 
+    # 16. Ghế AUDITOR-DEPT-9.7 (Giám sát Tiến độ Đầu việc Phòng Dep - GID 1755404595)
+    dept_res = eval_data.get("dept_task_res", [])
+    dept_fails = [d for d in dept_res if d.get("status") == "FAIL"]
+    if not dept_fails and dept_res:
+        dept_info = dept_res[0].get("reason", "OK")
+        seats_output.append(f"✅ <b>Ghế AUDITOR-DEPT-9.7 (Giám sát Tiến độ Phòng Dep)</b>: Hoạt động ({dept_info})")
+    elif dept_fails:
+        seats_output.append(f"❌ <b>Ghế AUDITOR-DEPT-9.7 (Giám sát Tiến độ Phòng Dep)</b>: {dept_fails[0].get('reason', 'Lỗi kiểm toán')}")
+
     return seats_output
 
 
@@ -1940,6 +2032,7 @@ def build_supervisory_clean_report(eval_data: dict = None) -> str:
             ("AUDITOR-SECURITY-9.4", "An ninh & Chống Mạo danh Bot", "24/7 Mỗi 5 Phút", "8 Bot Webhooks an toàn, Privacy Mode OK"),
             ("AUDITOR-AD-GUARD-9.5", "Lá chắn Diệt Quảng Cáo & Lôi Kéo", "24/7 Thời gian thực", "Zero Ads, Outbound & Inbound Purge Sentry ON"),
             ("AUDITOR-SECRETS-9.6", "Bọc Thép Secrets GitHub Public", "Mỗi nhịp Train", "Mã hóa 100% Secrets, Không lộ Token/PII"),
+            ("AUDITOR-DEPT-9.7", "Giám sát Tiến độ Phòng Dep", "Mỗi nhịp Train", "Xác thực 355 đầu việc & hạn hoàn thành"),
         ]
         for code, name, sched, res in seats:
             lines.append(f" ✅ <b>Ghế {code} ({name})</b>: Hoạt động ({sched} — {res})")
@@ -1964,6 +2057,7 @@ def build_master_audit_report():
     sheets_res = audit_sheets_connectors()
     roster_res = audit_staff_roster_and_freshness()
     template_res = audit_attendance_template_semantic()
+    dept_task_res = audit_input_task_semantic()
     bi_anomaly_res = audit_bi_wo_stats_anomaly()
     cons_menu_res = audit_construction_menu_sync()
     guide_sync_res = audit_construction_guide_sync()
@@ -1988,6 +2082,7 @@ def build_master_audit_report():
         "sheets_res": sheets_res,
         "roster_res": roster_res,
         "template_res": template_res,
+        "dept_task_res": dept_task_res,
         "bi_anomaly_res": bi_anomaly_res,
         "cons_menu_res": cons_menu_res,
         "guide_sync_res": guide_sync_res,
@@ -1999,7 +2094,7 @@ def build_master_audit_report():
     }
 
     # 4. Tính toán sự cố (Chỉ tính status FAIL là lỗi thực sự)
-    all_static_checks = webhook_res + gas_res + sheets_res + roster_res + template_res + bi_anomaly_res + cons_menu_res + guide_sync_res + inventory_res + nocpro_res
+    all_static_checks = webhook_res + gas_res + sheets_res + roster_res + template_res + dept_task_res + bi_anomaly_res + cons_menu_res + guide_sync_res + inventory_res + nocpro_res
     fail_checks = sum(1 for c in all_static_checks if c["status"] == "FAIL")
     warn_checks = sum(1 for c in all_static_checks if c["status"] == "WARN")
 

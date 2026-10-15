@@ -2430,7 +2430,7 @@ document.addEventListener('DOMContentLoaded', initGoogleAuthGate);
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
         <div>
           <div class="section-head" style="margin-bottom:0.2rem;"><i class="fa-solid fa-building"></i> Department Assignment Overview (Phòng Dep Tasks)</div>
-          <div style="font-size:0.8rem; color:var(--text-sub); font-weight:600;"><i class="fa-regular fa-clock"></i> Sheet Sync: <span class="sheet-sync-time" style="color:var(--cyan);">15/10/2026 13:51:08</span> | Total Active Tasks: <span style="color:var(--emerald);">355 Tasks Live</span></div>
+          <div style="font-size:0.8rem; color:var(--text-sub); font-weight:600;"><i class="fa-regular fa-clock"></i> Sheet Sync: <span class="sheet-sync-time" style="color:var(--cyan);">15/10/2026 14:57:04</span> | Total Active Tasks: <span style="color:var(--emerald);">355 Tasks Live</span></div>
         </div>
         <div style="display:flex; gap:0.5rem; align-items:center;">
           <button onclick="refreshDeptAssignLive()" class="filter-btn" style="padding:0.35rem 0.8rem; font-size:0.8rem; background:rgba(56,189,248,0.2); border:1px solid var(--cyan); color:#fff; cursor:pointer;"><i class="fa-solid fa-rotate"></i> Đồng bộ Dữ liệu Live</button>
@@ -12275,6 +12275,139 @@ window.TaskNotesManager = {
     return (s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
   }
 };
+</script>
+
+
+<script>
+window.filterDeptTable = function(deptName, btn) {
+  const buttons = document.querySelectorAll('#dept-assign-panel .filter-btn');
+  buttons.forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  const rows = document.querySelectorAll('#dept-assign-tbody tr');
+  rows.forEach(row => {
+    const rowDept = row.getAttribute('data-dept') || '';
+    if (deptName === 'ALL' || rowDept.toUpperCase() === deptName.toUpperCase()) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  });
+};
+
+window.refreshDeptAssignLive = async function() {
+  const tbody = document.getElementById('dept-assign-tbody');
+  if (!tbody) return;
+  const btn = document.querySelector('button[onclick="refreshDeptAssignLive()"]');
+  if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang đồng bộ...';
+
+  try {
+    const url = "https://docs.google.com/spreadsheets/d/1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8/gviz/tq?tqx=out:csv&gid=1755404595";
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    const text = await resp.text();
+
+    const rows = [];
+    let curRow = [], curVal = "", inQuote = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (c === '"') inQuote = !inQuote;
+      else if (c === ',' && !inQuote) { curRow.push(curVal); curVal = ""; }
+      else if ((c === '\r' || c === '\n') && !inQuote) {
+        if (c === '\r' && text[i+1] === '\n') i++;
+        curRow.push(curVal); curVal = "";
+        if (curRow.length > 0) rows.push(curRow);
+        curRow = [];
+      } else curVal += c;
+    }
+    if (curVal || curRow.length > 0) { curRow.push(curVal); rows.push(curRow); }
+
+    let count = 0;
+    const tbodyHtml = [];
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    const parseDateStr = (s) => {
+      if (!s) return null;
+      const parts = s.trim().split(' ')[0].replace(/\./g, '/').split('/');
+      if (parts.length === 3) {
+        return new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+      }
+      return null;
+    };
+
+    for (let r = 1; r < rows.length; r++) {
+      const row = rows[r];
+      const dept = (row[1] || "").trim();
+      if (!dept || ["nan", "dep assign", "sum"].includes(dept.toLowerCase())) continue;
+
+      const team = (row[2] || "").trim();
+      const groupAssign = (row[3] || "").trim();
+      const content = (row[4] || "").trim();
+      const targetDate = (row[6] || "").trim();
+      const completeDate = (row[9] || "").trim();
+
+      count++;
+
+      let teamTagClass = "tag-all";
+      const tLow = team.toLowerCase();
+      if (tLow.includes("team 01") || tLow.includes("team 1") || tLow.includes("t1")) teamTagClass = "tag-t1";
+      else if (tLow.includes("team 02") || tLow.includes("team 2") || tLow.includes("t2")) teamTagClass = "tag-t2";
+      else if (tLow.includes("team 03") || tLow.includes("team 3") || tLow.includes("t3")) teamTagClass = "tag-t3";
+      else if (tLow.includes("team 04") || tLow.includes("team 4") || tLow.includes("t4")) teamTagClass = "tag-t4";
+
+      let deptTagClass = "tag-t2";
+      const dLow = dept.toLowerCase();
+      if (dLow.includes("admin") || dLow.includes("asset")) deptTagClass = "tag-t1";
+      else if (dLow.includes("cm") || dLow.includes("m&e")) deptTagClass = "tag-t2";
+      else if (dLow.includes("pm") || dLow.includes("manager") || dLow.includes("construction")) deptTagClass = "tag-t3";
+      else if (dLow.includes("finance") || dLow.includes("transmission")) deptTagClass = "tag-t4";
+
+      let statusHtml = '<span class="status-pill-check sp-pending">In Progress</span>';
+      const cDt = parseDateStr(completeDate);
+      const tDt = parseDateStr(targetDate);
+      if (cDt) {
+        statusHtml = `<span class="status-pill-check sp-verified">✓ Done (${completeDate})</span>`;
+      } else if (tDt && tDt < today) {
+        statusHtml = `<span class="status-pill-check" style="background:rgba(239,68,68,0.2); color:#f87171; border:1px solid rgba(239,68,68,0.4);"><i class="fa-solid fa-triangle-exclamation"></i> Overdue (${targetDate})</span>`;
+      } else if (targetDate) {
+        statusHtml = `<span class="status-pill-check sp-pending">⏳ In Progress (${targetDate})</span>`;
+      }
+
+      tbodyHtml.push(`            <tr data-dept="${dept}">
+              <td>${count}</td>
+              <td><span class="team-tag ${deptTagClass}">${dept || "-"}</span></td>
+              <td><span class="team-tag ${teamTagClass}">${team || "-"}</span></td>
+              <td style="font-size:0.8rem; color:var(--text-sub); font-weight:600;">${groupAssign || "-"}</td>
+              <td style="text-align:left !important; max-width:420px; line-height:1.45; font-weight:600; color:#fff;">${content || "-"}</td>
+              <td style="font-size:0.8rem; color:var(--amber); font-weight:700;">${targetDate || "-"}</td>
+              <td>${statusHtml}</td>
+            </tr>`);
+    }
+
+    tbody.innerHTML = tbodyHtml.join("\n");
+    const syncTimeEl = document.querySelector('#dept-assign-panel .sheet-sync-time');
+    if (syncTimeEl) {
+      const now = new Date();
+      syncTimeEl.textContent = now.toLocaleDateString("vi-VN") + " " + now.toLocaleTimeString("vi-VN", {hour12: false}) + " MMT (Live)";
+    }
+    console.log(`✅ [Dept Assign] Đồng bộ Live thành công ${count} đầu việc phòng ban từ Google Sheets!`);
+  } catch(e) {
+    console.error("❌ [Dept Assign] Refresh error:", e);
+  } finally {
+    if (btn) btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Đồng bộ Dữ liệu Live';
+  }
+};
+
+document.addEventListener("DOMContentLoaded", function() {
+  const deptTabBtn = document.querySelector('button[onclick*="dept-assign-panel"]');
+  if (deptTabBtn) {
+    const origOnClick = deptTabBtn.getAttribute('onclick') || '';
+    if (!origOnClick.includes('refreshDeptAssignLive')) {
+      deptTabBtn.setAttribute('onclick', origOnClick + '; window.refreshDeptAssignLive();');
+    }
+  }
+});
 </script>
 
 </body>

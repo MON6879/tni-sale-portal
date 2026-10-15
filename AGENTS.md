@@ -3026,4 +3026,33 @@ Reason: [Lý do]`
 >   - Live verify `GET ?action=process_aw_az`: `{"ok":true,"sent_tin2":true,"has_1min_train":true}`.
 >   - Đồng bộ commit và push toàn bộ 3 repository (`Task and WO`, `tni-sitedown`, `tni-search`).
 >   - Khóa Thép Site Down tự động đóng lại bảo vệ hệ thống.
+>
+> **PM-105 (15/10/2026) — Ghế Cập Nhật & Giám Sát Toàn Diện Cho Phân Hệ Phòng Dep (Department Assign Dual-Layer Sync & Auditor Sentry Policy)**:
+> - **Yêu Cầu & Bối Cảnh (Requirement & Context)**:
+>   1. Người dùng phản ánh: *"cái này không có ghế cập nhật và giám sát à"* kèm ảnh chụp màn hình tab **"Department Assign"** (`🏢 Department Assignment Overview (Phòng Dep Tasks)`) trên BI Portal (`executive_dashboard.html`).
+>   2. Người dùng chỉ thị: *"Mời chuyên gia rà lại BI WO xem cái nào chưa có ghế cập nhật và giám sát thì triển khai luôn đi"*.
+> - **Nguyên Nhân Gốc (Root Cause Analysis)**:
+>   1. **Bảng Tĩnh Mồ Côi (Orphan Static Mockup)**: Tab `Department Assign` (`#dept-assign-panel`) trên `executive_dashboard.html` và `index.html` trước đây chỉ chứa 4 dòng HTML mẫu tĩnh (Admin repair CCTV, Asset Inventory Site, Technical, Transmission) được hardcode lúc dựng layout ban đầu.
+>   2. **Thiếu Ghế Cập Nhật (Missing Sync Engine)**: Script `sync_wo_detail.py` (Ghế `BI-WO-SYNC`) trước đây chỉ cào `WO Detail` (GID `159298579`), `Sum all WO Team` (GID `1840482617`) và `BOD assign` (GID `1482565085`), bỏ sót tab `Input task` (GID `1755404595`).
+>   3. **Thiếu Ghế Giám Sát (Missing Auditor)**: `system_auditor.py` (Ghế `AUDITOR-9.1`) chưa khai báo connector và bài kiểm tra nghiệp vụ cho tab `Input task`, dẫn đến việc 355 đầu việc và 321 task quá hạn không được theo dõi, cảnh báo.
+> - **Quy Trình & Biện Pháp Khắc Phục Bọc Thép (Rule PM-105)**:
+>   1. **Triển Khai Ghế Cập Nhật `DEPT-ASSIGN-SYNC` (Mở Rộng Ghế `BI-WO-SYNC` trong `sync_wo_detail.py`)**:
+>      - Cào trực tiếp tab `Input task` (GID `1755404595`) qua Google GViz API.
+>      - Xây dựng hàm `build_dept_assign_html(df_dept)` kết xuất 355 đầu việc sống của 6 phòng ban (CM: 21, Finance: 27, M&E: 166, Manager: 54, PM: 54, Transmission: 33) với đầy đủ mã màu team (`tag-t1`..`tag-t4`), trạng thái hoàn thành (`✓ Done`, `⏳ In Progress`, `⚠️ Overdue`).
+>      - Bổ sung thanh lọc nhanh theo phòng ban (`Filter Dept: All, M&E, Manager, PM, Transmission, Finance, CM`).
+>      - Tự động lưu cache JSON tại `api/dept_assign_cache.json`.
+>      - Cập nhật đồng bộ vào `executive_dashboard.html` & `index.html` trên toàn bộ các repository (`Task and WO`, `tni-search`).
+>   2. **Frontend Dual-Layer Live Sync (`executive_dashboard.html` & `index.html`)**:
+>      - Tích hợp hàm JavaScript `refreshDeptAssignLive()` kết nối trực tiếp GViz CSV (Zero-CORS) kèm nút bấm "Đồng bộ Dữ liệu Live".
+>      - Tự động kích hoạt Live Sync khi người dùng chuyển sang tab `Department Assign`.
+>      - Tích hợp hàm `filterDeptTable(deptName, btn)` lọc động tức thời trên trình duyệt.
+>   3. **Triển Khai Ghế Giám Sát `AUDITOR-DEPT-9.7` (Tích Hợp vào `system_auditor.py`)**:
+>      - Thêm `Sheet Input Task (GID=1755404595)` và `Sheet BOD Assign (GID=1482565085)` vào `SHEET_CONNECTORS`.
+>      - Xây dựng hàm kiểm toán nghiệp vụ `audit_input_task_semantic()`: kiểm tra kết nối, tính toàn vẹn 5 cột, thống kê tổng task theo phòng ban và phát hiện số lượng task quá hạn (`Target Date complete < today`).
+>      - Đưa Ghế `AUDITOR-DEPT-9.7 (Giám sát Tiến độ Phòng Dep)` vào danh sách báo cáo chính thức của Sentinel.
+> - **Triển Khai & Kiểm Chứng Live**:
+>   - Đã đồng bộ 355 dòng live vào 6 file HTML trên toàn dự án.
+>   - Kiểm toán thực tế: `Semantic Audit Input Task (Phòng Dep)` trả về PASS (355 tasks, phát hiện 321 task quá hạn trong 1.33s).
+>   - Đã lưu cache JSON `api/dept_assign_cache.json`.
+>   - Commit và push đồng bộ sang `Task and WO` và `tni-search`.
 

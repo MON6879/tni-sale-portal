@@ -27,16 +27,17 @@ SPREADSHEET_ID = "1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8"
 GID_WO_DETAIL  = "159298579"
 GID_SUM_ALL    = "1840482617"
 GID_BOD_ASSIGN = "1482565085"
+GID_INPUT_TASK = "1755404595"
 TZ_MM = timezone(timedelta(hours=6, minutes=30))
 
 
 def get_root_dir():
     current = os.path.abspath(os.path.dirname(__file__))
-    if os.path.exists(os.path.join(current, "index.html")):
-        return current
     parent = os.path.abspath(os.path.join(current, ".."))
-    if os.path.exists(os.path.join(parent, "index.html")):
+    if os.path.exists(os.path.join(parent, "Task and WO")):
         return parent
+    if os.path.exists(os.path.join(current, "Task and WO")):
+        return current
     return current
 
 
@@ -256,13 +257,156 @@ def build_bod_assign_html(df_bod: pd.DataFrame) -> tuple[str, int]:
     return full_bod_panel, count
 
 
-def update_html_file(file_path: str, new_wo_panel_html: str, new_bod_panel_html: str, export_time_str: str) -> bool:
+def build_dept_assign_html(df_dept: pd.DataFrame) -> tuple[str, int]:
+    today = datetime.now(TZ_MM).date()
+
+    def parse_dt(v):
+        if not v or v.lower() in ("nan", "none", "-", ""):
+            return None
+        v = v.split()[0].replace(".", "/")
+        for fmt in ("%d/%m/%Y", "%Y-%m-%d", "%m/%d/%Y"):
+            try:
+                return datetime.strptime(v, fmt).date()
+            except Exception:
+                pass
+        return None
+
+    tbody_rows = []
+    dept_counts = {}
+    count = 0
+
+    for i in range(len(df_dept)):
+        row = df_dept.iloc[i]
+        dept = clean_val(row.iloc[1])
+        if not dept or dept.lower() in ("nan", "dep assign", "sum"):
+            continue
+        team = clean_val(row.iloc[2]) if len(row) > 2 else ""
+        group_assign = clean_val(row.iloc[3]) if len(row) > 3 else ""
+        detailed_content = clean_val(row.iloc[4]) if len(row) > 4 else ""
+        target_date = clean_val(row.iloc[6]) if len(row) > 6 else ""
+        complete_date = clean_val(row.iloc[9]) if len(row) > 9 else ""
+
+        count += 1
+        dept_counts[dept] = dept_counts.get(dept, 0) + 1
+
+        # Team tag class
+        team_tag_class = "tag-all"
+        t_low = team.lower()
+        if "team 01" in t_low or "team 1" in t_low or "t1" in t_low:
+            team_tag_class = "tag-t1"
+        elif "team 02" in t_low or "team 2" in t_low or "t2" in t_low:
+            team_tag_class = "tag-t2"
+        elif "team 03" in t_low or "team 3" in t_low or "t3" in t_low:
+            team_tag_class = "tag-t3"
+        elif "team 04" in t_low or "team 4" in t_low or "t4" in t_low:
+            team_tag_class = "tag-t4"
+
+        # Dept tag class
+        dept_tag_class = "tag-t2"
+        d_low = dept.lower()
+        if "admin" in d_low or "asset" in d_low:
+            dept_tag_class = "tag-t1"
+        elif "cm" in d_low or "m&e" in d_low:
+            dept_tag_class = "tag-t2"
+        elif "pm" in d_low or "manager" in d_low or "construction" in d_low:
+            dept_tag_class = "tag-t3"
+        elif "finance" in d_low or "transmission" in d_low:
+            dept_tag_class = "tag-t4"
+
+        # Status
+        c_dt = parse_dt(complete_date)
+        t_dt = parse_dt(target_date)
+        if c_dt:
+            status_html = f'<span class="status-pill-check sp-verified">✓ Done ({complete_date})</span>'
+        elif t_dt and t_dt < today:
+            status_html = f'<span class="status-pill-check" style="background:rgba(239,68,68,0.2); color:#f87171; border:1px solid rgba(239,68,68,0.4);"><i class="fa-solid fa-triangle-exclamation"></i> Overdue ({target_date})</span>'
+        elif target_date:
+            status_html = f'<span class="status-pill-check sp-pending">⏳ In Progress ({target_date})</span>'
+        else:
+            status_html = '<span class="status-pill-check sp-pending">In Progress</span>'
+
+        t_str = target_date if target_date else "-"
+        dept_str = dept if dept else "-"
+        team_str = team if team else "-"
+        group_str = group_assign if group_assign else "-"
+        content_str = detailed_content if detailed_content else "-"
+
+        row_html = f"""            <tr data-dept="{dept}">
+              <td>{count}</td>
+              <td><span class="team-tag {dept_tag_class}">{dept_str}</span></td>
+              <td><span class="team-tag {team_tag_class}">{team_str}</span></td>
+              <td style="font-size:0.8rem; color:var(--text-sub); font-weight:600;">{group_str}</td>
+              <td style="text-align:left !important; max-width:420px; line-height:1.45; font-weight:600; color:#fff;">{content_str}</td>
+              <td style="font-size:0.8rem; color:var(--amber); font-weight:700;">{t_str}</td>
+              <td>{status_html}</td>
+            </tr>"""
+        tbody_rows.append(row_html)
+
+    # Filter buttons
+    filter_btns = []
+    for d, c in sorted(dept_counts.items(), key=lambda x: -x[1]):
+        filter_btns.append(f'<button class="filter-btn" onclick="filterDeptTable(\'{d}\', this)" style="padding:0.25rem 0.6rem; font-size:0.75rem;">{d} ({c})</button>')
+
+    export_time_str = datetime.now(TZ_MM).strftime("%d/%m/%Y %H:%M:%S")
+
+    full_dept_panel = f"""    <!-- 2. DEPARTMENT ASSIGN TAB (Phòng Dep - Live Google Sheet gid={GID_INPUT_TASK}) -->
+    <div id="dept-assign-panel" class="tab-panel">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+        <div>
+          <div class="section-head" style="margin-bottom:0.2rem;"><i class="fa-solid fa-building"></i> Department Assignment Overview (Phòng Dep Tasks)</div>
+          <div style="font-size:0.8rem; color:var(--text-sub); font-weight:600;"><i class="fa-regular fa-clock"></i> Sheet Sync: <span class="sheet-sync-time" style="color:var(--cyan);">{export_time_str}</span> | Total Active Tasks: <span style="color:var(--emerald);">{count} Tasks Live</span></div>
+        </div>
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+          <button onclick="refreshDeptAssignLive()" class="filter-btn" style="padding:0.35rem 0.8rem; font-size:0.8rem; background:rgba(56,189,248,0.2); border:1px solid var(--cyan); color:#fff; cursor:pointer;"><i class="fa-solid fa-rotate"></i> Đồng bộ Dữ liệu Live</button>
+          <span class="status-pill-check sp-verified" style="font-size:0.8rem;"><i class="fa-solid fa-circle-check"></i> {count} Tasks Synced</span>
+        </div>
+      </div>
+
+      <!-- Quick Filter Pills -->
+      <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem; background:rgba(30,41,59,0.5); padding:0.6rem 0.8rem; border-radius:8px; border:1px solid rgba(255,255,255,0.05);">
+        <span style="font-size:0.8rem; color:var(--text-sub); font-weight:700; display:flex; align-items:center; margin-right:0.3rem;"><i class="fa-solid fa-filter" style="margin-right:0.35rem; color:var(--cyan);"></i> Filter Dept:</span>
+        <button class="filter-btn active" onclick="filterDeptTable('ALL', this)" style="padding:0.25rem 0.6rem; font-size:0.75rem;">All ({count})</button>
+        {' '.join(filter_btns)}
+      </div>
+
+      <div class="card">
+        <div style="max-height: 650px; overflow-y: auto; overflow-x: auto;">
+          <table class="data-table" id="dept-assign-table">
+            <thead>
+              <tr>
+                <th style="width:40px;">#</th>
+                <th>Department</th>
+                <th>Assigned Team</th>
+                <th>Task Group</th>
+                <th style="text-align:left !important; color:var(--cyan);">Detailed Scope & Work Description</th>
+                <th>Target Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="dept-assign-tbody">
+{chr(10).join(tbody_rows)}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>"""
+
+    return full_dept_panel, count
+
+
+def update_html_file(file_path: str, new_wo_panel_html: str, new_bod_panel_html: str, new_dept_panel_html: str, export_time_str: str) -> bool:
     if not os.path.exists(file_path):
         return False
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
 
-    # 1. Thay thế panel WO Detail
+    # 1. Thay thế panel Department Assign
+    dept_pat = r'(?s)<!-- 2\. DEPARTMENT ASSIGN TAB.*?</div>\s*</div>(?=\s*<!--\s*(?:3\.|WO DETAIL))'
+    if re.search(dept_pat, content):
+        content = re.sub(dept_pat, new_dept_panel_html.strip(), content, count=1)
+        logger.info(f"Replaced dept-assign-panel in {file_path}")
+
+    # 2. Thay thế panel WO Detail
     pattern = r'(?s)\s*<!-- 3\.\s*WO DETAIL TAB PANEL.*?</div>\s*</div>\s*(?=\s*<!--\s*(?:4\.|3\.|BOD ASSIGN|Settings|GMAIL|\d+\.))'
     if re.search(pattern, content):
         content = re.sub(pattern, "\n\n" + new_wo_panel_html + "\n\n", content, count=1)
@@ -273,22 +417,148 @@ def update_html_file(file_path: str, new_wo_panel_html: str, new_bod_panel_html:
             content = re.sub(alt_pat, new_wo_panel_html.strip(), content, count=1)
             logger.info(f"Replaced wo-detail-panel via alt_pat in {file_path}")
 
-    # 2. Thay thế panel BOD Assign
+    # 3. Thay thế panel BOD Assign
     bod_pat = r'(?s)<!-- 3\. BOD ASSIGN TAB.*?</div>\s*</div>\s*</div>'
     if re.search(bod_pat, content):
         content = re.sub(bod_pat, new_bod_panel_html.strip(), content, count=1)
         logger.info(f"Replaced bod-assign-panel in {file_path}")
 
-    # 3. Thay thế ngày cũ thành mới nhất
-    content = content.replace("<td>05/08/2026</td>", "<td>15/09/2026</td>")
-    content = content.replace("Close 05/08", "Close 14/09")
-    content = content.replace("Close 06/08", "Close 15/09")
-    content = content.replace("Close 04/08", "Close 13/09")
-    content = content.replace("CLOSE 05/08", "CLOSE 14/09")
-    content = content.replace("CLOSE 06/08", "CLOSE 15/09")
-    content = content.replace("CLOSE 04/08", "CLOSE 13/09")
-    content = content.replace("Plan 07/08", "Plan 15/09")
-    content = content.replace("PLAN 07/08", "PLAN 15/09")
+    # 4. Thêm script refreshDeptAssignLive & filterDeptTable nếu chưa có
+    if "window.refreshDeptAssignLive" not in content and "</body>" in content:
+        dept_script = """
+<script>
+window.filterDeptTable = function(deptName, btn) {
+  const buttons = document.querySelectorAll('#dept-assign-panel .filter-btn');
+  buttons.forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  const rows = document.querySelectorAll('#dept-assign-tbody tr');
+  rows.forEach(row => {
+    const rowDept = row.getAttribute('data-dept') || '';
+    if (deptName === 'ALL' || rowDept.toUpperCase() === deptName.toUpperCase()) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  });
+};
+
+window.refreshDeptAssignLive = async function() {
+  const tbody = document.getElementById('dept-assign-tbody');
+  if (!tbody) return;
+  const btn = document.querySelector('button[onclick="refreshDeptAssignLive()"]');
+  if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang đồng bộ...';
+
+  try {
+    const url = "https://docs.google.com/spreadsheets/d/1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8/gviz/tq?tqx=out:csv&gid=1755404595";
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    const text = await resp.text();
+
+    const rows = [];
+    let curRow = [], curVal = "", inQuote = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (c === '"') inQuote = !inQuote;
+      else if (c === ',' && !inQuote) { curRow.push(curVal); curVal = ""; }
+      else if ((c === '\\r' || c === '\\n') && !inQuote) {
+        if (c === '\\r' && text[i+1] === '\\n') i++;
+        curRow.push(curVal); curVal = "";
+        if (curRow.length > 0) rows.push(curRow);
+        curRow = [];
+      } else curVal += c;
+    }
+    if (curVal || curRow.length > 0) { curRow.push(curVal); rows.push(curRow); }
+
+    let count = 0;
+    const tbodyHtml = [];
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    const parseDateStr = (s) => {
+      if (!s) return null;
+      const parts = s.trim().split(' ')[0].replace(/\\./g, '/').split('/');
+      if (parts.length === 3) {
+        return new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+      }
+      return null;
+    };
+
+    for (let r = 1; r < rows.length; r++) {
+      const row = rows[r];
+      const dept = (row[1] || "").trim();
+      if (!dept || ["nan", "dep assign", "sum"].includes(dept.toLowerCase())) continue;
+
+      const team = (row[2] || "").trim();
+      const groupAssign = (row[3] || "").trim();
+      const content = (row[4] || "").trim();
+      const targetDate = (row[6] || "").trim();
+      const completeDate = (row[9] || "").trim();
+
+      count++;
+
+      let teamTagClass = "tag-all";
+      const tLow = team.toLowerCase();
+      if (tLow.includes("team 01") || tLow.includes("team 1") || tLow.includes("t1")) teamTagClass = "tag-t1";
+      else if (tLow.includes("team 02") || tLow.includes("team 2") || tLow.includes("t2")) teamTagClass = "tag-t2";
+      else if (tLow.includes("team 03") || tLow.includes("team 3") || tLow.includes("t3")) teamTagClass = "tag-t3";
+      else if (tLow.includes("team 04") || tLow.includes("team 4") || tLow.includes("t4")) teamTagClass = "tag-t4";
+
+      let deptTagClass = "tag-t2";
+      const dLow = dept.toLowerCase();
+      if (dLow.includes("admin") || dLow.includes("asset")) deptTagClass = "tag-t1";
+      else if (dLow.includes("cm") || dLow.includes("m&e")) deptTagClass = "tag-t2";
+      else if (dLow.includes("pm") || dLow.includes("manager") || dLow.includes("construction")) deptTagClass = "tag-t3";
+      else if (dLow.includes("finance") || dLow.includes("transmission")) deptTagClass = "tag-t4";
+
+      let statusHtml = '<span class="status-pill-check sp-pending">In Progress</span>';
+      const cDt = parseDateStr(completeDate);
+      const tDt = parseDateStr(targetDate);
+      if (cDt) {
+        statusHtml = `<span class="status-pill-check sp-verified">✓ Done (${completeDate})</span>`;
+      } else if (tDt && tDt < today) {
+        statusHtml = `<span class="status-pill-check" style="background:rgba(239,68,68,0.2); color:#f87171; border:1px solid rgba(239,68,68,0.4);"><i class="fa-solid fa-triangle-exclamation"></i> Overdue (${targetDate})</span>`;
+      } else if (targetDate) {
+        statusHtml = `<span class="status-pill-check sp-pending">⏳ In Progress (${targetDate})</span>`;
+      }
+
+      tbodyHtml.push(`            <tr data-dept="${dept}">
+              <td>${count}</td>
+              <td><span class="team-tag ${deptTagClass}">${dept || "-"}</span></td>
+              <td><span class="team-tag ${teamTagClass}">${team || "-"}</span></td>
+              <td style="font-size:0.8rem; color:var(--text-sub); font-weight:600;">${groupAssign || "-"}</td>
+              <td style="text-align:left !important; max-width:420px; line-height:1.45; font-weight:600; color:#fff;">${content || "-"}</td>
+              <td style="font-size:0.8rem; color:var(--amber); font-weight:700;">${targetDate || "-"}</td>
+              <td>${statusHtml}</td>
+            </tr>`);
+    }
+
+    tbody.innerHTML = tbodyHtml.join("\\n");
+    const syncTimeEl = document.querySelector('#dept-assign-panel .sheet-sync-time');
+    if (syncTimeEl) {
+      const now = new Date();
+      syncTimeEl.textContent = now.toLocaleDateString("vi-VN") + " " + now.toLocaleTimeString("vi-VN", {hour12: false}) + " MMT (Live)";
+    }
+    console.log(`✅ [Dept Assign] Đồng bộ Live thành công ${count} đầu việc phòng ban từ Google Sheets!`);
+  } catch(e) {
+    console.error("❌ [Dept Assign] Refresh error:", e);
+  } finally {
+    if (btn) btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Đồng bộ Dữ liệu Live';
+  }
+};
+
+document.addEventListener("DOMContentLoaded", function() {
+  const deptTabBtn = document.querySelector('button[onclick*="dept-assign-panel"]');
+  if (deptTabBtn) {
+    const origOnClick = deptTabBtn.getAttribute('onclick') || '';
+    if (!origOnClick.includes('refreshDeptAssignLive')) {
+      deptTabBtn.setAttribute('onclick', origOnClick + '; window.refreshDeptAssignLive();');
+    }
+  }
+});
+</script>
+"""
+        content = content.replace("</body>", dept_script + "\n</body>")
 
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)
@@ -296,7 +566,7 @@ def update_html_file(file_path: str, new_wo_panel_html: str, new_bod_panel_html:
 
 
 def main():
-    logger.info("Starting Ghế BI-WO-SYNC (Toa WO Detail & BOD Assign Sync)...")
+    logger.info("Starting Ghế BI-WO-SYNC (Toa WO Detail, BOD Assign & Dept Assign Sync)...")
     logger.info(f"Fetching Tab 'Progress Team Task and WO+Oil' (GID {GID_WO_DETAIL})...")
     df_wo = fetch_csv_gviz(GID_WO_DETAIL)
     logger.info(f"Fetched GID {GID_WO_DETAIL}: {len(df_wo)} rows, {len(df_wo.columns)} cols")
@@ -308,6 +578,11 @@ def main():
     df_bod = fetch_csv_gviz(GID_BOD_ASSIGN)
     new_bod_panel_html, bod_row_count = build_bod_assign_html(df_bod)
     logger.info(f"Built BOD Assign HTML with {bod_row_count} live rows.")
+
+    logger.info(f"Fetching Tab 'Input task' (GID {GID_INPUT_TASK})...")
+    df_dept = fetch_csv_gviz(GID_INPUT_TASK)
+    new_dept_panel_html, dept_row_count = build_dept_assign_html(df_dept)
+    logger.info(f"Built Dept Assign HTML with {dept_row_count} live rows.")
 
     root_dir = get_root_dir()
     target_files = [
@@ -321,7 +596,7 @@ def main():
 
     updated_count = 0
     for tf in target_files:
-        if update_html_file(tf, new_wo_panel_html, new_bod_panel_html, export_time_str):
+        if update_html_file(tf, new_wo_panel_html, new_bod_panel_html, new_dept_panel_html, export_time_str):
             updated_count += 1
             logger.info(f"✅ Successfully updated {tf}")
 
@@ -341,7 +616,14 @@ def main():
             "html": new_bod_panel_html
         }, f, ensure_ascii=False, indent=2)
 
-    print(f"\n[Ghế BI-WO-SYNC] Hoàn tất đồng bộ {updated_count} files HTML với {bod_row_count} dòng BOD Assign & 7 bảng WO Detail ({export_time_str})!")
+    with open(os.path.join(cache_dir, "dept_assign_cache.json"), "w", encoding="utf-8") as f:
+        json.dump({
+            "updated_at": datetime.now(TZ_MM).strftime("%d/%m/%Y %H:%M:%S MMT"),
+            "rows_count": dept_row_count,
+            "html": new_dept_panel_html
+        }, f, ensure_ascii=False, indent=2)
+
+    print(f"\n[Ghế BI-WO-SYNC] Hoàn tất đồng bộ {updated_count} files HTML với {bod_row_count} dòng BOD Assign, {dept_row_count} dòng Dept Assign & 7 bảng WO Detail ({export_time_str})!")
 
 
 if __name__ == "__main__":
