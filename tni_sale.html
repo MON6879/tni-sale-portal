@@ -918,15 +918,15 @@ function copyTelegramReportTemplate(gName, gId, cat) {
 
         <!-- 📷 HÌNH ẢNH XÁC THỰC BÁN HÀNG & LINK FOLDER DRIVE (BẮT BUỘC) -->
         <div class="f" style="grid-column:1/-1;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px">
-          <div style="font-size:12.5px;font-weight:700;color:#166534;margin-bottom:6px">📷 Hình Ảnh Xuất Bán Hàng &amp; Link Folder Drive (Bắt buộc):</div>
+          <div style="font-size:12.5px;font-weight:700;color:#166534;margin-bottom:6px" data-lang="dispatch_photo_sec_title">📷 Hình Ảnh Xuất Bán Hàng &amp; Link Folder Drive (Bắt buộc):</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div>
-              <label style="font-size:11.5px;color:#166534;font-weight:600">Chọn ảnh serial / giao hàng:</label>
+              <label style="font-size:11.5px;color:#166534;font-weight:600" data-lang="dispatch_select_photo_lbl">Chọn ảnh serial / giao hàng:</label>
               <input type="file" id="b-photo-input" accept="image/*" multiple onchange="handleBPhotoUpload(this)" style="font-size:12px;margin-top:4px"/>
               <div id="b-photos-preview" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>
             </div>
             <div>
-              <label style="font-size:11.5px;color:#166534;font-weight:600">Link Google Drive lưu trữ hồ sơ KH:</label>
+              <label style="font-size:11.5px;color:#166534;font-weight:600" data-lang="dispatch_drive_link_lbl">Link Google Drive lưu trữ hồ sơ KH:</label>
               <input id="b-drive-link" placeholder="https://drive.google.com/drive/folders/..." style="width:100%;padding:6px 10px;border:1px solid #86efac;border-radius:6px;font-size:12px;margin-top:4px"/>
             </div>
           </div>
@@ -935,10 +935,10 @@ function copyTelegramReportTemplate(gName, gId, cat) {
 
       <!-- 💡 LIVE DISPATCH FINANCIAL SUMMARY -->
       <div id="ban-financial-box" style="margin-top:14px;padding:12px 14px;background:#f8fafc;border-radius:8px;border:1px solid #cbd5e1;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
-        <div><span style="font-size:11px;color:#0284c7">💰 Tổng Tiền Hàng</span><div id="bf-total" style="font-size:15px;font-weight:700;color:#0284c7">0 ₫</div></div>
-        <div><span style="font-size:11px;color:#475569">🏦 Vốn Gốc (83%)</span><div id="bf-cost" style="font-size:15px;font-weight:700;color:#475569">0 ₫</div></div>
-        <div><span style="font-size:11px;color:#1e40af">🏢 Phải Nộp Cty (% Cty)</span><div id="bf-cty" style="font-size:15px;font-weight:700;color:#1e40af">0 ₫</div></div>
-        <div><span style="font-size:11px;color:#16a34a">🏪 LN Chi Nhánh Thuần</span><div id="bf-branch" style="font-size:15px;font-weight:700;color:#16a34a">0 ₫</div></div>
+        <div><span style="font-size:11px;color:#0284c7" data-lang="kpi_total_revenue">💰 Tổng Tiền Hàng</span><div id="bf-total" style="font-size:15px;font-weight:700;color:#0284c7">0 ₫</div></div>
+        <div><span style="font-size:11px;color:#475569" data-lang="kpi_base_cost_83">🏦 Vốn Gốc (83%)</span><div id="bf-cost" style="font-size:15px;font-weight:700;color:#475569">0 ₫</div></div>
+        <div><span style="font-size:11px;color:#1e40af" data-lang="kpi_payable_ho_17">🏢 Phải Nộp Cty (% Cty)</span><div id="bf-cty" style="font-size:15px;font-weight:700;color:#1e40af">0 ₫</div></div>
+        <div><span style="font-size:11px;color:#16a34a" data-lang="kpi_branch_profit">🏪 LN Chi Nhánh Thuần</span><div id="bf-branch" style="font-size:15px;font-weight:700;color:#16a34a">0 ₫</div></div>
       </div>
 
       <div class="fa" style="margin-top:14px">
@@ -947,7 +947,7 @@ function copyTelegramReportTemplate(gName, gId, cat) {
       </div>
     </div>
   </div>
-  <div class="panel"><div class="ph"><h3>📋 Lịch Sử Bán Hàng</h3></div><div class="pb tw" id="t-ban"></div></div>
+  <div class="panel"><div class="ph"><h3 data-lang="dispatch_history_title">📋 Lịch Sử Bán Hàng</h3></div><div class="pb tw" id="t-ban"></div></div>
 </div>
 
 <!-- ══ BÁO GIÁ UPS ══ -->
@@ -2896,7 +2896,7 @@ function autoPrice(spId,giaId){
 // ═══════════════════════════════════════════════════
 function bk(t,c){return `<span class="bk bk-${c}">${t}</span>`;}
 function tbl(hs, rows) {
-  if (!rows.length) return `<p style="color:#94a3b8;font-size:12.5px;padding:6px 0">${currentLang === 'vi' ? 'Chưa có dữ liệu' : 'No data yet'}</p>`;
+  if (!rows.length) return `<p style="color:#94a3b8;font-size:12.5px;padding:6px 0">${currentLang === 'vi' ? 'Chưa có dữ liệu' : (currentLang === 'my' ? 'ဒေတာအချက်အလက် မရှိသေးပါ' : 'No data yet')}</p>`;
   const translatedHs = hs.map(h => {
     if (!h || typeof h !== 'string') return h;
     return typeof t === 'function' ? t(h.trim(), currentLang) : h;
@@ -3684,15 +3684,18 @@ function printDispatchNote(){
 
 function rBan(){
   const isVi = currentLang === 'vi';
+  const isMy = currentLang === 'my';
   const ban = DB.g('ban');
   const headers = isVi ?
     ['#','Nguồn','Loại Xuất','Sản Phẩm','SL','Serial','Đơn Giá','Tổng Tiền','Đã Thu','Còn Nợ','Người Nhận','SĐT','Ngày',''] :
-    ['#','Source','Target','Product','Qty','Serial','Unit Price','Total Amount','Paid','Debt','Recipient','Phone','Date',''];
+    (isMy ?
+    ['#','အရင်းအမြစ်','ထုတ်ပေးမှုပစ်မှတ်','ကုန်ပစ္စည်း','အရေအတွက်','စီရီရယ်','တစ်ခုချင်းဈေး','စုစုပေါင်း','ပေးပြီးငွေ','အကြွေးကျန်','လက်ခံသူ','ဖုန်း','ရက်စွဲ',''] :
+    ['#','Source','Target','Product','Qty','Serial','Unit Price','Total Amount','Paid','Debt','Recipient','Phone','Date','']);
 
   document.getElementById('t-ban').innerHTML = tbl(headers,
     ban.map((r, i) => {
       const sourceBadge = r.source === 'telegram' ? bk('📱 Telegram','pu') : bk('🌐 Web','bl');
-      const targetBadge = r.target === 'dealer' ? bk('Đại Lý','bl') : (r.target === 'pos' ? bk('Ký Gởi','pu') : (r.target === 'staff' ? bk('NV','or') : bk('Khách Lẻ','gn')));
+      const targetBadge = r.target === 'dealer' ? bk(isVi ? 'Đại Lý' : (isMy ? 'လက်ကား' : 'Dealer'),'bl') : (r.target === 'pos' ? bk(isVi ? 'Ký Gởi' : (isMy ? 'အပ်နှံ' : 'POS'),'pu') : (r.target === 'staff' ? bk(isVi ? 'NV' : (isMy ? 'ဝန်ထမ်း' : 'Staff'),'or') : bk(isVi ? 'Khách Lẻ' : (isMy ? 'လက်လီ' : 'Retail'),'gn')));
       const debtText = r.debt > 0 ? `<b style="color:var(--rd)">${fn(r.debt)}₫</b>` : '<span style="color:var(--gn)">0₫</span>';
       const spName = r.spN || r.product || '-';
       const customer = r.kh || r.customerName || '-';
@@ -8498,6 +8501,37 @@ const NAV_TITLES = {
     mysurvey: '📝 Khảo Sát Của Tôi',
     system: 'Hệ Thống & Phân Quyền',
     rbac: '🛡️ Phân Quyền Vai Trò <small style=\"background:#ede9fe;color:#6d28d9;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:auto;font-weight:700\">RBAC</small>'
+  },
+  my: {
+    overview: 'ခြုံငုံသုံးသပ်ချက်',
+    warehouse: 'ကုန်လှောင်ရုံ',
+    sales: 'အရောင်းနှင့် ဈေးနှုန်းအဆိုပြုလွှာ',
+    clients: 'ဖောက်သည်များ',
+    marketing: 'စျေးကွက်မြှင့်တင်ရေး',
+    finance: 'ဘဏ္ဍာရေးနှင့် စာရင်းကိုင်',
+    staff: '👤 ဝန်ထမ်းပေါ်တယ်',
+    dashboard: '📊 ပင်မဒက်ရှ်ဘုတ်',
+    nhap: '📦 ကုန်ပစ္စည်းအဝင်',
+    tonkho: '🗄️ ကုန်လက်ကျန်စာရင်း',
+    tamung: '🧑‍💼 ပစ္စည်းကြိုတင်ထုတ်ယူမှု',
+    banhang: '🛒 အရောင်းနှင့် ကုန်ပစ္စည်းထုတ်ပေးမှု',
+    baogiaups: '📄 စက်ပစ္စည်းဈေးနှုန်းအဆိုပြုလွှာ',
+    baogiasolar: '☀️ ဆိုလာဈေးနှုန်းအဆိုပြုလွှာ <small style="color:#38bdf8;font-size:10.5px;margin-left:auto">VCM</small>',
+    thucthi: '🚀 ကွင်းဆင်းလုပ်ငန်းဆောင်ရွက်မှု <small style="background:#dcfce7;color:#15803d;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:auto;font-weight:700">HUB</small>',
+    acceptance: '⚡ လုပ်ငန်းလွှဲပြောင်းနှင့် လက်ခံစစ်ဆေးမှု',
+    daily: '🏪 ဖြန့်ဖြူးရောင်းချရေး',
+    kygoi: '📋 အပ်နှံရောင်းချခြင်း (Consignment)',
+    crm: '👥 CRM နှင့် စစ်တမ်း',
+    quangcao: '📢 ကြော်ငြာလှုပ်ရှားမှုများ',
+    leads: '🎯 စိတ်ဝင်စားသူများနှင့် ပြောင်းလဲမှုနှုန်း',
+    loinhuan: '💰 ဘဏ္ဍာရေးနှင့် အမြတ်ငွေစာရင်း',
+    statement: '📑 VCM ငွေစာရင်းရှင်းတမ်း',
+    baocao: '📈 အစီရင်ခံစာများ',
+    mystats: '📊 ကျွန်ုပ်၏လုပ်ဆောင်ချက်မှတ်တမ်း',
+    myquotes: '📄 ကျွန်ုပ်၏ဈေးနှုန်းအဆိုပြုလွှာများ',
+    mysurvey: '📝 ကျွန်ုပ်၏စစ်တမ်းများ',
+    system: 'စနစ်နှင့် လုံခြုံရေး',
+    rbac: '🛡️ အခန်းကဏ္ဍခွင့်ပြုချက်များ <small style=\"background:#ede9fe;color:#6d28d9;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:auto;font-weight:700\">RBAC</small>'
   }
 };
 
@@ -8583,7 +8617,7 @@ const DICT = {
     qu_items_label: '📦 Equipment / Item List',
     qu_add_row: '+ Add Item Row',
     qu_col_order: 'Order',
-      qu_col_desc: 'Item Description / Equipment',
+    qu_col_desc: 'Item Description / Equipment',
     qu_col_brand: 'Brand',
     qu_col_unit: 'Unit',
     qu_col_qty: 'Qty',
@@ -8592,7 +8626,16 @@ const DICT = {
     qu_total_label: 'Total Quotation',
     qu_save_btn: '💾 Save Quotation',
     qu_print_btn: '🖨 Print / PDF',
-    qu_list_title: '📋 Device Quotations List'
+    qu_list_title: '📋 Device Quotations List',
+    dispatch_photo_sec_title: '📷 Sales Dispatch Photos & Drive Folder Link (Required):',
+    dispatch_select_photo_lbl: 'Select serial / delivery photos:',
+    dispatch_drive_link_lbl: 'Google Drive folder link for customer docs:',
+    kpi_total_revenue: '💰 Total Revenue',
+    kpi_base_cost_83: '🏦 Base Cost (83%)',
+    kpi_payable_ho_17: '🏢 Payable to HO (% Quota)',
+    kpi_branch_profit: '🏪 Branch Net Profit',
+    dispatch_history_title: '📋 Sales & Dispatch History',
+    nav_tg_groups: 'Telegram Groups'
   },
   vi: {
     nhap_title: '➕ Nhập Hàng & Phân Bổ Lợi Nhuận',
@@ -8675,7 +8718,7 @@ const DICT = {
     qu_items_label: '📦 Danh sách thiết bị',
     qu_add_row: '+ Thêm dòng',
     qu_col_order: 'Sắp xếp',
-      qu_col_desc: 'Hạng Mục / Thiết Bị',
+    qu_col_desc: 'Hạng Mục / Thiết Bị',
     qu_col_brand: 'Brand',
     qu_col_unit: 'ĐVT',
     qu_col_qty: 'SL',
@@ -8684,7 +8727,117 @@ const DICT = {
     qu_total_label: 'Tổng Báo Giá',
     qu_save_btn: '💾 Lưu Báo Giá',
     qu_print_btn: '🖨 In / PDF',
-    qu_list_title: '📋 Danh Sách Báo Giá Thiết Bị'
+    qu_list_title: '📋 Danh Sách Báo Giá Thiết Bị',
+    dispatch_photo_sec_title: '📷 Hình Ảnh Xuất Bán Hàng & Link Folder Drive (Bắt buộc):',
+    dispatch_select_photo_lbl: 'Chọn ảnh serial / giao hàng:',
+    dispatch_drive_link_lbl: 'Link Google Drive lưu trữ hồ sơ KH:',
+    kpi_total_revenue: '💰 Tổng Tiền Hàng',
+    kpi_base_cost_83: '🏦 Vốn Gốc (83%)',
+    kpi_payable_ho_17: '🏢 Phải Nộp Cty (% Cty)',
+    kpi_branch_profit: '🏪 LN Chi Nhánh Thuần',
+    dispatch_history_title: '📋 Lịch Sử Bán Hàng',
+    nav_tg_groups: 'Nhóm Telegram'
+  },
+  my: {
+    nhap_title: '➕ ကုန်ပစ္စည်းအဝင်နှင့် ကုန်ကျစရိတ်ခွဲဝေမှု',
+    p_name: 'ကုန်ပစ္စည်းအမည် *',
+    p_model: 'မော်ဒယ် / ပစ္စည်းကုဒ်',
+    p_serial: 'စီရီရယ်နံပါတ် (Serial Number)',
+    p_category: 'အမျိုးအစား',
+    p_qty: 'အရေအတွက် *',
+    cost_price_83: 'မူရင်းရင်းနှီးကုန်ကျစရိတ် (၈၃%) *',
+    p_retail_price: '🛒 ၁။ လက်လီရောင်းဈေး (ကိုယ်တိုင်ရိုက်ထည့်) *',
+    p_dealer_price: '🏪 ၂။ လက်ကားဖြန့်ဖြူးဈေး',
+    p_pos_price: '📋 ၃။ အရောင်းဆိုင်/အပ်နှံရောင်းဈေး',
+    p_staff_price: '🧑‍💼 ၄။ ဝန်ထမ်းအနိမ့်ဆုံးဈေး',
+    lbl_retail_profit: '🛒 လက်လီအမြတ်',
+    lbl_dealer_profit: '🏪 လက်ကားအမြတ်',
+    lbl_pos_profit: '📋 အပ်နှံဆိုင်အမြတ်',
+    actual_selling_price: 'အမှန်တကယ်ရောင်းဈေး *',
+    p_supplier: 'ကုန်ပစ္စည်းပေးသွင်းသူ',
+    p_date: 'ပစ္စည်းလက်ခံရက်စွဲ',
+    p_warranty: 'အာမခံသက်တမ်း (လ)',
+    p_note: 'မှတ်ချက်များ',
+    lbl_cost_83: '🏷️ မူရင်းရင်းနှီးငွေ (၈၃%)',
+    lbl_comp_17: '🏢 ရုံးချုပ်ခွဲတမ်း ၁၇%',
+    lbl_min_price: '🛡️ အနိမ့်ဆုံးသတ်မှတ်ရောင်းဈေး (၁၀၀%)',
+    lbl_act_price: '📈 အမှန်တကယ်ရောင်းဈေး',
+    lbl_branch_profit: '🏪 ဌာနခွဲအသားတင်အမြတ်',
+    btn_single_intake: '➕ သီးခြားတစ်ခုချင်းစာရင်းသွင်း',
+    btn_bulk_intake: '📥 အများအပြားတစ်ပြိုင်နက်တင်သွင်း (.CSV / Excel)',
+    btn_download_tpl: '📥 CSV ပုံစံဒေါင်းလုဒ်ရယူရန်',
+    btn_choose_csv: '📁 .CSV ဖိုင်ရွေးချယ်ရန်',
+    btn_save_intake: '📦 ပစ္စည်းအဝင်သိမ်းဆည်းမည်',
+    btn_clear: '✕ ရှင်းလင်းမည်',
+    nhap_bulk_h3: '📥 .CSV ဖိုင် (သို့မဟုတ်) Excel မှ အများအပြားတစ်ပြိုင်နက်တင်သွင်းခြင်း',
+    nhap_bulk_syntax: 'ပုံမှန်ဖော်မတ်: ကုန်ပစ္စည်းအမည် | မော်ဒယ် | စီရီရယ် | အမျိုးအစား | အရေအတွက် | မူရင်းဈေး (၈၃%) | ရောင်းဈေး | ပေးသွင်းသူ | အာမခံ | မှတ်ချက်',
+    nhap_bulk_guide: '<b>💡 ဝန်ထမ်းများအတွက် ရိုးရှင်းသောအဆင့် ၃ ဆင့် လမ်းညွှန်:</b><br/><b>၁။</b> <button class="btn b-gn b-xs" onclick="downloadNhapTemplate()">📥 CSV ပုံစံဒေါင်းလုဒ်ရယူရန်</button> ကိုနှိပ်၍ နမူနာဖိုင်ကို ရယူပါ။<br/><b>၂။</b> <b>Excel</b> သို့မဟုတ် <b>Google Sheets</b> တွင် ဖွင့်ပြီး ပစ္စည်းစာရင်းဖြည့်သွင်းကာ သိမ်းဆည်းပါ။<br/><b>၃။</b> <button class="btn b-bl b-xs" onclick="document.getElementById(\'bulk-file-input\').click()">📁 ဖိုင်ရွေးချယ်ရန်</button> ဖြင့် တင်သွင်းပါ <b>(သို့မဟုတ်)</b> Excel ထဲမှကော်ပီကူးယူ (<code>Ctrl+C</code>) ပြီး အောက်ပါအကွက်ထဲသို့ <b>ကူးထည့်ပါ (Ctrl+V)</b>:',
+    bulk_paste_ph: 'Excel / Google Sheets မှ ဒေတာများကို ဤနေရာတွင် ကူးထည့်ပါ (Ctrl+V)...\nဥပမာ:\nUPS APC BX1200\tAPC-BX1200\tSN001, SN002\tUPS\t2\t830000\t1250000\tAPC VN\t24\tအသစ်စက်စက်\nSolar Longi 450W\tLR4-72HPH\tLG01, LG02\tSolar Panel\t10\t1660000\t2200000\tLongi\t120\tGrade A',
+    btn_preview_bulk: '🔍 စစ်ဆေးပြီး အစမ်းကြည့်ရှုမည်',
+    btn_clear_bulk: '✕ အကွက်ရှင်းလင်းမည်',
+    btn_confirm_bulk: '🚀 ကုန်လှောင်ရုံသို့ အများအပြားတင်သွင်းမှုကို အတည်ပြုမည် (၀ မျိုး)',
+    dispatch_title: '🚚 အရောင်းအော်ဒါနှင့် ကုန်ပစ္စည်းထုတ်ပေးမှု (Smart Dispatch)',
+    dispatch_to: 'ထုတ်ပေးမည့်ပစ်မှတ် (Dispatch Target) *',
+    p_select: 'ထုတ်ပေးမည့် ကုန်ပစ္စည်း *',
+    p_unit_price: 'သတ်မှတ်ရောင်းဈေး (Applied Price) *',
+    recipient_name: 'လက်ခံသူ / အဖွဲ့အစည်း အမည် *',
+    phone_number: 'ဖုန်းနံပါတ်',
+    payment_method: 'ငွေပေးချေမှုစနစ်',
+    deposit_paid: 'ကြိုတင်ပေးသွင်းငွေ',
+    dispatch_date: 'ထုတ်ပေးသည့်ရက်စွဲ',
+    notes: 'ပစ္စည်းထုတ်မှတ်ချက်များ',
+    btn_confirm_dispatch: '🚚 ပစ္စည်းထုတ်ပေးမှုအတည်ပြုပြီး အော်ဒါသိမ်းဆည်းမည်',
+    btn_print_dispatch: '📄 ပစ္စည်းထုတ်ပြေစာ ပုံနှိပ်မည်',
+    tk_title: '🗄️ လက်ရှိသိုလှောင်ရုံ လက်ကျန်စာရင်း',
+    tk_search_ph: '🔍 ကုန်ပစ္စည်းအမည်၊ မော်ဒယ်၊ အမျိုးအစား ရှာဖွေရန်...',
+    d_recent_nhap: '📦 မကြာသေးမီက ပစ္စည်းအဝင်များ',
+    d_recent_ban: '🛒 မကြာသေးမီက အရောင်းများ',
+    d_low_stock: '⚠️ ပစ္စည်းလက်ကျန်နည်း သတိပေးချက်',
+    d_open_tu: '🧑‍💼 မပြီးပြတ်သေးသော ကြိုထုတ်ပစ္စည်းများ',
+    fin_pnl_title: '💰 ၃ ရန်ပုံငွေ အမြတ်/အရှုံး ခွဲခြမ်းစိတ်ဖြာမှု အစီရင်ခံစာ',
+    fin_by_product: '📊 ကုန်ပစ္စည်းအလိုက် အမြတ်ငွေစာရင်း',
+    fin_settlement_ho: '🏢 ရုံးချုပ်သို့ ၁၇% ပေးသွင်းငွေစာရင်း',
+    fin_credit_ledger: '⚠️ လက်ကားဆိုင်နှင့် ဖောက်သည်များထံမှ ရရန်ရှိငွေစာရင်း',
+    btn_kg_mode_single: '➕ တစ်ခုချင်း အပ်နှံရောင်းချလွှာ',
+    btn_kg_mode_bulk: '📥 အပ်နှံရောင်းချမှု အများအပြားတင်သွင်း (.CSV / Excel)',
+    btn_download_kg_tpl: '📥 CSV ပုံစံဒေါင်းလုဒ်ရယူရန်',
+    btn_choose_kg_csv: '📁 .CSV ဖိုင်ရွေးချယ်ရန်',
+    kg_bulk_h3: '📥 အပ်နှံရောင်းချလွှာများ အများအပြားတင်သွင်းခြင်း (.CSV / Excel)',
+    kg_bulk_syntax: 'ပုံမှန်ဖော်မတ်: အရောင်းဆိုင် | ဆက်သွယ်သူ | ဖုန်း | ပစ္စည်း/မော်ဒယ် | အရေအတွက် | အပ်နှံဈေး | သက်တမ်း (ရက်) | မှတ်ချက်',
+    qu_title: '📄 စက်ပစ္စည်းဈေးနှုန်းအဆိုပြုလွှာ',
+    lbl_old_quote_select: '📋 ယခင်အဆိုပြုလွှာကို ကူးယူ/ပြင်ဆင်ရန်:',
+    opt_old_quote_select: '-- ကူးယူ/ပြင်ဆင်ရန် ယခင်အဆိုပြုလွှာကို ရွေးချယ်ပါ --',
+    btn_copy_edit: '📋 ကူးယူပြီး ပြင်ဆင်မည်',
+    btn_save_as_new: '📋 အသစ်အဖြစ် သိမ်းဆည်းမည်',
+    btn_new_quote: '🔄 အသစ်ဖန်တီးမည်',
+    qu_customer: 'ဖောက်သည် / ကုမ္ပဏီ *',
+    qu_phone: 'ဖုန်းနံပါတ်',
+    qu_address: 'လိပ်စာ',
+    qu_creator: 'ပြုစုသူအမည်',
+    qu_date: 'ရက်စွဲ',
+    qu_validity: 'သက်တမ်း (ရက်)',
+    qu_items_label: '📦 စက်ပစ္စည်း/ပစ္စည်းစာရင်း',
+    qu_add_row: '+ စာကြောင်းအသစ်ထည့်မည်',
+    qu_col_order: 'စဉ်',
+    qu_col_desc: 'ပစ္စည်းအကြောင်းအရာ / စက်ပစ္စည်း',
+    qu_col_brand: 'တံဆိပ် (Brand)',
+    qu_col_unit: 'ယူနစ်',
+    qu_col_qty: 'အရေအတွက်',
+    qu_col_price: 'တစ်ခုချင်းဈေးနှုန်း',
+    qu_col_total: 'စုစုပေါင်းငွေ',
+    qu_total_label: 'စုစုပေါင်း အဆိုပြုငွေပမာဏ',
+    qu_save_btn: '💾 အဆိုပြုလွှာ သိမ်းဆည်းမည်',
+    qu_print_btn: '🖨 ပုံနှိပ်မည် / PDF ထုတ်ယူမည်',
+    qu_list_title: '📋 စက်ပစ္စည်းဈေးနှုန်းအဆိုပြုလွှာများ စာရင်း',
+    dispatch_photo_sec_title: '📷 အရောင်းထွက်အထောက်အထားဓာတ်ပုံနှင့် Drive ဖိုင်တွဲလင့်ခ် (မဖြစ်မနေလိုအပ်ပါ):',
+    dispatch_select_photo_lbl: 'စီရီရယ်နံပါတ် / ပစ္စည်းပို့ဓာတ်ပုံ ရွေးချယ်ပါ:',
+    dispatch_drive_link_lbl: 'ဖောက်သည်ဖိုင်တွဲ Google Drive လင့်ခ်:',
+    kpi_total_revenue: '💰 စုစုပေါင်း ကုန်ပစ္စည်းတန်ဖိုး',
+    kpi_base_cost_83: '🏦 မူရင်းအရင်းအနှီး (၈၃%)',
+    kpi_payable_ho_17: '🏢 ရုံးချုပ်သို့ ပေးသွင်းရန် (% ခွဲတမ်း)',
+    kpi_branch_profit: '🏪 ဌာနခွဲ အသားတင်အမြတ်',
+    dispatch_history_title: '📋 အရောင်းနှင့် ပစ္စည်းထုတ်ပေးမှု မှတ်တမ်း',
+    nav_tg_groups: 'တယ်လီဂရမ် အဖွဲ့များ'
   }
 };
 
@@ -8936,27 +9089,139 @@ const BILINGUAL_PAIRS = [
   ['📋 Lịch Sử Khảo Sát', '📋 Survey History'],
 ];
 
+// ═══════════════════════════════════════════════════
+// 🇲🇲 TRILINGUAL ENGINE (VIỆT - ANH - MYANMAR UNICODE)
+// ═══════════════════════════════════════════════════
+const TRILINGUAL_PAIRS = [
+  // Mục tiêu xuất hàng
+  { en: '🛒 Khách Hàng Bán Lẻ (Retail Customer)', vi: '🛒 Khách Hàng Bán Lẻ (Retail Customer)', my: '🛒 လက်လီဖောက်သည် (Retail Customer)' },
+  { en: '🏪 Đại Lý Phân Phối (Dealer Wholesale)', vi: '🏪 Đại Lý Phân Phối (Dealer Wholesale)', my: '🏪 လက်ကားဖြန့်ဖြူးသူ (Dealer Wholesale)' },
+  { en: '📋 Điểm Bán Ký Gởi (POS / Consignment)', vi: '📋 Điểm Bán Ký Gởi (POS / Consignment)', my: '📋 အပ်နှံအရောင်းဆိုင် (POS / Consignment)' },
+  { en: '🧑‍💼 Nhân Viên Tạm Ứng / Đi Công Trình (Staff)', vi: '🧑‍💼 Nhân Viên Tạm Ứng / Đi Công Trình (Staff)', my: '🧑‍💼 ဝန်ထမ်း / လုပ်ငန်းခွင်သုံး (Staff)' },
+  { en: 'Retail Customer', vi: 'Khách Hàng Bán Lẻ', my: 'လက်လီဖောက်သည်' },
+  { en: 'Dealer Wholesale', vi: 'Đại Lý Phân Phối', my: 'လက်ကားဖြန့်ဖြူးသူ' },
+  { en: 'POS / Consignment', vi: 'Điểm Bán Ký Gởi', my: 'အပ်နှံအရောင်းဆိုင်' },
+  { en: 'Staff Floor', vi: 'Giá Cho NV', my: 'ဝန်ထမ်းအနိမ့်ဆုံး' },
+
+  // Hình thức thanh toán
+  { en: '💵 Đã Thu 100% (Tiền mặt / Chuyển khoản)', vi: '💵 Đã Thu 100% (Tiền mặt / Chuyển khoản)', my: '💵 ၁၀၀% လက်ခံရရှိပြီး (ငွေသား / ဘဏ်လွှဲ)' },
+  { en: '100% Collected (Cash)', vi: 'Đã Thu 100% (Tiền mặt)', my: '၁၀၀% ငွေလက်ခံရရှိပြီး (ငွေသား)' },
+  { en: '100% Collected (Transfer)', vi: 'Đã Thu 100% (Chuyển khoản)', my: '၁၀၀% ငွေလက်ခံရရှိပြီး (ဘဏ်လွှဲ)' },
+  { en: '⏳ Ghi Nợ / Gối Đầu (Chưa thanh toán đủ)', vi: '⏳ Ghi Nợ / Gối Đầu (Chưa thanh toán đủ)', my: '⏳ အကြွေး / အရစ်ကျ (ငွေမပြေကျေသေး)' },
+  { en: '📋 Ký Gởi / Tạm Ứng (Chưa thu tiền)', vi: '📋 Ký Gởi / Tạm Ứng (Chưa thu tiền)', my: '📋 အပ်နှံရောင်းချ / ကြိုတင်ထုတ်ယူ (ငွေမရသေး)' },
+  { en: 'Credit / Unpaid', vi: 'Công Nợ (Chưa thu tiền)', my: 'အကြွေးကျန် (ငွေမရသေး)' },
+
+  // Ảnh xuất bán & Drive
+  { en: '📷 Hình Ảnh Xuất Bán Hàng & Link Folder Drive (Bắt buộc):', vi: '📷 Hình Ảnh Xuất Bán Hàng & Link Folder Drive (Bắt buộc):', my: '📷 အရောင်းထွက်အထောက်အထားဓာတ်ပုံနှင့် Drive ဖိုင်တွဲလင့်ခ် (မဖြစ်မနေလိုအပ်ပါ):' },
+  { en: 'Chọn ảnh serial / giao hàng:', vi: 'Chọn ảnh serial / giao hàng:', my: 'စီရီရယ်နံပါတ် / ပစ္စည်းပို့ဓာတ်ပုံ ရွေးချယ်ပါ:' },
+  { en: 'Link Google Drive lưu trữ hồ sơ KH:', vi: 'Link Google Drive lưu trữ hồ sơ KH:', my: 'ဖောက်သည်ဖိုင်တွဲ Google Drive လင့်ခ်:' },
+
+  // 4 Chỉ số KPI Tài chính
+  { en: '💰 Tổng Tiền Hàng', vi: '💰 Tổng Tiền Hàng', my: '💰 စုစုပေါင်း ကုန်ပစ္စည်းတန်ဖိုး' },
+  { en: '🏦 Vốn Gốc (83%)', vi: '🏦 Vốn Gốc (83%)', my: '🏦 မူရင်းအရင်းအနှီး (၈၃%)' },
+  { en: '🏢 Phải Nộp Cty (% Cty)', vi: '🏢 Phải Nộp Cty (% Cty)', my: '🏢 ရုံးချုပ်သို့ ပေးသွင်းရန် (% ခွဲတမ်း)' },
+  { en: '🏪 LN Chi Nhánh Thuần', vi: '🏪 LN Chi Nhánh Thuần', my: '🏪 ဌာနခွဲ အသားတင်အမြတ်' },
+  { en: 'Total Revenue', vi: 'Tổng Tiền Hàng', my: 'စုစုပေါင်း ကုန်ပစ္စည်းတန်ဖိုး' },
+  { en: 'Base Cost 83%', vi: 'Vốn Gốc (83%)', my: 'မူရင်းအရင်းအနှီး (၈၃%)' },
+  { en: 'Payable to HO', vi: 'Phải Nộp Cty (% Cty)', my: 'ရုံးချုပ်သို့ ပေးသွင်းရန် (% ခွဲတမ်း)' },
+  { en: 'Branch Net Profit', vi: 'LN Chi Nhánh Thuần', my: 'ဌာနခွဲ အသားတင်အမြတ်' },
+
+  // Bảng và Lịch sử
+  { en: '📋 Sales & Dispatch History', vi: '📋 Lịch Sử Bán Hàng', my: '📋 အရောင်းနှင့် ပစ္စည်းထုတ်ပေးမှု မှတ်တမ်း' },
+  { en: 'No data yet', vi: 'Chưa có dữ liệu', my: 'ဒေတာအချက်အလက် မရှိသေးပါ' },
+  { en: 'Drive Photos', vi: 'Kho Ảnh Drive (Photos)', my: 'Drive ဓာတ်ပုံမှတ်တမ်းများ (Photos)' },
+  { en: 'Switched to Myanmar language', vi: 'Đã chuyển sang tiếng Myanmar', my: 'မြန်မာဘာသာသို့ ပြောင်းလဲပြီးပါပြီ' },
+  { en: 'Click to switch language', vi: 'Bấm để chuyển ngôn ngữ', my: 'ဘာသာစကားပြောင်းလဲရန် နှိပ်ပါ' },
+
+  // Vai trò hệ thống
+  { en: 'Ban Giám Đốc (BOD)', vi: 'Ban Giám Đốc (BOD)', my: 'ဒါရိုက်တာအဖွဲ့ (BOD / Executive)' },
+  { en: 'Kế Toán & Tài Chính', vi: 'Kế Toán & Tài Chính', my: 'စာရင်းကိုင်နှင့် ဘဏ္ဍာရေး (Chief Accountant / Finance)' },
+  { en: 'Kinh Doanh (Sales)', vi: 'Kinh Doanh (Sales)', my: 'အရောင်းဌာန (Sales & Business)' },
+  { en: 'Kỹ Thuật (Field Ops)', vi: 'Kỹ Thuật (Field Ops)', my: 'ကွင်းဆင်းအင်ဂျင်နီယာ / နည်းပညာ (Field Operations)' },
+  { en: 'Thủ Kho / Vận Hành', vi: 'Thủ Kho / Vận Hành', my: 'ဂိုဒေါင်မှူး / စီမံခန့်ခွဲမှု (Warehouse & Operations)' },
+  { en: 'Đại Lý Phân Phối', vi: 'Đại Lý Phân Phối', my: 'တရားဝင်ကိုယ်စားလှယ် (Authorized Dealers)' },
+
+  // Nút bấm & hành động
+  { en: '💾 Save', vi: '💾 Lưu', my: '💾 သိမ်းဆည်းမည်' },
+  { en: '✕ Cancel / Close', vi: '✕ Hủy / Đóng', my: '✕ ပယ်ဖျက်မည် / ပိတ်မည်' },
+  { en: '✏️ Edit', vi: '✏️ Sửa', my: '✏️ ပြင်ဆင်မည်' },
+  { en: '🗑 Delete', vi: '🗑 Xóa', my: '🗑 ဖျက်မည်' },
+  { en: '🔍 Search', vi: '🔍 Tìm kiếm', my: '🔍 ရှာဖွေမည်' },
+  { en: '⬇ Export Excel', vi: '⬇ Xuất Excel', my: '⬇ Excel သို့ ထုတ်ယူမည်' },
+  { en: '📥 Download Template', vi: '📥 Tải mẫu', my: '📥 ပုံစံဒေါင်းလုဒ်ရယူရန်' },
+  { en: '⬆ Import Data', vi: '⬆ Nhập dữ liệu', my: '⬆ ဖိုင်တင်သွင်းမည်' },
+  { en: '📋 Copy Link', vi: '📋 Sao chép link', my: '📋 လင့်ခ်ကူးယူမည်' },
+  { en: '🖨 Print / PDF', vi: '🖨 In / PDF', my: '🖨 ပုံနှိပ်မည် / PDF ထုတ်ယူမည်' },
+  { en: '🔄 Reset Defaults', vi: '🔄 Reset Mặc Định', my: '🔄 မူလအတိုင်း ပြန်လည်သတ်မှတ်မည်' },
+  { en: '➕ Add Staff', vi: '➕ Thêm Nhân Sự', my: '➕ ဝန်ထမ်းအသစ်ထည့်မည်' }
+];
+
 const MAP_VI_TO_EN = {};
 const MAP_EN_TO_VI = {};
 const MAP_VI_TO_EN_LOWER = {};
 const MAP_EN_TO_VI_LOWER = {};
 
-BILINGUAL_PAIRS.forEach(([vi, en]) => {
-  const v = vi.trim();
-  const e = en.trim();
-  MAP_VI_TO_EN[v] = e;
-  MAP_EN_TO_VI[e] = v;
-  MAP_VI_TO_EN_LOWER[v.toLowerCase()] = e;
-  MAP_EN_TO_VI_LOWER[e.toLowerCase()] = v;
+const MAP_TO_MY = {};
+const MAP_TO_MY_LOWER = {};
+const MAP_MY_TO_VI = {};
+const MAP_MY_TO_EN = {};
 
-  // Also strip leading emojis/icons for fuzzy matching
-  const vClean = v.replace(/^[^\w\s\u00C0-\u1EF9]+/, '').trim();
-  const eClean = e.replace(/^[^\w\s\u00C0-\u1EF9]+/, '').trim();
-  if (vClean && eClean) {
-    if (!MAP_VI_TO_EN[vClean]) MAP_VI_TO_EN[vClean] = eClean;
-    if (!MAP_EN_TO_VI[eClean]) MAP_EN_TO_VI[eClean] = vClean;
-    MAP_VI_TO_EN_LOWER[vClean.toLowerCase()] = eClean;
-    MAP_EN_TO_VI_LOWER[eClean.toLowerCase()] = vClean;
+// 1. Populate from TRILINGUAL_PAIRS
+TRILINGUAL_PAIRS.forEach(p => {
+  const v = (p.vi || '').trim();
+  const e = (p.en || '').trim();
+  const m = (p.my || '').trim();
+
+  if (v && e) {
+    MAP_VI_TO_EN[v] = e;
+    MAP_EN_TO_VI[e] = v;
+    MAP_VI_TO_EN_LOWER[v.toLowerCase()] = e;
+    MAP_EN_TO_VI_LOWER[e.toLowerCase()] = v;
+  }
+  if (m) {
+    if (v) {
+      MAP_TO_MY[v] = m;
+      MAP_TO_MY_LOWER[v.toLowerCase()] = m;
+      MAP_MY_TO_VI[m] = v;
+    }
+    if (e) {
+      MAP_TO_MY[e] = m;
+      MAP_TO_MY_LOWER[e.toLowerCase()] = m;
+      MAP_MY_TO_EN[m] = e;
+    }
+  }
+});
+
+// 2. Populate from BILINGUAL_PAIRS
+BILINGUAL_PAIRS.forEach(([vi, en]) => {
+  const v = (vi || '').trim();
+  const e = (en || '').trim();
+  if (v && e) {
+    if (!MAP_VI_TO_EN[v]) MAP_VI_TO_EN[v] = e;
+    if (!MAP_EN_TO_VI[e]) MAP_EN_TO_VI[e] = v;
+    if (!MAP_VI_TO_EN_LOWER[v.toLowerCase()]) MAP_VI_TO_EN_LOWER[v.toLowerCase()] = e;
+    if (!MAP_EN_TO_VI_LOWER[e.toLowerCase()]) MAP_EN_TO_VI_LOWER[e.toLowerCase()] = v;
+  }
+});
+
+// 3. Populate from NAV_TITLES & DICT
+Object.keys(NAV_TITLES.en || {}).forEach(k => {
+  const v = (NAV_TITLES.vi && NAV_TITLES.vi[k]) || '';
+  const e = (NAV_TITLES.en && NAV_TITLES.en[k]) || '';
+  const m = (NAV_TITLES.my && NAV_TITLES.my[k]) || '';
+  if (m) {
+    if (v) { MAP_TO_MY[v] = m; MAP_TO_MY_LOWER[v.toLowerCase()] = m; }
+    if (e) { MAP_TO_MY[e] = m; MAP_TO_MY_LOWER[e.toLowerCase()] = m; }
+  }
+});
+
+Object.keys(DICT.en || {}).forEach(k => {
+  const e = (DICT.en[k] || '').trim();
+  const v = (DICT.vi && DICT.vi[k] ? DICT.vi[k] : '').trim();
+  const m = (DICT.my && DICT.my[k] ? DICT.my[k] : '').trim();
+  if (m) {
+    if (e) { MAP_TO_MY[e] = m; MAP_TO_MY_LOWER[e.toLowerCase()] = m; }
+    if (v) { MAP_TO_MY[v] = m; MAP_TO_MY_LOWER[v.toLowerCase()] = m; }
   }
 });
 
@@ -8964,18 +9229,35 @@ function t(str, lang) {
   if (!str || typeof str !== 'string') return str;
   const target = lang || currentLang;
   const trimmed = str.trim();
-  const map = target === 'vi' ? MAP_EN_TO_VI : MAP_VI_TO_EN;
-  if (map[trimmed]) return map[trimmed];
-  const mapLower = target === 'vi' ? MAP_EN_TO_VI_LOWER : MAP_VI_TO_EN_LOWER;
+  let map, mapLower;
+  if (target === 'my') {
+    map = MAP_TO_MY;
+    mapLower = MAP_TO_MY_LOWER;
+  } else if (target === 'vi') {
+    map = MAP_EN_TO_VI;
+    mapLower = MAP_EN_TO_VI_LOWER;
+  } else {
+    map = MAP_VI_TO_EN;
+    mapLower = MAP_VI_TO_EN_LOWER;
+  }
+  if (map && map[trimmed]) return map[trimmed];
   const lower = trimmed.toLowerCase();
-  if (mapLower[lower]) return mapLower[lower];
+  if (mapLower && mapLower[lower]) return mapLower[lower];
   return str;
 }
 
 function translateDOM(lang) {
-  const isVi = lang === 'vi';
-  const map = isVi ? MAP_EN_TO_VI : MAP_VI_TO_EN;
-  const mapLower = isVi ? MAP_EN_TO_VI_LOWER : MAP_VI_TO_EN_LOWER;
+  let map, mapLower;
+  if (lang === 'my') {
+    map = MAP_TO_MY;
+    mapLower = MAP_TO_MY_LOWER;
+  } else if (lang === 'vi') {
+    map = MAP_EN_TO_VI;
+    mapLower = MAP_EN_TO_VI_LOWER;
+  } else {
+    map = MAP_VI_TO_EN;
+    mapLower = MAP_VI_TO_EN_LOWER;
+  }
 
   // 1. Text elements: labels, headings, buttons, th, options, spans, paragraphs, summary boxes
   const selectors = 'label, h1, h2, h3, h4, h5, h6, button, th, option, b, span, p, div.qtotal div, div.lbl2, div.sub';
@@ -9016,29 +9298,36 @@ function translateDOM(lang) {
   });
 
   // 3. Document Title
-  document.title = isVi ? 'TNI Sale — Quản Lý Bán Hàng & Phân Bổ Lợi Nhuận' : 'TNI Sale — Sales & Profit Distribution';
+  if (lang === 'my') {
+    document.title = 'TNI အရောင်း — ကုန်ပစ္စည်းစီမံခန့်ခွဲမှုနှင့် အမြတ်ခွဲဝေမှုစနစ်';
+  } else if (lang === 'vi') {
+    document.title = 'TNI Sale — Quản Lý Bán Hàng & Phân Bổ Lợi Nhuận';
+  } else {
+    document.title = 'TNI Sale — Sales & Profit Distribution';
+  }
 }
-
 
 function updateRBACPanelStaticTexts() {
   const isVi = currentLang === 'vi';
+  const isMy = currentLang === 'my';
   
   // Banner
   const bTitle = document.getElementById('rbac-banner-title');
-  if (bTitle) bTitle.textContent = isVi ? 'HỆ THỐNG PHÂN QUYỀN TRUY CẬP NHÂN VIÊN (RBAC)' : 'EMPLOYEE ROLE-BASED ACCESS CONTROL (RBAC)';
+  if (bTitle) bTitle.textContent = isVi ? 'HỆ THỐNG PHÂN QUYỀN TRUY CẬP NHÂN VIÊN (RBAC)' : (isMy ? 'ဝန်ထမ်းအခန်းကဏ္ဍ အခွင့်အရေးသတ်မှတ်ချက်စနစ် (RBAC)' : 'EMPLOYEE ROLE-BASED ACCESS CONTROL (RBAC)');
   const bDesc = document.getElementById('rbac-banner-desc');
   if (bDesc) bDesc.innerHTML = isVi ? 
     'Xác định minh bạch và bọc thép 100%: <b>Ai Được Xem Gì</b> — Tuyệt đối bảo mật dữ liệu Tài Chính, Lợi Nhuận, Tỷ Lệ 17% Nộp Tổng Cty &amp; Giá Vốn.' : 
-    '100% Strict Access Control: <b>Who Sees What</b> — 17% HO Quota, Base Costs, and Financial Net Profit Strictly Protected.';
+    (isMy ? '၁၀၀% တိကျခိုင်မာသော စနစ်အသုံးပြုခွင့်: <b>မည်သူက မည်သည့်အချက်အလက်ကို ကြည့်ရှုနိုင်သည်</b> — ရုံးချုပ် ၁၇% ခွဲတမ်း၊ မူရင်းရင်းနှီးငွေနှင့် ဘဏ္ဍာရေးအမြတ်ငွေများကို တင်းကျပ်စွာ လုံခြုံမှုပေးထားပါသည်။' :
+    '100% Strict Access Control: <b>Who Sees What</b> — 17% HO Quota, Base Costs, and Financial Net Profit Strictly Protected.');
 
   // Quick card labels
   const cards = {
-    'rqc-admin':     { title: isVi ? 'Ban Giám Đốc (BOD)' : 'BOD (Executive)', desc: isVi ? 'Toàn quyền 100% tất cả các tab & xem tài chính' : 'Full 100% access to all modules & financials', badge: isVi ? 'Toàn Quyền' : 'Admin' },
-    'rqc-finance':   { title: isVi ? 'Kế Toán & Tài Chính' : 'Chief Accountant / Finance', desc: isVi ? 'Xem quỹ 17%, vốn 83%, tờ trình & công nợ' : 'Access 17% HO quota, 83% cost, statements & debts', badge: isVi ? 'Tài Chính' : 'Finance' },
-    'rqc-sales':     { title: isVi ? 'Kinh Doanh (Sales)' : 'Sales & Business', desc: isVi ? 'Bán hàng, báo giá, CRM. <b>Khóa Tài Chính</b>' : 'Sales, quotes, CRM. <b>Financials Locked</b>', badge: isVi ? 'Bán Hàng' : 'Sales' },
-    'rqc-tech':      { title: isVi ? 'Kỹ Thuật (Field Ops)' : 'Field Technical Team', desc: isVi ? 'Nghiệm thu, khảo sát, HUB. <b>Khóa Tài Chính</b>' : 'Site acceptance, surveys, HUB. <b>Financials Locked</b>', badge: isVi ? 'Hiện Trường' : 'Field' },
-    'rqc-warehouse': { title: isVi ? 'Thủ Kho / Vận Hành' : 'Warehouse & Operations', desc: isVi ? 'Tồn kho, nhập xuất, tạm ứng. <b>Khóa Tài Chính</b>' : 'Stock on-hand, intake, dispatch. <b>Financials Locked</b>', badge: isVi ? 'Thủ Kho' : 'Warehouse' },
-    'rqc-dealer':    { title: isVi ? 'Đại Lý Phân Phối' : 'Authorized Dealers', desc: isVi ? 'Báo giá sỉ, ký gởi. <b>Khóa Nội Bộ</b>' : 'Wholesale prices, consignment. <b>Internal Locked</b>', badge: isVi ? 'Đại Lý' : 'Dealers' }
+    'rqc-admin':     { title: isVi ? 'Ban Giám Đốc (BOD)' : (isMy ? 'ဒါရိုက်တာအဖွဲ့ (BOD)' : 'BOD (Executive)'), desc: isVi ? 'Toàn quyền 100% tất cả các tab & xem tài chính' : (isMy ? 'စနစ်တစ်ခုလုံးနှင့် ဘဏ္ဍာရေးအချက်အလက် ၁၀၀% အပြည့်အဝ ကြည့်ရှုစီမံခွင့်' : 'Full 100% access to all modules & financials'), badge: isVi ? 'Toàn Quyền' : (isMy ? 'စီမံခန့်ခွဲသူ' : 'Admin') },
+    'rqc-finance':   { title: isVi ? 'Kế Toán & Tài Chính' : (isMy ? 'စာရင်းကိုင်နှင့် ဘဏ္ဍာရေး' : 'Chief Accountant / Finance'), desc: isVi ? 'Xem quỹ 17%, vốn 83%, tờ trình & công nợ' : (isMy ? '၁၇% ရုံးချုပ်ခွဲတမ်း၊ ၈၃% ရင်းနှီးငွေ၊ စာရင်းရှင်းတမ်းနှင့် အကြွေးစာရင်း ကြည့်ရှုခွင့်' : 'Access 17% HO quota, 83% cost, statements & debts'), badge: isVi ? 'Tài Chính' : (isMy ? 'ဘဏ္ဍာရေး' : 'Finance') },
+    'rqc-sales':     { title: isVi ? 'Kinh Doanh (Sales)' : (isMy ? 'အရောင်းဌာန (Sales)' : 'Sales & Business'), desc: isVi ? 'Bán hàng, báo giá, CRM. <b>Khóa Tài Chính</b>' : (isMy ? 'အရောင်း၊ ဈေးနှုန်းအဆိုပြုလွှာ၊ CRM။ <b>ဘဏ္ဍာရေးပိုင်းကို ပိတ်ထားသည်</b>' : 'Sales, quotes, CRM. <b>Financials Locked</b>'), badge: isVi ? 'Bán Hàng' : (isMy ? 'အရောင်း' : 'Sales') },
+    'rqc-tech':      { title: isVi ? 'Kỹ Thuật (Field Ops)' : (isMy ? 'ကွင်းဆင်းအင်ဂျင်နီယာ (Field Ops)' : 'Field Technical Team'), desc: isVi ? 'Nghiệm thu, khảo sát, HUB. <b>Khóa Tài Chính</b>' : (isMy ? 'လက်ခံစစ်ဆေးမှု၊ စစ်တမ်း၊ HUB။ <b>ဘဏ္ဍာရေးပိုင်းကို ပိတ်ထားသည်</b>' : 'Site acceptance, surveys, HUB. <b>Financials Locked</b>'), badge: isVi ? 'Hiện Trường' : (isMy ? 'ကွင်းဆင်း' : 'Field') },
+    'rqc-warehouse': { title: isVi ? 'Thủ Kho / Vận Hành' : (isMy ? 'ဂိုဒေါင်မှူး / စီမံခန့်ခွဲမှု' : 'Warehouse & Operations'), desc: isVi ? 'Tồn kho, nhập xuất, tạm ứng. <b>Khóa Tài Chính</b>' : (isMy ? 'ပစ္စည်းလက်ကျန်၊ အဝင်အထွက်၊ ကြိုတင်ထုတ်ယူမှု။ <b>ဘဏ္ဍာရေးပိုင်းကို ပိတ်ထားသည်</b>' : 'Stock on-hand, intake, dispatch. <b>Financials Locked</b>'), badge: isVi ? 'Thủ Kho' : (isMy ? 'ဂိုဒေါင်' : 'Warehouse') },
+    'rqc-dealer':    { title: isVi ? 'Đại Lý Phân Phối' : (isMy ? 'တရားဝင်ကိုယ်စားလှယ်' : 'Authorized Dealers'), desc: isVi ? 'Báo giá sỉ, ký gởi. <b>Khóa Nội Bộ</b>' : (isMy ? 'လက်ကားဈေးနှုန်း၊ အပ်နှံရောင်းချမှု။ <b>အတွင်းပိုင်းအချက်အလက် ပိတ်ထားသည်</b>' : 'Wholesale prices, consignment. <b>Internal Locked</b>'), badge: isVi ? 'Đại Lý' : (isMy ? 'ကိုယ်စားလှယ်' : 'Dealers') }
   };
   Object.keys(cards).forEach(id => {
     const el = document.getElementById(id);
@@ -9054,138 +9343,139 @@ function updateRBACPanelStaticTexts() {
 
   // Table panel header
   const mTitle = document.getElementById('rbac-matrix-h3');
-  if (mTitle) mTitle.textContent = isVi ? '📊 BẢNG MA TRẬN PHÂN QUYỀN CHI TIẾT ("AI ĐƯỢC XEM GÌ")' : '📊 DETAILED PERMISSION MATRIX ("WHO SEES WHAT")';
+  if (mTitle) mTitle.textContent = isVi ? '📊 BẢNG MA TRẬN PHÂN QUYỀN CHI TIẾT ("AI ĐƯỢC XEM GÌ")' : (isMy ? '📊 အသေးစိတ် အခန်းကဏ္ဍခွင့်ပြုချက် ဇယား ("မည်သူက မည်သည်ကို ကြည့်ခွင့်ရှိသည်")' : '📊 DETAILED PERMISSION MATRIX ("WHO SEES WHAT")');
   const mSub = document.getElementById('rbac-matrix-sub');
-  if (mSub) mSub.textContent = isVi ? 'Rà soát chi tiết 20 phân hệ phần mềm và quyền xem / thao tác tương ứng của từng chức danh.' : 'Review detailed access rights for all 20 modules across staff operation roles.';
+  if (mSub) mSub.textContent = isVi ? 'Rà soát chi tiết 20 phân hệ phần mềm và quyền xem / thao tác tương ứng của từng chức danh.' : (isMy ? 'လုပ်ငန်းခွဲ ၂၀ ခုနှင့် သက်ဆိုင်ရာ ဝန်ထမ်းအဆင့်အလိုက် ကြည့်ရှု/ပြင်ဆင်ခွင့်များကို အသေးစိတ် စစ်ဆေးပါ။' : 'Review detailed access rights for all 20 modules across staff operation roles.');
 
   // Search input & category filter
   const sInput = document.getElementById('rbac-search-kw');
-  if (sInput) sInput.placeholder = isVi ? '🔍 Tìm kiếm phân hệ...' : '🔍 Search modules...';
+  if (sInput) sInput.placeholder = isVi ? '🔍 Tìm kiếm phân hệ...' : (isMy ? '🔍 လုပ်ငန်းခွဲများ ရှာဖွေရန်...' : '🔍 Search modules...');
   const cSel = document.getElementById('rbac-cat-filter');
   if (cSel) {
     const catOpts = [
-      { val: 'all', vi: '-- Tất cả danh mục phân hệ --', en: '-- All Module Categories --' },
-      { val: 'Tổng Quan', vi: '📊 Tổng Quan', en: '📊 Overview' },
-      { val: 'Kho Hàng', vi: '📦 Kho Hàng', en: '📦 Warehouse & Inventory' },
-      { val: 'Bán Hàng & Báo Giá', vi: '🛒 Bán Hàng & Báo Giá', en: '🛒 Sales & Quotations' },
-      { val: 'Kỹ Thuật & Hiện Trường', vi: '🚀 Kỹ Thuật & Hiện Trường', en: '🚀 Tech & Field Ops' },
-      { val: 'Khách Hàng', vi: '👥 Khách Hàng', en: '👥 Clients & CRM' },
-      { val: 'Marketing', vi: '📢 Marketing', en: '📢 Marketing' },
-      { val: 'Tài Chính & Kế Toán', vi: '💰 Tài Chính & Kế Toán (Bảo mật)', en: '💰 Finance & Accounting (Confidential)' },
-      { val: 'Cổng Nhân Viên', vi: '👤 Cổng Nhân Viên', en: '👤 Staff Portal' }
+      { val: 'all', vi: '-- Tất cả danh mục phân hệ --', en: '-- All Module Categories --', my: '-- လုပ်ငန်းခွဲ အမျိုးအစားအားလုံး --' },
+      { val: 'Tổng Quan', vi: '📊 Tổng Quan', en: '📊 Overview', my: '📊 ခြုံငုံသုံးသပ်ချက်' },
+      { val: 'Kho Hàng', vi: '📦 Kho Hàng', en: '📦 Warehouse & Inventory', my: '📦 ကုန်လှောင်ရုံ' },
+      { val: 'Bán Hàng & Báo Giá', vi: '🛒 Bán Hàng & Báo Giá', en: '🛒 Sales & Quotations', my: '🛒 အရောင်းနှင့် ဈေးနှုန်းအဆိုပြုလွှာ' },
+      { val: 'Kỹ Thuật & Hiện Trường', vi: '🚀 Kỹ Thuật & Hiện Trường', en: '🚀 Tech & Field Ops', my: '🚀 နည်းပညာနှင့် ကွင်းဆင်းလုပ်ငန်း' },
+      { val: 'Khách Hàng', vi: '👥 Khách Hàng', en: '👥 Clients & CRM', my: '👥 ဖောက်သည်များနှင့် CRM' },
+      { val: 'Marketing', vi: '📢 Marketing', en: '📢 Marketing', my: '📢 စျေးကွက်မြှင့်တင်ရေး' },
+      { val: 'Tài Chính & Kế Toán', vi: '💰 Tài Chính & Kế Toán (Bảo mật)', en: '💰 Finance & Accounting (Confidential)', my: '💰 ဘဏ္ဍာရေးနှင့် စာရင်းကိုင် (လျှို့ဝှက်)' },
+      { val: 'Cổng Nhân Viên', vi: '👤 Cổng Nhân Viên', en: '👤 Staff Portal', my: '👤 ဝန်ထမ်းပေါ်တယ်' }
     ];
     catOpts.forEach(o => {
       const opt = cSel.querySelector(`option[value="${o.val}"]`);
-      if (opt) opt.textContent = isVi ? o.vi : o.en;
+      if (opt) opt.textContent = isVi ? o.vi : (isMy ? o.my : o.en);
     });
   }
 
   // Buttons in banner
   const btnCsv = document.getElementById('rbac-btn-csv');
-  if (btnCsv) btnCsv.textContent = isVi ? '⬇ Xuất CSV Ma Trận' : '⬇ Export CSV Matrix';
+  if (btnCsv) btnCsv.textContent = isVi ? '⬇ Xuất CSV Ma Trận' : (isMy ? '⬇ CSV ဇယားထုတ်ယူမည်' : '⬇ Export CSV Matrix');
   const btnReset = document.getElementById('rbac-btn-reset');
-  if (btnReset) btnReset.textContent = isVi ? '↩ Reset Mặc Định' : '↩ Reset Defaults';
+  if (btnReset) btnReset.textContent = isVi ? '↩ Reset Mặc Định' : (isMy ? '↩ မူလအတိုင်း ပြန်လည်သတ်မှတ်မည်' : '↩ Reset Defaults');
   const btnPin = document.getElementById('rbac-btn-pin');
-  if (btnPin) btnPin.textContent = isVi ? '🔑 Đổi PIN Quản Trị' : '🔑 Change Admin PIN';
+  if (btnPin) btnPin.textContent = isVi ? '🔑 Đổi PIN Quản Trị' : (isMy ? '🔑 စီမံခန့်ခွဲသူ PIN ပြောင်းမည်' : '🔑 Change Admin PIN');
 
   // Panels below: Link generation
   const lTitle = document.getElementById('rbac-link-h3');
-  if (lTitle) lTitle.textContent = isVi ? '🔗 Tạo Link Phân Quyền Trực Tiếp Cho Nhân Viên' : '🔗 Generate Role-Based Login Link for Staff';
+  if (lTitle) lTitle.textContent = isVi ? '🔗 Tạo Link Phân Quyền Trực Tiếp Cho Nhân Viên' : (isMy ? '🔗 ဝန်ထမ်းများအတွက် သီးသန့်ဝင်ရောက်ခွင့်လင့်ခ် ထုတ်ယူရန်' : '🔗 Generate Role-Based Login Link for Staff');
   const lGuide = document.getElementById('rbac-link-guide');
   if (lGuide) lGuide.innerHTML = isVi ?
     '<b>💡 Hướng dẫn gửi link cho nhân viên:</b><br/>Quản trị viên chọn tên nhân viên và vai trò tương ứng bên dưới, sau đó bấm <b>"📋 Copy Link"</b> và gửi qua <b>Telegram / Zalo / Email</b>. Khi nhân viên nhấp vào link, hệ thống sẽ <b>tự động khóa đúng vai trò và ẩn các mục bảo mật</b>!' :
-    '<b>💡 Staff Link Sharing Guide:</b><br/>Select employee and assigned role below, then click <b>"📋 Copy Link"</b> and send via <b>Telegram / Zalo / Email</b>. When employee opens the link, the system will <b>automatically enforce their role and hide confidential modules</b>!';
+    (isMy ? '<b>💡 ဝန်ထမ်းများထံ လင့်ခ်ပေးပို့နည်း လမ်းညွှန်:</b><br/>စီမံခန့်ခွဲသူမှ ဝန်ထမ်းအမည်နှင့် သက်ဆိုင်ရာအခန်းကဏ္ဍကို ရွေးချယ်ပြီး <b>"📋 လင့်ခ်ကူးယူမည်"</b> ကိုနှိပ်၍ <b>Telegram / Viber / Email</b> မှတစ်ဆင့် ပေးပို့ပါ။ ဝန်ထမ်းမှ လင့်ခ်ကိုဖွင့်ပါက စနစ်မှ <b>သတ်မှတ်အခန်းကဏ္ဍအတိုင်း အလိုအလျောက် သတ်မှတ်ပေးပြီး လျှို့ဝှက်အချက်အလက်များကို ဖုံးကွယ်ထားမည်ဖြစ်ပါသည်</b>!' :
+    '<b>💡 Staff Link Sharing Guide:</b><br/>Select employee and assigned role below, then click <b>"📋 Copy Link"</b> and send via <b>Telegram / Zalo / Email</b>. When employee opens the link, the system will <b>automatically enforce their role and hide confidential modules</b>!');
   const lblStaff = document.getElementById('rbac-lbl-staff');
-  if (lblStaff) lblStaff.textContent = isVi ? '👤 Chọn Nhân Viên *' : '👤 Select Employee *';
+  if (lblStaff) lblStaff.textContent = isVi ? '👤 Chọn Nhân Viên *' : (isMy ? '👤 ဝန်ထမ်းရွေးချယ်ပါ *' : '👤 Select Employee *');
   const lblRole = document.getElementById('rbac-lbl-role');
-  if (lblRole) lblRole.textContent = isVi ? '🏷️ Gán Vai Trò *' : '🏷️ Assign Role *';
+  if (lblRole) lblRole.textContent = isVi ? '🏷️ Gán Vai Trò *' : (isMy ? '🏷️ အခန်းကဏ္ဍသတ်မှတ်ပါ *' : '🏷️ Assign Role *');
   const lblLink = document.getElementById('rbac-lbl-link');
-  if (lblLink) lblLink.textContent = isVi ? '🌐 Đường Link Cá Nhân Hóa Chuẩn:' : '🌐 Standard Personalized URL:';
+  if (lblLink) lblLink.textContent = isVi ? '🌐 Đường Link Cá Nhân Hóa Chuẩn:' : (isMy ? '🌐 ပုဂ္ဂိုလ်ရေးသီးသန့် ဝင်ရောက်ခွင့်လင့်ခ်:' : '🌐 Standard Personalized URL:');
   const btnCopy = document.getElementById('rbac-btn-copy');
-  if (btnCopy) btnCopy.textContent = isVi ? '📋 Copy Link Gửi Nhân Viên' : '📋 Copy Link for Staff';
+  if (btnCopy) btnCopy.textContent = isVi ? '📋 Copy Link Gửi Nhân Viên' : (isMy ? '📋 ဝန်ထမ်းထံပေးပို့ရန် လင့်ခ်ကူးယူမည်' : '📋 Copy Link for Staff');
   const btnTest = document.getElementById('rbac-btn-test');
-  if (btnTest) btnTest.textContent = isVi ? '🚀 Thử Nghiệm Link Này' : '🚀 Test This Link';
+  if (btnTest) btnTest.textContent = isVi ? '🚀 Thử Nghiệm Link Này' : (isMy ? '🚀 ဤလင့်ခ်ကို စမ်းသပ်ကြည့်မည်' : '🚀 Test This Link');
 
   // Role select options
   const rSel = document.getElementById('gen-role-sel');
   if (rSel) {
     const roleOpts = [
-      { val: 'sales', vi: '🧑‍💼 Nhân Viên Kinh Doanh (Sales)', en: '🧑‍💼 Sales Staff (Sales)' },
-      { val: 'tech', vi: '🚀 Kỹ Thuật / Hiện Trường (Field Ops)', en: '🚀 Field Tech Team (Field Ops)' },
-      { val: 'warehouse', vi: '📦 Thủ Kho (Warehouse)', en: '📦 Warehouse Keeper (Warehouse)' },
-      { val: 'finance', vi: '💰 Kế Toán & Tài Chính (Finance)', en: '💰 Chief Accountant & Finance (Finance)' },
-      { val: 'dealer', vi: '🏪 Đại Lý Phân Phối (Dealer)', en: '🏪 Authorized Dealer (Dealer)' },
-      { val: 'admin', vi: '👑 Ban Giám Đốc (BOD / Admin)', en: '👑 Board of Directors (BOD / Admin)' }
+      { val: 'sales', vi: '🧑‍💼 Nhân Viên Kinh Doanh (Sales)', en: '🧑‍💼 Sales Staff (Sales)', my: '🧑‍💼 အရောင်းဝန်ထမ်း (Sales)' },
+      { val: 'tech', vi: '🚀 Kỹ Thuật / Hiện Trường (Field Ops)', en: '🚀 Field Tech Team (Field Ops)', my: '🚀 ကွင်းဆင်းနည်းပညာအဖွဲ့ (Field Ops)' },
+      { val: 'warehouse', vi: '📦 Thủ Kho (Warehouse)', en: '📦 Warehouse Keeper (Warehouse)', my: '📦 ဂိုဒေါင်မှူး (Warehouse)' },
+      { val: 'finance', vi: '💰 Kế Toán & Tài Chính (Finance)', en: '💰 Chief Accountant & Finance (Finance)', my: '💰 စာရင်းကိုင်နှင့် ဘဏ္ဍာရေး (Finance)' },
+      { val: 'dealer', vi: '🏪 Đại Lý Phân Phối (Dealer)', en: '🏪 Authorized Dealer (Dealer)', my: '🏪 တရားဝင်ကိုယ်စားလှယ် (Dealer)' },
+      { val: 'admin', vi: '👑 Ban Giám Đốc (BOD / Admin)', en: '👑 Board of Directors (BOD / Admin)', my: '👑 ဒါရိုက်တာအဖွဲ့ (BOD / Admin)' }
     ];
     roleOpts.forEach(o => {
       const opt = rSel.querySelector(`option[value="${o.val}"]`);
-      if (opt) opt.textContent = isVi ? o.vi : o.en;
+      if (opt) opt.textContent = isVi ? o.vi : (isMy ? o.my : o.en);
     });
   }
 
   // Staff list panel
   const sTitle = document.getElementById('rbac-staff-h3');
-  if (sTitle) sTitle.textContent = isVi ? '👥 Danh Sách Nhân Sự & Vai Trò Đã Gán' : '👥 Staff Directory & Assigned Roles';
+  if (sTitle) sTitle.textContent = isVi ? '👥 Danh Sách Nhân Sự & Vai Trò Đã Gán' : (isMy ? '👥 ဝန်ထမ်းစာရင်းနှင့် ခွင့်ပြုထားသော အခန်းကဏ္ဍများ' : '👥 Staff Directory & Assigned Roles');
   const btnAddStaff = document.getElementById('rbac-btn-add-staff');
-  if (btnAddStaff) { const sp = btnAddStaff.querySelector('span'); if (sp) sp.textContent = isVi ? 'Thêm Nhân Sự' : 'Add Staff'; }
+  if (btnAddStaff) { const sp = btnAddStaff.querySelector('span'); if (sp) sp.textContent = isVi ? 'Thêm Nhân Sự' : (isMy ? 'ဝန်ထမ်းအသစ်ထည့်မည်' : 'Add Staff'); }
   const cleanLbl = document.getElementById('rbac-clean-lbl');
-  if (cleanLbl) cleanLbl.textContent = isVi ? 'Làm Sạch Mẫu' : 'Clean List';
+  if (cleanLbl) cleanLbl.textContent = isVi ? 'Làm Sạch Mẫu' : (isMy ? 'ပုံစံရှင်းလင်းမည်' : 'Clean List');
   const tplLbl = document.getElementById('rbac-tpl-lbl');
-  if (tplLbl) tplLbl.textContent = isVi ? 'Template' : 'Template';
+  if (tplLbl) tplLbl.textContent = isVi ? 'Template' : (isMy ? 'ပုံစံတမ်း' : 'Template');
   const exportLbl = document.getElementById('rbac-export-lbl');
-  if (exportLbl) exportLbl.textContent = isVi ? 'Xuất Excel' : 'Export';
+  if (exportLbl) exportLbl.textContent = isVi ? 'Xuất Excel' : (isMy ? 'Excel ထုတ်ယူမည်' : 'Export');
   const importLbl = document.getElementById('rbac-import-lbl');
-  if (importLbl) importLbl.textContent = isVi ? 'Nhập File' : 'Import';
+  if (importLbl) importLbl.textContent = isVi ? 'Nhập File' : (isMy ? 'ဖိုင်တင်သွင်းမည်' : 'Import');
 
   // Add / Edit Staff Modal dynamic translations
   const smTitle = document.getElementById('staff-modal-title');
   if (smTitle) {
     const editId = document.getElementById('staff-modal-id')?.value;
-    smTitle.textContent = isVi ? (editId ? '✏️ Chỉnh Sửa Thông Tin Nhân Sự' : '👤 Thêm Nhân Sự Mới & Gán Phân Quyền') : (editId ? '✏️ Edit Staff Member' : '👤 Add New Staff Member');
+    smTitle.textContent = isVi ? (editId ? '✏️ Chỉnh Sửa Thông Tin Nhân Sự' : '👤 Thêm Nhân Sự Mới & Gán Phân Quyền') : (isMy ? (editId ? '✏️ ဝန်ထမ်းအချက်အလက် ပြင်ဆင်မည်' : '👤 ဝန်ထမ်းအသစ်ထည့်သွင်းပြီး အခန်းကဏ္ဍသတ်မှတ်မည်') : (editId ? '✏️ Edit Staff Member' : '👤 Add New Staff Member'));
   }
   const smDesc = document.getElementById('staff-modal-desc');
-  if (smDesc) smDesc.textContent = isVi ? 'Điền đầy đủ thông tin nhân sự và chọn vai trò truy cập hệ thống' : 'Enter staff member details and assign system access role';
+  if (smDesc) smDesc.textContent = isVi ? 'Điền đầy đủ thông tin nhân sự và chọn vai trò truy cập hệ thống' : (isMy ? 'ဝန်ထမ်းအချက်အလက်များ အပြည့်အစုံဖြည့်စွက်ပြီး စနစ်အသုံးပြုခွင့် အခန်းကဏ္ဍကို ရွေးချယ်ပါ' : 'Enter staff member details and assign system access role');
   const smLblName = document.getElementById('lbl-staff-modal-name');
-  if (smLblName) smLblName.innerHTML = (isVi ? 'Họ và Tên Nhân Sự' : 'Staff Full Name') + ' <span style="color:#ef4444">*</span>';
+  if (smLblName) smLblName.innerHTML = (isVi ? 'Họ và Tên Nhân Sự' : (isMy ? 'ဝန်ထမ်းအမည်အပြည့်အစုံ' : 'Staff Full Name')) + ' <span style="color:#ef4444">*</span>';
   const smPhName = document.getElementById('staff-modal-name');
-  if (smPhName) smPhName.placeholder = isVi ? 'VD: Aung Kyaw Moe, Paing Soe...' : 'e.g. Aung Kyaw Moe, Paing Soe...';
+  if (smPhName) smPhName.placeholder = isVi ? 'VD: Aung Kyaw Moe, Paing Soe...' : (isMy ? 'ဥပမာ: Aung Kyaw Moe, Paing Soe...' : 'e.g. Aung Kyaw Moe, Paing Soe...');
   const smLblTitle = document.getElementById('lbl-staff-modal-title');
-  if (smLblTitle) smLblTitle.textContent = isVi ? 'Chức Danh / Vị Trí' : 'Job Title / Position';
+  if (smLblTitle) smLblTitle.textContent = isVi ? 'Chức Danh / Vị Trí' : (isMy ? 'ရာထူး / တာဝန်' : 'Job Title / Position');
   const smPhTitle = document.getElementById('staff-modal-title-input');
-  if (smPhTitle) smPhTitle.placeholder = isVi ? 'VD: Kỹ Sư Hiện Trường, Sale...' : 'e.g. Field Engineer, Sales Rep...';
+  if (smPhTitle) smPhTitle.placeholder = isVi ? 'VD: Kỹ Sư Hiện Trường, Sale...' : (isMy ? 'ဥပမာ: ကွင်းဆင်းအင်ဂျင်နီယာ၊ အရောင်းဝန်ထမ်း...' : 'e.g. Field Engineer, Sales Rep...');
   const smLblRole = document.getElementById('lbl-staff-modal-role');
-  if (smLblRole) smLblRole.innerHTML = (isVi ? 'Vai Trò Hệ Thống (RBAC)' : 'System Role (RBAC)') + ' <span style="color:#ef4444">*</span>';
+  if (smLblRole) smLblRole.innerHTML = (isVi ? 'Vai Trò Hệ Thống (RBAC)' : (isMy ? 'စနစ်အခန်းကဏ္ဍ (RBAC)' : 'System Role (RBAC)')) + ' <span style="color:#ef4444">*</span>';
   const smRoleSelect = document.getElementById('staff-modal-role');
   if (smRoleSelect) {
     const roleOpts = [
-      { val: 'admin', vi: '👑 Ban Giám Đốc (BOD / Admin)', en: '👑 BOD (Admin)' },
-      { val: 'finance', vi: '💰 Kế Toán / Tài Chính (Finance)', en: '💰 Finance / Accounting' },
-      { val: 'sales', vi: '🧑‍💼 Nhân Viên Kinh Doanh (Sales)', en: '🧑‍💼 Sales Rep' },
-      { val: 'tech', vi: '🚀 Kỹ Thuật Hiện Trường (Field Ops)', en: '🚀 Field Operations (Technical)' },
-      { val: 'warehouse', vi: '📦 Thủ Kho Vận Hành (Warehouse)', en: '📦 Warehouse Operator' },
-      { val: 'dealer', vi: '🏪 Đại Lý Phân Phối (Dealer)', en: '🏪 Distribution Dealer' }
+      { val: 'admin', vi: '👑 Ban Giám Đốc (BOD / Admin)', en: '👑 BOD (Admin)', my: '👑 ဒါရိုက်တာအဖွဲ့ (BOD / Admin)' },
+      { val: 'finance', vi: '💰 Kế Toán / Tài Chính (Finance)', en: '💰 Finance / Accounting', my: '💰 ဘဏ္ဍာရေးနှင့် စာရင်းကိုင် (Finance)' },
+      { val: 'sales', vi: '🧑‍💼 Nhân Viên Kinh Doanh (Sales)', en: '🧑‍💼 Sales Rep', my: '🧑‍💼 အရောင်းဝန်ထမ်း (Sales)' },
+      { val: 'tech', vi: '🚀 Kỹ Thuật Hiện Trường (Field Ops)', en: '🚀 Field Operations (Technical)', my: '🚀 ကွင်းဆင်းနည်းပညာအဖွဲ့ (Field Ops)' },
+      { val: 'warehouse', vi: '📦 Thủ Kho Vận Hành (Warehouse)', en: '📦 Warehouse Operator', my: '📦 ဂိုဒေါင်မှူး (Warehouse)' },
+      { val: 'dealer', vi: '🏪 Đại Lý Phân Phối (Dealer)', en: '🏪 Distribution Dealer', my: '🏪 တရားဝင်ကိုယ်စားလှယ် (Dealer)' }
     ];
     roleOpts.forEach(o => {
       const opt = smRoleSelect.querySelector(`option[value="${o.val}"]`);
-      if (opt) opt.textContent = isVi ? o.vi : o.en;
+      if (opt) opt.textContent = isVi ? o.vi : (isMy ? o.my : o.en);
     });
   }
   const smLblEmail = document.getElementById('lbl-staff-modal-email');
-  if (smLblEmail) smLblEmail.textContent = isVi ? 'Email / Tài Khoản' : 'Email / Account';
+  if (smLblEmail) smLblEmail.textContent = isVi ? 'Email / Tài Khoản' : (isMy ? 'အီးမေးလ် / အကောင့်' : 'Email / Account');
   const smPhEmail = document.getElementById('staff-modal-email');
-  if (smPhEmail) smPhEmail.placeholder = isVi ? 'VD: staff@tni.com' : 'e.g. staff@tni.com';
+  if (smPhEmail) smPhEmail.placeholder = isVi ? 'VD: staff@tni.com' : (isMy ? 'ဥပမာ: staff@tni.com' : 'e.g. staff@tni.com');
   const smLblPhone = document.getElementById('lbl-staff-modal-phone');
-  if (smLblPhone) smLblPhone.textContent = isVi ? 'Số Điện Thoại' : 'Phone Number';
+  if (smLblPhone) smLblPhone.textContent = isVi ? 'Số Điện Thoại' : (isMy ? 'ဖုန်းနံပါတ်' : 'Phone Number');
   const smPhPhone = document.getElementById('staff-modal-phone');
-  if (smPhPhone) smPhPhone.placeholder = isVi ? 'VD: 09xxxxxxxxx' : 'e.g. 09xxxxxxxxx';
+  if (smPhPhone) smPhPhone.placeholder = isVi ? 'VD: 09xxxxxxxxx' : (isMy ? 'ဥပမာ: 09xxxxxxxxx' : 'e.g. 09xxxxxxxxx');
   const smLblNote = document.getElementById('lbl-staff-modal-note');
-  if (smLblNote) smLblNote.textContent = isVi ? 'Ghi Chú Quản Trị / Khu Vực Phụ Trách' : 'Administrative Notes / Assigned Area';
+  if (smLblNote) smLblNote.textContent = isVi ? 'Ghi Chú Quản Trị / Khu Vực Phụ Trách' : (isMy ? 'စီမံခန့်ခွဲမှုမှတ်ချက် / တာဝန်ကျဒေသ' : 'Administrative Notes / Assigned Area');
   const smPhNote = document.getElementById('staff-modal-note');
-  if (smPhNote) smPhNote.placeholder = isVi ? 'VD: Phụ trách khu vực Dawei, Team 1...' : 'e.g. In charge of Dawei area, Team 1...';
+  if (smPhNote) smPhNote.placeholder = isVi ? 'VD: Phụ trách khu vực Dawei, Team 1...' : (isMy ? 'ဥပမာ: ထားဝယ်ဒေသတာဝန်ခံ၊ အဖွဲ့ ၁...' : 'e.g. In charge of Dawei area, Team 1...');
   const smBtnCancel = document.getElementById('btn-staff-modal-cancel');
-  if (smBtnCancel) smBtnCancel.textContent = isVi ? '✕ Hủy / Đóng' : '✕ Cancel / Close';
+  if (smBtnCancel) smBtnCancel.textContent = isVi ? '✕ Hủy / Đóng' : (isMy ? '✕ ပယ်ဖျက်မည် / ပိတ်မည်' : '✕ Cancel / Close');
   const smBtnSave = document.getElementById('btn-staff-modal-save');
-  if (smBtnSave) smBtnSave.textContent = isVi ? '💾 Lưu Nhân Sự' : '💾 Save Staff Member';
+  if (smBtnSave) smBtnSave.textContent = isVi ? '💾 Lưu Nhân Sự' : (isMy ? '💾 ဝန်ထမ်းအချက်အလက် သိမ်းဆည်းမည်' : '💾 Save Staff Member');
 }
 
 function applyLang(lang) {
@@ -9194,7 +9484,15 @@ function applyLang(lang) {
   
   // 1. Update Lang button
   const btn = document.getElementById('lang-btn');
-  if (btn) btn.innerHTML = lang === 'vi' ? '🌐 🇻🇳 VN (Bấm để chuyển EN)' : '🌐 🇬🇧 EN (Click for VN)';
+  if (btn) {
+    if (lang === 'my') {
+      btn.innerHTML = '🌐 🇲🇲 MM (Click for VN)';
+    } else if (lang === 'vi') {
+      btn.innerHTML = '🌐 🇻🇳 VN (Bấm chuyển EN)';
+    } else {
+      btn.innerHTML = '🌐 🇬🇧 EN (Click for MM)';
+    }
+  }
   
   // 2. Update Sidebar labels & nav links
   const navMap = NAV_TITLES[lang] || NAV_TITLES.en;
@@ -9219,17 +9517,17 @@ function applyLang(lang) {
   
   // 4. Update topbar labels
   const ctyEl = document.getElementById('cfg-cty-label');
-  if (ctyEl) ctyEl.textContent = lang === 'vi' ? '🏢 % Cty:' : '🏢 % HO:';
+  if (ctyEl) ctyEl.textContent = lang === 'my' ? '🏢 % ရုံးချုပ်:' : (lang === 'vi' ? '🏢 % Cty:' : '🏢 % HO:');
   
   // 5. Update dashboard panel headers
   const dNhapH3 = document.getElementById('d-nhap-h3');
-  if (dNhapH3) dNhapH3.textContent = lang === 'vi' ? '📦 Nhập gần đây' : '📦 Recent Stock Intake';
+  if (dNhapH3) dNhapH3.textContent = lang === 'my' ? '📦 မကြာသေးမီက ကုန်ပစ္စည်းအဝင်များ' : (lang === 'vi' ? '📦 Nhập gần đây' : '📦 Recent Stock Intake');
   const dBanH3 = document.getElementById('d-ban-h3');
-  if (dBanH3) dBanH3.textContent = lang === 'vi' ? '🛒 Bán gần đây' : '🛒 Recent Sales';
+  if (dBanH3) dBanH3.textContent = lang === 'my' ? '🛒 မကြာသေးမီက အရောင်းများ' : (lang === 'vi' ? '🛒 Bán gần đây' : '🛒 Recent Sales');
   const dWarnH3 = document.getElementById('d-warn-h3');
-  if (dWarnH3) dWarnH3.textContent = lang === 'vi' ? '⚠️ Cảnh báo tồn kho thấp' : '⚠️ Low Stock Alert';
+  if (dWarnH3) dWarnH3.textContent = lang === 'my' ? '⚠️ ကုန်လက်ကျန်နည်း သတိပေးချက်' : (lang === 'vi' ? '⚠️ Cảnh báo tồn kho thấp' : '⚠️ Low Stock Alert');
   const dTuH3 = document.getElementById('d-tu-h3');
-  if (dTuH3) dTuH3.textContent = lang === 'vi' ? '🧑‍💼 Tạm ứng nhân viên đang mở' : '🧑‍💼 Active Staff Advances';
+  if (dTuH3) dTuH3.textContent = lang === 'my' ? '🧑‍💼 မပြီးပြတ်သေးသော ကြိုထုတ်ပစ္စည်းများ' : (lang === 'vi' ? '🧑‍💼 Tạm ứng nhân viên đang mở' : '🧑‍💼 Active Staff Advances');
 
   // 6. Update all [data-lang] elements
   document.querySelectorAll('[data-lang]').forEach(el => {
@@ -9265,6 +9563,8 @@ function applyLang(lang) {
     if (secId === 'myquotes' && typeof renderMyQuotes === 'function') renderMyQuotes();
     if (secId === 'mysurvey' && typeof renderSurveys === 'function') renderSurveys();
     if (secId === 'baogiaups' && typeof rQuUPS === 'function') rQuUPS();
+    if (secId === 'banhang' && typeof rBan === 'function') rBan();
+    if (secId === 'tonkho' && typeof rTonKho === 'function') rTonKho();
   }
 
   // 10. Re-render RBAC only if RBAC tab is currently active
@@ -9277,12 +9577,25 @@ function applyLang(lang) {
 }
 
 function toggleLang() {
-  const next = currentLang === 'vi' ? 'en' : 'vi';
+  let next = 'en';
+  if (currentLang === 'en') next = 'my';
+  else if (currentLang === 'my') next = 'vi';
+  else next = 'en';
   applyLang(next);
-  al(next === 'vi' ? '🌐 Đã chuyển sang Tiếng Việt' : '🌐 Switched to English');
+  if (next === 'my') {
+    al('🌐 မြန်မာဘာသာသို့ ပြောင်းလဲပြီးပါပြီ');
+  } else if (next === 'vi') {
+    al('🌐 Đã chuyển sang Tiếng Việt');
+  } else {
+    al('🌐 Switched to English');
+  }
 }
 
-setInterval(()=>{document.getElementById('clk').textContent=new Date().toLocaleString(currentLang==='vi'?'vi-VN':'en-US');},1000);
+setInterval(()=>{
+  const loc = currentLang === 'vi' ? 'vi-VN' : (currentLang === 'my' ? 'en-GB' : 'en-US');
+  const clkEl = document.getElementById('clk');
+  if (clkEl) clkEl.textContent = new Date().toLocaleString(loc);
+}, 1000);
 document.querySelectorAll('input[type="date"]').forEach(e=>e.value=td());
 // Init quotation rows
 addQRow('qu-items');
