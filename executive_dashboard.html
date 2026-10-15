@@ -19,6 +19,9 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
+  <!-- Google Identity Services (Sign in with Google) -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
   <style>
     :root {
       --bg-dark: #070A11;
@@ -798,179 +801,540 @@
 .kpi-amber { background: rgba(245, 158, 11, 0.15); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.3); }
 .kpi-blue { background: rgba(6, 182, 212, 0.15); color: #06B6D4; border: 1px solid rgba(6, 182, 212, 0.3); }
 
+    /* ══════════════════════════════════════════════════════════════════════════
+       🔒 GOOGLE SIGN-IN & AUTHORIZED ROSTER AUTH GATE STYLING
+       ══════════════════════════════════════════════════════════════════════════ */
+    .auth-gate-overlay {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(7, 10, 17, 0.96) 0%, rgba(15, 23, 42, 0.98) 50%, rgba(7, 10, 17, 0.96) 100%);
+      backdrop-filter: blur(28px);
+      z-index: 999999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .auth-gate-card {
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 22px;
+      padding: 2.2rem;
+      max-width: 490px;
+      width: 100%;
+      box-shadow: 0 30px 70px -15px rgba(0, 0, 0, 0.85), 0 0 45px rgba(56, 189, 248, 0.15);
+      position: relative;
+      overflow: hidden;
+      animation: authCardFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .auth-gate-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, #38BDF8, #6366F1, #10B981, #F59E0B);
+    }
+    @keyframes authCardFadeIn {
+      from { opacity: 0; transform: scale(0.96) translateY(12px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .auth-brand-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+    }
+    .auth-brand-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--cyan), var(--indigo));
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      color: #fff;
+      box-shadow: 0 0 25px rgba(56, 189, 248, 0.45);
+      flex-shrink: 0;
+    }
+    .auth-brand-titles h2 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.02em;
+    }
+    .auth-brand-titles p {
+      font-size: 0.76rem;
+      color: var(--cyan);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    .auth-badge-notice {
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #fbbf24;
+      padding: 0.65rem 0.9rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.65rem;
+      line-height: 1.4;
+      margin-bottom: 1.3rem;
+    }
+    .auth-method-tabs {
+      display: flex;
+      gap: 0.4rem;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 0.35rem;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 1.2rem;
+    }
+    .auth-method-tab {
+      flex: 1;
+      padding: 0.6rem 0.8rem;
+      border-radius: 9px;
+      border: none;
+      background: transparent;
+      color: var(--text-sub);
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+    }
+    .auth-method-tab:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .auth-method-tab.active {
+      background: linear-gradient(135deg, var(--indigo), #4F46E5);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+    }
+    .auth-desc {
+      font-size: 0.825rem;
+      color: var(--text-sub);
+      margin-bottom: 0.8rem;
+      line-height: 1.45;
+    }
+    .auth-input-group {
+      margin-bottom: 0.9rem;
+      text-align: left;
+    }
+    .auth-input-group label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-sub);
+      margin-bottom: 0.35rem;
+    }
+    .auth-input-group input {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1.5px solid rgba(56, 189, 248, 0.3);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+    .auth-input-group input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+    }
+    .auth-submit-btn {
+      width: 100%;
+      padding: 0.85rem;
+      border: none;
+      border-radius: 11px;
+      background: linear-gradient(135deg, #0284C7, #2563EB);
+      color: #fff;
+      font-size: 0.925rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.55rem;
+      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.35);
+      transition: all 0.2s ease;
+      margin-top: 0.5rem;
+    }
+    .auth-submit-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
+    }
+    .auth-alert {
+      padding: 0.85rem 1rem;
+      border-radius: 11px;
+      font-size: 0.825rem;
+      line-height: 1.45;
+      text-align: left;
+      animation: alertSlideIn 0.3s ease;
+    }
+    @keyframes alertSlideIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .auth-alert.error {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+    }
+    .auth-alert.success {
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #6ee7b7;
+    }
+    .auth-alert.info {
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #7dd3fc;
+    }
+    .auth-footer-help {
+      margin-top: 1.4rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-color);
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      text-align: center;
+    }
+    .nav-tab.tab-locked {
+      opacity: 0.45;
+      cursor: not-allowed;
+      filter: grayscale(40%);
+    }
+
   </style>
 </head>
 <body>
 
-<!-- ══ PASSWORD GATE ══ -->
-<div id="pwd-gate" style="display:none;position:fixed;inset:0;background:linear-gradient(135deg,#070A11 0%,#0F172A 50%,#070A11 100%);z-index:999999;display:flex;align-items:center;justify-content:center;flex-direction:column">
-  <div style="background:rgba(30,41,59,0.7);backdrop-filter:blur(24px);border:1px solid rgba(56,189,248,0.3);border-radius:20px;padding:48px 40px;max-width:420px;width:90%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.6)">
-    <div style="font-size:44px;margin-bottom:12px;color:#38BDF8"><i class="fa-solid fa-shield-halved"></i></div>
-    <div style="font-size:24px;font-weight:800;color:#fff;margin-bottom:4px">TNI Operations Portal</div>
-    <div style="font-size:13px;color:#94A3B8;margin-bottom:28px">Executive Management System — Bảo Mật Nội Bộ</div>
-    <input id="pwd-input" type="password" placeholder="Nhập mật khẩu truy cập..." maxlength="50"
-      style="width:100%;padding:14px 18px;border-radius:10px;border:1.5px solid rgba(56,189,248,0.4);background:rgba(15,23,42,0.8);color:#fff;font-size:15px;outline:none;box-sizing:border-box;margin-bottom:12px;letter-spacing:2px;text-align:center"
-      onkeydown="if(event.key==='Enter')checkPwd()"
-      oninput="document.getElementById('pwd-err').style.display='none'">
-    <div id="pwd-err" style="display:none;color:#f87171;font-size:12.5px;margin-bottom:10px">❌ Mật khẩu không đúng. Thử lại!</div>
-    <button onclick="checkPwd()" style="width:100%;padding:14px;border-radius:10px;border:none;background:linear-gradient(135deg,#0284c7,#2563eb);color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:16px;box-shadow:0 4px 12px rgba(37,99,235,0.3)">
-      🔓 Mở Khóa Truy Cập
-    </button>
-    <div style="font-size:11px;color:#64748b">TNI Executive BI & Operations System • Restricted Access</div>
-  </div>
-</div>
+<!-- ══════════════════════════════════════════════════════════════════════════
+     🔒 GOOGLE SIGN-IN & AUTHORIZED GMAIL AUTHENTICATION GATE
+     Quy tắc bảo mật: CHỈ NHỮNG AI CÓ TRONG DANH SÁCH MỚI ĐƯỢC ĐĂNG NHẬP
+     ══════════════════════════════════════════════════════════════════════════ -->
+<div id="google-auth-overlay" class="auth-gate-overlay" style="display:flex;">
+  <div class="auth-gate-card">
+    <div class="auth-brand-header">
+      <div class="auth-brand-icon">
+        <i class="fa-solid fa-chart-line"></i>
+      </div>
+      <div class="auth-brand-titles">
+        <h2>TNI Operations BI Portal</h2>
+        <p>Hệ Thống Báo Cáo &amp; Quản Trị Vận Hành</p>
+      </div>
+    </div>
 
-<!-- ══ CHANGE PASSWORD MODAL ══ -->
-<div id="change-pwd-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999998;align-items:center;justify-content:center">
-  <div style="background:#0F172A;border:1px solid rgba(56,189,248,0.3);border-radius:16px;padding:36px 32px;max-width:400px;width:90%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.5)">
-    <div style="font-size:36px;margin-bottom:8px;color:#F59E0B">🔑</div>
-    <div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:6px">Đã đến lúc đổi mật khẩu!</div>
-    <div style="font-size:13px;color:#94A3B8;margin-bottom:24px">Mật khẩu của bạn đã dùng hơn <b id="pwd-days-used" style="color:#38BDF8">30</b> ngày.<br>Vui lòng đổi mật khẩu mới để bảo mật.</div>
-    <input id="new-pwd-1" type="password" placeholder="Mật khẩu mới (tối thiểu 6 ký tự)" maxlength="50"
-      style="width:100%;padding:12px 14px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.15);background:rgba(15,23,42,0.8);color:#fff;font-size:14px;margin-bottom:10px;box-sizing:border-box;outline:none">
-    <input id="new-pwd-2" type="password" placeholder="Nhập lại mật khẩu mới" maxlength="50"
-      style="width:100%;padding:12px 14px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.15);background:rgba(15,23,42,0.8);color:#fff;font-size:14px;margin-bottom:10px;box-sizing:border-box;outline:none">
-    <div id="change-pwd-err" style="display:none;color:#ef4444;font-size:12px;margin-bottom:10px"></div>
-    <div style="display:flex;gap:10px">
-      <button onclick="skipChangePwd()" style="flex:1;padding:12px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.15);background:#1E293B;color:#94A3B8;font-size:13px;cursor:pointer;font-weight:600">Để sau</button>
-      <button onclick="doChangePwd()" style="flex:2;padding:12px;border-radius:8px;border:none;background:linear-gradient(135deg,#0284c7,#2563eb);color:#fff;font-size:14px;font-weight:700;cursor:pointer">✅ Đổi Mật Khẩu</button>
+    <div class="auth-badge-notice">
+      <i class="fa-solid fa-shield-halved" style="font-size:1.15rem; margin-top:2px;"></i>
+      <div>
+        <b>YÊU CẦU XÁC THỰC BẢO MẬT:</b><br>
+        Chỉ các tài khoản Google đã được phê duyệt trong <b>Authorized Gmail Accounts Roster</b> mới có quyền đăng nhập vào hệ thống.
+      </div>
+    </div>
+
+    <!-- Dual Tab Selector -->
+    <div class="auth-method-tabs">
+      <button id="auth-tab-btn-gsi" class="auth-method-tab active" onclick="switchAuthTab('gsi')">
+        <i class="fa-brands fa-google"></i> Google One-Tap / Popup
+      </button>
+      <button id="auth-tab-btn-direct" class="auth-method-tab" onclick="switchAuthTab('direct')">
+        <i class="fa-solid fa-envelope-circle-check"></i> Xác Thực Tài Khoản Gmail
+      </button>
+    </div>
+
+    <!-- TAB 1: OFFICIAL GOOGLE IDENTITY SERVICES (GIS) BUTTON -->
+    <div id="auth-method-gsi-panel" class="auth-method-panel" style="display:block;">
+      <p class="auth-desc">Đăng nhập nhanh an toàn bằng tài khoản Google cá nhân hoặc công ty:</p>
+      <div id="g_id_signin_container" style="display:flex; justify-content:center; margin:1.2rem 0; min-height:44px;">
+        <div id="g_id_signin_btn"></div>
+      </div>
+      <div style="font-size:0.78rem; color:#94a3b8; text-align:center; line-height:1.45;">
+        Nhấp nút Google ở trên để chọn tài khoản Gmail của bạn.<br>
+        Hệ thống sẽ tự động đối soát tài khoản với danh sách được cấp quyền.
+      </div>
+    </div>
+
+    <!-- TAB 2: DIRECT AUTHORIZED GMAIL VERIFICATION -->
+    <div id="auth-method-direct-panel" class="auth-method-panel" style="display:none;">
+      <p class="auth-desc">Nhập địa chỉ Gmail của bạn để hệ thống kiểm tra phân quyền:</p>
+      <form onsubmit="handleDirectLoginSubmit(event)" style="margin-top:0.8rem;">
+        <div class="auth-input-group">
+          <label><i class="fa-solid fa-at"></i> Địa Chỉ Gmail Được Cấp Quyền</label>
+          <input type="email" id="direct-email-input" placeholder="Ví dụ: ingyinhmwe49@gmail.com" required autocomplete="email" />
+        </div>
+        <div class="auth-input-group" style="margin-top:0.8rem;">
+          <label><i class="fa-solid fa-key"></i> Mã PIN Bảo Mật (Mặc định: 7979)</label>
+          <input type="password" id="direct-pin-input" placeholder="Nhập PIN bảo mật..." value="7979" />
+        </div>
+        <button type="submit" class="auth-submit-btn">
+          <i class="fa-brands fa-google"></i> Xác Thực &amp; Đăng Nhập
+        </button>
+      </form>
+    </div>
+
+    <!-- STATUS / ERROR ALERTS -->
+    <div id="auth-alert-box" style="display:none; margin-top:1.1rem;"></div>
+
+    <div class="auth-footer-help">
+      <i class="fa-solid fa-circle-info"></i> Bạn chưa có quyền truy cập? Hãy liên hệ Quản trị viên TNI qua Telegram để được thêm vào danh sách <b>Authorized Gmail Accounts</b>.
     </div>
   </div>
 </div>
 
 <script>
-// ══ PASSWORD GATE SYSTEM ══
-const PWD_KEY      = 'tni_portal_pwd_hash';
-const PWD_SET_KEY  = 'tni_portal_pwd_set_at';
-const PWD_OK_KEY   = 'tni_portal_authed_at';
-const PWD_DAYS     = 30;    // Nhắc đổi sau 30 ngày
-const SESSION_MINS = 480;   // Session tự hết sau 8 tiếng (480 phút)
-const DEFAULT_PWD  = 'TNI@2026';
+/* ══════════════════════════════════════════════════════════════════════════════
+   🔒 GOOGLE SIGN-IN & AUTHORIZED GMAIL ROSTER ENGINE
+   Quy tắc bắt buộc: CHỈ NHỮNG TÀI KHOẢN CÓ TRONG DANH SÁCH MỚI ĐƯỢC ĐĂNG NHẬP
+   ══════════════════════════════════════════════════════════════════════════════ */
+const TNI_AUTH_USER_KEY     = 'tni_auth_user';
+const TNI_CURRENT_EMAIL_KEY = 'tni_current_user_email';
+const TNI_PORTAL_AUTHED_KEY = 'tni_portal_authed_at';
+const TNI_GOOGLE_CLIENT_ID  = 'tni_google_client_id';
 
-async function sha256(str) {
-  if (typeof crypto !== 'undefined' && crypto.subtle && typeof crypto.subtle.digest === 'function') {
-    try {
-      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-      return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-    } catch (e) {}
+function switchAuthTab(method) {
+  const gsiBtn = document.getElementById('auth-tab-btn-gsi');
+  const dirBtn = document.getElementById('auth-tab-btn-direct');
+  const gsiPanel = document.getElementById('auth-method-gsi-panel');
+  const dirPanel = document.getElementById('auth-method-direct-panel');
+  if (method === 'gsi') {
+    if (gsiBtn) gsiBtn.classList.add('active');
+    if (dirBtn) dirBtn.classList.remove('active');
+    if (gsiPanel) gsiPanel.style.display = 'block';
+    if (dirPanel) dirPanel.style.display = 'none';
+  } else {
+    if (dirBtn) dirBtn.classList.add('active');
+    if (gsiBtn) gsiBtn.classList.remove('active');
+    if (dirPanel) dirPanel.style.display = 'block';
+    if (gsiPanel) gsiPanel.style.display = 'none';
+    const emailInp = document.getElementById('direct-email-input');
+    if (emailInp) setTimeout(() => emailInp.focus(), 100);
   }
-  function rotr(n, x) { return (x >>> n) | (x << (32 - n)); }
-  function ch(x, y, z) { return (x & y) ^ (~x & z); }
-  function maj(x, y, z) { return (x & y) ^ (x & z) ^ (y & z); }
-  function sigma0(x) { return rotr(2, x) ^ rotr(13, x) ^ rotr(22, x); }
-  function sigma1(x) { return rotr(6, x) ^ rotr(11, x) ^ rotr(25, x); }
-  function gamma0(x) { return rotr(7, x) ^ rotr(18, x) ^ (x >>> 3); }
-  function gamma1(x) { return rotr(17, x) ^ rotr(19, x) ^ (x >>> 10); }
-  const K = [
-    0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
-    0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
-    0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
-    0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
-    0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
-    0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
-    0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
-    0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
-  ];
-  let H = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
-  const utf8 = unescape(encodeURIComponent(str));
-  const words = [];
-  for (let i = 0; i < utf8.length; i++) {
-    words[i >> 2] |= (utf8.charCodeAt(i) & 0xff) << (24 - (i % 4) * 8);
+}
+
+function showAuthAlert(type, htmlContent) {
+  const box = document.getElementById('auth-alert-box');
+  if (!box) return;
+  box.className = 'auth-alert ' + type;
+  box.innerHTML = htmlContent;
+  box.style.display = 'block';
+}
+
+function clearAuthAlert() {
+  const box = document.getElementById('auth-alert-box');
+  if (box) {
+    box.style.display = 'none';
+    box.innerHTML = '';
   }
-  const bitLen = utf8.length * 8;
-  words[bitLen >> 5] |= 0x80 << (24 - (bitLen % 32));
-  words[(((bitLen + 64) >> 9) << 4) + 15] = bitLen;
-  for (let i = 0; i < words.length; i += 16) {
-    const W = new Array(64);
-    for (let t = 0; t < 16; t++) W[t] = words[i + t] | 0;
-    for (let t = 16; t < 64; t++) W[t] = (gamma1(W[t - 2]) + W[t - 7] + gamma0(W[t - 15]) + W[t - 16]) | 0;
-    let [a, b, c, d, e, f, g, h] = H;
-    for (let t = 0; t < 64; t++) {
-      const T1 = (h + sigma1(e) + ch(e, f, g) + K[t] + W[t]) | 0;
-      const T2 = (sigma0(a) + maj(a, b, c)) | 0;
-      h = g; g = f; f = e; e = (d + T1) | 0;
-      d = c; c = b; b = a; a = (T1 + T2) | 0;
+}
+
+function getLoggedInUser() {
+  try {
+    const raw = localStorage.getItem(TNI_AUTH_USER_KEY);
+    if (raw) {
+      const u = JSON.parse(raw);
+      if (u && u.email) {
+        const accounts = getStoredGmailAccounts();
+        const acc = accounts.find(a => a.email.toLowerCase() === u.email.toLowerCase());
+        if (acc) {
+          return {
+            email: acc.email.toLowerCase(),
+            name: u.name || acc.email.split('@')[0],
+            picture: u.picture || '',
+            perms: Array.isArray(acc.perms) ? acc.perms : [],
+            acc: acc
+          };
+        } else {
+          // Account was removed from authorized roster!
+          handleLogout(true);
+          return null;
+        }
+      }
     }
-    H = [(H[0] + a) | 0, (H[1] + b) | 0, (H[2] + c) | 0, (H[3] + d) | 0, (H[4] + e) | 0, (H[5] + f) | 0, (H[6] + g) | 0, (H[7] + h) | 0];
+  } catch (e) {
+    console.error('Error reading logged in user', e);
   }
-  return H.map(x => (x >>> 0).toString(16).padStart(8, '0')).join('');
+  return null;
 }
 
-async function initPwdGate() {
-  const gate = document.getElementById('pwd-gate');
-  if (!gate) return;
-  if (!localStorage.getItem(PWD_KEY)) {
-    const h = await sha256(DEFAULT_PWD);
-    localStorage.setItem(PWD_KEY, h);
-    localStorage.setItem(PWD_SET_KEY, Date.now().toString());
-  }
+function initGoogleAuthGate() {
+  const user = getLoggedInUser();
+  const overlay = document.getElementById('google-auth-overlay');
+  const main = document.querySelector('main');
 
-  const authedAt = parseInt(localStorage.getItem(PWD_OK_KEY) || '0');
-  const sessionOk = authedAt && (Date.now() - authedAt) < SESSION_MINS * 60 * 1000;
-
-  if (sessionOk) {
-    gate.style.display = 'none';
-    checkPwdExpiry();
+  if (user) {
+    // User already authenticated and in roster
+    if (overlay) overlay.style.display = 'none';
+    if (main) main.style.display = 'block';
+    renderUserIdentityBadge();
+    updateNavTabsLockUI();
   } else {
-    gate.style.display = 'flex';
-    setTimeout(()=>{
-      const inp = document.getElementById('pwd-input');
-      if (inp) inp.focus();
-    }, 100);
+    // Lock portal completely
+    if (overlay) overlay.style.display = 'flex';
+    if (main) main.style.display = 'none';
+    renderUserIdentityBadge();
+    setupGoogleIdentityServices();
   }
 }
 
-async function checkPwd() {
-  const input = document.getElementById('pwd-input').value;
-  if (!input) return;
-  const h = await sha256(input);
-  const stored = localStorage.getItem(PWD_KEY);
-  if (h === stored) {
-    localStorage.setItem(PWD_OK_KEY, Date.now().toString());
-    document.getElementById('pwd-gate').style.display = 'none';
-    checkPwdExpiry();
+function setupGoogleIdentityServices() {
+  if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+    try {
+      const clientId = localStorage.getItem(TNI_GOOGLE_CLIENT_ID) || '1047716449175-6893608182.apps.googleusercontent.com';
+      google.accounts.id.initialize({
+        client_id: clientId,
+        callback: handleGoogleCredentialResponse,
+        auto_select: false
+      });
+      const btnContainer = document.getElementById('g_id_signin_btn');
+      if (btnContainer) {
+        btnContainer.innerHTML = '';
+        google.accounts.id.renderButton(
+          btnContainer,
+          { theme: 'filled_blue', size: 'large', type: 'standard', shape: 'pill', text: 'signin_with', logo_alignment: 'left', width: 280 }
+        );
+      }
+    } catch (e) {
+      console.warn('GIS init fallback', e);
+    }
   } else {
-    const err = document.getElementById('pwd-err');
-    if (err) err.style.display = 'block';
-    const inp = document.getElementById('pwd-input');
-    if (inp) { inp.value = ''; inp.focus(); }
+    setTimeout(setupGoogleIdentityServices, 300);
   }
 }
 
-function checkPwdExpiry() {
-  const setAt = parseInt(localStorage.getItem(PWD_SET_KEY) || '0');
-  if (!setAt) return;
-  const days = Math.floor((Date.now() - setAt) / 86400000);
-  if (days >= PWD_DAYS) {
-    const du = document.getElementById('pwd-days-used');
-    if (du) du.textContent = days;
-    const m = document.getElementById('change-pwd-modal');
-    if (m) m.style.display = 'flex';
+function handleGoogleCredentialResponse(response) {
+  if (!response || !response.credential) return;
+  try {
+    const base64Url = response.credential.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(escape(window.atob(base64)));
+    const payload = JSON.parse(jsonPayload);
+    const email = (payload.email || '').trim().toLowerCase();
+    authenticateUserEmail(email, {
+      name: payload.name || email.split('@')[0],
+      picture: payload.picture || '',
+      method: 'google_gis'
+    });
+  } catch (err) {
+    showAuthAlert('error', '❌ Lỗi giải mã phản hồi Google. Vui lòng thử lại!');
   }
 }
 
-function skipChangePwd() {
-  const m = document.getElementById('change-pwd-modal');
-  if (m) m.style.display = 'none';
+function handleDirectLoginSubmit(e) {
+  if (e) e.preventDefault();
+  clearAuthAlert();
+  const emailInput = document.getElementById('direct-email-input');
+  const pinInput = document.getElementById('direct-pin-input');
+  const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
+  const pin = pinInput ? pinInput.value.trim() : '';
+
+  authenticateUserEmail(email, {
+    pin: pin,
+    method: 'direct'
+  });
 }
 
-async function doChangePwd() {
-  const p1 = document.getElementById('new-pwd-1').value;
-  const p2 = document.getElementById('new-pwd-2').value;
-  const err = document.getElementById('change-pwd-err');
-  if (p1.length < 6) { if(err){err.textContent='Mật khẩu tối thiểu 6 ký tự!'; err.style.display='block';} return; }
-  if (p1 !== p2)     { if(err){err.textContent='Hai mật khẩu không khớp!'; err.style.display='block';} return; }
-  const h = await sha256(p1);
-  localStorage.setItem(PWD_KEY, h);
-  localStorage.setItem(PWD_SET_KEY, Date.now().toString());
-  const m = document.getElementById('change-pwd-modal');
-  if (m) m.style.display = 'none';
-  document.getElementById('new-pwd-1').value = '';
-  document.getElementById('new-pwd-2').value = '';
-  alert('✅ Đã đổi mật khẩu thành công!');
+function authenticateUserEmail(rawEmail, opts) {
+  opts = opts || {};
+  if (!rawEmail) {
+    showAuthAlert('error', '⚠️ Vui lòng nhập địa chỉ Gmail!');
+    return false;
+  }
+  const cleanEmail = rawEmail.trim().toLowerCase();
+  const accounts = getStoredGmailAccounts();
+  const found = accounts.find(a => a.email.toLowerCase() === cleanEmail);
+
+  // ⛔ STRICT ROSTER ENFORCEMENT: AI CÓ TRONG DANH SÁCH MỚI ĐƯỢC ĐĂNG NHẬP
+  if (!found) {
+    showAuthAlert('error', `
+      <div style="font-weight:800; font-size:0.95rem; margin-bottom:0.35rem; color:#ef4444;">
+        <i class="fa-solid fa-circle-xmark"></i> TỪ CHỐI TRUY CẬP (ACCESS DENIED)
+      </div>
+      <div>Tài khoản Google <b>"${cleanEmail}"</b> KHÔNG CÓ trong danh sách phân quyền (Authorized Gmail Accounts).</div>
+      <div style="margin-top:0.45rem; font-size:0.79rem; color:#fca5a5;">
+        ⚠️ <b>Quy định bảo mật:</b> Chỉ những tài khoản đã được phê duyệt trong danh sách mới được phép đăng nhập. Vui lòng liên hệ Quản trị viên TNI để được cấp quyền hoặc đăng nhập bằng tài khoản khác.
+      </div>
+    `);
+    return false;
+  }
+
+  // If using direct form, verify security PIN
+  if (opts.method === 'direct') {
+    const pin = (opts.pin || '').trim();
+    if (pin !== '7979' && pin !== 'TNI@2026') {
+      showAuthAlert('error', '❌ Mã PIN bảo mật không đúng! Vui lòng nhập đúng PIN (Mặc định: 7979).');
+      return false;
+    }
+  }
+
+  // ✅ AUTHENTICATION SUCCESS
+  showAuthAlert('success', `
+    <div style="font-weight:700; color:#10B981;">
+      <i class="fa-solid fa-circle-check"></i> XÁC THỰC THÀNH CÔNG!
+    </div>
+    <div>Xin chào <b>${found.email}</b>. Đang mở khóa hệ thống TNI BI Portal...</div>
+  `);
+
+  localStorage.setItem(TNI_AUTH_USER_KEY, JSON.stringify({
+    email: found.email,
+    name: opts.name || found.email.split('@')[0],
+    picture: opts.picture || '',
+    perms: found.perms,
+    loginAt: Date.now()
+  }));
+  localStorage.setItem(TNI_CURRENT_EMAIL_KEY, found.email.toLowerCase());
+  localStorage.setItem(TNI_PORTAL_AUTHED_KEY, Date.now().toString());
+
+  setTimeout(() => {
+    const overlay = document.getElementById('google-auth-overlay');
+    if (overlay) overlay.style.display = 'none';
+    const main = document.querySelector('main');
+    if (main) main.style.display = 'block';
+    renderUserIdentityBadge();
+    updateNavTabsLockUI();
+    if (typeof al === 'function') {
+      al(`Đăng nhập thành công! Chào mừng ${found.email}`, 'ok');
+    }
+  }, 450);
+
+  return true;
 }
 
-document.addEventListener('DOMContentLoaded', initPwdGate);
+function handleLogout(silent) {
+  localStorage.removeItem(TNI_AUTH_USER_KEY);
+  localStorage.removeItem(TNI_CURRENT_EMAIL_KEY);
+  localStorage.removeItem(TNI_PORTAL_AUTHED_KEY);
+  
+  const main = document.querySelector('main');
+  if (main) main.style.display = 'none';
+  const overlay = document.getElementById('google-auth-overlay');
+  if (overlay) overlay.style.display = 'flex';
+  
+  renderUserIdentityBadge();
+  updateNavTabsLockUI();
+  
+  if (!silent) {
+    showAuthAlert('info', 'ℹ️ Bạn đã đăng xuất khỏi hệ thống thành công. Vui lòng đăng nhập lại để tiếp tục.');
+  }
+}
+
+function showLoginGate() {
+  const overlay = document.getElementById('google-auth-overlay');
+  if (overlay) overlay.style.display = 'flex';
+  clearAuthAlert();
+}
+
+document.addEventListener('DOMContentLoaded', initGoogleAuthGate);
 </script>
 
 
@@ -4505,6 +4869,33 @@ Team04>> 2Box</td>
         </div>
 
       </div>
+
+      <!-- Google OAuth Client ID Configuration Card (Admin Only) -->
+      <div class="card" style="margin-bottom:1.2rem; background:rgba(30, 41, 59, 0.65); border:1px solid rgba(56, 189, 248, 0.35); border-radius:16px; padding:1.2rem;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.8rem; margin-bottom:0.8rem;">
+          <div>
+            <div style="font-size:0.95rem; font-weight:800; color:#fff; display:flex; align-items:center; gap:0.5rem;">
+              <i class="fa-brands fa-google" style="color:#38BDF8;"></i> Cấu Hình Google OAuth 2.0 Client ID (Sign in with Google)
+            </div>
+            <div style="font-size:0.76rem; color:#94A3B8; margin-top:0.25rem;">
+              Client ID dùng cho thư viện Google Identity Services (GIS). Mọi nhân viên phải dùng tài khoản Google có trong danh sách phân quyền bên dưới mới được cấp quyền truy cập.
+            </div>
+          </div>
+          <div style="display:flex; gap:0.5rem;">
+            <button class="filter-btn" style="background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.35); color:#38bdf8; font-size:0.75rem; padding:0.4rem 0.8rem; border-radius:8px; cursor:pointer;" onclick="resetGoogleClientIdDefault()">
+              <i class="fa-solid fa-rotate-left"></i> Dùng Client ID Mặc định
+            </button>
+            <button class="filter-btn" style="background:linear-gradient(135deg, #0284c7, #2563eb); color:#fff; border:none; font-size:0.75rem; padding:0.4rem 1rem; border-radius:8px; font-weight:700; cursor:pointer;" onclick="saveGoogleClientIdSetting()">
+              <i class="fa-solid fa-floppy-disk"></i> Lưu Client ID
+            </button>
+          </div>
+        </div>
+        <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+          <input type="text" id="google-client-id-input" placeholder="Nhập Google OAuth 2.0 Web Client ID (vd: xxx.apps.googleusercontent.com)..." style="flex:1; min-width:280px; background:#0f172a; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0.6rem 0.9rem; color:#fff; font-size:0.82rem; font-family:monospace;" />
+          <span id="google-client-id-status" style="font-size:0.75rem; color:#10B981; font-weight:700; display:none;"><i class="fa-solid fa-circle-check"></i> Đã lưu</span>
+        </div>
+      </div>
+
       <!-- Access Control Table Card -->
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.8rem;">
@@ -5754,29 +6145,40 @@ Team04>> 2Box</td>
 
     /* 🔐 GMAIL ACCESS CONTROL & MULTI-PERMISSION PERSISTENCE */
     const DEFAULT_GMAIL_ACCOUNTS = [
-      { email: "admin@tni.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "03/10/2026" },
-      { email: "coadmin@tni.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "03/10/2026" },
-      { email: "bod.director@mytel.com.mm", perms: ["EXEC", "BOD", "PLAN", "NOTE", "STAFF_GUIDE"], date: "03/10/2026" },
-      { email: "tni.technical@gmail.com", perms: ["DEPT", "WO", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE"], date: "03/10/2026" },
-      { email: "tni.operations@mytel.com.mm", perms: ["EXEC", "DEPT", "WO", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE"], date: "03/10/2026" },
-      { email: "team1.dawei@mytel.com.mm", perms: ["WO", "NOTE", "STAFF_GUIDE", "SYS_GUIDE"], date: "03/10/2026" },
-      { email: "team2.myeik@mytel.com.mm", perms: ["WO", "NOTE", "STAFF_GUIDE", "SYS_GUIDE"], date: "03/10/2026" },
-      { email: "team3.bokpyin@mytel.com.mm", perms: ["WO", "NOTE", "STAFF_GUIDE", "SYS_GUIDE"], date: "03/10/2026" },
-      { email: "team4.kawthoung@mytel.com.mm", perms: ["WO", "NOTE", "STAFF_GUIDE", "SYS_GUIDE"], date: "03/10/2026" },
-      { email: "field.engineer@tni.com.mm", perms: ["WO", "NOTE", "STAFF_GUIDE", "SYS_GUIDE"], date: "03/10/2026" }
+      { email: "ingyinhmwe49@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
+      { email: "yelwin086683@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
+      { email: "htoolaynyaw@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
+      { email: "heinnanda683@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
+      { email: "ppoe56591@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
+      { email: "hlaing127592@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
+      { email: "shingwutthmone776@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
+      { email: "admin@tni.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
+      { email: "coadmin@tni.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
+      { email: "tni.technical@gmail.com", perms: ["DEPT", "WO", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE"], date: "15/10/2026" }
     ];
 
     function getStoredGmailAccounts() {
+      let accounts = JSON.parse(JSON.stringify(DEFAULT_GMAIL_ACCOUNTS));
       try {
         const stored = localStorage.getItem('tni_gmail_access_list_v2');
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            parsed.forEach(p => {
+              if (!p || !p.email) return;
+              const idx = accounts.findIndex(a => a.email.toLowerCase() === p.email.toLowerCase());
+              if (idx >= 0) {
+                accounts[idx] = p; // keep customized perms/date
+              } else {
+                accounts.push(p);
+              }
+            });
+          }
         }
       } catch (e) {
         console.error('Error reading stored accounts', e);
       }
-      return DEFAULT_GMAIL_ACCOUNTS;
+      return accounts;
     }
 
     function saveStoredGmailAccounts(accounts) {
@@ -6088,31 +6490,68 @@ Gửi link này cho nhân viên qua Telegram/Zalo, khi họ bấm vào hệ th�
       });
     }
 
+    function loadGoogleClientIdSetting() {
+      const input = document.getElementById('google-client-id-input');
+      if (input) {
+        input.value = localStorage.getItem('tni_google_client_id') || '1047716449175-6893608182.apps.googleusercontent.com';
+      }
+    }
+
+    function saveGoogleClientIdSetting() {
+      const input = document.getElementById('google-client-id-input');
+      if (!input) return;
+      const val = input.value.trim();
+      if (!val) {
+        alert('Vui lòng nhập Google Client ID hợp lệ hoặc bấm "Dùng Client ID Mặc định"!');
+        return;
+      }
+      localStorage.setItem('tni_google_client_id', val);
+      const statusEl = document.getElementById('google-client-id-status');
+      if (statusEl) {
+        statusEl.style.display = 'inline-block';
+        setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+      }
+      alert('Đã lưu Google Client ID thành công! Các phiên đăng nhập Google tiếp theo sẽ áp dụng Client ID này.');
+      if (typeof setupGoogleIdentityServices === 'function') {
+        setupGoogleIdentityServices();
+      }
+    }
+
+    function resetGoogleClientIdDefault() {
+      const defaultClientId = '1047716449175-6893608182.apps.googleusercontent.com';
+      localStorage.removeItem('tni_google_client_id');
+      const input = document.getElementById('google-client-id-input');
+      if (input) input.value = defaultClientId;
+      alert('Đã khôi phục Google Client ID mặc định!');
+      if (typeof setupGoogleIdentityServices === 'function') {
+        setupGoogleIdentityServices();
+      }
+    }
+
     
     /* ══════════════════════════════════════════════════════════════════════════
        🔒 TAB PERMISSION ENFORCEMENT & IDENTITY MANAGEMENT
        ══════════════════════════════════════════════════════════════ */
     function getCurrentUserEmail() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const emailParam = urlParams.get('email') || urlParams.get('staff');
-      if (emailParam) {
-        localStorage.setItem('tni_current_user_email', emailParam.trim().toLowerCase());
-        return emailParam.trim().toLowerCase();
-      }
-      return (localStorage.getItem('tni_current_user_email') || 'admin@tni.com').trim().toLowerCase();
+      const user = (typeof getLoggedInUser === 'function') ? getLoggedInUser() : null;
+      if (user && user.email) return user.email.toLowerCase();
+      const raw = localStorage.getItem('tni_current_user_email');
+      return raw ? raw.trim().toLowerCase() : '';
     }
 
     function setCurrentUserEmail(email) {
       if (email) localStorage.setItem('tni_current_user_email', email.trim().toLowerCase());
       renderUserIdentityBadge();
+      updateNavTabsLockUI();
     }
 
     function isTabAllowedForUser(panelId) {
-      const email = getCurrentUserEmail();
-      const accounts = getStoredGmailAccounts();
-      const acc = accounts.find(a => a.email.toLowerCase() === email);
+      const user = (typeof getLoggedInUser === 'function') ? getLoggedInUser() : null;
+      if (!user) return false;
+      const email = user.email;
+      const acc = user.acc;
 
-      // Admin bypass
+      // Master Admin bypass
       if (email === 'admin@tni.com' || email === 'coadmin@tni.com') return true;
       if (acc && (acc.perms.includes('AUTH') || acc.perms.includes('FULL') || acc.perms.length >= 10)) return true;
 
@@ -6138,45 +6577,82 @@ Gửi link này cho nhân viên qua Telegram/Zalo, khi họ bấm vào hệ th�
     }
 
     function renderUserIdentityBadge() {
-      const email = getCurrentUserEmail();
-      const accounts = getStoredGmailAccounts();
-      const acc = accounts.find(a => a.email.toLowerCase() === email);
       const badgeContainer = document.getElementById('user-identity-badge');
       if (!badgeContainer) return;
+      const user = (typeof getLoggedInUser === 'function') ? getLoggedInUser() : null;
 
-      const perms = acc ? (Array.isArray(acc.perms) ? acc.perms : []) : [];
+      if (!user) {
+        badgeContainer.innerHTML = `
+          <button onclick="showLoginGate()" style="background:linear-gradient(135deg,#0284c7,#2563eb); border:none; color:#fff; font-size:0.75rem; font-weight:700; padding:0.4rem 0.85rem; border-radius:8px; cursor:pointer; display:flex; align-items:center; gap:0.4rem; box-shadow:0 2px 10px rgba(37,99,235,0.35);">
+            <i class="fa-brands fa-google"></i> Đăng Nhập
+          </button>
+        `;
+        return;
+      }
+
+      const email = user.email;
+      const perms = user.perms || [];
       const isAdmin = email === 'admin@tni.com' || perms.includes('AUTH') || perms.length >= 10;
+      const avatar = user.picture ? `<img src="${user.picture}" style="width:20px; height:20px; border-radius:50%; object-fit:cover;" />` : `<i class="fa-solid fa-circle-user" style="color:${isAdmin ? '#10B981' : '#38BDF8'}; font-size:1.1rem;"></i>`;
 
       badgeContainer.innerHTML = `
-        <div style="display:flex; align-items:center; gap:0.5rem; background:rgba(30,41,59,0.7); border:1px solid rgba(56,189,248,0.3); border-radius:10px; padding:0.35rem 0.75rem; font-size:0.75rem;">
-          <i class="fa-solid fa-user-check" style="color:${isAdmin ? '#10B981' : '#F59E0B'};"></i>
-          <span><b>${email}</b> <span style="color:#94a3b8;">(${isAdmin ? 'Full Access' : perms.length + ' Thẻ'})</span></span>
-          <button onclick="promptSwitchUserEmail()" style="background:rgba(255,255,255,0.1); border:none; color:#38bdf8; font-size:0.72rem; padding:0.2rem 0.45rem; border-radius:4px; cursor:pointer;" title="Đổi tài khoản Gmail">Đổi</button>
+        <div style="display:flex; align-items:center; gap:0.55rem; background:rgba(30,41,59,0.85); border:1px solid rgba(56,189,248,0.35); border-radius:10px; padding:0.35rem 0.75rem; font-size:0.76rem;">
+          ${avatar}
+          <span style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><b style="color:#F8FAFC;">${email}</b> <span style="color:#38bdf8;">(${isAdmin ? 'Full Access' : perms.length + ' Thẻ'})</span></span>
+          <button onclick="handleLogout()" style="background:rgba(239,68,68,0.2); border:1px solid rgba(239,68,68,0.4); color:#fca5a5; font-size:0.72rem; padding:0.25rem 0.55rem; border-radius:5px; cursor:pointer; font-weight:700; display:flex; align-items:center; gap:0.3rem; transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.35)'" onmouseout="this.style.background='rgba(239,68,68,0.2)'" title="Đăng xuất khỏi hệ thống">
+            <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+          </button>
         </div>
       `;
     }
 
-    function promptSwitchUserEmail() {
-      const current = getCurrentUserEmail();
-      const newEmail = prompt('Nhập địa chỉ Gmail để kiểm tra quyền truy cập (hoặc nhập "admin" / PIN "7979"):', current);
-      if (newEmail !== null) {
-        if (newEmail.trim() === '7979' || newEmail.trim().toLowerCase() === 'admin') {
-          setCurrentUserEmail('admin@tni.com');
-          alert('✅ Đã kích hoạt quyền Ban Giám Đốc (Admin Full Access)!');
-        } else if (newEmail.trim()) {
-          setCurrentUserEmail(newEmail.trim());
-          alert(`✅ Đang xem dưới quyền: ${newEmail.trim()}`);
+    function updateNavTabsLockUI() {
+      const panelMap = {
+        'exec-summary-panel':   'EXEC',
+        'dept-assign-panel':    'DEPT',
+        'wo-detail-panel':      'WO',
+        'bod-assign-panel':     'BOD',
+        'plan-week-panel':      'PLAN',
+        'task-notes-panel':     'NOTE',
+        'guide-for-staff-panel':'STAFF_GUIDE',
+        'system-guide-panel':   'SYS_GUIDE',
+        'access-control-panel': 'AUTH',
+        'secretary-panel':      'SECRETARY'
+      };
+      document.querySelectorAll('.nav-tab').forEach(btn => {
+        const onclickAttr = btn.getAttribute('onclick') || '';
+        let targetPanel = '';
+        for (const pId in panelMap) {
+          if (onclickAttr.includes(pId)) { targetPanel = pId; break; }
         }
-        location.reload();
-      }
+        if (targetPanel) {
+          const allowed = isTabAllowedForUser(targetPanel);
+          if (!allowed) {
+            btn.classList.add('tab-locked');
+            btn.setAttribute('title', '🔒 Tài khoản của bạn chưa được cấp quyền xem thẻ này');
+          } else {
+            btn.classList.remove('tab-locked');
+            btn.removeAttribute('title');
+          }
+        }
+      });
     }
 
     // Intercept showTab to guard unauthorized access
     const nativeShowTab = window.showTab;
     window.showTab = function(panelId, tabBtn) {
+      const user = (typeof getLoggedInUser === 'function') ? getLoggedInUser() : null;
+      if (!user) {
+        alert('🔒 BẢO MẬT HỆ THỐNG:\nVui lòng đăng nhập bằng tài khoản Google được cấp quyền để truy cập thông tin!');
+        showLoginGate();
+        return;
+      }
       if (!isTabAllowedForUser(panelId)) {
-        const email = getCurrentUserEmail();
-        alert(`🔒 TRUY CẬP BỊ KHÓA:\nTài khoản "${email}" chưa được cấp quyền xem thẻ này.\n\nVui lòng liên hệ Admin (@admin@tni.com) hoặc vào thẻ Gmail Access List để được tích chọn quyền!`);
+        if (panelId === 'access-control-panel') {
+          alert(`🔒 BẢO MẬT QUẢN TRỊ:\nThẻ "Gmail Access List" chỉ dành riêng cho Quản Trị Viên (Admin) để quản lý danh sách phân quyền!`);
+        } else {
+          alert(`🔒 TRUY CẬP BỊ KHÓA:\nTài khoản "${user.email}" chưa được cấp quyền xem thẻ này.\n\nVui lòng liên hệ Admin (@admin@tni.com) để được cấp thêm quyền.`);
+        }
         return;
       }
       if (typeof nativeShowTab === 'function') {
@@ -6188,12 +6664,19 @@ Gửi link này cho nhân viên qua Telegram/Zalo, khi họ bấm vào hệ th�
         if (target) target.classList.add('active');
         if (tabBtn && tabBtn.classList) tabBtn.classList.add('active');
       }
+      if (panelId === 'access-control-panel' && typeof loadGoogleClientIdSetting === 'function') {
+        loadGoogleClientIdSetting();
+      }
     };
 
-
     document.addEventListener('DOMContentLoaded', () => {
+      initGoogleAuthGate();
       renderUserIdentityBadge();
       renderGmailList();
+      updateNavTabsLockUI();
+      if (typeof loadGoogleClientIdSetting === 'function') {
+        loadGoogleClientIdSetting();
+      }
     });
 
     /* 🤖 AI VOICE SPEECH SYNTHESIS ENGINE (DYNAMIC LIVE DATA BRIEFING WITH SENTENCE CHUNKING QUEUE) */
