@@ -6246,10 +6246,11 @@ Team04>> 2Box</td>
               <tr>
                 <th style="width:40px;">#</th>
                 <th style="text-align:left !important;">Authorized Gmail Address</th>
+                <th style="text-align:left !important; width:130px;"><i class="fa-solid fa-key"></i> Mật Khẩu (Pass)</th>
                 <th style="text-align:left !important;">Assigned Tab Permissions (Các Thẻ Được Phép Xem)</th>
                 <th>Status</th>
                 <th>Date Added</th>
-                <th style="width:100px;">Actions</th>
+                <th style="width:140px;">Actions</th>
               </tr>
             </thead>
             <tbody id="gmailListTable">
@@ -7295,7 +7296,14 @@ Team04>> 2Box</td>
         <label style="display:block; font-weight:700; color:#F8FAFC; margin-bottom:0.4rem; font-size:0.88rem;">
           <i class="fa-solid fa-envelope" style="color:var(--cyan);"></i> Danh sách Gmail (Dán 1 hoặc hàng loạt cách nhau bằng Xuống dòng / Dấu phẩy):
         </label>
-        <textarea id="newGmailInput" class="form-input" rows="3" placeholder="Dán danh sách Gmail tại đây...&#10;Ví dụ:&#10;coadmin@tni.com&#10;director@mytel.com.mm, technical@gmail.com" style="width:100%; background:#1E293B; border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:0.6rem 0.9rem; color:#fff; font-size:0.92rem; font-family:monospace; resize:vertical;"></textarea>
+        <textarea id="newGmailInput" class="form-input" rows="3" placeholder="Dán danh sách Gmail tại đây...&#10;Ví dụ:&#10;phonghdpxd@gmail.com&#10;coadmin@tni.com, technical@gmail.com" style="width:100%; background:#1E293B; border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:0.6rem 0.9rem; color:#fff; font-size:0.92rem; font-family:monospace; resize:vertical;"></textarea>
+      </div>
+
+      <div class="form-group" style="margin-bottom:1.2rem;">
+        <label style="display:block; font-weight:700; color:#F8FAFC; margin-bottom:0.4rem; font-size:0.88rem;">
+          <i class="fa-solid fa-key" style="color:var(--cyan);"></i> Mật khẩu đăng nhập (Pass/PIN cho tài khoản - Mặc định: 7979):
+        </label>
+        <input type="text" id="newGmailPass" placeholder="Nhập mật khẩu / PIN (Ví dụ: 7979)..." value="7979" style="width:100%; background:#1E293B; border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:0.6rem 0.9rem; color:#fff; font-size:0.92rem;" />
       </div>
 
       <!-- Quick Group Presets -->
@@ -7417,28 +7425,56 @@ Team04>> 2Box</td>
 
     /* 🔐 GMAIL ACCESS CONTROL & MULTI-PERMISSION PERSISTENCE */
     const DEFAULT_GMAIL_ACCOUNTS = [
-      { email: "admin@tni.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "AUTH"], date: "15/08/2026" },
-      { email: "coadmin@tni.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "AUTH"], date: "15/08/2026" },
-      { email: "bod.director@mytel.com.mm", perms: ["EXEC", "BOD"], date: "15/08/2026" },
-      { email: "tni.technical@gmail.com", perms: ["DEPT", "WO", "PLAN"], date: "15/08/2026" },
-      { email: "tni.operations@mytel.com.mm", perms: ["EXEC", "DEPT", "WO", "PLAN"], date: "15/08/2026" },
-      { email: "team1.dawei@mytel.com.mm", perms: ["DEPT", "WO", "PLAN"], date: "15/08/2026" },
-      { email: "team2.myeik@mytel.com.mm", perms: ["DEPT", "WO", "PLAN"], date: "15/08/2026" },
-      { email: "team3.bokpyin@mytel.com.mm", perms: ["DEPT", "WO", "PLAN"], date: "15/08/2026" },
-      { email: "team4.kawthoung@mytel.com.mm", perms: ["DEPT", "WO", "PLAN"], date: "15/08/2026" }
+      { email: "phonghdpxd@gmail.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "AUTH"], date: "15/10/2026" },
+      { email: "admin@tni.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "AUTH"], date: "15/10/2026" },
+      { email: "coadmin@tni.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "AUTH"], date: "15/10/2026" },
+      { email: "bod.director@mytel.com.mm", pass: "7979", perms: ["EXEC", "BOD"], date: "15/10/2026" },
+      { email: "tni.technical@gmail.com", pass: "7979", perms: ["DEPT", "WO", "PLAN"], date: "15/10/2026" },
+      { email: "tni.operations@mytel.com.mm", pass: "7979", perms: ["EXEC", "DEPT", "WO", "PLAN"], date: "15/10/2026" },
+      { email: "team1.dawei@mytel.com.mm", pass: "7979", perms: ["DEPT", "WO", "PLAN"], date: "15/10/2026" },
+      { email: "team2.myeik@mytel.com.mm", pass: "7979", perms: ["DEPT", "WO", "PLAN"], date: "15/10/2026" },
+      { email: "team3.bokpyin@mytel.com.mm", pass: "7979", perms: ["DEPT", "WO", "PLAN"], date: "15/10/2026" },
+      { email: "team4.kawthoung@mytel.com.mm", pass: "7979", perms: ["DEPT", "WO", "PLAN"], date: "15/10/2026" }
     ];
 
     function getStoredGmailAccounts() {
+      let accounts = JSON.parse(JSON.stringify(DEFAULT_GMAIL_ACCOUNTS));
       try {
         const stored = localStorage.getItem('tni_gmail_access_list_v2');
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            parsed.forEach(p => {
+              if (!p || !p.email) return;
+              const idx = accounts.findIndex(a => a.email.toLowerCase() === p.email.toLowerCase());
+              if (idx >= 0) {
+                accounts[idx] = Object.assign({}, accounts[idx], p);
+              } else {
+                accounts.push(p);
+              }
+            });
+          }
         }
       } catch (e) {
         console.error('Error reading stored accounts', e);
       }
-      return DEFAULT_GMAIL_ACCOUNTS;
+
+      // 🛡️ BẢO HỘ TUYỆT ĐỐI ADMIN: phonghdpxd@gmail.com luôn là Super Admin
+      const adminEmail = 'phonghdpxd@gmail.com';
+      const superAdmin = accounts.find(a => a.email.toLowerCase() === adminEmail);
+      if (!superAdmin) {
+        accounts.unshift({
+          email: adminEmail,
+          pass: "7979",
+          perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "AUTH"],
+          date: "15/10/2026"
+        });
+      } else {
+        if (!superAdmin.perms.includes('AUTH')) superAdmin.perms.push('AUTH');
+        if (!superAdmin.pass) superAdmin.pass = '7979';
+      }
+
+      return accounts;
     }
 
     function saveStoredGmailAccounts(accounts) {
@@ -7470,6 +7506,19 @@ Team04>> 2Box</td>
       }).join(' ');
     }
 
+        function promptChangePass(idx) {
+      const accounts = getStoredGmailAccounts();
+      if (idx < 0 || idx >= accounts.length) return;
+      const acc = accounts[idx];
+      const newPass = prompt(`Nhập mật khẩu mới cho tài khoản "${acc.email}":`, acc.pass || '7979');
+      if (newPass !== null && newPass.trim() !== '') {
+        acc.pass = newPass.trim();
+        saveStoredGmailAccounts(accounts);
+        renderGmailList();
+        alert(`✅ Đã cập nhật mật khẩu cho ${acc.email} thành "${acc.pass}"!`);
+      }
+    }
+
     function renderGmailList() {
       const tbody = document.getElementById('gmailListTable');
       if (!tbody) return;
@@ -7485,16 +7534,26 @@ Team04>> 2Box</td>
         if (perms.includes("DEPT") || perms.includes("WO")) cDept++;
         if (perms.includes("EXEC")) cExec++;
 
+        const isSuper = acc.email.toLowerCase() === 'phonghdpxd@gmail.com';
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${idx + 1}</td>
-          <td style="text-align:left !important;"><strong style="color:var(--cyan); font-size:0.92rem;">${acc.email}</strong></td>
+          <td style="text-align:left !important;">
+            <strong style="color:var(--cyan); font-size:0.92rem;">${acc.email}</strong>
+            ${isSuper ? '<span class="kpi-pill kpi-red" style="margin-left:6px; font-size:0.65rem;">👑 SUPER ADMIN</span>' : ''}
+          </td>
+          <td style="text-align:left !important;">
+            <span style="font-family:monospace; font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.3); padding:0.2rem 0.55rem; border-radius:6px; font-size:0.8rem;">
+              ${acc.pass || '7979'}
+            </span>
+          </td>
           <td style="text-align:left !important;">${renderPermBadges(perms)}</td>
           <td><span class="status-pill-check sp-verified">✓ Active Authorized</span></td>
-          <td style="font-size:0.8rem; color:var(--text-sub);">${acc.date || '15/08/2026'}</td>
+          <td style="font-size:0.8rem; color:var(--text-sub);">${acc.date || '15/10/2026'}</td>
           <td style="white-space:nowrap;">
-            <button class="filter-btn" style="color:var(--cyan); padding:0.25rem 0.6rem; font-size:0.75rem; cursor:pointer; margin-right:4px;" onclick="editGmailIndex(${idx})"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
-            <button class="filter-btn" style="color:var(--rose); padding:0.25rem 0.6rem; font-size:0.75rem; cursor:pointer;" onclick="removeGmailIndex(${idx})"><i class="fa-solid fa-trash"></i> Remove</button>
+            <button class="filter-btn" style="color:#fbbf24; padding:0.25rem 0.5rem; font-size:0.72rem; cursor:pointer; margin-right:3px;" onclick="promptChangePass(${idx})" title="Đổi mật khẩu cho Gmail này"><i class="fa-solid fa-key"></i> Pass</button>
+            <button class="filter-btn" style="color:var(--cyan); padding:0.25rem 0.5rem; font-size:0.72rem; cursor:pointer; margin-right:3px;" onclick="editGmailIndex(${idx})"><i class="fa-solid fa-pen-to-square"></i></button>
+            <button class="filter-btn" style="color:var(--rose); padding:0.25rem 0.5rem; font-size:0.72rem; cursor:pointer;" onclick="removeGmailIndex(${idx})"><i class="fa-solid fa-trash"></i></button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -7624,14 +7683,17 @@ Team04>> 2Box</td>
       let updatedCount = 0;
       let addedCount = 0;
 
+      const passVal = (document.getElementById('newGmailPass') ? document.getElementById('newGmailPass').value : '7979').trim() || '7979';
+
       uniqueEmails.forEach(email => {
         const existingIdx = accounts.findIndex(a => a.email.toLowerCase() === email);
         if (existingIdx >= 0) {
           accounts[existingIdx].perms = perms;
+          accounts[existingIdx].pass = passVal;
           accounts[existingIdx].date = today;
           updatedCount++;
         } else {
-          accounts.unshift({ email, perms, date: today });
+          accounts.unshift({ email, pass: passVal, perms, date: today });
           addedCount++;
         }
       });
@@ -7662,9 +7724,11 @@ Team04>> 2Box</td>
       const acc = accounts[index];
       const perms = Array.isArray(acc.perms) ? acc.perms : [];
 
-      // Pre-fill email
+      // Pre-fill email and pass
       const emailInput = document.getElementById('newGmailInput');
       if (emailInput) emailInput.value = acc.email;
+      const passInput = document.getElementById('newGmailPass');
+      if (passInput) passInput.value = acc.pass || '7979';
 
       // Set checkboxes to current permissions
       const allPerms = ['exec', 'dept', 'wo', 'bod', 'plan', 'auth'];

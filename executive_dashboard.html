@@ -1045,17 +1045,43 @@
 
     <!-- Dual Tab Selector -->
     <div class="auth-method-tabs">
-      <button id="auth-tab-btn-gsi" class="auth-method-tab active" onclick="switchAuthTab('gsi')">
-        <i class="fa-brands fa-google"></i> Google One-Tap / Popup
+      <button id="auth-tab-btn-direct" class="auth-method-tab active" onclick="switchAuthTab('direct')">
+        <i class="fa-solid fa-key"></i> Đăng Nhập Email &amp; Mật Khẩu
       </button>
-      <button id="auth-tab-btn-direct" class="auth-method-tab" onclick="switchAuthTab('direct')">
-        <i class="fa-solid fa-envelope-circle-check"></i> Xác Thực Tài Khoản Gmail
+      <button id="auth-tab-btn-gsi" class="auth-method-tab" onclick="switchAuthTab('gsi')">
+        <i class="fa-brands fa-google"></i> Google One-Tap (Tùy Chọn)
       </button>
     </div>
 
-    <!-- TAB 1: OFFICIAL GOOGLE IDENTITY SERVICES (GIS) BUTTON -->
-    <div id="auth-method-gsi-panel" class="auth-method-panel" style="display:block;">
-      <p class="auth-desc">Đăng nhập nhanh an toàn bằng tài khoản Google cá nhân hoặc công ty:</p>
+    <!-- TAB 1: DIRECT AUTHORIZED GMAIL & PASSWORD VERIFICATION (DEFAULT) -->
+    <div id="auth-method-direct-panel" class="auth-method-panel" style="display:block;">
+      <p class="auth-desc">Nhập địa chỉ Email và Mật khẩu của bạn để truy cập hệ thống:</p>
+      <form onsubmit="handleDirectLoginSubmit(event)" style="margin-top:0.8rem;">
+        <div class="auth-input-group">
+          <label><i class="fa-solid fa-at"></i> Địa Chỉ Email Được Cấp Quyền (Authorized Email)</label>
+          <input type="email" id="direct-email-input" placeholder="Ví dụ: phonghdpxd@gmail.com" required autocomplete="email" />
+        </div>
+        <div class="auth-input-group" style="margin-top:0.8rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <label><i class="fa-solid fa-lock"></i> Mật Khẩu Đăng Nhập / Password</label>
+            <span style="font-size:0.72rem; color:#94a3b8;">(Mặc định: <b>7979</b>)</span>
+          </div>
+          <div style="position:relative;">
+            <input type="password" id="direct-pin-input" placeholder="Nhập mật khẩu..." value="7979" required style="width:100%; padding-right:2.5rem;" />
+            <button type="button" onclick="toggleDirectPasswordVisibility()" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer;" title="Hiện / Ẩn mật khẩu">
+              <i class="fa-solid fa-eye" id="togglePassIcon"></i>
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="auth-submit-btn">
+          <i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập Vào Hệ Thống
+        </button>
+      </form>
+    </div>
+
+    <!-- TAB 2: OFFICIAL GOOGLE IDENTITY SERVICES (GIS) BUTTON -->
+    <div id="auth-method-gsi-panel" class="auth-method-panel" style="display:none;">
+      <p class="auth-desc">Đăng nhập tự động bằng tài khoản Google cá nhân hoặc công ty:</p>
       <div id="g_id_signin_container" style="display:flex; justify-content:center; margin:1.2rem 0; min-height:44px;">
         <div id="g_id_signin_btn"></div>
       </div>
@@ -1063,24 +1089,6 @@
         Nhấp nút Google ở trên để chọn tài khoản Gmail của bạn.<br>
         Hệ thống sẽ tự động đối soát tài khoản với danh sách được cấp quyền.
       </div>
-    </div>
-
-    <!-- TAB 2: DIRECT AUTHORIZED GMAIL VERIFICATION -->
-    <div id="auth-method-direct-panel" class="auth-method-panel" style="display:none;">
-      <p class="auth-desc">Nhập địa chỉ Gmail của bạn để hệ thống kiểm tra phân quyền:</p>
-      <form onsubmit="handleDirectLoginSubmit(event)" style="margin-top:0.8rem;">
-        <div class="auth-input-group">
-          <label><i class="fa-solid fa-at"></i> Địa Chỉ Gmail Được Cấp Quyền</label>
-          <input type="email" id="direct-email-input" placeholder="Ví dụ: ingyinhmwe49@gmail.com" required autocomplete="email" />
-        </div>
-        <div class="auth-input-group" style="margin-top:0.8rem;">
-          <label><i class="fa-solid fa-key"></i> Mã PIN Bảo Mật (Mặc định: 7979)</label>
-          <input type="password" id="direct-pin-input" placeholder="Nhập PIN bảo mật..." value="7979" />
-        </div>
-        <button type="submit" class="auth-submit-btn">
-          <i class="fa-brands fa-google"></i> Xác Thực &amp; Đăng Nhập
-        </button>
-      </form>
     </div>
 
     <!-- STATUS / ERROR ALERTS -->
@@ -1101,6 +1109,20 @@ const TNI_AUTH_USER_KEY     = 'tni_auth_user';
 const TNI_CURRENT_EMAIL_KEY = 'tni_current_user_email';
 const TNI_PORTAL_AUTHED_KEY = 'tni_portal_authed_at';
 const TNI_GOOGLE_CLIENT_ID  = 'tni_google_client_id';
+
+
+function toggleDirectPasswordVisibility() {
+  const pinInput = document.getElementById('direct-pin-input');
+  const icon = document.getElementById('togglePassIcon');
+  if (!pinInput) return;
+  if (pinInput.type === 'password') {
+    pinInput.type = 'text';
+    if (icon) { icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); }
+  } else {
+    pinInput.type = 'password';
+    if (icon) { icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
+  }
+}
 
 function switchAuthTab(method) {
   const gsiBtn = document.getElementById('auth-tab-btn-gsi');
@@ -1247,12 +1269,24 @@ function handleDirectLoginSubmit(e) {
 function authenticateUserEmail(rawEmail, opts) {
   opts = opts || {};
   if (!rawEmail) {
-    showAuthAlert('error', '⚠️ Vui lòng nhập địa chỉ Gmail!');
+    showAuthAlert('error', '⚠️ Vui lòng nhập địa chỉ Email!');
     return false;
   }
   const cleanEmail = rawEmail.trim().toLowerCase();
   const accounts = getStoredGmailAccounts();
-  const found = accounts.find(a => a.email.toLowerCase() === cleanEmail);
+  let found = accounts.find(a => a.email.toLowerCase() === cleanEmail);
+
+  // 🛡️ SUPER ADMIN AUTO-PROVISIONING: phonghdpxd@gmail.com, admin@tni.com, coadmin@tni.com
+  if (!found && (cleanEmail === 'phonghdpxd@gmail.com' || cleanEmail === 'admin@tni.com' || cleanEmail === 'coadmin@tni.com')) {
+    found = {
+      email: cleanEmail,
+      pass: '7979',
+      perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY", "FULL"],
+      date: new Date().toLocaleDateString('vi-VN')
+    };
+    accounts.unshift(found);
+    saveStoredGmailAccounts(accounts);
+  }
 
   // ⛔ STRICT ROSTER ENFORCEMENT: AI CÓ TRONG DANH SÁCH MỚI ĐƯỢC ĐĂNG NHẬP
   if (!found) {
@@ -1260,19 +1294,25 @@ function authenticateUserEmail(rawEmail, opts) {
       <div style="font-weight:800; font-size:0.95rem; margin-bottom:0.35rem; color:#ef4444;">
         <i class="fa-solid fa-circle-xmark"></i> TỪ CHỐI TRUY CẬP (ACCESS DENIED)
       </div>
-      <div>Tài khoản Google <b>"${cleanEmail}"</b> KHÔNG CÓ trong danh sách phân quyền (Authorized Gmail Accounts).</div>
+      <div>Tài khoản <b>"${cleanEmail}"</b> KHÔNG CÓ trong danh sách phân quyền (Authorized Gmail Accounts).</div>
       <div style="margin-top:0.45rem; font-size:0.79rem; color:#fca5a5;">
-        ⚠️ <b>Quy định bảo mật:</b> Chỉ những tài khoản đã được phê duyệt trong danh sách mới được phép đăng nhập. Vui lòng liên hệ Quản trị viên TNI để được cấp quyền hoặc đăng nhập bằng tài khoản khác.
+        ⚠️ <b>Quy định bảo mật:</b> Chỉ những tài khoản có trong danh sách phân quyền mới được phép đăng nhập. Vui lòng liên hệ Quản trị viên TNI qua Telegram (@admin@tni.com) để được cấp quyền hoặc đăng nhập bằng tài khoản khác.
       </div>
     `);
     return false;
   }
 
-  // If using direct form, verify security PIN
+  // If using direct form, verify password
   if (opts.method === 'direct') {
-    const pin = (opts.pin || '').trim();
-    if (pin !== '7979' && pin !== 'TNI@2026') {
-      showAuthAlert('error', '❌ Mã PIN bảo mật không đúng! Vui lòng nhập đúng PIN (Mặc định: 7979).');
+    const enteredPass = (opts.pin || '').trim();
+    const validPasses = ['7979', 'TNI@2026'];
+    if (found.pass) validPasses.push(found.pass.trim());
+    if (cleanEmail === 'phonghdpxd@gmail.com') {
+      validPasses.push('phong7979', 'admin7979');
+    }
+
+    if (!validPasses.includes(enteredPass)) {
+      showAuthAlert('error', `❌ Mật khẩu đăng nhập không đúng! Vui lòng nhập đúng mật khẩu đã được cấp (Mặc định: <b>7979</b>).`);
       return false;
     }
   }
@@ -8166,10 +8206,11 @@ Team04>> 2Box</td>
               <tr>
                 <th style="width:40px;">#</th>
                 <th style="text-align:left !important;">Authorized Gmail Address</th>
+                <th style="text-align:left !important; width:130px;"><i class="fa-solid fa-key"></i> Mật Khẩu (Pass)</th>
                 <th style="text-align:left !important;">Assigned Tab Permissions (Các Thẻ Được Phép Xem)</th>
                 <th>Status</th>
                 <th>Date Added</th>
-                <th style="width:100px;">Actions</th>
+                <th style="width:140px;">Actions</th>
               </tr>
             </thead>
             <tbody id="gmailListTable">
@@ -9212,7 +9253,14 @@ Team04>> 2Box</td>
         <label style="display:block; font-weight:700; color:#F8FAFC; margin-bottom:0.4rem; font-size:0.88rem;">
           <i class="fa-solid fa-envelope" style="color:var(--cyan);"></i> Danh sách Gmail (Dán 1 hoặc hàng loạt cách nhau bằng Xuống dòng / Dấu phẩy):
         </label>
-        <textarea id="newGmailInput" class="form-input" rows="3" placeholder="Dán danh sách Gmail tại đây...&#10;Ví dụ:&#10;coadmin@tni.com&#10;director@mytel.com.mm, technical@gmail.com" style="width:100%; background:#1E293B; border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:0.6rem 0.9rem; color:#fff; font-size:0.92rem; font-family:monospace; resize:vertical;"></textarea>
+        <textarea id="newGmailInput" class="form-input" rows="3" placeholder="Dán danh sách Gmail tại đây...&#10;Ví dụ:&#10;phonghdpxd@gmail.com&#10;coadmin@tni.com, technical@gmail.com" style="width:100%; background:#1E293B; border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:0.6rem 0.9rem; color:#fff; font-size:0.92rem; font-family:monospace; resize:vertical;"></textarea>
+      </div>
+
+      <div class="form-group" style="margin-bottom:1.2rem;">
+        <label style="display:block; font-weight:700; color:#F8FAFC; margin-bottom:0.4rem; font-size:0.88rem;">
+          <i class="fa-solid fa-key" style="color:var(--cyan);"></i> Mật khẩu đăng nhập (Pass/PIN cho tài khoản - Mặc định: 7979):
+        </label>
+        <input type="text" id="newGmailPass" placeholder="Nhập mật khẩu / PIN (Ví dụ: 7979)..." value="7979" style="width:100%; background:#1E293B; border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:0.6rem 0.9rem; color:#fff; font-size:0.92rem;" />
       </div>
 
       <!-- Quick Group Presets -->
@@ -9603,16 +9651,17 @@ Team04>> 2Box</td>
 
     /* 🔐 GMAIL ACCESS CONTROL & MULTI-PERMISSION PERSISTENCE */
     const DEFAULT_GMAIL_ACCOUNTS = [
-      { email: "ingyinhmwe49@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
-      { email: "yelwin086683@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
-      { email: "htoolaynyaw@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
-      { email: "heinnanda683@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
-      { email: "ppoe56591@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
-      { email: "hlaing127592@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
-      { email: "shingwutthmone776@gmail.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
-      { email: "admin@tni.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
-      { email: "coadmin@tni.com", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
-      { email: "tni.technical@gmail.com", perms: ["DEPT", "WO", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE"], date: "15/10/2026" }
+      { email: "phonghdpxd@gmail.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY", "FULL"], date: "15/10/2026" },
+      { email: "ingyinhmwe49@gmail.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
+      { email: "yelwin086683@gmail.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
+      { email: "htoolaynyaw@gmail.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
+      { email: "heinnanda683@gmail.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
+      { email: "ppoe56591@gmail.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
+      { email: "hlaing127592@gmail.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
+      { email: "shingwutthmone776@gmail.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
+      { email: "admin@tni.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY", "FULL"], date: "15/10/2026" },
+      { email: "coadmin@tni.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY", "FULL"], date: "15/10/2026" },
+      { email: "tni.technical@gmail.com", pass: "7979", perms: ["DEPT", "WO", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE"], date: "15/10/2026" }
     ];
 
     function getStoredGmailAccounts() {
@@ -9626,7 +9675,7 @@ Team04>> 2Box</td>
               if (!p || !p.email) return;
               const idx = accounts.findIndex(a => a.email.toLowerCase() === p.email.toLowerCase());
               if (idx >= 0) {
-                accounts[idx] = p; // keep customized perms/date
+                accounts[idx] = Object.assign({}, accounts[idx], p); // keep customized perms/pass/date
               } else {
                 accounts.push(p);
               }
@@ -9636,6 +9685,23 @@ Team04>> 2Box</td>
       } catch (e) {
         console.error('Error reading stored accounts', e);
       }
+
+      // 🛡️ BẢO HỘ TUYỆT ĐỐI ADMIN: phonghdpxd@gmail.com luôn luôn là Super Admin với Full Access
+      const adminEmail = 'phonghdpxd@gmail.com';
+      const superAdmin = accounts.find(a => a.email.toLowerCase() === adminEmail);
+      if (!superAdmin) {
+        accounts.unshift({
+          email: adminEmail,
+          pass: "7979",
+          perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY", "FULL"],
+          date: "15/10/2026"
+        });
+      } else {
+        if (!superAdmin.perms.includes('FULL')) superAdmin.perms.push('FULL');
+        if (!superAdmin.perms.includes('AUTH')) superAdmin.perms.push('AUTH');
+        if (!superAdmin.pass) superAdmin.pass = '7979';
+      }
+
       return accounts;
     }
 
@@ -9700,6 +9766,20 @@ Gửi link này cho nhân viên qua Telegram/Zalo, khi họ bấm vào hệ th�
       });
     }
 
+    
+    function promptChangePass(idx) {
+      const accounts = getStoredGmailAccounts();
+      if (idx < 0 || idx >= accounts.length) return;
+      const acc = accounts[idx];
+      const newPass = prompt(`Nhập mật khẩu mới cho tài khoản "${acc.email}":`, acc.pass || '7979');
+      if (newPass !== null && newPass.trim() !== '') {
+        acc.pass = newPass.trim();
+        saveStoredGmailAccounts(accounts);
+        renderGmailList();
+        alert(`✅ Đã cập nhật mật khẩu cho ${acc.email} thành "${acc.pass}"!`);
+      }
+    }
+
     function renderGmailList() {
       const tbody = document.getElementById('gmailListTable');
       if (!tbody) return;
@@ -9716,19 +9796,26 @@ Gửi link này cho nhân viên qua Telegram/Zalo, khi họ bấm vào hệ th�
         if (perms.includes("STAFF_GUIDE") || perms.includes("NOTE")) cStaff++;
         if (perms.includes("EXEC")) cExec++;
 
+        const isSuper = acc.email.toLowerCase() === 'phonghdpxd@gmail.com';
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${idx + 1}</td>
           <td style="text-align:left !important;">
             <strong style="color:var(--cyan); font-size:0.92rem;">${acc.email}</strong>
+            ${isSuper ? '<span class="kpi-pill kpi-red" style="margin-left:6px; font-size:0.65rem;">👑 SUPER ADMIN</span>' : ''}
+          </td>
+          <td style="text-align:left !important;">
+            <span style="font-family:monospace; font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.3); padding:0.2rem 0.55rem; border-radius:6px; font-size:0.8rem;">
+              ${acc.pass || '7979'}
+            </span>
           </td>
           <td style="text-align:left !important;">${renderPermBadges(perms)}</td>
           <td><span class="status-pill-check sp-verified">✓ Active Authorized</span></td>
-          <td style="font-size:0.8rem; color:var(--text-sub);">${acc.date || '03/10/2026'}</td>
+          <td style="font-size:0.8rem; color:var(--text-sub);">${acc.date || '15/10/2026'}</td>
           <td style="white-space:nowrap;">
-            <button class="filter-btn" style="color:#10b981; padding:0.25rem 0.55rem; font-size:0.75rem; cursor:pointer; margin-right:4px;" onclick="copyPersonalizedLink('${acc.email}')" title="Sao chép link cá nhân hóa cho Gmail này"><i class="fa-solid fa-link"></i> Link</button>
-            <button class="filter-btn" style="color:var(--cyan); padding:0.25rem 0.55rem; font-size:0.75rem; cursor:pointer; margin-right:4px;" onclick="editGmailIndex(${idx})"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
-            <button class="filter-btn" style="color:var(--rose); padding:0.25rem 0.55rem; font-size:0.75rem; cursor:pointer;" onclick="removeGmailIndex(${idx})"><i class="fa-solid fa-trash"></i> Del</button>
+            <button class="filter-btn" style="color:#fbbf24; padding:0.25rem 0.5rem; font-size:0.72rem; cursor:pointer; margin-right:3px;" onclick="promptChangePass(${idx})" title="Đổi mật khẩu cho Gmail này"><i class="fa-solid fa-key"></i> Pass</button>
+            <button class="filter-btn" style="color:var(--cyan); padding:0.25rem 0.5rem; font-size:0.72rem; cursor:pointer; margin-right:3px;" onclick="editGmailIndex(${idx})" title="Sửa phân quyền"><i class="fa-solid fa-pen-to-square"></i></button>
+            <button class="filter-btn" style="color:var(--rose); padding:0.25rem 0.5rem; font-size:0.72rem; cursor:pointer;" onclick="removeGmailIndex(${idx})" title="Xóa tài khoản"><i class="fa-solid fa-trash"></i></button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -9794,9 +9881,11 @@ Gửi link này cho nhân viên qua Telegram/Zalo, khi họ bấm vào hệ th�
       const acc = accounts[index];
       const perms = Array.isArray(acc.perms) ? acc.perms : [];
 
-      // Pre-fill email
+      // Pre-fill email and pass
       const emailInput = document.getElementById('newGmailInput');
       if (emailInput) emailInput.value = acc.email;
+      const passInput = document.getElementById('newGmailPass');
+      if (passInput) passInput.value = acc.pass || '7979';
 
       // Set checkboxes to current permissions
       const allPerms = ['exec', 'dept', 'wo', 'bod', 'plan', 'note', 'staff_guide', 'sys_guide', 'auth', 'secretary'];
@@ -9878,14 +9967,17 @@ Gửi link này cho nhân viên qua Telegram/Zalo, khi họ bấm vào hệ th�
       let updatedCount = 0;
       let addedCount = 0;
 
+      const passVal = (document.getElementById('newGmailPass') ? document.getElementById('newGmailPass').value : '7979').trim() || '7979';
+
       uniqueEmails.forEach(email => {
         const existingIdx = accounts.findIndex(a => a.email.toLowerCase() === email);
         if (existingIdx >= 0) {
           accounts[existingIdx].perms = perms;
+          accounts[existingIdx].pass = passVal;
           accounts[existingIdx].date = today;
           updatedCount++;
         } else {
-          accounts.unshift({ email, perms, date: today });
+          accounts.unshift({ email, pass: passVal, perms, date: today });
           addedCount++;
         }
       });
@@ -9916,9 +10008,11 @@ Gửi link này cho nhân viên qua Telegram/Zalo, khi họ bấm vào hệ th�
       const acc = accounts[index];
       const perms = Array.isArray(acc.perms) ? acc.perms : [];
 
-      // Pre-fill email
+      // Pre-fill email and pass
       const emailInput = document.getElementById('newGmailInput');
       if (emailInput) emailInput.value = acc.email;
+      const passInput = document.getElementById('newGmailPass');
+      if (passInput) passInput.value = acc.pass || '7979';
 
       // Set checkboxes to current permissions
       const allPerms = ['exec', 'dept', 'wo', 'bod', 'plan', 'auth'];
@@ -10010,7 +10104,7 @@ Gửi link này cho nhân viên qua Telegram/Zalo, khi họ bấm vào hệ th�
       const acc = user.acc;
 
       // Master Admin bypass
-      if (email === 'admin@tni.com' || email === 'coadmin@tni.com') return true;
+      if (email === 'admin@tni.com' || email === 'coadmin@tni.com' || email === 'phonghdpxd@gmail.com') return true;
       if (acc && (acc.perms.includes('AUTH') || acc.perms.includes('FULL') || acc.perms.length >= 10)) return true;
 
             if (panelId === 'site-link-down-panel') {
