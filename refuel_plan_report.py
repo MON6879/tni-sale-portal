@@ -260,6 +260,7 @@ class RefuelData:
         self.all_dgs = set()       # tập hợp tất cả DG ID chuẩn từ Col B
         self.app_header = ""       # ô AL5 từ Request Partner Auto (App Approved header)
         self.dg_to_col_r = {}      # map DG ID -> Col R value (Littel need refuel)
+        self.dg_to_remain = {}     # map DG ID -> Col P value (Fuel Remain)
  
         if not os.path.exists(XLSX_FILE_PATH):
             if not download_spreadsheet():
@@ -283,6 +284,7 @@ class RefuelData:
         self.site_to_dg = {}
         self.dg_to_team = {}
         self.all_dgs = set()
+        self.dg_to_remain = {}
         
         sheet_names = [s for s in ["Request Partner Auto", "Need Refuel"] if s in wb.sheetnames]
         for sname in sheet_names:
@@ -301,6 +303,33 @@ class RefuelData:
                             self.site_to_dg[col_c] = []
                         if col_b not in self.site_to_dg[col_c]:
                             self.site_to_dg[col_c].append(col_b)
+                    if sname == "Request Partner Auto":
+                        col_p = ws.cell(row=r, column=16).value  # Col P: Fuel Remain
+                        if col_p is not None and str(col_p).strip() != "":
+                            try:
+                                self.dg_to_remain[col_b] = round(float(col_p))
+                            except (ValueError, TypeError):
+                                self.dg_to_remain[col_b] = col_p
+
+    def get_site_remain(self, raw_site: str):
+        """Lấy lượng dầu còn lại (Fuel Remain từ Cột P sheet Request Partner Auto)."""
+        if not raw_site:
+            return None
+        s = str(raw_site).strip().upper()
+        if s in self.dg_to_remain:
+            return self.dg_to_remain[s]
+        norm = self.normalize_to_col_b(s)
+        if norm in self.dg_to_remain:
+            return self.dg_to_remain[norm]
+        if not re.search(r"_\d+$", s):
+            cand = f"{s}_1"
+            if cand in self.dg_to_remain:
+                return self.dg_to_remain[cand]
+        else:
+            base = re.sub(r"_\d+$", "", s)
+            if base in self.dg_to_remain:
+                return self.dg_to_remain[base]
+        return None
 
     def normalize_to_col_b(self, raw_name: str, team: str = "") -> str:
         """Chuẩn hóa tên trạm về DUY NHẤT tên Cột B (DG ID, ví dụ TNI0035_1, TNI0012_1)."""
@@ -749,10 +778,12 @@ def report_1(data: RefuelData):
 
             def fmt_row(icon_: str) -> str:
                 diff_s = f"{diff:+d}" if diff != 0 else "0"
+                rem_val = data.get_site_remain(site)
+                rem_s = f" {rem_val}" if rem_val is not None else " —"
                 req_s = f" {rd}:{q}" if q > 0 else " —"
                 plan_s = f" {pd}:{p}" if p > 0 else " —"
                 ref_s = f" {fd}:{fill}" if fill > 0 else " —"
-                return f"{icon_}<code>{site}|{req_s}|{plan_s}|{ref_s}|{diff_s}L</code>"
+                return f"{icon_}<code>{site}|{rem_s}|{req_s}|{plan_s}|{ref_s}|{diff_s}L</code>"
 
             # Color rules:
             if q == 0 and (p > 0 or fill > 0):
@@ -781,7 +812,7 @@ def report_1(data: RefuelData):
             site_word = "Site" if total_sites == 1 else "Sites"
             lines.append(f"<b>{name} ({total_sites} {site_word})</b>")
             if team in ("T1", "T3"):
-                lines.append("<code>Site|Request|Plan|Refueled|Diff</code>")
+                lines.append("<code>Site|Remain|Request|Plan|Refueled|Diff</code>")
             for row in group_planned:
                 lines.append(row)
             for row in group_no_plan:
