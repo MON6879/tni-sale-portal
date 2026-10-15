@@ -998,19 +998,34 @@ def audit_bi_wo_stats_anomaly():
             total = close + remain
             rate_str = row[8] if len(row) > 8 else '0%'
 
-            colD = row[3] if len(row) > 3 else ''
-            m_assign = re.search(r'/All Assign:\s*/?(\d+)', colD)
-            dep_assign = int(m_assign.group(1)) if m_assign else (155 if idx == 0 else (71 if idx == 1 else (47 if idx == 2 else 58)))
+            # Tính tổng Department Assigned Tasks thực tế từ Table 2 (Cols 23-38)
+            dep_total = 0
+            for j in range(23, min(39, len(row))):
+                m_dep = re.search(r'/(\d+)', str(row[j]))
+                if m_dep:
+                    dep_total += int(m_dep.group(1))
 
-            diff = total - dep_assign
-            # Cảnh báo nếu Total Assigned lệch > 150 so với Dep Assign (như Team 1: 443 vs 155, lệch +288)
-            if abs(diff) > 150:
+            # Kiểm tra tính toàn vẹn dữ liệu
+            if total == 0:
                 results.append({
                     "component": f"BI Stats ({tname})",
                     "status": "WARN",
-                    "label": f"🔴 LỆCH BẤT THƯỜNG {total} vs {dep_assign} WOs",
-                    "detail": f"{tname}: Total WO Assigned = {total} (Close {close} + Remain {remain}) lệch {diff:+d} WOs so với Dep Assign ({dep_assign}). Rate chỉ {rate_str}!"
+                    "label": f"🔴 LỖI DỮ LIỆU {tname}",
+                    "detail": f"{tname}: Total WO = 0 hoặc bảng dữ liệu chưa được cập nhật."
                 })
+            else:
+                # Trích xuất tỷ lệ hoàn thành dạng số (%)
+                m_rate = re.search(r'(\d+)', str(rate_str))
+                rate_val = int(m_rate.group(1)) if m_rate else 0
+                now_d = datetime.now(TZ_MM).day
+                # Cảnh báo nếu tỷ lệ hoàn thành quá thấp (< 15%) khi đã ở nửa sau chu kỳ (sau ngày 12 hàng tháng)
+                if rate_val < 15 and (now_d >= 12 and now_d <= 25):
+                    results.append({
+                        "component": f"BI Stats ({tname})",
+                        "status": "WARN",
+                        "label": f"⚠️ TIẾN ĐỘ HOÀN THÀNH THẤP (Rate {rate_str})",
+                        "detail": f"{tname}: Hoàn thành {close}/{total} WOs ({rate_str}), còn tồn {remain} WOs | Dep Tasks: {dep_total}. Cần đẩy nhanh xử lý trước cuối chu kỳ!"
+                    })
 
         # 2. Kiểm tra kỹ sư bị ứ đọng WO quá tải (Remain >= 50 WOs)
         hoarding_staff = []
@@ -1504,26 +1519,36 @@ async def audit_telegram_messages_telethon():
                                 "label": "🟡 CAUGHT-UP",
                                 "detail": f"Toa bù lúc {catchup_msg['time_str']} đã gửi thành công (Toa 07:06 Catch-up | ID: {catchup_msg['id']})"
                             })
-                        elif r_name == "Report 5C (Plan Sáng/Chiều)" and target_t == "06:06" and any(abs(m["total_min"] - (8 * 60 + 28)) <= 15 for _, m in matched_msgs):
-                            # Mốc 06:06 đã được cập nhật/thay thế bằng mốc 08:28 (theo cơ chế dọn tin cũ Rule PM-46)
-                            later_msg = [m for _, m in matched_msgs if abs(m["total_min"] - (8 * 60 + 28)) <= 15][0]
-                            schedule_results.append({
-                                "report": r_name,
-                                "target_time": target_t,
-                                "group": gkey,
-                                "status": "PASS",
-                                "label": "🟢 SUPERSEDED",
-                                "detail": f"Đã được cập nhật & thay thế bởi mốc 08:28 lúc {later_msg['time_str']} (ID: {later_msg['id']})"
-                            })
                         else:
-                            schedule_results.append({
-                                "report": r_name,
-                                "target_time": target_t,
-                                "group": gkey,
-                                "status": "FAIL",
-                                "label": "🔴 MISSED",
-                                "detail": f"Tin gần nhất lúc {best_msg['time_str']} lệch {best_diff}p so với {target_t}"
-                            })
+                            # Kiểm tra xem mốc giờ này có được thay thế bởi một mốc sau trong ngày không (Rule PM-46 dọn tin cũ)
+                            # Áp dụng cho các báo cáo cập nhật cuốn chiếu nhiều lần/ngày: Report 5C, Report 6, Report 6.1, Refuel Merged
+                            is_rolling_report = len(rule["target_times"]) > 1
+                            later_targets = [t for t in rule["target_times"] if (int(t.split(":")[0])*60 + int(t.split(":")[1])) > target_total_min]
+                            has_later_slot_passed = any((int(t.split(":")[0])*60 + int(t.split(":")[1])) <= current_total_min + 15 for t in later_targets)
+
+                            # Tìm tin nhắn gửi sau mốc target_t này
+                            subsequent_msgs = [m for _, m in matched_msgs if m["total_min"] >= target_total_min - 15]
+
+                            if is_rolling_report and has_later_slot_passed and subsequent_msgs:
+                                subsequent_msgs.sort(key=lambda m: m["total_min"])
+                                superseding_msg = subsequent_msgs[0]
+                                schedule_results.append({
+                                    "report": r_name,
+                                    "target_time": target_t,
+                                    "group": gkey,
+                                    "status": "PASS",
+                                    "label": "🟢 SUPERSEDED",
+                                    "detail": f"Đã được cập nhật & thay thế bởi bản tin lúc {superseding_msg['time_str']} (ID: {superseding_msg['id']} | Rule PM-46 dọn tin cũ)"
+                                })
+                            else:
+                                schedule_results.append({
+                                    "report": r_name,
+                                    "target_time": target_t,
+                                    "group": gkey,
+                                    "status": "FAIL",
+                                    "label": "🔴 MISSED",
+                                    "detail": f"Tin gần nhất lúc {best_msg['time_str']} lệch {best_diff}p so với {target_t}"
+                                })
 
             # ── B. KIỂM TRA NHÂN ĐÔI TIN NHẮN (Deduplication Check) ──
             for gkey, msgs in group_messages.items():
