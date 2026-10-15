@@ -779,7 +779,7 @@ def report_1(data: RefuelData):
             def fmt_row(icon_: str) -> str:
                 diff_s = f"{diff:+d}" if diff != 0 else "0"
                 rem_val = data.get_site_remain(site)
-                rem_s = f" /{rem_val}" if rem_val is not None else " —"
+                rem_s = f"💧{rem_val}" if rem_val is not None else " —"
                 req_s = f" {rd}:{q}" if q > 0 else " —"
                 plan_s = f" {pd}:{p}" if p > 0 else " —"
                 ref_s = f" {fd}:{fill}" if fill > 0 else " —"
