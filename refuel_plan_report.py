@@ -751,7 +751,7 @@ def report_1(data: RefuelData):
         approved_line,
         f"  👥 FT follow monitor: <b>{ft_str}</b>",
         app_line,
-        "🟩 Refueled  🟦 Planned  🟨≤200 🟣>200 🔥>400(ColR)  🟥 Unlisted",
+        "🟩 Refueled  🟦 Planned  🟨 No Plan  🟥 Unlisted",
     ]
 
     green_total = yellow_total = red_total = blue_total = 0
@@ -779,7 +779,7 @@ def report_1(data: RefuelData):
             def fmt_row(icon_: str) -> str:
                 diff_s = f"{diff:+d}" if diff != 0 else "0"
                 rem_val = data.get_site_remain(site)
-                rem_s = f" {rem_val}" if rem_val is not None else " —"
+                rem_s = f" /{rem_val}" if rem_val is not None else " —"
                 req_s = f" {rd}:{q}" if q > 0 else " —"
                 plan_s = f" {pd}:{p}" if p > 0 else " —"
                 ref_s = f" {fd}:{fill}" if fill > 0 else " —"
@@ -797,14 +797,7 @@ def report_1(data: RefuelData):
                 group_planned.append(fmt_row("🟦"))
             elif q > 0 and p == 0 and fill == 0:
                 yellow_total += 1
-                col_r_val = data.dg_to_col_r.get(site, 0)
-                if col_r_val > 400:
-                    no_plan_icon = "🟨🔥"   # R > 400L
-                elif col_r_val > 200:
-                    no_plan_icon = "🟨🟣"   # 200 < R ≤ 400L
-                else:
-                    no_plan_icon = "🟨"     # R ≤ 200L
-                group_no_plan.append(fmt_row(no_plan_icon))
+                group_no_plan.append(fmt_row("🟨"))
 
         if group_planned or group_no_plan:
             total_sites = len(group_planned) + len(group_no_plan)
