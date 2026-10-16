@@ -8780,40 +8780,43 @@ Team04>> 2Box</td>
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.8rem; margin-bottom:1.2rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.9rem;">
           <div style="display:flex; align-items:center; gap:0.75rem;">
             <div style="width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg, #ef4444, #f59e0b); display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.2rem; box-shadow:0 0 15px rgba(239,68,68,0.4);">
-              <i class="fa-solid fa-table-columns"></i>
+              <i class="fa-solid fa-layer-group"></i>
             </div>
             <div>
               <div style="font-weight:900; font-size:1.05rem; color:#F8FAFC; display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
-                <span>BẢNG TRỰC QUAN TỔNG HỢP CẢNH BÁO 4 TEAMS (4-COLUMN LIVE BOARD)</span>
+                <span>Regional Teams Summary Cards (Click Card for Live Sheet Details)</span>
                 <span style="font-size:0.72rem; padding:0.18rem 0.55rem; border-radius:999px; background:rgba(16,185,129,0.18); border:1px solid rgba(16,185,129,0.4); color:#34D399; font-weight:700;">
-                  <i class="fa-solid fa-circle-dot fa-fade"></i> Dữ liệu sống Col AW..AZ
+                  <i class="fa-solid fa-circle-dot fa-fade"></i> Dữ liệu sống Col AW..AZ &amp; Col C
                 </span>
               </div>
-              <div style="font-size:0.74rem; color:#94A3B8; margin-top:0.2rem;">
-                Hiển thị đồng thời 4 Cột của 4 Đội vận hành: Team 1 (Dawei) · Team 2 (Myeik) · Team 3 (Bokpyin) · Team 4 (Kawthoung)
+              <div style="font-size:0.74rem; color:#38BDF8; font-weight:700; margin-top:0.2rem;">
+                <i class="fa-solid fa-clock"></i> Sheet Data Export Time: <span id="sd-4col-timestamp" style="color:#F8FAFC; font-weight:800;">16/10/2026 11:47:00</span>
               </div>
             </div>
           </div>
 
           <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
-            <span id="sd-4col-timestamp" style="font-size:0.74rem; color:#38BDF8; font-weight:700; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.25); padding:0.35rem 0.65rem; border-radius:8px;">
-              📅 16/10/2026 11:47
-            </span>
-            <button class="filter-btn" onclick="window.SiteDownManager.toggleDetailsAll()" id="sd-toggle-all-btn" style="padding:0.38rem 0.75rem; font-size:0.74rem; font-weight:700; border-radius:8px; background:rgba(255,255,255,0.06); color:#E2E8F0; border:1px solid rgba(255,255,255,0.15); cursor:pointer;">
-              <i class="fa-solid fa-up-right-and-down-left-from-center"></i> <span id="sd-toggle-all-text">Thu gọn tất cả</span>
+            <button class="filter-btn active" id="sd-view-cards-btn" onclick="window.SiteDownManager.toggleCardStyle('cards')" style="padding:0.42rem 0.85rem; font-size:0.75rem; font-weight:700; border-radius:8px; background:linear-gradient(135deg, #10B981, #06B6D4); color:#fff; border:none; cursor:pointer;">
+              <i class="fa-solid fa-id-card"></i> 4 Thẻ Summary (Executive)
             </button>
-            <button class="filter-btn" onclick="window.SiteDownManager.copyAllTeamsReport()" style="padding:0.38rem 0.85rem; font-size:0.74rem; font-weight:700; border-radius:8px; background:rgba(16,185,129,0.18); color:#34D399; border:1px solid rgba(16,185,129,0.4); cursor:pointer;">
+            <button class="filter-btn" id="sd-view-accordion-btn" onclick="window.SiteDownManager.toggleCardStyle('accordion')" style="padding:0.42rem 0.85rem; font-size:0.75rem; font-weight:700; border-radius:8px; background:rgba(255,255,255,0.06); color:#E2E8F0; border:1px solid rgba(255,255,255,0.15); cursor:pointer;">
+              <i class="fa-solid fa-list-ul"></i> Chi Tiết Kỹ Sư (Accordion)
+            </button>
+            <button class="filter-btn" onclick="window.SiteDownManager.copyAllTeamsReport()" style="padding:0.42rem 0.85rem; font-size:0.75rem; font-weight:700; border-radius:8px; background:rgba(16,185,129,0.18); color:#34D399; border:1px solid rgba(16,185,129,0.4); cursor:pointer;">
               <i class="fa-solid fa-clipboard-list"></i> Copy 4 Teams
+            </button>
+            <button class="filter-btn" onclick="window.SiteDownManager.setTeamFilter('all')" style="padding:0.42rem 0.85rem; font-size:0.75rem; font-weight:700; border-radius:8px; background:linear-gradient(135deg, #ef4444, #f97316); color:#fff; border:none; cursor:pointer;">
+              <i class="fa-solid fa-globe"></i> Xem Tất Cả 4 Teams
             </button>
           </div>
         </div>
 
-        <!-- 4 Columns Grid Container -->
-        <div id="sd-4team-columns-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(285px, 1fr)); gap:1rem; overflow-x:auto; padding-bottom:0.5rem;">
+        <!-- 4 Columns Grid Container: Class "team-card-grid" -->
+        <div id="sd-4team-columns-grid" class="team-card-grid" style="margin-bottom:0.5rem;">
           <!-- Dynamically Rendered by SiteDownManager.renderFourTeamsBoard() -->
           <div style="grid-column:1/-1; text-align:center; padding:2rem; color:#94A3B8;">
             <i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem; color:#38BDF8; margin-bottom:0.5rem; display:block;"></i>
-            Đang phân tích và nạp 4 Cột Tổng Hợp Cảnh Báo từ Sheet GID 0...
+            Đang nạp 4 Thẻ Tổng Hợp Cảnh Báo Regional Teams...
           </div>
         </div>
       </div>
@@ -13438,6 +13441,53 @@ document.addEventListener("DOMContentLoaded", function() {
         return teamsResult;
       }
 
+      var TEAM_CONFIG = [
+        {
+          key: 'team1',
+          tag: 'TEAM 1 DAWEI',
+          tagClass: 'tag-t1',
+          tbClass: 'tb-t1',
+          leader: 'Paing Aung Soe',
+          region: 'MYT_TNI_TEAM01_Dawei',
+          staff: '10',
+          color: '#F97316',
+          colLetter: 'AW'
+        },
+        {
+          key: 'team2',
+          tag: 'TEAM 2 MYEIK',
+          tagClass: 'tag-t2',
+          tbClass: 'tb-t2',
+          leader: 'Nay Myo Thu',
+          region: 'MYT_TNI_TEAM02_Myeik',
+          staff: '11',
+          color: '#38BDF8',
+          colLetter: 'AX'
+        },
+        {
+          key: 'team3',
+          tag: 'TEAM 3 BOKPYIN',
+          tagClass: 'tag-t3',
+          tbClass: 'tb-t3',
+          leader: 'Pyae Phyo Zaw',
+          region: 'MYT_TNI_TEAM03_Bokpyin',
+          staff: '4',
+          color: '#10B981',
+          colLetter: 'AY'
+        },
+        {
+          key: 'team4',
+          tag: 'TEAM 4 KAWTHOUNG',
+          tagClass: 'tag-t4',
+          tbClass: 'tb-t4',
+          leader: 'Naing Myo Htun',
+          region: 'MYT_TNI_TEAM04_Kawthoung',
+          staff: '4',
+          color: '#EAB308',
+          colLetter: 'AZ'
+        }
+      ];
+
       function renderFourTeamsBoard() {
         var grid = document.getElementById('sd-4team-columns-grid');
         if (!grid || !state.data || !state.data.fourTeamsSummary) return;
@@ -13448,86 +13498,238 @@ document.addEventListener("DOMContentLoaded", function() {
           tsEl.innerHTML = '📅 Mốc giờ Sheet: <b style="color:#fff;">' + teams[0].timestamp + '</b>';
         }
 
+        var isCardsMode = (state.cardStyle !== 'accordion');
         var html = '';
-        teams.forEach(function(t) {
-          var isExpanded = state.detailsExpanded !== false;
-          var hexColor = t.color;
-          var hexRgba = hexColor === '#ef4444' ? 'rgba(239,68,68,0.18)' :
-                        (hexColor === '#f59e0b' ? 'rgba(245,158,11,0.18)' :
-                        (hexColor === '#10b981' ? 'rgba(16,185,129,0.18)' : 'rgba(56,189,248,0.18)'));
 
-          html += `
-            <div class="team-col-card" style="background:rgba(30,41,59,0.72); border:1.5px solid ${hexColor}; border-radius:14px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.3); min-width:280px;">
-              <!-- Column Header -->
-              <div style="background:linear-gradient(180deg, ${hexRgba}, rgba(30,41,59,0.95)); padding:0.9rem 1rem; border-bottom:1px solid rgba(255,255,255,0.08);">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.4rem;">
-                  <div>
-                    <div style="display:flex; align-items:center; gap:0.45rem;">
-                      <span style="width:10px; height:10px; border-radius:50%; background:${hexColor}; box-shadow:0 0 8px ${hexColor};"></span>
-                      <span style="font-weight:900; font-size:1.02rem; color:#F8FAFC;">${t.teamName}</span>
-                    </div>
-                    <div style="font-size:0.72rem; color:#94A3B8; margin-top:0.2rem;">
-                      Khu vực: <strong style="color:#CBD5E1;">${t.region}</strong> · Cột: <b style="color:var(--cyan);">${t.colLetter}</b>
-                    </div>
-                  </div>
-                  <span style="background:${t.totalAlarms > 0 ? 'rgba(239,68,68,0.25)' : 'rgba(16,185,129,0.2)'}; color:${t.totalAlarms > 0 ? '#fca5a5' : '#34D399'}; border:1px solid ${t.totalAlarms > 0 ? 'rgba(239,68,68,0.45)' : 'rgba(16,185,129,0.4)'}; padding:0.25rem 0.6rem; border-radius:6px; font-weight:900; font-size:0.75rem; white-space:nowrap;">
-                    ${t.totalAlarms} Alarms
-                  </span>
-                </div>
+        if (isCardsMode) {
+          // ═════════════════════════════════════════════════════════════════════
+          // 🏆 CHẾ ĐỘ 4 THẺ REGIONAL TEAMS EXECUTIVE SUMMARY (GIỐNG EXECUTIVE DASHBOARD)
+          // ═════════════════════════════════════════════════════════════════════
+          teams.forEach(function(t, tIdx) {
+            var tCfg = TEAM_CONFIG[tIdx] || {
+              key: t.teamKey,
+              tag: t.teamName.toUpperCase(),
+              tagClass: 'tag-t1',
+              tbClass: 'tb-t1',
+              leader: 'Trưởng Đội',
+              region: t.region,
+              staff: '10',
+              color: t.color
+            };
 
-                <!-- Action Buttons for this Team -->
-                <div style="display:flex; gap:0.35rem; margin-top:0.6rem;">
-                  <button onclick="window.SiteDownManager.copyTeamTelegramReport('${t.teamKey}')" class="filter-btn" style="flex:1; padding:0.35rem 0.5rem; font-size:0.72rem; font-weight:700; border-radius:6px; background:rgba(56,189,248,0.18); color:#38BDF8; border:1px solid rgba(56,189,248,0.35); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.3rem;">
-                    <i class="fa-solid fa-copy"></i> Copy Báo Cáo
-                  </button>
-                  <button onclick="window.SiteDownManager.filterTableByTeam('${t.teamKey}')" class="filter-btn" style="padding:0.35rem 0.65rem; font-size:0.72rem; font-weight:700; border-radius:6px; background:rgba(255,255,255,0.08); color:#CBD5E1; border:1px solid rgba(255,255,255,0.15); cursor:pointer;" title="Lọc và xem danh sách sự cố Col C theo team này">
-                    <i class="fa-solid fa-filter"></i> Lọc Col C
-                  </button>
-                </div>
-              </div>
+            var catMap = {};
+            (t.categories || []).forEach(function(c) { catMap[c.key] = c; });
 
-              <!-- 8 Categories Stack -->
-              <div style="padding:0.75rem; display:flex; flex-direction:column; gap:0.65rem; flex:1; overflow-y:auto; max-height:850px;">
-          `;
+            var sdCount = catMap['site_down'] ? catMap['site_down'].count : 0;
+            var cellCount = catMap['cell_down'] ? catMap['cell_down'].count : 0;
+            var dgAbn = catMap['dg_abnormal'] ? catMap['dg_abnormal'].count : 0;
+            var dg16h = catMap['dg_run_16h'] ? catMap['dg_run_16h'].count : 0;
+            var dgOil = catMap['dg_low_oil'] ? catMap['dg_low_oil'].count : 0;
+            var linkCount = catMap['link_down'] ? catMap['link_down'].count : 0;
+            var battTemp = catMap['batt_temp_high'] ? catMap['batt_temp_high'].count : 0;
+            var smoke = catMap['smoke'] ? catMap['smoke'].count : 0;
+            var doorCount = catMap['door'] ? catMap['door'].count : 0;
 
-          t.categories.forEach(function(cat) {
-            var hasAlarms = cat.count > 0;
-            var catHex = cat.color;
+            var teamActiveSites = (state.data.activeSites || []).filter(function(s) {
+              return (s.team || '').toLowerCase().replace(/\s+/g, '') === t.teamKey;
+            });
+            var activeCnt = teamActiveSites.length;
+            var over24 = teamActiveSites.filter(function(s) { return (s.downHours || 0) >= 24; }).length;
+            var over72 = teamActiveSites.filter(function(s) { return (s.downHours || 0) >= 72; }).length;
+
+            var longestSite = 'Không có (0h)';
+            var maxH = -1;
+            teamActiveSites.forEach(function(s) {
+              var h = parseFloat(s.downHours) || 0;
+              if (h > maxH) {
+                maxH = h;
+                longestSite = s.siteId + ' (' + h.toFixed(1) + 'h)';
+              }
+            });
+
+            var engCountMap = {};
+            teamActiveSites.forEach(function(s) {
+              if (s.engineer) {
+                engCountMap[s.engineer] = (engCountMap[s.engineer] || 0) + 1;
+              }
+            });
+            var topEngStr = '--';
+            var topEngMax = 0;
+            Object.keys(engCountMap).forEach(function(eName) {
+              if (engCountMap[eName] > topEngMax) {
+                topEngMax = engCountMap[eName];
+                topEngStr = eName + ' (' + topEngMax + ' trạm)';
+              }
+            });
+
+            var rankText = '';
+            var rankColor = '#10B981';
+            if (sdCount === 0 && activeCnt === 0) {
+              rankText = '#1 (🟢 Hoạt Động Tốt / 0 Trạm Down)';
+              rankColor = '#10B981';
+            } else if (sdCount <= 3) {
+              rankText = '#2 (🟡 Cảnh Báo Nhẹ / ' + sdCount + ' Trạm Down)';
+              rankColor = '#FACC15';
+            } else if (sdCount <= 8) {
+              rankText = '#3 (🟠 Cảnh Báo Trung Bình / ' + sdCount + ' Trạm Down)';
+              rankColor = '#FB923C';
+            } else {
+              rankText = '#4 (🔴 Cảnh Báo Khẩn Cấp / ' + sdCount + ' Trạm Down ❌)';
+              rankColor = '#F87171';
+            }
+
+            var isSelected = (state.activeTeamFilter === t.teamKey);
 
             html += `
-              <div class="alarm-item-card" style="background:rgba(15,23,42,0.65); border:1px solid ${hasAlarms ? hexColor + '44' : 'rgba(255,255,255,0.06)'}; border-left:3px solid ${catHex}; border-radius:9px; padding:0.6rem; transition:border-color 0.2s;">
-                <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="window.SiteDownManager.toggleAlarmCard(this)">
-                  <div style="display:flex; align-items:center; gap:0.4rem; font-weight:800; font-size:0.8rem; color:#F8FAFC;">
-                    <span>${cat.icon}</span>
-                    <span>${cat.label}</span>
+              <div class="interactive-team-card" id="sd-card-${t.teamKey}" onclick="window.SiteDownManager.filterTableByTeam('${t.teamKey}')" style="cursor:pointer; border:1px solid ${isSelected ? tCfg.color : 'var(--border-color)'}; box-shadow:${isSelected ? '0 10px 30px ' + tCfg.color + '44' : 'none'}; transform:${isSelected ? 'translateY(-4px)' : 'none'};">
+                <div class="team-badge-icon ${tCfg.tbClass}"><i class="fa-solid fa-user-tie"></i></div>
+                <span class="team-tag ${tCfg.tagClass}">${tCfg.tag}</span>
+                <h3 style="margin-top:0.6rem; font-size:1.35rem; font-weight:800; color:#fff;">Leader: ${tCfg.leader}</h3>
+                <p style="font-size:0.75rem; color:var(--text-sub); margin-bottom:0.6rem;">Region: ${tCfg.region} (${tCfg.staff} Staff)</p>
+
+                <div class="row-detail">
+                  <span style="color:var(--text-sub);">I. Total Site Down (AW7):</span>
+                  <strong style="color:${sdCount > 0 ? 'var(--cyan)' : 'var(--emerald)'}; font-size:1.05rem;">${sdCount} Sites</strong>
+                </div>
+                <div class="row-detail">
+                  <span style="color:var(--text-sub);">🔴 Đang Mất Liên Lạc (Col C):</span>
+                  <strong style="color:${activeCnt > 0 ? '#f87171' : 'var(--emerald)'};">${activeCnt} Sites</strong>
+                </div>
+                <div class="row-detail">
+                  <span style="color:var(--text-sub);">📶 Cell Down (AW8):</span>
+                  <strong style="color:var(--amber);">${cellCount} Cells</strong>
+                </div>
+                <div class="row-detail">
+                  <span style="color:var(--text-sub);">⚡ DG Abnormal / Run &gt; 16h:</span>
+                  <span style="font-weight:700; color:#38bdf8;">${dgAbn} / ${dg16h} Máy</span>
+                </div>
+                <div class="row-detail">
+                  <span style="color:var(--text-sub);">🛢️ DG Low Oil (&lt; 40L):</span>
+                  <strong style="color:var(--emerald);">${dgOil} Trạm</strong>
+                </div>
+                <div class="row-detail">
+                  <span style="color:var(--text-sub);">🔗 Link Down (AW12):</span>
+                  <span style="font-weight:700; color:#a78bfa;">${linkCount} Link</span>
+                </div>
+                <div class="row-detail">
+                  <span style="color:var(--text-sub);">🌡️ Batt High Temp / Smoke:</span>
+                  <span style="font-weight:700; color:#f43f5e;">${battTemp} / ${smoke} Cảnh báo</span>
+                </div>
+                <div class="row-detail">
+                  <span style="color:var(--text-sub);">🚪 Door Open Alarm:</span>
+                  <strong style="color:var(--emerald);">${doorCount} Cửa</strong>
+                </div>
+                <div class="row-detail">
+                  <span style="color:var(--text-sub);">⏱️ Mất Liên Lạc &gt; 24h / &gt; 72h:</span>
+                  <span style="font-weight:700; color:#fb923c;">${over24} / <strong style="color:#f87171;">${over72} Trạm</strong></span>
+                </div>
+                <div class="row-detail">
+                  <span style="color:var(--text-sub);">Rank &amp; Status:</span>
+                  <span style="font-weight:700; color:${rankColor};">${rankText}</span>
+                </div>
+
+                <div style="margin-top:0.6rem; padding-top:0.5rem; border-top:1px dashed rgba(255,255,255,0.15);">
+                  <div class="row-detail">
+                    <span style="color:var(--cyan); font-weight:800;">II. Trạm Down Lâu Nhất:</span>
+                    <strong style="color:#F8FAFC; font-weight:800;">${longestSite}</strong>
                   </div>
-                  <div style="display:flex; align-items:center; gap:0.35rem;">
-                    <span style="padding:0.12rem 0.45rem; border-radius:5px; font-weight:800; font-size:0.75rem; background:${hasAlarms ? catHex + '25' : 'rgba(255,255,255,0.04)'}; color:${hasAlarms ? catHex : '#64748B'}; border:1px solid ${hasAlarms ? catHex + '55' : 'transparent'};">
-                      /${cat.count}
-                    </span>
-                    ${hasAlarms ? `<i class="fa-solid fa-chevron-down card-toggle-icon" style="font-size:0.65rem; color:#64748B; transform:${isExpanded ? 'rotate(180deg)' : 'none'}; transition:transform 0.2s;"></i>` : ''}
+                  <div class="row-detail">
+                    <span style="color:var(--text-sub);">👤 Kỹ Sư Phụ Trách Nhiều:</span>
+                    <strong style="color:#38BDF8; font-weight:800;">${topEngStr}</strong>
                   </div>
                 </div>
 
-                <!-- Body -->
-                ${hasAlarms ? `
-                  <div class="alarm-card-details" style="display:${isExpanded ? 'flex' : 'none'}; flex-direction:column; gap:0.45rem; margin-top:0.5rem; padding-top:0.45rem; border-top:1px solid rgba(255,255,255,0.06);">
-                    ${renderEngineerListHTML(cat.engineers, cat.key)}
-                  </div>
-                ` : `
-                  <div style="margin-top:0.3rem; font-size:0.68rem; color:#64748B; display:flex; align-items:center; gap:0.25rem;">
-                    <i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Bình thường
-                  </div>
-                `}
+                <div style="margin-top:0.8rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.4rem;">
+                  <span style="font-size:0.75rem; color:var(--cyan); font-weight:700;">
+                    👉 ${isSelected ? '✓ Đang lọc bảng trạm này' : 'Click để lọc bảng trạm'} (${activeCnt})
+                  </span>
+                  <button type="button" class="filter-btn" style="padding:0.25rem 0.6rem; font-size:0.7rem; background:rgba(255,255,255,0.08); color:#CBD5E1; border:1px solid rgba(255,255,255,0.15); border-radius:6px; cursor:pointer;" onclick="event.stopPropagation(); window.SiteDownManager.copyTeamTelegramReport('${t.teamKey}')" title="Sao chép báo cáo Telegram của team này">
+                    <i class="fa-solid fa-copy"></i> Copy Team
+                  </button>
+                </div>
               </div>
             `;
           });
+        } else {
+          // ═════════════════════════════════════════════════════════════════════
+          // 📋 CHẾ ĐỘ 4 CỘT ACCORDION CHI TIẾT DANH SÁCH KỸ SƯ
+          // ═════════════════════════════════════════════════════════════════════
+          teams.forEach(function(t) {
+            var isExpanded = state.detailsExpanded !== false;
+            var hexColor = t.color;
+            var hexRgba = hexColor === '#ef4444' ? 'rgba(239,68,68,0.18)' :
+                          (hexColor === '#f59e0b' ? 'rgba(245,158,11,0.18)' :
+                          (hexColor === '#10b981' ? 'rgba(16,185,129,0.18)' : 'rgba(56,189,248,0.18)'));
 
-          html += `
+            html += `
+              <div class="team-col-card" style="background:rgba(30,41,59,0.72); border:1.5px solid ${hexColor}; border-radius:14px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.3); min-width:280px;">
+                <div style="background:linear-gradient(180deg, ${hexRgba}, rgba(30,41,59,0.95)); padding:0.9rem 1rem; border-bottom:1px solid rgba(255,255,255,0.08);">
+                  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.4rem;">
+                    <div>
+                      <div style="display:flex; align-items:center; gap:0.45rem;">
+                        <span style="width:10px; height:10px; border-radius:50%; background:${hexColor}; box-shadow:0 0 8px ${hexColor};"></span>
+                        <span style="font-weight:900; font-size:1.02rem; color:#F8FAFC;">${t.teamName}</span>
+                      </div>
+                      <div style="font-size:0.72rem; color:#94A3B8; margin-top:0.2rem;">
+                        Khu vực: <strong style="color:#CBD5E1;">${t.region}</strong> · Cột: <b style="color:var(--cyan);">${t.colLetter}</b>
+                      </div>
+                    </div>
+                    <span style="background:${t.totalAlarms > 0 ? 'rgba(239,68,68,0.25)' : 'rgba(16,185,129,0.2)'}; color:${t.totalAlarms > 0 ? '#fca5a5' : '#34D399'}; border:1px solid ${t.totalAlarms > 0 ? 'rgba(239,68,68,0.45)' : 'rgba(16,185,129,0.4)'}; padding:0.25rem 0.6rem; border-radius:6px; font-weight:900; font-size:0.75rem; white-space:nowrap;">
+                      ${t.totalAlarms} Alarms
+                    </span>
+                  </div>
+
+                  <div style="display:flex; gap:0.35rem; margin-top:0.6rem;">
+                    <button onclick="window.SiteDownManager.copyTeamTelegramReport('${t.teamKey}')" class="filter-btn" style="flex:1; padding:0.35rem 0.5rem; font-size:0.72rem; font-weight:700; border-radius:6px; background:rgba(56,189,248,0.18); color:#38BDF8; border:1px solid rgba(56,189,248,0.35); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.3rem;">
+                      <i class="fa-solid fa-copy"></i> Copy Báo Cáo
+                    </button>
+                    <button onclick="window.SiteDownManager.filterTableByTeam('${t.teamKey}')" class="filter-btn" style="padding:0.35rem 0.65rem; font-size:0.72rem; font-weight:700; border-radius:6px; background:rgba(255,255,255,0.08); color:#CBD5E1; border:1px solid rgba(255,255,255,0.15); cursor:pointer;" title="Lọc và xem danh sách sự cố Col C theo team này">
+                      <i class="fa-solid fa-filter"></i> Lọc Col C
+                    </button>
+                  </div>
+                </div>
+
+                <div style="padding:0.75rem; display:flex; flex-direction:column; gap:0.65rem; flex:1; overflow-y:auto; max-height:850px;">
+            `;
+
+            t.categories.forEach(function(cat) {
+              var hasAlarms = cat.count > 0;
+              var catHex = cat.color;
+
+              html += `
+                <div class="alarm-item-card" style="background:rgba(15,23,42,0.65); border:1px solid ${hasAlarms ? hexColor + '44' : 'rgba(255,255,255,0.06)'}; border-left:3px solid ${catHex}; border-radius:9px; padding:0.6rem; transition:border-color 0.2s;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="window.SiteDownManager.toggleAlarmCard(this)">
+                    <div style="display:flex; align-items:center; gap:0.4rem; font-weight:800; font-size:0.8rem; color:#F8FAFC;">
+                      <span>${cat.icon}</span>
+                      <span>${cat.label}</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:0.35rem;">
+                      <span style="padding:0.12rem 0.45rem; border-radius:5px; font-weight:800; font-size:0.75rem; background:${hasAlarms ? catHex + '25' : 'rgba(255,255,255,0.04)'}; color:${hasAlarms ? catHex : '#64748B'}; border:1px solid ${hasAlarms ? catHex + '55' : 'transparent'};">
+                        /${cat.count}
+                      </span>
+                      ${hasAlarms ? `<i class="fa-solid fa-chevron-down card-toggle-icon" style="font-size:0.65rem; color:#64748B; transform:${isExpanded ? 'rotate(180deg)' : 'none'}; transition:transform 0.2s;"></i>` : ''}
+                    </div>
+                  </div>
+
+                  ${hasAlarms ? `
+                    <div class="alarm-card-details" style="display:${isExpanded ? 'flex' : 'none'}; flex-direction:column; gap:0.45rem; margin-top:0.5rem; padding-top:0.45rem; border-top:1px solid rgba(255,255,255,0.06);">
+                      ${renderEngineerListHTML(cat.engineers, cat.key)}
+                    </div>
+                  ` : `
+                    <div style="margin-top:0.3rem; font-size:0.68rem; color:#64748B; display:flex; align-items:center; gap:0.25rem;">
+                      <i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Bình thường
+                    </div>
+                  `}
+                </div>
+              `;
+            });
+
+            html += `
+                </div>
               </div>
-            </div>
-          `;
-        });
+            `;
+          });
+        }
 
         grid.innerHTML = html;
       }
@@ -13652,11 +13854,61 @@ document.addEventListener("DOMContentLoaded", function() {
         }
       }
 
+      function toggleCardStyle(style) {
+        state.cardStyle = style;
+        var btnCards = document.getElementById('sd-view-cards-btn');
+        var btnAcc = document.getElementById('sd-view-accordion-btn');
+        if (style === 'accordion') {
+          if (btnCards) {
+            btnCards.classList.remove('active');
+            btnCards.style.background = 'rgba(255,255,255,0.06)';
+            btnCards.style.color = '#E2E8F0';
+            btnCards.style.border = '1px solid rgba(255,255,255,0.15)';
+          }
+          if (btnAcc) {
+            btnAcc.classList.add('active');
+            btnAcc.style.background = 'linear-gradient(135deg, #10B981, #06B6D4)';
+            btnAcc.style.color = '#fff';
+            btnAcc.style.border = 'none';
+          }
+        } else {
+          if (btnAcc) {
+            btnAcc.classList.remove('active');
+            btnAcc.style.background = 'rgba(255,255,255,0.06)';
+            btnAcc.style.color = '#E2E8F0';
+            btnAcc.style.border = '1px solid rgba(255,255,255,0.15)';
+          }
+          if (btnCards) {
+            btnCards.classList.add('active');
+            btnCards.style.background = 'linear-gradient(135deg, #10B981, #06B6D4)';
+            btnCards.style.color = '#fff';
+            btnCards.style.border = 'none';
+          }
+        }
+        renderFourTeamsBoard();
+      }
+
       function filterTableByTeam(teamKey) {
-        setTeamFilter(teamKey);
-        setViewMode('split');
-        var tbl = document.getElementById('sd-active-sites-card');
-        if (tbl) tbl.scrollIntoView({ behavior: 'smooth' });
+        if (state.activeTeamFilter === teamKey) {
+          state.activeTeamFilter = 'all';
+        } else {
+          state.activeTeamFilter = teamKey;
+        }
+
+        var filterBtns = document.querySelectorAll('#sd-team-filters .filter-btn');
+        filterBtns.forEach(function(b) {
+          if (b.getAttribute('data-team') === state.activeTeamFilter) b.classList.add('active');
+          else b.classList.remove('active');
+        });
+
+        renderFourTeamsBoard();
+        renderActiveSitesTable();
+
+        if (state.activeTeamFilter !== 'all') {
+          setViewMode('split');
+          var tbl = document.getElementById('sd-active-sites-card');
+          if (tbl) tbl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
       }
 
       function setViewMode(mode) {
@@ -14062,6 +14314,7 @@ document.addEventListener("DOMContentLoaded", function() {
         filterBtns.forEach(function(b) { b.classList.remove('active'); });
         if (btn) btn.classList.add('active');
         renderTeamCards();
+        renderFourTeamsBoard();
         renderActiveSitesTable();
       }
 
@@ -14081,6 +14334,7 @@ document.addEventListener("DOMContentLoaded", function() {
           else b.classList.remove('active');
         });
         renderTeamCards();
+        renderFourTeamsBoard();
         renderActiveSitesTable();
       }
 
@@ -14235,7 +14489,8 @@ document.addEventListener("DOMContentLoaded", function() {
         openMetricModal: openMetricModal,
         closeModal: closeModal,
         copySummaryReport: copySummaryReport,
-        exportCSV: exportCSV
+        exportCSV: exportCSV,
+        toggleCardStyle: toggleCardStyle
       };
     })();
 
