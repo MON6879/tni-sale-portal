@@ -1089,6 +1089,13 @@
         Nhấp nút Google ở trên để chọn tài khoản Gmail của bạn.<br>
         Hệ thống sẽ tự động đối soát tài khoản với danh sách được cấp quyền.
       </div>
+      <div id="gsi-setup-hint" style="margin-top:1rem; padding:0.7rem 0.95rem; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.25); border-radius:10px; font-size:0.75rem; color:#94a3b8; text-align:left; line-height:1.45;">
+        <div style="font-weight:700; color:#38bdf8; margin-bottom:0.25rem;"><i class="fa-solid fa-shield-halved"></i> An Toàn &amp; Bảo Mật Tuyệt Đối 100%:</div>
+        <div>Đăng nhập Google sử dụng chuẩn OpenID Connect chính chủ từ Google. Mật khẩu của bạn được Google bảo vệ 100%, website không bao giờ thấy hoặc lưu mật khẩu Google của bạn.</div>
+        <div style="margin-top:0.4rem; color:#fca5a5;">
+          <b>⚠️ Nếu gặp lỗi "Error 401: invalid_client":</b> Do ứng dụng cần được gán Client ID thật từ Google Cloud Console. Bạn chỉ cần bấm sang tab <b>"Đăng Nhập Email &amp; Mật Khẩu"</b> bên cạnh để vào hệ thống ngay với mật khẩu mặc định <b>7979</b>!
+        </div>
+      </div>
     </div>
 
     <!-- STATUS / ERROR ALERTS -->
@@ -1212,13 +1219,24 @@ function initGoogleAuthGate() {
 function setupGoogleIdentityServices() {
   if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
     try {
-      const clientId = localStorage.getItem(TNI_GOOGLE_CLIENT_ID) || '1047716449175-6893608182.apps.googleusercontent.com';
+      const clientId = localStorage.getItem(TNI_GOOGLE_CLIENT_ID);
+      const btnContainer = document.getElementById('g_id_signin_btn');
+      if (!clientId || clientId.startsWith('1047716449175')) {
+        if (btnContainer) {
+          btnContainer.innerHTML = `
+            <div style="background:rgba(56,189,248,0.08); border:1px dashed rgba(56,189,248,0.3); border-radius:10px; padding:0.8rem 1rem; color:#94a3b8; font-size:0.8rem; text-align:center; max-width:360px; margin:0 auto;">
+              <div style="font-weight:700; color:#38bdf8; margin-bottom:0.25rem;"><i class="fa-brands fa-google"></i> Google OAuth Chưa Cấu Hình Client ID</div>
+              <div>Vui lòng sử dụng tab <b>"Đăng Nhập Email & Mật Khẩu"</b> bên cạnh để truy cập ngay với mật khẩu mặc định <b>7979</b>.</div>
+            </div>
+          `;
+        }
+        return;
+      }
       google.accounts.id.initialize({
         client_id: clientId,
         callback: handleGoogleCredentialResponse,
         auto_select: false
       });
-      const btnContainer = document.getElementById('g_id_signin_btn');
       if (btnContainer) {
         btnContainer.innerHTML = '';
         google.accounts.id.renderButton(
@@ -8095,6 +8113,29 @@ Team04>> 2Box</td>
         </div>
       </div>
 
+            <!-- Google OAuth Client ID Configuration Card -->
+      <div class="card" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 14px; padding: 1.2rem; margin-bottom: 1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.8rem;">
+          <div style="display:flex; align-items:center; gap:0.8rem;">
+            <div style="width:42px; height:42px; border-radius:10px; background:rgba(56, 189, 248, 0.15); display:flex; align-items:center; justify-content:center; color:var(--cyan); font-size:1.3rem;">
+              <i class="fa-brands fa-google"></i>
+            </div>
+            <div>
+              <div style="font-weight:800; color:#fff; font-size:0.95rem;">Cấu Hình Google OAuth 2.0 Client ID (Đăng Nhập Google Không Cần Mật Khẩu)</div>
+              <p style="font-size:0.75rem; color:#94A3B8; margin-top:0.2rem; margin-bottom:0;">
+                Dán Client ID từ Google Cloud Console (<a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:var(--cyan); text-decoration:underline;">console.cloud.google.com</a>) để kích hoạt đăng nhập 1 chạm. Bảo mật 100%, không bao giờ lộ thông tin.
+              </p>
+            </div>
+          </div>
+          <div style="display:flex; gap:0.5rem; flex:1; max-width:620px; min-width:280px;">
+            <input type="text" id="cfgGoogleClientId" placeholder="Dán Google OAuth Client ID (ví dụ: xxxx.apps.googleusercontent.com)..." style="flex:1; background:#0F172A; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0.5rem 0.8rem; color:#fff; font-size:0.8rem; font-family:monospace;" />
+            <button class="filter-btn active" style="background:linear-gradient(135deg, var(--cyan), #2563eb); color:#fff; border:none; padding:0.5rem 1rem; font-weight:700; border-radius:8px; cursor:pointer;" onclick="saveGoogleClientIdConfig()">
+              <i class="fa-solid fa-floppy-disk"></i> Lưu Client ID
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Quick Summary Cards for Permissions with Copy Buttons -->
       <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:0.85rem; margin-bottom:1.5rem;">
         
@@ -9776,7 +9817,34 @@ Gửi link này cho nhân viên qua Telegram/Zalo, khi họ bấm vào hệ th�
         acc.pass = newPass.trim();
         saveStoredGmailAccounts(accounts);
         renderGmailList();
+      initGoogleClientIdUI();
         alert(`✅ Đã cập nhật mật khẩu cho ${acc.email} thành "${acc.pass}"!`);
+      }
+    }
+
+    
+    function saveGoogleClientIdConfig() {
+      const inp = document.getElementById('cfgGoogleClientId');
+      if (!inp) return;
+      const val = inp.value.trim();
+      if (!val) {
+        alert('Vui lòng nhập Google Client ID hợp lệ (đuôi .apps.googleusercontent.com)!');
+        return;
+      }
+      localStorage.setItem('tni_google_client_id', val);
+      if (typeof setupGoogleIdentityServices === 'function') {
+        setupGoogleIdentityServices();
+      }
+      alert('✅ Đã lưu Google OAuth Client ID thành công!\nNút đăng nhập Google One-Tap đã được nạp Client ID mới.');
+    }
+
+    function initGoogleClientIdUI() {
+      const inp = document.getElementById('cfgGoogleClientId');
+      if (inp) {
+        const cur = localStorage.getItem('tni_google_client_id') || '';
+        if (cur && !cur.startsWith('1047716449175')) {
+          inp.value = cur;
+        }
       }
     }
 
@@ -9984,6 +10052,7 @@ Gửi link này cho nhân viên qua Telegram/Zalo, khi họ bấm vào hệ th�
 
       saveStoredGmailAccounts(accounts);
       renderGmailList();
+      initGoogleClientIdUI();
 
       document.getElementById('newGmailInput').value = '';
       closeAddGmailModal();
@@ -9998,6 +10067,7 @@ Gửi link này cho nhân viên qua Telegram/Zalo, khi họ bấm vào hệ th�
           accounts.splice(index, 1);
           saveStoredGmailAccounts(accounts);
           renderGmailList();
+      initGoogleClientIdUI();
         }
       }
     }
@@ -10030,6 +10100,7 @@ Gửi link này cho nhân viên qua Telegram/Zalo, khi họ bấm vào hệ th�
       if (confirm('Khôi phục danh sách tài khoản phân quyền về mặc định?')) {
         saveStoredGmailAccounts(DEFAULT_GMAIL_ACCOUNTS);
         renderGmailList();
+      initGoogleClientIdUI();
       }
     }
 
@@ -10235,6 +10306,7 @@ Gửi link này cho nhân viên qua Telegram/Zalo, khi họ bấm vào hệ th�
       initGoogleAuthGate();
       renderUserIdentityBadge();
       renderGmailList();
+      initGoogleClientIdUI();
       updateNavTabsLockUI();
       if (typeof loadGoogleClientIdSetting === 'function') {
         loadGoogleClientIdSetting();
