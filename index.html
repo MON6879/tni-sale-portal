@@ -351,6 +351,12 @@
     }
     .row-detail:last-child { border-bottom: none; }
 
+    /* AW7..AZ16 Matrix Syntax Highlighting */
+    .hl-tni { color: #38BDF8 !important; font-weight: 800 !important; }
+    .hl-cnt { color: #F87171 !important; font-weight: 800 !important; }
+    .hl-num { color: #F59E0B !important; font-weight: 700 !important; }
+    .hl-time { color: #94A3B8 !important; font-weight: 600 !important; }
+
     /* Custom Tables */
 
     /* Universal Resizable Table Columns */
@@ -8881,7 +8887,7 @@ Team04>> 2Box</td>
             <span><i class="fa-solid fa-terminal" style="color:var(--cyan);"></i> Hiển thị nguyên văn dữ liệu văn bản từ Google Sheet GID 0 (Cột AW..AZ, Dòng 7 đến 16):</span>
             <span style="color:#38BDF8; font-weight:700;">Nhấp vào từng ô để copy</span>
           </div>
-          <div id="sd-raw-matrix-content" style="display:flex; flex-direction:column; gap:0.75rem; max-height:600px; overflow-y:auto; padding-right:4px;">
+          <div id="sd-raw-matrix-content" style="display:flex; flex-direction:column; gap:0.85rem; max-height:75vh; overflow-y:auto; padding-right:8px;">
             <!-- Rendered by JS renderRawMatrix() -->
           </div>
         </div>
@@ -9422,137 +9428,150 @@ Team04>> 2Box</td>
 
   <!-- ADD AUTHORIZED GMAIL MODAL (BULK PASTE & CHECKBOX MULTI-SELECT) -->
   <div id="gmailModal" class="modal-backdrop">
-    <div class="modal-box" style="max-width: 600px; background:#0F172A; border:1px solid rgba(56, 189, 248, 0.35); border-radius:20px; padding:1.6rem; box-shadow:0 25px 50px -12px rgba(0, 0, 0, 0.85);">
-      <div class="modal-header" style="margin-bottom:1.2rem;">
+    <div class="modal-box" style="max-width: 680px; max-height: 90vh; background:#0F172A; border:1px solid rgba(56, 189, 248, 0.45); border-radius:20px; padding:1.4rem; box-shadow:0 25px 50px -12px rgba(0, 0, 0, 0.9); display:flex; flex-direction:column; overflow:hidden;">
+      
+      <!-- Sticky Modal Header with Save Button -->
+      <div class="modal-header" style="flex-shrink:0; margin-bottom:1rem; padding-bottom:0.75rem; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
         <div>
-          <h3 style="color:var(--cyan); font-weight:800; font-size:1.3rem;"><i class="fa-solid fa-user-shield"></i> Thêm &amp; Phân Quyền Gmail Hàng Loạt</h3>
-          <p style="font-size:0.8rem; color:var(--text-sub); margin-top:0.2rem;">Dán danh sách 1 hoặc nhiều Gmail cùng lúc &amp; chọn quyền theo từng Nhóm</p>
+          <h3 style="color:var(--cyan); font-weight:800; font-size:1.25rem; margin:0;"><i class="fa-solid fa-user-shield"></i> Thêm &amp; Phân Quyền Gmail Hàng Loạt</h3>
+          <p style="font-size:0.78rem; color:var(--text-sub); margin:0.25rem 0 0 0;">Dán danh sách 1 hoặc nhiều Gmail cùng lúc &amp; chọn quyền theo từng Nhóm</p>
         </div>
-        <button class="close-btn" onclick="closeAddGmailModal()">&times;</button>
+        <div style="display:flex; align-items:center; gap:0.6rem;">
+          <button type="button" class="voice-btn" style="background:linear-gradient(135deg, #0284c7, #10b981); color:#fff; border:none; padding:0.45rem 1rem; font-size:0.82rem; font-weight:700; border-radius:8px; cursor:pointer; display:flex; align-items:center; gap:0.35rem;" onclick="submitAddGmail()" title="Lưu phân quyền ngay">
+            <i class="fa-solid fa-floppy-disk"></i> Lưu Ngay
+          </button>
+          <button class="close-btn" onclick="closeAddGmailModal()" style="font-size:1.5rem; line-height:1; cursor:pointer; color:#94a3b8;">&times;</button>
+        </div>
       </div>
       
-      <div class="form-group" style="margin-bottom:1.2rem;">
-        <label style="display:block; font-weight:700; color:#F8FAFC; margin-bottom:0.4rem; font-size:0.88rem;">
-          <i class="fa-solid fa-envelope" style="color:var(--cyan);"></i> Danh sách Gmail (Dán 1 hoặc hàng loạt cách nhau bằng Xuống dòng / Dấu phẩy):
-        </label>
-        <textarea id="newGmailInput" class="form-input" rows="3" placeholder="Dán danh sách Gmail tại đây...&#10;Ví dụ:&#10;phonghdpxd@gmail.com&#10;coadmin@tni.com, technical@gmail.com" style="width:100%; background:#1E293B; border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:0.6rem 0.9rem; color:#fff; font-size:0.92rem; font-family:monospace; resize:vertical;"></textarea>
-      </div>
+      <!-- Scrollable Modal Body -->
+      <div class="modal-body" style="flex:1; overflow-y:auto; padding-right:6px;">
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label style="display:block; font-weight:700; color:#F8FAFC; margin-bottom:0.35rem; font-size:0.85rem;">
+            <i class="fa-solid fa-envelope" style="color:var(--cyan);"></i> Danh sách Gmail (Dán 1 hoặc hàng loạt cách nhau bằng Xuống dòng / Dấu phẩy):
+          </label>
+          <textarea id="newGmailInput" class="form-input" rows="3" placeholder="Dán danh sách Gmail tại đây...&#10;Ví dụ:&#10;quoc03061986@gmail.com&#10;phonghdpxd@gmail.com, technical@gmail.com" style="width:100%; background:#1E293B; border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:0.6rem 0.9rem; color:#fff; font-size:0.9rem; font-family:monospace; resize:vertical;"></textarea>
+        </div>
 
-      <div class="form-group" style="margin-bottom:1.2rem;">
-        <label style="display:block; font-weight:700; color:#F8FAFC; margin-bottom:0.4rem; font-size:0.88rem;">
-          <i class="fa-solid fa-key" style="color:var(--cyan);"></i> Mật khẩu đăng nhập (Pass/PIN cho tài khoản - Mặc định: 7979):
-        </label>
-        <input type="text" id="newGmailPass" placeholder="Nhập mật khẩu / PIN (Ví dụ: 7979)..." value="7979" style="width:100%; background:#1E293B; border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:0.6rem 0.9rem; color:#fff; font-size:0.92rem;" />
-      </div>
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label style="display:block; font-weight:700; color:#F8FAFC; margin-bottom:0.35rem; font-size:0.85rem;">
+            <i class="fa-solid fa-key" style="color:var(--cyan);"></i> Mật khẩu đăng nhập (Pass/PIN cho tài khoản - Mặc định: 7979):
+          </label>
+          <input type="text" id="newGmailPass" placeholder="Nhập mật khẩu / PIN (Ví dụ: 7979)..." value="7979" style="width:100%; background:#1E293B; border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:0.6rem 0.9rem; color:#fff; font-size:0.9rem;" />
+        </div>
 
-      <!-- Quick Group Presets -->
-      <div style="margin-bottom:1rem;">
-        <label style="display:block; font-weight:700; color:var(--text-sub); font-size:0.8rem; margin-bottom:0.4rem;">
-          ⚡ Chọn nhanh mẫu phân quyền theo Nhóm chức vụ:
-        </label>
-        <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
-          <button type="button" class="filter-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(16, 185, 129, 0.15); color:var(--emerald); border:1px solid rgba(16, 185, 129, 0.3); border-radius:6px; cursor:pointer;" onclick="applyPermissionPreset('FULL')">
-            🌟 Full Access (10 Thẻ)
-          </button>
-          <button type="button" class="filter-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(6, 182, 212, 0.15); color:var(--cyan); border:1px solid rgba(6, 182, 212, 0.3); border-radius:6px; cursor:pointer;" onclick="applyPermissionPreset('BOD')">
-            👑 Nhóm BOD
-          </button>
-          <button type="button" class="filter-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(167, 139, 250, 0.15); color:#a78bfa; border:1px solid rgba(167, 139, 250, 0.3); border-radius:6px; cursor:pointer;" onclick="applyPermissionPreset('DEPT')">
-            🏢 Nhóm Trưởng Phòng
-          </button>
-          <button type="button" class="filter-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(245, 158, 11, 0.2); color:#fbbf24; border:1px solid rgba(245, 158, 11, 0.4); border-radius:6px; cursor:pointer; font-weight:700;" onclick="applyPermissionPreset('STAFF')">
-            👷 Kỹ Sư Hiện Trường (Staff Guide + Note + WO)
-          </button>
-          <button type="button" class="filter-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(56, 189, 248, 0.15); color:#38bdf8; border:1px solid rgba(56, 189, 248, 0.3); border-radius:6px; cursor:pointer;" onclick="applyPermissionPreset('EXEC')">
-            📊 Nhóm Báo Cáo
-          </button>
-          <button type="button" class="filter-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(234, 179, 8, 0.15); color:#eab308; border:1px solid rgba(234, 179, 8, 0.3); border-radius:6px; cursor:pointer;" onclick="applyPermissionPreset('GUIDE_ONLY')">
-            📖 Chỉ Xem Hướng Dẫn
-          </button>
+        <!-- Quick Group Presets -->
+        <div style="margin-bottom:1rem;">
+          <label style="display:block; font-weight:700; color:var(--text-sub); font-size:0.8rem; margin-bottom:0.4rem;">
+            ⚡ Chọn nhanh mẫu phân quyền theo Nhóm chức vụ:
+          </label>
+          <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+            <button type="button" class="filter-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(16, 185, 129, 0.15); color:var(--emerald); border:1px solid rgba(16, 185, 129, 0.3); border-radius:6px; cursor:pointer;" onclick="applyPermissionPreset('FULL')">
+              🌟 Full Access (10 Thẻ)
+            </button>
+            <button type="button" class="filter-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(6, 182, 212, 0.15); color:var(--cyan); border:1px solid rgba(6, 182, 212, 0.3); border-radius:6px; cursor:pointer;" onclick="applyPermissionPreset('BOD')">
+              👑 Nhóm BOD
+            </button>
+            <button type="button" class="filter-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(167, 139, 250, 0.15); color:#a78bfa; border:1px solid rgba(167, 139, 250, 0.3); border-radius:6px; cursor:pointer;" onclick="applyPermissionPreset('DEPT')">
+              🏢 Nhóm Trưởng Phòng
+            </button>
+            <button type="button" class="filter-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(245, 158, 11, 0.2); color:#fbbf24; border:1px solid rgba(245, 158, 11, 0.4); border-radius:6px; cursor:pointer; font-weight:700;" onclick="applyPermissionPreset('STAFF')">
+              👷 Kỹ Sư Hiện Trường (Staff Guide + Note + WO)
+            </button>
+            <button type="button" class="filter-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(56, 189, 248, 0.15); color:#38bdf8; border:1px solid rgba(56, 189, 248, 0.3); border-radius:6px; cursor:pointer;" onclick="applyPermissionPreset('EXEC')">
+              📊 Nhóm Báo Cáo
+            </button>
+            <button type="button" class="filter-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:rgba(234, 179, 8, 0.15); color:#eab308; border:1px solid rgba(234, 179, 8, 0.3); border-radius:6px; cursor:pointer;" onclick="applyPermissionPreset('GUIDE_ONLY')">
+              📖 Chỉ Xem Hướng Dẫn
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0.5rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+            <label style="font-weight:700; color:#F8FAFC; font-size:0.85rem;">
+              <i class="fa-solid fa-square-check" style="color:var(--emerald);"></i> Tích chọn chi tiết 10 Thẻ được phép xem (Permissions):
+            </label>
+            <button type="button" class="filter-btn" style="padding:0.25rem 0.7rem; font-size:0.75rem; background:rgba(56, 189, 248, 0.15); color:var(--cyan); border:1px solid rgba(56, 189, 248, 0.3); border-radius:6px; cursor:pointer;" onclick="toggleSelectAllPermissions()">
+              <span id="selectAllBtnText">Bỏ Chọn Tất Cả</span>
+            </button>
+          </div>
+
+          <!-- Compact 2-column Grid for 10 cards -->
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:0.45rem; background:#1E293B; border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0.7rem; max-height:220px; overflow-y:auto;">
+            
+            <!-- Tab 1: Executive Summary -->
+            <label style="display:flex; align-items:center; gap:0.55rem; color:#fff; font-size:0.82rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
+              <input type="checkbox" id="perm_exec" class="perm-checkbox" value="EXEC" checked style="width:17px; height:17px; accent-color:var(--cyan); cursor:pointer;" />
+              <span>📊 <b>Exec Summary</b> (Tổng quan)</span>
+            </label>
+
+            <!-- Tab 2: Department Assign -->
+            <label style="display:flex; align-items:center; gap:0.55rem; color:#fff; font-size:0.82rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
+              <input type="checkbox" id="perm_dept" class="perm-checkbox" value="DEPT" checked style="width:17px; height:17px; accent-color:var(--cyan); cursor:pointer;" />
+              <span>🏢 <b>Dept Assign</b> (Giao việc TNI)</span>
+            </label>
+
+            <!-- Tab 3: WO Detail -->
+            <label style="display:flex; align-items:center; gap:0.55rem; color:#fff; font-size:0.82rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
+              <input type="checkbox" id="perm_wo" class="perm-checkbox" value="WO" checked style="width:17px; height:17px; accent-color:var(--cyan); cursor:pointer;" />
+              <span>📋 <b>WO Detail</b> (Chi tiết WO)</span>
+            </label>
+
+            <!-- Tab 4: BOD Assign -->
+            <label style="display:flex; align-items:center; gap:0.55rem; color:#fff; font-size:0.82rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
+              <input type="checkbox" id="perm_bod" class="perm-checkbox" value="BOD" checked style="width:17px; height:17px; accent-color:var(--cyan); cursor:pointer;" />
+              <span>👑 <b>BOD Assign</b> (Chỉ đạo BGĐ)</span>
+            </label>
+
+            <!-- Tab 5: Plan Week -->
+            <label style="display:flex; align-items:center; gap:0.55rem; color:#fff; font-size:0.82rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
+              <input type="checkbox" id="perm_plan" class="perm-checkbox" value="PLAN" checked style="width:17px; height:17px; accent-color:var(--cyan); cursor:pointer;" />
+              <span>📅 <b>Plan Week</b> (Kế hoạch tuần)</span>
+            </label>
+
+            <!-- Tab 6: Note Đầu Việc -->
+            <label style="display:flex; align-items:center; gap:0.55rem; color:#fff; font-size:0.82rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.25);">
+              <input type="checkbox" id="perm_note" class="perm-checkbox" value="NOTE" checked style="width:17px; height:17px; accent-color:var(--cyan); cursor:pointer;" />
+              <span>📝 <b>Note Đầu Việc</b> (Tiến độ)</span>
+            </label>
+
+            <!-- Tab 7: Guide For Staff (NEW) -->
+            <label style="display:flex; align-items:center; gap:0.55rem; color:#fff; font-size:0.82rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.35);">
+              <input type="checkbox" id="perm_staff_guide" class="perm-checkbox" value="STAFF_GUIDE" checked style="width:17px; height:17px; accent-color:#f59e0b; cursor:pointer;" />
+              <span style="color:#fde68a;">📖 <b>Guide Staff</b> (Cẩm nang kỹ sư)</span>
+            </label>
+
+            <!-- Tab 8: System Guide -->
+            <label style="display:flex; align-items:center; gap:0.55rem; color:#fff; font-size:0.82rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
+              <input type="checkbox" id="perm_sys_guide" class="perm-checkbox" value="SYS_GUIDE" checked style="width:17px; height:17px; accent-color:var(--cyan); cursor:pointer;" />
+              <span>📚 <b>System Guide</b> (Quy trình)</span>
+            </label>
+
+            <!-- Tab 9: Gmail Access List -->
+            <label style="display:flex; align-items:center; gap:0.55rem; color:#fff; font-size:0.82rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
+              <input type="checkbox" id="perm_auth" class="perm-checkbox" value="AUTH" checked style="width:17px; height:17px; accent-color:var(--cyan); cursor:pointer;" />
+              <span>🔒 <b>Gmail Access</b> (Phân quyền)</span>
+            </label>
+
+            <!-- Tab 10: Virtual Secretary -->
+            <label style="display:flex; align-items:center; gap:0.55rem; color:#fff; font-size:0.82rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25);">
+              <input type="checkbox" id="perm_secretary" class="perm-checkbox" value="SECRETARY" checked style="width:17px; height:17px; accent-color:var(--emerald); cursor:pointer;" />
+              <span>🤖 <b>Secretary</b> (Trợ lý AI)</span>
+            </label>
+
+          </div>
         </div>
       </div>
 
-      <div class="form-group">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
-          <label style="font-weight:700; color:#F8FAFC; font-size:0.88rem;">
-            <i class="fa-solid fa-square-check" style="color:var(--emerald);"></i> Tích chọn chi tiết 10 Thẻ được phép xem (Permissions):
-          </label>
-          <button type="button" class="filter-btn" style="padding:0.25rem 0.7rem; font-size:0.75rem; background:rgba(56, 189, 248, 0.15); color:var(--cyan); border:1px solid rgba(56, 189, 248, 0.3); border-radius:6px; cursor:pointer;" onclick="toggleSelectAllPermissions()">
-            <span id="selectAllBtnText">Bỏ Chọn Tất Cả</span>
-          </button>
-        </div>
-
-        <div style="display:grid; grid-template-columns:1fr; gap:0.5rem; background:#1E293B; border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0.85rem; max-height:360px; overflow-y:auto;">
-          
-          <!-- Tab 1: Executive Summary -->
-          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.85rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
-            <input type="checkbox" id="perm_exec" class="perm-checkbox" value="EXEC" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
-            <span>📊 <b>Executive Summary</b> (Báo Cáo Tổng Quan &amp; AI Audio &amp; Ghế Giám Sát BI WO)</span>
-          </label>
-
-          <!-- Tab 2: Department Assign -->
-          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.85rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
-            <input type="checkbox" id="perm_dept" class="perm-checkbox" value="DEPT" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
-            <span>🏢 <b>Department Assign</b> (Giao Việc Phòng Ban TNI)</span>
-          </label>
-
-          <!-- Tab 3: WO Detail -->
-          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.85rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
-            <input type="checkbox" id="perm_wo" class="perm-checkbox" value="WO" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
-            <span>📋 <b>WO Detail</b> (Chi Tiết 9 Bảng Work Orders &amp; Kỹ Sư)</span>
-          </label>
-
-          <!-- Tab 4: BOD Assign -->
-          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.85rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
-            <input type="checkbox" id="perm_bod" class="perm-checkbox" value="BOD" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
-            <span>👑 <b>BOD Assign</b> (Chỉ Đạo &amp; Giao Việc Ban Giám Đốc)</span>
-          </label>
-
-          <!-- Tab 5: Plan Week -->
-          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.85rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
-            <input type="checkbox" id="perm_plan" class="perm-checkbox" value="PLAN" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
-            <span>📅 <b>Plan Week</b> (Kế Hoạch Phòng Ban Theo Tuần)</span>
-          </label>
-
-          <!-- Tab 6: Note Đầu Việc -->
-          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.85rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.25);">
-            <input type="checkbox" id="perm_note" class="perm-checkbox" value="NOTE" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
-            <span>📝 <b>Note Đầu Việc</b> (Ghi Chú &amp; Theo Dõi Tiến Độ Đầu Việc)</span>
-          </label>
-
-          <!-- Tab 7: Guide For Staff (NEW) -->
-          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.85rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.35);">
-            <input type="checkbox" id="perm_staff_guide" class="perm-checkbox" value="STAFF_GUIDE" checked style="width:18px; height:18px; accent-color:#f59e0b; cursor:pointer;" />
-            <span style="color:#fde68a;">📖 <b>Guide For Staff</b> (Cẩm Nang Kỹ Thuật, Cáp, An Toàn &amp; Xe Công Tác)</span>
-          </label>
-
-          <!-- Tab 8: System Guide -->
-          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.85rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
-            <input type="checkbox" id="perm_sys_guide" class="perm-checkbox" value="SYS_GUIDE" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
-            <span>📚 <b>System Guide</b> (Hướng Dẫn Bot Telegram &amp; Quy Trình Vận Hành)</span>
-          </label>
-
-          <!-- Tab 9: Gmail Access List -->
-          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.85rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(255,255,255,0.03);">
-            <input type="checkbox" id="perm_auth" class="perm-checkbox" value="AUTH" checked style="width:18px; height:18px; accent-color:var(--cyan); cursor:pointer;" />
-            <span>🔒 <b>Gmail Access List</b> (Quản Lý Phân Quyền Hệ Thống)</span>
-          </label>
-
-          <!-- Tab 10: Virtual Secretary -->
-          <label style="display:flex; align-items:center; gap:0.65rem; color:#fff; font-size:0.85rem; cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25);">
-            <input type="checkbox" id="perm_secretary" class="perm-checkbox" value="SECRETARY" checked style="width:18px; height:18px; accent-color:var(--emerald); cursor:pointer;" />
-            <span>🤖 <b>Virtual Secretary</b> (Trợ Lý Ảo Điều Hành &amp; AI Sentinel)</span>
-          </label>
-
-        </div>
-      </div>
-
-      <div style="display:flex; justify-content:flex-end; gap:0.8rem; margin-top:1.5rem;">
-        <button type="button" class="filter-btn" style="background:rgba(255,255,255,0.08); padding:0.6rem 1.2rem; cursor:pointer;" onclick="closeAddGmailModal()">Hủy (Cancel)</button>
-        <button type="button" class="voice-btn" style="background:linear-gradient(135deg, var(--cyan), #059669); padding:0.6rem 1.4rem; font-weight:800; cursor:pointer;" onclick="submitAddGmail()">
-          <i class="fa-solid fa-check"></i> Lưu &amp; Phân Quyền Hàng Loạt
+      <!-- Sticky Footer -->
+      <div style="flex-shrink:0; padding-top:0.85rem; margin-top:0.3rem; border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:flex-end; gap:0.8rem; align-items:center;">
+        <button type="button" class="filter-btn" style="background:rgba(255,255,255,0.08); padding:0.6rem 1.2rem; cursor:pointer; border-radius:8px;" onclick="closeAddGmailModal()">Hủy (Cancel)</button>
+        <button type="button" class="voice-btn" style="background:linear-gradient(135deg, var(--cyan), #059669); color:#fff; border:none; padding:0.65rem 1.6rem; font-weight:800; font-size:0.92rem; border-radius:8px; cursor:pointer; box-shadow:0 4px 14px rgba(5, 150, 105, 0.4); display:flex; align-items:center; gap:0.4rem;" onclick="submitAddGmail()">
+          <i class="fa-solid fa-floppy-disk"></i> Lưu &amp; Cấp Quyền Gmail Ngay
         </button>
       </div>
+
     </div>
   </div>
 
@@ -10143,6 +10162,60 @@ Gửi link này cho nhân viên qua Telegram/Zalo, khi họ bấm vào hệ th�
       }).catch(err => {
         prompt('Sao chép danh sách Gmail dưới đây:', textToCopy);
       });
+    }
+
+    function submitQuickAddGmail() {
+      const emailInput = document.getElementById('quickAddGmailInput');
+      const passInput = document.getElementById('quickAddGmailPass');
+      const presetSelect = document.getElementById('quickAddGmailPreset');
+
+      if (!emailInput) return;
+      const email = emailInput.value.trim().toLowerCase();
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!email || !emailRegex.test(email)) {
+        alert('⚠️ Vui lòng nhập địa chỉ Gmail hợp lệ!\nVí dụ: quoc03061986@gmail.com');
+        emailInput.focus();
+        return;
+      }
+
+      const passVal = (passInput ? passInput.value.trim() : '7979') || '7979';
+      const preset = (presetSelect ? presetSelect.value : 'STAFF') || 'STAFF';
+
+      let perms = [];
+      if (preset === 'FULL') {
+        perms = ['EXEC', 'DEPT', 'WO', 'BOD', 'PLAN', 'NOTE', 'STAFF_GUIDE', 'SYS_GUIDE', 'AUTH', 'SECRETARY', 'FULL'];
+      } else if (preset === 'BOD') {
+        perms = ['EXEC', 'BOD', 'PLAN', 'NOTE', 'STAFF_GUIDE'];
+      } else if (preset === 'DEPT') {
+        perms = ['DEPT', 'WO', 'PLAN', 'NOTE', 'STAFF_GUIDE', 'SYS_GUIDE'];
+      } else if (preset === 'STAFF') {
+        perms = ['STAFF_GUIDE', 'NOTE', 'WO', 'SYS_GUIDE'];
+      } else if (preset === 'EXEC') {
+        perms = ['EXEC'];
+      } else if (preset === 'GUIDE_ONLY') {
+        perms = ['STAFF_GUIDE', 'SYS_GUIDE'];
+      }
+
+      const accounts = getStoredGmailAccounts();
+      const today = new Date().toLocaleDateString('vi-VN');
+      const existingIdx = accounts.findIndex(a => a.email.toLowerCase() === email);
+
+      if (existingIdx >= 0) {
+        accounts[existingIdx].perms = perms;
+        accounts[existingIdx].pass = passVal;
+        accounts[existingIdx].date = today;
+      } else {
+        accounts.unshift({ email, pass: passVal, perms, date: today });
+      }
+
+      saveStoredGmailAccounts(accounts);
+      renderGmailList();
+      initGoogleClientIdUI();
+
+      // Clear input
+      emailInput.value = '';
+
+      alert(`✅ ĐÃ LƯU THÀNH CÔNG!\n\nEmail: ${email}\nMật khẩu: ${passVal}\nQuyền: [${preset}]\n\nTài khoản đã được cập nhật ngay vào bảng danh sách bên dưới!`);
     }
 
     function submitAddGmail() {
@@ -12995,9 +13068,30 @@ document.addEventListener("DOMContentLoaded", function() {
       function highlightRawText(txt) {
         if (!txt) return '<span style="color:#64748B; font-style:italic;">(Ô trống)</span>';
         var esc = txt.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        esc = esc.replace(/(TNI\d{3,4}[A-Za-z0-9]*)/g, '<b style="color:#38BDF8; font-weight:800;">$1</b>');
-        esc = esc.replace(/(\/\d+)/g, '<span style="color:#f87171; font-weight:800;">$1</span>');
-        esc = esc.replace(/(:\s*[0-9.]+)/g, '<span style="color:#f59e0b; font-weight:700;">$1</span>');
+
+        // 1. Temporarily protect timestamps like 16/10/2026 11:47
+        var timestamps = [];
+        esc = esc.replace(/\d{1,2}\/\d{1,2}\/\d{2,4}(?:\s+\d{1,2}:\d{2})?/g, function(ts) {
+          timestamps.push(ts);
+          return '___TIMESTAMP_' + (timestamps.length - 1) + '___';
+        });
+
+        // 2. Highlight TNI site codes (Cyan bold)
+        esc = esc.replace(/(TNI\d{3,4}[A-Za-z0-9]*)/g, '<b class="hl-tni">$1</b>');
+
+        // 3. Highlight standalone alarm count pills /X (e.g. /14, /0, /10)
+        esc = esc.replace(/(^|[\s=])(\/\d+)(?=\s|$|[=,•-])/g, '$1<span class="hl-cnt">$2</span>');
+
+        // 4. Highlight down hours (e.g. " : 5.7", " : 38", ": 3060.7")
+        esc = esc.replace(/:\s*([0-9]+(?:\.[0-9]+)?)/g, function(match, num) {
+          return ': <span class="hl-num">' + num + '</span>';
+        });
+
+        // 5. Restore protected timestamps with nice muted styling
+        esc = esc.replace(/___TIMESTAMP_(\d+)___/g, function(_, idx) {
+          return '<span class="hl-time">' + timestamps[idx] + '</span>';
+        });
+
         return esc;
       }
 
@@ -13035,19 +13129,19 @@ document.addEventListener("DOMContentLoaded", function() {
                 </div>
               </div>
 
-              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:0.6rem;">
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:0.75rem; align-items:stretch;">
           `;
 
           teamLabels.forEach(function(tl) {
             var cellText = r[tl.key] || '';
             var isEmpty = !cellText.trim();
             html += `
-              <div style="background:rgba(15,23,42,0.65); border:1px solid ${isEmpty ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.1)'}; border-left:3px solid ${tl.color}; border-radius:8px; padding:0.6rem; display:flex; flex-direction:column; justify-content:space-between;">
-                <div style="font-size:0.7rem; font-weight:800; color:${tl.color}; margin-bottom:0.35rem; display:flex; justify-content:space-between; align-items:center;">
+              <div style="background:rgba(15,23,42,0.65); border:1px solid ${isEmpty ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.1)'}; border-left:3px solid ${tl.color}; border-radius:8px; padding:0.75rem; display:flex; flex-direction:column; justify-content:flex-start;">
+                <div style="font-size:0.72rem; font-weight:800; color:${tl.color}; margin-bottom:0.45rem; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:0.35rem;">
                   <span>${tl.name}</span>
-                  ${cellText ? `<button class="filter-btn" style="padding:0.1rem 0.4rem; font-size:0.62rem; background:rgba(255,255,255,0.06); color:#94A3B8; border:none; cursor:pointer;" onclick="navigator.clipboard.writeText('${cellText.replace(/'/g, "\\\\'").replace(/"/g, '&quot;')}'); alert('📋 Đã sao chép nội dung ô!');" title="Sao chép ô này"><i class="fa-solid fa-copy"></i></button>` : ''}
+                  ${cellText ? `<button class="filter-btn" style="padding:0.12rem 0.45rem; font-size:0.65rem; background:rgba(255,255,255,0.08); color:#94A3B8; border:1px solid rgba(255,255,255,0.12); border-radius:4px; cursor:pointer;" onclick="navigator.clipboard.writeText('${cellText.replace(/'/g, "\\\\'").replace(/"/g, '&quot;')}'); alert('📋 Đã sao chép nội dung ô!');" title="Sao chép ô này"><i class="fa-solid fa-copy"></i> Copy</button>` : ''}
                 </div>
-                <div style="font-size:0.74rem; line-height:1.45; font-family:monospace; color:#CBD5E1; word-break:break-word; max-height:120px; overflow-y:auto;">
+                <div style="font-size:0.75rem; line-height:1.55; font-family:monospace; color:#CBD5E1; word-break:break-word; white-space:pre-wrap;">
                   ${highlightRawText(cellText)}
                 </div>
               </div>
