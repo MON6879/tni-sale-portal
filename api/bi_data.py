@@ -425,6 +425,23 @@ def get_site_down_stats():
                 "total_alarms": sum(metrics[m["key"]]["teams"][tk]["count"] for m in metrics_def)
             }
 
+        # Collect raw matrix rows from row 7 to 16 (indices 6 to 15)
+        raw_matrix_rows = []
+        for r_idx in range(6, min(25, len(rows))):
+            row = rows[r_idx]
+            aw = str(row[48]).strip() if len(row) > 48 else ""
+            ax = str(row[49]).strip() if len(row) > 49 else ""
+            ay = str(row[50]).strip() if len(row) > 50 else ""
+            az = str(row[51]).strip() if len(row) > 51 else ""
+            if any([aw, ax, ay, az]):
+                raw_matrix_rows.append({
+                    "row": r_idx + 1,
+                    "aw": aw,
+                    "ax": ax,
+                    "ay": ay,
+                    "az": az
+                })
+
         return {
             "status": "ok",
             "updatedAt": now_str,
@@ -432,6 +449,7 @@ def get_site_down_stats():
             "metrics": metrics,
             "metricsList": metrics_def,
             "teamSummary": team_summary,
+            "rawMatrixRows": raw_matrix_rows,
             "activeSites": active_sites,
             "totalActiveSites": len(active_sites),
             "towerSummary": tower_summary,
