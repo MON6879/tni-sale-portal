@@ -8708,26 +8708,51 @@ Team04>> 2Box</td>
         </div>
       </div>
 
-      <!-- Section 1: AW7..AZ Matrix Comparison Table -->
+      <!-- Section 1: AW7..AZ16 Matrix Comparison & Sheet Raw Text View -->
       <div class="card" style="background:rgba(15,23,42,0.85); border:1px solid rgba(56,189,248,0.25); border-radius:16px; padding:1.2rem; margin-bottom:1.5rem;">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.6rem; margin-bottom:0.8rem;">
-          <div style="font-weight:800; font-size:0.95rem; color:#F8FAFC; display:flex; align-items:center; gap:0.5rem;">
-            <i class="fa-solid fa-table-cells" style="color:#38BDF8;"></i> BẢNG MA TRẬN ĐỐI CHIẾU CẢNH BÁO AW7..AZ (TỪNG TEAM & TOÀN VÙNG)
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.6rem; margin-bottom:1rem;">
+          <div style="display:flex; align-items:center; gap:0.6rem;">
+            <div style="width:36px; height:36px; border-radius:10px; background:rgba(56,189,248,0.15); display:flex; align-items:center; justify-content:center; color:var(--cyan); font-size:1.1rem;">
+              <i class="fa-solid fa-table-cells"></i>
+            </div>
+            <div>
+              <div style="font-weight:800; font-size:0.98rem; color:#F8FAFC;">
+                BẢNG MA TRẬN ĐỐI CHIẾU CẢNH BÁO AW7..AZ16 (GOOGLE SHEET GID 0)
+              </div>
+              <div style="font-size:0.72rem; color:#94A3B8; margin-top:0.15rem;">
+                Dữ liệu 4 Cột: AW (T1 Dawei) · AX (T2 Myeik) · AY (T3 Bokpyin) · AZ (T4 Kawthoung) — Từ Dòng Row 7 đến Row 16
+              </div>
+            </div>
           </div>
-          <div style="font-size:0.72rem; color:#94A3B8;">
-            <i class="fa-solid fa-circle-info"></i> Bấm vào số lượng cảnh báo để xem chi tiết danh sách trạm & kỹ sư phụ trách
+
+          <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+            <!-- Mode Switcher -->
+            <div style="display:flex; gap:0.25rem; background:rgba(30,41,59,0.9); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:3px;">
+              <button id="sd-mode-table-btn" class="filter-btn active" onclick="window.SiteDownManager.setMatrixMode('table')" style="padding:0.35rem 0.75rem; font-size:0.74rem; border-radius:6px; font-weight:700;">
+                <i class="fa-solid fa-chart-pie"></i> Bảng Số Liệu &amp; Đếm
+              </button>
+              <button id="sd-mode-raw-btn" class="filter-btn" onclick="window.SiteDownManager.setMatrixMode('raw')" style="padding:0.35rem 0.75rem; font-size:0.74rem; border-radius:6px; font-weight:700;">
+                <i class="fa-solid fa-file-lines"></i> Văn Bản Gốc AW7:AZ16
+              </button>
+            </div>
+
+            <!-- Copy Full Raw Text Button -->
+            <button class="filter-btn" onclick="window.SiteDownManager.copyRawMatrixText()" style="background:rgba(56,189,248,0.15); color:var(--cyan); border:1px solid rgba(56,189,248,0.3); padding:0.38rem 0.8rem; border-radius:8px; font-size:0.74rem; font-weight:700; cursor:pointer;" title="Sao chép toàn bộ nội dung văn bản AW7..AZ16 vào bộ nhớ tạm">
+              <i class="fa-solid fa-copy"></i> Copy AW..AZ16
+            </button>
           </div>
         </div>
 
-        <div class="table-container" style="overflow-x:auto;">
+        <!-- 1A. Table View (Numbers & Quick Modal) -->
+        <div id="sd-matrix-table-view" class="table-container" style="overflow-x:auto;">
           <table class="data-table" id="sd-matrix-table" style="width:100%; border-collapse:collapse; font-size:0.8rem;">
             <thead>
               <tr style="background:rgba(30,41,59,0.9); border-bottom:2px solid rgba(56,189,248,0.3); color:#94A3B8; text-align:left;">
-                <th style="padding:0.65rem 0.8rem; width:220px;">CHỈ SỐ CẢNH BÁO (ALARM)</th>
-                <th style="padding:0.65rem 0.8rem; text-align:center; color:#f87171;">TEAM 1 DAWEI (AW)</th>
-                <th style="padding:0.65rem 0.8rem; text-align:center; color:#fbbf24;">TEAM 2 MYEIK (AX)</th>
-                <th style="padding:0.65rem 0.8rem; text-align:center; color:#34d399;">TEAM 3 BOKPYIN (AY)</th>
-                <th style="padding:0.65rem 0.8rem; text-align:center; color:#38bdf8;">TEAM 4 KAWTHOUNG (AZ)</th>
+                <th style="padding:0.65rem 0.8rem; width:230px;">CHỈ SỐ CẢNH BÁO (ALARM)</th>
+                <th style="padding:0.65rem 0.8rem; text-align:center; color:#f87171;"><i class="fa-solid fa-location-dot"></i> TEAM 1 DAWEI (CỘT AW)</th>
+                <th style="padding:0.65rem 0.8rem; text-align:center; color:#fbbf24;"><i class="fa-solid fa-location-dot"></i> TEAM 2 MYEIK (CỘT AX)</th>
+                <th style="padding:0.65rem 0.8rem; text-align:center; color:#34d399;"><i class="fa-solid fa-location-dot"></i> TEAM 3 BOKPYIN (CỘT AY)</th>
+                <th style="padding:0.65rem 0.8rem; text-align:center; color:#38bdf8;"><i class="fa-solid fa-location-dot"></i> TEAM 4 KAWTHOUNG (CỘT AZ)</th>
                 <th style="padding:0.65rem 0.8rem; text-align:center; color:#e2e8f0; font-weight:800; background:rgba(56,189,248,0.12);">TOÀN VÙNG</th>
               </tr>
             </thead>
@@ -8735,6 +8760,17 @@ Team04>> 2Box</td>
               <!-- Rendered by JS -->
             </tbody>
           </table>
+        </div>
+
+        <!-- 1B. Raw Text View (Exact content of AW7:AZ16 rows) -->
+        <div id="sd-matrix-raw-view" style="display:none;">
+          <div style="font-size:0.75rem; color:#94A3B8; margin-bottom:0.8rem; display:flex; justify-content:space-between; align-items:center;">
+            <span><i class="fa-solid fa-terminal" style="color:var(--cyan);"></i> Hiển thị nguyên văn dữ liệu văn bản từ Google Sheet GID 0 (Cột AW..AZ, Dòng 7 đến 16):</span>
+            <span style="color:#38BDF8; font-weight:700;">Nhấp vào từng ô để copy</span>
+          </div>
+          <div id="sd-raw-matrix-content" style="display:flex; flex-direction:column; gap:0.75rem; max-height:600px; overflow-y:auto; padding-right:4px;">
+            <!-- Rendered by JS renderRawMatrix() -->
+          </div>
         </div>
       </div>
 
@@ -12829,6 +12865,121 @@ document.addEventListener("DOMContentLoaded", function() {
         'team4': { name: 'Team 4 Kawthoung', color: '#38bdf8', icon: 'fa-location-dot', badgeClass: 'kpi-blue' }
       };
 
+      function setMatrixMode(mode) {
+        state.matrixMode = mode;
+        var btnTable = document.getElementById('sd-mode-table-btn');
+        var btnRaw = document.getElementById('sd-mode-raw-btn');
+        var viewTable = document.getElementById('sd-matrix-table-view');
+        var viewRaw = document.getElementById('sd-matrix-raw-view');
+        if (mode === 'raw') {
+          if (btnTable) btnTable.classList.remove('active');
+          if (btnRaw) btnRaw.classList.add('active');
+          if (viewTable) viewTable.style.display = 'none';
+          if (viewRaw) {
+            viewRaw.style.display = 'block';
+            renderRawMatrix();
+          }
+        } else {
+          if (btnRaw) btnRaw.classList.remove('active');
+          if (btnTable) btnTable.classList.add('active');
+          if (viewRaw) viewRaw.style.display = 'none';
+          if (viewTable) viewTable.style.display = 'block';
+        }
+      }
+
+      function highlightRawText(txt) {
+        if (!txt) return '<span style="color:#64748B; font-style:italic;">(Ô trống)</span>';
+        var esc = txt.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        esc = esc.replace(/(TNI\d{3,4}[A-Za-z0-9]*)/g, '<b style="color:#38BDF8; font-weight:800;">$1</b>');
+        esc = esc.replace(/(\/\d+)/g, '<span style="color:#f87171; font-weight:800;">$1</span>');
+        esc = esc.replace(/(:\s*[0-9.]+)/g, '<span style="color:#f59e0b; font-weight:700;">$1</span>');
+        return esc;
+      }
+
+      function renderRawMatrix() {
+        var container = document.getElementById('sd-raw-matrix-content');
+        if (!container || !state.data) return;
+        var rawRows = state.data.rawMatrixRows || [];
+        if (rawRows.length === 0) {
+          container.innerHTML = '<div style="color:#94A3B8; text-align:center; padding:2rem;">Đang tải văn bản gốc AW7..AZ16 từ Google Sheet...</div>';
+          return;
+        }
+
+        var teamLabels = [
+          { key: 'aw', name: 'T1 Dawei (AW)', color: '#ef4444' },
+          { key: 'ax', name: 'T2 Myeik (AX)', color: '#f59e0b' },
+          { key: 'ay', name: 'T3 Bokpyin (AY)', color: '#10b981' },
+          { key: 'az', name: 'T4 Kawthoung (AZ)', color: '#38bdf8' }
+        ];
+
+        var html = '';
+        rawRows.forEach(function(r) {
+          var firstText = r.aw || r.ax || r.ay || r.az || '';
+          var titleMatch = firstText.match(/^([^:=]+)[:=]/);
+          var rowTitle = titleMatch ? titleMatch[1].replace(/[*]/g, '').trim() : ('Dòng ' + r.row);
+
+          html += `
+            <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:0.9rem; transition:border-color 0.2s;" onmouseover="this.style.borderColor='rgba(56,189,248,0.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'">
+              <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.5rem; margin-bottom:0.7rem;">
+                <div style="font-weight:800; font-size:0.86rem; color:#F8FAFC; display:flex; align-items:center; gap:0.5rem;">
+                  <span style="background:rgba(56,189,248,0.2); color:#38BDF8; padding:0.15rem 0.5rem; border-radius:5px; font-size:0.72rem; font-family:monospace;">Row ${r.row}</span>
+                  <span style="color:#fff;">${rowTitle}</span>
+                </div>
+                <div style="font-size:0.7rem; color:#94A3B8;">
+                  Google Sheet Range: <b style="color:var(--cyan);">AW${r.row}..AZ${r.row}</b>
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:0.6rem;">
+          `;
+
+          teamLabels.forEach(function(tl) {
+            var cellText = r[tl.key] || '';
+            var isEmpty = !cellText.trim();
+            html += `
+              <div style="background:rgba(15,23,42,0.65); border:1px solid ${isEmpty ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.1)'}; border-left:3px solid ${tl.color}; border-radius:8px; padding:0.6rem; display:flex; flex-direction:column; justify-content:space-between;">
+                <div style="font-size:0.7rem; font-weight:800; color:${tl.color}; margin-bottom:0.35rem; display:flex; justify-content:space-between; align-items:center;">
+                  <span>${tl.name}</span>
+                  ${cellText ? `<button class="filter-btn" style="padding:0.1rem 0.4rem; font-size:0.62rem; background:rgba(255,255,255,0.06); color:#94A3B8; border:none; cursor:pointer;" onclick="navigator.clipboard.writeText('${cellText.replace(/'/g, "\\\\'").replace(/"/g, '&quot;')}'); alert('📋 Đã sao chép nội dung ô!');" title="Sao chép ô này"><i class="fa-solid fa-copy"></i></button>` : ''}
+                </div>
+                <div style="font-size:0.74rem; line-height:1.45; font-family:monospace; color:#CBD5E1; word-break:break-word; max-height:120px; overflow-y:auto;">
+                  ${highlightRawText(cellText)}
+                </div>
+              </div>
+            `;
+          });
+
+          html += `
+              </div>
+            </div>
+          `;
+        });
+
+        container.innerHTML = html;
+      }
+
+      function copyRawMatrixText() {
+        if (!state.data || !state.data.rawMatrixRows) {
+          alert('Chưa có dữ liệu AW7:AZ16 để sao chép!');
+          return;
+        }
+        var text = '📊 BÁO CÁO CẢNH BÁO AW7..AZ16 TANINTHARYI REGION (MỐC: ' + (state.data.matrixTimestamp || '') + ')\n\n';
+        state.data.rawMatrixRows.forEach(function(r) {
+          text += '=== DÒNG ROW ' + r.row + ' ===\n';
+          if (r.aw) text += '[T1 Dawei - AW]: ' + r.aw + '\n';
+          if (r.ax) text += '[T2 Myeik - AX]: ' + r.ax + '\n';
+          if (r.ay) text += '[T3 Bokpyin - AY]: ' + r.ay + '\n';
+          if (r.az) text += '[T4 Kawthoung - AZ]: ' + r.az + '\n';
+          text += '\n';
+        });
+
+        navigator.clipboard.writeText(text).then(function() {
+          alert('📋 ĐÃ SAO CHÉP TOÀN BỘ NỘI DUNG AW7:AZ16 VÀO CLIPBOARD!\n\nBạn có thể dán vào Telegram hoặc văn bản báo cáo.');
+        }).catch(function() {
+          prompt('Sao chép nội dung AW7:AZ16 dưới đây:', text);
+        });
+      }
+
       function init() {
         // Load data on first tab view or initialization
         var siteTabBtn = document.getElementById('tab-btn-site-link-down');
@@ -12935,6 +13086,18 @@ document.addEventListener("DOMContentLoaded", function() {
           }
         }
 
+        var rawMatrixRows = [];
+        for (var r_idx = 6; r_idx < Math.min(25, rows.length); r_idx++) {
+          var r_row = rows[r_idx];
+          var aw_c = (r_row[48] || '').trim();
+          var ax_c = (r_row[49] || '').trim();
+          var ay_c = (r_row[50] || '').trim();
+          var az_c = (r_row[51] || '').trim();
+          if (aw_c || ax_c || ay_c || az_c) {
+            rawMatrixRows.push({ row: r_idx + 1, aw: aw_c, ax: ax_c, ay: ay_c, az: az_c });
+          }
+        }
+
         // Parse AW..AZ
         for (var r = 6; r < Math.min(35, rows.length); r++) {
           var row = rows[r];
@@ -13017,6 +13180,7 @@ document.addEventListener("DOMContentLoaded", function() {
           matrixTimestamp: latest_ts || '15/10/2026 11:51',
           metrics: metrics,
           metricsList: metrics_def,
+          rawMatrixRows: rawMatrixRows,
           activeSites: active_sites,
           totalActiveSites: active_sites.length,
           towerSummary: tower_summary
@@ -13039,6 +13203,9 @@ document.addEventListener("DOMContentLoaded", function() {
         renderKpis();
         renderTowerPills();
         renderMatrixTable();
+        if (state.matrixMode === 'raw') {
+          renderRawMatrix();
+        }
         renderTeamCards();
         renderActiveSitesTable();
         updateFilterCounts();
@@ -13537,6 +13704,8 @@ document.addEventListener("DOMContentLoaded", function() {
       return {
         init: init,
         loadData: loadData,
+        setMatrixMode: setMatrixMode,
+        copyRawMatrixText: copyRawMatrixText,
         setTeamFilter: setTeamFilter,
         handleSearch: handleSearch,
         resetFilters: resetFilters,

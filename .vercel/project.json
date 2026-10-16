@@ -1,0 +1,16 @@
+{
+  "projectId": "prj_macqrj4El25AvYlsQSxa4MvV5rxA",
+  "orgId": "team_Fv0oQWVJPILvuYNbA85AiRo0",
+  "projectName": "tni-done",
+  "settings": {
+    "createdAt": 1785499109302,
+    "framework": null,
+    "devCommand": null,
+    "installCommand": null,
+    "buildCommand": null,
+    "outputDirectory": null,
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "24.x"
+  }
+}
