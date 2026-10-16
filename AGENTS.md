@@ -3055,4 +3055,36 @@ Reason: [Lý do]`
 >   - Kiểm toán thực tế: `Semantic Audit Input Task (Phòng Dep)` trả về PASS (355 tasks, phát hiện 321 task quá hạn trong 1.33s).
 >   - Đã lưu cache JSON `api/dept_assign_cache.json`.
 >   - Commit và push đồng bộ sang `Task and WO` và `tni-search`.
+>
+> ---
+>
+> **PM-106 (16/10/2026) — Khắc Phục Lệch Hàng Cột C Site Down & Đảo Thứ Tự Bot 2D (ETA) Trước Bot 5T (Site Down) (Site Down Header Dynamic Match & Bot 2D/5T Sequential Priority Policy)**:
+> - **Yêu Cầu & Bối Cảnh (Requirement & Context)**:
+>   1. Người dùng thắc mắc: *"Sao có dữ liệu Cột A không liên quan gì AW7 mà"* kèm ảnh Sheet GID 0 (Cột A có 25 trạm down, Team 2 có 10 trạm down) và ảnh Telegram nhóm `TNI TEAM 2 PLAN - ALARM` (lúc 09:06 Bot 5T gửi tiêu đề `🟢 Team 3 Bokpyin: - 16/10/2026 09:00` với nội dung rỗng `< > | | | | | |`).
+>   2. Người dùng chỉ thị: *"điều chỉnh lại Bot 2D gởi trước rồi đến Bot 5T"*.
+> - **Nguyên Nhân Gốc (Root Cause Analysis)**:
+>   1. **Lệch Hàng Do Chỉ Số Cố Định (Hardcoded Array Offset Bug)**:
+>      Trong `site_down_v2.gs`, `teamHeaderMap` trước đây gán cứng: `T1: colC[3]`, `T2: colC[4]`, `T3: colC[5]`, `T4: colC[6]`.
+>      Khi hàng trên Sheet GID 0 bị thay đổi (xóa bớt 1 dòng tiêu đề ở đầu sheet), Team 1 chuyển lên dòng 3 (`colC[2]`), Team 2 lên dòng 4 (`colC[3]`), Team 3 lên dòng 5 (`colC[4]`).
+>      Khi đó, `colC[4]` (dòng 5) là tiêu đề của Team 3 Bokpyin nhưng lại bị gán cho `T2` (Team 2)! Bot 5T gửi nhầm tiêu đề Team 3 vào nhóm Team 2.
+>   2. **Bỏ Sót Trạm Dòng 9 (`colC.slice(9)`)**:
+>      Script dùng `colC.slice(9)` (0-indexed, bỏ qua 9 phần tử đầu tức dòng 1..9), dẫn đến trạm đầu tiên nằm ở dòng 9 bị bỏ sót.
+>   3. **Thứ Tự Gửi Ngược (Inverted Bot Ordering)**:
+>      `triggerBot2dEta_()` trước đây được đặt ở dòng 517 (sau khi Bot 5T đã gửi xong). Do đó tin nhắn Site Down (Bot 5T) luôn gửi trước, tin nhắn ETA Reminder (Bot 2D) gửi sau đè lên dưới, làm che khuất cảnh báo Site Down.
+> - **Quy Trình & Biện Pháp Khắc Phục Bọc Thép (Rule PM-106)**:
+>   1. **Quét Header Team Động 100% (Dynamic Team Header Detection)**:
+>      Dùng Regex `/^Team\s*0?1\b/i`, `/^Team\s*0?2\b/i`, `/^Team\s*0?3\b/i`, `/^Team\s*0?4\b/i` quét qua 15 dòng đầu của Cột C. Dù Sheet có bị chèn, xóa hay gộp dòng ở đầu, từng Team luôn được ánh xạ chính xác 100% vào đúng Header của mình.
+>   2. **Trích Xuất Trạm Theo Cấu Trúc Thực Tế (Robust Site Row Filter)**:
+>      Thay thế `colC.slice(9)` bằng bộ lọc chuẩn: kiểm tra dòng chứa dấu phân cách `|` và mã trạm `TNI\d{4}`, loại bỏ các dòng tiêu đề, đảm bảo không bỏ sót bất kỳ trạm nào từ dòng 8 trở đi.
+>   3. **Chốt Chặn Chống Bắn Tin Rỗng (Empty Template Guard)**:
+>      Nếu một Team không có trạm down (`sites.length === 0`) và header chỉ chứa khung mẫu rỗng `< > | | | | | |`, hệ thống tự động nhận diện và bỏ qua, tuyệt đối không gửi tin nhắn rác vào nhóm Telegram.
+>   4. **Đảo Thứ Tự: Bot 2D Gửi Trước, Bot 5T Gửi Sau (Sequential Priority Inversion)**:
+>      Đặt `triggerBot2dEta_(true)` lên đầu hàm `processSiteDownColC` (trước các bước gửi tin của Bot 5T), chờ 5 giây để Vercel dọn tin cũ và phát xong bản tin ETA Reminder (Bot 2D). Sau đó Bot 5T mới gửi tin Site Down. Bản tin Site Down luôn nằm ở vị trí đáy chat mới nhất.
+> - **Triển Khai & Kiểm Chứng Live**:
+>   - Đã cập nhật `apps_script_sitedown/site_down_v2.gs`.
+>   - Đã chạy `clasp push --force` thành công (2 files).
+>   - Đã chạy `clasp deploy -i AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF- -d "v111 Bot 2D before Bot 5T and Dynamic Col C Header"` ➔ Version `@117`.
+>   - Kiểm tra live Webhook: HTTP 200.
+>   - Đồng bộ sang `tni-sitedown`, `Task and WO/tni_site_down_repo`.
+
 
