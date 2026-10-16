@@ -351,6 +351,12 @@
     }
     .row-detail:last-child { border-bottom: none; }
 
+    /* AW7..AZ16 Matrix Syntax Highlighting */
+    .hl-tni { color: #38BDF8 !important; font-weight: 800 !important; }
+    .hl-cnt { color: #F87171 !important; font-weight: 800 !important; }
+    .hl-num { color: #F59E0B !important; font-weight: 700 !important; }
+    .hl-time { color: #94A3B8 !important; font-weight: 600 !important; }
+
     /* Custom Tables */
 
     /* Universal Resizable Table Columns */
@@ -8881,7 +8887,7 @@ Team04>> 2Box</td>
             <span><i class="fa-solid fa-terminal" style="color:var(--cyan);"></i> Hiển thị nguyên văn dữ liệu văn bản từ Google Sheet GID 0 (Cột AW..AZ, Dòng 7 đến 16):</span>
             <span style="color:#38BDF8; font-weight:700;">Nhấp vào từng ô để copy</span>
           </div>
-          <div id="sd-raw-matrix-content" style="display:flex; flex-direction:column; gap:0.75rem; max-height:600px; overflow-y:auto; padding-right:4px;">
+          <div id="sd-raw-matrix-content" style="display:flex; flex-direction:column; gap:0.85rem; max-height:75vh; overflow-y:auto; padding-right:8px;">
             <!-- Rendered by JS renderRawMatrix() -->
           </div>
         </div>
@@ -12995,9 +13001,30 @@ document.addEventListener("DOMContentLoaded", function() {
       function highlightRawText(txt) {
         if (!txt) return '<span style="color:#64748B; font-style:italic;">(Ô trống)</span>';
         var esc = txt.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        esc = esc.replace(/(TNI\d{3,4}[A-Za-z0-9]*)/g, '<b style="color:#38BDF8; font-weight:800;">$1</b>');
-        esc = esc.replace(/(\/\d+)/g, '<span style="color:#f87171; font-weight:800;">$1</span>');
-        esc = esc.replace(/(:\s*[0-9.]+)/g, '<span style="color:#f59e0b; font-weight:700;">$1</span>');
+
+        // 1. Temporarily protect timestamps like 16/10/2026 11:47
+        var timestamps = [];
+        esc = esc.replace(/\d{1,2}\/\d{1,2}\/\d{2,4}(?:\s+\d{1,2}:\d{2})?/g, function(ts) {
+          timestamps.push(ts);
+          return '___TIMESTAMP_' + (timestamps.length - 1) + '___';
+        });
+
+        // 2. Highlight TNI site codes (Cyan bold)
+        esc = esc.replace(/(TNI\d{3,4}[A-Za-z0-9]*)/g, '<b class="hl-tni">$1</b>');
+
+        // 3. Highlight standalone alarm count pills /X (e.g. /14, /0, /10)
+        esc = esc.replace(/(^|[\s=])(\/\d+)(?=\s|$|[=,•-])/g, '$1<span class="hl-cnt">$2</span>');
+
+        // 4. Highlight down hours (e.g. " : 5.7", " : 38", ": 3060.7")
+        esc = esc.replace(/:\s*([0-9]+(?:\.[0-9]+)?)/g, function(match, num) {
+          return ': <span class="hl-num">' + num + '</span>';
+        });
+
+        // 5. Restore protected timestamps with nice muted styling
+        esc = esc.replace(/___TIMESTAMP_(\d+)___/g, function(_, idx) {
+          return '<span class="hl-time">' + timestamps[idx] + '</span>';
+        });
+
         return esc;
       }
 
@@ -13035,19 +13062,19 @@ document.addEventListener("DOMContentLoaded", function() {
                 </div>
               </div>
 
-              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:0.6rem;">
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:0.75rem; align-items:stretch;">
           `;
 
           teamLabels.forEach(function(tl) {
             var cellText = r[tl.key] || '';
             var isEmpty = !cellText.trim();
             html += `
-              <div style="background:rgba(15,23,42,0.65); border:1px solid ${isEmpty ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.1)'}; border-left:3px solid ${tl.color}; border-radius:8px; padding:0.6rem; display:flex; flex-direction:column; justify-content:space-between;">
-                <div style="font-size:0.7rem; font-weight:800; color:${tl.color}; margin-bottom:0.35rem; display:flex; justify-content:space-between; align-items:center;">
+              <div style="background:rgba(15,23,42,0.65); border:1px solid ${isEmpty ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.1)'}; border-left:3px solid ${tl.color}; border-radius:8px; padding:0.75rem; display:flex; flex-direction:column; justify-content:flex-start;">
+                <div style="font-size:0.72rem; font-weight:800; color:${tl.color}; margin-bottom:0.45rem; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:0.35rem;">
                   <span>${tl.name}</span>
-                  ${cellText ? `<button class="filter-btn" style="padding:0.1rem 0.4rem; font-size:0.62rem; background:rgba(255,255,255,0.06); color:#94A3B8; border:none; cursor:pointer;" onclick="navigator.clipboard.writeText('${cellText.replace(/'/g, "\\\\'").replace(/"/g, '&quot;')}'); alert('📋 Đã sao chép nội dung ô!');" title="Sao chép ô này"><i class="fa-solid fa-copy"></i></button>` : ''}
+                  ${cellText ? `<button class="filter-btn" style="padding:0.12rem 0.45rem; font-size:0.65rem; background:rgba(255,255,255,0.08); color:#94A3B8; border:1px solid rgba(255,255,255,0.12); border-radius:4px; cursor:pointer;" onclick="navigator.clipboard.writeText('${cellText.replace(/'/g, "\\\\'").replace(/"/g, '&quot;')}'); alert('📋 Đã sao chép nội dung ô!');" title="Sao chép ô này"><i class="fa-solid fa-copy"></i> Copy</button>` : ''}
                 </div>
-                <div style="font-size:0.74rem; line-height:1.45; font-family:monospace; color:#CBD5E1; word-break:break-word; max-height:120px; overflow-y:auto;">
+                <div style="font-size:0.75rem; line-height:1.55; font-family:monospace; color:#CBD5E1; word-break:break-word; white-space:pre-wrap;">
                   ${highlightRawText(cellText)}
                 </div>
               </div>
