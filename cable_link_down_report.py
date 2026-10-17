@@ -42,12 +42,16 @@ DELETE_KEY      = "CABLE_LINK_DOWN_REPORT"
 
 # Import helper xóa tin cũ
 try:
-    from delete_old_helper import delete_old_messages_bot, save_msgids
+    from delete_old_helper import delete_old_messages_bot, save_msgids, get_old_msgids, delete_telegram_msg
 except ImportError:
     def delete_old_messages_bot(token, cid, gas_url, key):
         return 0
     def save_msgids(gas_url, key, msgids):
         pass
+    def get_old_msgids(gas_url, key):
+        return []
+    def delete_telegram_msg(token, cid, mid):
+        return False
 
 
 TEAM_EMOJIS = {
@@ -205,26 +209,35 @@ def run_cable_link_down():
         print(f"[Cable Link Down] ❌ Lỗi đọc dữ liệu sheet: {ex}")
         return
 
-    # ── Guard: chỉ xóa cũ & gửi khi có nội dung thực sự ──────────────────
+    # ── Guard: Khi KHÔNG có link down (toàn bộ tuyến bình thường) ────────
     if not items:
-        print("[Cable Link Down] ✅ No link down items found — skip send & delete.")
+        print("[Cable Link Down] ✅ Không có tuyến cáp đứt (All routes normal) — Dọn sạch tin báo cáo cũ...")
+        delete_old_messages_bot(CABLE_BOT_TOKEN, CABLE_CHAT_ID, APPS_SCRIPT_URL, DELETE_KEY)
         print("=" * 60)
         return
 
     msg_text = build_telegram_message(items)
 
     print(f"[Cable Link Down] 🗑️ Cleaning up previous link down report...")
-    delete_old_messages_bot(CABLE_BOT_TOKEN, CABLE_CHAT_ID, APPS_SCRIPT_URL, DELETE_KEY)
+    # Thu thập và xóa toàn bộ tin cũ, giữ lại các ID chưa xóa được (nếu có lỗi mạng)
+    old_ids = get_old_msgids(APPS_SCRIPT_URL, DELETE_KEY)
+    remaining_ids = []
+    if old_ids:
+        for mid in old_ids:
+            if not delete_telegram_msg(CABLE_BOT_TOKEN, CABLE_CHAT_ID, mid):
+                remaining_ids.append(mid)
+        print(f"[Cable Link Down] 📊 Đã dọn {len(old_ids) - len(remaining_ids)}/{len(old_ids)} tin cũ.")
 
     new_mid = send_telegram_report(msg_text)
 
     if new_mid:
+        to_save = list(dict.fromkeys(remaining_ids + [new_mid]))[-10:]
         # Lưu ID mới vào GAS — retry 3 lần chống GAS cold-start
         saved = False
         for attempt in range(3):
             try:
-                save_msgids(APPS_SCRIPT_URL, DELETE_KEY, [new_mid])
-                print(f"[Cable Link Down] 💾 Saved msg_id {new_mid} (attempt {attempt+1})")
+                save_msgids(APPS_SCRIPT_URL, DELETE_KEY, to_save)
+                print(f"[Cable Link Down] 💾 Saved msg_ids {to_save} (attempt {attempt+1})")
                 saved = True
                 break
             except Exception as ex:
@@ -232,7 +245,7 @@ def run_cable_link_down():
                 if attempt < 2:
                     import time; time.sleep(5)
         if not saved:
-            print(f"[Cable Link Down] ❌ Could not save msg_id {new_mid} after 3 attempts.")
+            print(f"[Cable Link Down] ❌ Could not save msg_ids {to_save} after 3 attempts.")
 
     print("=" * 60)
     print("🏁 TOA BÁO CÁO CABLE LINK DOWN HOÀN TẤT")
