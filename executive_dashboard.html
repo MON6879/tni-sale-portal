@@ -13203,6 +13203,9 @@ document.addEventListener("DOMContentLoaded", function() {
           })
           .then(function(json) {
             if (json && json.status === 'ok') {
+              if (!json.fourTeamsSummary && json.rawMatrixRows) {
+                json.fourTeamsSummary = buildFourTeamsSummary(json.rawMatrixRows, json.matrixTimestamp);
+              }
               state.data = json;
               render();
             } else {
@@ -13429,7 +13432,8 @@ document.addEventListener("DOMContentLoaded", function() {
           { key: 'dg_low_oil', icon: '🟣', label: 'DG.Low Oil Pressure', color: '#ec4899' },
           { key: 'link_down', icon: '🔗', label: 'Link down', color: '#8b5cf6' },
           { key: 'batt_temp_high', icon: '🌡️', label: 'Battery Temperature High', color: '#06b6d4' },
-          { key: 'smoke', icon: '💨', label: 'Smoke', color: '#94a3b8' }
+          { key: 'smoke', icon: '💨', label: 'Smoke', color: '#94a3b8' },
+          { key: 'door', icon: '🚪', label: 'Door Alarm', color: '#10b981' }
         ];
 
         var teamsResult = [];
@@ -13439,10 +13443,28 @@ document.addEventListener("DOMContentLoaded", function() {
           var tk = TEAM_KEYS[tIdx];
           var teamCategories = [];
           var totalAlarms = 0;
-          var ts = defaultTs || '';
+          var ts = defaultTs || (state.data && state.data.matrixTimestamp) || '';
 
           catDefs.forEach(function(cat, cIdx) {
-            var rowObj = rawMatrixRows[cIdx] || {};
+            var rowObj = null;
+            if (rawMatrixRows && rawMatrixRows.length) {
+              for (var r = 0; r < rawMatrixRows.length; r++) {
+                var testText = ((rawMatrixRows[r].aw || '') + ' ' + (rawMatrixRows[r].ax || '') + ' ' + (rawMatrixRows[r].ay || '') + ' ' + (rawMatrixRows[r].az || '')).toLowerCase();
+                if (cat.key === 'site_down' && testText.indexOf('site down') !== -1) { rowObj = rawMatrixRows[r]; break; }
+                if (cat.key === 'cell_down' && testText.indexOf('cell down') !== -1) { rowObj = rawMatrixRows[r]; break; }
+                if (cat.key === 'dg_abnormal' && testText.indexOf('dg abnormal') !== -1) { rowObj = rawMatrixRows[r]; break; }
+                if (cat.key === 'dg_run_16h' && (testText.indexOf('dg run') !== -1 || testText.indexOf('> 16h') !== -1 || testText.indexOf('>16h') !== -1)) { rowObj = rawMatrixRows[r]; break; }
+                if (cat.key === 'dg_low_oil' && (testText.indexOf('low oil') !== -1 || testText.indexOf('dg.low') !== -1)) { rowObj = rawMatrixRows[r]; break; }
+                if (cat.key === 'link_down' && testText.indexOf('link down') !== -1) { rowObj = rawMatrixRows[r]; break; }
+                if (cat.key === 'batt_temp_high' && (testText.indexOf('battery') !== -1 || testText.indexOf('temp') !== -1)) { rowObj = rawMatrixRows[r]; break; }
+                if (cat.key === 'smoke' && testText.indexOf('smoke') !== -1) { rowObj = rawMatrixRows[r]; break; }
+                if (cat.key === 'door' && testText.indexOf('door') !== -1) { rowObj = rawMatrixRows[r]; break; }
+              }
+            }
+            if (!rowObj && rawMatrixRows) {
+              rowObj = rawMatrixRows[cIdx] || {};
+            }
+            rowObj = rowObj || {};
             var rawText = (rowObj[cKey] || '').trim();
 
             if (!ts && rawText) {
@@ -13464,8 +13486,6 @@ document.addEventListener("DOMContentLoaded", function() {
               var mCnt = clean.match(/\/\s*(\d+)/);
               if (mCnt) count = parseInt(mCnt[1], 10);
             }
-
-            totalAlarms += count;
 
             var engineers = [];
             if (count > 0 && rawText) {
@@ -13498,6 +13518,25 @@ document.addEventListener("DOMContentLoaded", function() {
               });
             }
 
+            // Fallback from state.data.metrics if available
+            var mDef = state.data && state.data.metrics && state.data.metrics[cat.key];
+            var mTeam = mDef && mDef.teams && mDef.teams[tk];
+            if (mTeam) {
+              if (!count && mTeam.count) count = mTeam.count;
+              if (!rawText && mTeam.raw) rawText = mTeam.raw;
+              if ((!engineers || !engineers.length) && mTeam.items && mTeam.items.length) {
+                engineers = mTeam.items.map(function(it) {
+                  return {
+                    name: it.engineer || 'Chi tiết',
+                    details: it.content || '',
+                    items: parseEngineerDetails(it.content || '', cat.key)
+                  };
+                });
+              }
+            }
+
+            totalAlarms += count;
+
             teamCategories.push({
               key: cat.key,
               icon: cat.icon,
@@ -13525,7 +13564,7 @@ document.addEventListener("DOMContentLoaded", function() {
             region: teamRegions[tIdx],
             colLetter: teamCols[tIdx],
             color: teamColors[tIdx],
-            timestamp: ts || '16/10/2026 11:47',
+            timestamp: ts || (state.data && state.data.matrixTimestamp) || '16/10/2026 11:47',
             totalAlarms: totalAlarms,
             categories: teamCategories,
             telegramSummary: tgLines.join('\n')
@@ -13584,12 +13623,28 @@ document.addEventListener("DOMContentLoaded", function() {
 
       function renderFourTeamsBoard() {
         var grid = document.getElementById('sd-4team-columns-grid');
-        if (!grid || !state.data || !state.data.fourTeamsSummary) return;
+        if (!grid) return;
 
+        if (!state.data) {
+          grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #94a3b8;"><i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: #38bdf8; margin-bottom: 12px; display: block;"></i>Đang nạp 4 Thẻ Tổng Hợp Cảnh Báo Regional Teams...</div>';
+          return;
+        }
+
+        if (!state.data.fourTeamsSummary || !state.data.fourTeamsSummary.length) {
+          state.data.fourTeamsSummary = buildFourTeamsSummary(state.data.rawMatrixRows, state.data.matrixTimestamp);
+        }
         var teams = state.data.fourTeamsSummary;
+        if (!teams || !teams.length) {
+          grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 30px; color: #ef4444;"><i class="fa-solid fa-triangle-exclamation" style="font-size: 1.8rem; margin-bottom: 10px; display: block;"></i>Không tìm thấy dữ liệu 4 Regional Teams.</div>';
+          return;
+        }
+
         var tsEl = document.getElementById('sd-4col-timestamp');
-        if (tsEl && teams[0] && teams[0].timestamp) {
-          tsEl.innerHTML = '📅 Mốc giờ Sheet: <b style="color:#fff;">' + teams[0].timestamp + '</b>';
+        if (tsEl) {
+          var displayTs = (teams[0] && teams[0].timestamp) || state.data.matrixTimestamp || '';
+          if (displayTs) {
+            tsEl.innerHTML = '📅 Mốc giờ Sheet: <b style="color:#fff;">' + displayTs + '</b>';
+          }
         }
 
         var isCardsMode = (state.cardStyle !== 'accordion');

@@ -425,6 +425,48 @@ def get_site_down_stats():
                 "total_alarms": sum(metrics[m["key"]]["teams"][tk]["count"] for m in metrics_def)
             }
 
+        # Build fourTeamsSummary for Executive Summary cards
+        team_names_4 = ['Team 1 (Dawei)', 'Team 2 (Myeik)', 'Team 3 (Bokpyin)', 'Team 4 (Kawthoung)']
+        team_regions_4 = ['Dawei', 'Myeik', 'Bokpyin', 'Kawthoung']
+        team_colors_4 = ['#ef4444', '#f59e0b', '#10b981', '#38bdf8']
+        team_cols_4 = ['AW', 'AX', 'AY', 'AZ']
+
+        four_teams_summary = []
+        for t_idx, tk in enumerate(TEAM_ORDER):
+            cats = []
+            for m in metrics_def:
+                m_k = m["key"]
+                t_data = metrics[m_k]["teams"][tk]
+                cats.append({
+                    "key": m_k,
+                    "icon": m["icon"],
+                    "label": m["label"],
+                    "color": m["color"],
+                    "count": t_data["count"],
+                    "rawText": t_data["raw"],
+                    "engineers": [{"name": it.get("engineer", ""), "details": it.get("content", ""), "items": []} for it in t_data.get("items", [])]
+                })
+            tg_lines = [
+                f"📊 SUMMARY — {team_names_4[t_idx]}",
+                f"📅 {latest_timestamp or now_str}",
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            ]
+            for c in cats:
+                line = c["rawText"].lstrip("*").strip() if c["rawText"] else f"{c['label']}: /0 ="
+                tg_lines.append(f"{c['icon']} {line}")
+
+            four_teams_summary.append({
+                "teamKey": tk,
+                "teamName": team_names_4[t_idx],
+                "region": team_regions_4[t_idx],
+                "colLetter": team_cols_4[t_idx],
+                "color": team_colors_4[t_idx],
+                "timestamp": latest_timestamp or now_str,
+                "totalAlarms": team_summary[tk]["total_alarms"],
+                "categories": cats,
+                "telegramSummary": "\n".join(tg_lines)
+            })
+
         # Collect raw matrix rows from row 7 to 16 (indices 6 to 15)
         raw_matrix_rows = []
         for r_idx in range(6, min(25, len(rows))):
@@ -449,6 +491,7 @@ def get_site_down_stats():
             "metrics": metrics,
             "metricsList": metrics_def,
             "teamSummary": team_summary,
+            "fourTeamsSummary": four_teams_summary,
             "rawMatrixRows": raw_matrix_rows,
             "activeSites": active_sites,
             "totalActiveSites": len(active_sites),
