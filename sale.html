@@ -2657,12 +2657,12 @@ const DB = {
     DB._push('sale_bulk', { col: k, items: items });
   },
 
-  // ── Background push to GAS (fire-and-forget) ────────────
+  // ── Background push to GAS ────────────
   _push: (action, body) => {
     const curEmail = localStorage.getItem(GAUTH_EMAIL_KEY) || 'phonghdpxd@gmail.com';
     fetch(GAS_SALE_URL, {
-      method: 'POST', mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: action, email: curEmail, ...body })
     }).catch(e => console.warn('[DB] GAS push failed:', e));
   },
@@ -2672,8 +2672,8 @@ const DB = {
     try {
       const curEmail = localStorage.getItem(GAUTH_EMAIL_KEY) || 'phonghdpxd@gmail.com';
       const res  = await fetch(GAS_SALE_URL, {
-        method: 'POST', mode: 'cors',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: 'sale_get', col: k, email: curEmail })
       });
       const json = await res.json();
@@ -3216,15 +3216,14 @@ function confirmBulkImport() {
 }
 
 function syncBulkToGoogleSheet(items) {
-  const gasUrl = "https://script.google.com/macros/s/AKfycbx09J8PPi_IN3_n_ho8QF4RapsPh5uzLchVfS9T89iuw-4QMZWU_ynlhzDvav4wRvj4/exec";
   try {
-    fetch(gasUrl, {
+    const curEmail = localStorage.getItem(GAUTH_EMAIL_KEY) || 'phonghdpxd@gmail.com';
+    fetch(GAS_SALE_URL, {
       method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "bulk_nhap", items: items })
-    }).then(() => {
-      Logger ? Logger.log("Bulk synced to GAS") : console.log("Bulk synced to GAS");
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "sale_bulk", col: "nhap", items: items, email: curEmail })
+    }).then(r => r.json()).then(res => {
+      console.log("Bulk synced to GAS:", res);
     }).catch(err => {
       console.warn("GAS sync offline fallback:", err);
     });
@@ -3267,12 +3266,15 @@ function downloadCurrentNhapData() {
 
 function calcNhapProfit(manualOverride){
   const isVi = currentLang === 'vi';
-  const gg = Number(v('n-gg')) || 0;
+  let gg = Number(v('n-gg')) || 0;
+  let gb = Number(v('n-gb')) || 0;
+  if (!gg && gb > 0) {
+    gg = Math.round(gb * 0.83);
+  }
   const rate = Number(v('cfg-cty-rate') || 17);
   const lnCty = gg > 0 && rate < 100 ? Math.round(gg / (100 - rate) * rate) : 0;
   const minSell = gg + lnCty;
 
-  let gb = Number(v('n-gb')) || 0;
   let gDaily = Number(v('n-g-daily')) || 0;
   let gDiemBan = Number(v('n-g-diemban')) || 0;
   let gNV = Number(v('n-g-nv')) || 0;
@@ -3306,13 +3308,18 @@ function calcNhapProfit(manualOverride){
 
 function addNhap(){
   const isVi = currentLang === 'vi';
-  const ten=v('n-ten'),sl=v('n-sl'),gg=v('n-gg');
-  if(!ten||!sl||!gg){al(isVi ? 'Nhập đủ: Tên, SL, Giá gốc' : 'Please enter: Product Name, Qty, Base Cost','er');return;}
-  const cost = +gg;
+  const ten=v('n-ten'),sl=v('n-sl');
+  const rawGg = v('n-gg');
+  const rawGb = v('n-gb');
+  const cost = +rawGg || (+rawGb ? Math.round(+rawGb * 0.83) : 0);
+  if(!ten || !sl || (!rawGg && !rawGb)){
+    al(isVi ? 'Nhập đủ: Tên SP, Số lượng, và Giá bán hoặc Giá gốc' : 'Please enter: Product Name, Qty, and Retail Price/Cost','er');
+    return;
+  }
   const rate = Number(v('cfg-cty-rate') || 17);
   const lnCty = cost > 0 && rate < 100 ? Math.round(cost / (100 - rate) * rate) : 0;
   const minSell = cost + lnCty;
-  const gb = +v('n-gb') || Math.round(minSell * 1.25);
+  const gb = +rawGb || Math.round(minSell * 1.25);
   const gDaily = +v('n-g-daily') || Math.round(minSell * 1.08);
   const gDiemBan = +v('n-g-diemban') || Math.round(gb * 0.90);
   const gNV = +v('n-g-nv') || minSell;
@@ -3323,7 +3330,7 @@ function addNhap(){
     sl:+sl,gg:cost,rate,lnCty,minSell,gb,gDaily,gDiemBan,gNV,lnBranch,
     ncc:v('n-ncc'),ngay:v('n-ngay')||td(),bh:+v('n-bh')||12,gc:v('n-gc')
   });
-  al(isVi ? '✅ Đã lưu phiếu nhập!' : '✅ Goods intake saved!'); clrForm('n-'); calcNhapProfit(); rNhap();
+  al(isVi ? '✅ Đã lưu phiếu nhập thành công!' : '✅ Goods intake saved successfully!'); clrForm('n-'); calcNhapProfit(); rNhap();
 }
 
 function rNhap(){
@@ -9833,16 +9840,16 @@ const ROLES = {
   },
   sales: {
     id: 'sales',
-    name: 'Nhân Viên Kinh Doanh (Sales)',
-    shortName: 'Kinh Doanh (Sales)',
+    name: 'Nhân Viên Quản Lý Kinh Doanh (Sales)',
+    shortName: 'Quản Lý Kinh Doanh',
     icon: '🧑‍💼',
     color: '#16a34a',
     badgeClass: 'b-gn',
-    desc: 'Bán hàng, lập báo giá thiết bị & solar, chăm sóc khách hàng CRM, theo dõi tiến độ cá nhân. BỊ KHÓA các mục Tài chính & Giá vốn gốc 83%.',
+    desc: 'Quản lý kinh doanh, nhập kho thiết bị, kiểm tra tồn kho thực tế, bán hàng, lập báo giá & theo dõi tiến độ.',
     canViewFinance: false,
-    canViewCostPrice: false,
+    canViewCostPrice: true,
     allowedTabs: [
-      'dashboard',
+      'dashboard', 'nhap', 'tonkho', 'tamung',
       'banhang', 'baogiaups', 'baogiasolar', 'daily', 'kygoi',
       'crm', 'quangcao', 'leads',
       'mystats', 'myquotes', 'mysurvey'
@@ -10080,7 +10087,7 @@ const RBAC_CATS_EN = {
 const ROLE_NAMES_BILINGUAL = {
   admin:     { vi: 'Ban Giám Đốc (BOD)', en: 'BOD (Admin)', shortVi: 'Ban Giám Đốc', shortEn: 'BOD / Admin' },
   finance:   { vi: 'Kế Toán & Tài Chính', en: 'Finance / Chief Accountant', shortVi: 'Kế Toán Trưởng', shortEn: 'Finance / Chief Acc' },
-  sales:     { vi: 'Kinh Doanh (Sales)', en: 'Sales & Business', shortVi: 'Kinh Doanh', shortEn: 'Sales Rep' },
+  sales:     { vi: 'Nhân Viên Quản Lý Kinh Doanh (Sales)', en: 'Sales & Business Management', shortVi: 'Quản Lý Kinh Doanh', shortEn: 'Sales Manager' },
   tech:      { vi: 'Kỹ Thuật (Field Ops)', en: 'Field Technical Team', shortVi: 'Kỹ Thuật Hiện Trường', shortEn: 'Field Engineer' },
   warehouse: { vi: 'Thủ Kho / Vận Hành', en: 'Warehouse & Operations', shortVi: 'Thủ Kho', shortEn: 'Warehouse' },
 };
