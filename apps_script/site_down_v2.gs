@@ -146,11 +146,20 @@ function doPost(e) {
         Logger.log("[doPost] ❌ Lỗi Luồng 1 (Cột C): " + errColC.message);
       }
 
-      // ✅ Luồng 2 (AW7 Summary): Tự động kiểm tra và gửi cập nhật nếu bảng AW:AZ có dữ liệu mới / thay đổi trạm
+      // ✅ Luồng 2 (AW7 Summary): Chỉ gọi trong khung giờ hoạt động 03:30–22:30 MMT
+      // 🛡️ PM-100: Nếu relay chạy ban đêm (manual/force), TUYỆT ĐỐI CẤM gửi AW7 tin cũ!
       var sentAwAz = false;
       try {
-        sentAwAz = processSummaryAwAz(sheet, false);
-        Logger.log("[doPost] Luồng 2 (AW7 Summary) cập nhật: " + sentAwAz);
+        const _nowPost = new Date();
+        const _hPost   = parseInt(Utilities.formatDate(_nowPost, "Asia/Rangoon", "H"), 10);
+        const _mPost   = parseInt(Utilities.formatDate(_nowPost, "Asia/Rangoon", "m"), 10);
+        const _inWinPost = (_hPost > 3 || (_hPost === 3 && _mPost >= 30)) && (_hPost < 22 || (_hPost === 22 && _mPost <= 30));
+        if (_inWinPost) {
+          sentAwAz = processSummaryAwAz(sheet, false);
+          Logger.log("[doPost] Luồng 2 (AW7 Summary) cập nhật: " + sentAwAz);
+        } else {
+          Logger.log("[doPost] 🌙 Ngoài khung giờ " + _hPost + ":" + (_mPost < 10 ? "0" : "") + _mPost + " MMT — Bỏ qua AW7 (guard doPost)!");
+        }
       } catch(errAwAz) {
         Logger.log("[doPost] ⚠️ Lỗi Luồng 2 (AW7 Summary): " + errAwAz.message);
       }
@@ -162,9 +171,19 @@ function doPost(e) {
         sent_tin1: sentColC,
         sent_tin2: sentAwAz
       });
+
     }
 
     if (action === "process_aw_az") {
+      // 🛡️ PM-100: Kiểm tra khung giờ trước khi xử lý AW7 qua POST
+      const _nowPaz = new Date();
+      const _hPaz   = parseInt(Utilities.formatDate(_nowPaz, "Asia/Rangoon", "H"), 10);
+      const _mPaz   = parseInt(Utilities.formatDate(_nowPaz, "Asia/Rangoon", "m"), 10);
+      const _inWinPaz = (_hPaz > 3 || (_hPaz === 3 && _mPaz >= 30)) && (_hPaz < 22 || (_hPaz === 22 && _mPaz <= 30));
+      if (!_inWinPaz) {
+        Logger.log("[doPost/process_aw_az] 🌙 Ngoài khung giờ " + _hPaz + ":" + (_mPaz < 10 ? "0" : "") + _mPaz + " MMT — Bỏ qua AW7!");
+        return _json({ ok: false, msg: "Outside active window (03:30-22:30 MMT)", skipped: true });
+      }
       const ss    = SpreadsheetApp.openById(SD_SHEET_ID);
       const sheet = getSheetByGid(ss, SD_SHEET_GID);
       if (!sheet) return _json({ ok: false, msg: "Sheet not found" });
@@ -182,7 +201,13 @@ function doPost(e) {
       SpreadsheetApp.flush();
       try { lock.releaseLock(); } catch(eLock) {}
       const sent1 = processSiteDownColC(sheet, true);
-      const sent2 = processSummaryAwAz(sheet, false);
+      // 🛡️ PM-100: AW7 chỉ gửi trong giờ hoạt động
+      const _nowSdn = new Date();
+      const _hSdn   = parseInt(Utilities.formatDate(_nowSdn, "Asia/Rangoon", "H"), 10);
+      const _mSdn   = parseInt(Utilities.formatDate(_nowSdn, "Asia/Rangoon", "m"), 10);
+      const _inWinSdn = (_hSdn > 3 || (_hSdn === 3 && _mSdn >= 30)) && (_hSdn < 22 || (_hSdn === 22 && _mSdn <= 30));
+      const sent2 = _inWinSdn ? processSummaryAwAz(sheet, false) : false;
+      if (!_inWinSdn) Logger.log("[doPost/send_site_down_now] 🌙 Ngoài giờ — bỏ AW7");
       return _json({ ok: true, sent_tin1: sent1, sent_tin2: sent2 });
     }
 
@@ -305,20 +330,13 @@ function doGet(e) {
 
     // ── Kích hoạt / Kiểm tra GAS 1-Minute Train (Hỗ trợ cả 2 alias) ──────
     if (action === "setup_gas_train_1min" || action === "setup_gas_train") {
-      const deleted = [];
-      ScriptApp.getProjectTriggers().forEach(t => {
-        const fn = t.getHandlerFunction();
-        if (fn === "checkAndSend_1min" || fn === "checkAndSend") {
-          ScriptApp.deleteTrigger(t);
-          deleted.push(fn);
-        }
-      });
-      ScriptApp.newTrigger("checkAndSend_1min")
-        .timeBased()
-        .everyMinutes(1)
-        .create();
+      // ✅ PM-100 BUG#6: Dùng ensureGasTrain1min_() thay vì delete+create mỗi lần gọi!
+      // Lý do: Keepalive gọi endpoint này mỗi 5 phút → trigger cũ bị xóa+tạo liên tục
+      // → khoảng trống không có trigger, mất checkAndSend_1min trong vài giây.
+      // Fix: ensureGasTrain1min_() chỉ hành động nếu không có đúng 1 trigger khỏe mạnh.
+      ensureGasTrain1min_();
       const remaining = ScriptApp.getProjectTriggers().map(t => t.getHandlerFunction());
-      return _json({ ok: true, action: "setup_gas_train_1min", deleted: deleted, triggers: remaining, msg: "GAS 1-min train active!" });
+      return _json({ ok: true, action: "setup_gas_train_1min", triggers: remaining, msg: "GAS 1-min train ensured (idempotent)!" });
     }
 
     if (action === "status_gas_train") {
@@ -523,8 +541,17 @@ function processSiteDownColC(sheet, isDirectPush) {
   props.setProperty("SD_LAST_SENT_SLOT", sentSlot);
   Logger.log("[Luồng A1] ✅ Hoàn tất gửi Tin 1!");
 
-  // ⏱️ LIÊN KẾT BOT 5T -> BOT 2D: Đợi đúng 30 giây rồi kích hoạt Bot 2D phát tin ETA Update
-  triggerBot2dEta_();
+  // ⚡ PM-100 BUG#4: Fire-and-forget Bot 2D ETA — KHÔNG sleep(30s) để tránh GAS timeout!
+  // Lý do: triggerBot2dEta_() có Utilities.sleep(30000) gây blocking doPost/trigger path 30+ giây.
+  // Giải pháp: gọi trực tiếp URL fetch không chờ delay; Bot 2D có logic riêng để gửi đúng timing.
+  try {
+    UrlFetchApp.fetch("https://tni-bot.vercel.app/api/search_bot?action=send_eta_reminders", {
+      method: "get", muteHttpExceptions: true
+    });
+    Logger.log("[Luồng A1] ⚡ ETA trigger fired (fire-and-forget, no 30s sleep).");
+  } catch(eEta) {
+    Logger.log("[Luồng A1] ⚠️ ETA trigger lỗi (non-blocking): " + eEta.message);
+  }
 
   return true;
 }
@@ -588,6 +615,16 @@ function processSummaryAwAz(sheet, isDirectPush) {
 
     if (!tsKey) {
       Logger.log("[Luồng AW7] Không bóc tách được timestamp từ AW7 — Bỏ qua Luồng 2");
+      return false;
+    }
+
+    // ✅ PM-100 BUG#5: FRESHNESS CHECK — Chặn tuyệt đối gửi tin cũ ngày hôm qua!
+    // Khi ScriptProperties bị reset (lastSig="") và AW7 còn timestamp hôm qua
+    // → sigKey ≠ lastSig → GỬI TIN CŨ. Fix: so sánh ngày trước khi xử lý.
+    const todayMmt = Utilities.formatDate(new Date(), "Asia/Rangoon", "dd/MM/yyyy");
+    const tsKeyDate = tsKey.substring(0, 10); // "dd/MM/yyyy"
+    if (tsKeyDate !== todayMmt) {
+      Logger.log("[Luồng AW7] 🚫 FRESHNESS GUARD: Dữ liệu AW7 KHÔNG phải hôm nay! (" + tsKeyDate + " vs hôm nay " + todayMmt + ") — Chặn tuyệt đối, KHÔNG gửi tin cũ!");
       return false;
     }
 
