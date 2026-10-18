@@ -13116,16 +13116,20 @@ document.addEventListener("DOMContentLoaded", function() {
           var firstText = r.aw || r.ax || r.ay || r.az || '';
           var titleMatch = firstText.match(/^([^:=]+)[:=]/);
           var rowTitle = titleMatch ? titleMatch[1].replace(/[*]/g, '').trim() : ('Dòng ' + r.row);
+          var isDoorRow = (r.row === 15) || rowTitle.toLowerCase().indexOf('door') !== -1;
+          if (isDoorRow) {
+            rowTitle = 'Door Alarm';
+          }
 
           html += `
-            <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:0.9rem; transition:border-color 0.2s;" onmouseover="this.style.borderColor='rgba(56,189,248,0.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'">
+            <div style="background:rgba(30,41,59,0.7); border:1px solid ${isDoorRow ? 'rgba(20,184,166,0.35)' : 'rgba(255,255,255,0.08)'}; border-radius:12px; padding:0.9rem; transition:border-color 0.2s;" onmouseover="this.style.borderColor='${isDoorRow ? 'rgba(20,184,166,0.6)' : 'rgba(56,189,248,0.4)'}'" onmouseout="this.style.borderColor='${isDoorRow ? 'rgba(20,184,166,0.35)' : 'rgba(255,255,255,0.08)'}'">
               <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.5rem; margin-bottom:0.7rem;">
                 <div style="font-weight:800; font-size:0.86rem; color:#F8FAFC; display:flex; align-items:center; gap:0.5rem;">
-                  <span style="background:rgba(56,189,248,0.2); color:#38BDF8; padding:0.15rem 0.5rem; border-radius:5px; font-size:0.72rem; font-family:monospace;">Row ${r.row}</span>
-                  <span style="color:#fff;">${rowTitle}</span>
+                  <span style="background:${isDoorRow ? 'rgba(20,184,166,0.22)' : 'rgba(56,189,248,0.2)'}; color:${isDoorRow ? '#2dd4bf' : '#38BDF8'}; padding:0.15rem 0.5rem; border-radius:5px; font-size:0.72rem; font-family:monospace;">Row ${r.row}</span>
+                  <span style="color:#fff;">${isDoorRow ? '🚪 ' : ''}${rowTitle}</span>
                 </div>
                 <div style="font-size:0.7rem; color:#94A3B8;">
-                  Google Sheet Range: <b style="color:var(--cyan);">AW${r.row}..AZ${r.row}</b>
+                  Google Sheet Range: <b style="color:${isDoorRow ? '#2dd4bf' : 'var(--cyan)'};">AW${r.row}..AZ${r.row}</b>
                 </div>
               </div>
 
@@ -13164,7 +13168,8 @@ document.addEventListener("DOMContentLoaded", function() {
         }
         var text = '📊 BÁO CÁO CẢNH BÁO AW7..AZ16 TANINTHARYI REGION (MỐC: ' + (state.data.matrixTimestamp || '') + ')\n\n';
         state.data.rawMatrixRows.forEach(function(r) {
-          text += '=== DÒNG ROW ' + r.row + ' ===\n';
+          var title = (r.row === 15 || (r.aw && r.aw.toLowerCase().indexOf('door') !== -1)) ? 'DÒNG ROW 15 (Door Alarm)' : ('DÒNG ROW ' + r.row);
+          text += '=== ' + title + ' ===\n';
           if (r.aw) text += '[T1 Dawei - AW]: ' + r.aw + '\n';
           if (r.ax) text += '[T2 Myeik - AX]: ' + r.ax + '\n';
           if (r.ay) text += '[T3 Bokpyin - AY]: ' + r.ay + '\n';
@@ -13203,6 +13208,23 @@ document.addEventListener("DOMContentLoaded", function() {
           })
           .then(function(json) {
             if (json && json.status === 'ok') {
+              if (json.rawMatrixRows) {
+                var hasR15 = json.rawMatrixRows.some(function(r) { return r.row === 15; });
+                if (!hasR15) {
+                  var d1 = (json.metrics && json.metrics.door && json.metrics.door.teams && json.metrics.door.teams.team1 && json.metrics.door.teams.team1.raw) || 'Door: /0 =';
+                  var d2 = (json.metrics && json.metrics.door && json.metrics.door.teams && json.metrics.door.teams.team2 && json.metrics.door.teams.team2.raw) || 'Door: /0 =';
+                  var d3 = (json.metrics && json.metrics.door && json.metrics.door.teams && json.metrics.door.teams.team3 && json.metrics.door.teams.team3.raw) || 'Door: /0 =';
+                  var d4 = (json.metrics && json.metrics.door && json.metrics.door.teams && json.metrics.door.teams.team4 && json.metrics.door.teams.team4.raw) || 'Door: /0 =';
+                  json.rawMatrixRows.push({
+                    row: 15,
+                    aw: d1,
+                    ax: d2,
+                    ay: d3,
+                    az: d4
+                  });
+                  json.rawMatrixRows.sort(function(a, b) { return a.row - b.row; });
+                }
+              }
               if (!json.fourTeamsSummary && json.rawMatrixRows) {
                 json.fourTeamsSummary = buildFourTeamsSummary(json.rawMatrixRows, json.matrixTimestamp);
               }
@@ -13300,6 +13322,24 @@ document.addEventListener("DOMContentLoaded", function() {
           }
         }
 
+        // Guarantee Row 15 (Door Alarm) is always present right under Row 14 (Smoke)
+        var hasRow15 = rawMatrixRows.some(function(r) { return r.row === 15; });
+        if (!hasRow15) {
+          var r15_row = (rows.length > 14) ? rows[14] : [];
+          var r15_aw = (r15_row[48] || '').trim();
+          var r15_ax = (r15_row[49] || '').trim();
+          var r15_ay = (r15_row[50] || '').trim();
+          var r15_az = (r15_row[51] || '').trim();
+          rawMatrixRows.push({
+            row: 15,
+            aw: r15_aw || 'Door: /0 =',
+            ax: r15_ax || 'Door: /0 =',
+            ay: r15_ay || 'Door: /0 =',
+            az: r15_az || 'Door: /0 ='
+          });
+          rawMatrixRows.sort(function(a, b) { return a.row - b.row; });
+        }
+
         // Parse AW..AZ
         for (var r = 6; r < Math.min(35, rows.length); r++) {
           var row = rows[r];
@@ -13351,6 +13391,17 @@ document.addEventListener("DOMContentLoaded", function() {
             metrics[mKey].total += cnt;
           }
         }
+
+        // Ensure door metric has default values if not found in sheet
+        TEAM_KEYS.forEach(function(tk) {
+          if (!metrics['door'].teams[tk].raw) {
+            var r15_item = rawMatrixRows.find(function(r) { return r.row === 15; });
+            var colKeyMap = { 'team1': 'aw', 'team2': 'ax', 'team3': 'ay', 'team4': 'az' };
+            var dVal = r15_item ? (r15_item[colKeyMap[tk]] || 'Door: /0 =') : 'Door: /0 =';
+            metrics['door'].teams[tk].raw = dVal;
+            metrics['door'].teams[tk].count = 0;
+          }
+        });
 
         // Parse Active Sites from Col C
         var active_sites = [];
@@ -13458,7 +13509,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 if (cat.key === 'link_down' && testText.indexOf('link down') !== -1) { rowObj = rawMatrixRows[r]; break; }
                 if (cat.key === 'batt_temp_high' && (testText.indexOf('battery') !== -1 || testText.indexOf('temp') !== -1)) { rowObj = rawMatrixRows[r]; break; }
                 if (cat.key === 'smoke' && testText.indexOf('smoke') !== -1) { rowObj = rawMatrixRows[r]; break; }
-                if (cat.key === 'door' && testText.indexOf('door') !== -1) { rowObj = rawMatrixRows[r]; break; }
+                if (cat.key === 'door' && (testText.indexOf('door') !== -1 || rawMatrixRows[r].row === 15)) { rowObj = rawMatrixRows[r]; break; }
               }
             }
             if (!rowObj && rawMatrixRows) {
@@ -13466,6 +13517,9 @@ document.addEventListener("DOMContentLoaded", function() {
             }
             rowObj = rowObj || {};
             var rawText = (rowObj[cKey] || '').trim();
+            if (!rawText && cat.key === 'door') {
+              rawText = 'Door: /0 =';
+            }
 
             if (!ts && rawText) {
               var mTs = rawText.match(/(\d{1,2}\/\d{1,2}\/\d{2,4}\s+\d{1,2}:\d{1,2})/);

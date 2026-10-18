@@ -374,6 +374,12 @@ def get_site_down_stats():
                 metrics[metric_key]["teams"][tk]["items"] = items
                 metrics[metric_key]["total"] += cnt
 
+        # Ensure door metric is populated with default Door: /0 = if row was not in sheet
+        for tk in TEAM_ORDER:
+            if not metrics["door"]["teams"][tk]["raw"]:
+                metrics["door"]["teams"][tk]["raw"] = "Door: /0 ="
+                metrics["door"]["teams"][tk]["count"] = 0
+
         # 3. Parse Active Site Down list from Col C
         for r_idx in range(len(rows)):
             row = rows[r_idx]
@@ -483,6 +489,23 @@ def get_site_down_stats():
                     "ay": ay,
                     "az": az
                 })
+
+        # Ensure Row 15 (Door Alarm) is always present right under Row 14 (Smoke)
+        has_row_15 = any(r["row"] == 15 for r in raw_matrix_rows)
+        if not has_row_15:
+            r15_row = rows[14] if len(rows) > 14 else []
+            r15_aw = str(r15_row[48]).strip() if len(r15_row) > 48 else ""
+            r15_ax = str(r15_row[49]).strip() if len(r15_row) > 49 else ""
+            r15_ay = str(r15_row[50]).strip() if len(r15_row) > 50 else ""
+            r15_az = str(r15_row[51]).strip() if len(r15_row) > 51 else ""
+            raw_matrix_rows.append({
+                "row": 15,
+                "aw": r15_aw or metrics["door"]["teams"]["team1"]["raw"] or "Door: /0 =",
+                "ax": r15_ax or metrics["door"]["teams"]["team2"]["raw"] or "Door: /0 =",
+                "ay": r15_ay or metrics["door"]["teams"]["team3"]["raw"] or "Door: /0 =",
+                "az": r15_az or metrics["door"]["teams"]["team4"]["raw"] or "Door: /0 ="
+            })
+            raw_matrix_rows.sort(key=lambda x: x["row"])
 
         return {
             "status": "ok",
