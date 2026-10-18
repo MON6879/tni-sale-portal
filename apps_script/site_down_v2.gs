@@ -284,6 +284,16 @@ function doGet(e) {
 
     // ── Xử lý Luồng AW7 Summary (Tin 2) qua GET ─────────────────────────
     if (action === "process_aw_az") {
+      // 🛡️ PM-99: Kiểm tra khung giờ hoạt động 03:30–22:30 MMT trước khi xử lý AW7
+      // Keepalive gọi endpoint này MỌI 5 phút (kể cả 23:53) → phải chặn ngoài giờ ở đây
+      const _nowAw = new Date();
+      const _hAw   = parseInt(Utilities.formatDate(_nowAw, "Asia/Rangoon", "H"), 10);
+      const _mAw   = parseInt(Utilities.formatDate(_nowAw, "Asia/Rangoon", "m"), 10);
+      const _inWin = (_hAw > 3 || (_hAw === 3 && _mAw >= 30)) && (_hAw < 22 || (_hAw === 22 && _mAw <= 30));
+      if (!_inWin) {
+        Logger.log("[doGet/process_aw_az] 🌙 Ngoài khung giờ " + _hAw + ":" + (_mAw < 10 ? "0" : "") + _mAw + " MMT — Bỏ qua AW7, không gửi tin cũ!");
+        return _json({ ok: false, msg: "Outside active window (03:30-22:30 MMT)", skipped: true });
+      }
       ensureGasTrain1min_();
       const ss    = SpreadsheetApp.openById(SD_SHEET_ID);
       const sheet = getSheetByGid(ss, SD_SHEET_GID);
@@ -1344,16 +1354,21 @@ function triggerBotlookupRelay() {
 function ensureGasTrain1min_() {
   try {
     const triggers = ScriptApp.getProjectTriggers();
-    const has1min = triggers.some(t => t.getHandlerFunction() === "checkAndSend_1min");
-    if (!has1min) {
-      ScriptApp.newTrigger("checkAndSend_1min")
-        .timeBased()
-        .everyMinutes(1)
-        .create();
-      Logger.log("[ensureGasTrain1min_] 🔄 Đã tự động phục hồi trigger 1 phút checkAndSend_1min!");
+    const mins1 = triggers.filter(t => t.getHandlerFunction() === "checkAndSend_1min");
+    if (mins1.length === 1) {
+      // Đúng 1 trigger — hoàn hảo, không làm gì để tránh tạo trùng
+      return;
     }
+    // 🛡️ PM-99: Nếu 0 hoặc >1 trigger → xóa hết, tạo lại đúng 1 cái duy nhất
+    // Tránh race condition: nhiều trigger chạy đồng thời làm DEDUP mất tác dụng
+    mins1.forEach(t => { try { ScriptApp.deleteTrigger(t); } catch(ed) {} });
+    ScriptApp.newTrigger("checkAndSend_1min")
+      .timeBased()
+      .everyMinutes(1)
+      .create();
+    Logger.log("[ensureGasTrain1min_] 🔄 Đã đồng bộ trigger 1 phút (xóa " + mins1.length + " cũ, tạo 1 mới).");
   } catch (err) {
-    Logger.log("[ensureGasTrain1min_] ⚠️ Lỗi tạo trigger 1 phút: " + err.message);
+    Logger.log("[ensureGasTrain1min_] ⚠️ Lỗi đồng bộ trigger 1 phút: " + err.message);
   }
 }
 
