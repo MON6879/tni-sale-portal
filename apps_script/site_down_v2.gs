@@ -506,15 +506,16 @@ function processSiteDownColC(sheet, isDirectPush) {
 
   // ⚡ PM-100-v2: Trigger Bot 2D ETA TRƯỚC khi gửi Tin 1 (5T)
   // Yêu cầu: cột A cập nhật mới → 2D gửi ETA trước → 5T gửi Site Down sau
+  // ⚠️ PM-103 FIX: deadline:5s để tránh block 5T tối đa 60s (GAS default timeout gây mất 5T)
   try {
     UrlFetchApp.fetch("https://tni-bot.vercel.app/api/search_bot?action=send_eta_reminders", {
-      method: "get", muteHttpExceptions: true
+      method: "get", muteHttpExceptions: true, deadline: 5
     });
-    Logger.log("[Luồng A1] ⚡ Bot 2D ETA triggered TRƯỚC Tin 1. Sleep 3s...");
+    Logger.log("[Luồng A1] ⚡ Bot 2D ETA triggered TRƯỚC Tin 1 (deadline=5s). Sleep 1s → gửi Tin 1...");
   } catch(eEta) {
-    Logger.log("[Luồng A1] ⚠️ 2D ETA trigger lỗi (tiếp tục gửi Tin 1): " + eEta.message);
+    Logger.log("[Luồng A1] ⚠️ 2D ETA trigger timeout/lỗi (tiếp tục gửi Tin 1 ngay): " + eEta.message);
   }
-  Utilities.sleep(3000); // ⏳ Nhường 3 giây head start cho Bot 2D xuất hiện trước trong nhóm
+  Utilities.sleep(1000); // ⏳ Chỉ 1 giây head start (tránh delay quá lớn làm hỏng trigger 1min)
 
   // 1. Gửi nhóm CONTROL (Header C1:C2 + C10:C liên tục, không tách bảng Team, chỉ gắn icon màu)
   const controlId = SD_GROUPS["CONTROL"];
