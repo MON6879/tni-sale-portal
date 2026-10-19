@@ -631,36 +631,29 @@ function processSummaryAwAz(sheet, isDirectPush) {
     // ✅ Đọc trực tiếp bảng AW:AZ và kiểm tra signature trạm
     let awaz = readAwAz(sheet);
 
-    // 🛑 DEDUP BẢO VỆ KÉP (RULE PM-83 + RULE PM-91):
-    // 1. Chống gửi lại liên tục do nhảy số Duration (PM-83): Tuyệt đối KHÔNG so sánh chuỗi số giờ nhảy.
-    // 2. Chống bỏ sót trạm cập nhật mới/bổ sung (PM-91): Trích xuất signature gồm:
-    //    Mốc giờ + Tổng số trạm khai báo từng Team + Danh sách mã trạm TNIxxxx.
-    const allSites = (awaz || []).map(r => (r || []).join(" ")).join(" ").match(/TNI\d{4}/g) || [];
-    const sitesSig = Array.from(new Set(allSites)).sort().join(",");
-    const counts = (awaz || []).map(function(r) {
-      return (r || []).map(function(c) {
-        var cm = String(c || "").match(/=\s*\/([0-9]+)\s*=/);
-        return cm ? cm[1] : "0";
-      }).join(",");
-    }).join(";");
-    const sigKey = tsKey + "__CNT:" + counts + "__SITES:" + sitesSig;
+    // 🛑 DEDUP ĐƠN GIẢN — RULE PM-102 (19/10/2026):
+    // Chỉ dùng tsKey (mốc giờ AW7) làm chìa khóa dedup.
+    // Lý do bỏ counts/sitesSig: Sheet AW:AZ có công thức tính lại duration theo phút
+    // → counts nhảy số liên tục dù AW7 không có data mới → false resend.
+    // Nguyên tắc: AW7 timestamp đổi = data mới → gửi; timestamp không đổi → KHÔNG gửi.
+    const sigKey = tsKey;  // ONLY timestamp
 
     const props   = PropertiesService.getScriptProperties();
     const lastSig = props.getProperty(TS_KEY_AW7) || "";
 
-    Logger.log("[Luồng AW7] sigKey=[" + sigKey + "] lastSig=[" + lastSig + "] match=" + (sigKey === lastSig));
+    Logger.log("[Luồng AW7] tsKey=[" + tsKey + "] lastSig=[" + lastSig + "] match=" + (sigKey === lastSig));
 
     if (sigKey === lastSig && !isDirectPush) {
-      Logger.log("[Luồng AW7] Dữ liệu AW7 chưa đổi (Mốc giờ & Trạm không đổi) → Chặn 100%, bỏ qua Luồng 2");
+      Logger.log("[Luồng AW7] ⛔ AW7 timestamp chưa đổi (" + tsKey + ") → Chặn 100%, bỏ qua. Không gửi tin cũ!");
       return false;
     }
 
-    // ✅ Có mốc giờ mới hoặc danh sách trạm thay đổi → gửi ngay!
-    Logger.log("[Luồng AW7] 🆕 AW7 có dữ liệu mới/thay đổi: " + sigKey + " (cũ: " + lastSig + ") → Gửi ngay!");
+    // ✅ Có mốc giờ AW7 mới → gửi ngay!
+    Logger.log("[Luồng AW7] 🆕 AW7 timestamp mới: " + sigKey + " (cũ: " + lastSig + ") → Gửi ngay!");
 
-    // ✅ ĐỘC LẬP: Lưu ngay khóa signature AW7
+    // ✅ ĐỘC LẬP: Lưu ngay khóa timestamp AW7
     props.setProperty(TS_KEY_AW7, sigKey);
-    Logger.log("[Luồng AW7] 🆕 Đã lưu khóa TS_KEY_AW7: " + sigKey + " → Đang xử lý Tin 2 (SUMMARY)...");
+    Logger.log("[Luồng AW7] ✅ Đã lưu TS_KEY_AW7: " + sigKey);
 
     const teams = ["T1", "T2", "T3", "T4"];
     let sentCount = 0;
