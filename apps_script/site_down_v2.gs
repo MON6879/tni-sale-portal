@@ -504,6 +504,18 @@ function processSiteDownColC(sheet, isDirectPush) {
     T4: colC[6] || "🟡 Team 4",
   };
 
+  // ⚡ PM-100-v2: Trigger Bot 2D ETA TRƯỚC khi gửi Tin 1 (5T)
+  // Yêu cầu: cột A cập nhật mới → 2D gửi ETA trước → 5T gửi Site Down sau
+  try {
+    UrlFetchApp.fetch("https://tni-bot.vercel.app/api/search_bot?action=send_eta_reminders", {
+      method: "get", muteHttpExceptions: true
+    });
+    Logger.log("[Luồng A1] ⚡ Bot 2D ETA triggered TRƯỚC Tin 1. Sleep 3s...");
+  } catch(eEta) {
+    Logger.log("[Luồng A1] ⚠️ 2D ETA trigger lỗi (tiếp tục gửi Tin 1): " + eEta.message);
+  }
+  Utilities.sleep(3000); // ⏳ Nhường 3 giây head start cho Bot 2D xuất hiện trước trong nhóm
+
   // 1. Gửi nhóm CONTROL (Header C1:C2 + C10:C liên tục, không tách bảng Team, chỉ gắn icon màu)
   const controlId = SD_GROUPS["CONTROL"];
   if (controlId) {
@@ -539,19 +551,7 @@ function processSiteDownColC(sheet, isDirectPush) {
   const now = new Date();
   const sentSlot = Utilities.formatDate(now, "Asia/Rangoon", "yyyyMMddHH") + (now.getMinutes() < 30 ? "_00" : "_30");
   props.setProperty("SD_LAST_SENT_SLOT", sentSlot);
-  Logger.log("[Luồng A1] ✅ Hoàn tất gửi Tin 1!");
-
-  // ⚡ PM-100 BUG#4: Fire-and-forget Bot 2D ETA — KHÔNG sleep(30s) để tránh GAS timeout!
-  // Lý do: triggerBot2dEta_() có Utilities.sleep(30000) gây blocking doPost/trigger path 30+ giây.
-  // Giải pháp: gọi trực tiếp URL fetch không chờ delay; Bot 2D có logic riêng để gửi đúng timing.
-  try {
-    UrlFetchApp.fetch("https://tni-bot.vercel.app/api/search_bot?action=send_eta_reminders", {
-      method: "get", muteHttpExceptions: true
-    });
-    Logger.log("[Luồng A1] ⚡ ETA trigger fired (fire-and-forget, no 30s sleep).");
-  } catch(eEta) {
-    Logger.log("[Luồng A1] ⚠️ ETA trigger lỗi (non-blocking): " + eEta.message);
-  }
+  Logger.log("[Luồng A1] ✅ Hoàn tất! Thứ tự: Bot 2D ETA trước → Tin 1 (5T) sau.");
 
   return true;
 }
