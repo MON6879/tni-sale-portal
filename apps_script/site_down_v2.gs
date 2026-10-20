@@ -89,7 +89,11 @@ function handleTelegramWebhook_(data) {
 function doPost(e) {
   const lock = LockService.getScriptLock();
   try {
-    lock.tryLock(8000);
+    // PM-105 BUG-A FIX: tryLock() tra false khi ban, KHONG throw exception!
+    if (!lock.tryLock(8000)) {
+      Logger.log('[doPost] ⏳ Lock ban (8s) -> Bo qua tranh race condition ghi Col A');
+      return _json({ ok: false, msg: 'Lock busy, retry next cycle' });
+    }
     const data = JSON.parse(e.postData.contents);
 
     if (data.update_id !== undefined && !data.action) {
@@ -131,7 +135,7 @@ function doPost(e) {
       if (relayTs > 0) props.setProperty("SD_LAST_RELAY_TS", relayTs.toString());
 
       SpreadsheetApp.flush();
-      try { lock.releaseLock(); } catch(eLock) {} // ✅ Nhả lock ngay
+      // PM-105 BUG-B FIX: Khong nha lock som! Giu lock den het processSiteDownColC doc sheet
 
       Utilities.sleep(5000); // ⏱️ Chờ đúng 5s + flush để Google Sheets hoàn tất 100% tính toán đồng bộ công thức Cột C
       SpreadsheetApp.flush();
