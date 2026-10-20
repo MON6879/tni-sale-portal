@@ -1827,21 +1827,22 @@ Mọi thao tác cài đặt hoặc khôi phục Webhook Telegram đều phải �
 >    - Khi nhân viên lưu phiếu ký gởi hàng cho trưởng thôn hoặc đại lý, hệ thống BẮT BUỘC tự động tách dải số Serial và cập nhật trạng thái `"Ký Gởi Trưởng Thôn / Điểm Bán"` vào bảng Tồn Kho Serial (`serial_inventory`).
 >    - Khi người dùng truy cập qua URL param `?tab=thucthi&staff=...`, hệ thống BẮT BUỘC tự động chuyển hướng vào tab Thực Thi và chọn đúng nhân viên phụ trách mà không cần thao tác bấm chuột thủ công.
 
-# ⛽ POST-MORTEM RULE — 18/09/2026: BỌC THÉP ĐỒNG BỘ CỘT V & Y TRÊN TAB REQUEST PARTNER AUTO (REFUEL) (RULE PM-45)
+# ⛽ POST-MORTEM RULE — 20/10/2026: CẤM TUYỆT ĐỐI GHI ĐÈ CÔNG THỨC CỘT Y & CHỈ THAO TÁC TRÊN CỘT V:W TAB REQUEST PARTNER AUTO (RULE PM-45 UPDATED)
 
-> ### Nguồn gốc: **Khắc Phục Sự Cố Ô Màu Cam Cột V 'Request Partner Auto' (18/09/2026)**
+> ### Nguồn gốc: **Khắc Phục Lỗi Ghi Đè Giá Trị `"123"` (`"-"`) Làm Mất Công Thức Cột Y 'Request Partner Auto' (20/10/2026)**
 > - **Root Cause**:
->   1. Khi trạm cạn dầu (`S=1`), nếu Cột Y (`Date Partner refuel`) vô tình chứa chuỗi ghi chú rác hoặc ngày cũ/tương lai (ví dụ: `14/02/2027 < + > 91` trên dòng 70 `TNI0351_1`), logic cũ trong `runPartnerAutoRefuelUpdate` (Tác vụ 1) vội vàng gọi `clearContent()` xóa Cột V và W, đồng thời đánh dấu `clearedInThisRun = true` khiến Tác vụ 2 bỏ qua dòng này.
->   2. Hậu quả: Cột V bị xóa rỗng trong khi Cột S vẫn là `1`, khiến Conditional Formatting trong Google Sheets lập tức bôi cam ô V, tạo vòng lặp xóa - bôi cam và khiến AUDITOR-9.1 liên tục phát cảnh báo mất đồng bộ đỏ!
+>   1. Trước đây, `runPartnerAutoRefuelUpdate` tự ý gọi `sheet.getRange(sheetRow, 25).setValue("-")` khi `S=1` và `Y <> "-"`, làm ghi đè giá trị tĩnh `"-"` (paste 123) xóa mất công thức động tại Cột Y (`Y19, Y63, Y65, Y73, Y79, Y87, Y91, Y141, Y145`).
+>   2. Đồng thời, việc dùng `clearedInThisRun = true` hoặc chặn `sVal !== "1"` ngăn cản quy trình tự nhiên: xóa yêu cầu cũ trên `V:W` (Tác vụ 1) rồi cập nhật ngày yêu cầu mới hôm nay vào `V:W` cho các trạm đang cần dầu `S=1` (Tác vụ 2).
 >
-> ### 🔴 RULE PM-45: 3 NGUYÊN TẮC BỌC THÉP CHO BẢNG REQUEST PARTNER AUTO
-> 1. **Bảo Vệ Cột V và W Khi Trạm Đang Cạn Dầu (`S=1`)**:
->    - TUYỆT ĐỐI KHÔNG xóa dữ liệu Cột V (Date request) và Cột W (Littel request) của bất kỳ trạm nào đang có trạng thái `S === 1` (hoặc `"1"`).
->    - Chỉ cho phép xóa Cột V và W khi và chỉ khi: (1) Cột Y có giá trị khác `"-"` VÀ (2) Trạm đã thực sự hoàn thành chu kỳ đổ dầu (`S !== "1"`, tức lượng dầu trong bồn đã được bổ sung và cờ S tắt về 0).
-> 2. **Tự Động Làm Sạch Cột Y Khi Phát Hiện Chuỗi Rác / Lệch Trạng Thái**:
->    - Nếu trạm đang ở trạng thái cần dầu (`S === 1`) mà Cột Y lại chứa giá trị khác `"-"` (ghi chú nhầm, ngày cũ hoặc ngày tương lai), hệ thống BẮT BUỘC phải tự động ghi đè reset Cột Y về `"-"` (`sheet.getRange(sheetRow, 25).setValue("-")`) để chuẩn hóa trạng thái chờ đối tác đổ dầu.
+> ### 🔴 RULE PM-45 (BẢN CHUẨN 20/10/2026): 3 NGUYÊN TẮC BỌC THÉP CHO BẢNG REQUEST PARTNER AUTO
+> 1. **Cấm Tuyệt Đối Đụng Vào Cột Y (Zero Write/Clear on Formula Column Y)**:
+>    - Cột Y (`Date Partner refuel`, từ `Y7:Y325`) chứa công thức điều kiện `=if(V7="","-", TEXTJOIN(...)&if(S7=0,"not Count",""))`.
+>    - Hàm `runPartnerAutoRefuelUpdate` **CHỈ ĐƯỢC ĐỌC** giá trị hiển thị của Cột Y để xét điều kiện xóa Cột `V:W`, **TUYỆT ĐỐI CẤM** dùng `setValue`, `clearContent` hay bất kỳ lệnh ghi nào vào Cột Y! Yêu cầu thao tác cột nào (`V`, `W`) thì chỉ làm đúng cột đó.
+> 2. **Chuẩn Hóa 2 Tác Vụ Tuần Tự Trên Cột V và W (Không Có Vòng Lặp)**:
+>    - **Tác vụ 1 (Xóa `V:W`)**: Quét từ dòng 7 đến dòng 325, nếu `Y <> "-"` (và không rỗng) thì xóa nội dung tương ứng tại Cột `V` và Cột `W` (`sheet.getRange(sheetRow, 22, 1, 2).clearContent()`). Khi `V` bị xóa rỗng (trường hợp `S=0`), công thức Cột Y tự động trả về `"-"`.
+>    - **Tác vụ 2 (Cập nhật `V:W`)**: Nếu Cột `V` có màu cam (bôi cam thủ công hoặc theo Conditional Formatting: `S=1`, `V` đang trống — bao gồm cả dòng vừa xóa `V` cũ ở Tác vụ 1 — và `X` không thuộc danh sách loại trừ) thì: (a) Dán giá trị ngày hôm nay vào `V`, (b) Xóa màu nền thủ công ở `V`, (c) Copy giá trị Cột `Q` dán vào `W`. Khi `V` nhận ngày mới hôm nay, công thức Cột Y lọc `X:X >= V_mới` tự động trả về `"-"`, hoàn toàn không xảy ra vòng lặp.
 > 3. **Hậu Kiểm Zero-Orange Của AUDITOR-9.1 Sau Mỗi Lượt Cập Nhật**:
->    - Sau khi hoàn thành Tác vụ 1 và Tác vụ 2, AUDITOR-9.1 quét lại toàn bộ Cột V (row 4 đến row 300). Nếu còn bất kỳ ô nào thuộc diện màu cam (`isManual` hoặc `isCF`), hệ thống gửi cảnh báo kèm danh sách trạm vi phạm; nếu bằng 0, ghi nhận trạng thái PASS hoàn hảo.
+>    - Sau khi hoàn thành Tác vụ 1 và Tác vụ 2, AUDITOR-9.1 quét lại toàn bộ Cột V (`row 7` đến `row 325`). Nếu còn bất kỳ ô nào thuộc diện màu cam (`isManual` hoặc `isCF`), hệ thống gửi cảnh báo; nếu bằng 0, ghi nhận trạng thái PASS hoàn hảo.
 
 
 # 🛡️ POST-MORTEM RULE — 18/09/2026: ASYNC-SAFE THREADPOOLEXECUTOR CHO TELETHON PURGE & FAST-FAIL HTTP TRONG HELPER (RULE PM-47)
