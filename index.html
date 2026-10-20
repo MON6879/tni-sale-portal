@@ -2610,19 +2610,141 @@ document.addEventListener('DOMContentLoaded', initGoogleAuthGate);
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
         <div>
           <div class="section-head" style="margin-bottom:0.2rem;"><i class="fa-solid fa-building"></i> Department Assignment Overview (Phòng Dep Tasks)</div>
-          <div style="font-size:0.8rem; color:var(--text-sub); font-weight:600;"><i class="fa-regular fa-clock"></i> Sheet Sync: <span class="sheet-sync-time" style="color:var(--cyan);">15/10/2026 14:57:04</span> | Total Active Tasks: <span style="color:var(--emerald);">355 Tasks Live</span></div>
+          <div style="font-size:0.8rem; color:var(--text-sub); font-weight:600;"><i class="fa-regular fa-clock"></i> Sheet Sync: <span class="sheet-sync-time" style="color:var(--cyan);">20/10/2026 Live</span> | Total Active Tasks: <span id="dept-total-live-count" style="color:var(--emerald);">269 Tasks Live</span></div>
         </div>
-        <div style="display:flex; gap:0.5rem; align-items:center;">
+        <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+          <button onclick="exportDeptAssignByTeamExcel()" class="filter-btn" style="padding:0.35rem 0.85rem; font-size:0.8rem; background:rgba(16,185,129,0.2); border:1px solid var(--emerald); color:#fff; cursor:pointer; font-weight:700;"><i class="fa-solid fa-file-excel"></i> 📥 Xuất File Tổng Hợp Từng Team (.xls)</button>
           <button onclick="refreshDeptAssignLive()" class="filter-btn" style="padding:0.35rem 0.8rem; font-size:0.8rem; background:rgba(56,189,248,0.2); border:1px solid var(--cyan); color:#fff; cursor:pointer;"><i class="fa-solid fa-rotate"></i> Đồng bộ Dữ liệu Live</button>
-          <span class="status-pill-check sp-verified" style="font-size:0.8rem;"><i class="fa-solid fa-circle-check"></i> 355 Tasks Synced</span>
+          <span id="dept-synced-badge" class="status-pill-check sp-verified" style="font-size:0.8rem;"><i class="fa-solid fa-circle-check"></i> 269 Tasks Synced</span>
         </div>
       </div>
 
-      <!-- Quick Filter Pills -->
-      <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem; background:rgba(30,41,59,0.5); padding:0.6rem 0.8rem; border-radius:8px; border:1px solid rgba(255,255,255,0.05);">
+      <!-- Bảng Tổng Hợp Từng Team Theo Phòng Ban (Team x Dept Summary Matrix) -->
+      <div class="card" style="margin-bottom:1rem; padding:0.9rem 1rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
+          <div style="font-size:0.9rem; font-weight:800; color:var(--cyan);"><i class="fa-solid fa-table-cells-large"></i> BẢNG TỔNG HỢP ĐẦU VIỆC TỪNG TEAM THEO PHÒNG BAN (CLICK ĐỂ LỌC NHANH)</div>
+          <div style="font-size:0.75rem; color:var(--text-sub);">Click vào số lượng hoặc tên Team để lọc danh sách chi tiết bên dưới</div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="data-table" id="dept-team-matrix-table" style="margin-bottom:0;">
+            <thead>
+              <tr>
+                <th style="text-align:left !important;">Team</th>
+                <th>M&amp;E</th>
+                <th>Manager</th>
+                <th>PM</th>
+                <th>Transmission</th>
+                <th>Finance</th>
+                <th>CM</th>
+                <th style="color:var(--cyan);">Tổng Đầu Việc</th>
+                <th style="color:var(--amber);">Tỷ Trọng</th>
+                <th style="color:#f87171;">Overdue</th>
+                <th style="color:#38bdf8;">In Progress</th>
+              </tr>
+            </thead>
+            <tbody id="dept-team-matrix-tbody">
+              <tr onclick="filterDeptTeamMatrix('ALL','Team 01')" style="cursor:pointer;">
+                <td style="text-align:left !important;"><span class="team-tag tag-t1">Team 01</span></td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('M&E','Team 01')" style="font-weight:700;">33</td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('Manager','Team 01')" style="font-weight:700;">26</td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('PM','Team 01')" style="font-weight:700;">53</td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('Transmission','Team 01')" style="font-weight:700;">16</td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('Finance','Team 01')" style="font-weight:700;">6</td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('CM','Team 01')" style="font-weight:700;">14</td>
+                <td style="font-weight:800; color:var(--cyan);">148</td>
+                <td style="color:var(--amber); font-weight:700;">55.0%</td>
+                <td style="color:#f87171; font-weight:700;">141</td>
+                <td style="color:#38bdf8; font-weight:700;">7</td>
+              </tr>
+              <tr onclick="filterDeptTeamMatrix('ALL','Team 02')" style="cursor:pointer;">
+                <td style="text-align:left !important;"><span class="team-tag tag-t2">Team 02</span></td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('M&E','Team 02')" style="font-weight:700;">16</td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('Manager','Team 02')" style="font-weight:700;">9</td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('PM','Team 02')" style="font-weight:700;">1</td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('Transmission','Team 02')" style="font-weight:700;">2</td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('Finance','Team 02')" style="font-weight:700;">10</td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('CM','Team 02')" style="font-weight:700;">4</td>
+                <td style="font-weight:800; color:var(--cyan);">42</td>
+                <td style="color:var(--amber); font-weight:700;">15.6%</td>
+                <td style="color:#f87171; font-weight:700;">32</td>
+                <td style="color:#38bdf8; font-weight:700;">10</td>
+              </tr>
+              <tr onclick="filterDeptTeamMatrix('ALL','Team 03')" style="cursor:pointer;">
+                <td style="text-align:left !important;"><span class="team-tag tag-t3">Team 03</span></td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('M&E','Team 03')" style="font-weight:700;">7</td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('Manager','Team 03')" style="font-weight:700;">8</td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('PM','Team 03')" style="font-weight:700;">0</td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('Transmission','Team 03')" style="font-weight:700;">11</td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('Finance','Team 03')" style="font-weight:700;">6</td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('CM','Team 03')" style="font-weight:700;">3</td>
+                <td style="font-weight:800; color:var(--cyan);">35</td>
+                <td style="color:var(--amber); font-weight:700;">13.0%</td>
+                <td style="color:#f87171; font-weight:700;">29</td>
+                <td style="color:#38bdf8; font-weight:700;">6</td>
+              </tr>
+              <tr onclick="filterDeptTeamMatrix('ALL','Team 04')" style="cursor:pointer;">
+                <td style="text-align:left !important;"><span class="team-tag tag-t4">Team 04</span></td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('M&E','Team 04')" style="font-weight:700;">11</td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('Manager','Team 04')" style="font-weight:700;">9</td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('PM','Team 04')" style="font-weight:700;">0</td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('Transmission','Team 04')" style="font-weight:700;">4</td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('Finance','Team 04')" style="font-weight:700;">5</td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('CM','Team 04')" style="font-weight:700;">0</td>
+                <td style="font-weight:800; color:var(--cyan);">29</td>
+                <td style="color:var(--amber); font-weight:700;">10.8%</td>
+                <td style="color:#f87171; font-weight:700;">24</td>
+                <td style="color:#38bdf8; font-weight:700;">5</td>
+              </tr>
+              <tr onclick="filterDeptTeamMatrix('ALL','Team 05')" style="cursor:pointer;">
+                <td style="text-align:left !important;"><span class="team-tag tag-all">Team 05</span></td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('M&E','Team 05')" style="font-weight:700;">13</td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('Manager','Team 05')" style="font-weight:700;">2</td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('PM','Team 05')" style="font-weight:700;">0</td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('Transmission','Team 05')" style="font-weight:700;">0</td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('Finance','Team 05')" style="font-weight:700;">0</td>
+                <td onclick="event.stopPropagation(); filterDeptTeamMatrix('CM','Team 05')" style="font-weight:700;">0</td>
+                <td style="font-weight:800; color:var(--cyan);">15</td>
+                <td style="color:var(--amber); font-weight:700;">5.6%</td>
+                <td style="color:#f87171; font-weight:700;">15</td>
+                <td style="color:#38bdf8; font-weight:700;">0</td>
+              </tr>
+              <tr onclick="filterDeptTeamMatrix('ALL','ALL')" style="cursor:pointer; background:rgba(56,189,248,0.08); font-weight:800;">
+                <td style="text-align:left !important; color:var(--cyan);">TỔNG CỘNG</td>
+                <td style="color:#fff;">80</td>
+                <td style="color:#fff;">54</td>
+                <td style="color:#fff;">54</td>
+                <td style="color:#fff;">33</td>
+                <td style="color:#fff;">27</td>
+                <td style="color:#fff;">21</td>
+                <td style="color:var(--emerald); font-size:0.95rem;">269</td>
+                <td style="color:var(--amber);">100%</td>
+                <td style="color:#f87171;">241</td>
+                <td style="color:#38bdf8;">28</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Quick Filter Pills: Dept + Team -->
+      <div id="dept-filter-pills-bar" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.6rem; background:rgba(30,41,59,0.5); padding:0.6rem 0.8rem; border-radius:8px; border:1px solid rgba(255,255,255,0.05);">
         <span style="font-size:0.8rem; color:var(--text-sub); font-weight:700; display:flex; align-items:center; margin-right:0.3rem;"><i class="fa-solid fa-filter" style="margin-right:0.35rem; color:var(--cyan);"></i> Filter Dept:</span>
-        <button class="filter-btn active" onclick="filterDeptTable('ALL', this)" style="padding:0.25rem 0.6rem; font-size:0.75rem;">All (355)</button>
-        <button class="filter-btn" onclick="filterDeptTable('M&E', this)" style="padding:0.25rem 0.6rem; font-size:0.75rem;">M&E (166)</button> <button class="filter-btn" onclick="filterDeptTable('Manager', this)" style="padding:0.25rem 0.6rem; font-size:0.75rem;">Manager (54)</button> <button class="filter-btn" onclick="filterDeptTable('PM', this)" style="padding:0.25rem 0.6rem; font-size:0.75rem;">PM (54)</button> <button class="filter-btn" onclick="filterDeptTable('Transmission', this)" style="padding:0.25rem 0.6rem; font-size:0.75rem;">Transmission (33)</button> <button class="filter-btn" onclick="filterDeptTable('Finance', this)" style="padding:0.25rem 0.6rem; font-size:0.75rem;">Finance (27)</button> <button class="filter-btn" onclick="filterDeptTable('CM', this)" style="padding:0.25rem 0.6rem; font-size:0.75rem;">CM (21)</button>
+        <button class="filter-btn dept-pill active" data-dept-filter="ALL" onclick="filterDeptTable('ALL', this)" style="padding:0.25rem 0.6rem; font-size:0.75rem;">All (269)</button>
+        <button class="filter-btn dept-pill" data-dept-filter="M&E" onclick="filterDeptTable('M&E', this)" style="padding:0.25rem 0.6rem; font-size:0.75rem;">M&amp;E (80)</button>
+        <button class="filter-btn dept-pill" data-dept-filter="Manager" onclick="filterDeptTable('Manager', this)" style="padding:0.25rem 0.6rem; font-size:0.75rem;">Manager (54)</button>
+        <button class="filter-btn dept-pill" data-dept-filter="PM" onclick="filterDeptTable('PM', this)" style="padding:0.25rem 0.6rem; font-size:0.75rem;">PM (54)</button>
+        <button class="filter-btn dept-pill" data-dept-filter="Transmission" onclick="filterDeptTable('Transmission', this)" style="padding:0.25rem 0.6rem; font-size:0.75rem;">Transmission (33)</button>
+        <button class="filter-btn dept-pill" data-dept-filter="Finance" onclick="filterDeptTable('Finance', this)" style="padding:0.25rem 0.6rem; font-size:0.75rem;">Finance (27)</button>
+        <button class="filter-btn dept-pill" data-dept-filter="CM" onclick="filterDeptTable('CM', this)" style="padding:0.25rem 0.6rem; font-size:0.75rem;">CM (21)</button>
+      </div>
+      <div id="team-filter-pills-bar" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem; background:rgba(30,41,59,0.5); padding:0.6rem 0.8rem; border-radius:8px; border:1px solid rgba(255,255,255,0.05);">
+        <span style="font-size:0.8rem; color:var(--text-sub); font-weight:700; display:flex; align-items:center; margin-right:0.3rem;"><i class="fa-solid fa-users" style="margin-right:0.35rem; color:var(--emerald);"></i> Filter Team:</span>
+        <button class="filter-btn team-pill active" data-team-filter="ALL" onclick="filterTeamTable('ALL', this)" style="padding:0.25rem 0.6rem; font-size:0.75rem;">All Teams (269)</button>
+        <button class="filter-btn team-pill" data-team-filter="Team 01" onclick="filterTeamTable('Team 01', this)" style="padding:0.25rem 0.6rem; font-size:0.75rem;">Team 01 (148)</button>
+        <button class="filter-btn team-pill" data-team-filter="Team 02" onclick="filterTeamTable('Team 02', this)" style="padding:0.25rem 0.6rem; font-size:0.75rem;">Team 02 (42)</button>
+        <button class="filter-btn team-pill" data-team-filter="Team 03" onclick="filterTeamTable('Team 03', this)" style="padding:0.25rem 0.6rem; font-size:0.75rem;">Team 03 (35)</button>
+        <button class="filter-btn team-pill" data-team-filter="Team 04" onclick="filterTeamTable('Team 04', this)" style="padding:0.25rem 0.6rem; font-size:0.75rem;">Team 04 (29)</button>
+        <button class="filter-btn team-pill" data-team-filter="Team 05" onclick="filterTeamTable('Team 05', this)" style="padding:0.25rem 0.6rem; font-size:0.75rem;">Team 05 (15)</button>
       </div>
 
       <div class="card">
@@ -12951,20 +13073,101 @@ window.TaskNotesManager = {
 
 
 <script>
+window._currentDeptFilter = 'ALL';
+window._currentTeamFilter = 'ALL';
+
+window.applyDeptTeamFilters = function() {
+  const rows = document.querySelectorAll('#dept-assign-tbody tr');
+  const dF = (window._currentDeptFilter || 'ALL').toUpperCase();
+  const tF = (window._currentTeamFilter || 'ALL').toUpperCase();
+  rows.forEach(row => {
+    const rowDept = (row.getAttribute('data-dept') || '').toUpperCase();
+    let rowTeam = (row.getAttribute('data-team') || '').toUpperCase();
+    if (!rowTeam) {
+      const tdTeam = row.querySelectorAll('td')[2];
+      rowTeam = tdTeam ? tdTeam.textContent.trim().toUpperCase() : '';
+    }
+    const matchDept = (dF === 'ALL' || rowDept === dF);
+    const matchTeam = (tF === 'ALL' || rowTeam === tF);
+    row.style.display = (matchDept && matchTeam) ? '' : 'none';
+  });
+};
+
 window.filterDeptTable = function(deptName, btn) {
-  const buttons = document.querySelectorAll('#dept-assign-panel .filter-btn');
+  window._currentDeptFilter = deptName || 'ALL';
+  const buttons = document.querySelectorAll('#dept-filter-pills-bar .dept-pill');
   buttons.forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
+  window.applyDeptTeamFilters();
+};
 
-  const rows = document.querySelectorAll('#dept-assign-tbody tr');
-  rows.forEach(row => {
-    const rowDept = row.getAttribute('data-dept') || '';
-    if (deptName === 'ALL' || rowDept.toUpperCase() === deptName.toUpperCase()) {
-      row.style.display = '';
-    } else {
-      row.style.display = 'none';
-    }
+window.filterTeamTable = function(teamName, btn) {
+  window._currentTeamFilter = teamName || 'ALL';
+  const buttons = document.querySelectorAll('#team-filter-pills-bar .team-pill');
+  buttons.forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  window.applyDeptTeamFilters();
+};
+
+window.filterDeptTeamMatrix = function(deptName, teamName) {
+  window._currentDeptFilter = deptName || 'ALL';
+  window._currentTeamFilter = teamName || 'ALL';
+  document.querySelectorAll('#dept-filter-pills-bar .dept-pill').forEach(b => {
+    b.classList.toggle('active', (b.getAttribute('data-dept-filter') || '').toUpperCase() === window._currentDeptFilter.toUpperCase());
   });
+  document.querySelectorAll('#team-filter-pills-bar .team-pill').forEach(b => {
+    b.classList.toggle('active', (b.getAttribute('data-team-filter') || '').toUpperCase() === window._currentTeamFilter.toUpperCase());
+  });
+  window.applyDeptTeamFilters();
+};
+
+window.exportDeptAssignByTeamExcel = function() {
+  const rows = Array.from(document.querySelectorAll('#dept-assign-tbody tr'));
+  if (!rows.length) return;
+  const items = rows.map(r => {
+    const tds = r.querySelectorAll('td');
+    return {
+      no: tds[0] ? tds[0].textContent.trim() : '',
+      dept: tds[1] ? tds[1].textContent.trim() : '',
+      team: tds[2] ? tds[2].textContent.trim() : '',
+      group: tds[3] ? tds[3].textContent.trim() : '',
+      content: tds[4] ? tds[4].textContent.trim() : '',
+      target: tds[5] ? tds[5].textContent.trim() : '',
+      status: tds[6] ? tds[6].textContent.trim() : ''
+    };
+  });
+
+  const teams = Array.from(new Set(items.map(x => x.team))).sort();
+  const depts = ['M&E', 'Manager', 'PM', 'Transmission', 'Finance', 'CM'];
+  let htmlOut = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="utf-8"></head><body>';
+  htmlOut += '<h2>BÁO CÁO TỔNG HỢP ĐẦU VIỆC PHÒNG BAN GIAO TỪNG TEAM (DEPARTMENT ASSIGN BY TEAM)</h2>';
+  htmlOut += '<table border="1" cellspacing="0" cellpadding="5"><tr style="background:#1e3a8a;color:#fff;font-weight:bold;"><th>Team</th>' + depts.map(d => '<th>' + d + '</th>').join('') + '<th>Tổng Đầu Việc</th><th>Quá Hạn (Overdue)</th><th>Đang Chạy (In Progress)</th></tr>';
+  teams.forEach(tm => {
+    const sub = items.filter(x => x.team === tm);
+    const ov = sub.filter(x => x.status.toLowerCase().includes('overdue')).length;
+    const ip = sub.length - ov;
+    htmlOut += '<tr><td><b>' + tm + '</b></td>' + depts.map(d => '<td align="center">' + sub.filter(x => x.dept === d).length + '</td>').join('') + '<td align="center"><b>' + sub.length + '</b></td><td align="center" style="color:#dc2626;"><b>' + ov + '</b></td><td align="center">' + ip + '</td></tr>';
+  });
+  htmlOut += '</table><br/>';
+
+  teams.forEach(tm => {
+    const sub = items.filter(x => x.team === tm);
+    htmlOut += '<h3>DANH SÁCH CHI TIẾT — ' + tm.toUpperCase() + ' (' + sub.length + ' ĐẦU VIỆC)</h3>';
+    htmlOut += '<table border="1" cellspacing="0" cellpadding="4"><tr style="background:#0f766e;color:#fff;font-weight:bold;"><th>STT Team</th><th>STT Gốc</th><th>Department</th><th>Team</th><th>Task Group</th><th>Detailed Scope & Work Description</th><th>Target Date</th><th>Status</th></tr>';
+    sub.forEach((it, idx) => {
+      htmlOut += '<tr><td align="center">' + (idx + 1) + '</td><td align="center">' + it.no + '</td><td><b>' + it.dept + '</b></td><td>' + it.team + '</td><td>' + it.group + '</td><td>' + it.content + '</td><td align="center">' + it.target + '</td><td>' + it.status + '</td></tr>';
+    });
+    htmlOut += '</table><br/>';
+  });
+  htmlOut += '</body></html>';
+
+  const blob = new Blob(['\ufeff' + htmlOut], { type: 'application/vnd.ms-excel;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Tong_Hop_Assign_Dep_Theo_Tung_Team.xls';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 };
 
 window.refreshDeptAssignLive = async function() {
@@ -12996,6 +13199,10 @@ window.refreshDeptAssignLive = async function() {
 
     let count = 0;
     const tbodyHtml = [];
+    const deptCounts = {};
+    const teamCounts = {};
+    const teamDeptCounts = {};
+    const teamOverdueCounts = {};
     const today = new Date();
     today.setHours(0,0,0,0);
 
@@ -13013,13 +13220,17 @@ window.refreshDeptAssignLive = async function() {
       const dept = (row[1] || "").trim();
       if (!dept || ["nan", "dep assign", "sum"].includes(dept.toLowerCase())) continue;
 
-      const team = (row[2] || "").trim();
+      const team = (row[2] || "").trim() || "Unassigned";
       const groupAssign = (row[3] || "").trim();
       const content = (row[4] || "").trim();
       const targetDate = (row[6] || "").trim();
       const completeDate = (row[9] || "").trim();
 
       count++;
+      deptCounts[dept] = (deptCounts[dept] || 0) + 1;
+      teamCounts[team] = (teamCounts[team] || 0) + 1;
+      if (!teamDeptCounts[team]) teamDeptCounts[team] = {};
+      teamDeptCounts[team][dept] = (teamDeptCounts[team][dept] || 0) + 1;
 
       let teamTagClass = "tag-all";
       const tLow = team.toLowerCase();
@@ -13041,12 +13252,13 @@ window.refreshDeptAssignLive = async function() {
       if (cDt) {
         statusHtml = `<span class="status-pill-check sp-verified">✓ Done (${completeDate})</span>`;
       } else if (tDt && tDt < today) {
+        teamOverdueCounts[team] = (teamOverdueCounts[team] || 0) + 1;
         statusHtml = `<span class="status-pill-check" style="background:rgba(239,68,68,0.2); color:#f87171; border:1px solid rgba(239,68,68,0.4);"><i class="fa-solid fa-triangle-exclamation"></i> Overdue (${targetDate})</span>`;
       } else if (targetDate) {
         statusHtml = `<span class="status-pill-check sp-pending">⏳ In Progress (${targetDate})</span>`;
       }
 
-      tbodyHtml.push(`            <tr data-dept="${dept}">
+      tbodyHtml.push(`            <tr data-dept="${dept}" data-team="${team}">
               <td>${count}</td>
               <td><span class="team-tag ${deptTagClass}">${dept || "-"}</span></td>
               <td><span class="team-tag ${teamTagClass}">${team || "-"}</span></td>
@@ -13058,6 +13270,66 @@ window.refreshDeptAssignLive = async function() {
     }
 
     tbody.innerHTML = tbodyHtml.join("\n");
+    const totalEl = document.getElementById('dept-total-live-count');
+    if (totalEl) totalEl.textContent = count + " Tasks Live";
+    const badgeEl = document.getElementById('dept-synced-badge');
+    if (badgeEl) badgeEl.innerHTML = '<i class="fa-solid fa-circle-check"></i> ' + count + ' Tasks Synced';
+
+    // Update Dept filter buttons
+    document.querySelectorAll('#dept-filter-pills-bar .dept-pill').forEach(b => {
+      const df = b.getAttribute('data-dept-filter');
+      if (df === 'ALL') b.textContent = `All (${count})`;
+      else if (df) b.textContent = `${df} (${deptCounts[df] || 0})`;
+    });
+
+    // Update Team filter buttons
+    document.querySelectorAll('#team-filter-pills-bar .team-pill').forEach(b => {
+      const tf = b.getAttribute('data-team-filter');
+      if (tf === 'ALL') b.textContent = `All Teams (${count})`;
+      else if (tf) b.textContent = `${tf} (${teamCounts[tf] || 0})`;
+    });
+
+    // Update Team x Dept Matrix
+    const matrixTbody = document.getElementById('dept-team-matrix-tbody');
+    if (matrixTbody) {
+      const deptsOrder = ['M&E', 'Manager', 'PM', 'Transmission', 'Finance', 'CM'];
+      const teamsSorted = Object.keys(teamCounts).sort();
+      let mHtml = '';
+      let totOv = 0, totIp = 0;
+      teamsSorted.forEach(tm => {
+        const tTotal = teamCounts[tm] || 0;
+        const tOv = teamOverdueCounts[tm] || 0;
+        const tIp = tTotal - tOv;
+        totOv += tOv;
+        totIp += tIp;
+        const pct = count ? ((tTotal / count) * 100).toFixed(1) + '%' : '0%';
+        let tagCls = 'tag-all';
+        if (tm.includes('01')) tagCls = 'tag-t1';
+        else if (tm.includes('02')) tagCls = 'tag-t2';
+        else if (tm.includes('03')) tagCls = 'tag-t3';
+        else if (tm.includes('04')) tagCls = 'tag-t4';
+        mHtml += `<tr onclick="filterDeptTeamMatrix('ALL','${tm}')" style="cursor:pointer;">
+          <td style="text-align:left !important;"><span class="team-tag ${tagCls}">${tm}</span></td>` +
+          deptsOrder.map(d => `<td onclick="event.stopPropagation(); filterDeptTeamMatrix('${d}','${tm}')" style="font-weight:700;">${(teamDeptCounts[tm] && teamDeptCounts[tm][d]) || 0}</td>`).join('') +
+          `<td style="font-weight:800; color:var(--cyan);">${tTotal}</td>
+          <td style="color:var(--amber); font-weight:700;">${pct}</td>
+          <td style="color:#f87171; font-weight:700;">${tOv}</td>
+          <td style="color:#38bdf8; font-weight:700;">${tIp}</td>
+        </tr>`;
+      });
+      mHtml += `<tr onclick="filterDeptTeamMatrix('ALL','ALL')" style="cursor:pointer; background:rgba(56,189,248,0.08); font-weight:800;">
+        <td style="text-align:left !important; color:var(--cyan);">TỔNG CỘNG</td>` +
+        deptsOrder.map(d => `<td style="color:#fff;">${deptCounts[d] || 0}</td>`).join('') +
+        `<td style="color:var(--emerald); font-size:0.95rem;">${count}</td>
+        <td style="color:var(--amber);">100%</td>
+        <td style="color:#f87171;">${totOv}</td>
+        <td style="color:#38bdf8;">${totIp}</td>
+      </tr>`;
+      matrixTbody.innerHTML = mHtml;
+    }
+
+    window.applyDeptTeamFilters();
+
     const syncTimeEl = document.querySelector('#dept-assign-panel .sheet-sync-time');
     if (syncTimeEl) {
       const now = new Date();
