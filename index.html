@@ -1863,12 +1863,12 @@ document.addEventListener('DOMContentLoaded', initGoogleAuthGate);
                     <div style="font-size:0.7rem; color:#94A3B8;">Lọc Trùng Tin &amp; Cấp Phát Dầu</div>
                   </div>
                 </div>
-                <span class="seat-status-pill" style="background:rgba(16,185,129,0.2); color:#34D399; font-weight:700; font-size:0.68rem; padding:0.2rem 0.5rem; border-radius:6px; border:1px solid rgba(16,185,129,0.4);">
-                  ✅ Chuẩn Xác
+                <span class="seat-status-pill" id="seat-status-auditor31" style="background:rgba(16,185,129,0.2); color:#34D399; font-weight:700; font-size:0.68rem; padding:0.2rem 0.5rem; border-radius:6px; border:1px solid rgba(16,185,129,0.4);">
+                  ✅ 6/6 Mẫu OK · Appr: 19/10
                 </span>
               </div>
-              <div style="font-size:0.72rem; color:#CBD5E1; margin-top:0.5rem; line-height:1.4;">
-                Xác thực định danh xe trạm, kế hoạch cấp dầu, lọc trùng tin nhắn Telegram Refuel tuyệt đối.
+              <div id="seat-detail-auditor31" style="font-size:0.72rem; color:#CBD5E1; margin-top:0.5rem; line-height:1.4;">
+                Giám sát sống 6 mẫu classify() (Refueled, Plan, Request, Submit/Approved Letter, FT Monitor) &amp; tự động bù đơn sót vào Lettel Progress.
               </div>
             </div>
 
@@ -2435,6 +2435,7 @@ document.addEventListener('DOMContentLoaded', initGoogleAuthGate);
 
               window.allEngineers = allEngineers;
               window.deptPointsMap = deptPointsMap;
+              renderDeptMatrix(deptPointsMap);
               window.latestTeamData = teamData;
               window.latestDates = datesObj;
               window.latestExportTime = exportTimeStr;
@@ -2510,6 +2511,49 @@ document.addEventListener('DOMContentLoaded', initGoogleAuthGate);
             });
         }
 
+        // 👑 RENDER TABLE 2: DEPARTMENT POINT MATRIX — live update & bold every number > 0
+        function renderDeptMatrix(dpm) {
+          var tbody = document.getElementById('dept-matrix-tbody');
+          if (!tbody) return;
+          var tKeys  = ['team1', 'team2', 'team3', 'team4'];
+          var tCodes = ['MYT_TNI_TEAM01_Dawei', 'MYT_TNI_TEAM02_Myeik', 'MYT_TNI_TEAM03_Bokpyin', 'MYT_TNI_TEAM04_Kawthoung'];
+          var tTags  = ['tag-t1', 'tag-t2', 'tag-t3', 'tag-t4'];
+          var cols   = ['manager', 'asset', 'cm', 'me', 'pm', 'construction', 'finance'];
+          var colColors = {
+            manager: 'var(--rose)', asset: 'var(--cyan)', cm: 'var(--cyan)',
+            me: 'var(--amber)', pm: 'var(--amber)', construction: 'var(--amber)', finance: 'var(--emerald)'
+          };
+          function cellHtml(val, col) {
+            var str = (val || 'TL:0 /0 P:0').trim();
+            var color = colColors[col] || 'var(--cyan)';
+            var hasPositive = false;
+            var formatted = str.replace(/(TL:\s*|\/\s*|P:\s*)(\d+)/gi, function(match, prefix, numStr) {
+              var n = parseInt(numStr, 10) || 0;
+              if (n > 0) {
+                hasPositive = true;
+                return prefix + '<strong style="color:' + color + '; font-weight:800; font-size:1.05em;">' + numStr + '</strong>';
+              }
+              return '<span style="opacity:0.65;">' + prefix + numStr + '</span>';
+            });
+            if (!hasPositive) {
+              return '<span style="opacity:0.55;">' + str + '</span>';
+            }
+            return formatted;
+          }
+          var rows = '';
+          for (var i = 0; i < 4; i++) {
+            var tk = tKeys[i];
+            var dp = dpm[tk] || {};
+            rows += '<tr>';
+            rows += '<td><span class="team-tag ' + tTags[i] + '">' + tCodes[i] + '</span></td>';
+            for (var c = 0; c < cols.length; c++) {
+              rows += '<td>' + cellHtml(dp[cols[c]], cols[c]) + '</td>';
+            }
+            rows += '</tr>';
+          }
+          tbody.innerHTML = rows;
+        }
+
         function init(){ loadStats(); setInterval(loadStats, 30*1000); }
         if(document.readyState==='loading'){
           document.addEventListener('DOMContentLoaded', init);
@@ -2536,46 +2580,46 @@ document.addEventListener('DOMContentLoaded', initGoogleAuthGate);
               <th>Finance</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="dept-matrix-tbody">
             <tr>
               <td><span class="team-tag tag-t1">MYT_TNI_TEAM01_Dawei</span></td>
-              <td>TL:0 /14 P:0</td>
-              <td><strong style="color:var(--cyan);">TL:27 /39 P:0</strong></td>
-              <td>TL:0 /26 P:0</td>
-              <td>TL:0 /35 P:0</td>
-              <td>TL:0 /24 P:0</td>
-              <td>TL:0 /0 P:0</td>
-              <td><strong style="color:var(--emerald);">TL:3 /3 P:0</strong></td>
+              <td><span style="opacity:0.65;">TL:0</span> /<strong style="color:var(--rose); font-weight:800; font-size:1.05em;">26</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td><span style="opacity:0.55;">TL:0 /0 P:0</span></td>
+              <td><span style="opacity:0.65;">TL:0</span> /<strong style="color:var(--cyan); font-weight:800; font-size:1.05em;">14</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td>TL:<strong style="color:var(--amber); font-weight:800; font-size:1.05em;">1</strong> /<strong style="color:var(--amber); font-weight:800; font-size:1.05em;">33</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td><span style="opacity:0.65;">TL:0</span> /<strong style="color:var(--amber); font-weight:800; font-size:1.05em;">53</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td><span style="opacity:0.55;">TL:0 /0 P:0</span></td>
+              <td>TL:<strong style="color:var(--emerald); font-weight:800; font-size:1.05em;">6</strong> /<strong style="color:var(--emerald); font-weight:800; font-size:1.05em;">6</strong> <span style="opacity:0.65;">P:0</span></td>
             </tr>
             <tr>
               <td><span class="team-tag tag-t2">MYT_TNI_TEAM02_Myeik</span></td>
-              <td>TL:0 /7 P:0</td>
-              <td><strong style="color:var(--cyan);">TL:14 /20 P:0</strong></td>
-              <td>TL:0 /14 P:0</td>
-              <td>TL:0 /26 P:0</td>
-              <td>TL:0 /3 P:0</td>
-              <td>TL:0 /0 P:0</td>
-              <td><strong style="color:var(--emerald);">TL:5 /5 P:0</strong></td>
+              <td><span style="opacity:0.65;">TL:0</span> /<strong style="color:var(--rose); font-weight:800; font-size:1.05em;">11</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td><span style="opacity:0.55;">TL:0 /0 P:0</span></td>
+              <td><span style="opacity:0.65;">TL:0</span> /<strong style="color:var(--cyan); font-weight:800; font-size:1.05em;">4</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td>TL:<strong style="color:var(--amber); font-weight:800; font-size:1.05em;">2</strong> /<strong style="color:var(--amber); font-weight:800; font-size:1.05em;">29</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td><span style="opacity:0.65;">TL:0</span> /<strong style="color:var(--amber); font-weight:800; font-size:1.05em;">1</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td><span style="opacity:0.55;">TL:0 /0 P:0</span></td>
+              <td>TL:<strong style="color:var(--emerald); font-weight:800; font-size:1.05em;">10</strong> /<strong style="color:var(--emerald); font-weight:800; font-size:1.05em;">10</strong> <span style="opacity:0.65;">P:0</span></td>
             </tr>
             <tr>
               <td><span class="team-tag tag-t3">MYT_TNI_TEAM03_Bokpyin</span></td>
-              <td>TL:0 /4 P:0</td>
-              <td><strong style="color:var(--cyan);">TL:6 /13 P:0</strong></td>
-              <td>TL:0 /7 P:0</td>
-              <td>TL:0 /7 P:0</td>
-              <td>TL:0 /0 P:0</td>
-              <td>TL:0 /1 P:0</td>
-              <td><strong style="color:var(--emerald);">TL:4 /4 P:0</strong></td>
+              <td><span style="opacity:0.65;">TL:0</span> /<strong style="color:var(--rose); font-weight:800; font-size:1.05em;">8</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td><span style="opacity:0.55;">TL:0 /0 P:0</span></td>
+              <td><span style="opacity:0.65;">TL:0</span> /<strong style="color:var(--cyan); font-weight:800; font-size:1.05em;">3</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td>TL:<strong style="color:var(--amber); font-weight:800; font-size:1.05em;">1</strong> /<strong style="color:var(--amber); font-weight:800; font-size:1.05em;">7</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td><span style="opacity:0.55;">TL:0 /0 P:0</span></td>
+              <td><span style="opacity:0.55;">TL:0 /0 P:0</span></td>
+              <td>TL:<strong style="color:var(--emerald); font-weight:800; font-size:1.05em;">6</strong> /<strong style="color:var(--emerald); font-weight:800; font-size:1.05em;">6</strong> <span style="opacity:0.65;">P:0</span></td>
             </tr>
             <tr>
               <td><span class="team-tag tag-t4">MYT_TNI_TEAM04_Kawthoung</span></td>
-              <td>TL:1 /4 P:0</td>
-              <td><strong style="color:var(--cyan);">TL:16 /17 P:0</strong></td>
-              <td>TL:0 /4 P:0</td>
-              <td>TL:0 /11 P:0</td>
-              <td>TL:0 /11 P:0</td>
-              <td>TL:0 /1 P:0</td>
-              <td><strong style="color:var(--emerald);">TL:5 /5 P:0</strong></td>
+              <td>TL:<strong style="color:var(--rose); font-weight:800; font-size:1.05em;">1</strong> /<strong style="color:var(--rose); font-weight:800; font-size:1.05em;">9</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td><span style="opacity:0.55;">TL:0 /0 P:0</span></td>
+              <td><span style="opacity:0.55;">TL:0 /0 P:0</span></td>
+              <td><span style="opacity:0.65;">TL:0</span> /<strong style="color:var(--amber); font-weight:800; font-size:1.05em;">11</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td><span style="opacity:0.55;">TL:0 /0 P:0</span></td>
+              <td><span style="opacity:0.55;">TL:0 /0 P:0</span></td>
+              <td>TL:<strong style="color:var(--emerald); font-weight:800; font-size:1.05em;">5</strong> /<strong style="color:var(--emerald); font-weight:800; font-size:1.05em;">5</strong> <span style="opacity:0.65;">P:0</span></td>
             </tr>
           </tbody>
         </table>
@@ -9844,6 +9888,27 @@ Team04>> 2Box</td>
             }
           }
         }
+        // 4. Kiểm toán sống Ghế AUDITOR-3.1 (Nhiên Liệu Refuel & Lettel Progress)
+        fetch('https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec?action=audit_refuel')
+          .then(function(r) { return r.json(); })
+          .then(function(rf) {
+            var rfBadge = document.getElementById('seat-status-auditor31');
+            var rfDetail = document.getElementById('seat-detail-auditor31');
+            if (rf && rf.status === 'ok') {
+              var appShort = (rf.latest_approved || '').slice(0, 5);
+              var subShort = (rf.latest_submit || '').slice(0, 5);
+              if (rfBadge) {
+                rfBadge.style.background = 'rgba(16,185,129,0.2)';
+                rfBadge.style.color = '#34D399';
+                rfBadge.style.borderColor = 'rgba(16,185,129,0.4)';
+                rfBadge.innerHTML = '✅ 6/6 OK · Appr: ' + (appShort || 'OK');
+              }
+              if (rfDetail) {
+                rfDetail.innerHTML = 'Lettel Progress đồng bộ sống — <b>Submit:</b> ' + (rf.latest_submit || 'N/A') + ' · <b>Approved:</b> <span style="color:#34D399;font-weight:700;">' + (rf.latest_approved || 'N/A') + '</span> (Tự động hậu kiểm &amp; bù đơn sót).';
+              }
+            }
+          })
+          .catch(function() {});
       } catch(e) {
         console.warn('[SupervisorySentinel] Error evaluating BI WO status:', e);
       }

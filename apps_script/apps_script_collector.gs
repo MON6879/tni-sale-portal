@@ -114,6 +114,9 @@ function doPostCollector_(e) {
         body.action === "plan_dep_update" ||
         body.action === "plan_dep_delete")   return handlePlanDepPost_(body);
 
+    // ── Task Notes Collector (Ghi Chú Đầu Việc & Tiến Độ) ───────────────────
+    if (body.action && body.action.startsWith("task_notes_")) return handleTaskNotesPost_(body);
+
     // ── Attendance Collector (Morning Attendance & Staff Leave) ─────────────
     if (body.action === "attendance_add" ||
         body.action === "collect_attendance") return handleAttendancePost_(body);
@@ -121,8 +124,19 @@ function doPostCollector_(e) {
     // ── Train Schedule Sync (auto-publish at 01:46 MMT daily) ──────────────
     if (body.action === "sync_schedule")     return handleSyncSchedule_(body);
 
-    // ── Sale Backend (Nhap/Ban/TamUng/KhaoSat/CRM...) ─────────────────────
-    if (body.action && body.action.startsWith('sale_')) return handleSalePost_(body);
+    // ── Sale Backend (Nhap/Ban/TamUng/KhaoSat/CRM + Staff Directory) ──────
+    if (body.action && (body.action.startsWith('sale_') ||
+        body.action.startsWith('staff_') ||
+        body.action === 'google_auth_verify' ||
+        body.action === 'template_sale_get' ||
+        body.action === 'telegram_groups_get'))
+      return handleSalePost_(body);
+
+    // ── Nocpro Sync Sheet (Desktop Client Alarm Importer - Ghế DESK-NOCPRO-1) ──
+    if (body.action === "nocpro_sync_sheet") return handleNocproSyncSheet_(body);
+
+    // ── Nocpro Sync Clear History (Alarm Status Clear Importer - Ghế DESK-NOCPRO-2) ──
+    if (body.action === "nocpro_sync_clear_history") return handleNocproSyncClearHistory_(body);
 
     return json({ status: "error", message: "Unknown action: " + body.action });
   } catch (err) {
@@ -139,14 +153,153 @@ function doGetCollector_(e) {
       return ContentService.createTextOutput(JSON.stringify({ status: "ok", message: "pong", timestamp: new Date().toISOString() }))
         .setMimeType(ContentService.MimeType.JSON);
     }
+
+    // ── Ghế Giám Sát: AUDITOR-NOCPRO-9.3 (Check status của Ghế DESK-NOCPRO-1) ──
+    if (action === "audit_nocpro") {
+      const rawAudit = PropertiesService.getScriptProperties().getProperty("AUDIT_DESK_NOCPRO_1");
+      let auditData = null;
+      try { auditData = rawAudit ? JSON.parse(rawAudit) : null; } catch(err) {}
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "ok",
+        supervisor_seat: "AUDITOR-NOCPRO-9.3",
+        monitored_seat: "DESK-NOCPRO-1",
+        audit: auditData,
+        timestamp: new Date().toISOString()
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // ── Ghế Giám Sát: AUDITOR-NOCPRO-9.4 (Check status của Ghế DESK-NOCPRO-2) ──
+    if (action === "audit_nocpro_2") {
+      const rawAudit = PropertiesService.getScriptProperties().getProperty("AUDIT_DESK_NOCPRO_2");
+      let auditData = null;
+      try { auditData = rawAudit ? JSON.parse(rawAudit) : null; } catch(err) {}
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "ok",
+        supervisor_seat: "AUDITOR-NOCPRO-9.4",
+        monitored_seat: "DESK-NOCPRO-2",
+        audit: auditData,
+        timestamp: new Date().toISOString()
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // ── Ghế Giám Sát: AUDITOR-NOCPRO-9.5 (Check status của Ghế DESK-NOCPRO-3 — Clear Door) ──
+    if (action === "audit_nocpro_3") {
+      const rawAudit = PropertiesService.getScriptProperties().getProperty("AUDIT_DESK_NOCPRO_3");
+      let auditData = null;
+      try { auditData = rawAudit ? JSON.parse(rawAudit) : null; } catch(err) {}
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "ok",
+        supervisor_seat: "AUDITOR-NOCPRO-9.5",
+        monitored_seat: "DESK-NOCPRO-3",
+        audit: auditData,
+        timestamp: new Date().toISOString()
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // ── Ghế Giám Sát: AUDITOR-3.1 (Check status của Ghế BOT-REFUEL-9 & Lettel Progress) ──
+    if (action === "audit_refuel") {
+      return doGetRefuelPlan_(e);
+    }
+
+    // ── Tham số tìm kiếm Nocpro Clear & Door (Đọc trực tiếp từ Sheet SSOT) ──
+    if (action === "nocpro_get_clear_params" || action === "nocpro_get_door_params") {
+      try {
+        const isDoor = (action === "nocpro_get_door_params" || (e && e.parameter && (e.parameter.tab === "door" || e.parameter.target_gid === "2099413230")));
+        const ss = SpreadsheetApp.openById("1aAMxzyhiiYYZ1Hl8n8VYgXTfu3Cx_ivX6X-WSzXbFcI");
+        const targetGid = isDoor ? "2099413230" : "379017693";
+        let ws = null;
+        for (const s of ss.getSheets()) {
+          if (s.getSheetId().toString() === targetGid) { ws = s; break; }
+        }
+        const cellDate = isDoor ? "AF3" : "AF4";
+        const cellTime = isDoor ? "AG3" : "AG4";
+        const dateStart = ws ? ws.getRange(cellDate).getDisplayValue() : "";
+        const timeStart = ws ? ws.getRange(cellTime).getDisplayValue() : "";
+        return ContentService.createTextOutput(JSON.stringify({
+          status: "ok",
+          task: isDoor ? "door_alarm" : "flow_loss",
+          target_gid: targetGid,
+          cell_date: cellDate,
+          cell_time: cellTime,
+          date_start: dateStart,
+          time_start: timeStart,
+          timestamp: new Date().toISOString()
+        })).setMimeType(ContentService.MimeType.JSON);
+      } catch (err) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.message }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
+    // ── Staff Directory — Public GET (no auth, read-only) ─────────────────
+    if (action === "staff_get") return staffGet_(e.parameter);
+    if (action === "staff_delete") return staffDeletePublic_(e.parameter);
+    // ── Dynamic Template Sale & Telegram Groups — Public GET (no auth, read-only) ─
+    if (action === "template_sale_get") return templateSaleGet_();
+    if (action === "telegram_groups_get") return telegramGroupsGetPublic_();
     if (action === "get_general") {
       return ContentService.createTextOutput(JSON.stringify({
         status: "ok",
         service: "TNI Main GAS Backend",
-        version: "@438",
+        version: "@451",
         message: "TNI Collector running",
         timestamp: new Date().toISOString()
       })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // ── Clear Construction Template Cache (gọi sau khi sửa Sheet 'Template Cons') ──
+    if (action === "clear_cons_cache") {
+      try {
+        CacheService.getScriptCache().remove("TNI_TEMPLATE_CONS_DATA");
+        Logger.log("[clear_cons_cache] Cache xóa thành công");
+        return ContentService.createTextOutput(JSON.stringify({
+          status: "ok",
+          message: "Construction template cache cleared. Next /command will read fresh data from Sheet.",
+          timestamp: new Date().toISOString()
+        })).setMimeType(ContentService.MimeType.JSON);
+      } catch(err) {
+        return ContentService.createTextOutput(JSON.stringify({
+          status: "error",
+          message: err.toString()
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
+    // ── Sync Guide Tab from Template Cons (gọi từ Auditor khi Guide lệch với Template) ──
+    if (action === "sync_guide_tab") {
+      try {
+        if (typeof syncGuideFromTemplate_ === "function") {
+          var syncResult = syncGuideFromTemplate_();
+          return ContentService.createTextOutput(JSON.stringify({
+            status: syncResult.success ? "ok" : "error",
+            count: syncResult.count || 0,
+            reason: syncResult.reason || "",
+            message: syncResult.success
+              ? ("Guide tab synced: " + (syncResult.count || 0) + " templates written")
+              : ("Sync failed: " + (syncResult.reason || "unknown")),
+            timestamp: new Date().toISOString()
+          })).setMimeType(ContentService.MimeType.JSON);
+        } else {
+          return ContentService.createTextOutput(JSON.stringify({
+            status: "error",
+            message: "syncGuideFromTemplate_ function not found in GAS project"
+          })).setMimeType(ContentService.MimeType.JSON);
+        }
+      } catch(err) {
+        return ContentService.createTextOutput(JSON.stringify({
+          status: "error",
+          message: err.toString()
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
+    if (action === "send_team_progress_reports") {
+      if (typeof sendTeamOperationProgressReports === "function") {
+        return ContentService.createTextOutput(JSON.stringify(sendTeamOperationProgressReports()))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+      return ContentService.createTextOutput(JSON.stringify({ error: "sendTeamOperationProgressReports not found" }))
+        .setMimeType(ContentService.MimeType.JSON);
     }
 
     // ── Construction Sheet Initialization Endpoint ──
@@ -297,6 +450,9 @@ function doGetCollector_(e) {
     if (action === "get_plan_dep")        return handleGetPlanDep_();
     if (action === "get_plan_dep_permit") return handleGetPlanDepPermit_();
     if (action === "plan_dep_archive")    return handlePlanDepArchive_();
+
+    // ── Task Notes (Ghi Chú Đầu Việc & Tiến Độ) ───────────────
+    if (action === "get_task_notes")      return handleGetTaskNotes_();
 
     if (action === "diagnose_site_clear") return handleDiagnoseSiteClear_();
     if (action === "clear_site_clear_morning") return handleClearSiteClearMorning_();
@@ -2295,6 +2451,122 @@ function handleDebugSumSheet_() {
     return json({ status: "error", message: e.message });
   }
 }
+
+/**
+ * BI WO Portal Team Stats — Fallback endpoint cho executive_dashboard.html & index.html
+ * GET ?action=get_team_wo_stats
+ */
+function handleGetTeamWoStats_() {
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    const sh = ss.getSheetByName("Sum all WO Team");
+    if (!sh) return json({ status: "error", message: "Sheet Sum all WO Team not found" });
+
+    const rows = sh.getDataRange().getValues();
+    const nowMm = Utilities.formatDate(new Date(), "Asia/Rangoon", "dd/MM/yyyy HH:mm");
+    
+    let targetPct = 75;
+    if (rows.length > 0 && rows[0].length > 5) {
+      const vTgt = rows[0][5];
+      if (typeof vTgt === "number") {
+        targetPct = vTgt <= 1 ? Math.round(vTgt * 100) : Math.round(vTgt);
+      } else {
+        const mTgt = String(vTgt || "").match(/(\d+)/);
+        if (mTgt) targetPct = parseInt(mTgt[1], 10);
+      }
+    }
+
+    let dateLabel = "11/10/09-08-2026";
+    let planLabel = "🎯 Plan 12/08/2026 (M):";
+
+    if (rows.length >= 2) {
+      const hdrRow2 = rows[1];
+      const hdrJ = String(hdrRow2[9] || "");
+      const hdrK = String(hdrRow2[10] || "");
+      const hdrL = String(hdrRow2[11] || "");
+      const hdrM = String(hdrRow2[12] || "");
+
+      const mJ = hdrJ.match(/(\d{2}\/\d{2})/);
+      const mK = hdrK.match(/(\d{2}\/\d{2})/);
+      const mL = hdrL.match(/(\d{2}\/\d{2})/);
+      const mM = hdrM.match(/(\d{2}\/\d{2}(?:\/\d{2,4})?)/);
+
+      const strJ = mJ ? mJ[1] : "11/08";
+      const strK = mK ? mK[1] : "10/08";
+      const strL = mL ? mL[1] : "09/08";
+      const strM = mM ? mM[1] : "12/08/2026";
+
+      const yrStr = Utilities.formatDate(new Date(), "Asia/Rangoon", "yyyy");
+      const fullMDate = (strM.indexOf("/") >= 0 && strM.split("/").length === 3) ? strM : (strM + "/" + yrStr);
+      planLabel = "🎯 Plan " + fullMDate + " (M):";
+
+      const dayJ = strJ.split("/")[0];
+      const dayK = strK.split("/")[0];
+      const dayL = strL.split("/")[0];
+      const monthStr = strJ.indexOf("/") >= 0 ? strJ.split("/")[1] : "08";
+      dateLabel = dayJ + "/" + dayK + "/" + dayL + "-" + monthStr + "-" + yrStr;
+    }
+
+    const teamKeys = ["team1", "team2", "team3", "team4"];
+    const teamData = {};
+
+    if (rows.length >= 56) {
+      for (let idx = 0; idx < teamKeys.length; idx++) {
+        const rowI = 52 + idx;
+        const row = rows[rowI];
+        if (row && row.length >= 16) {
+          const cdNotYet = Math.round(Number(row[0]) || 0);
+          const waitCD   = Math.round(Number(row[5]) || 0);
+          const fotClose = Math.round(Number(row[6]) || 0);
+          const sheetRank = Math.round(Number(row[7]) || (idx + 1));
+
+          const rawPct = String(row[8] || "");
+          const mPct = rawPct.match(/(\d+)/);
+          const sheetPct = mPct ? parseInt(mPct[1], 10) : 0;
+
+          const d2Close  = Math.round(Number(row[9])  || 0);
+          const d1Close  = Math.round(Number(row[10]) || 0);
+          const d0Close  = Math.round(Number(row[11]) || 0);
+          const planM    = Math.round(Number(row[12]) || 0);
+          const overdueF = Math.round(Number(row[13]) || 0);
+          const remainWo = Math.round(Number(row[15]) || 0);
+
+          const totalAssigned = fotClose + remainWo;
+          const calcPct = totalAssigned > 0 ? Math.round((fotClose / totalAssigned) * 100) : 0;
+          const finalPct = sheetPct > 0 ? sheetPct : calcPct;
+
+          teamData[teamKeys[idx]] = {
+            totalAssigned: totalAssigned,
+            fotClose: fotClose,
+            remain: remainWo,
+            overdueF: overdueF,
+            waitCD: waitCD,
+            cdNotYet: cdNotYet,
+            planM: planM,
+            d0: d0Close,
+            d1: d1Close,
+            d2: d2Close,
+            pct: finalPct,
+            sheetRank: sheetRank,
+            engineers: idx === 0 ? 10 : (idx === 1 ? 11 : 4)
+          };
+        }
+      }
+    }
+
+    return json({
+      status: "ok",
+      updatedAt: nowMm,
+      dateLabel: dateLabel,
+      planLabel: planLabel,
+      targetPct: targetPct,
+      data: teamData
+    });
+  } catch (err) {
+    return json({ status: "error", message: err.message });
+  }
+}
+
 // ============================================================
 // NOTE MESSAGE_IDS — Lưu/đọc message_ids của Note gửi bởi @Phongha79
 // botlookup_relay.py gọi GAS để lưu/đọc, rồi xóa Note cũ qua Telethon
@@ -3076,6 +3348,188 @@ function handlePlanDepArchive_() {
 }
 
 // ============================================================
+// 📝 TASK NOTES & ACTION ITEMS (Ghi Chú Đầu Việc & Tiến Độ)
+// Sheet: 1J4huU6zxJw-gC6_EtuOP1O4FQ2y8s38inxUM5rYYLzo (GID=0)
+// Columns: STT, Tên công việc, Tiến độ (%), Điều kiện hoàn thành, Trạng thái, Cập nhật lần cuối, Ghi chú
+// ============================================================
+const TASK_NOTES_SS_ID = "1J4huU6zxJw-gC6_EtuOP1O4FQ2y8s38inxUM5rYYLzo";
+
+function getOrCreateTaskNotesSheet_(ss) {
+  let sheet = ss.getSheets()[0];
+  if (sheet.getLastRow() === 0 || sheet.getLastColumn() === 0) {
+    const headers = [["STT", "Tên công việc", "Tiến độ (%)", "Điều kiện hoàn thành", "Trạng thái", "Cập nhật lần cuối", "Ghi chú"]];
+    sheet.getRange(1, 1, 1, 7).setValues(headers);
+    sheet.getRange(1, 1, 1, 7).setBackground("#0F172A").setFontColor("#FFFFFF").setFontWeight("bold");
+    sheet.setFrozenRows(1);
+    sheet.setColumnWidth(1, 60);
+    sheet.setColumnWidth(2, 300);
+    sheet.setColumnWidth(3, 110);
+    sheet.setColumnWidth(4, 300);
+    sheet.setColumnWidth(5, 130);
+    sheet.setColumnWidth(6, 150);
+    sheet.setColumnWidth(7, 200);
+  }
+  return sheet;
+}
+
+function handleGetTaskNotes_() {
+  try {
+    const ss = SpreadsheetApp.openById(TASK_NOTES_SS_ID);
+    const sheet = getOrCreateTaskNotesSheet_(ss);
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) {
+      return json({ status: "ok", version: "1.0", timestamp: new Date().toISOString(), data: [], meta: { total: 0 } });
+    }
+    const values = sheet.getRange(2, 1, lastRow - 1, 7).getValues();
+    const tasks = [];
+    for (let i = 0; i < values.length; i++) {
+      const rowNum = i + 2;
+      const row = values[i];
+      const taskName = String(row[1] || "").trim();
+      if (!taskName && !row[3]) continue;
+      let rawProg = row[2];
+      let progress = 0;
+      if (typeof rawProg === "number") {
+        progress = (rawProg <= 1 && rawProg > 0) ? Math.round(rawProg * 100) : Math.round(rawProg);
+      } else {
+        let pStr = String(rawProg || "0").replace("%", "").trim();
+        let pNum = parseFloat(pStr);
+        if (!isNaN(pNum)) {
+          progress = (pNum <= 1 && pNum > 0 && String(rawProg).indexOf("%") === -1) ? Math.round(pNum * 100) : Math.round(pNum);
+        }
+      }
+      if (isNaN(progress)) progress = 0;
+      if (progress < 0) progress = 0;
+      if (progress > 100) progress = 100;
+      
+      let status = String(row[4] || "").trim();
+      if (!status) {
+        status = progress >= 100 ? "Hoàn thành" : (progress > 0 ? "Đang làm" : "Chưa làm");
+      }
+      
+      tasks.push({
+        row: rowNum,
+        stt: row[0] || (i + 1),
+        taskName: taskName,
+        progress: progress,
+        criteria: String(row[3] || "").trim(),
+        status: status,
+        updatedAt: row[5] ? (row[5] instanceof Date ? Utilities.formatDate(row[5], "GMT+0630", "dd/MM/yyyy HH:mm") : String(row[5])) : "",
+        notes: String(row[6] || "").trim()
+      });
+    }
+    return json({ status: "ok", version: "1.0", timestamp: new Date().toISOString(), data: tasks, meta: { total: tasks.length } });
+  } catch (err) {
+    return json({ status: "error", version: "1.0", timestamp: new Date().toISOString(), data: [], error: { code: "FETCH_ERROR", message: err.message } });
+  }
+}
+
+function handleTaskNotesPost_(body) {
+  try {
+    const ss = SpreadsheetApp.openById(TASK_NOTES_SS_ID);
+    const sheet = getOrCreateTaskNotesSheet_(ss);
+    const nowStr = Utilities.formatDate(new Date(), "GMT+0630", "dd/MM/yyyy HH:mm");
+    
+    // --- ADD TASK ---
+    if (body.action === "task_notes_add") {
+      const taskName = String(body.taskName || "").trim();
+      if (!taskName) {
+        return json({ status: "error", error: { code: "INVALID", message: "Tên công việc không được để trống" } });
+      }
+      let progress = parseInt(body.progress || 0, 10);
+      if (isNaN(progress)) progress = 0;
+      if (progress < 0) progress = 0;
+      if (progress > 100) progress = 100;
+      
+      const criteria = String(body.criteria || "").trim();
+      let status = String(body.status || "").trim();
+      if (!status) {
+        status = progress >= 100 ? "Hoàn thành" : (progress > 0 ? "Đang làm" : "Chưa làm");
+      }
+      const notes = String(body.notes || "").trim();
+      
+      const nextRow = sheet.getLastRow() + 1;
+      const stt = nextRow - 1;
+      sheet.appendRow([stt, taskName, progress + "%", criteria, status, nowStr, notes]);
+      
+      return json({
+        status: "ok",
+        action: "added",
+        data: { row: nextRow, stt, taskName, progress, criteria, status, updatedAt: nowStr, notes }
+      });
+    }
+    
+    // --- UPDATE TASK ---
+    if (body.action === "task_notes_update") {
+      const row = parseInt(body.row, 10);
+      if (!row || row < 2) {
+        return json({ status: "error", error: { code: "INVALID", message: "Hàng cần cập nhật không hợp lệ" } });
+      }
+      const taskName = String(body.taskName !== undefined ? body.taskName : "").trim();
+      let progress = parseInt(body.progress || 0, 10);
+      if (isNaN(progress)) progress = 0;
+      if (progress < 0) progress = 0;
+      if (progress > 100) progress = 100;
+      
+      const criteria = String(body.criteria !== undefined ? body.criteria : "").trim();
+      let status = String(body.status !== undefined ? body.status : "").trim();
+      if (!status) {
+        status = progress >= 100 ? "Hoàn thành" : (progress > 0 ? "Đang làm" : "Chưa làm");
+      }
+      const notes = String(body.notes !== undefined ? body.notes : "").trim();
+      
+      const updateData = [
+        [row - 1, taskName, progress + "%", criteria, status, nowStr, notes]
+      ];
+      sheet.getRange(row, 1, 1, 7).setValues(updateData);
+      
+      return json({
+        status: "ok",
+        action: "updated",
+        data: { row, taskName, progress, criteria, status, updatedAt: nowStr, notes }
+      });
+    }
+    
+    // --- QUICK UPDATE PROGRESS ---
+    if (body.action === "task_notes_update_progress") {
+      const row = parseInt(body.row, 10);
+      if (!row || row < 2) {
+        return json({ status: "error", error: { code: "INVALID", message: "Hàng không hợp lệ" } });
+      }
+      let progress = parseInt(body.progress || 0, 10);
+      if (isNaN(progress)) progress = 0;
+      if (progress < 0) progress = 0;
+      if (progress > 100) progress = 100;
+      const status = progress >= 100 ? "Hoàn thành" : (progress > 0 ? "Đang làm" : "Chưa làm");
+      sheet.getRange(row, 3).setValue(progress + "%");
+      sheet.getRange(row, 5).setValue(status);
+      sheet.getRange(row, 6).setValue(nowStr);
+      return json({ status: "ok", action: "progress_updated", data: { row, progress, status, updatedAt: nowStr } });
+    }
+    
+    // --- DELETE TASK ---
+    if (body.action === "task_notes_delete") {
+      const row = parseInt(body.row, 10);
+      if (!row || row < 2) {
+        return json({ status: "error", error: { code: "INVALID", message: "Hàng cần xóa không hợp lệ" } });
+      }
+      sheet.deleteRow(row);
+      const totalRows = sheet.getLastRow();
+      if (totalRows >= 2) {
+        for (let r = 2; r <= totalRows; r++) {
+          sheet.getRange(r, 1).setValue(r - 1);
+        }
+      }
+      return json({ status: "ok", action: "deleted", data: { row } });
+    }
+    
+    return json({ status: "error", error: { code: "UNKNOWN_ACTION", message: "Unknown action: " + body.action } });
+  } catch (err) {
+    return json({ status: "error", error: { code: "SERVER_ERROR", message: err.message } });
+  }
+}
+
+// ============================================================
 // ATTENDANCE COLLECTOR — Morning Attendance & Staff Leave Records
 // v2026-08-17 — Split Team Leader Attendance & Staff Leave into Sheet
 // Sheet ID: 18zQB4i0Fu4QfKKkkUZUd6SKWIEbdWDiwdpgNSaL9v54
@@ -3544,3 +3998,314 @@ function setupReadGroupCleanupTrigger() {
 
   Logger.log("✅ Đã cài trigger dọn dẹp Read Group: ngày 16 hàng tháng lúc ~01:00-02:00 Myanmar");
 }
+
+// ============================================================
+// GHẾ: DESK-NOCPRO-1 (Nocpro Desktop Alarm Sync)
+// GHẾ GIÁM SÁT: AUDITOR-NOCPRO-9.3
+// Đồng bộ dữ liệu Alarm xuất từ Nocpro vào Sheet 1. Input New (A:AA)
+// ============================================================
+function handleNocproSyncSheet_(body) {
+  try {
+    const TARGET_SS_ID = "1aAMxzyhiiYYZ1Hl8n8VYgXTfu3Cx_ivX6X-WSzXbFcI";
+    const TARGET_TAB_NAME = "1. Input New";
+    const TARGET_GID = "85422169";
+
+    const rows = body.rows || [];
+    const sourceFile = (body.source_file || "").trim();
+
+    // 🔒 KHÓA THÉP ZERO-WIPE GUARD (RULE PM-89):
+    // Tuyệt đối không xóa dữ liệu trên sheet nếu không có file export thực tế hoặc không đủ số dòng tối thiểu.
+    // File xuất chuẩn của Nocpro luôn có ít nhất: Dòng 1 (Exported time), Dòng 2 (Tiêu đề), Dòng 3 (Header), và từ Dòng 4 trở đi là dữ liệu Alarm.
+    if (!sourceFile) {
+      Logger.log("⛔ [ZERO-WIPE GUARD] Chặn thao tác: Thiếu source_file xuất từ Nocpro. Giữ nguyên 100% dữ liệu trên link!");
+      return json({
+        status: "error",
+        code: "ZERO_WIPE_GUARD_NO_SOURCE",
+        message: "ZERO-WIPE GUARD: Khong co ten file excel export tu Nocpro. Tuyet doi khong xoa du lieu tren sheet!"
+      });
+    }
+
+    if (!rows || rows.length < 4) {
+      Logger.log("⛔ [ZERO-WIPE GUARD] Chặn thao tác: Số dòng dữ liệu (" + (rows ? rows.length : 0) + ") < 4 (không đủ cấu trúc Header + Alarm). Giữ nguyên 100% dữ liệu trên link!");
+      return json({
+        status: "error",
+        code: "ZERO_WIPE_GUARD_EMPTY_ROWS",
+        message: "ZERO-WIPE GUARD: Du lieu rows khong hop le hoac khong co Alarm (" + (rows ? rows.length : 0) + " dong). Tuyet doi khong xoa du lieu tren sheet!"
+      });
+    }
+
+    // 🔒 SEAT GUARD DESK-NOCPRO-1 (sự cố 12/10/2026 05:50): cảnh báo New KHÔNG có End time (cột K).
+    // Có End time = dữ liệu Cleared/History -> từ chối TRƯỚC khi xóa tab, giữ nguyên Sheet.
+    if (String((rows[2] || [])[10] || "").trim() !== "End time") {
+      return json({ status: "error", code: "SEAT_GUARD_HEADER", message: "Header col K is not 'End time'. Nothing written." });
+    }
+    let endedRows = 0;
+    for (let i = 3; i < rows.length; i++) {
+      if (String((rows[i] || [])[10] || "").trim() !== "") endedRows++;
+    }
+    if (endedRows > 0) {
+      return json({ status: "error", code: "SEAT_GUARD_NOT_NEW", message: endedRows + " rows have End time -> not 'New alarm' data. Refused for '1. Input New'. Nothing written." });
+    }
+
+    const ss = SpreadsheetApp.openById(TARGET_SS_ID);
+    let ws = null;
+    for (const s of ss.getSheets()) {
+      if (s.getSheetId().toString() === TARGET_GID) {
+        ws = s;
+        break;
+      }
+    }
+    if (!ws || ws.getName() !== TARGET_TAB_NAME) {
+      return json({ status: "error", message: "Worksheet GID " + TARGET_GID + " / '" + TARGET_TAB_NAME + "' mismatch. Nothing written." });
+    }
+
+    const neededRows = rows.length;
+    const currentLastRow = Math.max(ws.getLastRow(), 1);
+
+    // 1. Đảm bảo sheet đủ số dòng
+    const maxRows = ws.getMaxRows();
+    if (neededRows > maxRows) {
+      ws.insertRowsAfter(maxRows, neededRows - maxRows);
+    }
+
+    // 2. Chuẩn hóa ma trận đủ 27 cột (A:AA)
+    const formattedRows = rows.map(function(r) {
+      const rowArr = Array.isArray(r) ? r : [];
+      const newRow = [];
+      for (let c = 0; c < 27; c++) {
+        newRow.push(c < rowArr.length && rowArr[c] !== null && rowArr[c] !== undefined ? String(rowArr[c]) : "");
+      }
+      return newRow;
+    });
+
+    // 3. Ghi đè trực tiếp dữ liệu mới vào A1:AA{neededRows} (atomic, không làm rỗng bảng, không đứt công thức)
+    ws.getRange(1, 1, neededRows, 27).setValues(formattedRows);
+
+    // 4. Nếu trước đó có nhiều dòng hơn (ví dụ còn dư từ lần xuất lỗi), chỉ xóa phần dư từ neededRows + 1
+    if (currentLastRow > neededRows) {
+      ws.getRange(neededRows + 1, 1, currentLastRow - neededRows, 27).clearContent();
+    }
+    
+    // Định dạng rõ ràng ô A1 (Exported Time) để luôn hiển thị chữ đen, đậm, dễ quan sát
+    try {
+      ws.getRange(1, 1).setFontColor("#000000").setFontWeight("bold");
+    } catch(fErr) {}
+
+    // 5. Lưu trạng thái kiểm toán cho Ghế Giám Sát AUDITOR-NOCPRO-9.3 (lưu ngay sau khi setValues)
+    const auditInfo = {
+      seat: "DESK-NOCPRO-1",
+      supervisor_seat: "AUDITOR-NOCPRO-9.3",
+      rows_synced: neededRows,
+      source_file: sourceFile,
+      timestamp: new Date().toISOString(),
+      status: "OK",
+      action: body.sub_action || "export_access_alarm"
+    };
+    PropertiesService.getScriptProperties().setProperty("AUDIT_DESK_NOCPRO_1", JSON.stringify(auditInfo));
+
+    SpreadsheetApp.flush();
+
+    return json({
+      status: "ok",
+      seat: "DESK-NOCPRO-1",
+      supervisor_seat: "AUDITOR-NOCPRO-9.3",
+      rows_written: neededRows,
+      cols_written: 27,
+      tab: TARGET_TAB_NAME,
+      source_file: sourceFile,
+      timestamp: auditInfo.timestamp
+    });
+  } catch (err) {
+    Logger.log("❌ Lỗi handleNocproSyncSheet_: " + err.message);
+    const errAudit = {
+      seat: "DESK-NOCPRO-1",
+      supervisor_seat: "AUDITOR-NOCPRO-9.3",
+      timestamp: new Date().toISOString(),
+      status: "FAIL",
+      error: err.message
+    };
+    PropertiesService.getScriptProperties().setProperty("AUDIT_DESK_NOCPRO_1", JSON.stringify(errAudit));
+    return json({ status: "error", message: err.message, stack: err.stack });
+  }
+}
+
+// ============================================================
+// 3 GHẾ NOCPRO — MỖI GHẾ ĐÚNG 1 TAB (khóa cứng, không suy luận):
+//   DESK-NOCPRO-1 : New alarm          -> "1. Input New"                               GID 85422169   (handleNocproSyncSheet_)
+//   DESK-NOCPRO-2 : Cleared Flow Loss  -> "1.1 Input  Site Clear+History"             GID 379017693  (hàm này, sub_action flow_loss)
+//   DESK-NOCPRO-3 : Cleared Door       -> "1.1.2 Input Clear + History open the door" GID 2099413230 (hàm này, sub_action door_alarm)
+// seat + sub_action + target_gid PHẢI khớp đúng 1 dòng bảng; nội dung từng dòng kiểm theo ghế trước khi ghi.
+// ============================================================
+const NOCPRO_CLEAR_SEATS_ = {
+  "DESK-NOCPRO-2": { sub: "flow_loss", gid: "379017693", tab: "1.1 Input  Site Clear+History",
+                     auditKey: "AUDIT_DESK_NOCPRO_2", supervisor: "AUDITOR-NOCPRO-9.4" },
+  "DESK-NOCPRO-3": { sub: "door_alarm", gid: "2099413230", tab: "1.1.2 Input Clear + History open the door",
+                     auditKey: "AUDIT_DESK_NOCPRO_3", supervisor: "AUDITOR-NOCPRO-9.5" }
+};
+
+function handleNocproSyncClearHistory_(body) {
+  // Ghế xác định bởi body.seat; tương thích bản cũ (không gửi seat) chỉ cho Flow Loss.
+  const seatId = String(body.seat || (body.sub_action === "flow_loss" ? "DESK-NOCPRO-2" : ""));
+  const SEAT = NOCPRO_CLEAR_SEATS_[seatId];
+  try {
+    if (!SEAT || body.sub_action !== SEAT.sub || String(body.target_gid) !== SEAT.gid) {
+      return json({ status: "error", code: "SEAT_MISMATCH", message: "Seat/sub_action/target_gid mismatch (seat='" + seatId +
+        "', sub_action='" + body.sub_action + "', gid='" + body.target_gid + "'). Nothing written." });
+    }
+    const isDoor = SEAT.sub === "door_alarm";
+    const TARGET_SS_ID = "1aAMxzyhiiYYZ1Hl8n8VYgXTfu3Cx_ivX6X-WSzXbFcI";
+    const TARGET_TAB_NAME = SEAT.tab;
+    const TARGET_GID = SEAT.gid;
+    const minBlankRow = 6;
+
+    const rows = body.rows || [];
+    if (!rows || rows.length === 0) {
+      return json({ status: "error", message: "rows array is empty" });
+    }
+    // KIỂM NỘI DUNG THEO GHẾ: Cleared -> End time (K) phải có; Flow Loss -> O = "Flow Loss"; Door -> R chứa "door"
+    for (let i = 0; i < rows.length; i++) {
+      const r = Array.isArray(rows[i]) ? rows[i] : [];
+      if (!r.some(function (v) { return String(v == null ? "" : v).trim() !== ""; })) continue;
+      const endT = String(r[10] == null ? "" : r[10]).trim();
+      const grp = String(r[14] == null ? "" : r[14]).trim();
+      const nm = String(r[17] == null ? "" : r[17]).toLowerCase();
+      const okRow = endT !== "" && (isDoor ? nm.indexOf("door") >= 0 : grp === "Flow Loss");
+      if (!okRow) {
+        return json({ status: "error", code: "SEAT_GUARD_CONTENT", message: "Row " + (i + 1) + " does not belong to seat " + seatId +
+          " (End time/Alarm group/Alarm name). Nothing written." });
+      }
+    }
+
+    const ss = SpreadsheetApp.openById(TARGET_SS_ID);
+    let ws = null;
+    for (const s of ss.getSheets()) {
+      if (s.getSheetId().toString() === TARGET_GID) {
+        ws = s;
+        break;
+      }
+    }
+    if (!ws) {
+      return json({ status: "error", message: "Worksheet GID " + TARGET_GID + " not found" });
+    }
+    // CHỐT CHẶN: đúng GID VÀ đúng tên tab (tên thật có 2 dấu cách; so sánh sau khi chuẩn hóa khoảng trắng)
+    const normTab_ = function (t) { return String(t).replace(/\s+/g, " ").trim().toLowerCase(); };
+    if (normTab_(ws.getName()) !== normTab_(TARGET_TAB_NAME)) {
+      return json({ status: "error", message: "Worksheet name mismatch: GID " + TARGET_GID + " is '" + ws.getName() + "', expected '" + TARGET_TAB_NAME + "'. Nothing written." });
+    }
+
+    // Cột ngày-giờ (0-based, ví dụ [9,10] = J,K): chuỗi dd/MM/yyyy HH:mm:ss -> số serial Sheets
+    const dtCols = Array.isArray(body.datetime_cols) ? body.datetime_cols : [];
+    const toSerial_ = function (s) {
+      const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})[ T](\d{1,2}):(\d{2}):(\d{2})$/.exec(s);
+      if (!m) return null;
+      const days = Math.round((Date.UTC(+m[3], +m[2] - 1, +m[1]) - Date.UTC(1899, 11, 30)) / 86400000);
+      return days + (+m[4] * 3600 + +m[5] * 60 + +m[6]) / 86400;
+    };
+
+    // 1. Chuẩn hóa ma trận đủ 27 cột (A:AA) và lọc bỏ dòng hoàn toàn rỗng
+    const formattedRows = [];
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      const rowArr = Array.isArray(r) ? r : [];
+      let hasData = false;
+      const newRow = [];
+      for (let c = 0; c < 27; c++) {
+        let val = (c < rowArr.length && rowArr[c] !== null && rowArr[c] !== undefined) ? String(rowArr[c]).trim() : "";
+        if (val !== "" && dtCols.indexOf(c) >= 0) {
+          const ser = toSerial_(val);
+          if (ser === null) {
+            return json({ status: "error", message: "Bad datetime '" + val + "' at row " + (i + 1) + " col " + (c + 1) + ". Nothing written." });
+          }
+          val = ser;
+        }
+        newRow.push(val);
+        if (val !== "") hasData = true;
+      }
+      if (hasData) {
+        formattedRows.push(newRow);
+      }
+    }
+
+    if (formattedRows.length === 0) {
+      return json({ status: "error", message: "No valid non-empty data rows to append" });
+    }
+
+    // 2. Tìm hàng trống đầu tiên trong dải A:AA (bắt đầu từ hàng minBlankRow trở đi)
+    const colAValues = ws.getRange("A1:A" + Math.max(ws.getLastRow(), 1)).getValues();
+    let firstBlankRow = minBlankRow;
+    for (let i = colAValues.length - 1; i >= 0; i--) {
+      const val = colAValues[i][0];
+      if (val !== "" && val !== null && val !== undefined) {
+        firstBlankRow = Math.max(i + 2, minBlankRow);
+        break;
+      }
+    }
+
+    // 3. Đảm bảo sheet có đủ số dòng
+    const neededRows = formattedRows.length;
+    const targetEndRow = firstBlankRow + neededRows - 1;
+    const maxRows = ws.getMaxRows();
+    if (targetEndRow > maxRows) {
+      ws.insertRowsAfter(maxRows, targetEndRow - maxRows + 20);
+    }
+
+    // 4. Ghi nối tiếp vào A{firstBlankRow}:AA{targetEndRow}; cột ngày-giờ lấy đúng định dạng của dòng dữ liệu liền trên
+    ws.getRange(firstBlankRow, 1, neededRows, 27).setValues(formattedRows);
+    if (firstBlankRow > minBlankRow) {
+      dtCols.forEach(function (c) {
+        const fmt = ws.getRange(firstBlankRow - 1, c + 1).getNumberFormat();
+        ws.getRange(firstBlankRow, c + 1, neededRows, 1).setNumberFormat(fmt);
+      });
+    }
+
+    SpreadsheetApp.flush();
+
+    // 5. Lưu trạng thái kiểm toán cho Ghế Giám Sát của ĐÚNG ghế này
+    const auditKey = SEAT.auditKey;
+    const auditInfo = {
+      seat: seatId,
+      supervisor_seat: SEAT.supervisor,
+      task: SEAT.sub,
+      tab: TARGET_TAB_NAME,
+      gid: TARGET_GID,
+      rows_appended: neededRows,
+      start_row: firstBlankRow,
+      end_row: targetEndRow,
+      timestamp: new Date().toISOString(),
+      status: "OK",
+      source_file: body.source_file || "",
+      action: "nocpro_sync_clear_history"
+    };
+    PropertiesService.getScriptProperties().setProperty(auditKey, JSON.stringify(auditInfo));
+
+    return json({
+      status: "ok",
+      seat: seatId,
+      supervisor_seat: SEAT.supervisor,
+      task: SEAT.sub,
+      rows_written: neededRows,
+      start_row: firstBlankRow,
+      end_row: targetEndRow,
+      cols_written: 27,
+      tab: TARGET_TAB_NAME,
+      gid: TARGET_GID,
+      timestamp: auditInfo.timestamp
+    });
+  } catch (err) {
+    Logger.log("❌ Lỗi handleNocproSyncClearHistory_: " + err.message);
+    if (SEAT) {
+      const errAudit = {
+        seat: seatId,
+        supervisor_seat: SEAT.supervisor,
+        timestamp: new Date().toISOString(),
+        status: "FAIL",
+        source_file: body.source_file || "",
+        error: err.message
+      };
+      PropertiesService.getScriptProperties().setProperty(SEAT.auditKey, JSON.stringify(errAudit));
+    }
+    return json({ status: "error", message: err.message, stack: err.stack });
+  }
+}
+
+

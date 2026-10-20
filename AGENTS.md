@@ -3114,3 +3114,23 @@ Reason: [Lý do]`
 > - **Fix B**: Bo dong `try { lock.releaseLock(); } catch(eLock) {}` som, giu lock den finally block cuoi doPost de bao ve toan bo qua trinh ghi Col A + doc processSiteDownColC.
 > - **Deploy**: `@123` | `clasp push --force` + `clasp deploy -i AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-` | Dong bo 3 repos: tni-sitedown, Task and WO, tni-search.
 
+
+> **PM-108 (20/10/2026) — Khắc Phục Lỗi `classify()` Chặn Thu Thập Approved Letter, Đồng Bộ Live Table 2 Department Point Matrix (In Đậm Số > 0) & Bổ Sung Giám Sát Tự Động Bù Đơn `AUDITOR-3.1` (`@522`)**:
+> - **Bối cảnh & Yêu cầu**:
+>   1. Trên Dashboard Web UI (`index.html`), bảng `Table 2: Department Point Matrix — Range X50:AD56 (Sheet 'Sum all WO Team')` không tự động cập nhật dữ liệu mới từ Sheet và chưa in đậm tất cả các con số `> 0` (`TL:X`, `/Y`, `P:Z`).
+>   2. Trong nhóm `9 TNI REQUEST REFUEL` (`-5469544739`), khi nhân sự `Hein Nanda m&e` gửi `Approved Letter: 19/10/2026` lúc 22:10, Bot `@TNI_FUEL` không thu thập vào tab `Lettel Progress` và Ghế Giám Sát (`AUDITOR-3.1` / `AUDITOR-9.1`) không phát hiện ra lỗi.
+> - **Nguyên nhân gốc (Root Cause)**:
+>   1. **Table 2 tĩnh & thiếu đồng bộ `tni-search`**: `tbody` của Table 2 trước đây cố định HTML tĩnh; hàm `renderDeptMatrix` chỉ kiểm tra `TL > 0` thay vì in đậm mọi số `> 0` trong `TL:X /Y P:Z`, đồng thời chưa đồng bộ sang repo `tni-search` (`MON6879/TNI-DONE`).
+>   2. **Dòng `return None` lạc chỗ trong `classify()` & chưa deploy Vercel Production**: Trong `api/refuel_collector.py`, dòng `return None` đặt ngay sau nhánh `REFUELED` làm toàn bộ các nhánh phía dưới (`LETTER_SUBMIT`, `LETTER_APPROVED`, `PLAN`, `REQUEST`) biến thành dead code không bao giờ chạy tới. Ngoài ra `REFUEL_PLAN_GAS_URL` chưa ép fallback về `AKfycbz-NZlBk8q2...`, và Vercel Production (`tni-bot.vercel.app`) chưa được chạy `npx vercel --prod`.
+>   3. **Ghế Giám Sát `AUDITOR-3.1` thiếu kiểm toán tự động**: `system_auditor.py` và giao diện Supervisory Sentinel (`index.html`) chỉ kiểm tra lịch gửi báo cáo gộp mà chưa có `run_classifier_self_test()` (kiểm tra 6 mẫu chuẩn trên Vercel), chưa có endpoint `?action=audit_refuel`, và chưa đối chiếu tin nhắn thực tế trong Group 9 với tab `Lettel Progress`.
+> - **Giải pháp & Triển khai Bọc Thép (Rule PM-108)**:
+>   1. **Table 2 Live Sync & In Đậm Mọi Số `> 0` (`index.html`)**: Cập nhật `renderDeptMatrix(dpm)` dùng regex `/(TL:\s*|\/\s*|P:\s*)(\d+)/gi` để in đậm kèm màu sắc cột cho bất kỳ con số nào `> 0` (`TL:X`, `/Y`, `P:Z`), làm mờ nhẹ các số `0`, và cập nhật sẵn dữ liệu mới nhất vào `#dept-matrix-tbody`.
+>   2. **Sửa `api/refuel_collector.py` & `apps_script_refuel_plan.gs` (`@522`)**:
+>      - Xóa dòng `return None` lạc chỗ; hỗ trợ cả `Approve/Approved Letter`, `Submit/Submitted Letter` và khối gộp `/letter`.
+>      - Trong `updateLettelProgress()`, nếu `LETTER_SUBMIT` / `LETTER_APPROVED` được gửi bởi ID chưa khai báo trong cột J tab `Template`, tự động fallback ghi vào dòng 2 (`#00003`) của `Lettel Progress` để không bao giờ rớt công văn.
+>      - Đã thu thập bù thành công `Approved Letter: 19/10/2026` của `Hein Nanda m&e` vào dòng 2 (`#00003`, cột C = `19/10/2026`).
+>   3. **Nâng Cấp Ghế Giám Sát `AUDITOR-3.1` & `AUDITOR-9.1` (Self-Test + Auto-Heal)**:
+>      - Tích hợp `run_classifier_self_test()` vào `GET /api/refuel_collector` (`classifier_self_test: "PASS"` cho đủ 6 mẫu `FT_MONITOR`, `REFUELED`, `LETTER_SUBMIT`, `LETTER_APPROVED`, `PLAN`, `REQUEST`).
+>      - Bổ sung endpoint `?action=audit_refuel` trên GAS (`apps_script_collector.gs` & `apps_script_refuel_plan.gs`).
+>      - Trong `system_auditor.py`: thêm `audit_refuel_collector_and_letter_sync()` và mục C.4 trong `audit_telegram_messages_telethon()` — tự động phát hiện mọi tin báo cáo trong Group 9 chưa có phản hồi `Recorded` của Bot và **tự động bù (Auto-Heal)** đẩy lên GAS + cảnh báo về DM Admin.
+>      - Đồng bộ trạng thái sống của `AUDITOR-3.1` lên bảng điều hành Supervisory Sentinel (`#seat-status-auditor31` trên `index.html`).

@@ -181,6 +181,14 @@ SHEET_CONNECTORS = {
     "Sheet CheckJoint (Attendance)": {
         "url": "https://docs.google.com/spreadsheets/d/18zQB4i0Fu4QfKKkkUZUd6SKWIEbdWDiwdpgNSaL9v54/gviz/tq?tqx=out:csv&sheet=CheckJoint",
         "min_rows": 2
+    },
+    "Sheet Refueled (Refuel SSOT)": {
+        "url": "https://docs.google.com/spreadsheets/d/1JxrA4pJo92Xx_SpwLnOQxphVYwE2iFhLrCOHmyVVuuM/gviz/tq?tqx=out:csv&sheet=Refueled",
+        "min_rows": 2
+    },
+    "Sheet Lettel Progress (Refuel Letter)": {
+        "url": "https://docs.google.com/spreadsheets/d/1JxrA4pJo92Xx_SpwLnOQxphVYwE2iFhLrCOHmyVVuuM/gviz/tq?tqx=out:csv&sheet=Lettel%20Progress",
+        "min_rows": 2
     }
 }
 
@@ -1387,6 +1395,108 @@ def audit_nocpro_alarm_sync():
     return results
 
 
+# ── AUDIT REFUEL COLLECTOR & LETTEL PROGRESS — Ghế AUDITOR-3.1 ──────────────
+def audit_refuel_collector_and_letter_sync():
+    """
+    ══════════════════════════════════════════════════════════════
+    🛡️ GHẾ AUDITOR-3.1 — GIÁM SÁT BỘ PHÂN LOẠI REFUEL & CÔNG VĂN DẦU (LETTEL PROGRESS)
+    ══════════════════════════════════════════════════════════════
+    1. Kiểm tra tự động 6 mẫu classify() của api/refuel_collector.py (Local + Live Vercel).
+    2. Kiểm tra endpoint ?action=audit_refuel trên GAS & tab 'Lettel Progress' trên Sheet.
+    ══════════════════════════════════════════════════════════════
+    """
+    results = []
+
+    # 1. Kiểm tra bộ phân loại classify() Local & Live Vercel
+    try:
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "api"))
+        import refuel_collector as _rc
+        local_st = _rc.run_classifier_self_test()
+        if not local_st.get("passed"):
+            results.append({
+                "component": "Refuel Classifier Local (AUDITOR-3.1)",
+                "status": "FAIL",
+                "label": "🔴 LỖI PHÂN LOẠI LOCAL",
+                "detail": f"Hàm classify() local lỗi mẫu: {local_st.get('failed')}"
+            })
+    except Exception as e_loc:
+        logger.warning(f"[AUDITOR-3.1] Local classifier check warning: {e_loc}")
+
+    try:
+        r_ver = requests.get("https://tni-bot.vercel.app/api/refuel_collector", timeout=12)
+        if r_ver.status_code == 200:
+            v_data = r_ver.json()
+            v_st = v_data.get("classifier_self_test")
+            if v_st == "FAIL":
+                results.append({
+                    "component": "Refuel Classifier Vercel (AUDITOR-3.1)",
+                    "status": "FAIL",
+                    "label": "🔴 LỖI PHÂN LOẠI TRÊN VERCEL",
+                    "detail": f"Vercel /api/refuel_collector lỗi classify(): {v_data.get('failed')}"
+                })
+            elif v_st != "PASS":
+                results.append({
+                    "component": "Refuel Classifier Vercel (AUDITOR-3.1)",
+                    "status": "WARN",
+                    "label": "⚠️ VERCEL CHƯA CẬP NHẬT SELF-TEST",
+                    "detail": "Endpoint /api/refuel_collector trên Vercel chưa có classifier_self_test=PASS"
+                })
+        else:
+            results.append({
+                "component": "Refuel Classifier Vercel (AUDITOR-3.1)",
+                "status": "FAIL",
+                "label": f"🔴 HTTP {r_ver.status_code}",
+                "detail": f"Endpoint /api/refuel_collector trả mã lỗi HTTP {r_ver.status_code}"
+            })
+    except Exception as e_ver:
+        results.append({
+            "component": "Refuel Classifier Vercel (AUDITOR-3.1)",
+            "status": "WARN",
+            "label": "⚠️ Lỗi kết nối Vercel",
+            "detail": str(e_ver)[:60]
+        })
+
+    # 2. Kiểm tra GAS ?action=audit_refuel & tab Lettel Progress
+    audit_url = "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec?action=audit_refuel"
+    try:
+        r_gas = requests.get(audit_url, timeout=20, allow_redirects=True)
+        if r_gas.status_code == 200:
+            g_data = r_gas.json()
+            if g_data.get("status") == "ok":
+                sub_d = g_data.get("latest_submit", "")
+                app_d = g_data.get("latest_approved", "")
+                if sub_d and app_d:
+                    results.append({
+                        "component": "Refuel Lettel Progress (AUDITOR-3.1)",
+                        "status": "PASS",
+                        "label": "OK",
+                        "detail": f"Submit={sub_d} | Approved={app_d}"
+                    })
+                else:
+                    results.append({
+                        "component": "Refuel Lettel Progress (AUDITOR-3.1)",
+                        "status": "WARN",
+                        "label": "⚠️ Thiếu ngày công văn",
+                        "detail": f"Lettel Progress thiếu ngày: Submit='{sub_d}', Approved='{app_d}'"
+                    })
+            else:
+                results.append({
+                    "component": "Refuel Lettel Progress (AUDITOR-3.1)",
+                    "status": "WARN",
+                    "label": "⚠️ GAS trả lỗi",
+                    "detail": g_data.get("message", "Unknown error")
+                })
+    except Exception as e_gas:
+        results.append({
+            "component": "Refuel Lettel Progress (AUDITOR-3.1)",
+            "status": "WARN",
+            "label": "⚠️ Lỗi kết nối GAS audit_refuel",
+            "detail": str(e_gas)[:60]
+        })
+
+    return results
+
+
 # ── 4. KIỂM TRA ĐÚNG GIỜ & PHÁT HIỆN NHÂN ĐÔI TIN NHẮN (TELETHON AUDIT) ─────
 async def audit_telegram_messages_telethon():
     """
@@ -1652,6 +1762,79 @@ async def audit_telegram_messages_telethon():
                                 "detail": f"Nhóm {gkey}: Phát hiện Bot gửi lặp tin mẫu 3+ lần trong vòng 2 phút!"
                             })
                             break
+
+            # 4. Kiểm Tra & Tự Động Bù Đơn Refuel Bị Bỏ Sót Trong Group 9 (AUDITOR-3.1 Auto-Heal)
+            refuel_msgs = group_messages.get("REFUEL", [])
+            if refuel_msgs:
+                try:
+                    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "api"))
+                    import refuel_collector as _rc
+                    # Sắp xếp tin từ cũ đến mới
+                    sorted_rf = sorted(refuel_msgs, key=lambda x: x["date"])
+                    bot_confirmations = [
+                        m for m in sorted_rf
+                        if "Recorded" in m.get("text", "") or "Who is assigned to follow and monitor" in m.get("text", "")
+                    ]
+                    for m in sorted_rf:
+                        txt = m.get("text", "").strip()
+                        if not txt or txt.startswith("/"):
+                            continue
+                        # Bỏ qua tin nhắn mẫu của chính Bot (chứa • Submit Letter: hoặc TNIXXXX hoặc [Report 1])
+                        if ("• Submit Letter:" in txt and "• Approved Letter:" in txt) or "TNIXXXX" in txt or "[Report 1]" in txt or "Welcome to TNI Refuel Bot" in txt or "Recorded" in txt:
+                            continue
+                        cat = _rc.classify(txt)
+                        if not cat:
+                            continue
+                        # Kiểm tra xem có tin xác nhận của Bot trong vòng 10 phút sau tin này (hoặc đã ghi nhận trong Sheet) không
+                        has_reply = any(
+                            0 <= (bc["date"] - m["date"]).total_seconds() <= 600
+                            for bc in bot_confirmations
+                        )
+                        if not has_reply:
+                            # Nếu là LETTER_APPROVED hoặc LETTER_SUBMIT, kiểm tra thêm trên GAS audit_refuel xem ngày đó đã vào Sheet chưa
+                            already_in_sheet = False
+                            m_date = re.search(r'(\d{1,2}[/\.\-]\d{1,2}[/\.\-]\d{4})', txt)
+                            date_extracted = m_date.group(1).replace(".", "/").replace("-", "/") if m_date else ""
+                            if date_extracted:
+                                parts = date_extracted.split("/")
+                                if len(parts) == 3:
+                                    date_extracted = f"{int(parts[0]):02d}/{int(parts[1]):02d}/{parts[2]}"
+                            try:
+                                r_aud = requests.get(
+                                    "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec?action=audit_refuel",
+                                    timeout=12
+                                ).json()
+                                if cat == "LETTER_APPROVED" and date_extracted and r_aud.get("latest_approved") == date_extracted:
+                                    already_in_sheet = True
+                                elif cat == "LETTER_SUBMIT" and date_extracted and r_aud.get("latest_submit") == date_extracted:
+                                    already_in_sheet = True
+                            except Exception:
+                                pass
+
+                            if not already_in_sheet:
+                                # Tự động bù (Auto-Heal) gửi lên GAS để không mất dữ liệu của người dùng!
+                                heal_res = _rc.post_gas({
+                                    "action": "collect_message",
+                                    "group_id": "5469544739",
+                                    "text": txt,
+                                    "sender": "Auto-Healed by AUDITOR-3.1",
+                                    "sender_id": str(m.get("sender_id") or "7237034356"),
+                                    "date": m["date"].strftime("%d/%m/%Y %H:%M"),
+                                    "category": cat,
+                                })
+                                healed_ok = heal_res.get("status") == "ok" and bool(heal_res.get("def"))
+                                quality_results.append({
+                                    "report": f"Refuel Collector ({cat})",
+                                    "group": "REFUEL",
+                                    "status": "WARN" if healed_ok else "FAIL",
+                                    "label": "🟡 AUTO-HEALED UNCOLLECTED" if healed_ok else "🔴 UNCOLLECTED REFUEL MSG",
+                                    "detail": (
+                                        f"Tin '{ m['first_line'][:40] }' lúc {m['time_str']} bị sót phản hồi Bot -> "
+                                        + (f"Ghế AUDITOR-3.1 đã tự động thu thập bù (DEF {heal_res.get('def')}) ✅" if healed_ok else f"Tự động bù thất bại: {heal_res}")
+                                    )
+                                })
+                except Exception as rf_err:
+                    logger.warning(f"[AUDITOR-3.1] Lỗi kiểm tra tin sót Group 9: {rf_err}")
 
         return {
             "available": True,
@@ -1921,15 +2104,27 @@ def build_supervisory_seats_status(eval_data: dict) -> list[str]:
     else:
         seats_output.append("❌ <b>Ghế AUDITOR-2.1 (Giám sát Báo cáo Cáp Cable)</b>: Mất kết nối Webhook Cable")
 
-    # 4. Ghế AUDITOR-3.1 (Giám sát Nhiên liệu Refuel & Plan)
+    # 4. Ghế AUDITOR-3.1 (Giám sát Nhiên liệu Refuel & Plan & Lettel Progress)
     refuel_sched = [s for s in schedule_res if "Refuel" in s.get("report", "")]
     refuel_dups = [d for d in duplicate_res if "REFUEL" in d.get("group", "").upper()]
     refuel_fails = [s for s in refuel_sched if s.get("status") in ("FAIL", "WARN")]
-    if not refuel_fails and not refuel_dups:
-        seats_output.append("✅ <b>Ghế AUDITOR-3.1 (Giám sát Nhiên liệu Refuel)</b>: Hoạt động chuẩn xác (Lọc trùng & tiến độ)")
+    refuel_audit_res = eval_data.get("refuel_audit_res", [])
+    rf_audit_fails = [r for r in refuel_audit_res if r.get("status") in ("FAIL", "WARN")]
+    rf_qual_fails = [q for q in eval_data.get("quality_res", []) if q.get("group") == "REFUEL"]
+    if not refuel_fails and not refuel_dups and not rf_audit_fails and not rf_qual_fails:
+        lp_info = next((r.get("detail", "") for r in refuel_audit_res if r.get("status") == "PASS"), "Lọc trùng & tiến độ")
+        seats_output.append(f"✅ <b>Ghế AUDITOR-3.1 (Giám sát Nhiên liệu Refuel)</b>: Hoạt động chuẩn xác (6/6 mẫu classify OK | {lp_info})")
     else:
-        issue_txt = f"{len(refuel_dups)} tin đúp" if refuel_dups else f"{len(refuel_fails)} trễ giờ"
-        seats_output.append(f"⚠️ <b>Ghế AUDITOR-3.1 (Giám sát Nhiên liệu Refuel)</b>: Hoạt động ({issue_txt})")
+        issues = []
+        if refuel_dups:
+            issues.append(f"{len(refuel_dups)} tin đúp")
+        if refuel_fails:
+            issues.append(f"{len(refuel_fails)} trễ giờ")
+        if rf_audit_fails:
+            issues.append(rf_audit_fails[0].get("label", "lỗi collector"))
+        if rf_qual_fails:
+            issues.append(rf_qual_fails[0].get("label", "sót tin"))
+        seats_output.append(f"⚠️ <b>Ghế AUDITOR-3.1 (Giám sát Nhiên liệu Refuel)</b>: Hoạt động ({', '.join(issues)})")
 
     # 5. Ghế AUDITOR-4.1 (Giám sát Kế hoạch Daily Plan 5A-5C)
     plan_sched = [s for s in schedule_res if any(k in s.get("report", "") for k in ["Report 5", "Plan"])]
@@ -2088,6 +2283,7 @@ def build_master_audit_report():
     guide_sync_res = audit_construction_guide_sync()
     inventory_res = audit_sale_inventory()
     nocpro_res = audit_nocpro_alarm_sync()
+    refuel_audit_res = audit_refuel_collector_and_letter_sync()
 
     # 2. Chạy kiểm tra Telethon (Đúng giờ & Nhân đôi)
     try:
@@ -2113,13 +2309,14 @@ def build_master_audit_report():
         "guide_sync_res": guide_sync_res,
         "inventory_res": inventory_res,
         "nocpro_res": nocpro_res,
+        "refuel_audit_res": refuel_audit_res,
         "schedule_res": schedule_res,
         "duplicate_res": duplicate_res,
         "quality_res": quality_res
     }
 
     # 4. Tính toán sự cố (Chỉ tính status FAIL là lỗi thực sự)
-    all_static_checks = webhook_res + gas_res + sheets_res + roster_res + template_res + dept_task_res + bi_anomaly_res + cons_menu_res + guide_sync_res + inventory_res + nocpro_res
+    all_static_checks = webhook_res + gas_res + sheets_res + roster_res + template_res + dept_task_res + bi_anomaly_res + cons_menu_res + guide_sync_res + inventory_res + nocpro_res + refuel_audit_res
     fail_checks = sum(1 for c in all_static_checks if c["status"] == "FAIL")
     warn_checks = sum(1 for c in all_static_checks if c["status"] == "WARN")
 

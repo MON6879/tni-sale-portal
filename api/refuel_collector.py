@@ -25,9 +25,10 @@ REFUEL_PLAN_GAS_URL = (
     ""
 ).strip()
 
-# Tự động chuyển đổi nếu URL chứa deployment cũ đã bị Google lưu trữ (archive)
-if not REFUEL_PLAN_GAS_URL or "AKfycbzZmFw" in REFUEL_PLAN_GAS_URL or "AKfycbwHyzul" in REFUEL_PLAN_GAS_URL or "AKfycbwi3J0" in REFUEL_PLAN_GAS_URL:
-    REFUEL_PLAN_GAS_URL = "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
+# Tự động chuyển đổi về SSOT GAS URL hiện hành nếu env chứa deployment cũ
+MAIN_GAS_FALLBACK = "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
+if not REFUEL_PLAN_GAS_URL or "AKfycbz-NZlBk8q2" not in REFUEL_PLAN_GAS_URL:
+    REFUEL_PLAN_GAS_URL = MAIN_GAS_FALLBACK
 
 PLAN_GROUP_ID       = "5469544739"   # ID group 9 TNI REQUEST REFUEL (dạng số dương, không có dấu -)
 
@@ -65,18 +66,20 @@ def classify(text: str) -> str | None:
 
     if has_site and refueled_metrics and (refueled_start or ('before' in t and 'after' in t)) and refueled_keywords:
         return "REFUELED"
-    return None
 
-    # 3. LETTER_SUBMIT: Bắt buộc BẮT ĐẦU bằng 'Letter Submit:' hoặc 'Submit Letter:'
-    if (re.search(r'^\s*(?:•\s*)?(letter\s*submit|submit\s*letter)\s*[:\-]', t) or 
-        re.search(r'^\s*(?:•\s*)?(letter\s*submit|submit\s*letter)\b.*\d{1,2}[/\-\.]\d{1,2}', t)):
-        return "LETTER_SUBMIT"
-
-    # 4. LETTER_APPROVED: Bắt buộc BẮT ĐẦU bằng 'Approved Letter:' hoặc 'Letter Approved:' hoặc 'Government Approved:'
-    if (re.search(r'^\s*(?:•\s*)?(approved\s*letter|letter\s*approved)\s*[:\-]', t) or 
-        re.search(r'^\s*(?:•\s*)?(approved\s*letter|letter\s*approved)\b.*\d{1,2}[/\-\.]\d{1,2}', t) or
-        re.search(r'^\s*government\s+approved\s*[:\-]', t)):
+    # 3. LETTER_APPROVED & 4. LETTER_SUBMIT: Hỗ trợ đơn lẻ, có dấu • đầu dòng, hoặc copy nguyên khối /letter
+    has_approve_line = bool(
+        re.search(r'(?:^|\n)\s*(?:[•\-\*]\s*)?(?:approve(?:d)?\s*letter|letter\s*approve(?:d)?|government\s+approve(?:d)?)\s*[:\-]', t) or
+        re.search(r'(?:^|\n)\s*(?:[•\-\*]\s*)?(?:approve(?:d)?\s*letter|letter\s*approve(?:d)?)\b.*\d{1,2}[/\-\.]\d{1,2}', t)
+    )
+    has_submit_line = bool(
+        re.search(r'(?:^|\n)\s*(?:[•\-\*]\s*)?(?:letter\s*submit(?:ted)?|submit(?:ted)?\s*letter)\s*[:\-]', t) or
+        re.search(r'(?:^|\n)\s*(?:[•\-\*]\s*)?(?:letter\s*submit(?:ted)?|submit(?:ted)?\s*letter)\b.*\d{1,2}[/\-\.]\d{1,2}', t)
+    )
+    if has_approve_line:
         return "LETTER_APPROVED"
+    if has_submit_line:
+        return "LETTER_SUBMIT"
 
     # 5. PLAN: Bắt buộc BẮT ĐẦU bằng 'Plan refuel' hoặc 'Team X Plan' VÀ có mã trạm TNI
     if re.search(r'^\s*(?:plan\s*refuel|team[\s_\-]*0*[1-4](?:\s*s\d+)?\s*plan(?:\s*refuel)?)\b', t):
@@ -347,7 +350,7 @@ def process_update(update: dict):
             s_id = str(f_user.get("id", ""))
             if s_id:
                 import threading
-                threading.Thread(
+                th = threading.Thread(
                     target=post_gas,
                     args=({
                         "action": "realtime_read",
@@ -357,7 +360,9 @@ def process_update(update: dict):
                         "text": text[:100],
                     },),
                     daemon=True
-                ).start()
+                )
+                th.start()
+                th.join(timeout=2.5)
         logger.info("No keyword match (casual chat logged async) — skip")
         return
 
@@ -487,11 +492,36 @@ def _tg_secret_ok(headers, env_name):
     """PM-97 R5: constant-time Telegram webhook secret check when configured; allow if env not set."""
     import hmac as _hmac
     import os as _os
-    exp = _os.environ.get(env_name, "").strip()
+    exp = _os.environ.get(env_name, "").strip().strip('"').strip("'")
     if not exp:
         return True
     got = headers.get("X-Telegram-Bot-Api-Secret-Token", "").strip()
     return bool(got) and _hmac.compare_digest(got.encode("utf-8"), exp.encode("utf-8"))
+
+
+def run_classifier_self_test() -> dict:
+    """Tự kiểm tra 6 mẫu chuẩn của bộ phân loại classify() phục vụ Ghế Giám Sát AUDITOR-3.1 & AUDITOR-9.1."""
+    samples = {
+        "FT_MONITOR": "Name of FT staff member accompanying to supervise: Paung Aung Soe - 19/10/2026 TNI0213 + 660L",
+        "REFUELED": "DG Type\nDate: 19/10/2026\nDG ID: TNI0004\nRunning Hour: 100\nBefore:\nCSU Reading (L): 10\nAfter:\nCSU Reading (L): 200\nActual Filled Qty (L): 190",
+        "LETTER_SUBMIT": "Letter Submit: 19/10/2026",
+        "LETTER_APPROVED": "Approved Letter: 19/10/2026",
+        "PLAN": "Team 1 Plan refuel 20/10/2026 : TNI0061 440L",
+        "REQUEST": "Team 1 request 20/10/2026: TNI0129: 440L",
+    }
+    ok_cats = []
+    failed = {}
+    for expected, sample_text in samples.items():
+        got = classify(sample_text)
+        if got == expected:
+            ok_cats.append(expected)
+        else:
+            failed[expected] = got
+    return {
+        "passed": len(failed) == 0,
+        "categories_ok": ok_cats,
+        "failed": failed,
+    }
 
 
 class handler(BaseHTTPRequestHandler):
@@ -516,10 +546,18 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"ok": True}).encode())
 
     def do_GET(self):
-        self.send_response(200)
+        st = run_classifier_self_test()
+        resp = {
+            "status": "ok" if st["passed"] else "error",
+            "service": "TNI Refuel Collector",
+            "classifier_self_test": "PASS" if st["passed"] else "FAIL",
+            "categories_ok": st["categories_ok"],
+            "failed": st["failed"],
+        }
+        self.send_response(200 if st["passed"] else 500)
         self.send_header("Content-Type", "application/json")
         self.end_headers()
-        self.wfile.write(json.dumps({"status": "ok", "service": "TNI Refuel Collector"}).encode())
+        self.wfile.write(json.dumps(resp).encode())
 
     def log_message(self, fmt, *args):
         logger.info(fmt % args)
