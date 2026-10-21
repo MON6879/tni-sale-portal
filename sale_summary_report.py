@@ -31,7 +31,9 @@ logger = logging.getLogger("SaleTrain")
 TZ_MM = timezone(timedelta(hours=6, minutes=30))
 SALE_SS_ID = "1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA"
 
-BOT_TOKEN = os.getenv("SALE_BOT_TOKEN") or os.getenv("SEND_BOT_TOKEN") or ""
+SALE_BOT_TOKEN = os.getenv("SALE_BOT_TOKEN", "").strip()
+SEND_BOT_TOKEN = os.getenv("SEND_BOT_TOKEN", "").strip()
+BOT_TOKEN = SALE_BOT_TOKEN or SEND_BOT_TOKEN
 ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID", "6859790680")
 
 def fetch_gviz_rows(gid):
@@ -51,23 +53,31 @@ def fetch_gviz_rows(gid):
         logger.warning(f"GViz fetch error for GID {gid}: {e}")
         return [], []
 
-def send_telegram(chat_id, text):
-    if not BOT_TOKEN or not chat_id:
+def send_telegram(chat_id, text, preferred_token=None):
+    tokens = [t for t in [preferred_token, SALE_BOT_TOKEN, SEND_BOT_TOKEN] if t]
+    # Deduplicate while preserving order
+    seen = set()
+    unique_tokens = [t for t in tokens if not (t in seen or seen.add(t))]
+    if not unique_tokens or not chat_id:
         return False
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     payload = json.dumps({
         "chat_id": str(chat_id),
         "text": text,
         "parse_mode": "HTML",
         "disable_web_page_preview": True
     }).encode("utf-8")
-    try:
-        req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            return resp.status == 200
-    except Exception as e:
-        logger.error(f"Failed to send to {chat_id}: {e}")
-        return False
+    last_err = None
+    for tk in unique_tokens:
+        url = f"https://api.telegram.org/bot{tk}/sendMessage"
+        try:
+            req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                if resp.status == 200:
+                    return True
+        except Exception as e:
+            last_err = e
+    logger.error(f"Failed to send to {chat_id}: {last_err}")
+    return False
 
 def _in_slot(now_mm):
     """True within 15 min of 11:30 or 17:30 MMT. Allows for sequential train queue delay while preventing out-of-window runs."""
@@ -143,7 +153,7 @@ def run_sale_summary():
     # Gửi bản tổng hợp vận hành vào CONTROL SITE (-5251698940) phục vụ Ban Điều Hành & Auditor
     control_chat_id = os.getenv("CONTROL_CHAT_ID", "-5251698940")
     if control_chat_id:
-        send_telegram(control_chat_id, central_msg)
+        send_telegram(control_chat_id, central_msg, preferred_token=SEND_BOT_TOKEN)
 
     # 5. Báo cáo Giám Đốc (Admin DM)
     if ADMIN_CHAT_ID:
@@ -155,7 +165,7 @@ def run_sale_summary():
             f"🛡️ <b>Zero Cost Leakage:</b> 100% verified (no base cost in public groups)\n"
             f"✅ <b>Auditor:</b> 100% Live Fresh Parity Verified."
         )
-        send_telegram(ADMIN_CHAT_ID, admin_msg)
+        send_telegram(ADMIN_CHAT_ID, admin_msg, preferred_token=SEND_BOT_TOKEN)
 
     logger.info("✅ Sale Summary Train Car completed successfully.")
 
