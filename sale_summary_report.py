@@ -20,6 +20,7 @@ Ghế hạt nhân:
 import os
 import sys
 import json
+import html
 import logging
 import urllib.request
 import urllib.parse
@@ -140,7 +141,7 @@ def run_sale_summary():
         else:
             # Thông điệp nhẹ nhàng cho từng Team
             team_msg = (
-                f"🛒 <b>[{gname.upper()}] SALE &amp; SERVICE DISPATCH</b>\n"
+                f"🛒 <b>[{html.escape(gname.upper())}] SALE &amp; SERVICE DISPATCH</b>\n"
                 f"📅 <b>Time:</b> {time_str} MMT | ⚡ <b>System Active</b>\n"
                 f"━━━━━━━━━━━━━━━━━━━━\n"
                 f"✅ Web BI Sales Portal is live for your team.\n"
@@ -153,6 +154,11 @@ def run_sale_summary():
     # Gửi bản tổng hợp vận hành vào CONTROL SITE (-5251698940) phục vụ Ban Điều Hành & Auditor
     control_chat_id = os.getenv("CONTROL_CHAT_ID", "-5251698940")
     if control_chat_id:
+        try:
+            from tg_utils import tg_delete_by_title
+            tg_delete_by_title(control_chat_id, "📊 TNI SALE & OPERATIONS SUMMARY", bot_token=SEND_BOT_TOKEN or BOT_TOKEN)
+        except Exception as ex:
+            logger.warning(f"Delete old Sale Summary in CONTROL error: {ex}")
         send_telegram(control_chat_id, central_msg, preferred_token=SEND_BOT_TOKEN)
 
     # 5. Báo cáo Giám Đốc (Admin DM)

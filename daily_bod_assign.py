@@ -98,17 +98,25 @@ async def send_msg(bot: Bot, chat_id: int, text: str, label: str, reply_markup=N
             parts.append(current)
         return parts
 
+    async def _send_one(chunk_str, rm_val):
+        try:
+            return await bot.send_message(chat_id=chat_id, text=chunk_str, parse_mode="HTML", reply_markup=rm_val)
+        except Exception as html_err:
+            logger.warning(f"⚠️ HTML send failed for {label} ({html_err}), falling back to Plain Text...")
+            plain = re.sub(r"</?[a-zA-Z][^>]*>", "", chunk_str).replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
+            return await bot.send_message(chat_id=chat_id, text=plain, reply_markup=rm_val)
+
     try:
         msg_ids = []
         if len(text) <= MAX:
-            sent = await bot.send_message(chat_id=chat_id, text=text, parse_mode="HTML", reply_markup=reply_markup)
+            sent = await _send_one(text, reply_markup)
             logger.info(f"✅ Sent message to {chat_id} ({label})")
             return True, [sent.message_id]
         else:
             chunks = chunk_text(text)
             for idx, p in enumerate(chunks):
                 rm = reply_markup if idx == len(chunks) - 1 else None
-                sent = await bot.send_message(chat_id=chat_id, text=p, parse_mode="HTML", reply_markup=rm)
+                sent = await _send_one(p, rm)
                 msg_ids.append(sent.message_id)
                 await asyncio.sleep(0.3)
             logger.info(f"✅ Sent {len(chunks)} chunks to {chat_id} ({label})")
@@ -241,7 +249,7 @@ async def main():
         for i, (role, s) in enumerate(sorted_stats):
             dot = DEP_SQUARES.get(role.lower().strip(), "🔹")
             lines.append(
-                f"{dot} <b>{role}</b>: Task assign : {s['total_assigned']} = 3 day {s['d2']}/{s['d1']}/{s['d0']} "
+                f"{dot} <b>{html.escape(str(role))}</b>: Task assign : {s['total_assigned']} = 3 day {s['d2']}/{s['d1']}/{s['d0']} "
                 f"7 day: {s['d7']} Month: {s['month']} Not Yet Cofirm : {s['unconfirmed']} case"
             )
             
@@ -282,17 +290,18 @@ async def main():
         role_lower = role_name.lower().strip()
         dot = DEP_SQUARES.get(role_lower, "💙")
         
+        role_esc = html.escape(str(role_name))
         report_lines = [
-            f"📋 <b>1.1. Report — BOD Assign to {role_name}</b>",
+            f"📋 <b>1.1. Report — BOD Assign to {role_esc}</b>",
             f"📅 {date_str}  |  🕐 {now_str}",
             "━━━━━━━━━━━━━━━━━━━━━━",
-            f"{dot} <b>{role_name}</b>: You have new Assign from BOD or Manager:",
+            f"{dot} <b>{role_esc}</b>: You have new Assign from BOD or Manager:",
             "━━━━━━━━━━━━━━━━━━━━━━"
         ]
         
         buttons = []
         for task in tasks:
-            task_line = f"• Row #{task['row']} | PIC: {task['pic']} | Content: {task['content']}"
+            task_line = f"• Row #{task['row']} | PIC: {html.escape(str(task['pic']))} | Content: {html.escape(str(task['content']))}"
             report_lines.append(task_line)
             buttons.append([InlineKeyboardButton(f"Yes, I received Row #{task['row']}", callback_data=f"ack_bod_assign_{task['row']}")])
             

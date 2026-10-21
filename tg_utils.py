@@ -201,8 +201,15 @@ def tg_delete_by_title(chat_id: str, title_prefix: str, search_limit: int = 300,
                     if not msg.text:
                         continue
 
-                    # 1. Xóa Note reply gửi từ user @Phongha79 nếu có
-                    if any(k in msg.text for k in ["@Raja HO", "Refuel Team Sent Plan", "Aung MinPaing_VCM", "Note: Team leader read", "Note: Above are the end-of-day", "Note: 📋 1. Report"]):
+                    # 1. Xóa Note reply gửi từ user @Phongha79 CHỈ KHI đúng loại báo cáo chủ quản (CẤM xóa nhầm Note của Report 4 khi đang chạy Report 5!)
+                    pfx_lower = title_prefix.lower()
+                    is_refuel_pfx = any(k in pfx_lower for k in ["refuel", "plan & progress"])
+                    is_r4_pfx = any(k in pfx_lower for k in ["4. report", "4a. report", "1. report", "daily eod", "technical dept", "tl comparison"])
+                    should_del_note = (
+                        (is_refuel_pfx and any(k in msg.text for k in ["@Raja HO", "Refuel Team Sent Plan", "Aung MinPaing_VCM"]))
+                        or (is_r4_pfx and any(k in msg.text for k in ["Note: Team leader read", "Note: Above are the end-of-day", "Note: 📋 1. Report"]))
+                    )
+                    if should_del_note:
                         try:
                             await client.delete_messages(int(chat_id), [msg.id], revoke=True)
                             deleted += 1

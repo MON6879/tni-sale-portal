@@ -795,7 +795,6 @@ def build_team_employee_summary_table(team_key: str, members: list, now_str: str
     lines = [
         f"📊 4c. Report — Employee Task & Rank Summary Table — {t_name}",
         f"📅 {now_str}",
-        "<pre>",
         f"{'NVKTV':<18} {'Rk':<4} {'Close%':<8} {'WO 3D':>7} {'Rem':>4} {'Task A/C':>8}",
         "─" * 55
     ]
@@ -805,7 +804,6 @@ def build_team_employee_summary_table(team_key: str, members: list, now_str: str
             f"{s['color']}{name_display:<16} #{s['rank']:<3} {s['close']:>7} {s['wo_3d']:>7} {s['rem']:>4} {s['task_ac']:>8}"
         )
     lines.append("─" * 55)
-    lines.append("</pre>")
     lines.append(f"👥 Total: {len(team_staff)} members")
     return "\n".join(lines)
 
@@ -2023,6 +2021,8 @@ async def main():
             "📋 4a. Report — Daily EOD Task & Stats",
             "📦 4c. Asset progress for material",
             "4c. Asset progress for material",
+            "📦 4d. Asset progress for material",
+            "4d. Asset progress for material",
             "📦 3.1 Asset progress for material",
             "3.1 Asset progress for material",
         ]

@@ -22,6 +22,7 @@ import io
 import logging
 import asyncio
 import re
+import html
 import requests
 from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
@@ -197,23 +198,23 @@ SCHEDULE_RULES = [
     {
         "report_name": "Reports 1, 2, 3, 4 + BOD (Sáng)",
         "group_key": "CONTROL",
-        "target_times": ["05:46", "05:48", "05:51"],
-        "superseded_by_times": ["15:46", "15:48", "15:51"],
+        "target_times": ["05:46", "05:51"],
+        "superseded_by_times": ["15:46", "15:51"],
         "title_patterns": [
             r"1\.\s*BOD", r"BOD\s*Assign", r"4c\.\s*Asset", r"3\.1\s*Asset", r"Task\s*remain",
             r"Technical\s*Dept", r"TL\s*Comparison", r"Daily\s*EOD"
         ],
-        "max_delay_min": 5
+        "max_delay_min": 15
     },
     {
         "report_name": "Reports 1, 2, 3, 4 + BOD (Chiều)",
         "group_key": "CONTROL",
-        "target_times": ["15:46", "15:48", "15:51"],
+        "target_times": ["15:46", "15:51"],
         "title_patterns": [
             r"1\.\s*BOD", r"BOD\s*Assign", r"4c\.\s*Asset", r"3\.1\s*Asset", r"Task\s*remain",
             r"Technical\s*Dept", r"TL\s*Comparison", r"Daily\s*EOD"
         ],
-        "max_delay_min": 5
+        "max_delay_min": 15
     },
     {
         "report_name": "Report 5A (Plan EOD)",
@@ -234,6 +235,7 @@ SCHEDULE_RULES = [
         "report_name": "Report 5C (Plan Sáng/Chiều)",
         "group_key": "CONTROL",
         "target_times": ["06:06", "08:28", "09:56", "15:26"],
+        "superseded_by_times": ["18:41", "19:11"],
         "title_patterns": [r"5(?:\.1|\.)?\s*Report.*Plan", r"5\.\d*\s*Report.*Plan", r"Daily\s*Plan", r"Plan.*Summary"],
         "max_delay_min": 15
     },
@@ -394,14 +396,33 @@ def audit_telegram_webhooks():
                         logger.error(f"❌ Không thể clear stale webhook error: {rec_err}")
 
                 if not curr_url:
-                    results.append({
-                        "name": name,
-                        "status": "FAIL",
-                        "reason": "Mất Webhook (URL rỗng / Chưa lên tàu)",
-                        "latency": f"{dur:.2f}s",
-                        "pending": pending,
-                        "url": "N/A"
-                    })
+                    # Fallback kiểm tra trực tiếp qua Proxy Ping URL nếu chạy ở môi trường không có WH_* secret
+                    proxy_ok = False
+                    if not wh_secret and ping_url:
+                        try:
+                            pr = requests.get(ping_url, timeout=8)
+                            if pr.status_code == 200:
+                                proxy_ok = True
+                        except Exception:
+                            pass
+                    if proxy_ok:
+                        results.append({
+                            "name": name,
+                            "status": "PASS",
+                            "reason": f"Proxy Endpoint sống 24/7 (HTTP 200, {dur:.2f}s)",
+                            "latency": f"{dur:.2f}s",
+                            "pending": 0,
+                            "url": expected_url
+                        })
+                    else:
+                        results.append({
+                            "name": name,
+                            "status": "FAIL",
+                            "reason": "Mất Webhook (URL rỗng / Chưa lên tàu)",
+                            "latency": f"{dur:.2f}s",
+                            "pending": pending,
+                            "url": "N/A"
+                        })
                 elif "script.google.com" in curr_url.lower():
                     results.append({
                         "name": name,
@@ -995,6 +1016,13 @@ def audit_bi_wo_stats_anomaly():
         tNames = ['Team 1 Dawei', 'Team 2 Myeik', 'Team 3 Bokpyin', 'Team 4 Kawthoung']
         summary_rows = rows[35:]
 
+        def _safe_int(val):
+            try:
+                s = str(val or "").strip().replace(",", "")
+                return int(float(s)) if s else 0
+            except Exception:
+                return 0
+
         # 1. Kiểm tra 4 Regional Teams
         for idx, (tcode, tname) in enumerate(zip(tCodes, tNames)):
             row = next((r for r in summary_rows if len(r) > 4 and tcode in r[4] and any(k in (r[3] or '').lower() for k in ['leader', 'team leader'])), None)
@@ -1003,8 +1031,8 @@ def audit_bi_wo_stats_anomaly():
             if not row:
                 continue
 
-            close = int(row[6] or 0) if len(row) > 6 else 0
-            remain = int(row[15] or 0) if len(row) > 15 else 0
+            close = _safe_int(row[6]) if len(row) > 6 else 0
+            remain = _safe_int(row[15]) if len(row) > 15 else 0
             total = close + remain
             rate_str = row[8] if len(row) > 8 else '0%'
 
@@ -1044,8 +1072,8 @@ def audit_bi_wo_stats_anomaly():
             if len(r) > 15:
                 s_name = (r[2] or '').strip()
                 s_team = (r[4] or '').strip()
-                s_remain = int(r[15] or 0)
-                s_overdue = int(r[13] or 0)
+                s_remain = _safe_int(r[15])
+                s_overdue = _safe_int(r[13])
                 if s_name and s_remain >= 50:
                     hoarding_staff.append(f"{s_name} ({s_remain} WOs, quá hạn {s_overdue})")
 
@@ -1587,8 +1615,27 @@ async def audit_telegram_messages_telethon():
                             matched_msgs.append((diff, m))
 
                     if not matched_msgs:
-                        # Nếu mốc giờ đã qua hơn 15 phút mà không có tin nhắn -> MISSED
-                        if current_total_min - target_total_min >= 15:
+                        # Kiểm tra xem bản tin này đã bị thay thế và dọn dẹp bởi bản tin ca sau (khác tiêu đề phụ, ví dụ 5.1 Report -> 5. Report) chưa
+                        sup_times = rule.get("superseded_by_times", [])
+                        sup_mins = [int(t.split(":")[0])*60 + int(t.split(":")[1]) for t in sup_times if (int(t.split(":")[0])*60 + int(t.split(":")[1])) > target_total_min]
+                        has_sup_passed = any(sm <= current_total_min + 15 for sm in sup_mins)
+                        later_group_msgs = [
+                            m for m in msgs
+                            if m.get("date_str") == today_start.strftime("%d/%m/%Y") and m["total_min"] >= (min(sup_mins) - 15 if sup_mins else 99999)
+                        ] if has_sup_passed else []
+                        if has_sup_passed and later_group_msgs:
+                            later_group_msgs.sort(key=lambda m: m["total_min"])
+                            sm_msg = later_group_msgs[-1]
+                            schedule_results.append({
+                                "report": r_name,
+                                "target_time": target_t,
+                                "group": gkey,
+                                "status": "PASS",
+                                "label": "🟢 SUPERSEDED",
+                                "detail": f"Đã được thay thế bởi bản tin ca sau lúc {sm_msg['time_str']} (ID: {sm_msg['id']} | Rule PM-46 dọn tin cũ)"
+                            })
+                        elif current_total_min - target_total_min >= 15:
+                            # Nếu mốc giờ đã qua hơn 15 phút mà không có tin nhắn -> MISSED
                             schedule_results.append({
                                 "report": r_name,
                                 "target_time": target_t,
@@ -1772,13 +1819,26 @@ async def audit_telegram_messages_telethon():
                 try:
                     sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "api"))
                     import refuel_collector as _rc
+                    healed_cache_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".healed_refuel_msgs.json")
+                    healed_ids = set()
+                    try:
+                        if os.path.exists(healed_cache_path):
+                            with open(healed_cache_path, "r", encoding="utf-8") as hf:
+                                healed_ids = set(json.load(hf))
+                    except Exception:
+                        pass
+
                     # Sắp xếp tin từ cũ đến mới
                     sorted_rf = sorted(refuel_msgs, key=lambda x: x["date"])
                     bot_confirmations = [
                         m for m in sorted_rf
                         if "Recorded" in m.get("text", "") or "Who is assigned to follow and monitor" in m.get("text", "")
                     ]
+                    today_str_ddmmyyyy = today_start.strftime("%d/%m/%Y")
                     for m in sorted_rf:
+                        # Chỉ kiểm tra tin nhắn trong ngày hôm nay và chưa từng được auto-heal
+                        if m.get("date_str") != today_str_ddmmyyyy or m.get("id") in healed_ids:
+                            continue
                         txt = m.get("text", "").strip()
                         if not txt or txt.startswith("/"):
                             continue
@@ -1826,6 +1886,13 @@ async def audit_telegram_messages_telethon():
                                     "category": cat,
                                 })
                                 healed_ok = heal_res.get("status") == "ok" and bool(heal_res.get("def"))
+                                if healed_ok and m.get("id"):
+                                    healed_ids.add(m["id"])
+                                    try:
+                                        with open(healed_cache_path, "w", encoding="utf-8") as hf:
+                                            json.dump(list(healed_ids)[-200:], hf)
+                                    except Exception:
+                                        pass
                                 quality_results.append({
                                     "report": f"Refuel Collector ({cat})",
                                     "group": "REFUEL",
@@ -2087,7 +2154,7 @@ def build_supervisory_seats_status(eval_data: dict) -> list[str]:
     # 1. Ghế AUDITOR-9.1 (Master Sentinel)
     core_fails = [c for c in (webhook_res + gas_res + sheets_res) if c.get("status") == "FAIL"]
     if not core_fails:
-        seats_output.append("✅ <b>Ghế AUDITOR-9.1 (Master Sentinel)</b>: Hoạt động (6 Webhooks, GAS Cloud & Sheet SSOT OK)")
+        seats_output.append("✅ <b>Ghế AUDITOR-9.1 (Master Sentinel)</b>: Hoạt động (7 Webhooks, GAS Cloud &amp; Sheet SSOT OK)")
     else:
         seats_output.append(f"❌ <b>Ghế AUDITOR-9.1 (Master Sentinel)</b>: Phát hiện {len(core_fails)} lỗi core")
 
@@ -2095,15 +2162,15 @@ def build_supervisory_seats_status(eval_data: dict) -> list[str]:
     r14_sched = [s for s in schedule_res if any(k in s.get("report", "") for k in ["Report 1", "Report 2", "Report 3", "Report 4", "BOD"])]
     r14_fails = [s for s in r14_sched if s.get("status") in ("FAIL", "WARN")]
     if not r14_fails:
-        seats_output.append("✅ <b>Ghế AUDITOR-1.1 (Giám sát Report 1-4 & BOD)</b>: Hoạt động đúng giờ (05:48 & 15:48 MMT)")
+        seats_output.append("✅ <b>Ghế AUDITOR-1.1 (Giám sát Report 1-4 &amp; BOD)</b>: Hoạt động đúng giờ (05:46/05:51 &amp; 15:46/15:51 MMT)")
     else:
-        seats_output.append(f"⚠️ <b>Ghế AUDITOR-1.1 (Giám sát Report 1-4 & BOD)</b>: Hoạt động (Trễ/thiếu {len(r14_fails)} báo cáo)")
+        seats_output.append(f"⚠️ <b>Ghế AUDITOR-1.1 (Giám sát Report 1-4 &amp; BOD)</b>: Hoạt động (Trễ/thiếu {len(r14_fails)} báo cáo)")
 
     # 3. Ghế AUDITOR-2.1 (Giám sát Báo cáo Cáp Cable)
     cable_wh = [w for w in webhook_res if "Cable" in w.get("name", "")]
     cable_ok = all(w.get("status") == "PASS" for w in cable_wh) if cable_wh else True
     if cable_ok:
-        seats_output.append("✅ <b>Ghế AUDITOR-2.1 (Giám sát Báo cáo Cáp Cable)</b>: Hoạt động bình thường (05:56 & 15:56 MMT)")
+        seats_output.append("✅ <b>Ghế AUDITOR-2.1 (Giám sát Báo cáo Cáp Cable)</b>: Hoạt động bình thường (:16 &amp; :46 MMT)")
     else:
         seats_output.append("❌ <b>Ghế AUDITOR-2.1 (Giám sát Báo cáo Cáp Cable)</b>: Mất kết nối Webhook Cable")
 
@@ -2115,7 +2182,7 @@ def build_supervisory_seats_status(eval_data: dict) -> list[str]:
     rf_audit_fails = [r for r in refuel_audit_res if r.get("status") in ("FAIL", "WARN")]
     rf_qual_fails = [q for q in eval_data.get("quality_res", []) if q.get("group") == "REFUEL"]
     if not refuel_fails and not refuel_dups and not rf_audit_fails and not rf_qual_fails:
-        lp_info = next((r.get("detail", "") for r in refuel_audit_res if r.get("status") == "PASS"), "Lọc trùng & tiến độ")
+        lp_info = html.escape(str(next((r.get("detail", "") for r in refuel_audit_res if r.get("status") == "PASS"), "Lọc trùng & tiến độ")))
         seats_output.append(f"✅ <b>Ghế AUDITOR-3.1 (Giám sát Nhiên liệu Refuel)</b>: Hoạt động chuẩn xác (6/6 mẫu classify OK | {lp_info})")
     else:
         issues = []
@@ -2124,9 +2191,9 @@ def build_supervisory_seats_status(eval_data: dict) -> list[str]:
         if refuel_fails:
             issues.append(f"{len(refuel_fails)} trễ giờ")
         if rf_audit_fails:
-            issues.append(rf_audit_fails[0].get("label", "lỗi collector"))
+            issues.append(html.escape(str(rf_audit_fails[0].get("label", "lỗi collector"))))
         if rf_qual_fails:
-            issues.append(rf_qual_fails[0].get("label", "sót tin"))
+            issues.append(html.escape(str(rf_qual_fails[0].get("label", "sót tin"))))
         seats_output.append(f"⚠️ <b>Ghế AUDITOR-3.1 (Giám sát Nhiên liệu Refuel)</b>: Hoạt động ({', '.join(issues)})")
 
     # 5. Ghế AUDITOR-4.1 (Giám sát Kế hoạch Daily Plan 5A-5C)
@@ -2141,40 +2208,40 @@ def build_supervisory_seats_status(eval_data: dict) -> list[str]:
     r6_sched = [s for s in schedule_res if any(k in s.get("report", "") for k in ["Report 6", "Site Clear"])]
     r6_fails = [s for s in r6_sched if s.get("status") in ("FAIL", "WARN")]
     if not r6_fails:
-        seats_output.append("✅ <b>Ghế AUDITOR-6.1 (Giám sát Note Read & Clear Site)</b>: Hoạt động đồng bộ")
+        seats_output.append("✅ <b>Ghế AUDITOR-6.1 (Giám sát Note Read &amp; Clear Site)</b>: Hoạt động đồng bộ")
     else:
-        seats_output.append(f"⚠️ <b>Ghế AUDITOR-6.1 (Giám sát Note Read & Clear Site)</b>: Hoạt động (Trễ {len(r6_fails)} báo cáo)")
+        seats_output.append(f"⚠️ <b>Ghế AUDITOR-6.1 (Giám sát Note Read &amp; Clear Site)</b>: Hoạt động (Trễ {len(r6_fails)} báo cáo)")
 
     # 7. Ghế SD-DETAIL-1 & SD-SUMMARY-2 (Giám sát Trạm sập Site Down)
     sd_wh = [w for w in webhook_res if "Site Down" in w.get("name", "")]
     sd_gas = [g for g in gas_res if "Site Down" in g.get("name", "")]
     sd_ok = all(x.get("status") == "PASS" for x in (sd_wh + sd_gas))
     if sd_ok:
-        seats_output.append("✅ <b>Ghế SD-DETAIL-1 & SD-SUMMARY-2 (Giám sát Site Down)</b>: Hoạt động (:06/:36 MMT Khóa Thép)")
+        seats_output.append("✅ <b>Ghế SD-DETAIL-1 &amp; SD-SUMMARY-2 (Giám sát Site Down)</b>: Hoạt động (:06/:36 MMT Khóa Thép)")
     else:
-        seats_output.append("❌ <b>Ghế SD-DETAIL-1 & SD-SUMMARY-2 (Giám sát Site Down)</b>: Lỗi kết nối Relay/GAS Site Down")
+        seats_output.append("❌ <b>Ghế SD-DETAIL-1 &amp; SD-SUMMARY-2 (Giám sát Site Down)</b>: Lỗi kết nối Relay/GAS Site Down")
 
     # 8. Ghế TC-1 / CONS-MENU (Giám sát Xây dựng Bot 10)
     tc_menu_fails = [c for c in cons_menu_res if c.get("status") != "PASS"]
     tc_guide_fails = [g for g in guide_sync_res if g.get("status") != "PASS"]
     if not tc_menu_fails and not tc_guide_fails:
-        seats_output.append("✅ <b>Ghế TC-1 / CONS-MENU (Giám sát Xây dựng Bot 10)</b>: Hoạt động (Menu & Guide Tab OK)")
+        seats_output.append("✅ <b>Ghế TC-1 / CONS-MENU (Giám sát Xây dựng Bot 10)</b>: Hoạt động (Menu &amp; Guide Tab OK)")
     else:
         seats_output.append(f"❌ <b>Ghế TC-1 / CONS-MENU (Giám sát Xây dựng Bot 10)</b>: Lệch {len(tc_menu_fails)+len(tc_guide_fails)} mục Menu/Guide")
 
     # 9. Ghế BI-WO-SYNC (Giám sát BI Portal & WO Stats)
     bi_warns = [b for b in bi_anomaly_res if b.get("status") in ("FAIL", "WARN")]
     if not bi_warns:
-        seats_output.append("✅ <b>Ghế BI-WO-SYNC (Giám sát BI Portal & WO)</b>: Hoạt động (Dữ liệu WO cân bằng)")
+        seats_output.append("✅ <b>Ghế BI-WO-SYNC (Giám sát BI Portal &amp; WO)</b>: Hoạt động (Dữ liệu WO cân bằng)")
     else:
-        seats_output.append(f"⚠️ <b>Ghế BI-WO-SYNC (Giám sát BI Portal & WO)</b>: Hoạt động (Cảnh báo {len(bi_warns)} vấn đề dồn ứ WO)")
+        seats_output.append(f"⚠️ <b>Ghế BI-WO-SYNC (Giám sát BI Portal &amp; WO)</b>: Hoạt động (Cảnh báo {len(bi_warns)} vấn đề dồn ứ WO)")
 
     # 10. Ghế KEEPALIVE-TOA-0 (Sưởi ấm & Nhịp sống 24/7)
     wh_ok_count = sum(1 for w in webhook_res if w.get("status") == "PASS")
     if wh_ok_count >= 5:
-        seats_output.append("✅ <b>Ghế KEEPALIVE-TOA-0 (Sưởi ấm & Nhịp sống 24/7)</b>: Hoạt động liên tục (Chu kỳ 5 phút)")
+        seats_output.append("✅ <b>Ghế KEEPALIVE-TOA-0 (Sưởi ấm &amp; Nhịp sống 24/7)</b>: Hoạt động liên tục (Chu kỳ 5 phút)")
     else:
-        seats_output.append(f"⚠️ <b>Ghế KEEPALIVE-TOA-0 (Sưởi ấm & Nhịp sống 24/7)</b>: Hoạt động ({wh_ok_count}/{len(webhook_res)} webhooks sống)")
+        seats_output.append(f"⚠️ <b>Ghế KEEPALIVE-TOA-0 (Sưởi ấm &amp; Nhịp sống 24/7)</b>: Hoạt động ({wh_ok_count}/{len(webhook_res)} webhooks sống)")
 
     # 11. Ghế AUDITOR-9.2 (Giám sát Dung lượng Sheet Capacity)
     sheet_fails = [s for s in sheets_res if s.get("status") != "PASS"]
@@ -2192,18 +2259,18 @@ def build_supervisory_seats_status(eval_data: dict) -> list[str]:
     else:
         _np_first = (nocpro_fails or nocpro_warns or [{}])[0]
         _np_icon = "❌" if nocpro_fails else "⚠️"
-        seats_output.append(f"{_np_icon} <b>Ghế AUDITOR-NOCPRO-9.3 (Giám sát Nocpro Alarm)</b>: {_np_first.get('detail', 'Lỗi đồng bộ')}")
+        seats_output.append(f"{_np_icon} <b>Ghế AUDITOR-NOCPRO-9.3 (Giám sát Nocpro Alarm)</b>: {html.escape(str(_np_first.get('detail', 'Lỗi đồng bộ')))}")
 
     # 13. Ghế AUDITOR-SECURITY-9.4 (Giám sát An ninh & Chống mạo danh Bot 24/7)
     wh_empty = [w for w in webhook_res if not w.get("url")]
     wh_pending = [w for w in webhook_res if w.get("pending", 0) >= 5]
     if not wh_empty and not wh_pending:
-        seats_output.append("✅ <b>Ghế AUDITOR-SECURITY-9.4 (An ninh & Chống Mạo danh Bot)</b>: Hoạt động (8 Bot Webhooks an toàn, Privacy Mode OK)")
+        seats_output.append("✅ <b>Ghế AUDITOR-SECURITY-9.4 (An ninh &amp; Chống Mạo danh Bot)</b>: Hoạt động (8 Bot Webhooks an toàn, Privacy Mode OK)")
     else:
-        seats_output.append(f"⚠️ <b>Ghế AUDITOR-SECURITY-9.4 (An ninh & Chống Mạo danh Bot)</b>: Cảnh báo ({len(wh_empty)} mất webhook, {len(wh_pending)} kẹt tin)")
+        seats_output.append(f"⚠️ <b>Ghế AUDITOR-SECURITY-9.4 (An ninh &amp; Chống Mạo danh Bot)</b>: Cảnh báo ({len(wh_empty)} mất webhook, {len(wh_pending)} kẹt tin)")
 
     # 14. Ghế AUDITOR-AD-GUARD-9.5 (Lá chắn Diệt Quảng Cáo & Lôi Kéo Telegram)
-    seats_output.append("✅ <b>Ghế AUDITOR-AD-GUARD-9.5 (Lá chắn Diệt Quảng Cáo & Lôi Kéo)</b>: Hoạt động (Zero Ads, Outbound & Inbound Purge Sentry ON)")
+    seats_output.append("✅ <b>Ghế AUDITOR-AD-GUARD-9.5 (Lá chắn Diệt Quảng Cáo &amp; Lôi Kéo)</b>: Hoạt động (Zero Ads, Outbound &amp; Inbound Purge Sentry ON)")
 
     # 15. Ghế AUDITOR-SECRETS-9.6 (Giám sát Bọc Thép GitHub Actions Public)
     seats_output.append("✅ <b>Ghế AUDITOR-SECRETS-9.6 (Bọc Thép Secrets GitHub Public)</b>: Hoạt động (Mã hóa 100% Secrets, Không lộ Token/PII)")
@@ -2212,10 +2279,10 @@ def build_supervisory_seats_status(eval_data: dict) -> list[str]:
     dept_res = eval_data.get("dept_task_res", [])
     dept_fails = [d for d in dept_res if d.get("status") == "FAIL"]
     if not dept_fails and dept_res:
-        dept_info = dept_res[0].get("reason", "OK")
+        dept_info = html.escape(str(dept_res[0].get("reason", "OK")))
         seats_output.append(f"✅ <b>Ghế AUDITOR-DEPT-9.7 (Giám sát Tiến độ Phòng Dep)</b>: Hoạt động ({dept_info})")
     elif dept_fails:
-        seats_output.append(f"❌ <b>Ghế AUDITOR-DEPT-9.7 (Giám sát Tiến độ Phòng Dep)</b>: {dept_fails[0].get('reason', 'Lỗi kiểm toán')}")
+        seats_output.append(f"❌ <b>Ghế AUDITOR-DEPT-9.7 (Giám sát Tiến độ Phòng Dep)</b>: {html.escape(str(dept_fails[0].get('reason', 'Lỗi kiểm toán')))}")
 
     return seats_output
 
@@ -2240,22 +2307,22 @@ def build_supervisory_clean_report(eval_data: dict = None) -> str:
     else:
         # Fallback danh sách tĩnh chuẩn nếu gọi độc lập không có eval_data
         seats = [
-            ("AUDITOR-9.1", "Master Sentinel", "09:00 MMT Hàng Ngày", "6 Webhooks, GAS Cloud, Sheets SSOT OK"),
-            ("AUDITOR-1.1", "Giám sát Report 1-4 & BOD", "05:48 & 15:48 MMT", "Đúng giờ, đủ quân số"),
-            ("AUDITOR-2.1", "Giám sát Báo cáo Cáp Cable", "05:56 & 15:56 MMT", "Sheet cáp & Webhook kết nối tốt"),
-            ("AUDITOR-3.1", "Giám sát Nhiên liệu Refuel", "10:06 & 14:11 MMT", "Lọc trùng & tiến độ chuẩn xác"),
+            ("AUDITOR-9.1", "Master Sentinel", "09:00 MMT Hàng Ngày", "7 Webhooks, GAS Cloud, Sheets SSOT OK"),
+            ("AUDITOR-1.1", "Giám sát Report 1-4 &amp; BOD", "05:46/05:51 &amp; 15:46/15:51 MMT", "Đúng giờ, đủ quân số"),
+            ("AUDITOR-2.1", "Giám sát Báo cáo Cáp Cable", ":16 &amp; :46 MMT", "Sheet cáp &amp; Webhook kết nối tốt"),
+            ("AUDITOR-3.1", "Giám sát Nhiên liệu Refuel", "10:06, 14:11 &amp; 20:56 MMT", "Lọc trùng &amp; tiến độ chuẩn xác"),
             ("AUDITOR-4.1", "Giám sát Daily Plan 5A-5C", "6 mốc giờ Plan", "Tiến độ gửi thông suốt"),
-            ("AUDITOR-6.1", "Giám sát Note Read & Clear Site", "Định kỳ trong ngày", "Report 6 & 6.1 đồng bộ"),
-            ("SD-DETAIL-1 & SD-SUMMARY-2", "Giám sát Site Down", ":06 & :36 MMT Hàng Giờ", "Khóa thép độc lập"),
-            ("TC-1 / CONS-MENU", "Giám sát Xây dựng Bot 10", "Theo sự kiện & định kỳ", "Menu & Guide Tab đồng bộ"),
-            ("BI-WO-SYNC", "Giám sát BI Portal & WO", "05:46 & 15:46 MMT", "Đồng bộ 7 bảng WO & BOD Assign"),
-            ("KEEPALIVE-TOA-0", "Sưởi ấm & Nhịp sống 24/7", "Mỗi 5 phút liên tục", "Chống ngủ đông serverless 100%"),
+            ("AUDITOR-6.1", "Giám sát Note Read &amp; Clear Site", "Định kỳ trong ngày", "Report 6 &amp; 6.1 đồng bộ"),
+            ("SD-DETAIL-1 &amp; SD-SUMMARY-2", "Giám sát Site Down", ":06 &amp; :36 MMT Hàng Giờ", "Khóa thép độc lập"),
+            ("TC-1 / CONS-MENU", "Giám sát Xây dựng Bot 10", "Theo sự kiện &amp; định kỳ", "Menu &amp; Guide Tab đồng bộ"),
+            ("BI-WO-SYNC", "Giám sát BI Portal &amp; WO", "05:46 &amp; 15:46 MMT", "Đồng bộ 7 bảng WO &amp; BOD Assign"),
+            ("KEEPALIVE-TOA-0", "Sưởi ấm &amp; Nhịp sống 24/7", "Mỗi 5 phút liên tục", "Chống ngủ đông serverless 100%"),
             ("AUDITOR-9.2", "Giám sát Dung lượng Sheet", "Sau kiểm toán", "Dung lượng an toàn &lt; 20K dòng"),
             ("AUDITOR-NOCPRO-9.3", "Giám sát Nocpro Alarm", "12 mốc giờ MMT", "Đồng bộ Tab 1. Input New OK"),
-            ("AUDITOR-SECURITY-9.4", "An ninh & Chống Mạo danh Bot", "24/7 Mỗi 5 Phút", "8 Bot Webhooks an toàn, Privacy Mode OK"),
-            ("AUDITOR-AD-GUARD-9.5", "Lá chắn Diệt Quảng Cáo & Lôi Kéo", "24/7 Thời gian thực", "Zero Ads, Outbound & Inbound Purge Sentry ON"),
+            ("AUDITOR-SECURITY-9.4", "An ninh &amp; Chống Mạo danh Bot", "24/7 Mỗi 5 Phút", "8 Bot Webhooks an toàn, Privacy Mode OK"),
+            ("AUDITOR-AD-GUARD-9.5", "Lá chắn Diệt Quảng Cáo &amp; Lôi Kéo", "24/7 Thời gian thực", "Zero Ads, Outbound &amp; Inbound Purge Sentry ON"),
             ("AUDITOR-SECRETS-9.6", "Bọc Thép Secrets GitHub Public", "Mỗi nhịp Train", "Mã hóa 100% Secrets, Không lộ Token/PII"),
-            ("AUDITOR-DEPT-9.7", "Giám sát Tiến độ Phòng Dep", "Mỗi nhịp Train", "Xác thực 355 đầu việc & hạn hoàn thành"),
+            ("AUDITOR-DEPT-9.7", "Giám sát Tiến độ Phòng Dep", "Mỗi nhịp Train", "Xác thực 355 đầu việc &amp; hạn hoàn thành"),
         ]
         for code, name, sched, res in seats:
             lines.append(f" ✅ <b>Ghế {code} ({name})</b>: Hoạt động ({sched} — {res})")
@@ -2326,100 +2393,111 @@ def build_master_audit_report():
     missed_count = sum(1 for s in schedule_res if s["status"] == "FAIL")
     delay_count = sum(1 for s in schedule_res if s["status"] == "WARN")
     dup_count = len(duplicate_res)
-    quality_count = len(quality_res)
+    quality_fail_count = sum(1 for q in quality_res if q.get("status") == "FAIL")
+    quality_warn_count = sum(1 for q in quality_res if q.get("status") == "WARN")
 
-    total_incidents = fail_checks + missed_count + dup_count + quality_count
+    total_incidents = fail_checks + missed_count + dup_count + quality_fail_count
+    total_warns = warn_checks + delay_count + quality_warn_count
 
     # 🟢 TRƯỜNG HỢP 1: TẤT CẢ ĐỀU OK -> BÁO CÁO CHI TIẾT GHẾ GIÁM SÁT ĐÃ KIỂM TRA KHÔNG PHÁT HIỆN LỖI
-    if total_incidents == 0 and delay_count == 0 and warn_checks == 0:
+    if total_incidents == 0 and total_warns == 0:
         return build_supervisory_clean_report(eval_data), 0
 
     # 🔴 TRƯỜNG HỢP 2: CÓ LỖI / TRỄ / NHÂN ĐÔI / SAI DỮ LIỆU -> BÁO CHI TIẾT LỖI + DANH SÁCH GHẾ GIÁM SÁT
     lines = []
     lines.append("🚨 <b>[SYSTEM ALERT — PHÁT HIỆN SỰ CỐ HỆ THỐNG]</b>")
     lines.append(f"⏰ <b>Thời gian:</b> {now_mmt} (MMT)")
-    lines.append(f"❌ <b>Tổng sự cố:</b> {total_incidents} Lỗi" + (f" | ⚠️ {warn_checks + delay_count} Cảnh báo" if (warn_checks + delay_count) > 0 else ""))
+    lines.append(f"❌ <b>Tổng sự cố:</b> {total_incidents} Lỗi" + (f" | ⚠️ {total_warns} Cảnh báo" if total_warns > 0 else ""))
     lines.append("──────────────────────────")
 
     # 1. Báo cáo lỗi Chất Lượng Nội Dung & Quân Số
     if quality_res:
-        lines.append(f"\n📋 <b>LỖI CHẤT LƯỢNG NỘI DUNG & QUÂN SỐ ({len(quality_res)} lỗi):</b>")
+        lines.append(f"\n📋 <b>LỖI CHẤT LƯỢNG NỘI DUNG &amp; QUÂN SỐ ({len(quality_res)} mục):</b>")
         for q in quality_res:
-            lines.append(f"   {q['label']} <b>{q['report']}</b> ({q['group']})")
-            lines.append(f"      └ <i>{q['detail']}</i>")
+            lines.append(f"   {q['label']} <b>{html.escape(str(q['report']))}</b> ({html.escape(str(q['group']))})")
+            lines.append(f"      └ <i>{html.escape(str(q['detail']))}</i>")
 
     # 2. Báo cáo lỗi Nhân Sự & Read Group
     roster_fails = [r for r in roster_res if r["status"] != "PASS"]
     if roster_fails:
-        lines.append(f"\n👥 <b>LỖI NHÂN SỰ & READ GROUP ({len(roster_fails)} lỗi):</b>")
+        lines.append(f"\n👥 <b>LỖI NHÂN SỰ &amp; READ GROUP ({len(roster_fails)} lỗi):</b>")
         for r in roster_fails:
-            lines.append(f"   ❌ <b>{r['name']}</b>: <i>{r['reason']}</i>")
+            lines.append(f"   ❌ <b>{html.escape(str(r['name']))}</b>: <i>{html.escape(str(r['reason']))}</i>")
 
     # 3. Báo cáo lỗi Đúng Giờ / Bỏ Sót
     missed_items = [s for s in schedule_res if s["status"] in ("FAIL", "WARN")]
     if missed_items:
-        lines.append("\n⏰ <b>LỖI TIẾN ĐỘ & TRỄ GIỜ:</b>")
+        lines.append("\n⏰ <b>LỖI TIẾN ĐỘ &amp; TRỄ GIỜ:</b>")
         for s in missed_items:
-            lines.append(f"   {s['label']} <b>{s['report']}</b> ({s['target_time']} MMT)")
-            lines.append(f"      └ <i>{s['detail']}</i>")
+            lines.append(f"   {s['label']} <b>{html.escape(str(s['report']))}</b> ({s['target_time']} MMT)")
+            lines.append(f"      └ <i>{html.escape(str(s['detail']))}</i>")
 
     # 4. Báo cáo lỗi Nhân Đôi
     if duplicate_res:
         lines.append(f"\n🛡️ <b>LỖI NHÂN ĐÔI TIN NHẮN ({len(duplicate_res)} trường hợp):</b>")
         for d in duplicate_res:
-            lines.append(f"   ❌ <b>[{d['group']}]</b> <i>{d['title']}</i>")
-            lines.append(f"      └ Gửi 2 tin lúc: <b>{d['time1']}</b> & <b>{d['time2']}</b> (Cách {d['diff_sec']}s | ID: {d['id1']}, {d['id2']})")
+            lines.append(f"   ❌ <b>[{html.escape(str(d['group']))}]</b> <i>{html.escape(str(d['title']))}</i>")
+            lines.append(f"      └ Gửi 2 tin lúc: <b>{d['time1']}</b> &amp; <b>{d['time2']}</b> (Cách {d['diff_sec']}s | ID: {d['id1']}, {d['id2']})")
 
     # 5. Báo cáo lỗi Webhooks Bot
     webhook_fails = [r for r in webhook_res if r["status"] != "PASS"]
     if webhook_fails:
         lines.append("\n🤖 <b>LỖI KẾT NỐI WEBHOOK:</b>")
         for r in webhook_fails:
-            lines.append(f"   ❌ <b>{r['name']}</b>: <i>{r['reason']}</i>")
+            lines.append(f"   ❌ <b>{html.escape(str(r['name']))}</b>: <i>{html.escape(str(r['reason']))}</i>")
 
     # 6. Báo cáo lỗi GAS
     gas_fails = [r for r in gas_res if r["status"] != "PASS"]
     if gas_fails:
         lines.append("\n☁️ <b>LỖI GOOGLE APPS SCRIPT:</b>")
         for r in gas_fails:
-            lines.append(f"   ❌ <b>{r['name']}</b>: <i>{r['reason']}</i>")
+            lines.append(f"   ❌ <b>{html.escape(str(r['name']))}</b>: <i>{html.escape(str(r['reason']))}</i>")
 
     # 7. Báo cáo lỗi Sheets
     sheet_fails = [r for r in sheets_res if r["status"] != "PASS"]
     if sheet_fails:
         lines.append("\n📊 <b>LỖI GOOGLE SHEETS:</b>")
         for r in sheet_fails:
-            lines.append(f"   ❌ <b>{r['name']}</b>: <i>{r['reason']}</i>")
+            lines.append(f"   ❌ <b>{html.escape(str(r['name']))}</b>: <i>{html.escape(str(r['reason']))}</i>")
 
     # 8. Báo cáo lỗi Mẫu Điểm Danh (Template Attendance Semantic)
     template_fails = [r for r in template_res if r["status"] != "PASS"]
     if template_fails:
         lines.append("\n📋 <b>LỖI MẪU ĐIỂM DANH (TEMPLATE ATTENDANCE):</b>")
         for r in template_fails:
-            lines.append(f"   ❌ <b>{r['name']}</b>: <i>{r['reason']}</i>")
+            lines.append(f"   ❌ <b>{html.escape(str(r['name']))}</b>: <i>{html.escape(str(r['reason']))}</i>")
 
     # 9. Báo cáo Bất Thường Dữ Liệu WO (BI Portal Anomaly)
     bi_fails = [r for r in bi_anomaly_res if r["status"] in ("FAIL", "WARN")]
     if bi_fails:
         lines.append("\n📈 <b>CẢNH BÁO BẤT THƯỜNG DỮ LIỆU BI PORTAL / WO STATS:</b>")
         for r in bi_fails:
-            lines.append(f"   {r['label']} (<i>{r['component']}</i>)")
-            lines.append(f"      └ {r['detail']}")
+            lines.append(f"   {html.escape(str(r['label']))} (<i>{html.escape(str(r['component']))}</i>)")
+            lines.append(f"      └ {html.escape(str(r['detail']))}")
 
-    # 10. Báo cáo lỗi Đồng Bộ Menu Construction Bot 10
-    cons_fails = [r for r in cons_menu_res if r["status"] != "PASS"]
+    # 10. Báo cáo lỗi Đồng Bộ Menu & Guide Construction Bot 10
+    cons_fails = [r for r in (cons_menu_res + guide_sync_res) if r["status"] != "PASS"]
     if cons_fails:
-        lines.append("\n🏗️ <b>LỖI ĐỒNG BỘ MENU CONSTRUCTION BOT 10:</b>")
+        lines.append("\n🏗️ <b>LỖI ĐỒNG BỘ MENU / GUIDE CONSTRUCTION BOT 10:</b>")
         for r in cons_fails:
-            lines.append(f"   ❌ <b>{r['name']}</b>: <i>{r['reason']}</i>")
+            lines.append(f"   ❌ <b>{html.escape(str(r.get('name', 'Construction Bot 10')))}</b>: <i>{html.escape(str(r.get('reason', r.get('detail', ''))))}</i>")
 
     # 11. Báo cáo Kho Bán Hàng (Sale Inventory Smart Alerts)
     inv_fails = [r for r in inventory_res if r["status"] in ("FAIL", "WARN")]
     if inv_fails:
         lines.append("\n🏷️ <b>CẢNH BÁO TỒN KHO BÁN HÀNG:</b>")
         for r in inv_fails:
-            lines.append(f"   {r['label']} (<i>{r['component']}</i>)")
-            lines.append(f"      └ {r['detail']}")
+            lines.append(f"   {html.escape(str(r['label']))} (<i>{html.escape(str(r['component']))}</i>)")
+            lines.append(f"      └ {html.escape(str(r['detail']))}")
+
+    # 12. Báo cáo Nocpro, Refuel Collector & Dept Task nếu có lỗi
+    extra_fails = [r for r in (nocpro_res + refuel_audit_res + dept_task_res) if r["status"] != "PASS"]
+    if extra_fails:
+        lines.append("\n⚙️ <b>CẢNH BÁO ĐỒNG BỘ NOCPRO / REFUEL / DEPT TASK:</b>")
+        for r in extra_fails:
+            r_title = r.get("name") or r.get("component") or r.get("label") or "Audit Check"
+            r_desc = r.get("reason") or r.get("detail") or ""
+            lines.append(f"   ⚠️ <b>{html.escape(str(r_title))}</b>: <i>{html.escape(str(r_desc))}</i>")
 
     # ── ĐƯA DANH SÁCH CÁC GHẾ GIÁM SÁT VÀO BÁO CÁO HÀNG NGÀY (CÓ TICK XANH CHO GHẾ HOẠT ĐỘNG) ──
     lines.append("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")

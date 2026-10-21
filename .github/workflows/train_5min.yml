@@ -143,30 +143,30 @@ jobs:
           R1234=false; R4=false; BOD=false; P5A=false; P5B=false; P5C=false
           R6=false; R61=false; CABLE=false; REFUEL_REQ=false
           REFUEL_P1=false; REFUEL_P2=false; REFUEL_P21=false; REFUEL_P4=false
+          REFUEL_READ=false; SWEEP_ETA=false
           AUDITOR91=false; SHARE_ETA=false; SITE_DOWN=false; CABLE_LD=false
           BI_WO_SYNC=false; SALE_SUM=false
 
-          # check_time <hour> <target_minute> — dung sai ±4 phút (nới rộng do GitHub Actions delay thường xuyên 3-5p)
+          # check_time <hour> <target_minute> — dung sai ±2 phút (mỗi cửa sổ 5 phút chứa ĐÚNG 1 nhịp tàu 5p, chống chạy lặp 2-3 lần!)
           check_time() {
             local TH=$1 TM=$2
             local CURR_MIN=$(( 10#$H * 60 + 10#$M ))
             local TARG_MIN=$(( 10#$TH * 60 + 10#$TM ))
             local DIFF=$(( CURR_MIN - TARG_MIN ))
             [ $DIFF -lt 0 ] && DIFF=$(( -DIFF ))
-            # Tolerance: ±5 phút (nới rộng kháng độ trễ GitHub Actions runner 3-6 phút)
-            [ $DIFF -le 5 ] && return 0
+            [ $DIFF -le 2 ] && return 0
             return 1
           }
 
 
-          # check_time_tolerance_4m <hour> <target_minute> — dung sai ±4 phút kháng trễ hàng đợi runner GitHub Actions
+          # check_time_tolerance_4m <hour> <target_minute> — dung sai ±2 phút (1 cửa sổ 5 phút = đúng 1 nhịp tàu 5p duy nhất)
           check_time_tolerance_4m() {
             local TH=$1 TM=$2
             local CURR_MIN=$(( 10#$H * 60 + 10#$M ))
             local TARG_MIN=$(( 10#$TH * 60 + 10#$TM ))
             local DIFF=$(( CURR_MIN - TARG_MIN ))
             [ $DIFF -lt 0 ] && DIFF=$(( -DIFF ))
-            [ $DIFF -le 4 ] && return 0
+            [ $DIFF -le 2 ] && return 0
             return 1
           }
 
@@ -240,7 +240,7 @@ jobs:
           #  20:26 → Refuel Group 9 Read Report (Sent to Bot 2)
           check_time 20 26 && REFUEL_READ=true && NEED_PYTHON=true && echo "🚃 Toa Refuel Read: Refuel Group 9 Read Report (20:26 MMT)"
           #  20:56 → Refuel Merged Report + Members Not Joined (📱 Telethon)
-          check_time 20 56 && REFUEL_P1=true && REFUEL_P4=true && NEED_PYTHON=true && echo "🚃 Toa 9+11: Refuel Merged + Members (20:56 MMT)"
+          check_time 20 56 && REFUEL_P1=true && NEED_PYTHON=true && echo "🚃 Toa 9: Refuel Merged Report (20:56 MMT)"
           #  22:06 -> [DISABLED] Plan 5C Evening disabled at night (already covered by 18:41 EOD & 19:11 Update)
 
           # 🚨 TOA SITE DOWN: Khởi hành tại nhịp :06 và :36 MMT mỗi giờ (hoạt động 03:30 - 22:15 MMT)
