@@ -296,7 +296,7 @@ def audit_telegram_webhooks():
             if "Search" in name:
                 token = (os.environ.get("SEARCH_BOT_TOKEN") or os.environ.get("TELEGRAM_TOKEN") or os.environ.get("BOT_TOKEN") or "").strip()
             elif "Site Down" in name:
-                token = (os.environ.get("SITEDOWN_BOT_TOKEN") or os.environ.get("SEND_BOT_TOKEN") or "").strip()
+                token = (os.environ.get("SITEDOWN_BOT_TOKEN") or "").strip()
             elif "Collector" in name and "Refuel" not in name:
                 token = (os.environ.get("COLLECTOR_BOT_TOKEN") or os.environ.get("TECHNICAL_DEP_BOT_TOKEN") or "").strip()
             elif "Cable" in name:
