@@ -198,9 +198,10 @@ SCHEDULE_RULES = [
         "report_name": "Reports 1, 2, 3, 4 + BOD (Sáng)",
         "group_key": "CONTROL",
         "target_times": ["05:46", "05:48", "05:51"],
+        "superseded_by_times": ["15:46", "15:48", "15:51"],
         "title_patterns": [
             r"1\.\s*BOD", r"BOD\s*Assign", r"4c\.\s*Asset", r"3\.1\s*Asset", r"Task\s*remain",
-            r"Team\s*1\s*Dawei", r"Technical\s*Dept", r"TL\s*Comparison", r"Daily\s*EOD"
+            r"Technical\s*Dept", r"TL\s*Comparison", r"Daily\s*EOD"
         ],
         "max_delay_min": 5
     },
@@ -210,7 +211,7 @@ SCHEDULE_RULES = [
         "target_times": ["15:46", "15:48", "15:51"],
         "title_patterns": [
             r"1\.\s*BOD", r"BOD\s*Assign", r"4c\.\s*Asset", r"3\.1\s*Asset", r"Task\s*remain",
-            r"Team\s*1\s*Dawei", r"Technical\s*Dept", r"TL\s*Comparison", r"Daily\s*EOD"
+            r"Technical\s*Dept", r"TL\s*Comparison", r"Daily\s*EOD"
         ],
         "max_delay_min": 5
     },
@@ -218,6 +219,7 @@ SCHEDULE_RULES = [
         "report_name": "Report 5A (Plan EOD)",
         "group_key": "CONTROL",
         "target_times": ["18:41"],
+        "superseded_by_times": ["19:11"],
         "title_patterns": [r"5\.\s*Report.*Plan", r"Plan\s*EOD"],
         "max_delay_min": 15
     },
@@ -231,7 +233,7 @@ SCHEDULE_RULES = [
     {
         "report_name": "Report 5C (Plan Sáng/Chiều)",
         "group_key": "CONTROL",
-        "target_times": ["06:06", "08:28", "09:56", "15:26", "22:06"],
+        "target_times": ["06:06", "08:28", "09:56", "15:26"],
         "title_patterns": [r"5(?:\.1|\.)?\s*Report.*Plan", r"5\.\d*\s*Report.*Plan", r"Daily\s*Plan", r"Plan.*Summary"],
         "max_delay_min": 15
     },
@@ -252,7 +254,7 @@ SCHEDULE_RULES = [
     {
         "report_name": "Refuel Merged Report",
         "group_key": "REFUEL",
-        "target_times": ["10:06", "14:11"],
+        "target_times": ["10:06", "14:11", "20:56"],
         "title_patterns": [r"\[Report\s*1\]\s*TNI\s*REQUEST\s*REFUEL", r"TNI\s*REQUEST\s*REFUEL", r"Plan.*Refuel"],
         "max_delay_min": 15
     },
@@ -1537,7 +1539,7 @@ async def audit_telegram_messages_telethon():
             for gkey, gid in ALL_MONITORED_GROUPS.items():
                 try:
                     msgs = []
-                    async for msg in client.iter_messages(gid, limit=100):
+                    async for msg in client.iter_messages(gid, limit=250):
                         if not msg.text:
                             continue
                         msg_date_mmt = msg.date.astimezone(TZ_MM)
@@ -1631,15 +1633,16 @@ async def audit_telegram_messages_telethon():
                             })
                         else:
                             # Kiểm tra xem mốc giờ này có được thay thế bởi một mốc sau trong ngày không (Rule PM-46 dọn tin cũ)
-                            # Áp dụng cho các báo cáo cập nhật cuốn chiếu nhiều lần/ngày: Report 5C, Report 6, Report 6.1, Refuel Merged
-                            is_rolling_report = len(rule["target_times"]) > 1
-                            later_targets = [t for t in rule["target_times"] if (int(t.split(":")[0])*60 + int(t.split(":")[1])) > target_total_min]
+                            # Áp dụng cho mọi báo cáo cập nhật cuốn chiếu / tự xóa tin cũ: Reports 1-4+BOD, Report 5A/5B, Report 5C, Report 6, Report 6.1, Refuel Merged
+                            all_slots = list(rule["target_times"]) + list(rule.get("superseded_by_times", []))
+                            is_rolling_report = len(all_slots) > 1
+                            later_targets = [t for t in all_slots if (int(t.split(":")[0])*60 + int(t.split(":")[1])) > target_total_min]
                             has_later_slot_passed = any((int(t.split(":")[0])*60 + int(t.split(":")[1])) <= current_total_min + 15 for t in later_targets)
 
-                            # Tìm tin nhắn gửi sau mốc target_t này
-                            subsequent_msgs = [m for _, m in matched_msgs if m["total_min"] >= target_total_min - 15]
+                            # Tìm tin nhắn gửi sau mốc target_t này (bản tin mới hơn đã xóa bản tin cũ theo Rule PM-46)
+                            subsequent_msgs = [m for _, m in matched_msgs if m["total_min"] > target_total_min]
 
-                            if is_rolling_report and has_later_slot_passed and subsequent_msgs:
+                            if subsequent_msgs and ((is_rolling_report and has_later_slot_passed) or any(m["total_min"] > target_total_min + rule["max_delay_min"] for m in subsequent_msgs)):
                                 subsequent_msgs.sort(key=lambda m: m["total_min"])
                                 superseding_msg = subsequent_msgs[0]
                                 schedule_results.append({
@@ -2130,7 +2133,7 @@ def build_supervisory_seats_status(eval_data: dict) -> list[str]:
     plan_sched = [s for s in schedule_res if any(k in s.get("report", "") for k in ["Report 5", "Plan"])]
     plan_fails = [s for s in plan_sched if s.get("status") in ("FAIL", "WARN")]
     if not plan_fails:
-        seats_output.append("✅ <b>Ghế AUDITOR-4.1 (Giám sát Daily Plan 5A-5C)</b>: Hoạt động thông suốt (7 mốc giờ Plan)")
+        seats_output.append("✅ <b>Ghế AUDITOR-4.1 (Giám sát Daily Plan 5A-5C)</b>: Hoạt động thông suốt (6 mốc giờ Plan)")
     else:
         seats_output.append(f"⚠️ <b>Ghế AUDITOR-4.1 (Giám sát Daily Plan 5A-5C)</b>: Hoạt động (Trễ {len(plan_fails)} mốc Plan)")
 
@@ -2176,7 +2179,7 @@ def build_supervisory_seats_status(eval_data: dict) -> list[str]:
     # 11. Ghế AUDITOR-9.2 (Giám sát Dung lượng Sheet Capacity)
     sheet_fails = [s for s in sheets_res if s.get("status") != "PASS"]
     if not sheet_fails:
-        seats_output.append("✅ <b>Ghế AUDITOR-9.2 (Giám sát Dung lượng Sheet)</b>: Hoạt động (Dung lượng an toàn < 20K dòng)")
+        seats_output.append("✅ <b>Ghế AUDITOR-9.2 (Giám sát Dung lượng Sheet)</b>: Hoạt động (Dung lượng an toàn &lt; 20K dòng)")
     else:
         seats_output.append(f"⚠️ <b>Ghế AUDITOR-9.2 (Giám sát Dung lượng Sheet)</b>: {len(sheet_fails)} tab cần chú ý dung lượng")
 
@@ -2241,13 +2244,13 @@ def build_supervisory_clean_report(eval_data: dict = None) -> str:
             ("AUDITOR-1.1", "Giám sát Report 1-4 & BOD", "05:48 & 15:48 MMT", "Đúng giờ, đủ quân số"),
             ("AUDITOR-2.1", "Giám sát Báo cáo Cáp Cable", "05:56 & 15:56 MMT", "Sheet cáp & Webhook kết nối tốt"),
             ("AUDITOR-3.1", "Giám sát Nhiên liệu Refuel", "10:06 & 14:11 MMT", "Lọc trùng & tiến độ chuẩn xác"),
-            ("AUDITOR-4.1", "Giám sát Daily Plan 5A-5C", "7 mốc giờ Plan", "Tiến độ gửi thông suốt"),
+            ("AUDITOR-4.1", "Giám sát Daily Plan 5A-5C", "6 mốc giờ Plan", "Tiến độ gửi thông suốt"),
             ("AUDITOR-6.1", "Giám sát Note Read & Clear Site", "Định kỳ trong ngày", "Report 6 & 6.1 đồng bộ"),
             ("SD-DETAIL-1 & SD-SUMMARY-2", "Giám sát Site Down", ":06 & :36 MMT Hàng Giờ", "Khóa thép độc lập"),
             ("TC-1 / CONS-MENU", "Giám sát Xây dựng Bot 10", "Theo sự kiện & định kỳ", "Menu & Guide Tab đồng bộ"),
             ("BI-WO-SYNC", "Giám sát BI Portal & WO", "05:46 & 15:46 MMT", "Đồng bộ 7 bảng WO & BOD Assign"),
             ("KEEPALIVE-TOA-0", "Sưởi ấm & Nhịp sống 24/7", "Mỗi 5 phút liên tục", "Chống ngủ đông serverless 100%"),
-            ("AUDITOR-9.2", "Giám sát Dung lượng Sheet", "Sau kiểm toán", "Dung lượng an toàn < 20K dòng"),
+            ("AUDITOR-9.2", "Giám sát Dung lượng Sheet", "Sau kiểm toán", "Dung lượng an toàn &lt; 20K dòng"),
             ("AUDITOR-NOCPRO-9.3", "Giám sát Nocpro Alarm", "12 mốc giờ MMT", "Đồng bộ Tab 1. Input New OK"),
             ("AUDITOR-SECURITY-9.4", "An ninh & Chống Mạo danh Bot", "24/7 Mỗi 5 Phút", "8 Bot Webhooks an toàn, Privacy Mode OK"),
             ("AUDITOR-AD-GUARD-9.5", "Lá chắn Diệt Quảng Cáo & Lôi Kéo", "24/7 Thời gian thực", "Zero Ads, Outbound & Inbound Purge Sentry ON"),
@@ -2470,7 +2473,7 @@ def send_report_telegram(msg_text: str):
                 logger.info(f"✅ Đã gửi báo cáo Ghế AUDITOR-9.1 (Part {idx+1}/{len(chunks)}) thành công đến DM Admin: {ADMIN_CHAT_ID}")
             else:
                 logger.warning(f"⚠️ Gửi HTML thất bại (HTTP {resp.status_code}), thử gửi Plain Text...")
-                plain = re.sub(r"<[^>]*>", "", chunk)
+                plain = re.sub(r"</?[a-zA-Z][^>]*>", "", chunk).replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
                 resp2 = requests.post(url, json={"chat_id": ADMIN_CHAT_ID, "text": plain}, timeout=20)
                 if resp2.status_code == 200:
                     logger.info(f"✅ Đã gửi Plain Text fallback thành công!")
@@ -2623,14 +2626,14 @@ def audit_capacity():
         if rows < 0:
             lines.append(f"❌ {name}: ERROR ({t.get('label', '')})")
         elif rows > 40000:
-            lines.append(f"🔴 {name}: <b>{rows:,}</b> rows (> 40K — SẮP TIMEOUT!)")
+            lines.append(f"🔴 {name}: <b>{rows:,}</b> rows (&gt; 40K — SẮP TIMEOUT!)")
         elif rows > 20000:
-            lines.append(f"🟡 {name}: <b>{rows:,}</b> rows (> 20K)")
+            lines.append(f"🟡 {name}: <b>{rows:,}</b> rows (&gt; 20K)")
         else:
             lines.append(f"🟢 {name}: {rows:,} rows")
 
     if gas_status == "OK":
-        lines.append(f"📊 Tổng: {len(tabs)} tabs đều < 20K rows")
+        lines.append(f"📊 Tổng: {len(tabs)} tabs đều &lt; 20K rows")
 
     lines.append(f"🕐 {gas_ts}")
 

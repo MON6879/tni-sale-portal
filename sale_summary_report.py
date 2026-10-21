@@ -70,9 +70,9 @@ def send_telegram(chat_id, text):
         return False
 
 def _in_slot(now_mm):
-    """True within 4 min of 17:30 MMT (single daily slot per SALE_SPEC.md). Prevents a re-run / late dispatch from double-sending."""
+    """True within 15 min of 11:30 or 17:30 MMT. Allows for sequential train queue delay while preventing out-of-window runs."""
     mins = now_mm.hour * 60 + now_mm.minute
-    return any(abs(mins - s) <= 4 for s in (17 * 60 + 30,))
+    return any(abs(mins - s) <= 15 for s in (11 * 60 + 30, 17 * 60 + 30))
 
 def run_sale_summary():
     now_mm = datetime.now(TZ_MM)
