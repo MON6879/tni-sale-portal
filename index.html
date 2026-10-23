@@ -8991,7 +8991,10 @@ Team04>> 2Box</td>
       <!-- 🎛️ VIEW TABS BAR (CHẾ ĐỘ XEM TRỰC QUAN TRÊN CÙNG BẢNG) -->
       <div class="card" style="background:rgba(15,23,42,0.92); border:1px solid rgba(56,189,248,0.3); border-radius:14px; padding:0.65rem 0.9rem; margin-bottom:1.2rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.65rem;">
         <div style="display:flex; gap:0.4rem; flex-wrap:wrap;" id="sd-view-mode-tabs">
-          <button id="sd-vtab-4col" class="filter-btn active" onclick="window.SiteDownManager.setViewMode('4col')" style="padding:0.45rem 0.95rem; border-radius:8px; font-weight:800; font-size:0.8rem; display:flex; align-items:center; gap:0.4rem;">
+          <button id="sd-vtab-raw" class="filter-btn active" onclick="window.SiteDownManager.setViewMode('raw')" style="padding:0.45rem 0.95rem; border-radius:8px; font-weight:800; font-size:0.8rem; display:flex; align-items:center; gap:0.4rem;">
+            <i class="fa-solid fa-file-lines" style="color:#38bdf8;"></i> 📄 VĂN BẢN GỐC AW7:AZ16
+          </button>
+          <button id="sd-vtab-4col" class="filter-btn" onclick="window.SiteDownManager.setViewMode('4col')" style="padding:0.45rem 0.95rem; border-radius:8px; font-weight:800; font-size:0.8rem; display:flex; align-items:center; gap:0.4rem;">
             <i class="fa-solid fa-table-columns" style="color:#ef4444;"></i> 📊 BẢNG 4 CỘT TRỰC QUAN 4 TEAMS
           </button>
           <button id="sd-vtab-detail" class="filter-btn" onclick="window.SiteDownManager.setViewMode('detail')" style="padding:0.45rem 0.95rem; border-radius:8px; font-weight:800; font-size:0.8rem; display:flex; align-items:center; gap:0.4rem;">
@@ -9012,8 +9015,77 @@ Team04>> 2Box</td>
         </div>
       </div>
 
+      <!-- 🔢 SECTION B (DEFAULT FIRST): AW7..AZ16 Matrix Comparison & Sheet Raw Text View -->
+      <div id="sd-matrix-card" class="card" style="background:rgba(15,23,42,0.85); border:1px solid rgba(56,189,248,0.25); border-radius:16px; padding:1.2rem; margin-bottom:1.5rem; display:block;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.6rem; margin-bottom:1rem;">
+          <div style="display:flex; align-items:center; gap:0.6rem;">
+            <div style="width:36px; height:36px; border-radius:10px; background:rgba(56,189,248,0.15); display:flex; align-items:center; justify-content:center; color:var(--cyan); font-size:1.1rem;">
+              <i class="fa-solid fa-file-lines"></i>
+            </div>
+            <div>
+              <div style="font-weight:800; font-size:0.98rem; color:#F8FAFC;">
+                VĂN BẢN GỐC AW7:AZ16 &amp; BẢNG MA TRẬN ĐỐI CHIẾU CẢNH BÁO (GOOGLE SHEET GID 0)
+              </div>
+              <div style="font-size:0.72rem; color:#94A3B8; margin-top:0.15rem;">
+                Dữ liệu 4 Cột: AW (T1 Dawei) · AX (T2 Myeik) · AY (T3 Bokpyin) · AZ (T4 Kawthoung) — Từ Dòng Row 7 đến Row 16
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+            <!-- Mode Switcher (Văn Bản Gốc AW7:AZ16 first & active by default) -->
+            <div style="display:flex; gap:0.25rem; background:rgba(30,41,59,0.9); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:3px;">
+              <button id="sd-mode-raw-btn" class="filter-btn active" onclick="window.SiteDownManager.setMatrixMode('raw')" style="padding:0.35rem 0.75rem; font-size:0.74rem; border-radius:6px; font-weight:700;">
+                <i class="fa-solid fa-file-lines"></i> Văn Bản Gốc AW7:AZ16
+              </button>
+              <button id="sd-mode-table-btn" class="filter-btn" onclick="window.SiteDownManager.setMatrixMode('table')" style="padding:0.35rem 0.75rem; font-size:0.74rem; border-radius:6px; font-weight:700;">
+                <i class="fa-solid fa-chart-pie"></i> Bảng Số Liệu &amp; Đếm
+              </button>
+            </div>
+
+            <!-- Copy Full Raw Text Button -->
+            <button class="filter-btn" onclick="window.SiteDownManager.copyRawMatrixText()" style="background:rgba(56,189,248,0.15); color:var(--cyan); border:1px solid rgba(56,189,248,0.3); padding:0.38rem 0.8rem; border-radius:8px; font-size:0.74rem; font-weight:700; cursor:pointer;" title="Sao chép toàn bộ nội dung văn bản AW7..AZ16 vào bộ nhớ tạm">
+              <i class="fa-solid fa-copy"></i> Copy AW..AZ16
+            </button>
+          </div>
+        </div>
+
+        <!-- 1B. Raw Text View (Exact content of AW7:AZ16 rows - OPEN BY DEFAULT) -->
+        <div id="sd-matrix-raw-view" style="display:block;">
+          <div style="font-size:0.75rem; color:#94A3B8; margin-bottom:0.8rem; display:flex; justify-content:space-between; align-items:center;">
+            <span><i class="fa-solid fa-terminal" style="color:var(--cyan);"></i> Hiển thị nguyên văn dữ liệu văn bản từ Google Sheet GID 0 (Cột AW..AZ, Dòng 7 đến 16):</span>
+            <span style="color:#38BDF8; font-weight:700;">Nhấp vào từng ô để copy</span>
+          </div>
+          <div id="sd-raw-matrix-content" style="display:flex; flex-direction:column; gap:0.85rem; max-height:75vh; overflow-y:auto; padding-right:8px;">
+            <div style="text-align:center; padding:2rem; color:#94A3B8;">
+              <i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem; color:#38BDF8; margin-bottom:0.5rem; display:block;"></i>
+              Đang nạp Văn Bản Gốc AW7:AZ16 từ Google Sheet GID 0...
+            </div>
+          </div>
+        </div>
+
+        <!-- 1A. Table View (Numbers & Quick Modal) -->
+        <div id="sd-matrix-table-view" class="table-container" style="overflow-x:auto; display:none;">
+          <table class="data-table" id="sd-matrix-table" style="width:100%; border-collapse:collapse; font-size:0.8rem;">
+            <thead>
+              <tr style="background:rgba(30,41,59,0.9); border-bottom:2px solid rgba(56,189,248,0.3); color:#94A3B8; text-align:left;">
+                <th style="padding:0.65rem 0.8rem; width:230px;">CHỈ SỐ CẢNH BÁO (ALARM)</th>
+                <th style="padding:0.65rem 0.8rem; text-align:center; color:#f87171;"><i class="fa-solid fa-location-dot"></i> TEAM 1 DAWEI (CỘT AW)</th>
+                <th style="padding:0.65rem 0.8rem; text-align:center; color:#fbbf24;"><i class="fa-solid fa-location-dot"></i> TEAM 2 MYEIK (CỘT AX)</th>
+                <th style="padding:0.65rem 0.8rem; text-align:center; color:#34d399;"><i class="fa-solid fa-location-dot"></i> TEAM 3 BOKPYIN (CỘT AY)</th>
+                <th style="padding:0.65rem 0.8rem; text-align:center; color:#38bdf8;"><i class="fa-solid fa-location-dot"></i> TEAM 4 KAWTHOUNG (CỘT AZ)</th>
+                <th style="padding:0.65rem 0.8rem; text-align:center; color:#e2e8f0; font-weight:800; background:rgba(56,189,248,0.12);">TOÀN VÙNG</th>
+              </tr>
+            </thead>
+            <tbody id="sd-matrix-tbody">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- 📊 SECTION A: 4-COLUMN LIVE SUMMARY BOARD (CHẾ ĐỘ XEM 4 CỘT SONG SONG) -->
-      <div id="sd-4team-board-card" class="card" style="background:rgba(15,23,42,0.92); border:1px solid rgba(56,189,248,0.3); border-radius:18px; padding:1.25rem; margin-bottom:1.5rem; box-shadow:0 10px 32px rgba(0,0,0,0.35);">
+      <div id="sd-4team-board-card" class="card" style="background:rgba(15,23,42,0.92); border:1px solid rgba(56,189,248,0.3); border-radius:18px; padding:1.25rem; margin-bottom:1.5rem; box-shadow:0 10px 32px rgba(0,0,0,0.35); display:none;">
         <!-- Top Board Info & Controls -->
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.8rem; margin-bottom:1.2rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.9rem;">
           <div style="display:flex; align-items:center; gap:0.75rem;">
@@ -9055,72 +9127,6 @@ Team04>> 2Box</td>
           <div style="grid-column:1/-1; text-align:center; padding:2rem; color:#94A3B8;">
             <i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem; color:#38BDF8; margin-bottom:0.5rem; display:block;"></i>
             Đang nạp 4 Thẻ Tổng Hợp Cảnh Báo Regional Teams...
-          </div>
-        </div>
-      </div>
-
-      <!-- 🔢 SECTION B: AW7..AZ16 Matrix Comparison & Sheet Raw Text View -->
-      <div id="sd-matrix-card" class="card" style="background:rgba(15,23,42,0.85); border:1px solid rgba(56,189,248,0.25); border-radius:16px; padding:1.2rem; margin-bottom:1.5rem; display:none;">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.6rem; margin-bottom:1rem;">
-          <div style="display:flex; align-items:center; gap:0.6rem;">
-            <div style="width:36px; height:36px; border-radius:10px; background:rgba(56,189,248,0.15); display:flex; align-items:center; justify-content:center; color:var(--cyan); font-size:1.1rem;">
-              <i class="fa-solid fa-table-cells"></i>
-            </div>
-            <div>
-              <div style="font-weight:800; font-size:0.98rem; color:#F8FAFC;">
-                BẢNG MA TRẬN ĐỐI CHIẾU CẢNH BÁO AW7..AZ16 (GOOGLE SHEET GID 0)
-              </div>
-              <div style="font-size:0.72rem; color:#94A3B8; margin-top:0.15rem;">
-                Dữ liệu 4 Cột: AW (T1 Dawei) · AX (T2 Myeik) · AY (T3 Bokpyin) · AZ (T4 Kawthoung) — Từ Dòng Row 7 đến Row 16
-              </div>
-            </div>
-          </div>
-
-          <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
-            <!-- Mode Switcher -->
-            <div style="display:flex; gap:0.25rem; background:rgba(30,41,59,0.9); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:3px;">
-              <button id="sd-mode-table-btn" class="filter-btn active" onclick="window.SiteDownManager.setMatrixMode('table')" style="padding:0.35rem 0.75rem; font-size:0.74rem; border-radius:6px; font-weight:700;">
-                <i class="fa-solid fa-chart-pie"></i> Bảng Số Liệu &amp; Đếm
-              </button>
-              <button id="sd-mode-raw-btn" class="filter-btn" onclick="window.SiteDownManager.setMatrixMode('raw')" style="padding:0.35rem 0.75rem; font-size:0.74rem; border-radius:6px; font-weight:700;">
-                <i class="fa-solid fa-file-lines"></i> Văn Bản Gốc AW7:AZ16
-              </button>
-            </div>
-
-            <!-- Copy Full Raw Text Button -->
-            <button class="filter-btn" onclick="window.SiteDownManager.copyRawMatrixText()" style="background:rgba(56,189,248,0.15); color:var(--cyan); border:1px solid rgba(56,189,248,0.3); padding:0.38rem 0.8rem; border-radius:8px; font-size:0.74rem; font-weight:700; cursor:pointer;" title="Sao chép toàn bộ nội dung văn bản AW7..AZ16 vào bộ nhớ tạm">
-              <i class="fa-solid fa-copy"></i> Copy AW..AZ16
-            </button>
-          </div>
-        </div>
-
-        <!-- 1A. Table View (Numbers & Quick Modal) -->
-        <div id="sd-matrix-table-view" class="table-container" style="overflow-x:auto;">
-          <table class="data-table" id="sd-matrix-table" style="width:100%; border-collapse:collapse; font-size:0.8rem;">
-            <thead>
-              <tr style="background:rgba(30,41,59,0.9); border-bottom:2px solid rgba(56,189,248,0.3); color:#94A3B8; text-align:left;">
-                <th style="padding:0.65rem 0.8rem; width:230px;">CHỈ SỐ CẢNH BÁO (ALARM)</th>
-                <th style="padding:0.65rem 0.8rem; text-align:center; color:#f87171;"><i class="fa-solid fa-location-dot"></i> TEAM 1 DAWEI (CỘT AW)</th>
-                <th style="padding:0.65rem 0.8rem; text-align:center; color:#fbbf24;"><i class="fa-solid fa-location-dot"></i> TEAM 2 MYEIK (CỘT AX)</th>
-                <th style="padding:0.65rem 0.8rem; text-align:center; color:#34d399;"><i class="fa-solid fa-location-dot"></i> TEAM 3 BOKPYIN (CỘT AY)</th>
-                <th style="padding:0.65rem 0.8rem; text-align:center; color:#38bdf8;"><i class="fa-solid fa-location-dot"></i> TEAM 4 KAWTHOUNG (CỘT AZ)</th>
-                <th style="padding:0.65rem 0.8rem; text-align:center; color:#e2e8f0; font-weight:800; background:rgba(56,189,248,0.12);">TOÀN VÙNG</th>
-              </tr>
-            </thead>
-            <tbody id="sd-matrix-tbody">
-              <!-- Rendered by JS -->
-            </tbody>
-          </table>
-        </div>
-
-        <!-- 1B. Raw Text View (Exact content of AW7:AZ16 rows) -->
-        <div id="sd-matrix-raw-view" style="display:none;">
-          <div style="font-size:0.75rem; color:#94A3B8; margin-bottom:0.8rem; display:flex; justify-content:space-between; align-items:center;">
-            <span><i class="fa-solid fa-terminal" style="color:var(--cyan);"></i> Hiển thị nguyên văn dữ liệu văn bản từ Google Sheet GID 0 (Cột AW..AZ, Dòng 7 đến 16):</span>
-            <span style="color:#38BDF8; font-weight:700;">Nhấp vào từng ô để copy</span>
-          </div>
-          <div id="sd-raw-matrix-content" style="display:flex; flex-direction:column; gap:0.85rem; max-height:75vh; overflow-y:auto; padding-right:8px;">
-            <!-- Rendered by JS renderRawMatrix() -->
           </div>
         </div>
       </div>
@@ -10069,6 +10075,7 @@ Team04>> 2Box</td>
       document.getElementById(panelId).classList.add('active');
       tabBtn.classList.add('active');
       if (panelId === 'site-link-down-panel' && window.SiteDownManager) {
+        window.SiteDownManager.setViewMode('raw');
         window.SiteDownManager.loadData(false);
       }
     }
@@ -10765,6 +10772,7 @@ Gửi link này cho nhân viên qua Telegram/Zalo, khi họ bấm vào hệ th�
         loadGoogleClientIdSetting();
       }
       if (panelId === 'site-link-down-panel' && window.SiteDownManager) {
+        window.SiteDownManager.setViewMode('raw');
         window.SiteDownManager.loadData(false);
       }
     };
@@ -13434,7 +13442,8 @@ document.addEventListener("DOMContentLoaded", function() {
         sortField: 'downHours',
         sortAsc: false,
         isLoading: false,
-        viewMode: '4col',
+        viewMode: 'raw',
+        matrixMode: 'raw',
         detailsExpanded: true
       };
 
@@ -13452,6 +13461,8 @@ document.addEventListener("DOMContentLoaded", function() {
         var btnRaw = document.getElementById('sd-mode-raw-btn');
         var viewTable = document.getElementById('sd-matrix-table-view');
         var viewRaw = document.getElementById('sd-matrix-raw-view');
+        var btnVtabRaw = document.getElementById('sd-vtab-raw');
+        var btnVtabMatrix = document.getElementById('sd-vtab-matrix');
         if (mode === 'raw') {
           if (btnTable) btnTable.classList.remove('active');
           if (btnRaw) btnRaw.classList.add('active');
@@ -13460,11 +13471,21 @@ document.addEventListener("DOMContentLoaded", function() {
             viewRaw.style.display = 'block';
             renderRawMatrix();
           }
+          if (state.viewMode === 'matrix' || state.viewMode === 'raw') {
+            state.viewMode = 'raw';
+            if (btnVtabMatrix) btnVtabMatrix.classList.remove('active');
+            if (btnVtabRaw) btnVtabRaw.classList.add('active');
+          }
         } else {
           if (btnRaw) btnRaw.classList.remove('active');
           if (btnTable) btnTable.classList.add('active');
           if (viewRaw) viewRaw.style.display = 'none';
           if (viewTable) viewTable.style.display = 'block';
+          if (state.viewMode === 'matrix' || state.viewMode === 'raw') {
+            state.viewMode = 'matrix';
+            if (btnVtabRaw) btnVtabRaw.classList.remove('active');
+            if (btnVtabMatrix) btnVtabMatrix.classList.add('active');
+          }
         }
       }
 
@@ -14523,21 +14544,28 @@ document.addEventListener("DOMContentLoaded", function() {
       }
 
       function applyViewMode() {
-        var mode = state.viewMode || '4col';
+        var mode = state.viewMode || 'raw';
         var v4col = document.getElementById('sd-4team-board-card');
         var vDetail = document.getElementById('sd-active-sites-card');
         var vMatrix = document.getElementById('sd-matrix-card');
 
+        var btnRawTab = document.getElementById('sd-vtab-raw');
         var btn4col = document.getElementById('sd-vtab-4col');
         var btnDetail = document.getElementById('sd-vtab-detail');
         var btnSplit = document.getElementById('sd-vtab-split');
         var btnMatrix = document.getElementById('sd-vtab-matrix');
 
-        [btn4col, btnDetail, btnSplit, btnMatrix].forEach(function(b) {
+        [btnRawTab, btn4col, btnDetail, btnSplit, btnMatrix].forEach(function(b) {
           if (b) b.classList.remove('active');
         });
 
-        if (mode === '4col') {
+        if (mode === 'raw') {
+          if (btnRawTab) btnRawTab.classList.add('active');
+          if (v4col) v4col.style.display = 'none';
+          if (vDetail) vDetail.style.display = 'none';
+          if (vMatrix) vMatrix.style.display = 'block';
+          setMatrixMode('raw');
+        } else if (mode === '4col') {
           if (btn4col) btn4col.classList.add('active');
           if (v4col) v4col.style.display = 'block';
           if (vDetail) vDetail.style.display = 'none';
@@ -14557,6 +14585,7 @@ document.addEventListener("DOMContentLoaded", function() {
           if (v4col) v4col.style.display = 'none';
           if (vDetail) vDetail.style.display = 'none';
           if (vMatrix) vMatrix.style.display = 'block';
+          setMatrixMode('table');
         }
       }
 
