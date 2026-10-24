@@ -26,8 +26,8 @@
 >
 > 9. **🪑 Phân Định 3 Ghế Độc Lập Chuẩn Xác — Quy Tắc Alarm Group & Alarm Name (3 Dedicated Seats Policy — PM 2026-10-12/13)**:
 >    - **Ghế 1 (`DESK-NOCPRO-1` / `nocpro_run.py new`)**: Xuất cảnh báo New Alarm ghi đè toàn bộ tab `1. Input New` (GID `85422169`). `Alarm group` = **TICK CHỌN `Select all` (toàn bộ các nhóm cảnh báo, KHÔNG giới hạn 4 nhóm)**, `Alarm name` = **BỎ TRỐNG (`--Select--`)**, TUYỆT ĐỐI KHÔNG có End time.
->    - **Ghế 2 (`DESK-NOCPRO-2` / `nocpro_run.py flow_loss`)**: Xuất cảnh báo Cleared Flow Loss dán nối tiếp vào tab `1.1 Input  Site Clear+History` (GID `379017693`). Start time đọc từ `AM3:AN3`, to `today + 1` `00:00:00`. Status = `Cleared alarm`. `Alarm group` = **CHỈ TICK 1 CÁI `Flow Loss`**, `Alarm name` = **BỎ TRỐNG (`--Select--`)**.
->    - **Ghế 3 (`DESK-NOCPRO-3` / `nocpro_run.py door`)**: Xuất cảnh báo Cleared Door dán nối tiếp vào tab `1.1.2 Input Clear + History open the door` (GID `2099413230`). Start time đọc từ `AF3:AG3`, to `today + 1` `00:00:00`. Status = `Cleared alarm`. `Alarm group` = `Select all`. **CHỈ CÓ DOOR MỚI CHỌN ALARM NAME**: chọn đúng 5 loại Door (`Battery Cabinet Door Alarm`, `DG Door Alarm`, `Door Alarm`, `Door open alarm`, `Door open alarm.`). Sau khi xuất xong, **BẮT BUỘC** khôi phục `Alarm name` về `--Select--` và trả bộ lọc về `New` (`Alarm group` = `Select all`). Lịch chạy tự động hàng ngày: **12:22**.
+>    - **Ghế 2 (`DESK-NOCPRO-2` / `nocpro_run.py flow_loss`)**: Xuất cảnh báo Cleared Flow Loss dán nối tiếp vào tab `1.1 Input  Site Clear+History` (GID `379017693`). Start time đọc từ `AF4:AG4` (`AM3:AN3`), to `today + 1` `00:00:00`. Status = `Cleared alarm`. `Alarm group` = **CHỈ TICK 1 CÁI `Flow Loss`**, `Alarm name` = **BỎ TRỐNG (`--Select--`)**. Lịch chạy tự động hàng ngày (đúng 2 lần/ngày, trước 15 phút so với giờ gửi `OPERATION PROGRESS REPORT` lúc `11:46` & `17:21 MMT` / `12:16` & `17:51 VN`): **`12:01` & `17:36` VN (`11:31` & `17:06 MMT`)**.
+>    - **Ghế 3 (`DESK-NOCPRO-3` / `nocpro_run.py door`)**: Xuất cảnh báo Cleared Door dán nối tiếp vào tab `1.1.2 Input Clear + History open the door` (GID `2099413230`). Start time đọc từ `AF3:AG3`, to `today + 1` `00:00:00`. Status = `Cleared alarm`. `Alarm group` = `Select all`. **CHỈ CÓ DOOR MỚI CHỌN ALARM NAME**: chọn đúng 5 loại Door (`Battery Cabinet Door Alarm`, `DG Door Alarm`, `Door Alarm`, `Door open alarm`, `Door open alarm.`). Sau khi xuất xong, **BẮT BUỘC** khôi phục `Alarm name` về `--Select--` và trả bộ lọc về `New` (`Alarm group` = `Select all`). Lịch chạy tự động hàng ngày (xếp hàng FIFO ngay sau Flow Loss, đúng 2 lần/ngày trước 15 phút so với `OPERATION PROGRESS REPORT`): **`12:02` & `17:37` VN (`11:32` & `17:07 MMT`)**. Bản tin độc lập `11 Site down Clear` (`Time report: ...`) đã tắt hoàn toàn vì đã tích hợp vào `OPERATION PROGRESS REPORT`.
 >
 > 10. **🖱️ Tối Ưu Chuột & Trải Nghiệm Người Dùng (Mouse & UX Non-Interference Policy — PM 2026-10-12)**:
 >    - **Rê chuột / Chạm chuột**: Người dùng vô tình rê/chạm chuột trên máy, AI **vẫn tiếp tục làm**, KHÔNG dừng.
@@ -53,7 +53,8 @@
 >      - **TUYỆT ĐỐI CẤM** chạm vào, chỉnh sửa, xóa, ghi đè, hay copy-dán giá trị (`123` bỏ qua hàm) lên **các cột công thức `A:T`**, các cột từ `AX` trở đi, hoặc bất kỳ tab nào khác (`ALL WO 2 month include WO TT`, `Export WO Cable`, `Site form Team`, `Sum site and Cable`...).
 >      - **TUYỆT ĐỐI CẤM** tự ý bấm vào biểu tượng `Sheets Home` hoặc mở sang trang/link Google khác khi người dùng không yêu cầu.
 >    - **Khóa Thép 5 Lớp Bắt Buộc Trong `auto_sync_wo.py`**:
->      1. **Làm sạch ký tự xuống dòng trong từng ô (`clean_cell`)**: Mọi ô đọc từ Excel (29 cột `A..AC`) BẮT BUỘC loại bỏ toàn bộ ``, `
+>      1. **Làm sạch ký tự xuống dòng trong từng ô (`clean_cell`)**: Mọi ô đọc từ Excel (29 cột `A..AC`) BẮT BUỘC loại bỏ toàn bộ `
+`, `
 `, `	` (`" ".join(str(val).replace("	", " ").splitlines()).strip()`) để 1 dòng Excel = đúng 1 dòng Google Sheet × 29 cột (`U:AW`), không bao giờ bị vỡ dòng.
 >      2. **Click đơn đúng tâm Name Box `(45, 394)` + Kiểm tra viền xanh (`blue_px >= 200`)**: Trên màn hình vật lý `2560×1600` (`SetProcessDpiAwareness(2)`), CHỈ click đơn 1 lần vào `(45, 394)` (tuyệt đối CẤM `(50, 217)` hay `(50, 365)`, CẤM `Double-click` + `Ctrl+A` + `Backspace`). Sau khi click, BẮT BUỘC chụp kiểm tra `bbox=(0, 375, 200, 415)` phải có `>= 200` điểm ảnh viền xanh dương (`b - r > 30`); không có -> **DỪNG KHẨN CẤP**.
 >      3. **Định tuyến tường minh kèm tên tab**: Mọi lệnh nhập vào Name Box BẮT BUỘC ghi đầy đủ tên tab: `'WoList input'!U1:AW2500` (khi xóa) và `'WoList input'!U1` (khi dán).
@@ -3005,7 +3006,7 @@ Reason: [Lý do]`
 > **PM-102 (13/10/2026) — Khắc Phục Triệt Để Độ Trễ Gửi Tin AW7 Site Down & Kích Hoạt Lại GAS 1-Minute Train Kèm Khóa ScriptLock (Zero AW7 Latency & Dual-Track Realtime Dispatch Engine)**:
 > - **Yêu Cầu & Bối Cảnh (Requirement & Context)**:
 >   1. Người dùng phản ánh: *"Site down AW7 lúc trước có tin mới là gởi liền tại sao giờ hơn 10 phút mới gởi"* kèm ảnh chụp bản tin Telegram nhóm `5 TNI_SITE_DOWN_CELL_ALARM` có mốc dữ liệu `07:56` nhưng tin nhắn đến lúc `08:08` (trễ 12 phút).
->   2. Người dùng gửi lệnh mở khóa thép: `UNLOCK STEEL: Phucat@6879lo`.
+>   2. Người dùng gửi lệnh mở khóa thép: `UNLOCK STEEL: <mật-khẩu-bảo-mật>`.
 > - **Nguyên Nhân Gốc (Root Cause Analysis)**:
 >   1. **Trigger 1 Phút Trên GAS Bị Xóa**: Ở đợt dọn dẹp chống trùng lặp phiên trước (Rule PM-71), trigger time-driven 1 phút trên GAS (`checkAndSend_1min`) đã bị hủy (`teardownGasTrain1min`) để tránh race condition, dồn việc phát hiện sang Đoàn tàu GitHub Actions.
 >   2. **Lệnh `curl` trong Toa 0 Keepalive Bị Lỗi HTTP 411 Length Required**: Trong `train_5min.yml`, lệnh kiểm tra AW7 được viết:
@@ -3031,7 +3032,7 @@ Reason: [Lý do]`
 > **PM-103 (13/10/2026) — Bổ Sung Hàng Dữ Liệu `DG.Low Oil Pressure` Kèm Icon Chấm Màu Tím `🟣` & Mở Rộng Bảng AW7:AZ18 Trong Site Down Summary (Strict DG.Low Oil Pressure Parsing & Dynamic Label Prefix Policy)**:
 > - **Yêu Cầu & Bối Cảnh (Requirement & Context)**:
 >   1. Người dùng chỉ thị: *"Có thêm 1 hàng dữ liệu DG.Low Oil Pressure: /1 =Khant Chaw Nyo: TNI0120 : 0 bạn vào thêm icon chấm màu Tím cho tôi"* kèm ảnh chụp màn hình ô `AW11` có hàng dữ liệu `DG.Low Oil Pressure: /0 =` trên tab `1 Input Site down Telegram` (Sheet GID 0).
->   2. Người dùng cung cấp mật khẩu mở khóa: `UNLOCK STEEL: Phucat@6879lo`.
+>   2. Người dùng cung cấp mật khẩu mở khóa: `UNLOCK STEEL: <mật-khẩu-bảo-mật>`.
 > - **Nguyên Nhân & Điểm Cần Xử Lý**:
 >   1. Bảng dữ liệu `AW7:AZ16` (10 dòng) trước đây chỉ bao gồm: Site down, Cell down, DG Abnormal, DG Run>16H, Link down, Battery Temperature High, Smoke, DOOR.
 >   2. Khi chèn thêm hàng `DG.Low Oil Pressure` tại dòng 11, các hàng bên dưới bị đẩy xuống 1 dòng (DOOR chuyển xuống dòng 15). Cần mở rộng dải ô đọc thành `AW7:AZ18` (12 dòng) để đảm bảo không bị cắt đuôi.
@@ -3046,7 +3047,7 @@ Reason: [Lý do]`
 > **PM-104 (14/10/2026) — Tự Động Phục Hồi Trigger 1 Phút (Self-Healing 1-Min Train) & Bắn Tin AW7 Dưới 60 Giây (Zero AW7 Delay & Resilient Watchdog Policy)**:
 > - **Yêu Cầu & Bối Cảnh (Requirement & Context)**:
 >   1. Người dùng chỉ thị: *"sửa lại AW7 có tin mới là gởi liền sao bảo sửa dưới 60s rồi sao giờ hơn 15 phút"* kèm ảnh chụp màn hình bản tin Tin 2 Summary nhóm `TNI TEAM 1 PLAN - ALARM` có mốc giờ `19:47` nhưng đến `20:00` mới gửi đến Telegram (~13-15 phút độ trễ).
->   2. Người dùng cung cấp mật khẩu mở khóa: `UNLOCK STEEL: Phucat@6879lo`.
+>   2. Người dùng cung cấp mật khẩu mở khóa: `UNLOCK STEEL: <mật-khẩu-bảo-mật>`.
 > - **Nguyên Nhân Gốc (Root Cause Analysis)**:
 >   1. **Trigger 1 Phút Bị Mất (`has_1min_train: false`)**: Sau khi nâng cấp Version `@115`, trigger time-driven `checkAndSend_1min` trên GAS không được tự động tạo lại / bị thiếu do thiếu cơ chế watchdog tự phục hồi (self-healing). Kiểm tra live `?action=status_gas_train` trả về `{"ok":true,"triggers":[],"has_1min_train":false}`.
 >   2. **Phụ Thuộc Fallback Chậm**: Khi trigger 1 phút vắng mặt, AW7 chỉ được kiểm tra khi Đoàn tàu 5 phút (`train_5min.yml` / `14_GITHUB_DISPATCH.gs`) chạy hoặc nhịp relay :06/:36. Độ lệch pha và thời gian khởi tạo runner khiến tin bị trễ ~15 phút.
@@ -3155,3 +3156,64 @@ Reason: [Lý do]`
 >      - Bổ sung endpoint `?action=audit_refuel` trên GAS (`apps_script_collector.gs` & `apps_script_refuel_plan.gs`).
 >      - Trong `system_auditor.py`: thêm `audit_refuel_collector_and_letter_sync()` và mục C.4 trong `audit_telegram_messages_telethon()` — tự động phát hiện mọi tin báo cáo trong Group 9 chưa có phản hồi `Recorded` của Bot và **tự động bù (Auto-Heal)** đẩy lên GAS + cảnh báo về DM Admin.
 >      - Đồng bộ trạng thái sống của `AUDITOR-3.1` lên bảng điều hành Supervisory Sentinel (`#seat-status-auditor31` trên `index.html`).
+
+> **PM-109 (24/10/2026) — Đồng Bộ Cutoff 22:15 MMT Cho Cable Link Down & Sweep ETA (Zero Late-Night Noise Fix)**:
+> - **Bối cảnh & Yêu cầu**: Bot gửi tin vào ban đêm sau 22:36 VN (22:06 MMT) do ba toa không có guard giờ: (1) Toa Cable Link Down chạy 24/7 không giới hạn; (2) Toa Sweep ETA kích hoạt theo `site_down=true` không có guard riêng; (3) `cable_link_down_report.py` không có bất kỳ kiểm tra giờ nào bên trong Python.
+> - **Nguyên nhân gốc (Root Cause)**:
+>   1. `train_5min.yml` Toa Cable (line 219): chỉ kiểm tra phút `:16`/`:46` nhưng **không kiểm tra giờ** → chạy 24/7 kể cả lúc 23:16, 00:16...
+>   2. `train_5min.yml` Toa Sweep ETA job (line 756–757): có điều kiện `steps.sched.outputs.site_down == 'true'` → Sweep ETA chạy mỗi khi Site Down chạy, kể cả lần cuối 22:06 MMT, không có guard riêng.
+>   3. `cable_link_down_report.py`: hoàn toàn không có guard `TZ_MM` → Python script chạy bất kể giờ nào workflow gọi.
+> - **Giải pháp & Triển khai Bọc Thép (Rule PM-109)**:
+>   1. **`train_5min.yml` Toa Cable**: Thêm `CURR_TOTAL_MIN` guard `≥ 3*60+30 && ≤ 22*60+15` — đồng bộ hoàn toàn với Site Down cutoff.
+>   2. **`train_5min.yml` Toa Sweep ETA sched block**: Thêm `CURR_TOTAL_MIN` guard `≥ 3*60+30 && ≤ 22*60+15`. Bỏ trigger `site_down == 'true'` khỏi job `if:` condition của Sweep ETA — chỉ chạy qua `sweep_eta=true` (từ `:11`/`:41`) hoặc `workflow_dispatch`.
+>   3. **`cable_link_down_report.py`**: Thêm Python-level guard ngay sau `load_dotenv()`: tính `_total_min_mm`, nếu ngoài `[3*60+30, 22*60+15]` thì `print` + `sys.exit(0)` — defense-in-depth.
+> - **Commit**: `d9273ac` — push thành công `MON6879/tni-bot` (remote `mon6879-bot`).
+> - **Kết quả**: Toàn bộ hoạt động ban đêm kết thúc đúng 22:15 MMT (22:45 VN). Lần chạy cuối: Cable 22:16 MMT (22:46 VN) → guard chặn, không gửi.
+
+> **PM-110 (24/10/2026) — Khắc Phục Triệt Để Lỗi Timeout Đồng Bộ Google Sheet Nocpro (`SheetsAPI_v4` ~2.5s) & Nâng Timeout Hộp Thoại `selectSaveFile` Lên 75s (`@528`)**:
+> - **Bối cảnh & Triệu chứng**:
+>   1. Ghế 1 (`DESK-NOCPRO-1`, đồng bộ vào tab `'1. Input New'` trên Sheet `1aAMxzyhiiYYZ1Hl8n8VYgXTfu3Cx_ivX6X-WSzXbFcI`) liên tục báo `ReadTimeout` và dừng an toàn sau 7 phút chờ audit với lỗi GAS: `"Dịch vụ Bảng tính đã hết thời gian chờ khi truy cập vào tài liệu có mã 1aAMxzyhiiYYZ1Hl8n8VYgXTfu3Cx_ivX6X-WSzXbFcI."`.
+>   2. Lúc `20:31:02`, khi xuất ~1,550 dòng cảnh báo vào giờ cao điểm qua VPN, script dừng an toàn với lỗi `"Không thấy hộp thoại lưu file sau khi bấm Action. Dừng."`, trong khi chỉ vài giây sau hộp thoại `selectSaveFile` mới hiện ra trên Desktop 2.
+> - **Nguyên nhân gốc (Root Cause)**:
+>   1. **Mở bảng trung gian không cần thiết trong `doPostCollector_()`**: Mọi request POST gửi tới GAS đều phải đi qua `SpreadsheetApp.openById(SHEET_ID)` ở đầu hàm `doPostCollector_()` trước khi định tuyến tới `handleNocproSyncSheet_()`.
+>   2. **`SpreadsheetApp.openById()` quá tải trên bảng tính lớn**: Việc nạp toàn bộ DOM `SpreadsheetApp` của file `1aAMxzyhiiYYZ1Hl8n8VYgXTfu3Cx_ivX6X-WSzXbFcI` kèm `ws.getLastRow()` + `setValues()` + `clearContent()` + `SpreadsheetApp.flush()` kích hoạt tính toán lại toàn bộ các tab công thức phụ thuộc, ngốn 4.5–6 phút và chạm ngưỡng timeout cứng của Dịch vụ Bảng tính Google.
+>   3. **Timeout hộp thoại `selectSaveFile` quá ngắn (20s)**: Hàm `step_confirm_save(timeout=20)` trong `nocpro_export.py` chỉ chờ 20 giây, trong khi máy chủ Nocpro kết xuất ~1,600 dòng qua VPN giờ cao điểm cần 15–35 giây mới bật hộp thoại `selectSaveFile`.
+> - **Giải pháp & Triển khai Bọc Thép (Rule PM-110)**:
+>   1. **Fast-Path định tuyến đầu hàm `doPostCollector_()`**: Đưa `nocpro_sync_sheet` và `nocpro_sync_clear_history` lên ngay đầu hàm `doPostCollector_()`, bỏ qua hoàn toàn việc mở `SHEET_ID` không liên quan.
+>   2. **Bật Advanced Service `Sheets` v4 (`appsscript.json`) & Ghi Trực Tiếp Ở Tầng REST v4 (`@528`)**:
+>      - Trong `handleNocproSyncSheet_()` và `handleNocproSyncClearHistory_()`: Sử dụng `Sheets.Spreadsheets.Values.update` + `Sheets.Spreadsheets.Values.clear` (Tầng 1 `SheetsAPI_v4`, có fallback `UrlFetch_SheetsV4` và `SpreadsheetApp`).
+>      - Thời gian ghi 1,516 dòng × 27 cột vào `'1. Input New'` giảm từ **> 300 giây (timeout)** xuống còn **2.48 giây (`elapsed_ms: 2482`)**!
+>   3. **Nâng timeout `step_confirm_save(timeout=75)` và `step_sync(timeout=150)` trong `nocpro_export.py`**: Đảm bảo chờ đủ thời gian kết xuất file qua VPN và đính kèm `source_file` vào `errAudit` để nhận diện tức thì.
+
+> **PM-111 (25/10/2026) — Khắc Phục Triệt Để Lỗi `botlookup_relay.py` Cào Không Dán Vào Cột A Do Lệch Đồng Hồ (`msg.id > sent_msg.id`), Lỗi `checkAndSend_1min` Gửi Lại Tin Ngày Hôm Qua Lúc `03:30 MMT` & Tách Biệt Dọn Rác Tin 1 / Tin 2 (`@126`)**:
+> - **Bối cảnh & Triệu chứng**:
+>   1. Sáng `25/10/2026`, trong nhóm `BOT LOOKUP` (`-1002681525983`), tài khoản userbot đã gửi lệnh `/down_tni@auto_nocpro_bot` vào các nhịp `03:38`, `04:08`, `04:38 MMT` (`04:08`, `04:38`, `05:08 VN`) và `@auto_nocpro_bot` đã trả lời đầy đủ dữ liệu `Tanintharyi Region` (`03:30:00`, `04:00:00`, `04:30:00`), nhưng `botlookup_relay.py` **không lấy được dữ liệu để dán vào Cột A** trên Sheet GID `0` (ô `A1` vẫn kẹt ở mốc `24/10/2026 22:00:00` của tối hôm trước).
+>   2. Đúng `04:01 VN` (`03:31 MMT`), Bot 5T lại gửi bản tin `24/10/2026 22:00` cũ của ngày hôm qua lên tất cả các nhóm Telegram như một bản tin mới.
+> - **Nguyên nhân gốc (Root Cause)**:
+>   1. **Lệch đồng hồ runner & làm tròn giây của Telegram (`msg.date >= send_time`)**:
+>      - Trong `botlookup_relay.py`, `send_time = datetime.now(timezone.utc)` được ghi nhận *sau khi* hàm `await client.send_message(source, COMMAND)` trả về (có phần thập phân microsecond `.xxxxxx` kèm độ lệch đồng hồ dương 1–2s của máy ảo GitHub runner), trong khi máy chủ Telegram đóng dấu `msg.date` ở giây nguyên (`.000000` tại thời điểm nhận lệnh).
+>      - Hệ quả: Chính tin nhắn lệnh vừa gửi (`sent_msg`) luôn có `sent_msg.date < send_time` nên bị lọc bỏ (`found_command = False`). Khi `@auto_nocpro_bot` phản hồi cực nhanh trong vòng 1 giây (`04:08` `id=148047`, `04:38` `id=148051`), tin trả lời của bot cũng có `msg.date < send_time` và bị loại khỏi `all_after`!
+>      - Ở nhịp `03:38 MMT`, 5 giây sau khi bot trả lời `Tanintharyi Region` (`id=148035`), một người dùng khác gửi `/down_kyn@auto_nocpro_bot` và bot trả lời `Kayin State` (`id=148037`). Nhánh fallback (`for msg in reversed(all_after)`) lấy ngay 1 tin bot mới nhất (`Kayin State`) rồi `break` luôn mà không kiểm tra `is_tni_data_msg`, dẫn đến loại bỏ vì không có chữ `Tanintharyi`!
+>   2. **Reset `TS_KEY_A1` lúc `03:30 MMT` + Thiếu `Freshness Guard` ngày hôm nay trong `processSiteDownColC`**:
+>      - Trigger 1 phút `checkAndSend_1min` bắt đầu chạy từ `03:30 MMT` (`04:00 VN`), sớm hơn 8 phút so với chuyến `botlookup_relay.py` đầu tiên trong ngày (`03:38 MMT`).
+>      - Tại `03:30 MMT`, hàm `checkAndSend()` thấy sang ngày mới (`todayStr !== lastDay`) nên gọi `props.deleteProperty(TS_KEY_A1)` xóa mốc dedup của Cột A trong khi ô `A1` vẫn đang chứa dữ liệu tối hôm qua (`24/10/2026 22:00:00`).
+>      - Khác với `processSummaryAwAz` (đã có `todayMmt` Freshness Guard từ PM-100), hàm `processSiteDownColC` **chưa có chốt kiểm tra ngày `todayMmt`**, nên ngay khi `TS_KEY_A1` bị xóa lúc `03:30 MMT`, `processSiteDownColC` tưởng dữ liệu `24/10/2026 22:00:00` là dữ liệu mới và bắn ngay lên toàn bộ 5 nhóm Telegram!
+>   3. **Liên kết công thức Cột C (`C4..C7`) phụ thuộc chéo vào `AW8:AZ14` & Xung đột `checkAndSend_1min` / `sweep_orphan_eta.py`**:
+>      - Các ô tiêu đề Team ở Cột C (`C4..C7`) lấy thời gian/trạm từ Cột A nhưng nối chuỗi với số liệu `Cell down`, `DG Abnormal`, `DG Run>16H` từ vùng `AW8:AZ14` (do `IMPORTRANGE` nạp về). Khi `IMPORTRANGE` đang nạp lại (`#REF!` / `< > | | |`), nếu `processSiteDownColC` hoặc `processSummaryAwAz` đọc ngay sẽ gửi bản tin rỗng/lỗi và khóa `TS_KEY_A1`.
+>      - Hàm `checkAndSend()` trước đây chưa bọc `LockService.getScriptLock()`, nên khi `doPost(store_site_down)` đang ngủ `Utilities.sleep(5000)` chờ bảng tính flush và xóa sớm `TS_KEY_A1`, trigger `checkAndSend_1min` nhảy vào đọc giữa chừng gây gửi đúp Tin 1.
+>      - Ngoài ra `sweep_orphan_eta.py` trước đây gom chung Tin 1 (Col C) và Tin 2 (AW7 Summary) vào cùng một danh sách `sitedown_msgs` theo cửa sổ 120s, khiến Tin 2 gửi sau >2 phút xóa mất Tin 1.
+> - **Giải pháp & Triển khai Bọc Thép (Rule PM-111 — Deploy `@126`)**:
+>   1. **Neo ID Tin Nhắn Tuyệt Đối (`msg.id > sent_msg.id`) & Smart Polling Trong `botlookup_relay.py`**:
+>      - Bắt trực tiếp đối tượng trả về `sent_msg = await client.send_message(source, COMMAND)` và lọc lịch sử theo **`msg.id > sent_msg.id`** (sắp xếp tăng dần theo `msg.id`). ID tự tăng của Telegram miễn nhiễm 100% với lệch đồng hồ máy ảo và làm tròn giây.
+>      - Xây dựng `user_map` từ `hist.users` để nhận diện `@auto_nocpro_bot` tức thì (`O(1)`), kết hợp Smart Polling mỗi 4 giây (tối đa 45s) + chờ 2.5s gom đủ tin tách phần, và bổ sung Stage 3 Fallback quét tin `Tanintharyi` của ngày hôm nay trong 35 phút gần nhất nếu cần.
+>   2. **Khóa Thép 4 Lớp Trong `apps_script_sitedown/site_down_v2.gs` (`@126`)**:
+>      - **Lớp 1 — Bỏ xóa `TS_KEY_A1` lúc `03:30 AM` trong `checkAndSend()`**: Giữ nguyên `TS_KEY_A1` qua đêm để không bao giờ kích hoạt gửi lại dữ liệu tối hôm qua trước khi relay sáng nay cào xong.
+>      - **Lớp 2 — `FRESHNESS GUARD` (`todayMmt`) trong `processSiteDownColC`**: Trích xuất ngày `dd/MM/yyyy` từ `storeKey` (`A1`) và so sánh với `todayMmt` (`Asia/Rangoon`). Nếu `a1Date !== todayMmt` $\rightarrow$ **CHẶN ĐỨNG 100% (`return false`)**, tuyệt đối không gửi dữ liệu khác ngày hôm nay!
+>      - **Lớp 3 — `FORMULA SYNC GUARD` cho cả Cột C và `AW7:AZ18`**: Nếu phát hiện `#REF!`, `#LOADING`, `#ERROR!` hoặc `< > | | |` khi `IMPORTRANGE` đang đồng bộ, tự động chờ / hoãn gửi và không lưu `TS_KEY_A1` / `TS_KEY_AW7` cho tới khi công thức tính xong.
+>      - **Lớp 4 — `LockService.getScriptLock()` trong `checkAndSend()` & Xóa `TS_KEY_A1` sau `Utilities.sleep(5000)` trong `doPost`**: Triệt tiêu hoàn toàn race condition giữa `checkAndSend_1min` và `doPost(store_site_down)`. Đồng thời sửa `addKeywordIcons` để `DG Run>16H: /0 =` hiển thị chấm xanh `✅` chuẩn xác.
+>   3. **Tách Biệt Hoàn Toàn `Tin1-Detail` và `Tin2-Summary` Trong `sweep_orphan_eta.py`**:
+>      - Phân loại độc lập `Tin1-Detail` (bản tin chi tiết Cột C) và `Tin2-Summary` (bản tin tổng hợp AW7 kèm các mảnh tách trong phạm vi `±15s` quanh mỏ neo `"SUMMARY —"`), giữ lại đúng 1 batch mới nhất của mỗi loại trên cả 5 nhóm (`CONTROL`, `T1`, `T2`, `T3`, `T4`).
+>   4. **Kiểm Chứng Live & Đóng Khóa Thép**:
+>      - Deploy `apps_script_sitedown` lên Version **`@126`** (`AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-`).
+>      - Chạy live `botlookup_relay.py --force`, `process_aw_az` và `sweep_orphan_eta.py`: Cào thành công trong 4s (`msg_id > 148064`), cập nhật 41 dòng vào Cột A (`25/10/2026 05:00:00`), gửi chuẩn xác Tin 1 (`05:00`), ETA (`05:14`) và Tin 2 (`05:22`) trên cả 5 nhóm, dọn sạch toàn bộ tin cũ ngày `24/10/2026`.
+>      - Khóa Thép Site Down tự động đóng lại bảo vệ hệ thống.

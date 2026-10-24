@@ -2,6 +2,7 @@
 # sweep_orphan_eta.py — Sweep tin ETA mồ côi + Site Down Alarm cũ (PM-59 & PM-71 fix)
 import os, asyncio, re, json, time
 from dotenv import load_dotenv
+load_dotenv()
 load_dotenv('Task and WO/.env')
 from telethon import TelegramClient
 from telethon.sessions import StringSession
@@ -16,6 +17,7 @@ GROUPS = {
     'T2': -1004480845549,
     'T3': -1004369170658,
     'T4': -1004293741999,
+    'CONTROL': -5251698940,
 }
 
 BOT_2D_NAME   = "2. TNI Auto Report Daily"
@@ -90,39 +92,48 @@ async def execute_clean():
                     except Exception as e:
                         print(f"[{subteam}] ❌ ETA delete error: {e}")
 
-            # ── Xử lý Site Down: Gom cụm theo batch mới nhất (cửa sổ 120s) ───
-            if site_down_msgs:
-                newest_date   = site_down_msgs[0].date
+            # ── Xử lý Site Down: Tách riêng Tin 1 (Detail Col C) và Tin 2 (Summary AW7, kể cả chunk Part 2 phát cùng đợt ±15s) ───
+            summary_anchor_dates = [m.date for m in site_down_msgs if "SUMMARY —" in (m.text or "")]
+            def is_summary_msg(m):
+                if "SUMMARY —" in (m.text or ""):
+                    return True
+                return any(abs((m.date - ad).total_seconds()) <= 15 for ad in summary_anchor_dates)
+
+            sd_detail_msgs  = [m for m in site_down_msgs if not is_summary_msg(m)]
+            sd_summary_msgs = [m for m in site_down_msgs if is_summary_msg(m)]
+
+            for bucket_label, bucket_msgs in [("Tin1-Detail", sd_detail_msgs), ("Tin2-Summary", sd_summary_msgs)]:
+                if not bucket_msgs:
+                    continue
+                newest_date   = bucket_msgs[0].date
                 current_batch = []
                 orphan_sd_ids = []
                 seen_texts    = set()
 
-                for m in site_down_msgs:
+                for m in bucket_msgs:
                     age_from_newest = (newest_date - m.date).total_seconds()
                     if age_from_newest <= 120:
-                        # Nằm trong đợt gửi mới nhất (Batch Window 120 giây)
+                        # Nằm trong đợt gửi mới nhất của đúng loại tin này (Batch Window 120 giây)
                         sig = m.text.strip()[:80]
                         if sig in seen_texts:
-                            # Trùng lặp chunk trong cùng batch -> đưa vào danh sách xóa
-                            print(f"[{t_name}] ⚠️ Site Down duplicate cùng batch ID={m.id} -> orphan")
+                            print(f"[{t_name}] ⚠️ {bucket_label} duplicate cùng batch ID={m.id} -> orphan")
                             orphan_sd_ids.append(m.id)
                         else:
                             seen_texts.add(sig)
                             current_batch.append(m.id)
                     else:
-                        # Thuộc các đợt phát trước đó (> 120s) -> chắc chắn là tin mồ côi cũ
                         orphan_sd_ids.append(m.id)
 
-                print(f"[{t_name}] Site Down: giữ batch mới nhất ({len(current_batch)} tin: {current_batch}), xóa {len(orphan_sd_ids)} tin cũ")
+                print(f"[{t_name}] Site Down ({bucket_label}): giữ batch mới nhất ({len(current_batch)} tin: {current_batch}), xóa {len(orphan_sd_ids)} tin cũ")
                 if orphan_sd_ids:
                     for i in range(0, len(orphan_sd_ids), 50):
                         chunk = orphan_sd_ids[i:i+50]
                         try:
                             await client.delete_messages(chat_id, chunk, revoke=True)
                             total_deleted += len(chunk)
-                            print(f"[{t_name}] ✅ Đã xóa {len(chunk)} Site Down cũ (revoke=True)")
+                            print(f"[{t_name}] ✅ Đã xóa {len(chunk)} {bucket_label} cũ (revoke=True)")
                         except Exception as e:
-                            print(f"[{t_name}] ❌ Site Down delete error: {e}")
+                            print(f"[{t_name}] ❌ {bucket_label} delete error: {e}")
 
     # ── Lưu newest ETA IDs lên GAS ────────────────────────────────────
     print(f"\n==================== SAVING TO GAS ====================")

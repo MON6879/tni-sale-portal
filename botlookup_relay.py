@@ -96,7 +96,7 @@ BOT_USERNAME   = "auto_nocpro_bot"
 WAIT_REPLY_SEC = 35
 
 ACTIVE_START   = (3, 30)
-ACTIVE_END     = (22, 10)
+ACTIVE_END     = (22, 30)  # PM-100 BUG#8: Đồng nhất với GAS (22:30), trước sai là (22, 10)
 
 MIN_DELAY_SEC  = 0
 MAX_DELAY_SEC  = 0
@@ -160,7 +160,7 @@ async def main():
 
     # ── 0. Kiểm tra khung giờ ─────────────────────────────────────
     if not in_active_window() and not force:
-        print(f"[{myanmar_now()}] 🌙 Ngoài khung giờ 03:30–22:15. Kết thúc.")
+        print(f"[{myanmar_now()}] 🌙 Ngoài khung giờ 03:30–22:30. Kết thúc.")
         return
 
     # ── 1. Chờ đúng phút :06 hoặc :36 MMT ────────────────────────
@@ -196,126 +196,143 @@ async def main():
 
         # ── 4+5. Gửi lệnh /down_tni@auto_nocpro_bot vào nhóm Botlookup ─────
         print(f"[{myanmar_now()}] 📤 Gửi lệnh trực tiếp: {COMMAND}")
-        await client.send_message(source, COMMAND)
-        send_time = datetime.now(timezone.utc) - timedelta(seconds=5)
+        sent_msg = await client.send_message(source, COMMAND)
+        sent_msg_id = getattr(sent_msg, "id", 0) or 0
+        send_time = getattr(sent_msg, "date", None) or (datetime.now(timezone.utc) - timedelta(seconds=3))
+        print(f"[{myanmar_now()}] 📌 Đã gửi lệnh msg_id={sent_msg_id} (server_utc={send_time.strftime('%H:%M:%S')})")
 
-        # ── 6. Chờ bot phản hồi ───────────────────────────────────
-        print(f"[{myanmar_now()}] ⏳ Chờ {WAIT_REPLY_SEC}s...")
-        await asyncio.sleep(WAIT_REPLY_SEC)
+        # 🛡️ NHẬN DIỆN TIN TANINTHARYI (PM-60 + PM-111):
+        #   (1) Tin có chứa "tanintharyi" → header bản tin đầu tiên
+        #   (2) Tin có ≥1 dòng mà left(3) = "TNI" → các phần tiếp theo (Tin 2, Tin 3)
+        def is_tni_data_msg(m):
+            if not m:
+                return False
+            low = m.lower()
+            if "tanintharyi" in low:
+                return True
+            if "site down" in low and " in " in low and "tanintharyi" not in low:
+                return False
+            return any(
+                line.strip()[:3].upper() == "TNI"
+                for line in m.split("\n") if line.strip()
+            )
 
-        # -- 7. Doc lich su Botlookup (newest-first tu API) --
-        history = await client(GetHistoryRequest(
-            peer=source, limit=50,
-            offset_date=None, offset_id=0,
-            max_id=0, min_id=0, add_offset=0, hash=0,
-        ))
+        async def collect_tni_from_history(only_after_sent=True):
+            hist = await client(GetHistoryRequest(
+                peer=source, limit=50,
+                offset_date=None, offset_id=0,
+                max_id=0, min_id=0, add_offset=0, hash=0,
+            ))
+            user_map = {
+                u.id: (getattr(u, "username", "") or "")
+                for u in getattr(hist, "users", [])
+            }
 
-        # -- 8. Thu thap tin sau send_time, sort oldest-first --
-        all_after = [msg for msg in history.messages if msg.date >= send_time]
-        all_after.sort(key=lambda m: m.date)  # oldest-first = tu tren xuong
-
-        # -- 9. Gom tin bot: tu lenh /down_tni -> dung khi co nguoi khac --
-        found_command = False
-        bot_messages  = []
-
-        for msg in all_after:
-            if not found_command:
-                is_mine = (msg.sender_id == me.id) or getattr(msg, 'out', False)
-                if is_mine and "/down_tni" in (msg.message or "").lower():
-                    found_command = True
-                continue
-
-            sender_uname = ""
-            if msg.sender_id:
+            async def get_uname(msg_obj):
+                sid = getattr(msg_obj, "sender_id", None)
+                if not sid:
+                    return ""
+                if sid in user_map and user_map[sid]:
+                    return user_map[sid]
                 try:
-                    s = await client.get_entity(msg.sender_id)
-                    sender_uname = getattr(s, "username", "") or ""
+                    s = await client.get_entity(sid)
+                    uname = getattr(s, "username", "") or ""
+                    user_map[sid] = uname
+                    return uname
                 except Exception:
-                    pass
+                    return ""
 
-            if sender_uname.lower() == BOT_USERNAME.lower() and msg.message:
-                bot_messages.append(msg.message)
-                print(f"[{myanmar_now()}] Bot tin #{len(bot_messages)}: {len(msg.message)} ky tu")
-            # Không dừng loop khi có tài khoản thứ 2 hoặc người khác gửi tin nhắn — tiếp tục gom đủ tin từ @auto_nocpro_bot
+            if only_after_sent:
+                if sent_msg_id > 0:
+                    candidates = [m for m in hist.messages if m.id > sent_msg_id]
+                else:
+                    candidates = [m for m in hist.messages if m.date >= send_time]
+                candidates.sort(key=lambda m: m.id)  # oldest-first (từ ngay sau lệnh /down_tni)
 
-        if not found_command:
-            print(f"[{myanmar_now()}] Khong tim thay lenh /down_tni -> fallback: lay tin bot MOI NHAT sau send_time")
-            # Fallback: chi lay 1 tin MOI NHAT cua bot (tranh lay nhieu tin tu cac lan relay truoc)
-            for msg in reversed(all_after):  # newest-first
-                is_mine = (msg.sender_id == me.id) or getattr(msg, 'out', False)
-                if is_mine:
-                    continue
-                s_name = ""
-                if msg.sender_id:
-                    try:
-                        s = await client.get_entity(msg.sender_id)
-                        s_name = getattr(s, "username", "") or ""
-                    except Exception:
-                        pass
-                if s_name.lower() == BOT_USERNAME.lower() and msg.message:
-                    bot_messages.append(msg.message)
-                    print(f"[{myanmar_now()}] Fallback: lay tin moi nhat ({len(msg.message)} ky tu) - dung lai")
-                    break  # Chi lay 1 tin moi nhat, khong lay them
+                parts = []
+                all_bot = []
+                for m in candidates:
+                    uname = await get_uname(m)
+                    if uname.lower() == BOT_USERNAME.lower() and m.message:
+                        all_bot.append(m.message)
+                        if is_tni_data_msg(m.message):
+                            parts.append(m.message)
+                        elif parts and ("site down" in m.message.lower()):
+                            # Bot đã chuyển sang trả lời lệnh của tỉnh khác sau khi trả lời xong TNI
+                            break
+                return parts, all_bot
+            else:
+                # Fallback Stage 3: Quét 30 tin gần nhất trong BOT LOOKUP tìm bản tin Tanintharyi mới nhất trong vòng 35 phút hôm nay
+                chron = sorted(hist.messages, key=lambda m: m.id)
+                tz_mm = timezone(timedelta(hours=6, minutes=30))
+                today_str = datetime.now(tz_mm).strftime("%d/%m/%Y")
+                best_parts = []
+                collecting = False
+                for m in chron:
+                    uname = await get_uname(m)
+                    if uname.lower() != BOT_USERNAME.lower() or not m.message:
+                        continue
+                    txt = m.message
+                    if "tanintharyi" in txt.lower():
+                        ts_m = re.search(r"(\d{2}/\d{2}/\d{4})\s+(\d{2}:\d{2}(?::\d{2})?)", txt)
+                        if ts_m and ts_m.group(1) == today_str:
+                            age_sec = (datetime.now(timezone.utc) - m.date).total_seconds()
+                            if age_sec <= 2100:  # <= 35 phút
+                                best_parts = [txt]
+                                collecting = True
+                            else:
+                                collecting = False
+                        else:
+                            collecting = False
+                    elif collecting:
+                        if is_tni_data_msg(txt):
+                            best_parts.append(txt)
+                        else:
+                            collecting = False
+                return best_parts, best_parts
 
-        # Smart Retry Stage 2: Nếu chưa có tin nhắn sau WAIT_REPLY_SEC (25s), chờ thêm 10s và quét lại lần 2
-        if not bot_messages:
-            print(f"[{myanmar_now()}] ⏳ Chưa nhận phản hồi — Chờ thêm 10s (Smart Retry Stage 2)...")
-            await asyncio.sleep(10)
+        # ── 6+7+8+9. Poll phản hồi từ @auto_nocpro_bot theo msg.id > sent_msg_id ──
+        print(f"[{myanmar_now()}] ⏳ Chờ phản hồi từ @{BOT_USERNAME} (neo theo msg_id > {sent_msg_id}, tối đa 45s)...")
+        tni_parts = []
+        bot_messages = []
+        waited = 0
+        poll_step = 4
+        max_wait = 45
+
+        while waited < max_wait:
+            await asyncio.sleep(poll_step)
+            waited += poll_step
             try:
-                history2 = await client(GetHistoryRequest(
-                    peer=source, limit=50,
-                    offset_date=None, offset_id=0,
-                    max_id=0, min_id=0, add_offset=0, hash=0,
-                ))
-                all_after2 = [msg for msg in history2.messages if msg.date >= send_time]
-                for msg in reversed(all_after2):
-                    s_name = ""
-                    if msg.sender_id:
-                        try:
-                            s = await client.get_entity(msg.sender_id)
-                            s_name = getattr(s, "username", "") or ""
-                        except Exception: pass
-                    if s_name.lower() == BOT_USERNAME.lower() and msg.message:
-                        bot_messages.append(msg.message)
-                        print(f"[{myanmar_now()}] ✅ Smart Retry thành công! Tìm thấy tin bot ({len(msg.message)} ký tự)")
-                        break
-            except Exception as retry_ex:
-                print(f"[{myanmar_now()}] ⚠️ Smart Retry error: {retry_ex}")
+                tni_parts, bot_messages = await collect_tni_from_history(only_after_sent=True)
+                if tni_parts:
+                    # Chờ thêm 2.5s để đảm bảo nếu bot chia 2-3 tin split thì các phần sau đã tới đủ
+                    await asyncio.sleep(2.5)
+                    tni_parts, bot_messages = await collect_tni_from_history(only_after_sent=True)
+                    print(f"[{myanmar_now()}] ✅ Nhận phản hồi TNI sau {waited}s: {len(tni_parts)} phần ({sum(len(p) for p in tni_parts)} ký tự)")
+                    break
+            except Exception as poll_ex:
+                print(f"[{myanmar_now()}] ⚠️ Poll lỗi tại {waited}s: {poll_ex}")
+
+        # Fallback Stage 3: Nếu bot đã đăng sẵn tin Tanintharyi mới tinh trong nhóm ngay trước lệnh
+        if not tni_parts:
+            try:
+                tni_parts, _ = await collect_tni_from_history(only_after_sent=False)
+                if tni_parts:
+                    print(f"[{myanmar_now()}] ✅ Fallback Stage 3: Lấy bản tin Tanintharyi mới nhất có sẵn trong BOT LOOKUP ({len(tni_parts)} phần)")
+            except Exception as fb_ex:
+                print(f"[{myanmar_now()}] ⚠️ Fallback Stage 3 lỗi: {fb_ex}")
 
         gas_url = os.environ.get("SD_APPS_SCRIPT_URL") or os.environ.get("APPS_SCRIPT_URL") or ""
 
-        if not bot_messages:
-            err = f"[{myanmar_now()}] @{BOT_USERNAME} did not respond within 35s (Stage 1 + 2)"
-            print(err)
-            # 🛑 Không gửi tin báo lỗi nội bộ vào nhóm tác chiến để tránh spam nhóm
-
-        raw_text = "\n".join(bot_messages) if bot_messages else ""
-
-        # 🛡️ LỌC CHỈ LẤY TANINTHARYI REGION — Không lấy tỉnh khác (Ayeyarwady, Sagaing, v.v.)
-        # ✅ PM-60 FIX v843: Nhận diện tin TNI data bằng 2 điều kiện OR:
-        #   (1) Tin có chứa "tanintharyi" → header bản tin đầu tiên
-        #   (2) Tin có ≥1 dòng mà left(3) = "TNI" → các phần tiếp theo (Tin 2, Tin 3)
-        # Cả 2 điều kiện đảm bảo gom đủ 172 dòng kể cả khi bot chia thành N tin split.
-        # TUYỆT ĐỐI CẤM chỉ filter "tanintharyi" — Tin 2+3 không có header, sẽ bị bỏ sót!
-        if bot_messages:
-            def is_tni_data_msg(m):
-                if "tanintharyi" in m.lower():
-                    return True  # Tin đầu: có header region
-                # Tin tiếp theo: có ít nhất 1 dòng bắt đầu bằng "TNI" (station ID)
-                return any(
-                    line.strip()[:3].upper() == "TNI"
-                    for line in m.split("\n") if line.strip()
-                )
-
-            tni_parts = [m for m in bot_messages if is_tni_data_msg(m)]
-            if tni_parts:
-                raw_text = "\n".join(tni_parts)
-                print(f"[{myanmar_now()}] 🎯 Gom {len(tni_parts)}/{len(bot_messages)} phần TNI data → {len(raw_text)} ký tự tổng")
-            else:
-                print(f"[{myanmar_now()}] ⚠️ Không tìm thấy tin Tanintharyi/TNI trong {len(bot_messages)} tin bot — bỏ qua!")
-                raw_text = ""
+        if tni_parts:
+            raw_text = "\n".join(tni_parts)
+            print(f"[{myanmar_now()}] 🎯 Gom {len(tni_parts)} phần TNI data → {len(raw_text)} ký tự tổng")
         else:
             raw_text = ""
+            if bot_messages:
+                print(f"[{myanmar_now()}] ⚠️ Không tìm thấy tin Tanintharyi/TNI trong {len(bot_messages)} tin bot — bỏ qua!")
+            else:
+                print(f"[{myanmar_now()}] @{BOT_USERNAME} did not respond within {max_wait}s")
 
 
         PRIMARY_GAS_URL = "https://script.google.com/macros/s/AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-/exec"
