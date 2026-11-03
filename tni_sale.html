@@ -3044,6 +3044,7 @@ function switchNhapMode(mode) {
 function downloadNhapTemplate() {
   const isVi = currentLang === 'vi';
   // Chuẩn Song Ngữ Anh - Việt trên từng cột tiêu đề (Bilingual Column Headers)
+  // ✅ Cột khớp với bảng hiển thị web (14 cột): Tên SP | Model | Serial | DM | SL | Giá Gốc(83%) | Giá Bán Lẻ | Giá Đại Lý | Giá Điểm Bán | Giá Cho NV | NCC | BH | Ngày | Ghi Chú
   const headers = [
     "Tên Sản Phẩm / Product Name",
     "Model / Mã SP (Item Code)",
@@ -3051,16 +3052,20 @@ function downloadNhapTemplate() {
     "Danh Mục / Category",
     "Số Lượng / Quantity",
     "Giá Gốc Đầu Vào (83%) / Base Cost",
-    "Giá Thực Bán (để trống = lấy giá sàn 100%) / Selling Price",
+    "Giá Bán Lẻ (để trống = tự tính) / Retail Price",
+    "Giá Đại Lý (để trống = tự tính) / Dealer Price",
+    "Giá Điểm Bán / Ký Gởi (để trống = tự tính) / POS Price",
+    "Giá Cho NV / Sàn (để trống = tự tính) / Staff Price",
     "Nhà Cung Cấp / Supplier",
     "Bảo Hành (tháng) / Warranty (Months)",
+    "Ngày Nhập (để trống = hôm nay) / Date Received",
     "Ghi Chú / Notes"
   ];
   const sampleRows = [
-    ["UPS APC BX1200", "APC-BX1200", "SN001, SN002", "UPS", "2", "830000", "1250000", "APC Vietnam", "24", "Brand new, original seal / Hàng mới nguyên seal"],
-    ["Tấm Pin Solar Longi 450W / Solar Panel", "LR4-72HPH-450M", "LG450-01, LG450-02", "Solar Panel", "5", "1660000", "2200000", "Longi Solar", "120", "25-year performance warranty / Bảo hành hiệu suất 25 năm"],
-    ["Inverter Hybrid 5kW Deye / Biến Tần Hybrid", "SUN-5K-SG03LP1", "DY5K-8899", "Inverter", "1", "16600000", "22000000", "Deye Solar", "60", "Includes WiFi module / Kèm WiFi module"],
-    ["Ắc Quy Vision 12V 100Ah / Storage Battery", "6FM100-X", "VS100-01, VS100-02", "Ắc Quy / Battery", "4", "2490000", "3200000", "Vision Battery", "12", "Specialized for UPS & Solar / Chuyên dụng cho UPS & Solar"]
+    ["UPS APC BX1200", "APC-BX1200", "SN001, SN002", "UPS", "2", "830000", "", "", "", "", "APC Vietnam", "24", "", "Brand new, original seal / Hàng mới nguyên seal"],
+    ["Solar Panel Longi 450W", "LR4-72HPH-450M", "LG450-01, LG450-02", "Solar Panel", "5", "1660000", "2200000", "2000000", "1900000", "1750000", "Longi Solar", "120", "", "25-year performance warranty / Bảo hành 25 năm"],
+    ["Inverter Hybrid 5kW Deye", "SUN-5K-SG03LP1", "DY5K-8899", "Inverter", "1", "16600000", "22000000", "20000000", "19000000", "17500000", "Deye Solar", "60", "", "Includes WiFi module / Kèm WiFi module"],
+    ["Ắc Quy Vision 12V 100Ah", "6FM100-X", "VS100-01, VS100-02", "Ắc Quy / Battery", "4", "2490000", "3200000", "3000000", "2900000", "2600000", "Vision Battery", "12", "", "Specialized for UPS & Solar"]
   ];
   
   let csvContent = "\uFEFF" + headers.join(",") + "\n" + sampleRows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -3134,16 +3139,31 @@ function parseBulkInput() {
     const dm = parts[3] || 'Thiết bị';
     const sl = parseInt((parts[4] || '1').replace(/\D/g, ''), 10) || 1;
     const gg = parseFloat((parts[5] || '0').replace(/[^0-9.]/g, '')) || 0;
-    
-    // Tính toán tài chính chuẩn 5 cột
+
+    // Tính tài chính chuẩn
     const lnCty = gg > 0 ? Math.round(gg / 83 * 17) : 0;
     const minSell = gg + lnCty;
-    const rawGb = parseFloat((parts[6] || '0').replace(/[^0-9.]/g, '')) || 0;
-    const gb = rawGb > 0 ? rawGb : minSell;
-    const lnBranch = Math.max(0, gb - minSell);
-    const ncc = parts[7] || '-';
-    const bh = parseInt((parts[8] || '12').replace(/\D/g, ''), 10) || 12;
-    const gc = parts.slice(9).join(' | ') || 'Import hàng loạt';
+
+    // Hỗ trợ cả template cũ (10 cột) và mới (14 cột)
+    const is14col = parts.length >= 11;
+    let gb, lnBranch, ncc, bh, gc;
+    if (is14col) {
+      // Format mới 14 cột: col6=BánLẻ, col7=ĐạiLý, col8=ĐiểmBán, col9=ChoNV, col10=NCC, col11=BH, col12=Ngày, col13+=GhiChú
+      const rawBl  = parseFloat((parts[6]  || '0').replace(/[^0-9.]/g, '')) || 0;
+      gb = rawBl > 0 ? rawBl : minSell;
+      lnBranch = Math.max(0, gb - minSell);
+      ncc = parts[10] || '-';
+      bh  = parseInt((parts[11] || '12').replace(/\D/g, ''), 10) || 12;
+      gc  = parts.slice(13).join(' | ') || 'Import hàng loạt';
+    } else {
+      // Format cũ 10 cột (backward compatible): col6=GiáThựcBán, col7=NCC, col8=BH, col9+=GhiChú
+      const rawGb = parseFloat((parts[6] || '0').replace(/[^0-9.]/g, '')) || 0;
+      gb = rawGb > 0 ? rawGb : minSell;
+      lnBranch = Math.max(0, gb - minSell);
+      ncc = parts[7] || '-';
+      bh  = parseInt((parts[8] || '12').replace(/\D/g, ''), 10) || 12;
+      gc  = parts.slice(9).join(' | ') || 'Import hàng loạt';
+    }
 
     parsedBulkItems.push({
       ten, model, serial, dm, sl,
