@@ -634,7 +634,7 @@ function copyTelegramReportTemplate(gName, gId, cat) {
     <a onclick="go('nhap')" data-nav-a="nhap">📦 Goods Intake</a>
     <a onclick="go('tonkho')" data-nav-a="tonkho">🗄️ Inventory</a>
     <a onclick="go('tamung')" data-nav-a="tamung">🧑‍💼 Stock Advance</a>
-    <a onclick="go('kiemke')" data-nav-a="kiemke" style="color:#7c3aed;font-weight:700">📊 Kiểm Kê <small style="background:#ede9fe;color:#6d28d9;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:auto;font-weight:700">Tháng</small></a>
+    <a onclick="go('kiemke')" data-nav-a="kiemke" style="color:#7c3aed;font-weight:700">📊 <span data-lang="nav_kiemke">Kiểm Kê</span> <small data-lang="nav_kiemke_badge" style="background:#ede9fe;color:#6d28d9;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:auto;font-weight:700">Tháng</small></a>
 
     <div class="lbl" data-nav-lbl="sales">Sales &amp; Quotation</div>
     <a onclick="go('banhang')" data-nav-a="banhang">🛒 Sales &amp; Dispatch</a>
@@ -8733,7 +8733,9 @@ const DICT = {
     kpi_payable_ho_17: '🏢 Payable to HO (% Quota)',
     kpi_branch_profit: '🏪 Branch Net Profit',
     dispatch_history_title: '📋 Sales & Dispatch History',
-    nav_tg_groups: 'Telegram Groups'
+    nav_tg_groups: 'Telegram Groups',
+    nav_kiemke: 'Inventory Check',
+    nav_kiemke_badge: 'Month'
   },
   vi: {
     nhap_title: '➕ Nhập Hàng & Phân Bổ Lợi Nhuận',
@@ -8834,7 +8836,9 @@ const DICT = {
     kpi_payable_ho_17: '🏢 Phải Nộp Cty (% Cty)',
     kpi_branch_profit: '🏪 LN Chi Nhánh Thuần',
     dispatch_history_title: '📋 Lịch Sử Bán Hàng',
-    nav_tg_groups: 'Nhóm Telegram'
+    nav_tg_groups: 'Nhóm Telegram',
+    nav_kiemke: 'Kiểm Kê',
+    nav_kiemke_badge: 'Tháng'
   },
   my: {
     nhap_title: '➕ ကုန်ပစ္စည်းအဝင်နှင့် ကုန်ကျစရိတ်ခွဲဝေမှု',
@@ -8935,7 +8939,9 @@ const DICT = {
     kpi_payable_ho_17: '🏢 ရုံးချုပ်သို့ ပေးသွင်းရန် (% ခွဲတမ်း)',
     kpi_branch_profit: '🏪 ဌာနခွဲ အသားတင်အမြတ်',
     dispatch_history_title: '📋 အရောင်းနှင့် ပစ္စည်းထုတ်ပေးမှု မှတ်တမ်း',
-    nav_tg_groups: 'တယ်လီဂရမ် အဖွဲ့များ'
+    nav_tg_groups: 'တယ်လီဂရမ် အဖွဲ့များ',
+    nav_kiemke: 'စာရင်းစစ်ဆေးခြင်း',
+    nav_kiemke_badge: 'လ'
   }
 };
 
