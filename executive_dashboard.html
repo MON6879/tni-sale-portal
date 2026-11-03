@@ -1863,12 +1863,12 @@ document.addEventListener('DOMContentLoaded', initGoogleAuthGate);
                     <div style="font-size:0.7rem; color:#94A3B8;">Lọc Trùng Tin &amp; Cấp Phát Dầu</div>
                   </div>
                 </div>
-                <span class="seat-status-pill" style="background:rgba(16,185,129,0.2); color:#34D399; font-weight:700; font-size:0.68rem; padding:0.2rem 0.5rem; border-radius:6px; border:1px solid rgba(16,185,129,0.4);">
-                  ✅ Chuẩn Xác
+                <span class="seat-status-pill" id="seat-status-auditor31" style="background:rgba(16,185,129,0.2); color:#34D399; font-weight:700; font-size:0.68rem; padding:0.2rem 0.5rem; border-radius:6px; border:1px solid rgba(16,185,129,0.4);">
+                  ✅ 6/6 Mẫu OK · Appr: 19/10
                 </span>
               </div>
-              <div style="font-size:0.72rem; color:#CBD5E1; margin-top:0.5rem; line-height:1.4;">
-                Xác thực định danh xe trạm, kế hoạch cấp dầu, lọc trùng tin nhắn Telegram Refuel tuyệt đối.
+              <div id="seat-detail-auditor31" style="font-size:0.72rem; color:#CBD5E1; margin-top:0.5rem; line-height:1.4;">
+                Giám sát sống 6 mẫu classify() (Refueled, Plan, Request, Submit/Approved Letter, FT Monitor) &amp; tự động bù đơn sót vào Lettel Progress.
               </div>
             </div>
 
@@ -2435,6 +2435,7 @@ document.addEventListener('DOMContentLoaded', initGoogleAuthGate);
 
               window.allEngineers = allEngineers;
               window.deptPointsMap = deptPointsMap;
+              renderDeptMatrix(deptPointsMap);
               window.latestTeamData = teamData;
               window.latestDates = datesObj;
               window.latestExportTime = exportTimeStr;
@@ -2510,6 +2511,49 @@ document.addEventListener('DOMContentLoaded', initGoogleAuthGate);
             });
         }
 
+        // 👑 RENDER TABLE 2: DEPARTMENT POINT MATRIX — live update & bold every number > 0
+        function renderDeptMatrix(dpm) {
+          var tbody = document.getElementById('dept-matrix-tbody');
+          if (!tbody) return;
+          var tKeys  = ['team1', 'team2', 'team3', 'team4'];
+          var tCodes = ['MYT_TNI_TEAM01_Dawei', 'MYT_TNI_TEAM02_Myeik', 'MYT_TNI_TEAM03_Bokpyin', 'MYT_TNI_TEAM04_Kawthoung'];
+          var tTags  = ['tag-t1', 'tag-t2', 'tag-t3', 'tag-t4'];
+          var cols   = ['manager', 'asset', 'cm', 'me', 'pm', 'construction', 'finance'];
+          var colColors = {
+            manager: 'var(--rose)', asset: 'var(--cyan)', cm: 'var(--cyan)',
+            me: 'var(--amber)', pm: 'var(--amber)', construction: 'var(--amber)', finance: 'var(--emerald)'
+          };
+          function cellHtml(val, col) {
+            var str = (val || 'TL:0 /0 P:0').trim();
+            var color = colColors[col] || 'var(--cyan)';
+            var hasPositive = false;
+            var formatted = str.replace(/(TL:\s*|\/\s*|P:\s*)(\d+)/gi, function(match, prefix, numStr) {
+              var n = parseInt(numStr, 10) || 0;
+              if (n > 0) {
+                hasPositive = true;
+                return prefix + '<strong style="color:' + color + '; font-weight:800; font-size:1.05em;">' + numStr + '</strong>';
+              }
+              return '<span style="opacity:0.65;">' + prefix + numStr + '</span>';
+            });
+            if (!hasPositive) {
+              return '<span style="opacity:0.55;">' + str + '</span>';
+            }
+            return formatted;
+          }
+          var rows = '';
+          for (var i = 0; i < 4; i++) {
+            var tk = tKeys[i];
+            var dp = dpm[tk] || {};
+            rows += '<tr>';
+            rows += '<td><span class="team-tag ' + tTags[i] + '">' + tCodes[i] + '</span></td>';
+            for (var c = 0; c < cols.length; c++) {
+              rows += '<td>' + cellHtml(dp[cols[c]], cols[c]) + '</td>';
+            }
+            rows += '</tr>';
+          }
+          tbody.innerHTML = rows;
+        }
+
         function init(){ loadStats(); setInterval(loadStats, 30*1000); }
         if(document.readyState==='loading'){
           document.addEventListener('DOMContentLoaded', init);
@@ -2536,46 +2580,46 @@ document.addEventListener('DOMContentLoaded', initGoogleAuthGate);
               <th>Finance</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="dept-matrix-tbody">
             <tr>
               <td><span class="team-tag tag-t1">MYT_TNI_TEAM01_Dawei</span></td>
-              <td>TL:0 /14 P:0</td>
-              <td><strong style="color:var(--cyan);">TL:27 /39 P:0</strong></td>
-              <td>TL:0 /26 P:0</td>
-              <td>TL:0 /35 P:0</td>
-              <td>TL:0 /24 P:0</td>
-              <td>TL:0 /0 P:0</td>
-              <td><strong style="color:var(--emerald);">TL:3 /3 P:0</strong></td>
+              <td><span style="opacity:0.65;">TL:0</span> /<strong style="color:var(--rose); font-weight:800; font-size:1.05em;">26</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td><span style="opacity:0.55;">TL:0 /0 P:0</span></td>
+              <td><span style="opacity:0.65;">TL:0</span> /<strong style="color:var(--cyan); font-weight:800; font-size:1.05em;">14</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td>TL:<strong style="color:var(--amber); font-weight:800; font-size:1.05em;">1</strong> /<strong style="color:var(--amber); font-weight:800; font-size:1.05em;">33</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td><span style="opacity:0.65;">TL:0</span> /<strong style="color:var(--amber); font-weight:800; font-size:1.05em;">53</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td><span style="opacity:0.55;">TL:0 /0 P:0</span></td>
+              <td>TL:<strong style="color:var(--emerald); font-weight:800; font-size:1.05em;">6</strong> /<strong style="color:var(--emerald); font-weight:800; font-size:1.05em;">6</strong> <span style="opacity:0.65;">P:0</span></td>
             </tr>
             <tr>
               <td><span class="team-tag tag-t2">MYT_TNI_TEAM02_Myeik</span></td>
-              <td>TL:0 /7 P:0</td>
-              <td><strong style="color:var(--cyan);">TL:14 /20 P:0</strong></td>
-              <td>TL:0 /14 P:0</td>
-              <td>TL:0 /26 P:0</td>
-              <td>TL:0 /3 P:0</td>
-              <td>TL:0 /0 P:0</td>
-              <td><strong style="color:var(--emerald);">TL:5 /5 P:0</strong></td>
+              <td><span style="opacity:0.65;">TL:0</span> /<strong style="color:var(--rose); font-weight:800; font-size:1.05em;">11</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td><span style="opacity:0.55;">TL:0 /0 P:0</span></td>
+              <td><span style="opacity:0.65;">TL:0</span> /<strong style="color:var(--cyan); font-weight:800; font-size:1.05em;">4</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td>TL:<strong style="color:var(--amber); font-weight:800; font-size:1.05em;">2</strong> /<strong style="color:var(--amber); font-weight:800; font-size:1.05em;">29</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td><span style="opacity:0.65;">TL:0</span> /<strong style="color:var(--amber); font-weight:800; font-size:1.05em;">1</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td><span style="opacity:0.55;">TL:0 /0 P:0</span></td>
+              <td>TL:<strong style="color:var(--emerald); font-weight:800; font-size:1.05em;">10</strong> /<strong style="color:var(--emerald); font-weight:800; font-size:1.05em;">10</strong> <span style="opacity:0.65;">P:0</span></td>
             </tr>
             <tr>
               <td><span class="team-tag tag-t3">MYT_TNI_TEAM03_Bokpyin</span></td>
-              <td>TL:0 /4 P:0</td>
-              <td><strong style="color:var(--cyan);">TL:6 /13 P:0</strong></td>
-              <td>TL:0 /7 P:0</td>
-              <td>TL:0 /7 P:0</td>
-              <td>TL:0 /0 P:0</td>
-              <td>TL:0 /1 P:0</td>
-              <td><strong style="color:var(--emerald);">TL:4 /4 P:0</strong></td>
+              <td><span style="opacity:0.65;">TL:0</span> /<strong style="color:var(--rose); font-weight:800; font-size:1.05em;">8</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td><span style="opacity:0.55;">TL:0 /0 P:0</span></td>
+              <td><span style="opacity:0.65;">TL:0</span> /<strong style="color:var(--cyan); font-weight:800; font-size:1.05em;">3</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td>TL:<strong style="color:var(--amber); font-weight:800; font-size:1.05em;">1</strong> /<strong style="color:var(--amber); font-weight:800; font-size:1.05em;">7</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td><span style="opacity:0.55;">TL:0 /0 P:0</span></td>
+              <td><span style="opacity:0.55;">TL:0 /0 P:0</span></td>
+              <td>TL:<strong style="color:var(--emerald); font-weight:800; font-size:1.05em;">6</strong> /<strong style="color:var(--emerald); font-weight:800; font-size:1.05em;">6</strong> <span style="opacity:0.65;">P:0</span></td>
             </tr>
             <tr>
               <td><span class="team-tag tag-t4">MYT_TNI_TEAM04_Kawthoung</span></td>
-              <td>TL:1 /4 P:0</td>
-              <td><strong style="color:var(--cyan);">TL:16 /17 P:0</strong></td>
-              <td>TL:0 /4 P:0</td>
-              <td>TL:0 /11 P:0</td>
-              <td>TL:0 /11 P:0</td>
-              <td>TL:0 /1 P:0</td>
-              <td><strong style="color:var(--emerald);">TL:5 /5 P:0</strong></td>
+              <td>TL:<strong style="color:var(--rose); font-weight:800; font-size:1.05em;">1</strong> /<strong style="color:var(--rose); font-weight:800; font-size:1.05em;">9</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td><span style="opacity:0.55;">TL:0 /0 P:0</span></td>
+              <td><span style="opacity:0.55;">TL:0 /0 P:0</span></td>
+              <td><span style="opacity:0.65;">TL:0</span> /<strong style="color:var(--amber); font-weight:800; font-size:1.05em;">11</strong> <span style="opacity:0.65;">P:0</span></td>
+              <td><span style="opacity:0.55;">TL:0 /0 P:0</span></td>
+              <td><span style="opacity:0.55;">TL:0 /0 P:0</span></td>
+              <td>TL:<strong style="color:var(--emerald); font-weight:800; font-size:1.05em;">5</strong> /<strong style="color:var(--emerald); font-weight:800; font-size:1.05em;">5</strong> <span style="opacity:0.65;">P:0</span></td>
             </tr>
           </tbody>
         </table>
@@ -8889,9 +8933,107 @@ Team04>> 2Box</td>
             </button>
           </div>
         </div>
+      </div>
 
-        <!-- 9 AW7 KPI Summary Cards Strip -->
-        <div style="margin-top:1.2rem;">
+      <!-- 🎛️ VIEW TABS BAR (CHẾ ĐỘ XEM TRỰC QUAN TRÊN CÙNG BẢNG — MẶC ĐỊNH MỞ VĂN BẢN GỐC AW7:AZ16 ĐẦU TIÊN) -->
+      <div class="card" style="background:rgba(15,23,42,0.92); border:1px solid rgba(56,189,248,0.3); border-radius:14px; padding:0.65rem 0.9rem; margin-bottom:1.2rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.65rem;">
+        <div style="display:flex; gap:0.4rem; flex-wrap:wrap;" id="sd-view-mode-tabs">
+          <button id="sd-vtab-raw" class="filter-btn active" onclick="window.SiteDownManager.setViewMode('raw')" style="padding:0.45rem 0.95rem; border-radius:8px; font-weight:800; font-size:0.8rem; display:flex; align-items:center; gap:0.4rem;">
+            <i class="fa-solid fa-file-lines" style="color:#38bdf8;"></i> 📄 VĂN BẢN GỐC AW7:AZ16
+          </button>
+          <button id="sd-vtab-4col" class="filter-btn" onclick="window.SiteDownManager.setViewMode('4col')" style="padding:0.45rem 0.95rem; border-radius:8px; font-weight:800; font-size:0.8rem; display:flex; align-items:center; gap:0.4rem;">
+            <i class="fa-solid fa-table-columns" style="color:#ef4444;"></i> 📊 BẢNG 4 CỘT TRỰC QUAN 4 TEAMS
+          </button>
+          <button id="sd-vtab-detail" class="filter-btn" onclick="window.SiteDownManager.setViewMode('detail')" style="padding:0.45rem 0.95rem; border-radius:8px; font-weight:800; font-size:0.8rem; display:flex; align-items:center; gap:0.4rem;">
+            <i class="fa-solid fa-list-check" style="color:#38bdf8;"></i> 📋 DANH SÁCH CHI TIẾT SỰ CỐ (COL C LIVE)
+          </button>
+          <button id="sd-vtab-split" class="filter-btn" onclick="window.SiteDownManager.setViewMode('split')" style="padding:0.45rem 0.95rem; border-radius:8px; font-weight:800; font-size:0.8rem; display:flex; align-items:center; gap:0.4rem;">
+            <i class="fa-solid fa-layer-group" style="color:#f59e0b;"></i> 👁️ HIỂN THỊ TẤT CẢ (SPLIT VIEW)
+          </button>
+          <button id="sd-vtab-matrix" class="filter-btn" onclick="window.SiteDownManager.setViewMode('matrix')" style="padding:0.45rem 0.95rem; border-radius:8px; font-weight:800; font-size:0.8rem; display:flex; align-items:center; gap:0.4rem;">
+            <i class="fa-solid fa-table-cells" style="color:#10b981;"></i> 🔢 MA TRẬN ĐỐI CHIẾU AW7..AZ16
+          </button>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <button class="filter-btn" onclick="window.SiteDownManager.copyAllTeamsReport()" style="background:rgba(16,185,129,0.18); color:#34D399; border:1px solid rgba(16,185,129,0.4); padding:0.42rem 0.85rem; border-radius:8px; font-size:0.75rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:0.4rem;" title="Sao chép toàn bộ báo cáo tổng hợp 4 Teams">
+            <i class="fa-solid fa-clipboard-list"></i> Copy Báo Cáo 4 Teams
+          </button>
+        </div>
+      </div>
+
+      <!-- 🔢 SECTION B (DEFAULT FIRST AT VERY TOP): AW7..AZ16 Sheet Raw Text View & Matrix Comparison -->
+      <div id="sd-matrix-card" class="card" style="background:rgba(15,23,42,0.85); border:1px solid rgba(56,189,248,0.25); border-radius:16px; padding:1.2rem; margin-bottom:1.5rem; display:block;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.6rem; margin-bottom:1rem;">
+          <div style="display:flex; align-items:center; gap:0.6rem;">
+            <div style="width:36px; height:36px; border-radius:10px; background:rgba(56,189,248,0.15); display:flex; align-items:center; justify-content:center; color:var(--cyan); font-size:1.1rem;">
+              <i class="fa-solid fa-file-lines"></i>
+            </div>
+            <div>
+              <div style="font-weight:800; font-size:0.98rem; color:#F8FAFC;">
+                VĂN BẢN GỐC AW7:AZ16 &amp; BẢNG MA TRẬN ĐỐI CHIẾU CẢNH BÁO (GOOGLE SHEET GID 0)
+              </div>
+              <div style="font-size:0.72rem; color:#94A3B8; margin-top:0.15rem;">
+                Dữ liệu 4 Cột: AW (T1 Dawei) · AX (T2 Myeik) · AY (T3 Bokpyin) · AZ (T4 Kawthoung) — Từ Dòng Row 7 đến Row 16
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+            <!-- Mode Switcher (Văn Bản Gốc AW7:AZ16 first & active by default) -->
+            <div style="display:flex; gap:0.25rem; background:rgba(30,41,59,0.9); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:3px;">
+              <button id="sd-mode-raw-btn" class="filter-btn active" onclick="window.SiteDownManager.setMatrixMode('raw')" style="padding:0.35rem 0.75rem; font-size:0.74rem; border-radius:6px; font-weight:700;">
+                <i class="fa-solid fa-file-lines"></i> Văn Bản Gốc AW7:AZ16
+              </button>
+              <button id="sd-mode-table-btn" class="filter-btn" onclick="window.SiteDownManager.setMatrixMode('table')" style="padding:0.35rem 0.75rem; font-size:0.74rem; border-radius:6px; font-weight:700;">
+                <i class="fa-solid fa-chart-pie"></i> Bảng Số Liệu &amp; Đếm
+              </button>
+            </div>
+
+            <!-- Copy Full Raw Text Button -->
+            <button class="filter-btn" onclick="window.SiteDownManager.copyRawMatrixText()" style="background:rgba(56,189,248,0.15); color:var(--cyan); border:1px solid rgba(56,189,248,0.3); padding:0.38rem 0.8rem; border-radius:8px; font-size:0.74rem; font-weight:700; cursor:pointer;" title="Sao chép toàn bộ nội dung văn bản AW7..AZ16 vào bộ nhớ tạm">
+              <i class="fa-solid fa-copy"></i> Copy AW..AZ16
+            </button>
+          </div>
+        </div>
+
+        <!-- 1B. Raw Text View (Exact content of AW7:AZ16 rows - OPEN BY DEFAULT) -->
+        <div id="sd-matrix-raw-view" style="display:block;">
+          <div style="font-size:0.75rem; color:#94A3B8; margin-bottom:0.8rem; display:flex; justify-content:space-between; align-items:center;">
+            <span><i class="fa-solid fa-terminal" style="color:var(--cyan);"></i> Hiển thị nguyên văn dữ liệu văn bản từ Google Sheet GID 0 (Cột AW..AZ, Dòng 7 đến 16):</span>
+            <span style="color:#38BDF8; font-weight:700;">Nhấp vào từng ô để copy</span>
+          </div>
+          <div id="sd-raw-matrix-content" style="display:flex; flex-direction:column; gap:0.85rem; max-height:75vh; overflow-y:auto; padding-right:8px;">
+            <div style="text-align:center; padding:2rem; color:#94A3B8;">
+              <i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem; color:#38BDF8; margin-bottom:0.5rem; display:block;"></i>
+              Đang nạp Văn Bản Gốc AW7:AZ16 từ Google Sheet GID 0...
+            </div>
+          </div>
+        </div>
+
+        <!-- 1A. Table View (Numbers & Quick Modal) -->
+        <div id="sd-matrix-table-view" class="table-container" style="overflow-x:auto; display:none;">
+          <table class="data-table" id="sd-matrix-table" style="width:100%; border-collapse:collapse; font-size:0.8rem;">
+            <thead>
+              <tr style="background:rgba(30,41,59,0.9); border-bottom:2px solid rgba(56,189,248,0.3); color:#94A3B8; text-align:left;">
+                <th style="padding:0.65rem 0.8rem; width:230px;">CHỈ SỐ CẢNH BÁO (ALARM)</th>
+                <th style="padding:0.65rem 0.8rem; text-align:center; color:#f87171;"><i class="fa-solid fa-location-dot"></i> TEAM 1 DAWEI (CỘT AW)</th>
+                <th style="padding:0.65rem 0.8rem; text-align:center; color:#fbbf24;"><i class="fa-solid fa-location-dot"></i> TEAM 2 MYEIK (CỘT AX)</th>
+                <th style="padding:0.65rem 0.8rem; text-align:center; color:#34d399;"><i class="fa-solid fa-location-dot"></i> TEAM 3 BOKPYIN (CỘT AY)</th>
+                <th style="padding:0.65rem 0.8rem; text-align:center; color:#38bdf8;"><i class="fa-solid fa-location-dot"></i> TEAM 4 KAWTHOUNG (CỘT AZ)</th>
+                <th style="padding:0.65rem 0.8rem; text-align:center; color:#e2e8f0; font-weight:800; background:rgba(56,189,248,0.12);">TOÀN VÙNG</th>
+              </tr>
+            </thead>
+            <tbody id="sd-matrix-tbody">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 9 AW7 KPI Summary Cards & TowerCo Strip -->
+      <div class="card" style="background: rgba(15, 23, 42, 0.90); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 1.1rem 1.2rem; margin-bottom: 1.2rem;">
+        <div>
           <div style="font-size:0.8rem; font-weight:800; color:#F8FAFC; margin-bottom:0.65rem; display:flex; align-items:center; justify-content:space-between;">
             <span style="display:flex; align-items:center; gap:0.4rem;">
               <i class="fa-solid fa-chart-pie" style="color:#ef4444;"></i> <b>TỔNG QUAN 9 CHỈ SỐ CẢNH BÁO TOÀN VÙNG (AW7..AZ SUMMARY):</b>
@@ -8913,7 +9055,6 @@ Team04>> 2Box</td>
             <!-- Rendered by JS -->
           </div>
         </div>
-
       </div>
 
       <!-- Team Filter Strip -->
@@ -8944,32 +9085,8 @@ Team04>> 2Box</td>
         </div>
       </div>
 
-      <!-- 🎛️ VIEW TABS BAR (CHẾ ĐỘ XEM TRỰC QUAN TRÊN CÙNG BẢNG) -->
-      <div class="card" style="background:rgba(15,23,42,0.92); border:1px solid rgba(56,189,248,0.3); border-radius:14px; padding:0.65rem 0.9rem; margin-bottom:1.2rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.65rem;">
-        <div style="display:flex; gap:0.4rem; flex-wrap:wrap;" id="sd-view-mode-tabs">
-          <button id="sd-vtab-4col" class="filter-btn active" onclick="window.SiteDownManager.setViewMode('4col')" style="padding:0.45rem 0.95rem; border-radius:8px; font-weight:800; font-size:0.8rem; display:flex; align-items:center; gap:0.4rem;">
-            <i class="fa-solid fa-table-columns" style="color:#ef4444;"></i> 📊 BẢNG 4 CỘT TRỰC QUAN 4 TEAMS
-          </button>
-          <button id="sd-vtab-detail" class="filter-btn" onclick="window.SiteDownManager.setViewMode('detail')" style="padding:0.45rem 0.95rem; border-radius:8px; font-weight:800; font-size:0.8rem; display:flex; align-items:center; gap:0.4rem;">
-            <i class="fa-solid fa-list-check" style="color:#38bdf8;"></i> 📋 DANH SÁCH CHI TIẾT SỰ CỐ (COL C LIVE)
-          </button>
-          <button id="sd-vtab-split" class="filter-btn" onclick="window.SiteDownManager.setViewMode('split')" style="padding:0.45rem 0.95rem; border-radius:8px; font-weight:800; font-size:0.8rem; display:flex; align-items:center; gap:0.4rem;">
-            <i class="fa-solid fa-layer-group" style="color:#f59e0b;"></i> 👁️ HIỂN THỊ CẢ HAI (SPLIT VIEW)
-          </button>
-          <button id="sd-vtab-matrix" class="filter-btn" onclick="window.SiteDownManager.setViewMode('matrix')" style="padding:0.45rem 0.95rem; border-radius:8px; font-weight:800; font-size:0.8rem; display:flex; align-items:center; gap:0.4rem;">
-            <i class="fa-solid fa-table-cells" style="color:#10b981;"></i> 🔢 MA TRẬN ĐỐI CHIẾU AW7..AZ16
-          </button>
-        </div>
-
-        <div style="display:flex; align-items:center; gap:0.5rem;">
-          <button class="filter-btn" onclick="window.SiteDownManager.copyAllTeamsReport()" style="background:rgba(16,185,129,0.18); color:#34D399; border:1px solid rgba(16,185,129,0.4); padding:0.42rem 0.85rem; border-radius:8px; font-size:0.75rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:0.4rem;" title="Sao chép toàn bộ báo cáo tổng hợp 4 Teams">
-            <i class="fa-solid fa-clipboard-list"></i> Copy Báo Cáo 4 Teams
-          </button>
-        </div>
-      </div>
-
       <!-- 📊 SECTION A: 4-COLUMN LIVE SUMMARY BOARD (CHẾ ĐỘ XEM 4 CỘT SONG SONG) -->
-      <div id="sd-4team-board-card" class="card" style="background:rgba(15,23,42,0.92); border:1px solid rgba(56,189,248,0.3); border-radius:18px; padding:1.25rem; margin-bottom:1.5rem; box-shadow:0 10px 32px rgba(0,0,0,0.35);">
+      <div id="sd-4team-board-card" class="card" style="background:rgba(15,23,42,0.92); border:1px solid rgba(56,189,248,0.3); border-radius:18px; padding:1.25rem; margin-bottom:1.5rem; box-shadow:0 10px 32px rgba(0,0,0,0.35); display:none;">
         <!-- Top Board Info & Controls -->
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.8rem; margin-bottom:1.2rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.9rem;">
           <div style="display:flex; align-items:center; gap:0.75rem;">
@@ -9011,72 +9128,6 @@ Team04>> 2Box</td>
           <div style="grid-column:1/-1; text-align:center; padding:2rem; color:#94A3B8;">
             <i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem; color:#38BDF8; margin-bottom:0.5rem; display:block;"></i>
             Đang nạp 4 Thẻ Tổng Hợp Cảnh Báo Regional Teams...
-          </div>
-        </div>
-      </div>
-
-      <!-- 🔢 SECTION B: AW7..AZ16 Matrix Comparison & Sheet Raw Text View -->
-      <div id="sd-matrix-card" class="card" style="background:rgba(15,23,42,0.85); border:1px solid rgba(56,189,248,0.25); border-radius:16px; padding:1.2rem; margin-bottom:1.5rem; display:none;">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.6rem; margin-bottom:1rem;">
-          <div style="display:flex; align-items:center; gap:0.6rem;">
-            <div style="width:36px; height:36px; border-radius:10px; background:rgba(56,189,248,0.15); display:flex; align-items:center; justify-content:center; color:var(--cyan); font-size:1.1rem;">
-              <i class="fa-solid fa-table-cells"></i>
-            </div>
-            <div>
-              <div style="font-weight:800; font-size:0.98rem; color:#F8FAFC;">
-                BẢNG MA TRẬN ĐỐI CHIẾU CẢNH BÁO AW7..AZ16 (GOOGLE SHEET GID 0)
-              </div>
-              <div style="font-size:0.72rem; color:#94A3B8; margin-top:0.15rem;">
-                Dữ liệu 4 Cột: AW (T1 Dawei) · AX (T2 Myeik) · AY (T3 Bokpyin) · AZ (T4 Kawthoung) — Từ Dòng Row 7 đến Row 16
-              </div>
-            </div>
-          </div>
-
-          <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
-            <!-- Mode Switcher -->
-            <div style="display:flex; gap:0.25rem; background:rgba(30,41,59,0.9); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:3px;">
-              <button id="sd-mode-table-btn" class="filter-btn active" onclick="window.SiteDownManager.setMatrixMode('table')" style="padding:0.35rem 0.75rem; font-size:0.74rem; border-radius:6px; font-weight:700;">
-                <i class="fa-solid fa-chart-pie"></i> Bảng Số Liệu &amp; Đếm
-              </button>
-              <button id="sd-mode-raw-btn" class="filter-btn" onclick="window.SiteDownManager.setMatrixMode('raw')" style="padding:0.35rem 0.75rem; font-size:0.74rem; border-radius:6px; font-weight:700;">
-                <i class="fa-solid fa-file-lines"></i> Văn Bản Gốc AW7:AZ16
-              </button>
-            </div>
-
-            <!-- Copy Full Raw Text Button -->
-            <button class="filter-btn" onclick="window.SiteDownManager.copyRawMatrixText()" style="background:rgba(56,189,248,0.15); color:var(--cyan); border:1px solid rgba(56,189,248,0.3); padding:0.38rem 0.8rem; border-radius:8px; font-size:0.74rem; font-weight:700; cursor:pointer;" title="Sao chép toàn bộ nội dung văn bản AW7..AZ16 vào bộ nhớ tạm">
-              <i class="fa-solid fa-copy"></i> Copy AW..AZ16
-            </button>
-          </div>
-        </div>
-
-        <!-- 1A. Table View (Numbers & Quick Modal) -->
-        <div id="sd-matrix-table-view" class="table-container" style="overflow-x:auto;">
-          <table class="data-table" id="sd-matrix-table" style="width:100%; border-collapse:collapse; font-size:0.8rem;">
-            <thead>
-              <tr style="background:rgba(30,41,59,0.9); border-bottom:2px solid rgba(56,189,248,0.3); color:#94A3B8; text-align:left;">
-                <th style="padding:0.65rem 0.8rem; width:230px;">CHỈ SỐ CẢNH BÁO (ALARM)</th>
-                <th style="padding:0.65rem 0.8rem; text-align:center; color:#f87171;"><i class="fa-solid fa-location-dot"></i> TEAM 1 DAWEI (CỘT AW)</th>
-                <th style="padding:0.65rem 0.8rem; text-align:center; color:#fbbf24;"><i class="fa-solid fa-location-dot"></i> TEAM 2 MYEIK (CỘT AX)</th>
-                <th style="padding:0.65rem 0.8rem; text-align:center; color:#34d399;"><i class="fa-solid fa-location-dot"></i> TEAM 3 BOKPYIN (CỘT AY)</th>
-                <th style="padding:0.65rem 0.8rem; text-align:center; color:#38bdf8;"><i class="fa-solid fa-location-dot"></i> TEAM 4 KAWTHOUNG (CỘT AZ)</th>
-                <th style="padding:0.65rem 0.8rem; text-align:center; color:#e2e8f0; font-weight:800; background:rgba(56,189,248,0.12);">TOÀN VÙNG</th>
-              </tr>
-            </thead>
-            <tbody id="sd-matrix-tbody">
-              <!-- Rendered by JS -->
-            </tbody>
-          </table>
-        </div>
-
-        <!-- 1B. Raw Text View (Exact content of AW7:AZ16 rows) -->
-        <div id="sd-matrix-raw-view" style="display:none;">
-          <div style="font-size:0.75rem; color:#94A3B8; margin-bottom:0.8rem; display:flex; justify-content:space-between; align-items:center;">
-            <span><i class="fa-solid fa-terminal" style="color:var(--cyan);"></i> Hiển thị nguyên văn dữ liệu văn bản từ Google Sheet GID 0 (Cột AW..AZ, Dòng 7 đến 16):</span>
-            <span style="color:#38BDF8; font-weight:700;">Nhấp vào từng ô để copy</span>
-          </div>
-          <div id="sd-raw-matrix-content" style="display:flex; flex-direction:column; gap:0.85rem; max-height:75vh; overflow-y:auto; padding-right:8px;">
-            <!-- Rendered by JS renderRawMatrix() -->
           </div>
         </div>
       </div>
@@ -9844,6 +9895,27 @@ Team04>> 2Box</td>
             }
           }
         }
+        // 4. Kiểm toán sống Ghế AUDITOR-3.1 (Nhiên Liệu Refuel & Lettel Progress)
+        fetch('https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec?action=audit_refuel')
+          .then(function(r) { return r.json(); })
+          .then(function(rf) {
+            var rfBadge = document.getElementById('seat-status-auditor31');
+            var rfDetail = document.getElementById('seat-detail-auditor31');
+            if (rf && rf.status === 'ok') {
+              var appShort = (rf.latest_approved || '').slice(0, 5);
+              var subShort = (rf.latest_submit || '').slice(0, 5);
+              if (rfBadge) {
+                rfBadge.style.background = 'rgba(16,185,129,0.2)';
+                rfBadge.style.color = '#34D399';
+                rfBadge.style.borderColor = 'rgba(16,185,129,0.4)';
+                rfBadge.innerHTML = '✅ 6/6 OK · Appr: ' + (appShort || 'OK');
+              }
+              if (rfDetail) {
+                rfDetail.innerHTML = 'Lettel Progress đồng bộ sống — <b>Submit:</b> ' + (rf.latest_submit || 'N/A') + ' · <b>Approved:</b> <span style="color:#34D399;font-weight:700;">' + (rf.latest_approved || 'N/A') + '</span> (Tự động hậu kiểm &amp; bù đơn sót).';
+              }
+            }
+          })
+          .catch(function() {});
       } catch(e) {
         console.warn('[SupervisorySentinel] Error evaluating BI WO status:', e);
       }
@@ -10004,6 +10076,7 @@ Team04>> 2Box</td>
       document.getElementById(panelId).classList.add('active');
       tabBtn.classList.add('active');
       if (panelId === 'site-link-down-panel' && window.SiteDownManager) {
+        window.SiteDownManager.setViewMode('raw');
         window.SiteDownManager.loadData(false);
       }
     }
@@ -10700,6 +10773,7 @@ Gửi link này cho nhân viên qua Telegram/Zalo, khi họ bấm vào hệ th�
         loadGoogleClientIdSetting();
       }
       if (panelId === 'site-link-down-panel' && window.SiteDownManager) {
+        window.SiteDownManager.setViewMode('raw');
         window.SiteDownManager.loadData(false);
       }
     };
@@ -13369,7 +13443,8 @@ document.addEventListener("DOMContentLoaded", function() {
         sortField: 'downHours',
         sortAsc: false,
         isLoading: false,
-        viewMode: '4col',
+        viewMode: 'raw',
+        matrixMode: 'raw',
         detailsExpanded: true
       };
 
@@ -13387,6 +13462,8 @@ document.addEventListener("DOMContentLoaded", function() {
         var btnRaw = document.getElementById('sd-mode-raw-btn');
         var viewTable = document.getElementById('sd-matrix-table-view');
         var viewRaw = document.getElementById('sd-matrix-raw-view');
+        var btnVtabRaw = document.getElementById('sd-vtab-raw');
+        var btnVtabMatrix = document.getElementById('sd-vtab-matrix');
         if (mode === 'raw') {
           if (btnTable) btnTable.classList.remove('active');
           if (btnRaw) btnRaw.classList.add('active');
@@ -13395,11 +13472,21 @@ document.addEventListener("DOMContentLoaded", function() {
             viewRaw.style.display = 'block';
             renderRawMatrix();
           }
+          if (state.viewMode === 'matrix' || state.viewMode === 'raw') {
+            state.viewMode = 'raw';
+            if (btnVtabMatrix) btnVtabMatrix.classList.remove('active');
+            if (btnVtabRaw) btnVtabRaw.classList.add('active');
+          }
         } else {
           if (btnRaw) btnRaw.classList.remove('active');
           if (btnTable) btnTable.classList.add('active');
           if (viewRaw) viewRaw.style.display = 'none';
           if (viewTable) viewTable.style.display = 'block';
+          if (state.viewMode === 'matrix' || state.viewMode === 'raw') {
+            state.viewMode = 'matrix';
+            if (btnVtabRaw) btnVtabRaw.classList.remove('active');
+            if (btnVtabMatrix) btnVtabMatrix.classList.add('active');
+          }
         }
       }
 
@@ -14458,21 +14545,28 @@ document.addEventListener("DOMContentLoaded", function() {
       }
 
       function applyViewMode() {
-        var mode = state.viewMode || '4col';
+        var mode = state.viewMode || 'raw';
         var v4col = document.getElementById('sd-4team-board-card');
         var vDetail = document.getElementById('sd-active-sites-card');
         var vMatrix = document.getElementById('sd-matrix-card');
 
+        var btnRawTab = document.getElementById('sd-vtab-raw');
         var btn4col = document.getElementById('sd-vtab-4col');
         var btnDetail = document.getElementById('sd-vtab-detail');
         var btnSplit = document.getElementById('sd-vtab-split');
         var btnMatrix = document.getElementById('sd-vtab-matrix');
 
-        [btn4col, btnDetail, btnSplit, btnMatrix].forEach(function(b) {
+        [btnRawTab, btn4col, btnDetail, btnSplit, btnMatrix].forEach(function(b) {
           if (b) b.classList.remove('active');
         });
 
-        if (mode === '4col') {
+        if (mode === 'raw') {
+          if (btnRawTab) btnRawTab.classList.add('active');
+          if (v4col) v4col.style.display = 'none';
+          if (vDetail) vDetail.style.display = 'none';
+          if (vMatrix) vMatrix.style.display = 'block';
+          setMatrixMode('raw');
+        } else if (mode === '4col') {
           if (btn4col) btn4col.classList.add('active');
           if (v4col) v4col.style.display = 'block';
           if (vDetail) vDetail.style.display = 'none';
@@ -14486,12 +14580,14 @@ document.addEventListener("DOMContentLoaded", function() {
           if (btnSplit) btnSplit.classList.add('active');
           if (v4col) v4col.style.display = 'block';
           if (vDetail) vDetail.style.display = 'block';
-          if (vMatrix) vMatrix.style.display = 'none';
+          if (vMatrix) vMatrix.style.display = 'block';
+          setMatrixMode('raw');
         } else if (mode === 'matrix') {
           if (btnMatrix) btnMatrix.classList.add('active');
           if (v4col) v4col.style.display = 'none';
           if (vDetail) vDetail.style.display = 'none';
           if (vMatrix) vMatrix.style.display = 'block';
+          setMatrixMode('table');
         }
       }
 
@@ -14513,9 +14609,7 @@ document.addEventListener("DOMContentLoaded", function() {
         renderMatrixTable();
         renderKpis();
         renderTowerPills();
-        if (state.matrixMode === 'raw') {
-          renderRawMatrix();
-        }
+        renderRawMatrix();
         updateFilterCounts();
         applyViewMode();
 

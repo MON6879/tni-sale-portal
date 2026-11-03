@@ -8933,62 +8933,9 @@ Team04>> 2Box</td>
             </button>
           </div>
         </div>
-
-        <!-- 9 AW7 KPI Summary Cards Strip -->
-        <div style="margin-top:1.2rem;">
-          <div style="font-size:0.8rem; font-weight:800; color:#F8FAFC; margin-bottom:0.65rem; display:flex; align-items:center; justify-content:space-between;">
-            <span style="display:flex; align-items:center; gap:0.4rem;">
-              <i class="fa-solid fa-chart-pie" style="color:#ef4444;"></i> <b>TỔNG QUAN 9 CHỈ SỐ CẢNH BÁO TOÀN VÙNG (AW7..AZ SUMMARY):</b>
-            </span>
-            <span id="sd-matrix-timestamp-badge" style="font-size:0.72rem; color:#94A3B8;">Mốc giờ Sheet: Đang đọc...</span>
-          </div>
-
-          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:0.65rem;" id="sd-kpi-cards-grid">
-            <!-- Rendered by JS -->
-          </div>
-        </div>
-
-        <!-- Tower Company Distribution Bar -->
-        <div id="sd-tower-co-strip" style="margin-top:1rem; background:rgba(30,41,59,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:0.65rem 1rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.6rem;">
-          <div style="font-size:0.75rem; color:#94A3B8; display:flex; align-items:center; gap:0.4rem;">
-            <i class="fa-solid fa-broadcast-tower" style="color:#f59e0b;"></i> <b>Phân Bổ Cột Site Down (TowerCo):</b>
-          </div>
-          <div id="sd-tower-pills" style="display:flex; flex-wrap:wrap; gap:0.4rem;">
-            <!-- Rendered by JS -->
-          </div>
-        </div>
-
       </div>
 
-      <!-- Team Filter Strip -->
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.8rem; margin-bottom:1rem;">
-        <div style="display:flex; gap:0.4rem; flex-wrap:wrap;" id="sd-team-filters">
-          <button class="filter-btn active" data-team="all" onclick="window.SiteDownManager.setTeamFilter('all', this)" style="border-radius:8px; font-size:0.78rem; font-weight:700; padding:0.4rem 0.85rem;">
-            🌐 Tất Cả 4 Teams (<span id="sd-filter-cnt-all">0</span> Sites)
-          </button>
-          <button class="filter-btn" data-team="team1" onclick="window.SiteDownManager.setTeamFilter('team1', this)" style="border-radius:8px; font-size:0.78rem; font-weight:700; padding:0.4rem 0.85rem;">
-            🔴 Team 1 Dawei (<span id="sd-filter-cnt-t1">0</span>)
-          </button>
-          <button class="filter-btn" data-team="team2" onclick="window.SiteDownManager.setTeamFilter('team2', this)" style="border-radius:8px; font-size:0.78rem; font-weight:700; padding:0.4rem 0.85rem;">
-            🟡 Team 2 Myeik (<span id="sd-filter-cnt-t2">0</span>)
-          </button>
-          <button class="filter-btn" data-team="team3" onclick="window.SiteDownManager.setTeamFilter('team3', this)" style="border-radius:8px; font-size:0.78rem; font-weight:700; padding:0.4rem 0.85rem;">
-            🟢 Team 3 Bokpyin (<span id="sd-filter-cnt-t3">0</span>)
-          </button>
-          <button class="filter-btn" data-team="team4" onclick="window.SiteDownManager.setTeamFilter('team4', this)" style="border-radius:8px; font-size:0.78rem; font-weight:700; padding:0.4rem 0.85rem;">
-            🔵 Team 4 Kawthoung (<span id="sd-filter-cnt-t4">0</span>)
-          </button>
-        </div>
-
-        <div style="display:flex; gap:0.5rem; align-items:center;">
-          <input type="text" id="sd-search-input" placeholder="🔍 Tìm mã trạm, kỹ sư, huyện, tower co..." style="background:#1E293B; border:1px solid rgba(255,255,255,0.15); border-radius:8px; padding:0.4rem 0.8rem; color:#fff; font-size:0.78rem; width:260px;" oninput="window.SiteDownManager.handleSearch(this.value)" />
-          <button class="filter-btn" onclick="window.SiteDownManager.resetFilters()" style="background:rgba(255,255,255,0.06); color:#94A3B8; border:1px solid rgba(255,255,255,0.12); padding:0.4rem 0.7rem; border-radius:8px; font-size:0.78rem; cursor:pointer;" title="Xóa bộ lọc">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
-        </div>
-      </div>
-
-      <!-- 🎛️ VIEW TABS BAR (CHẾ ĐỘ XEM TRỰC QUAN TRÊN CÙNG BẢNG) -->
+      <!-- 🎛️ VIEW TABS BAR (CHẾ ĐỘ XEM TRỰC QUAN TRÊN CÙNG BẢNG — MẶC ĐỊNH MỞ VĂN BẢN GỐC AW7:AZ16 ĐẦU TIÊN) -->
       <div class="card" style="background:rgba(15,23,42,0.92); border:1px solid rgba(56,189,248,0.3); border-radius:14px; padding:0.65rem 0.9rem; margin-bottom:1.2rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.65rem;">
         <div style="display:flex; gap:0.4rem; flex-wrap:wrap;" id="sd-view-mode-tabs">
           <button id="sd-vtab-raw" class="filter-btn active" onclick="window.SiteDownManager.setViewMode('raw')" style="padding:0.45rem 0.95rem; border-radius:8px; font-weight:800; font-size:0.8rem; display:flex; align-items:center; gap:0.4rem;">
@@ -9001,7 +8948,7 @@ Team04>> 2Box</td>
             <i class="fa-solid fa-list-check" style="color:#38bdf8;"></i> 📋 DANH SÁCH CHI TIẾT SỰ CỐ (COL C LIVE)
           </button>
           <button id="sd-vtab-split" class="filter-btn" onclick="window.SiteDownManager.setViewMode('split')" style="padding:0.45rem 0.95rem; border-radius:8px; font-weight:800; font-size:0.8rem; display:flex; align-items:center; gap:0.4rem;">
-            <i class="fa-solid fa-layer-group" style="color:#f59e0b;"></i> 👁️ HIỂN THỊ CẢ HAI (SPLIT VIEW)
+            <i class="fa-solid fa-layer-group" style="color:#f59e0b;"></i> 👁️ HIỂN THỊ TẤT CẢ (SPLIT VIEW)
           </button>
           <button id="sd-vtab-matrix" class="filter-btn" onclick="window.SiteDownManager.setViewMode('matrix')" style="padding:0.45rem 0.95rem; border-radius:8px; font-weight:800; font-size:0.8rem; display:flex; align-items:center; gap:0.4rem;">
             <i class="fa-solid fa-table-cells" style="color:#10b981;"></i> 🔢 MA TRẬN ĐỐI CHIẾU AW7..AZ16
@@ -9015,7 +8962,7 @@ Team04>> 2Box</td>
         </div>
       </div>
 
-      <!-- 🔢 SECTION B (DEFAULT FIRST): AW7..AZ16 Matrix Comparison & Sheet Raw Text View -->
+      <!-- 🔢 SECTION B (DEFAULT FIRST AT VERY TOP): AW7..AZ16 Sheet Raw Text View & Matrix Comparison -->
       <div id="sd-matrix-card" class="card" style="background:rgba(15,23,42,0.85); border:1px solid rgba(56,189,248,0.25); border-radius:16px; padding:1.2rem; margin-bottom:1.5rem; display:block;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.6rem; margin-bottom:1rem;">
           <div style="display:flex; align-items:center; gap:0.6rem;">
@@ -9081,6 +9028,60 @@ Team04>> 2Box</td>
               <!-- Rendered by JS -->
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- 9 AW7 KPI Summary Cards & TowerCo Strip -->
+      <div class="card" style="background: rgba(15, 23, 42, 0.90); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 1.1rem 1.2rem; margin-bottom: 1.2rem;">
+        <div>
+          <div style="font-size:0.8rem; font-weight:800; color:#F8FAFC; margin-bottom:0.65rem; display:flex; align-items:center; justify-content:space-between;">
+            <span style="display:flex; align-items:center; gap:0.4rem;">
+              <i class="fa-solid fa-chart-pie" style="color:#ef4444;"></i> <b>TỔNG QUAN 9 CHỈ SỐ CẢNH BÁO TOÀN VÙNG (AW7..AZ SUMMARY):</b>
+            </span>
+            <span id="sd-matrix-timestamp-badge" style="font-size:0.72rem; color:#94A3B8;">Mốc giờ Sheet: Đang đọc...</span>
+          </div>
+
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:0.65rem;" id="sd-kpi-cards-grid">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Tower Company Distribution Bar -->
+        <div id="sd-tower-co-strip" style="margin-top:1rem; background:rgba(30,41,59,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:0.65rem 1rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.6rem;">
+          <div style="font-size:0.75rem; color:#94A3B8; display:flex; align-items:center; gap:0.4rem;">
+            <i class="fa-solid fa-broadcast-tower" style="color:#f59e0b;"></i> <b>Phân Bổ Cột Site Down (TowerCo):</b>
+          </div>
+          <div id="sd-tower-pills" style="display:flex; flex-wrap:wrap; gap:0.4rem;">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Team Filter Strip -->
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.8rem; margin-bottom:1rem;">
+        <div style="display:flex; gap:0.4rem; flex-wrap:wrap;" id="sd-team-filters">
+          <button class="filter-btn active" data-team="all" onclick="window.SiteDownManager.setTeamFilter('all', this)" style="border-radius:8px; font-size:0.78rem; font-weight:700; padding:0.4rem 0.85rem;">
+            🌐 Tất Cả 4 Teams (<span id="sd-filter-cnt-all">0</span> Sites)
+          </button>
+          <button class="filter-btn" data-team="team1" onclick="window.SiteDownManager.setTeamFilter('team1', this)" style="border-radius:8px; font-size:0.78rem; font-weight:700; padding:0.4rem 0.85rem;">
+            🔴 Team 1 Dawei (<span id="sd-filter-cnt-t1">0</span>)
+          </button>
+          <button class="filter-btn" data-team="team2" onclick="window.SiteDownManager.setTeamFilter('team2', this)" style="border-radius:8px; font-size:0.78rem; font-weight:700; padding:0.4rem 0.85rem;">
+            🟡 Team 2 Myeik (<span id="sd-filter-cnt-t2">0</span>)
+          </button>
+          <button class="filter-btn" data-team="team3" onclick="window.SiteDownManager.setTeamFilter('team3', this)" style="border-radius:8px; font-size:0.78rem; font-weight:700; padding:0.4rem 0.85rem;">
+            🟢 Team 3 Bokpyin (<span id="sd-filter-cnt-t3">0</span>)
+          </button>
+          <button class="filter-btn" data-team="team4" onclick="window.SiteDownManager.setTeamFilter('team4', this)" style="border-radius:8px; font-size:0.78rem; font-weight:700; padding:0.4rem 0.85rem;">
+            🔵 Team 4 Kawthoung (<span id="sd-filter-cnt-t4">0</span>)
+          </button>
+        </div>
+
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+          <input type="text" id="sd-search-input" placeholder="🔍 Tìm mã trạm, kỹ sư, huyện, tower co..." style="background:#1E293B; border:1px solid rgba(255,255,255,0.15); border-radius:8px; padding:0.4rem 0.8rem; color:#fff; font-size:0.78rem; width:260px;" oninput="window.SiteDownManager.handleSearch(this.value)" />
+          <button class="filter-btn" onclick="window.SiteDownManager.resetFilters()" style="background:rgba(255,255,255,0.06); color:#94A3B8; border:1px solid rgba(255,255,255,0.12); padding:0.4rem 0.7rem; border-radius:8px; font-size:0.78rem; cursor:pointer;" title="Xóa bộ lọc">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
         </div>
       </div>
 
@@ -14579,7 +14580,8 @@ document.addEventListener("DOMContentLoaded", function() {
           if (btnSplit) btnSplit.classList.add('active');
           if (v4col) v4col.style.display = 'block';
           if (vDetail) vDetail.style.display = 'block';
-          if (vMatrix) vMatrix.style.display = 'none';
+          if (vMatrix) vMatrix.style.display = 'block';
+          setMatrixMode('raw');
         } else if (mode === 'matrix') {
           if (btnMatrix) btnMatrix.classList.add('active');
           if (v4col) v4col.style.display = 'none';
@@ -14607,9 +14609,7 @@ document.addEventListener("DOMContentLoaded", function() {
         renderMatrixTable();
         renderKpis();
         renderTowerPills();
-        if (state.matrixMode === 'raw') {
-          renderRawMatrix();
-        }
+        renderRawMatrix();
         updateFilterCounts();
         applyViewMode();
 
