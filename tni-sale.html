@@ -817,14 +817,6 @@ function copyTelegramReportTemplate(gName, gId, cat) {
       </div>
     </div>
     <div class="pb tw" id="t-nhap"></div>
-  <!-- BULK DELETE BAR NHAP -->
-  <div id="nhap-bulk-bar" style="display:none;background:#fff7ed;border:2px solid #fed7aa;border-radius:10px;padding:12px 16px;margin:10px 16px 0;align-items:center;gap:10px;flex-wrap:wrap">
-    <span style="font-size:18px">&#128203;</span>
-    <span id="nhap-bulk-count" style="font-weight:700;color:#ea580c">0 phi&#7871;u &#273;&#432;&#7907;c ch&#7885;n</span>
-    <input id="nhap-bulk-reason" type="text" placeholder="L&#253; do x&#243;a (b&#7855;t bu&#7897;c)..." style="flex:1;min-width:200px;padding:6px 10px;border:1.5px solid #fed7aa;border-radius:6px;font-size:13px">
-    <button class="btn" onclick="submitBulkDelNhap()" style="background:#ea580c;color:#fff;border:none;font-size:13px;padding:6px 14px">&#128232; G&#7917;i Y&#234;u C&#7847;u X&#243;a</button>
-    <button class="btn b-out" onclick="nhapClearSelection()" style="font-size:12px;border-color:#fed7aa;color:#ea580c">&#10005; B&#7887; ch&#7885;n</button>
-  </div>
   </div>
 </div>
 
@@ -3409,8 +3401,8 @@ function rNhap(){
   const isVi = currentLang === 'vi';
   const d=DB.g('nhap');
   const headers = isVi ?
-    ['<input type="checkbox" id="nhap-chk-all" onchange="nhapToggleAll(this)" title="Chọn tất cả">','#','Tên SP','Model','DM','SL','Giá Gốc (83%)','LN Cty','Giá Sàn','Giá Bán Lẻ','Giá Đại Lý','Giá Điểm Bán','Giá Cho NV','NCC','BH','Ngày',''] :
-    ['<input type="checkbox" id="nhap-chk-all" onchange="nhapToggleAll(this)" title="Select all">','#','Product','Model','Category','Qty','Base Cost (83%)','HO Profit','Floor Price','Retail Price','Dealer Price','POS Price','Staff Price','Supplier','Warranty','Date',''];
+    ['#','Tên SP','Model','DM','SL','Giá Gốc (83%)','LN Cty','Giá Sàn','Giá Bán Lẻ','Giá Đại Lý','Giá Điểm Bán','Giá Cho NV','NCC','BH','Ngày',''] :
+    ['#','Product','Model','Category','Qty','Base Cost (83%)','HO Profit','Floor Price','Retail Price','Dealer Price','POS Price','Staff Price','Supplier','Warranty','Date',''];
   document.getElementById('t-nhap').innerHTML=tbl(headers,
     d.map((r,i)=>{
       const gg = Number(r.gg || 0);
@@ -3422,7 +3414,6 @@ function rNhap(){
       const gDiemBan = Number(r.gDiemBan || 0) || Math.round(gb * 0.90);
       const gNV = Number(r.gNV || 0) || minSell;
       return [
-        `<input type="checkbox" class="nhap-chk" data-id="${r.id}" data-name="${(r.ten||r.sp||'SP').replace(/'/g,'')}" onchange="nhapUpdateBulkBar()">`,
         i+1,
         `<b>${r.ten}</b>`,
         r.model||'-',
@@ -11701,49 +11692,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-
-// ════════════ BULK DELETE — NHAP HANG ════════════
-function nhapToggleAll(cb) {
-  document.querySelectorAll('.nhap-chk').forEach(c => { c.checked = cb.checked; });
-  nhapUpdateBulkBar();
-}
-function nhapUpdateBulkBar() {
-  var checked = document.querySelectorAll('.nhap-chk:checked');
-  var bar = document.getElementById('nhap-bulk-bar');
-  var cnt = document.getElementById('nhap-bulk-count');
-  if (!bar) return;
-  if (checked.length > 0) {
-    bar.style.display = 'flex';
-    cnt.textContent = checked.length + ' phiếu được chọn';
-  } else {
-    bar.style.display = 'none';
-  }
-}
-function nhapClearSelection() {
-  document.querySelectorAll('.nhap-chk').forEach(c => c.checked = false);
-  var allChk = document.getElementById('nhap-chk-all');
-  if (allChk) allChk.checked = false;
-  nhapUpdateBulkBar();
-}
-function submitBulkDelNhap() {
-  var checked = document.querySelectorAll('.nhap-chk:checked');
-  if (checked.length === 0) { al('Chưa chọn phiếu nào!', 'er'); return; }
-  var reason = (document.getElementById('nhap-bulk-reason').value || '').trim();
-  if (!reason) { al('Vui lòng nhập lý do xóa!', 'er'); document.getElementById('nhap-bulk-reason').focus(); return; }
-  var items = [];
-  checked.forEach(c => items.push({ spId: c.dataset.id, spName: c.dataset.name }));
-  var requests = DB.g('del_requests') || [];
-  var ts = new Date().toISOString();
-  var reqBy = (CUR_USER || {}).name || 'Unknown';
-  items.forEach(function(item) {
-    requests.push({ id: Date.now() + Math.random(), spId: item.spId, spName: item.spName, reason: reason, requestedBy: reqBy, requestedAt: ts, status: 'pending' });
-  });
-  DB.s('del_requests', requests);
-  al('📨 Đã gửi ' + items.length + ' yêu cầu xóa lên Giám Đốc! Chờ phê duyệt.', 'ok');
-  nhapClearSelection();
-  document.getElementById('nhap-bulk-reason').value = '';
-  _renderDelReqBadge();
-}
 
 // ════════════ BULK DELETE — TON KHO ════════════
 function tkToggleAll(cb) {
