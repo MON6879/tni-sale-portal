@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>TNI Sale — Sales & Profit Distribution Management | Viettel Construction Myanmar</title>
+<title>TNI Bán hàng — TNI Sale | Quản Lý Bán Hàng & Phân Bổ Lợi Nhuận</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bl:#2563eb;--bl2:#1d4ed8;--gn:#16a34a;--rd:#dc2626;--or:#ea580c;--yw:#ca8a04;--pu:#7c3aed;--gray:#f1f5f9;--dark:#1e293b;--tx:#334155;--bd:#e2e8f0;--wh:#fff}
@@ -625,7 +625,7 @@ function copyTelegramReportTemplate(gName, gId, cat) {
 
 <!-- ══ SIDEBAR ══ -->
 <div id="sb">
-  <div class="logo">⚡ TNI <span>Sale</span></div>
+  <div class="logo" title="TNI Bán hàng — TNI Sale">⚡ TNI <span>Bán hàng</span></div>
   <nav>
     <div class="lbl" data-nav-lbl="overview">Overview</div>
     <a class="active" onclick="go('dashboard')" data-nav-a="dashboard">📊 Dashboard</a>
@@ -679,7 +679,7 @@ function copyTelegramReportTemplate(gName, gId, cat) {
     </a>
     <!-- Cài đặt % Lợi Nhuận & Thuế Nộp Tổng Công Ty (Ẩn UI theo yêu cầu người dùng) -->
     <input id="cfg-cty-rate" type="hidden" value="17"/>
-    <a href="https://docs.google.com/spreadsheets/d/1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA" target="_blank" class="btn b-bl b-sm" style="text-decoration:none">📊 Google Sheet</a>
+    <a href="https://docs.google.com/spreadsheets/d/1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA/edit?gid=491845137#gid=491845137" target="_blank" class="btn b-bl b-sm" style="text-decoration:none" title="Mở Google Sheet: TNI Bán hàng — TNI Sale">📊 Sheet: TNI Bán hàng</a>
     <button id="cloud-sync-badge" class="btn b-sm" onclick="DB.pullAll(true)" title="Bấm để đồng bộ 2 chiều trực tiếp với Google Sheet ngay lập tức" style="background:#dcfce7;color:#15803d;border:1.5px solid #86efac;font-weight:700;font-size:11.5px;display:inline-flex;align-items:center;gap:5px">☁️ Sheet SSOT</button>
     <!-- 👤 USER PROFILE BADGE (GOOGLE AUTH) -->
     <div id="user-profile-badge"></div>
@@ -3072,7 +3072,9 @@ function go(id){
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
   document.querySelectorAll('#sb nav a').forEach(a=>a.classList.remove('active'));
   const s=document.getElementById('s-'+id); if(s) s.classList.add('on');
-  document.getElementById('ptitle').textContent=ptitles[id]||id;
+  const navMapForTitle = (typeof NAV_TITLES !== 'undefined' && NAV_TITLES[currentLang]) ? NAV_TITLES[currentLang] : ptitles;
+  const rawPageTitle = (navMapForTitle && navMapForTitle[id]) ? navMapForTitle[id] : (ptitles[id] || id);
+  document.getElementById('ptitle').textContent = String(rawPageTitle).replace(/<small[\s\S]*?<\/small>/gi, '').replace(/<span[^>]*id="del-req-badge[^"]*"[\s\S]*?<\/span>/gi, '').replace(/<[^>]+>/g, '').trim();
 
   // Highlight navigation item
   const activeLink = document.querySelector(`#sb nav a[data-nav-a="${id}"]`);
@@ -3622,8 +3624,8 @@ function rNhap(){
   const isVi = currentLang === 'vi';
   const d=DB.g('nhap');
   const headers = isVi ?
-    ['#','Tên SP','Model','Serial','DM','SL','Giá Gốc (83%)','LN Cty','Giá Sàn','Giá Bán Lẻ','Giá Đại Lý','Giá Điểm Bán','Giá Cho NV','NCC','BH','Ngày',''] :
-    ['#','Product','Model','Serial','Category','Qty','Base Cost (83%)','HO Profit','Floor Price','Retail Price','Dealer Price','POS Price','Staff Price','Supplier','Warranty','Date',''];
+    ['#','Tên SP','Model','Serial','Danh Mục','Số Lượng','Giá Gốc (83%)','LN Cty (17%)','Giá Sàn','Giá Bán Lẻ','Giá Đại Lý','Giá Điểm Bán','Giá Cho NV','LN Chi Nhánh','NCC','Bảo Hành','Ngày Nhập','Ghi Chú',''] :
+    ['#','Product','Model','Serial','Category','Qty','Base Cost (83%)','HO Profit (17%)','Floor Price','Retail Price','Dealer Price','POS Price','Staff Price','Branch Profit','Supplier','Warranty','Date','Note',''];
   document.getElementById('t-nhap').innerHTML=tbl(headers,
     d.map((r,i)=>{
       const gg = Number(r.gg || 0);
@@ -3634,6 +3636,7 @@ function rNhap(){
       const gDaily = Number(r.gDaily || 0) || Math.round(minSell * 1.08);
       const gDiemBan = Number(r.gDiemBan || 0) || Math.round(gb * 0.90);
       const gNV = Number(r.gNV || 0) || minSell;
+      const lnBranch = r.lnBranch !== undefined ? Number(r.lnBranch) : Math.max(0, gb - minSell);
       const snVal = (r.serial || r.se || '').trim();
       const snBadge = snVal ? `<span style="background:#f3e8ff;color:#6d28d9;padding:2px 7px;border-radius:6px;font-weight:700;font-size:11.5px;white-space:nowrap">🏷️ ${snVal}</span>` : '-';
       return [
@@ -3650,9 +3653,11 @@ function rNhap(){
         `<span style="color:#0284c7;font-weight:600">${fn(gDaily)}₫</span>`,
         `<span style="color:#7c3aed;font-weight:600">${fn(gDiemBan)}₫</span>`,
         `<span style="color:#d97706;font-weight:600">${fn(gNV)}₫</span>`,
+        `<span style="color:#15803d;font-weight:600">${fn(lnBranch)}₫</span>`,
         r.ncc||'-',
         (r.bh||'-')+'th',
         fd(r.ngay),
+        r.gc||'-',
         `<button class="btn b-xs b-rd" onclick="requestDelNhap(${r.id},'${(r.ten||r.sp||'SP').replace(/'/g,'')}')" title="Gửi yêu cầu xóa lên Giám Đốc" style="background:#fff7ed;color:#ea580c;border:1px solid #fed7aa;font-size:11px;padding:2px 7px">📨 Xóa</button>`
       ];
     }));
@@ -8746,7 +8751,7 @@ function exportAcceptancesCSV() {
 // ═══════════════════════════════════════════════════
 // 🌐 UNIFIED BILINGUAL ENGINE (VIỆT - ANH ĐỒNG BỘ 100%)
 // ═══════════════════════════════════════════════════
-let currentLang = localStorage.getItem('ups_lang') || 'en';
+let currentLang = localStorage.getItem('ups_lang') || 'vi';
 
 const NAV_TITLES = {
   en: {
@@ -9612,13 +9617,13 @@ function translateDOM(lang) {
     }
   });
 
-  // 3. Document Title
+  // 3. Document Title (Đồng bộ 100% với tên Google Sheet: TNI Bán hàng — TNI Sale)
   if (lang === 'my') {
-    document.title = 'TNI အရောင်း — ကုန်ပစ္စည်းစီမံခန့်ခွဲမှုနှင့် အမြတ်ခွဲဝေမှုစနစ်';
+    document.title = 'TNI Bán hàng — TNI Sale (ကုန်ပစ္စည်းစီမံခန့်ခွဲမှုနှင့် အမြတ်ခွဲဝေမှုစနစ်)';
   } else if (lang === 'vi') {
-    document.title = 'TNI Sale — Quản Lý Bán Hàng & Phân Bổ Lợi Nhuận';
+    document.title = 'TNI Bán hàng — TNI Sale | Quản Lý Bán Hàng & Phân Bổ Lợi Nhuận';
   } else {
-    document.title = 'TNI Sale — Sales & Profit Distribution';
+    document.title = 'TNI Bán hàng — TNI Sale | Sales & Profit Distribution';
   }
 }
 
@@ -9817,16 +9822,26 @@ function applyLang(lang) {
   });
   document.querySelectorAll('[data-nav-a]').forEach(el => {
     const k = el.getAttribute('data-nav-a');
-    if (navMap[k]) el.innerHTML = navMap[k];
+    if (navMap[k]) {
+      if (k === 'nhap') {
+        el.innerHTML = navMap[k] + ' <span id="del-req-badge" style="display:none;background:#dc2626;color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:4px">0</span>';
+      } else if (k === 'tonkho') {
+        el.innerHTML = navMap[k] + ' <span id="del-req-badge-tk" style="display:none;background:#dc2626;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:auto">0</span>';
+      } else {
+        el.innerHTML = navMap[k];
+      }
+    }
   });
+  if (typeof renderDelReqBadge === 'function') renderDelReqBadge();
   
   // 3. Update active page title
   const activeSec = document.querySelector('.sec.on');
   if (activeSec) {
     const secId = activeSec.id.replace('s-', '');
     const ptitleEl = document.getElementById('ptitle');
-    if (ptitleEl && navMap[secId]) {
-      ptitleEl.innerHTML = navMap[secId];
+    const rawSecTitle = navMap[secId] || ptitles[secId];
+    if (ptitleEl && rawSecTitle) {
+      ptitleEl.textContent = String(rawSecTitle).replace(/<small[\s\S]*?<\/small>/gi, '').replace(/<span[^>]*id="del-req-badge[^"]*"[\s\S]*?<\/span>/gi, '').replace(/<[^>]+>/g, '').trim();
     }
   }
   
