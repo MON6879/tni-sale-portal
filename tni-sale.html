@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -2812,7 +2812,7 @@ const ptitles={dashboard:'📊 Dashboard',nhap:'📦 Goods Intake',tonkho:'🗄�
   mystats:'📊 My Performance',myquotes:'📄 My Quotations',mysurvey:'📝 My Surveys',rbac:'🛡️ Role Permissions (RBAC)','access-denied':'🔒 Access Restricted'};
 
 const renders={
-  dashboard:rDash,nhap:rNhap,tonkho:renderTK,tamung:rTU,
+  dashboard:rDash,nhap:()=>{rNhap();_renderDelReqBadge();_renderDelReqList();},tonkho:renderTK,tamung:rTU,
   banhang:()=>{popSP(['b-sp']);rBan();},
   baogiaups:()=>{if(!document.getElementById('qu-items').children.length)addQRow('qu-items');rQuUPS();populateOldQuoteSelectUPS();},
   baogiasolar:()=>{if(!document.getElementById('qs-table-body')?.children.length)addSolarItemRow();if(typeof rQuSolar==='function')rQuSolar();},
