@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -11681,6 +11681,37 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+
+// ════════════ GỬI YÊU CẦU XÓA (NHÂN VIÊN) ════════════
+
+function requestDelNhap(spId, spName) {
+  var isVi = currentLang === 'vi';
+  var promptMsg = isVi
+    ? 'Lý do xóa "' + spName + '"?\n(Yêu cầu sẽ gửi lên Giám Đốc để phê duyệt)'
+    : 'Reason to delete "' + spName + '"?\n(Request will be sent to Director for approval)';
+  var reason = prompt(promptMsg, '');
+  if (reason === null) return; // Nhấn Hủy / Cancelled
+  reason = reason.trim();
+  if (!reason) {
+    al(isVi ? '⚠️ Vui lòng nhập lý do xóa!' : '⚠️ Please enter a reason!', 'er');
+    return;
+  }
+  var requests = DB.g('del_requests') || [];
+  requests.push({
+    id: Date.now(),
+    spId: spId,
+    spName: spName,
+    reason: reason,
+    requestedBy: (CUR_USER || {}).name || 'Unknown',
+    requestedAt: new Date().toISOString(),
+    status: 'pending'
+  });
+  DB.s('del_requests', requests);
+  al(isVi
+    ? '📨 Đã gửi yêu cầu xóa lên Giám Đốc! Chờ phê duyệt.'
+    : '📨 Delete request sent to Director! Awaiting approval.', 'ok');
+  _renderDelReqBadge();
+}
 
 // ════════════ LUONG PHE DUYET XOA HANG NHAP ════════════
 
