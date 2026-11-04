@@ -2901,10 +2901,11 @@ function getTK(){
   const nhap=DB.g('nhap'),ban=DB.g('ban'),pp=DB.g('pp'),kg=DB.g('kygoi'),tu=DB.g('tamung');
   const m={};
   nhap.forEach(r=>{
-    if(!m[r.id]) m[r.id]={id:r.id,ten:r.ten,model:r.model||'',dm:r.dm,giagoc:r.gg,giaban:r.gb,nhap:0,ban:0,pp:0,kg:0,tu:0,bh:r.bh,allSerials:[]};
+    const rawSn = r.serial || r.se || '';
+    if(!m[r.id]) m[r.id]={id:r.id,ten:r.ten,model:r.model||'',serial:rawSn,dm:r.dm,giagoc:r.gg,giaban:r.gb,nhap:0,ban:0,pp:0,kg:0,tu:0,bh:r.bh,allSerials:[]};
     m[r.id].nhap+=Number(r.sl);
-    if(r.serial){
-      const sArr = String(r.serial).split(/[,;\n\r]+/).map(s=>s.trim()).filter(Boolean);
+    if(rawSn){
+      const sArr = String(rawSn).split(/[,;\n\r]+/).map(s=>s.trim()).filter(Boolean);
       m[r.id].allSerials.push(...sArr);
     }
   });
@@ -3412,8 +3413,8 @@ function rNhap(){
   const isVi = currentLang === 'vi';
   const d=DB.g('nhap');
   const headers = isVi ?
-    ['#','Tên SP','Model','DM','SL','Giá Gốc (83%)','LN Cty','Giá Sàn','Giá Bán Lẻ','Giá Đại Lý','Giá Điểm Bán','Giá Cho NV','NCC','BH','Ngày',''] :
-    ['#','Product','Model','Category','Qty','Base Cost (83%)','HO Profit','Floor Price','Retail Price','Dealer Price','POS Price','Staff Price','Supplier','Warranty','Date',''];
+    ['#','Tên SP','Model','Serial','DM','SL','Giá Gốc (83%)','LN Cty','Giá Sàn','Giá Bán Lẻ','Giá Đại Lý','Giá Điểm Bán','Giá Cho NV','NCC','BH','Ngày',''] :
+    ['#','Product','Model','Serial','Category','Qty','Base Cost (83%)','HO Profit','Floor Price','Retail Price','Dealer Price','POS Price','Staff Price','Supplier','Warranty','Date',''];
   document.getElementById('t-nhap').innerHTML=tbl(headers,
     d.map((r,i)=>{
       const gg = Number(r.gg || 0);
@@ -3424,10 +3425,13 @@ function rNhap(){
       const gDaily = Number(r.gDaily || 0) || Math.round(minSell * 1.08);
       const gDiemBan = Number(r.gDiemBan || 0) || Math.round(gb * 0.90);
       const gNV = Number(r.gNV || 0) || minSell;
+      const snVal = (r.serial || r.se || '').trim();
+      const snBadge = snVal ? `<span style="background:#f3e8ff;color:#6d28d9;padding:2px 7px;border-radius:6px;font-weight:700;font-size:11.5px;white-space:nowrap">🏷️ ${snVal}</span>` : '-';
       return [
         i+1,
         `<b>${r.ten}</b>`,
         r.model||'-',
+        snBadge,
         bk(r.dm,'bl'),
         r.sl,
         fn(gg)+'₫',
@@ -3452,7 +3456,7 @@ function renderTK(){
   const isVi = currentLang === 'vi';
   const q=(v('sk-q')||'').toLowerCase(),dm=v('sk-dm');
   const allData=getTK();
-  const data=allData.filter(r=>(!q||(r.ten+r.model).toLowerCase().includes(q))&&(!dm||r.dm===dm));
+  const data=allData.filter(r=>(!q||(r.ten+r.model+(r.serial||'')+(r.allSerials||[]).join(' ')).toLowerCase().includes(q))&&(!dm||r.dm===dm));
 
   // Tính tổng các chỉ số
   const totNhap = allData.reduce((s,r)=>s+r.nhap,0);
@@ -3481,8 +3485,8 @@ function renderTK(){
   
   document.getElementById('tk-warn').innerHTML = cardsHtml + warnHtml;
   const tkHeaders = isVi ?
-    ['<input type="checkbox" id="tk-chk-all" onchange="tkToggleAll(this)" title="Chọn tất cả">','Tên SP','Model','DM','Đã Nhập','Đã Bán','Ký Gởi','Tồn Kho','Khả Dụng','Giá Gốc (83%)','LN Cty 17%','Giá Sàn (100%)','Giá Thực Bán','LN Chi Nhánh','Tổng LN Cty','Tổng LN Chi Nhánh','Giá Trị Tồn Gốc','Trạng Thái','Xóa Nhập'] :
-    ['<input type="checkbox" id="tk-chk-all" onchange="tkToggleAll(this)" title="Select all">','Product','Model','Category','Intake','Sold','Consigned','Total Stock','Available','Base Cost (83%)','HO Profit 17%','Min Price (100%)','Actual Price','Branch Profit','Total HO Profit','Total Branch Profit','Total Stock Cost','Status','Delete'];
+    ['<input type="checkbox" id="tk-chk-all" onchange="tkToggleAll(this)" title="Chọn tất cả">','Tên SP','Model','Serial','DM','Đã Nhập','Đã Bán','Ký Gởi','Tồn Kho','Khả Dụng','Giá Gốc (83%)','LN Cty 17%','Giá Sàn (100%)','Giá Thực Bán','LN Chi Nhánh','Tổng LN Cty','Tổng LN Chi Nhánh','Giá Trị Tồn Gốc','Trạng Thái','Xóa Nhập'] :
+    ['<input type="checkbox" id="tk-chk-all" onchange="tkToggleAll(this)" title="Select all">','Product','Model','Serial','Category','Intake','Sold','Consigned','Total Stock','Available','Base Cost (83%)','HO Profit 17%','Min Price (100%)','Actual Price','Branch Profit','Total HO Profit','Total Branch Profit','Total Stock Cost','Status','Delete'];
   document.getElementById('t-tonkho').innerHTML=tbl(tkHeaders,
     data.map(r=>{
       const gg = Number(r.giagoc || 0);
@@ -3493,10 +3497,15 @@ function renderTK(){
       const totLnCty = r.ban * lnCty;
       const totLnBranch = r.ban * lnBranch;
       const valTonGoc = r.ton * gg;
+      const snList = (r.availableSerials && r.availableSerials.length ? r.availableSerials : (r.allSerials || []));
+      const snStr = snList.length ? snList.join(', ') : (r.serial || '');
+      const snDisplay = snStr ? `<span style="background:#f3e8ff;color:#6d28d9;padding:2px 7px;border-radius:6px;font-weight:700;font-size:11.5px;white-space:nowrap">🏷️ ${snStr}</span>` : '-';
+      const fullSpLabel = ((r.ten||'SP') + (snStr ? ' [Serial: ' + snStr + ']' : '')).replace(/'/g,'').replace(/"/g,'');
       return [
-        `<input type="checkbox" class="tk-chk" data-id="${r.id}" data-name="${(r.ten||'SP').replace(/'/g,'')}" onchange="tkUpdateBulkBar()">`,
+        `<input type="checkbox" class="tk-chk" data-id="${r.id}" data-name="${fullSpLabel}" onchange="tkUpdateBulkBar()">`,
         `<b>${r.ten}</b>`,
         r.model||'-',
+        snDisplay,
         bk(r.dm,'bl'),
         r.nhap,
         `<b style="color:var(--gn)">${r.ban}</b>`,
@@ -3512,7 +3521,7 @@ function renderTK(){
         `<span style="color:var(--gn);font-weight:700">${fn(totLnBranch)}₫</span>`,
         fn(valTonGoc)+'₫',
         r.khaDung>5?bk('Sẵn hàng','gn'):r.khaDung>0?bk('Sắp hết','or'):bk('Hết hàng','rd'),
-        `<button class="btn b-xs" onclick="requestDelNhap(${r.id},'${(r.ten||'SP').replace(/'/g,'')}')" title="Xóa phiếu nhập → Tồn kho tự giảm (cần GĐ duyệt)" style="background:#fff7ed;color:#ea580c;border:1px solid #fed7aa;font-size:11px;padding:2px 7px">📨 Xóa</button>`
+        `<button class="btn b-xs" onclick="requestDelNhap(${r.id},'${fullSpLabel}')" title="Xóa phiếu nhập → Tồn kho tự giảm (cần GĐ duyệt)" style="background:#fff7ed;color:#ea580c;border:1px solid #fed7aa;font-size:11px;padding:2px 7px">📨 Xóa</button>`
       ];
     })
   );
