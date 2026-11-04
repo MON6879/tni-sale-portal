@@ -3462,8 +3462,8 @@ function renderTK(){
   
   document.getElementById('tk-warn').innerHTML = cardsHtml + warnHtml;
   const tkHeaders = isVi ?
-    ['Tên SP','Model','DM','Đã Nhập','Đã Bán','Ký Gởi','Tồn Kho','Khả Dụng','Giá Gốc (83%)','LN Cty 17%','Giá Sàn (100%)','Giá Thực Bán','LN Chi Nhánh','Tổng LN Cty','Tổng LN Chi Nhánh','Giá Trị Tồn Gốc','Trạng Thái'] :
-    ['Product','Model','Category','Intake','Sold','Consigned','Total Stock','Available','Base Cost (83%)','HO Profit 17%','Min Price (100%)','Actual Price','Branch Profit','Total HO Profit','Total Branch Profit','Total Stock Cost','Status'];
+    ['Tên SP','Model','DM','Đã Nhập','Đã Bán','Ký Gởi','Tồn Kho','Khả Dụng','Giá Gốc (83%)','LN Cty 17%','Giá Sàn (100%)','Giá Thực Bán','LN Chi Nhánh','Tổng LN Cty','Tổng LN Chi Nhánh','Giá Trị Tồn Gốc','Trạng Thái','Xóa Nhập'] :
+    ['Product','Model','Category','Intake','Sold','Consigned','Total Stock','Available','Base Cost (83%)','HO Profit 17%','Min Price (100%)','Actual Price','Branch Profit','Total HO Profit','Total Branch Profit','Total Stock Cost','Status','Delete'];
   document.getElementById('t-tonkho').innerHTML=tbl(tkHeaders,
     data.map(r=>{
       const gg = Number(r.giagoc || 0);
@@ -3491,7 +3491,8 @@ function renderTK(){
         `<span style="color:#1e40af;font-weight:700">${fn(totLnCty)}₫</span>`,
         `<span style="color:var(--gn);font-weight:700">${fn(totLnBranch)}₫</span>`,
         fn(valTonGoc)+'₫',
-        r.khaDung>5?bk('Sẵn hàng','gn'):r.khaDung>0?bk('Sắp hết','or'):bk('Hết hàng','rd')
+        r.khaDung>5?bk('Sẵn hàng','gn'):r.khaDung>0?bk('Sắp hết','or'):bk('Hết hàng','rd'),
+        `<button class="btn b-xs" onclick="requestDelNhap(${r.id},'${(r.ten||'SP').replace(/'/g,'')}')" title="Xóa phiếu nhập → Tồn kho tự giảm (cần GĐ duyệt)" style="background:#fff7ed;color:#ea580c;border:1px solid #fed7aa;font-size:11px;padding:2px 7px">📨 Xóa</button>`
       ];
     })
   );
