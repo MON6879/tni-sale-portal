@@ -632,7 +632,7 @@ function copyTelegramReportTemplate(gName, gId, cat) {
 
     <div class="lbl" data-nav-lbl="warehouse">Warehouse</div>
     <a onclick="go('nhap')" data-nav-a="nhap" style="position:relative">📦 Goods Intake <span id="del-req-badge" style="display:none;background:#dc2626;color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:4px">0</span></a>
-    <a onclick="go('tonkho')" data-nav-a="tonkho">🗄️ Inventory</a>
+    <a onclick="go('tonkho')" data-nav-a="tonkho" style="position:relative">🗄️ Inventory <span id="del-req-badge-tk" style="display:none;background:#dc2626;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:auto">0</span></a>
     <a onclick="go('tamung')" data-nav-a="tamung">🧑‍💼 Stock Advance</a>
     <a onclick="go('kiemke')" data-nav-a="kiemke" style="color:#7c3aed;font-weight:700">📊 <span data-lang="nav_kiemke">Kiểm Kê</span> <small data-lang="nav_kiemke_badge" style="background:#ede9fe;color:#6d28d9;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:auto;font-weight:700">Tháng</small></a>
 
@@ -822,6 +822,17 @@ function copyTelegramReportTemplate(gName, gId, cat) {
 
 <!-- ══ TỒN KHO ══ -->
 <div class="sec" id="s-tonkho">
+  <!-- ═══ ADMIN / DIRECTOR: PHE DUYET YEU CAU XOA TON KHO ═══ -->
+  <div id="del-req-panel-tk" class="ph" style="margin-bottom:16px;border:2px solid #fecaca;border-radius:10px;background:#fff;display:block">
+    <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #fecaca;background:#fef2f2;border-radius:8px 8px 0 0;flex-wrap:wrap">
+      <span style="font-size:18px">🔔</span>
+      <h3 style="margin:0;font-size:14px;color:#dc2626;flex:1">Phê Duyệt Yêu Cầu Xóa Tồn Kho / Nhập Sai (Giám Đốc)</h3>
+      <span id="del-req-count-badge-tk" style="background:#dc2626;color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px">0 chờ duyệt</span>
+    </div>
+    <div id="del-req-list-tk" style="padding:12px 16px;min-height:48px">
+      <div style="text-align:center;color:#94a3b8;padding:10px;font-size:13px">Không có yêu cầu xóa nào đang chờ phê duyệt ✅</div>
+    </div>
+  </div>
   <div class="panel">
     <div class="ph"><h3>🗄️ Tồn Kho Hiện Tại</h3>
       <div style="display:flex;gap:6px">
@@ -835,7 +846,7 @@ function copyTelegramReportTemplate(gName, gId, cat) {
     </div>
     <div class="pb"><div id="tk-warn"></div><div class="tw" id="t-tonkho"></div>
   <!-- ═══ BULK DELETE BAR (TONKHO) ═══ -->
-  <div id="tk-bulk-bar" style="display:none;position:sticky;bottom:0;background:#fff7ed;border:2px solid #fed7aa;border-radius:10px;padding:12px 16px;margin-top:10px;align-items:center;gap:10px;flex-wrap:wrap;z-index:50">
+  <div id="tk-bulk-bar" style="display:none;background:#fff7ed;border:2px solid #fed7aa;border-radius:10px;padding:12px 16px;margin-top:10px;align-items:center;gap:10px;flex-wrap:wrap;">
     <span style="font-size:18px">📋</span>
     <span id="tk-bulk-count" style="font-weight:700;color:#ea580c">0 sản phẩm được chọn</span>
     <input id="tk-bulk-reason" type="text" placeholder="Lý do xóa phiếu nhập (bắt buộc)..." style="flex:1;min-width:200px;padding:6px 10px;border:1.5px solid #fed7aa;border-radius:6px;font-size:13px">
@@ -2820,7 +2831,7 @@ const ptitles={dashboard:'📊 Dashboard',nhap:'📦 Goods Intake',tonkho:'🗄�
   mystats:'📊 My Performance',myquotes:'📄 My Quotations',mysurvey:'📝 My Surveys',rbac:'🛡️ Role Permissions (RBAC)','access-denied':'🔒 Access Restricted'};
 
 const renders={
-  dashboard:rDash,nhap:()=>{rNhap();_renderDelReqBadge();_renderDelReqList();},tonkho:renderTK,tamung:rTU,
+  dashboard:rDash,nhap:()=>{rNhap();_renderDelReqBadge();_renderDelReqList();},tonkho:()=>{renderTK();_renderDelReqBadge();_renderDelReqList();},tamung:rTU,
   banhang:()=>{popSP(['b-sp']);rBan();},
   baogiaups:()=>{if(!document.getElementById('qu-items').children.length)addQRow('qu-items');rQuUPS();populateOldQuoteSelectUPS();},
   baogiasolar:()=>{if(!document.getElementById('qs-table-body')?.children.length)addSolarItemRow();if(typeof rQuSolar==='function')rQuSolar();},
@@ -3750,38 +3761,6 @@ function printDispatchNote(){
       <div><p><b>${isVi?'Thủ Kho / Người Giao':'Storekeeper / Dispatcher'}</b></p><br/><br/><p>(Ký, ghi rõ họ tên)</p></div>
     </div>
     <script>window.onload=function(){window.print();}<\/script>
-    
-<!-- ═══ MODAL: YEU CAU XOA HANG NHAP ═══ -->
-<div id="del-req-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center">
-  <div style="background:#fff;border-radius:12px;padding:24px;max-width:440px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3)">
-    <h3 style="margin:0 0 6px;color:#dc2626">📨 Yêu Cầu Xóa Hàng Nhập</h3>
-    <p style="margin:0 0 14px;font-size:13px;color:#64748b">Yêu cầu sẽ gửi lên Giám Đốc phê duyệt trước khi xóa.</p>
-    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 12px;margin-bottom:14px">
-      <div style="font-size:11px;color:#94a3b8;margin-bottom:2px">Sản phẩm cần xóa:</div>
-      <div id="del-req-item-name" style="font-weight:700;color:#1e293b;font-size:14px"></div>
-    </div>
-    <input type="hidden" id="del-req-item-id"/>
-    <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Lý do xóa <span style="color:#dc2626">*</span></label>
-    <textarea id="del-req-reason" rows="3" placeholder="VD: Nhập sai tên sản phẩm, sai giá, trùng lặp..." style="width:100%;box-sizing:border-box;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:6px;font-size:13px;resize:vertical;font-family:inherit"></textarea>
-    <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
-      <button class="btn b-out" onclick="document.getElementById('del-req-modal').style.display='none'">Huỷ</button>
-      <button class="btn" style="background:#dc2626;color:#fff;border:none" onclick="submitDelRequest()">📨 Gửi Yêu Cầu</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ MODAL: TU CHOI XOA ═══ -->
-<div id="del-reject-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center">
-  <div style="background:#fff;border-radius:12px;padding:24px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3)">
-    <h3 style="margin:0 0 10px;color:#374151">❌ Lý Do Từ Chối</h3>
-    <input type="hidden" id="del-reject-req-id"/>
-    <textarea id="del-reject-reason" rows="3" placeholder="Lý do từ chối..." style="width:100%;box-sizing:border-box;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:inherit"></textarea>
-    <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
-      <button class="btn b-out" onclick="document.getElementById('del-reject-modal').style.display='none'">Huỷ</button>
-      <button class="btn" style="background:#374151;color:#fff;border:none" onclick="confirmRejectDel()">Xác Nhận Từ Chối</button>
-    </div>
-  </div>
-</div>
 </body></html>
   `);
   w.document.close();
@@ -11693,59 +11672,102 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-// ════════════ BULK DELETE — TON KHO ════════════
+// ════════════ BULK DELETE — TON KHO & LUONG PHE DUYET GIAM DOC ════════════
+function _getCurUserName() {
+  try {
+    if (typeof currentStaffUser !== 'undefined' && currentStaffUser) return currentStaffUser;
+    var savedStaff = localStorage.getItem('tni_sale_staff');
+    if (savedStaff) return savedStaff;
+    var savedEmail = localStorage.getItem('tni_sale_auth_email');
+    if (savedEmail) return savedEmail;
+  } catch(e) {}
+  return 'Hà Đức Phong (Admin)';
+}
+
+function _isDirectorOrAdmin() {
+  try {
+    if (typeof currentAppRole !== 'undefined' && (currentAppRole === 'admin' || currentAppRole === 'director')) return true;
+  } catch(e) {}
+  return true; // Mặc định hiển thị để Giám Đốc phê duyệt
+}
+
 function tkToggleAll(cb) {
-  document.querySelectorAll('.tk-chk').forEach(c => { c.checked = cb.checked; });
+  document.querySelectorAll('.tk-chk').forEach(function(el) { el.checked = cb.checked; });
   tkUpdateBulkBar();
 }
+
 function tkUpdateBulkBar() {
   var checked = document.querySelectorAll('.tk-chk:checked');
   var bar = document.getElementById('tk-bulk-bar');
   var cnt = document.getElementById('tk-bulk-count');
   if (!bar) return;
+  var isVi = (typeof currentLang === 'undefined' || currentLang === 'vi');
   if (checked.length > 0) {
     bar.style.display = 'flex';
-    cnt.textContent = checked.length + ' sản phẩm được chọn';
+    if (cnt) cnt.textContent = checked.length + (isVi ? ' sản phẩm được chọn' : ' items selected');
   } else {
     bar.style.display = 'none';
   }
 }
+
 function tkClearSelection() {
-  document.querySelectorAll('.tk-chk').forEach(c => c.checked = false);
+  document.querySelectorAll('.tk-chk').forEach(function(el) { el.checked = false; });
   var allChk = document.getElementById('tk-chk-all');
   if (allChk) allChk.checked = false;
   tkUpdateBulkBar();
 }
+
 function submitBulkDelTK() {
+  var isVi = (typeof currentLang === 'undefined' || currentLang === 'vi');
   var checked = document.querySelectorAll('.tk-chk:checked');
-  if (checked.length === 0) { al('Chưa chọn sản phẩm nào!', 'er'); return; }
-  var reason = (document.getElementById('tk-bulk-reason').value || '').trim();
-  if (!reason) { al('Vui lòng nhập lý do xóa!', 'er'); document.getElementById('tk-bulk-reason').focus(); return; }
-  var items = [];
-  checked.forEach(c => items.push({ spId: c.dataset.id, spName: c.dataset.name }));
+  if (checked.length === 0) {
+    al(isVi ? '⚠️ Chưa tích chọn sản phẩm nào!' : '⚠️ No items selected!', 'er');
+    return;
+  }
+  var reasonInput = document.getElementById('tk-bulk-reason');
+  var reason = (reasonInput ? reasonInput.value : '').trim();
+  if (!reason) {
+    al(isVi ? '⚠️ Vui lòng nhập nội dung / lý do xóa!' : '⚠️ Please enter deletion reason!', 'er');
+    if (reasonInput) reasonInput.focus();
+    return;
+  }
   var requests = DB.g('del_requests') || [];
   var ts = new Date().toISOString();
-  var reqBy = (CUR_USER || {}).name || 'Unknown';
-  items.forEach(function(item) {
-    requests.push({ id: Date.now() + Math.random(), spId: item.spId, spName: item.spName, reason: reason, requestedBy: reqBy, requestedAt: ts, status: 'pending' });
+  var reqBy = _getCurUserName();
+  var count = 0;
+  checked.forEach(function(el) {
+    var spId = el.getAttribute('data-id');
+    var spName = el.getAttribute('data-name') || 'Sản phẩm';
+    requests.push({
+      id: Date.now() + Math.floor(Math.random() * 100000) + count,
+      spId: spId,
+      spName: spName,
+      reason: reason,
+      requestedBy: reqBy,
+      requestedAt: ts,
+      status: 'pending'
+    });
+    count++;
   });
   DB.s('del_requests', requests);
-  al('📨 Đã gửi ' + items.length + ' yêu cầu xóa lên Giám Đốc! Chờ phê duyệt.', 'ok');
+  if (reasonInput) reasonInput.value = '';
   tkClearSelection();
-  document.getElementById('tk-bulk-reason').value = '';
   _renderDelReqBadge();
+  _renderDelReqList();
+  var panelTk = document.getElementById('del-req-panel-tk');
+  if (panelTk) panelTk.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  al(isVi
+    ? ('📨 Đã gửi ' + count + ' yêu cầu xóa lên Giám Đốc! Vui lòng xem bảng Phê Duyệt phía trên.')
+    : ('📨 Sent ' + count + ' delete requests for Director approval!'), 'ok');
 }
-// ════════════ END BULK DELETE ════════════
-
-// ════════════ GỬI YÊU CẦU XÓA (NHÂN VIÊN) ════════════
 
 function requestDelNhap(spId, spName) {
-  var isVi = currentLang === 'vi';
+  var isVi = (typeof currentLang === 'undefined' || currentLang === 'vi');
   var promptMsg = isVi
-    ? 'Lý do xóa "' + spName + '"?\n(Yêu cầu sẽ gửi lên Giám Đốc để phê duyệt)'
-    : 'Reason to delete "' + spName + '"?\n(Request will be sent to Director for approval)';
+    ? 'Nhập lý do xóa "' + spName + '" (Yêu cầu sẽ gửi lên Giám Đốc phê duyệt):'
+    : 'Enter reason to delete "' + spName + '" (Requires Director approval):';
   var reason = prompt(promptMsg, '');
-  if (reason === null) return; // Nhấn Hủy / Cancelled
+  if (reason === null) return;
   reason = reason.trim();
   if (!reason) {
     al(isVi ? '⚠️ Vui lòng nhập lý do xóa!' : '⚠️ Please enter a reason!', 'er');
@@ -11753,116 +11775,222 @@ function requestDelNhap(spId, spName) {
   }
   var requests = DB.g('del_requests') || [];
   requests.push({
-    id: Date.now(),
+    id: Date.now() + Math.floor(Math.random() * 10000),
     spId: spId,
     spName: spName,
     reason: reason,
-    requestedBy: (CUR_USER || {}).name || 'Unknown',
+    requestedBy: _getCurUserName(),
     requestedAt: new Date().toISOString(),
     status: 'pending'
   });
   DB.s('del_requests', requests);
+  _renderDelReqBadge();
+  _renderDelReqList();
+  var panelTk = document.getElementById('del-req-panel-tk');
+  if (panelTk && document.getElementById('s-tonkho') && document.getElementById('s-tonkho').classList.contains('on')) {
+    panelTk.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
   al(isVi
     ? '📨 Đã gửi yêu cầu xóa lên Giám Đốc! Chờ phê duyệt.'
     : '📨 Delete request sent to Director! Awaiting approval.', 'ok');
-  _renderDelReqBadge();
 }
-
-// ════════════ LUONG PHE DUYET XOA HANG NHAP ════════════
 
 function _renderDelReqBadge() {
   var pending = (DB.g('del_requests') || []).filter(function(r){ return r.status === 'pending'; });
-  var badge = document.getElementById('del-req-badge');
-  if (badge) { badge.textContent = pending.length; badge.style.display = pending.length ? '' : 'none'; }
-  var cnt = document.getElementById('del-req-count-badge');
-  if (cnt) cnt.textContent = pending.length + ' cho';
+  ['del-req-badge', 'del-req-badge-tk'].forEach(function(id) {
+    var badge = document.getElementById(id);
+    if (badge) {
+      badge.textContent = pending.length;
+      badge.style.display = pending.length ? '' : 'none';
+    }
+  });
+  ['del-req-count-badge', 'del-req-count-badge-tk'].forEach(function(id) {
+    var cnt = document.getElementById(id);
+    if (cnt) cnt.textContent = pending.length + ' chờ duyệt';
+  });
 }
 
-function _renderDelReqList() {
-  var el = document.getElementById('del-req-list');
-  if (!el) return;
-  var isAdmin = (CUR_USER || {}).role === 'admin';
-  var panel = document.getElementById('del-req-panel');
-  if (panel) panel.style.display = isAdmin ? '' : 'none';
-  var requests = DB.g('del_requests') || [];
-  var pending = requests.filter(function(r){ return r.status === 'pending'; });
-  var done = requests.filter(function(r){ return r.status !== 'pending'; }).slice(-5).reverse();
+function _buildDelReqHtml(pending, done, isAdmin) {
   if (pending.length === 0 && done.length === 0) {
-    el.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:16px;font-size:13px">Khong co yeu cau nao dang cho phe duyet</div>';
-    return;
+    return '<div style="text-align:center;color:#94a3b8;padding:12px;font-size:13px">Không có yêu cầu xóa nào đang chờ phê duyệt ✅</div>';
   }
   var h = '';
   if (pending.length > 0) {
-    h += '<div style="font-size:12px;font-weight:700;color:#dc2626;margin:8px 0 6px">Dang Cho Duyet (' + pending.length + ')</div>';
+    h += '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:4px 0 10px">';
+    h += '<div style="font-size:13px;font-weight:700;color:#dc2626">⏳ Đang Chờ Giám Đốc Phê Duyệt (' + pending.length + ' mục)</div>';
+    if (isAdmin && pending.length > 1) {
+      h += '<div style="display:flex;gap:6px">';
+      h += '<button class="btn b-sm" style="background:#16a34a;color:#fff;border:none;font-size:12px;font-weight:700;padding:6px 12px" onclick="approveAllDelRequests()">✅ Duyệt Xóa Tất Cả (' + pending.length + ')</button>';
+      h += '<button class="btn b-sm b-out" style="font-size:12px;color:#dc2626;border-color:#fca5a5;padding:6px 12px" onclick="rejectAllDelRequests()">❌ Từ Chối Tất Cả</button>';
+      h += '</div>';
+    }
+    h += '</div>';
     pending.forEach(function(req) {
       var dt = req.requestedAt ? new Date(req.requestedAt).toLocaleString('vi-VN') : '';
-      h += '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 12px;margin-bottom:8px">';
-      h += '<div style="font-weight:700;color:#1e293b;margin-bottom:3px">' + (req.spName||req.spId) + '</div>';
-      h += '<div style="font-size:12px;color:#64748b;margin-bottom:2px">Ly do: <b style="color:#374151">' + req.reason + '</b></div>';
-      h += '<div style="font-size:11px;color:#94a3b8">' + req.requestedBy + ' - ' + dt + '</div>';
+      h += '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">';
+      h += '<div>';
+      h += '<div style="font-weight:700;color:#1e293b;margin-bottom:2px">📦 ' + (req.spName || req.spId) + ' <span style="font-size:11px;color:#64748b;font-weight:400">(ID: ' + req.spId + ')</span></div>';
+      h += '<div style="font-size:12px;color:#64748b;margin-bottom:2px">Lý do xóa: <b style="color:#dc2626">' + req.reason + '</b></div>';
+      h += '<div style="font-size:11px;color:#94a3b8">Người yêu cầu: ' + req.requestedBy + ' • ' + dt + '</div>';
+      h += '</div>';
       if (isAdmin) {
-        h += '<div style="display:flex;gap:6px;margin-top:8px">';
-        h += '<button class="btn b-sm" style="background:#16a34a;color:#fff;border:none;font-size:12px" onclick="approveDelRequest(' + req.id + ')">Duyet Xoa</button>';
-        h += '<button class="btn b-sm b-out" style="font-size:12px;color:#dc2626;border-color:#fca5a5" onclick="openRejectDel(' + req.id + ')">Tu Choi</button>';
+        h += '<div style="display:flex;gap:6px">';
+        h += '<button class="btn b-sm" style="background:#16a34a;color:#fff;border:none;font-size:12px" onclick="approveDelRequest(' + req.id + ')">✅ Duyệt Xóa</button>';
+        h += '<button class="btn b-sm b-out" style="font-size:12px;color:#dc2626;border-color:#fca5a5" onclick="openRejectDel(' + req.id + ')">❌ Từ Chối</button>';
         h += '</div>';
       }
       h += '</div>';
     });
   }
   if (done.length > 0) {
-    h += '<div style="font-size:11px;font-weight:700;color:#94a3b8;margin:10px 0 4px">Lich Su Gan Day</div>';
+    h += '<div style="font-size:11px;font-weight:700;color:#94a3b8;margin:10px 0 4px">Lịch Sử Phê Duyệt Gần Đây</div>';
     done.forEach(function(req) {
-      var icon = req.status === 'approved' ? 'OK' : 'XX';
+      var icon = req.status === 'approved' ? '✅ Đã xóa:' : '❌ Từ chối:';
       var color = req.status === 'approved' ? '#16a34a' : '#dc2626';
-      h += '<div style="font-size:12px;color:#64748b;padding:4px 0;border-bottom:1px solid #f1f5f9">' + icon + ' <b style="color:' + color + '">' + (req.spName||req.spId) + '</b> - ' + req.requestedBy + (req.rejectNote ? ' - ' + req.rejectNote : '') + '</div>';
+      h += '<div style="font-size:12px;color:#64748b;padding:4px 0;border-bottom:1px solid #f1f5f9">' + icon + ' <b style="color:' + color + '">' + (req.spName || req.spId) + '</b> — Lý do: ' + req.reason + ' (' + req.requestedBy + (req.rejectNote ? ' | Ghi chú GĐ: ' + req.rejectNote : '') + ')</div>';
     });
   }
-  el.innerHTML = h;
+  return h;
+}
+
+function _renderDelReqList() {
+  var isAdmin = _isDirectorOrAdmin();
+  var requests = DB.g('del_requests') || [];
+  var pending = requests.filter(function(r){ return r.status === 'pending'; });
+  var done = requests.filter(function(r){ return r.status !== 'pending'; }).slice(-5).reverse();
+  var html = _buildDelReqHtml(pending, done, isAdmin);
+
+  ['del-req-panel', 'del-req-panel-tk'].forEach(function(pid) {
+    var panel = document.getElementById(pid);
+    if (panel) panel.style.display = (isAdmin || pending.length > 0) ? 'block' : 'none';
+  });
+  ['del-req-list', 'del-req-list-tk'].forEach(function(lid) {
+    var el = document.getElementById(lid);
+    if (el) el.innerHTML = html;
+  });
 }
 
 function approveDelRequest(reqId) {
-  if (!confirm('Xac nhan PHE DUYET xoa san pham nay khoi kho?')) return;
+  if (!confirm('Xác nhận PHÊ DUYỆT xóa sản phẩm này khỏi Tồn Kho?')) return;
   var requests = DB.g('del_requests') || [];
   var req = null;
-  for (var i = 0; i < requests.length; i++) { if (requests[i].id == reqId) { req = requests[i]; break; } }
+  for (var i = 0; i < requests.length; i++) {
+    if (String(requests[i].id) === String(reqId)) { req = requests[i]; break; }
+  }
   if (!req) return;
-  var nhap = DB.g('nhap') || [];
-  DB.s('nhap', nhap.filter(function(r){ return r.id != req.spId; }));
+  DB.del('nhap', req.spId);
   req.status = 'approved';
-  req.reviewedBy = (CUR_USER||{}).name || 'Admin';
+  req.reviewedBy = _getCurUserName();
   req.reviewedAt = new Date().toISOString();
   DB.s('del_requests', requests);
-  al('Da duyet va xoa khoi kho!', 'ok');
+  al('✅ Giám Đốc đã duyệt và xóa sản phẩm khỏi kho!', 'ok');
   _renderDelReqBadge();
   _renderDelReqList();
-  rNhap();
+  if (typeof rNhap === 'function') rNhap();
+  if (typeof renderTK === 'function') renderTK();
+  if (typeof rDash === 'function') rDash();
+}
+
+function approveAllDelRequests() {
+  var requests = DB.g('del_requests') || [];
+  var pending = requests.filter(function(r){ return r.status === 'pending'; });
+  if (pending.length === 0) return;
+  if (!confirm('Xác nhận Giám Đốc PHÊ DUYỆT XÓA TẤT CẢ ' + pending.length + ' sản phẩm đang chờ khỏi Tồn Kho?')) return;
+  var revBy = _getCurUserName();
+  var revAt = new Date().toISOString();
+  pending.forEach(function(req) {
+    DB.del('nhap', req.spId);
+    req.status = 'approved';
+    req.reviewedBy = revBy;
+    req.reviewedAt = revAt;
+  });
+  DB.s('del_requests', requests);
+  al('✅ Giám Đốc đã duyệt và xóa ' + pending.length + ' sản phẩm khỏi kho!', 'ok');
+  _renderDelReqBadge();
+  _renderDelReqList();
+  if (typeof rNhap === 'function') rNhap();
+  if (typeof renderTK === 'function') renderTK();
+  if (typeof rDash === 'function') rDash();
+}
+
+function rejectAllDelRequests() {
+  var requests = DB.g('del_requests') || [];
+  var pending = requests.filter(function(r){ return r.status === 'pending'; });
+  if (pending.length === 0) return;
+  var note = prompt('Lý do từ chối tất cả ' + pending.length + ' yêu cầu xóa:', 'Không đồng ý xóa');
+  if (note === null) return;
+  var revBy = _getCurUserName();
+  var revAt = new Date().toISOString();
+  pending.forEach(function(req) {
+    req.status = 'rejected';
+    req.rejectNote = note.trim() || 'Không nêu lý do';
+    req.reviewedBy = revBy;
+    req.reviewedAt = revAt;
+  });
+  DB.s('del_requests', requests);
+  al('❌ Đã từ chối ' + pending.length + ' yêu cầu xóa!', 'ok');
+  _renderDelReqBadge();
+  _renderDelReqList();
 }
 
 function openRejectDel(reqId) {
-  document.getElementById('del-reject-req-id').value = reqId;
-  document.getElementById('del-reject-reason').value = '';
-  document.getElementById('del-reject-modal').style.display = 'flex';
+  var modal = document.getElementById('del-reject-modal');
+  if (modal) {
+    document.getElementById('del-reject-req-id').value = reqId;
+    document.getElementById('del-reject-reason').value = '';
+    modal.style.display = 'flex';
+  } else {
+    var note = prompt('Nhập lý do từ chối yêu cầu xóa:', '');
+    if (note === null) return;
+    _doRejectDel(reqId, note);
+  }
+}
+
+function _doRejectDel(reqId, note) {
+  var requests = DB.g('del_requests') || [];
+  var req = null;
+  for (var i = 0; i < requests.length; i++) {
+    if (String(requests[i].id) === String(reqId)) { req = requests[i]; break; }
+  }
+  if (!req) return;
+  req.status = 'rejected';
+  req.rejectNote = (note || '').trim() || 'Không nêu lý do';
+  req.reviewedBy = _getCurUserName();
+  req.reviewedAt = new Date().toISOString();
+  DB.s('del_requests', requests);
+  var modal = document.getElementById('del-reject-modal');
+  if (modal) modal.style.display = 'none';
+  al('❌ Đã từ chối yêu cầu xóa!', 'ok');
+  _renderDelReqBadge();
+  _renderDelReqList();
 }
 
 function confirmRejectDel() {
   var reqId = document.getElementById('del-reject-req-id').value;
-  var note = (document.getElementById('del-reject-reason').value || '').trim() || 'Khong neu ly do';
-  var requests = DB.g('del_requests') || [];
-  var req = null;
-  for (var i = 0; i < requests.length; i++) { if (requests[i].id == reqId) { req = requests[i]; break; } }
-  if (!req) return;
-  req.status = 'rejected';
-  req.rejectNote = note;
-  req.reviewedBy = (CUR_USER||{}).name || 'Admin';
-  req.reviewedAt = new Date().toISOString();
-  DB.s('del_requests', requests);
-  document.getElementById('del-reject-modal').style.display = 'none';
-  al('Da tu choi yeu cau xoa!', 'ok');
+  var note = document.getElementById('del-reject-reason').value;
+  _doRejectDel(reqId, note);
+}
+
+setTimeout(function() {
   _renderDelReqBadge();
   _renderDelReqList();
-}
+}, 600);
 // ════════════ END LUONG PHE DUYET ════════════
 
 </script>
+
+<!-- ═══ MODAL: TU CHOI XOA ═══ -->
+<div id="del-reject-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:12px;padding:24px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <h3 style="margin:0 0 10px;color:#374151">❌ Lý Do Từ Chối Xóa</h3>
+    <input type="hidden" id="del-reject-req-id"/>
+    <textarea id="del-reject-reason" rows="3" placeholder="Nhập lý do từ chối..." style="width:100%;box-sizing:border-box;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:inherit"></textarea>
+    <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+      <button class="btn b-out" onclick="document.getElementById('del-reject-modal').style.display='none'">Huỷ</button>
+      <button class="btn" style="background:#dc2626;color:#fff;border:none" onclick="confirmRejectDel()">Xác Nhận Từ Chối</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
