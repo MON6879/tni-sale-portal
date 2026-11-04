@@ -2990,9 +2990,39 @@ try {
   }
 } catch(e) {}
 
-// ── Sau khi trang load xong → pull dữ liệu sống từ Sheet ────────
+// ── ĐỒNG BỘ TỰ ĐỘNG 2 CHIỀU REAL-TIME (WEB <-> GOOGLE SHEET) ────────
+let _lastPullTs = 0;
+let _pullInFlight = false;
+
+async function _autoSyncFromSheet(force) {
+  if (_pullInFlight) return;
+  const now = Date.now();
+  if (!force && (now - _lastPullTs < 4000)) return;
+  // Không ghi đè giao diện nếu người dùng đang gõ trực tiếp vào ô input trong bảng kiểm kê
+  const activeEl = document.activeElement;
+  if (!force && activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA') && activeEl.closest('table')) {
+    return;
+  }
+  _pullInFlight = true;
+  _lastPullTs = now;
+  try {
+    await DB.pullAll(false);
+  } finally {
+    _pullInFlight = false;
+  }
+}
+
 window.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => DB.pullAll(), 1200); // delay 1.2s để UI render trước
+  setTimeout(() => _autoSyncFromSheet(true), 600);
+  // 1. Tự động đồng bộ ngay lập tức khi người dùng vừa sửa trên tab Google Sheet rồi bấm quay lại tab Web
+  window.addEventListener('focus', () => _autoSyncFromSheet(false));
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') _autoSyncFromSheet(false);
+  });
+  // 2. Tự động đồng bộ ngầm mỗi 20 giây khi đang mở trang
+  setInterval(() => {
+    if (document.visibilityState === 'visible') _autoSyncFromSheet(false);
+  }, 20000);
 });
 
 function td(){return new Date().toISOString().slice(0,10);}
