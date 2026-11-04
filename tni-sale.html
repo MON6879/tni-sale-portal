@@ -631,9 +631,10 @@ function copyTelegramReportTemplate(gName, gId, cat) {
     <a class="active" onclick="go('dashboard')" data-nav-a="dashboard">📊 Dashboard</a>
 
     <div class="lbl" data-nav-lbl="warehouse">Warehouse</div>
-    <a onclick="go('nhap')" data-nav-a="nhap">📦 Goods Intake</a>
+    <a onclick="go('nhap')" data-nav-a="nhap" style="position:relative">📦 Goods Intake <span id="del-req-badge" style="display:none;background:#dc2626;color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:4px">0</span></a>
     <a onclick="go('tonkho')" data-nav-a="tonkho">🗄️ Inventory</a>
     <a onclick="go('tamung')" data-nav-a="tamung">🧑‍💼 Stock Advance</a>
+    <a onclick="go('kiemke')" data-nav-a="kiemke" style="color:#7c3aed;font-weight:700">📊 <span data-lang="nav_kiemke">Kiểm Kê</span> <small data-lang="nav_kiemke_badge" style="background:#ede9fe;color:#6d28d9;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:auto;font-weight:700">Tháng</small></a>
 
     <div class="lbl" data-nav-lbl="sales">Sales &amp; Quotation</div>
     <a onclick="go('banhang')" data-nav-a="banhang">🛒 Sales &amp; Dispatch</a>
@@ -704,6 +705,19 @@ function copyTelegramReportTemplate(gName, gId, cat) {
 
 <!-- ══ NHẬP HÀNG ══ -->
 <div class="sec" id="s-nhap">
+
+    <!-- ═══ ADMIN: PHE DUYET XOA HANG NHAP ═══ -->
+    <div id="del-req-panel" class="ph" style="margin-top:18px;border:2px solid #fecaca;border-radius:10px;background:#fff;display:none">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #fecaca;background:#fef2f2;border-radius:8px 8px 0 0">
+        <span style="font-size:18px">🔔</span>
+        <h3 style="margin:0;font-size:14px;color:#dc2626;flex:1">Phê Duyệt Yêu Cầu Xóa Hàng Nhập</h3>
+        <span id="del-req-count-badge" style="background:#dc2626;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px">0 chờ</span>
+      </div>
+      <div id="del-req-list" style="padding:10px 16px;min-height:60px">
+        <div style="text-align:center;color:#94a3b8;padding:16px;font-size:13px">Không có yêu cầu nào đang chờ phê duyệt ✅</div>
+      </div>
+    </div>
+
   <!-- Chuyển đổi chế độ nhập: Đơn lẻ vs Hàng loạt -->
   <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;justify-content:space-between;flex-wrap:wrap">
     <div style="display:flex;gap:6px">
@@ -727,31 +741,23 @@ function copyTelegramReportTemplate(gName, gId, cat) {
           <div class="f"><label data-lang="p_model">Model / Mã SP</label><input id="n-model" placeholder="APC-BX1200"/></div>
           <div class="f"><label data-lang="p_serial">Serial Number</label><input id="n-serial" placeholder="SN2024001"/></div>
           <div class="f"><label data-lang="p_category">Danh Mục</label><select id="n-dm"><option>UPS</option><option>Solar Panel</option><option>Inverter</option><option>Ắc Quy</option><option>Phụ Kiện Solar</option><option>Cáp &amp; Đầu Nối</option><option>Khác</option></select></div>
-          <div class="f"><label data-lang="p_qty">Số Lượng *</label><input id="n-sl" type="number" min="1" placeholder="0" oninput="calcNhapProfit()"/></div>
-          <div class="f"><label data-lang="cost_price_83">Đơn Giá Gốc Vốn (83%) (₫) *</label><input id="n-gg" type="number" placeholder="0" oninput="calcNhapProfit()"/></div>
-          <div class="f"><label data-lang="p_retail_price">🛒 1. Giá Bán Lẻ (Gõ tay) (₫) *</label><input id="n-gb" type="number" placeholder="0" oninput="calcNhapProfit(true)"/></div>
-          <div class="f"><label data-lang="p_dealer_price">🏪 2. Giá Bỏ Đại Lý (₫)</label><input id="n-g-daily" type="number" placeholder="Auto / Gõ tay" oninput="calcNhapProfit(true)"/></div>
-          <div class="f"><label data-lang="p_pos_price">📋 3. Giá Điểm Bán / Ký Gởi (₫)</label><input id="n-g-diemban" type="number" placeholder="Auto / Gõ tay" oninput="calcNhapProfit(true)"/></div>
-          <div class="f"><label data-lang="p_staff_price">🧑‍💼 4. Giá Cho NV (Sàn) (₫)</label><input id="n-g-nv" type="number" placeholder="Auto / Gõ tay" oninput="calcNhapProfit(true)"/></div>
+          <div class="f"><label data-lang="p_qty">Số Lượng *</label><input id="n-sl" type="number" min="1" placeholder="0"/></div>
+          <div class="f"><label data-lang="cost_price_83">Đơn Giá Gốc Vốn (83%) (₫) *</label><input id="n-gg" type="number" placeholder="0"/></div>
+          <div class="f"><label data-lang="p_retail_price">🛒 1. Giá Bán Lẻ (Gõ tay) (₫) *</label><input id="n-gb" type="number" placeholder="0"/></div>
+          <div class="f"><label data-lang="p_dealer_price">🏪 2. Giá Bỏ Đại Lý (₫)</label><input id="n-g-daily" type="number" placeholder="0"/></div>
+          <div class="f"><label data-lang="p_pos_price">📋 3. Giá Điểm Bán / Ký Gởi (₫)</label><input id="n-g-diemban" type="number" placeholder="0"/></div>
+          <div class="f"><label data-lang="p_staff_price">🧑‍💼 4. Giá Cho NV (Sàn) (₫)</label><input id="n-g-nv" type="number" placeholder="0"/></div>
           <div class="f"><label data-lang="p_supplier">Nhà Cung Cấp</label><input id="n-ncc" placeholder="Tên NCC"/></div>
           <div class="f"><label data-lang="p_date">Ngày Nhập</label><input id="n-ngay" type="date"/></div>
           <div class="f"><label data-lang="p_warranty">Bảo Hành (tháng)</label><input id="n-bh" type="number" placeholder="12"/></div>
           <div class="f" style="grid-column:1/-1"><label data-lang="p_note">Ghi Chú</label><textarea id="n-gc" placeholder="..."></textarea></div>
         </div>
 
-        <!-- 💡 LIVE PROFIT & 4-TIER PRICING PREVIEW -->
-        <div id="nhap-calc-box" style="margin-top:14px;padding:12px 14px;background:#f8fafc;border-radius:8px;border:1px solid #cbd5e1;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
-          <div><span style="font-size:11px;color:#0284c7" data-lang="lbl_cost_83">🏷️ Giá Gốc (83%)</span><div id="nc-goc" style="font-size:15px;font-weight:700;color:#0284c7">0 ₫</div></div>
-          <div><span style="font-size:11px;color:#1e40af" data-lang="lbl_comp_17">🏢 LN Nộp Cty (% Cty)</span><div id="nc-cty17" style="font-size:15px;font-weight:700;color:#1e40af">0 ₫ / SP</div></div>
-          <div><span style="font-size:11px;color:#ea580c" data-lang="lbl_min_price">🛡️ Giá Sàn (100%)</span><div id="nc-minsell" style="font-size:15px;font-weight:700;color:#ea580c">0 ₫ / SP</div></div>
-          <div><span style="font-size:11px;color:#16a34a" data-lang="lbl_retail_profit">🛒 LN Bán Lẻ</span><div id="nc-ln-retail" style="font-size:15px;font-weight:700;color:#16a34a">0 ₫ / SP</div></div>
-          <div><span style="font-size:11px;color:#0284c7" data-lang="lbl_dealer_profit">🏪 LN Đại Lý</span><div id="nc-ln-dealer" style="font-size:15px;font-weight:700;color:#0284c7">0 ₫ / SP</div></div>
-          <div><span style="font-size:11px;color:#7c3aed" data-lang="lbl_pos_profit">📋 LN Điểm Bán</span><div id="nc-ln-pos" style="font-size:15px;font-weight:700;color:#7c3aed">0 ₫ / SP</div></div>
-        </div>
+
 
         <div class="fa">
           <button class="btn b-bl" onclick="addNhap()" data-lang="btn_save_intake">📦 Save Intake</button>
-          <button class="btn b-out" onclick="clrForm('n-');calcNhapProfit()" data-lang="btn_clear">✕ Clear</button>
+          <button class="btn b-out" onclick="clrForm('n-')" data-lang="btn_clear">✕ Clear</button>
         </div>
       </div>
     </div>
@@ -1870,6 +1876,76 @@ function copyTelegramReportTemplate(gName, gId, cat) {
 </div>
 
 
+<!-- ══ KIỂM KÊ KHO & KÝ GỞI HÀNG THÁNG ══ -->
+<div class="sec" id="s-kiemke">
+
+  <!-- === HEADER CHỌN THÁNG ===-->
+  <div class="panel">
+    <div class="ph">
+      <h3>📊 Kiểm Kê Kho & Hàng Ký Gởi Hàng Tháng</h3>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select id="kk-thang" onchange="renderKiemKe()" style="padding:6px 10px;border:1px solid var(--bd);border-radius:6px;font-size:13px;font-weight:700;color:#4338ca">
+          <option value="">-- Chọn Tháng --</option>
+        </select>
+        <button class="btn b-sm" onclick="kkGenThang()" style="background:#ede9fe;color:#6d28d9;font-weight:700;border:1.5px solid #c4b5fd">📅 Tạo Tháng Này</button>
+        <button class="btn b-sm" onclick="kkExportCSV()" style="background:#f0fdf4;color:#15803d;font-weight:700;border:1.5px solid #86efac">⬇️ Xuất CSV</button>
+        <span id="kk-status-badge" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;background:#fef3c7;color:#92400e"></span>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="pb">
+      <div class="cards" id="kk-kpi-cards" style="margin-bottom:12px"></div>
+
+      <!-- TABS: Kho / Ký Gởi -->
+      <div style="display:flex;gap:0;border-bottom:2px solid #e2e8f0;margin-bottom:14px">
+        <div id="kk-tab-kho" onclick="kkSwitchTab('kho')" style="padding:8px 20px;font-size:13px;font-weight:700;cursor:pointer;border-bottom:3px solid #6d28d9;color:#6d28d9;margin-bottom:-2px">🏭 Tồn Kho Chi Nhánh</div>
+        <div id="kk-tab-kg" onclick="kkSwitchTab('kg')" style="padding:8px 20px;font-size:13px;font-weight:700;cursor:pointer;color:#64748b;margin-bottom:-2px">📋 Hàng Ký Gởi / Điểm Bán</div>
+        <div id="kk-tab-tamung" onclick="kkSwitchTab('tamung')" style="padding:8px 20px;font-size:13px;font-weight:700;cursor:pointer;color:#64748b;margin-bottom:-2px">🧑‍💼 Tạm Ứng NV</div>
+        <div id="kk-tab-diff" onclick="kkSwitchTab('diff')" style="padding:8px 20px;font-size:13px;font-weight:700;cursor:pointer;color:#64748b;margin-bottom:-2px">⚠️ Chênh Lệch</div>
+      </div>
+
+      <!-- Panel KHO -->
+      <div id="kk-panel-kho">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+          <b style="color:#1e293b;font-size:13px">📦 Danh Sách Tồn Kho Thực Tế — Cần Đối Chiếu Vật Lý</b>
+          <button class="btn b-sm b-bl" onclick="kkMarkAllKho()" style="font-size:11.5px;font-weight:700">✅ Tick Đã Kiểm Hết</button>
+        </div>
+        <div class="tw" id="t-kk-kho"></div>
+      </div>
+
+      <!-- Panel KÝ GỞI -->
+      <div id="kk-panel-kg" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+          <b style="color:#1e293b;font-size:13px">📋 Hàng Ký Gởi / Điểm Bán — Đối Chiếu Số Lượng Thực Tế</b>
+          <button class="btn b-sm b-or" onclick="kkMarkAllKG()" style="font-size:11.5px;font-weight:700">✅ Tick Đã Kiểm Hết</button>
+        </div>
+        <div class="tw" id="t-kk-kg"></div>
+      </div>
+
+      <!-- Panel TẠM ỨNG -->
+      <div id="kk-panel-tamung" style="display:none">
+        <b style="color:#1e293b;font-size:13px;display:block;margin-bottom:8px">🧑‍💼 Hàng Tạm Ứng NV — Đang Mang Theo</b>
+        <div class="tw" id="t-kk-tamung"></div>
+      </div>
+
+      <!-- Panel CHÊNH LỆCH -->
+      <div id="kk-panel-diff" style="display:none">
+        <b style="color:#dc2626;font-size:13px;display:block;margin-bottom:8px">⚠️ Các Mục Có Chênh Lệch (Thực Tế ≠ Hệ Thống)</b>
+        <div class="tw" id="t-kk-diff"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- === PHIẾU KIỂM KÊ ĐÃ LƯU ===-->
+  <div class="panel">
+    <div class="ph"><h3>🗂️ Lịch Sử Phiếu Kiểm Kê Đã Lưu</h3>
+      <button class="btn b-sm" style="background:#fef3c7;color:#92400e;font-weight:700;border:1.5px solid #fde68a" onclick="kkSavePhieu()">💾 Lưu Phiếu Kiểm Kê Tháng Này</button>
+    </div>
+    <div class="pb tw" id="t-kk-history"></div>
+  </div>
+</div>
+
 <!-- ══ NHÓM TELEGRAM (SALES & OPS GROUPS) ══ -->
 <div class="sec" id="s-telegram">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
@@ -2973,6 +3049,7 @@ function switchNhapMode(mode) {
 function downloadNhapTemplate() {
   const isVi = currentLang === 'vi';
   // Chuẩn Song Ngữ Anh - Việt trên từng cột tiêu đề (Bilingual Column Headers)
+  // ✅ Cột khớp với bảng hiển thị web (14 cột): Tên SP | Model | Serial | DM | SL | Giá Gốc(83%) | Giá Bán Lẻ | Giá Đại Lý | Giá Điểm Bán | Giá Cho NV | NCC | BH | Ngày | Ghi Chú
   const headers = [
     "Tên Sản Phẩm / Product Name",
     "Model / Mã SP (Item Code)",
@@ -2980,16 +3057,20 @@ function downloadNhapTemplate() {
     "Danh Mục / Category",
     "Số Lượng / Quantity",
     "Giá Gốc Đầu Vào (83%) / Base Cost",
-    "Giá Thực Bán (để trống = lấy giá sàn 100%) / Selling Price",
+    "Giá Bán Lẻ / Retail Price",
+    "Giá Đại Lý / Dealer Price",
+    "Giá Điểm Bán / Ký Gởi / POS Price",
+    "Giá Cho NV / Sàn / Staff Price",
     "Nhà Cung Cấp / Supplier",
     "Bảo Hành (tháng) / Warranty (Months)",
+    "Ngày Nhập (để trống = hôm nay) / Date Received",
     "Ghi Chú / Notes"
   ];
   const sampleRows = [
-    ["UPS APC BX1200", "APC-BX1200", "SN001, SN002", "UPS", "2", "830000", "1250000", "APC Vietnam", "24", "Brand new, original seal / Hàng mới nguyên seal"],
-    ["Tấm Pin Solar Longi 450W / Solar Panel", "LR4-72HPH-450M", "LG450-01, LG450-02", "Solar Panel", "5", "1660000", "2200000", "Longi Solar", "120", "25-year performance warranty / Bảo hành hiệu suất 25 năm"],
-    ["Inverter Hybrid 5kW Deye / Biến Tần Hybrid", "SUN-5K-SG03LP1", "DY5K-8899", "Inverter", "1", "16600000", "22000000", "Deye Solar", "60", "Includes WiFi module / Kèm WiFi module"],
-    ["Ắc Quy Vision 12V 100Ah / Storage Battery", "6FM100-X", "VS100-01, VS100-02", "Ắc Quy / Battery", "4", "2490000", "3200000", "Vision Battery", "12", "Specialized for UPS & Solar / Chuyên dụng cho UPS & Solar"]
+    ["UPS APC BX1200", "APC-BX1200", "SN001, SN002", "UPS", "2", "830000", "", "", "", "", "APC Vietnam", "24", "", "Brand new, original seal / Hàng mới nguyên seal"],
+    ["Solar Panel Longi 450W", "LR4-72HPH-450M", "LG450-01, LG450-02", "Solar Panel", "5", "1660000", "2200000", "2000000", "1900000", "1750000", "Longi Solar", "120", "", "25-year performance warranty / Bảo hành 25 năm"],
+    ["Inverter Hybrid 5kW Deye", "SUN-5K-SG03LP1", "DY5K-8899", "Inverter", "1", "16600000", "22000000", "20000000", "19000000", "17500000", "Deye Solar", "60", "", "Includes WiFi module / Kèm WiFi module"],
+    ["Ắc Quy Vision 12V 100Ah", "6FM100-X", "VS100-01, VS100-02", "Ắc Quy / Battery", "4", "2490000", "3200000", "3000000", "2900000", "2600000", "Vision Battery", "12", "", "Specialized for UPS & Solar"]
   ];
   
   let csvContent = "\uFEFF" + headers.join(",") + "\n" + sampleRows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -3063,16 +3144,31 @@ function parseBulkInput() {
     const dm = parts[3] || 'Thiết bị';
     const sl = parseInt((parts[4] || '1').replace(/\D/g, ''), 10) || 1;
     const gg = parseFloat((parts[5] || '0').replace(/[^0-9.]/g, '')) || 0;
-    
-    // Tính toán tài chính chuẩn 5 cột
+
+    // Tính tài chính chuẩn
     const lnCty = gg > 0 ? Math.round(gg / 83 * 17) : 0;
     const minSell = gg + lnCty;
-    const rawGb = parseFloat((parts[6] || '0').replace(/[^0-9.]/g, '')) || 0;
-    const gb = rawGb > 0 ? rawGb : minSell;
-    const lnBranch = Math.max(0, gb - minSell);
-    const ncc = parts[7] || '-';
-    const bh = parseInt((parts[8] || '12').replace(/\D/g, ''), 10) || 12;
-    const gc = parts.slice(9).join(' | ') || 'Import hàng loạt';
+
+    // Hỗ trợ cả template cũ (10 cột) và mới (14 cột)
+    const is14col = parts.length >= 11;
+    let gb, lnBranch, ncc, bh, gc;
+    if (is14col) {
+      // Format mới 14 cột: col6=BánLẻ, col7=ĐạiLý, col8=ĐiểmBán, col9=ChoNV, col10=NCC, col11=BH, col12=Ngày, col13+=GhiChú
+      const rawBl  = parseFloat((parts[6]  || '0').replace(/[^0-9.]/g, '')) || 0;
+      gb = rawBl > 0 ? rawBl : minSell;
+      lnBranch = Math.max(0, gb - minSell);
+      ncc = parts[10] || '-';
+      bh  = parseInt((parts[11] || '12').replace(/\D/g, ''), 10) || 12;
+      gc  = parts.slice(13).join(' | ') || 'Import hàng loạt';
+    } else {
+      // Format cũ 10 cột (backward compatible): col6=GiáThựcBán, col7=NCC, col8=BH, col9+=GhiChú
+      const rawGb = parseFloat((parts[6] || '0').replace(/[^0-9.]/g, '')) || 0;
+      gb = rawGb > 0 ? rawGb : minSell;
+      lnBranch = Math.max(0, gb - minSell);
+      ncc = parts[7] || '-';
+      bh  = parseInt((parts[8] || '12').replace(/\D/g, ''), 10) || 12;
+      gc  = parts.slice(9).join(' | ') || 'Import hàng loạt';
+    }
 
     parsedBulkItems.push({
       ten, model, serial, dm, sl,
@@ -3264,47 +3360,7 @@ function downloadCurrentNhapData() {
   a.click();
 }
 
-function calcNhapProfit(manualOverride){
-  const isVi = currentLang === 'vi';
-  let gg = Number(v('n-gg')) || 0;
-  let gb = Number(v('n-gb')) || 0;
-  if (!gg && gb > 0) {
-    gg = Math.round(gb * 0.83);
-  }
-  const rate = Number(v('cfg-cty-rate') || 17);
-  const lnCty = gg > 0 && rate < 100 ? Math.round(gg / (100 - rate) * rate) : 0;
-  const minSell = gg + lnCty;
-
-  let gDaily = Number(v('n-g-daily')) || 0;
-  let gDiemBan = Number(v('n-g-diemban')) || 0;
-  let gNV = Number(v('n-g-nv')) || 0;
-
-  // Smart Auto-Suggest if user hasn't overridden
-  if (!manualOverride && gg > 0) {
-    if (!v('n-g-nv')) { gNV = minSell; const el = document.getElementById('n-g-nv'); if (el) el.value = gNV; }
-    if (!v('n-gb')) { gb = Math.round(minSell * 1.25); const el = document.getElementById('n-gb'); if (el) el.value = gb; }
-    if (!v('n-g-daily')) { gDaily = Math.round(minSell * 1.08); const el = document.getElementById('n-g-daily'); if (el) el.value = gDaily; }
-    if (!v('n-g-diemban')) { gDiemBan = Math.round((gb || minSell) * 0.90); const el = document.getElementById('n-g-diemban'); if (el) el.value = gDiemBan; }
-  }
-
-  const lnRetail = Math.max(0, gb - minSell);
-  const lnDaily = Math.max(0, gDaily - minSell);
-  const lnDiemBan = Math.max(0, gDiemBan - minSell);
-
-  const gocEl = document.getElementById('nc-goc');
-  const cty17El = document.getElementById('nc-cty17');
-  const minSellEl = document.getElementById('nc-minsell');
-  const lnRetailEl = document.getElementById('nc-ln-retail');
-  const lnDailyEl = document.getElementById('nc-ln-dealer');
-  const lnPosEl = document.getElementById('nc-ln-pos');
-
-  if (gocEl) gocEl.innerHTML = `${fn(gg)} ₫ <small style="font-weight:normal;color:#0369a1">(83% ${isVi?'vốn':'cost'})</small>`;
-  if (cty17El) cty17El.innerHTML = `${fn(lnCty)} ₫ <small style="font-weight:normal;color:#1e40af">(${rate}% Cty)</small>`;
-  if (minSellEl) minSellEl.innerHTML = `${fn(minSell)} ₫ <small style="font-weight:normal;color:#ea580c">(${isVi?'Sàn 100%':'Floor 100%'})</small>`;
-  if (lnRetailEl) lnRetailEl.innerHTML = `<span style="color:${lnRetail > 0 ? 'var(--gn)' : '#64748b'};font-weight:700">+${fn(lnRetail)} ₫</span>`;
-  if (lnDailyEl) lnDailyEl.innerHTML = `<span style="color:${lnDaily > 0 ? '#0284c7' : '#64748b'};font-weight:700">+${fn(lnDaily)} ₫</span>`;
-  if (lnPosEl) lnPosEl.innerHTML = `<span style="color:${lnDiemBan > 0 ? '#7c3aed' : '#64748b'};font-weight:700">+${fn(lnDiemBan)} ₫</span>`;
-}
+function calcNhapProfit(manualOverride){ /* disabled - prices manual */ }
 
 function addNhap(){
   const isVi = currentLang === 'vi';
@@ -3330,7 +3386,7 @@ function addNhap(){
     sl:+sl,gg:cost,rate,lnCty,minSell,gb,gDaily,gDiemBan,gNV,lnBranch,
     ncc:v('n-ncc'),ngay:v('n-ngay')||td(),bh:+v('n-bh')||12,gc:v('n-gc')
   });
-  al(isVi ? '✅ Đã lưu phiếu nhập thành công!' : '✅ Goods intake saved successfully!'); clrForm('n-'); calcNhapProfit(); rNhap();
+  al(isVi ? '✅ Đã lưu phiếu nhập thành công!' : '✅ Goods intake saved successfully!'); clrForm('n-'); rNhap();
 }
 
 function rNhap(){
@@ -3365,7 +3421,7 @@ function rNhap(){
         r.ncc||'-',
         (r.bh||'-')+'th',
         fd(r.ngay),
-        `<button class="btn b-xs b-rd" onclick="del('nhap',${r.id},rNhap)">🗑</button>`
+        `<button class="btn b-xs b-rd" onclick="requestDelNhap(${r.id},'${(r.ten||r.sp||'SP').replace(/'/g,'')}')" title="Gửi yêu cầu xóa lên Giám Đốc" style="background:#fff7ed;color:#ea580c;border:1px solid #fed7aa;font-size:11px;padding:2px 7px">📨 Xóa</button>`
       ];
     }));
 }
@@ -3684,7 +3740,39 @@ function printDispatchNote(){
       <div><p><b>${isVi?'Thủ Kho / Người Giao':'Storekeeper / Dispatcher'}</b></p><br/><br/><p>(Ký, ghi rõ họ tên)</p></div>
     </div>
     <script>window.onload=function(){window.print();}<\/script>
-    </body></html>
+    
+<!-- ═══ MODAL: YEU CAU XOA HANG NHAP ═══ -->
+<div id="del-req-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:12px;padding:24px;max-width:440px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <h3 style="margin:0 0 6px;color:#dc2626">📨 Yêu Cầu Xóa Hàng Nhập</h3>
+    <p style="margin:0 0 14px;font-size:13px;color:#64748b">Yêu cầu sẽ gửi lên Giám Đốc phê duyệt trước khi xóa.</p>
+    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 12px;margin-bottom:14px">
+      <div style="font-size:11px;color:#94a3b8;margin-bottom:2px">Sản phẩm cần xóa:</div>
+      <div id="del-req-item-name" style="font-weight:700;color:#1e293b;font-size:14px"></div>
+    </div>
+    <input type="hidden" id="del-req-item-id"/>
+    <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Lý do xóa <span style="color:#dc2626">*</span></label>
+    <textarea id="del-req-reason" rows="3" placeholder="VD: Nhập sai tên sản phẩm, sai giá, trùng lặp..." style="width:100%;box-sizing:border-box;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:6px;font-size:13px;resize:vertical;font-family:inherit"></textarea>
+    <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
+      <button class="btn b-out" onclick="document.getElementById('del-req-modal').style.display='none'">Huỷ</button>
+      <button class="btn" style="background:#dc2626;color:#fff;border:none" onclick="submitDelRequest()">📨 Gửi Yêu Cầu</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: TU CHOI XOA ═══ -->
+<div id="del-reject-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:12px;padding:24px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <h3 style="margin:0 0 10px;color:#374151">❌ Lý Do Từ Chối</h3>
+    <input type="hidden" id="del-reject-req-id"/>
+    <textarea id="del-reject-reason" rows="3" placeholder="Lý do từ chối..." style="width:100%;box-sizing:border-box;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:inherit"></textarea>
+    <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+      <button class="btn b-out" onclick="document.getElementById('del-reject-modal').style.display='none'">Huỷ</button>
+      <button class="btn" style="background:#374151;color:#fff;border:none" onclick="confirmRejectDel()">Xác Nhận Từ Chối</button>
+    </div>
+  </div>
+</div>
+</body></html>
   `);
   w.document.close();
 }
@@ -3850,7 +3938,7 @@ function setCompanyRate(val) {
   localStorage.setItem('tni_company_tax_rate', num);
   const el = document.getElementById('cfg-cty-rate');
   if (el) el.value = num;
-  calcNhapProfit();
+  // calcNhapProfit removed
   if (typeof renderLN === 'function') renderLN();
   if (typeof rKG === 'function') rKG();
 }
@@ -8642,7 +8730,9 @@ const DICT = {
     kpi_payable_ho_17: '🏢 Payable to HO (% Quota)',
     kpi_branch_profit: '🏪 Branch Net Profit',
     dispatch_history_title: '📋 Sales & Dispatch History',
-    nav_tg_groups: 'Telegram Groups'
+    nav_tg_groups: 'Telegram Groups',
+    nav_kiemke: 'Inventory Check',
+    nav_kiemke_badge: 'Month'
   },
   vi: {
     nhap_title: '➕ Nhập Hàng & Phân Bổ Lợi Nhuận',
@@ -8743,7 +8833,9 @@ const DICT = {
     kpi_payable_ho_17: '🏢 Phải Nộp Cty (% Cty)',
     kpi_branch_profit: '🏪 LN Chi Nhánh Thuần',
     dispatch_history_title: '📋 Lịch Sử Bán Hàng',
-    nav_tg_groups: 'Nhóm Telegram'
+    nav_tg_groups: 'Nhóm Telegram',
+    nav_kiemke: 'Kiểm Kê',
+    nav_kiemke_badge: 'Tháng'
   },
   my: {
     nhap_title: '➕ ကုန်ပစ္စည်းအဝင်နှင့် ကုန်ကျစရိတ်ခွဲဝေမှု',
@@ -8844,7 +8936,9 @@ const DICT = {
     kpi_payable_ho_17: '🏢 ရုံးချုပ်သို့ ပေးသွင်းရန် (% ခွဲတမ်း)',
     kpi_branch_profit: '🏪 ဌာနခွဲ အသားတင်အမြတ်',
     dispatch_history_title: '📋 အရောင်းနှင့် ပစ္စည်းထုတ်ပေးမှု မှတ်တမ်း',
-    nav_tg_groups: 'တယ်လီဂရမ် အဖွဲ့များ'
+    nav_tg_groups: 'တယ်လီဂရမ် အဖွဲ့များ',
+    nav_kiemke: 'စာရင်းစစ်ဆေးခြင်း',
+    nav_kiemke_badge: 'လ'
   }
 };
 
@@ -9937,21 +10031,16 @@ const DEFAULT_STAFF_USERS = [
   { id: 'emp_004', name: 'Hein Nanda', email: 'heinnanda683@gmail.com', role: 'sales', title: 'M&E Enginner', phone: '09780677154\'09698456060' },
   { id: 'emp_005', name: 'Naw Oh Nyaw', email: 'htoolaynyaw@gmail.com', role: 'sales', title: 'PM Enginner', phone: '0925473265009677462225' },
   { id: 'emp_006', name: 'Bhone Htet Aung', email: 'bhonehtetaumg1521@gmail.com', role: 'sales', title: 'Team 01', phone: '09667877277' },
-  { id: 'emp_007', name: 'Aung Lwin Phyo', email: 'aung.lwin.phyo@company.com', role: 'sales', title: 'Team 01', phone: '09453069704\'09667416762' },
   { id: 'emp_008', name: 'Paing Aung Soe', email: 'paingaungsoeayoo@gmail.com', role: 'sales', title: 'Team 01', phone: '09666625857\'09254370254' },
   { id: 'emp_009', name: 'Thu Rain Naing', email: 'thureinnaingkla@gmail.com', role: 'sales', title: 'Team 01', phone: '09698806742' },
-  { id: 'emp_010', name: 'Phyo Ko Ko', email: 'phyokoko9320@email.com', role: 'sales', title: 'Team 01', phone: '09651315321, 09764847912' },
   { id: 'emp_011', name: 'Sai Kar Kar Myo', email: 'saikarkarmyo6@gmail.com', role: 'sales', title: 'Team 01', phone: '09663202252' },
   { id: 'emp_012', name: 'Phyo Htet Aung', email: 'phyohtetaung227567@gmail.com', role: 'sales', title: 'Team 01', phone: '09676116447' },
-  { id: 'emp_013', name: 'Aung Min Paing', email: 'aung.min.paing@company.com', role: 'sales', title: 'Team 01', phone: '09454995756, 09691527543' },
   { id: 'emp_014', name: 'Win Htet Aung', email: 'winhtetaung851@gmail.com', role: 'sales', title: 'Team 02', phone: '09252088815\'09699011167' },
   { id: 'emp_015', name: 'Maung Maung', email: 'mgmg25608mm@gmail.com', role: 'sales', title: 'Team 02', phone: '09672809127' },
   { id: 'emp_016', name: 'Pyi Kyaw Aung', email: 'Pyikyaw101973@gmail.com', role: 'sales', title: 'Team 02', phone: '09692016722' },
   { id: 'emp_017', name: 'Wanna Oo', email: 'wanaoo348@gmail.com', role: 'sales', title: 'Team 02', phone: '09687906307' },
-  { id: 'emp_018', name: 'Ye Lin', email: 'ye.lin@company.com', role: 'sales', title: 'Team 02', phone: '09677553749' },
   { id: 'emp_019', name: 'Nay Myo Thu', email: 'naymyothu272016@gmail.com', role: 'sales', title: 'Team 02', phone: '09693031909\'09251001909' },
   { id: 'emp_020', name: 'Min Paing Oo', email: 'mrminpaing@hotmail.com', role: 'sales', title: 'Team 02', phone: '09687922272\'09453354654' },
-  { id: 'emp_021', name: 'Aye Min Soe', email: 'aye.min.soe@company.com', role: 'sales', title: 'Team 02', phone: '0925600759909699580810' },
   { id: 'emp_022', name: 'Si Thu Htun', email: 'ct500558@gmail.com', role: 'sales', title: 'Team 03', phone: '09650149222' },
   { id: 'emp_023', name: 'Tin Naing Lin', email: 'ko748724@gmail.com', role: 'sales', title: 'Team 03', phone: '09250470549 \'09698177034' },
   { id: 'emp_024', name: 'Pyae Phyo Zaw', email: 'pyaephyozaw2015@gmail.com', role: 'sales', title: 'Team 03', phone: '09678278066' },
@@ -9961,14 +10050,9 @@ const DEFAULT_STAFF_USERS = [
   { id: 'emp_028', name: 'Khant Chaw Nyo', email: 'nyochaw2412@gmail.com', role: 'sales', title: 'Team 04', phone: '09677337705' },
   { id: 'emp_029', name: 'Naing Myo Htun', email: 'myohtunn45@gmail.com', role: 'sales', title: 'Team 04', phone: '09691051525,09255804879' },
   { id: 'emp_030', name: 'Pyae Phyo Hlaing', email: 'pyaephyo202126@gmail.com', role: 'sales', title: 'Team 04', phone: '09674983764' },
-  { id: 'emp_031', name: 'Htun Lin Oo', email: 'htun.lin.oo@company.com', role: 'sales', title: 'Team 04', phone: '09674001156' },
   { id: 'emp_032', name: 'Ye Lwin', email: 'yelwin086683@gmail.com', role: 'sales', title: 'Technical Manager', phone: '09684002111' },
   { id: 'emp_033', name: 'Aung La Pyae Oo', email: 'aunglapyaeoo664@gmail.com', role: 'sales', title: 'Team 01', phone: '09670568272' },
   { id: 'emp_034', name: 'Ingyin Hmwe', email: 'ingyinhmwe49@gmail.com', role: 'sales', title: 'Asset', phone: '09794307646\'09680129666' },
-  { id: 'emp_035', name: 'Nyi Nyi', email: 'nyi.nyi@company.com', role: 'sales', title: 'Sales Rep', phone: '' },
-  { id: 'emp_036', name: 'Kyaw Myo Htwe', email: 'kyaw.myo.htwe@company.com', role: 'sales', title: 'Team 04', phone: '09674001156' },
-  { id: 'emp_037', name: 'Myo Aung', email: 'myo.aung@company.com', role: 'sales', title: 'Team 04', phone: '9691051525' },
-  { id: 'emp_038', name: 'Zin Ko Oo', email: 'zin.ko.oo@company.com', role: 'sales', title: 'Team 01', phone: '09667191528' }
 ];
 
 let currentAppRole = 'admin'; // Đã chia sẻ qua Gmail: Mở toàn quyền 100% tất cả các phân hệ
@@ -10431,6 +10515,9 @@ function renderStaffUsersTable(sourceOverride, _retry) {
     rawList.forEach((r, idx) => {
       const name = String(r.name || '').trim();
       if (!name || name === 'undefined' || name.toLowerCase() === 'null') return;
+      // Skip staff without real Gmail
+      const rawEmail = String(r.email || '').trim().toLowerCase();
+      if (!rawEmail || rawEmail.endsWith('@company.com') || rawEmail.endsWith('@email.com')) return;
       activeLiveNames.add(name.toLowerCase());
 
       // Giữ lại vai trò đã được điều chỉnh, nếu chưa có thì gán mặc định 'sales' (riêng HR and Finance gán 'finance')
@@ -10507,8 +10594,16 @@ function _renderStaffTable_(users, source) {
 
   // Lọc sạch tuyệt đối dữ liệu đầu vào: KHÔNG BAO GIỜ cho phép dòng undefined/rác xuất hiện
   users = (users || []).map((u, i) => normalizeStaffUser(u, i + 1)).filter(Boolean);
+  // Filter out entries without real Gmail
+  users = users.filter(function(u) {
+    var em = (u.email || '').trim().toLowerCase();
+    return em && !em.endsWith('@company.com') && !em.endsWith('@email.com');
+  });
   if (users.length === 0) {
-    users = DEFAULT_STAFF_USERS.map((u, i) => normalizeStaffUser(u, i + 1)).filter(Boolean);
+    users = DEFAULT_STAFF_USERS.map((u, i) => normalizeStaffUser(u, i + 1)).filter(Boolean).filter(function(u) {
+      var em = (u.email || '').trim().toLowerCase();
+      return em && !em.endsWith('@company.com') && !em.endsWith('@email.com');
+    });
   }
 
   // Auto-sanitize old cached names
@@ -10692,6 +10787,11 @@ function populateStaffUserSelect() {
     ? cached.map((u, i) => normalizeStaffUser(u, i + 1)).filter(Boolean)
     : DEFAULT_STAFF_USERS;
   if (!users || users.length === 0) users = DEFAULT_STAFF_USERS;
+  // Filter out staff without real Gmail
+  users = users.filter(function(u) {
+    var em = (u.email || '').trim().toLowerCase();
+    return em && !em.endsWith('@company.com') && !em.endsWith('@email.com');
+  });
 
   sel.innerHTML = '';
   users.forEach(u => {
@@ -11066,7 +11166,647 @@ window.addEventListener('DOMContentLoaded', () => {
     try { renderRBACMatrix(); } catch(e) { console.warn(e); }
     try { renderStaffUsersTable(); } catch(e) { console.warn(e); }
   }, 300);
+  try { _renderDelReqBadge(); _renderDelReqList(); } catch(e) { console.warn(e); }
 });
+
+
+// ═══════════════════════════════════════════════════════════════
+// 📊 MODULE KIỂM KÊ KHO & KÝ GỞI HÀNG THÁNG
+// ═══════════════════════════════════════════════════════════════
+let _kkActiveTab = 'kho';
+
+// Khởi tạo: populate select tháng từ 2025 đến hiện tại
+function kkInitThangSelect() {
+  const sel = document.getElementById('kk-thang');
+  if (!sel) return;
+  const now = new Date();
+  sel.innerHTML = '<option value="">-- Chọn Tháng --</option>';
+  for (let y = 2025; y <= now.getFullYear(); y++) {
+    const maxM = (y === now.getFullYear()) ? now.getMonth() + 1 : 12;
+    for (let m = 1; m <= maxM; m++) {
+      const val = y + '-' + String(m).padStart(2, '0');
+      const lbl = 'Tháng ' + m + '/' + y;
+      sel.innerHTML += '<option value="' + val + '">' + lbl + '</option>';
+    }
+  }
+  // Mặc định tháng hiện tại
+  const curVal = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  sel.value = curVal;
+}
+
+// Tạo snapshot tháng hiện tại từ dữ liệu thực tế
+function kkGenThang() {
+  const now = new Date();
+  const val = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  document.getElementById('kk-thang').value = val;
+  renderKiemKe();
+  al('📅 Đã tải dữ liệu tháng ' + val + ' từ kho thực tế!', 'ok');
+}
+
+// Switch tab
+function kkSwitchTab(tab) {
+  _kkActiveTab = tab;
+  ['kho','kg','tamung','diff'].forEach(t => {
+    const btn = document.getElementById('kk-tab-' + t);
+    const panel = document.getElementById('kk-panel-' + t);
+    if (!btn || !panel) return;
+    const isActive = t === tab;
+    btn.style.borderBottom = isActive ? '3px solid #6d28d9' : '3px solid transparent';
+    btn.style.color = isActive ? '#6d28d9' : '#64748b';
+    btn.style.marginBottom = isActive ? '-2px' : '0';
+    panel.style.display = isActive ? '' : 'none';
+  });
+}
+
+// === RENDER CHÍNH ===
+function renderKiemKe() {
+  const thang = (document.getElementById('kk-thang') || {}).value || '';
+
+  // Lấy dữ liệu nguồn
+  const nhapAll = DB.g('nhap') || [];
+  const banAll  = DB.g('ban')  || [];
+  const kgAll   = DB.g('kygoi') || [];
+  const tuAll   = DB.g('tamung') || [];
+
+  // Tính tồn kho (nhập - bán - ký gởi active - tạm ứng active)
+  function calcTon(nhapItem) {
+    const id = nhapItem.id;
+    const slNhap = Number(nhapItem.sl) || 1;
+    const slBan  = banAll.filter(b => b.spId == id && b.tt !== 'cancel').reduce((s,b) => s + (Number(b.sl)||1), 0);
+    const slKG   = kgAll.filter(k => k.spId == id && k.ts !== 'returned' && k.ts !== 'sold').reduce((s,k) => s + (Number(k.sl)||1), 0);
+    const slTU   = tuAll.filter(t => t.spId == id && t.ts !== 'returned').reduce((s,t) => s + (Number(t.sl)||1), 0);
+    return Math.max(0, slNhap - slBan - slKG - slTU);
+  }
+
+  // Nhóm theo tên sản phẩm; hàng có serial tách riêng từng serial
+  const khoMap = {};
+  nhapAll.forEach(item => {
+    const ton = calcTon(item);
+    if (ton <= 0) return;
+    const serial = (item.serial || item.se || '').trim();
+    if (serial) {
+      // Hàng có serial: 1 serial = 1 dòng kiểm kê riêng
+      const key = 'SN::' + item.id + '::' + serial;
+      khoMap[key] = { ten: (item.ten || item.sp || 'Không rõ').trim(), dm: item.dm || '-', mo: item.mo || item.model || '', slHeThong: 1, serial: serial, isSerial: true, itemId: item.id, items: [item] };
+    } else {
+      // Hàng không serial: nhóm theo tên, nhập SL thực tế
+      const key = (item.ten || item.sp || 'Không rõ').trim();
+      if (!khoMap[key]) khoMap[key] = { ten: key, dm: item.dm || '-', slHeThong: 0, giaGoc: Number(item.goc || item.gia || 0), items: [] };
+      khoMap[key].slHeThong += ton;
+      khoMap[key].items.push(item);
+    }
+  });
+
+  // Load phiếu kiểm kê đã lưu (nếu có) để lấy slThucTe
+  const kkSaved = (DB.g('kiemke_phieu') || []).find(p => p.thang === thang) || null;
+
+  // --- RENDER KHO ---
+  const khoList = Object.values(khoMap).filter(r => r.slHeThong > 0);
+  let htmlKho = '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#f8fafc">';
+  htmlKho += '<th style="padding:8px 6px;text-align:left;border-bottom:2px solid #e2e8f0">#</th>';
+  htmlKho += '<th style="padding:8px 6px;text-align:left;border-bottom:2px solid #e2e8f0">Tên Sản Phẩm</th>';
+  htmlKho += '<th style="padding:8px 6px;text-align:center;border-bottom:2px solid #e2e8f0">Danh Mục</th>';
+  htmlKho += '<th style="padding:8px 6px;text-align:center;border-bottom:2px solid #e2e8f0">SL Hệ Thống / Serial</th>';
+  htmlKho += '<th style="padding:8px 6px;text-align:center;border-bottom:2px solid #e2e8f0;color:#7c3aed">SL Thực Tế / Có Mặt?</th>';
+  htmlKho += '<th style="padding:8px 6px;text-align:center;border-bottom:2px solid #e2e8f0">Chênh Lệch / Tình Trạng</th>';
+  htmlKho += '<th style="padding:8px 6px;text-align:left;border-bottom:2px solid #e2e8f0">Ghi Chú</th>';
+  htmlKho += '<th style="padding:8px 6px;text-align:center;border-bottom:2px solid #e2e8f0">Đã Kiểm ✓</th>';
+  htmlKho += '</tr></thead><tbody>';
+
+  khoList.forEach((r, idx) => {
+    const bg = idx % 2 === 0 ? '#fff' : '#f8fafc';
+    if (r.isSerial) {
+      // === HÀNG CÓ SERIAL: check từng serial ===
+      const snKey = 'SN::' + r.itemId + '::' + r.serial;
+      const saved = kkSaved ? (kkSaved.kho || []).find(s => s.snKey === snKey) : null;
+      const present = saved ? (saved.present !== false) : null; // null=chưa kiểm, true=có, false=thiếu
+      const checked = (present === true) ? 'checked' : '';
+      const statusColor = present === null ? '#94a3b8' : present ? '#16a34a' : '#dc2626';
+      const statusTxt   = present === null ? '—' : present ? '✅ Có' : '❌ Thiếu';
+      htmlKho += '<tr style="background:' + bg + '">';
+      htmlKho += '<td style="padding:7px 6px;color:#94a3b8">' + (idx+1) + '</td>';
+      htmlKho += '<td style="padding:7px 6px;font-weight:600">' + r.ten + (r.mo ? '<br><span style="font-size:10px;color:#94a3b8">' + r.mo + '</span>' : '') + '</td>';
+      htmlKho += '<td style="padding:7px 6px;text-align:center"><span class="bk bk-bl" style="font-size:10.5px">' + r.dm + '</span></td>';
+      htmlKho += '<td style="padding:7px 6px;text-align:center"><span style="font-size:11px;font-weight:700;color:#7c3aed;background:#ede9fe;padding:2px 7px;border-radius:4px">📋 ' + r.serial + '</span></td>';
+      htmlKho += '<td style="padding:7px 6px;text-align:center;font-weight:700;color:' + statusColor + '">' + statusTxt + '</td>';
+      htmlKho += '<td style="padding:7px 6px;text-align:left"><input type="text" placeholder="Ghi chú..." data-kk-note-kho="' + encodeURIComponent(snKey) + '" value="' + (saved ? (saved.note||'') : '') + '" onchange="kkUpdateNoteKho(this)" style="width:120px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:4px;font-size:11.5px"/></td>';
+      htmlKho += '<td style="padding:7px 6px;text-align:center"><input type="checkbox" ' + checked + ' data-kk-serial="' + encodeURIComponent(snKey) + '" onchange="kkUpdateSerialChk(this)" style="width:17px;height:17px;accent-color:#7c3aed"/></td>';
+      htmlKho += '</tr>';
+    } else {
+      // === HÀNG KHÔNG SERIAL: nhập SL thực tế ===
+      const saved = kkSaved ? (kkSaved.kho || []).find(s => s.ten === r.ten && !s.snKey) : null;
+      const slTT  = saved ? saved.slThucTe : '';
+      const slHTStr = r.slHeThong;
+      const diff  = slTT !== '' ? (Number(slTT) - slHTStr) : null;
+      const diffColor = diff === null ? '#94a3b8' : diff === 0 ? '#16a34a' : diff > 0 ? '#2563eb' : '#dc2626';
+      const diffTxt   = diff === null ? '—' : (diff > 0 ? '+' + diff : String(diff));
+      const checked   = saved ? (saved.checked ? 'checked' : '') : '';
+      htmlKho += '<tr style="background:' + bg + '">';
+      htmlKho += '<td style="padding:7px 6px;color:#94a3b8">' + (idx+1) + '</td>';
+      htmlKho += '<td style="padding:7px 6px;font-weight:600">' + r.ten + '</td>';
+      htmlKho += '<td style="padding:7px 6px;text-align:center"><span class="bk bk-bl" style="font-size:10.5px">' + r.dm + '</span></td>';
+      htmlKho += '<td style="padding:7px 6px;text-align:center;font-weight:700;color:#1e293b">' + slHTStr + ' sp</td>';
+      htmlKho += '<td style="padding:7px 6px;text-align:center"><input type="number" min="0" value="' + (slTT !== '' ? slTT : '') + '" placeholder="Nhập SL" data-kk-kho="' + encodeURIComponent(r.ten) + '" onchange="kkUpdateKho(this)" style="width:70px;text-align:center;padding:3px 5px;border:1.5px solid #c4b5fd;border-radius:4px;font-weight:700;color:#6d28d9"/></td>';
+      htmlKho += '<td style="padding:7px 6px;text-align:center;font-weight:700;color:' + diffColor + '">' + diffTxt + '</td>';
+      htmlKho += '<td style="padding:7px 6px"><input type="text" placeholder="..." data-kk-note-kho="' + encodeURIComponent(r.ten) + '" value="' + (saved ? (saved.note||'') : '') + '" onchange="kkUpdateNoteKho(this)" style="width:120px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:4px;font-size:11.5px"/></td>';
+      htmlKho += '<td style="padding:7px 6px;text-align:center"><input type="checkbox" ' + checked + ' data-kk-chk-kho="' + encodeURIComponent(r.ten) + '" onchange="kkUpdateChkKho(this)" style="width:16px;height:16px;accent-color:#7c3aed"/></td>';
+      htmlKho += '</tr>';
+    }
+  });
+
+  if (khoList.length === 0) {
+    htmlKho += '<tr><td colspan="8" style="text-align:center;padding:20px;color:#94a3b8">Chưa có hàng tồn kho</td></tr>';
+  }
+  htmlKho += '</tbody></table>';
+  const elKho = document.getElementById('t-kk-kho');
+  if (elKho) elKho.innerHTML = htmlKho;
+
+  // --- RENDER KÝ GỞI ---
+  // Nhóm ký gởi theo điểm bán
+  const kgActive = kgAll.filter(k => k.ts !== 'returned' && k.ts !== 'sold');
+  const kgMap = {};
+  kgActive.forEach(k => {
+    const diemBan = k.dlN || k.kh || k.diem || 'Không rõ';
+    if (!kgMap[diemBan]) kgMap[diemBan] = { diem: diemBan, items: [], slHeThong: 0 };
+    kgMap[diemBan].items.push(k);
+    kgMap[diemBan].slHeThong += Number(k.sl||1);
+  });
+
+  let htmlKG = '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#fff7ed">';
+  htmlKG += '<th style="padding:8px 6px;text-align:left;border-bottom:2px solid #fed7aa">#</th>';
+  htmlKG += '<th style="padding:8px 6px;text-align:left;border-bottom:2px solid #fed7aa">Điểm Bán / Ký Gởi</th>';
+  htmlKG += '<th style="padding:8px 6px;text-align:left;border-bottom:2px solid #fed7aa">Sản Phẩm</th>';
+  htmlKG += '<th style="padding:8px 6px;text-align:center;border-bottom:2px solid #fed7aa">SL Hệ Thống</th>';
+  htmlKG += '<th style="padding:8px 6px;text-align:center;border-bottom:2px solid #fed7aa;color:#ea580c">SL Thực Tế *</th>';
+  htmlKG += '<th style="padding:8px 6px;text-align:center;border-bottom:2px solid #fed7aa">Chênh Lệch</th>';
+  htmlKG += '<th style="padding:8px 6px;text-align:left;border-bottom:2px solid #fed7aa">Tình Trạng</th>';
+  htmlKG += '<th style="padding:8px 6px;text-align:center;border-bottom:2px solid #fed7aa">Đã Kiểm</th>';
+  htmlKG += '</tr></thead><tbody>';
+
+  let kgRowIdx = 0;
+  Object.values(kgMap).forEach(dp => {
+    dp.items.forEach((k, ki) => {
+      const savedKG = kkSaved ? (kkSaved.kg || []).find(s => s.id === k.id) : null;
+      const slTT = savedKG ? savedKG.slThucTe : '';
+      const slHT = Number(k.sl || 1);
+      const diff = slTT !== '' ? (Number(slTT) - slHT) : null;
+      const diffColor = diff === null ? '#94a3b8' : diff === 0 ? '#16a34a' : diff > 0 ? '#2563eb' : '#dc2626';
+      const diffTxt = diff === null ? '—' : (diff > 0 ? '+' + diff : String(diff));
+      const checked = savedKG && savedKG.checked ? 'checked' : '';
+      const bg = kgRowIdx % 2 === 0 ? '#fff' : '#fff7ed';
+      kgRowIdx++;
+
+      htmlKG += '<tr style="background:' + bg + '">';
+      if (ki === 0) htmlKG += '<td rowspan="' + dp.items.length + '" style="padding:7px 6px;font-weight:700;color:#ea580c;vertical-align:top;border-right:2px solid #fed7aa">' + dp.diem + '</td>';
+      htmlKG += '<td style="padding:7px 6px">' + (k.spN || k.ten || '-') + '</td>';
+      htmlKG += '<td style="padding:7px 6px;text-align:center;font-weight:700">' + slHT + '</td>';
+      htmlKG += '<td style="padding:7px 6px;text-align:center"><input type="number" min="0" value="' + (slTT !== '' ? slTT : '') + '" placeholder="Nhập" data-kk-kg="' + k.id + '" onchange="kkUpdateKG(this)" style="width:60px;text-align:center;padding:3px 4px;border:1.5px solid #fed7aa;border-radius:4px;font-weight:700;color:#ea580c"/></td>';
+      htmlKG += '<td style="padding:7px 6px;text-align:center;font-weight:700;color:' + diffColor + '">' + diffTxt + '</td>';
+      htmlKG += '<td style="padding:7px 6px"><span style="font-size:11px;padding:2px 7px;border-radius:10px;background:' + (k.ts === 'active' ? '#dcfce7' : '#fef3c7') + ';color:' + (k.ts === 'active' ? '#15803d' : '#92400e') + '">' + (k.ts || 'active') + '</span></td>';
+      htmlKG += '<td style="padding:7px 6px;text-align:center"><input type="checkbox" ' + checked + ' data-kk-chk-kg="' + k.id + '" onchange="kkUpdateChkKG(this)" style="width:16px;height:16px;accent-color:#ea580c"/></td>';
+      htmlKG += '</tr>';
+    });
+  });
+
+  if (kgActive.length === 0) {
+    htmlKG += '<tr><td colspan="8" style="text-align:center;padding:20px;color:#94a3b8">Không có hàng ký gởi đang hoạt động</td></tr>';
+  }
+  htmlKG += '</tbody></table>';
+  const elKG = document.getElementById('t-kk-kg');
+  if (elKG) elKG.innerHTML = htmlKG;
+
+  // --- RENDER TẠM ỨNG ---
+  const tuActive = tuAll.filter(t => t.ts !== 'returned');
+  let htmlTU = '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#f5f3ff">';
+  ['#','Nhân Viên','Sản Phẩm','SL','Mục Đích','Ngày Lấy','Hạn Trả','Tình Trạng'].forEach(h => {
+    htmlTU += '<th style="padding:7px 6px;text-align:left;border-bottom:2px solid #ddd6fe">' + h + '</th>';
+  });
+  htmlTU += '</tr></thead><tbody>';
+  tuActive.forEach((t, idx) => {
+    const bg = idx % 2 === 0 ? '#fff' : '#f5f3ff';
+    const qua = t.han && new Date(t.han) < new Date();
+    htmlTU += '<tr style="background:' + bg + (qua ? ';outline:2px solid #fca5a5 inset' : '') + '">';
+    htmlTU += '<td style="padding:6px;color:#94a3b8">' + (idx+1) + '</td>';
+    htmlTU += '<td style="padding:6px;font-weight:600">' + (t.nv||'-') + '</td>';
+    htmlTU += '<td style="padding:6px">' + (t.spN||t.ten||'-') + '</td>';
+    htmlTU += '<td style="padding:6px;text-align:center;font-weight:700">' + (t.sl||1) + '</td>';
+    htmlTU += '<td style="padding:6px">' + (t.md||'-') + '</td>';
+    htmlTU += '<td style="padding:6px">' + (t.ngay||'-') + '</td>';
+    htmlTU += '<td style="padding:6px;color:' + (qua ? '#dc2626' : '#334155') + ';font-weight:' + (qua ? '700' : '400') + '">' + (t.han||'-') + (qua ? ' ⚠️' : '') + '</td>';
+    htmlTU += '<td style="padding:6px"><span style="font-size:11px;padding:2px 7px;border-radius:10px;background:' + (qua ? '#fee2e2' : '#dbeafe') + ';color:' + (qua ? '#991b1b' : '#1e40af') + '">' + (qua ? 'Quá hạn' : 'Đang ứng') + '</span></td>';
+    htmlTU += '</tr>';
+  });
+  if (tuActive.length === 0) htmlTU += '<tr><td colspan="8" style="text-align:center;padding:20px;color:#94a3b8">Không có hàng tạm ứng</td></tr>';
+  htmlTU += '</tbody></table>';
+  const elTU = document.getElementById('t-kk-tamung');
+  if (elTU) elTU.innerHTML = htmlTU;
+
+  // --- RENDER CHÊNH LỆCH ---
+  const diffItems = [];
+  if (kkSaved) {
+    (kkSaved.kho||[]).forEach(s => {
+      if (s.slThucTe !== undefined && s.slThucTe !== '') {
+        const sysItem = khoMap[s.ten];
+        const sysQty  = sysItem ? sysItem.slHeThong : 0;
+        const diff2   = Number(s.slThucTe) - sysQty;
+        if (diff2 !== 0) diffItems.push({ loai: 'Kho', ten: s.ten, slHeThong: sysQty, slThucTe: Number(s.slThucTe), diff: diff2 });
+      }
+    });
+    (kkSaved.kg||[]).forEach(s => {
+      if (s.slThucTe !== undefined && s.slThucTe !== '') {
+        const kgItem = kgAll.find(k => k.id == s.id);
+        const sysQty = kgItem ? Number(kgItem.sl||1) : 0;
+        const diff2  = Number(s.slThucTe) - sysQty;
+        if (diff2 !== 0) diffItems.push({ loai: 'Ký Gởi', ten: (kgItem ? (kgItem.spN||kgItem.ten) : s.id) + ' @ ' + (kgItem ? (kgItem.dlN||kgItem.kh) : '?'), slHeThong: sysQty, slThucTe: Number(s.slThucTe), diff: diff2 });
+      }
+    });
+  }
+
+  let htmlDiff = '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#fef2f2">';
+  ['#','Loại','Tên','SL Hệ Thống','SL Thực Tế','Chênh Lệch'].forEach(h => {
+    htmlDiff += '<th style="padding:7px 8px;text-align:left;border-bottom:2px solid #fca5a5">' + h + '</th>';
+  });
+  htmlDiff += '</tr></thead><tbody>';
+  diffItems.forEach((r, idx) => {
+    const bg = idx % 2 === 0 ? '#fff' : '#fef2f2';
+    htmlDiff += '<tr style="background:' + bg + '"><td style="padding:7px;color:#94a3b8">' + (idx+1) + '</td>';
+    htmlDiff += '<td style="padding:7px"><span class="bk" style="background:' + (r.loai==='Kho'?'#dbeafe':'#fef3c7') + ';color:' + (r.loai==='Kho'?'#1e40af':'#92400e') + '">' + r.loai + '</span></td>';
+    htmlDiff += '<td style="padding:7px;font-weight:600">' + r.ten + '</td>';
+    htmlDiff += '<td style="padding:7px;text-align:center">' + r.slHeThong + '</td>';
+    htmlDiff += '<td style="padding:7px;text-align:center;font-weight:700">' + r.slThucTe + '</td>';
+    htmlDiff += '<td style="padding:7px;text-align:center;font-weight:700;color:' + (r.diff > 0 ? '#2563eb' : '#dc2626') + '">' + (r.diff > 0 ? '+' + r.diff : r.diff) + '</td></tr>';
+  });
+  if (diffItems.length === 0) htmlDiff += '<tr><td colspan="6" style="text-align:center;padding:20px;color:#16a34a">✅ Không có chênh lệch — hoặc chưa nhập số liệu thực tế</td></tr>';
+  htmlDiff += '</tbody></table>';
+  const elDiff = document.getElementById('t-kk-diff');
+  if (elDiff) elDiff.innerHTML = htmlDiff;
+
+  // --- KPI CARDS ---
+  const totalSLHT = khoList.reduce((s,r) => s + r.slHeThong, 0);
+  const totalKGHT = kgActive.reduce((s,k) => s + Number(k.sl||1), 0);
+  const totalTUHT = tuActive.reduce((s,t) => s + Number(t.sl||1), 0);
+  const tongDiffCnt = diffItems.length;
+  const khoChecked = kkSaved ? (kkSaved.kho||[]).filter(s => s.checked).length : 0;
+  const kgChecked  = kkSaved ? (kkSaved.kg||[]).filter(s => s.checked).length : 0;
+
+  const kpiEl = document.getElementById('kk-kpi-cards');
+  if (kpiEl) {
+    kpiEl.innerHTML = [
+      { lbl: '📦 Tồn Kho Hệ Thống', val: totalSLHT + ' sp', sub: khoList.length + ' loại', c: 'c-bl' },
+      { lbl: '📋 Ký Gởi Đang Chạy',   val: totalKGHT + ' sp', sub: Object.keys(kgMap).length + ' điểm bán', c: 'c-or' },
+      { lbl: '🧑‍💼 Tạm Ứng NV',        val: totalTUHT + ' sp', sub: tuActive.length + ' phiếu', c: 'c-pu' },
+      { lbl: '⚠️ Chênh Lệch',          val: tongDiffCnt + ' mục', sub: 'Cần xác nhận', c: tongDiffCnt > 0 ? 'c-rd' : 'c-gn' },
+      { lbl: '✅ Đã Kiểm (Kho)',        val: khoChecked + '/' + khoList.length, sub: 'Kho Chi Nhánh', c: 'c-gn' },
+      { lbl: '✅ Đã Kiểm (Ký Gởi)',     val: kgChecked + '/' + kgActive.length, sub: 'Điểm Bán', c: 'c-gn' },
+    ].map(k => '<div class="card ' + k.c + '"><div class="lbl2">' + k.lbl + '</div><div class="val" style="font-size:18px">' + k.val + '</div><div class="sub">' + k.sub + '</div></div>').join('');
+  }
+
+  // Badge trạng thái
+  const badge = document.getElementById('kk-status-badge');
+  if (badge) {
+    const pct = khoList.length + kgActive.length > 0 ? Math.round((khoChecked + kgChecked) / (khoList.length + kgActive.length) * 100) : 0;
+    badge.textContent = pct + '% Hoàn Thành';
+    badge.style.background = pct === 100 ? '#dcfce7' : pct > 50 ? '#fef3c7' : '#fee2e2';
+    badge.style.color       = pct === 100 ? '#15803d' : pct > 50 ? '#92400e' : '#991b1b';
+  }
+
+  // History
+  renderKiemKeHistory();
+}
+
+// Cập nhật SL thực tế cho kho
+function kkUpdateKho(inp) {
+  const ten = decodeURIComponent(inp.getAttribute('data-kk-kho'));
+  const thang = (document.getElementById('kk-thang') || {}).value || '';
+  if (!thang) return;
+  let phieu = kkGetPhieu(thang);
+  let khoArr = phieu.kho || [];
+  const idx = khoArr.findIndex(s => s.ten === ten);
+  if (idx >= 0) khoArr[idx].slThucTe = Number(inp.value);
+  else khoArr.push({ ten, slThucTe: Number(inp.value), checked: false, note: '' });
+  phieu.kho = khoArr;
+  kkSavePhieuAuto(thang, phieu);
+  renderKiemKe();
+}
+function kkUpdateNoteKho(inp) {
+  const ten = decodeURIComponent(inp.getAttribute('data-kk-note-kho'));
+  const thang = (document.getElementById('kk-thang') || {}).value || '';
+  if (!thang) return;
+  let phieu = kkGetPhieu(thang);
+  let khoArr = phieu.kho || [];
+  const idx = khoArr.findIndex(s => s.ten === ten);
+  if (idx >= 0) khoArr[idx].note = inp.value;
+  else khoArr.push({ ten, slThucTe: '', checked: false, note: inp.value });
+  phieu.kho = khoArr;
+  kkSavePhieuAuto(thang, phieu);
+}
+function kkUpdateChkKho(inp) {
+  const ten = decodeURIComponent(inp.getAttribute('data-kk-chk-kho'));
+  const thang = (document.getElementById('kk-thang') || {}).value || '';
+  if (!thang) return;
+  let phieu = kkGetPhieu(thang);
+  let khoArr = phieu.kho || [];
+  const idx = khoArr.findIndex(s => s.ten === ten);
+  if (idx >= 0) khoArr[idx].checked = inp.checked;
+  else khoArr.push({ ten, slThucTe: '', checked: inp.checked, note: '' });
+  phieu.kho = khoArr;
+  kkSavePhieuAuto(thang, phieu);
+  renderKiemKe();
+}
+function kkUpdateKG(inp) {
+  const id = inp.getAttribute('data-kk-kg');
+  const thang = (document.getElementById('kk-thang') || {}).value || '';
+  if (!thang) return;
+  let phieu = kkGetPhieu(thang);
+  let kgArr = phieu.kg || [];
+  const idx = kgArr.findIndex(s => s.id == id);
+  if (idx >= 0) kgArr[idx].slThucTe = Number(inp.value);
+  else kgArr.push({ id, slThucTe: Number(inp.value), checked: false });
+  phieu.kg = kgArr;
+  kkSavePhieuAuto(thang, phieu);
+  renderKiemKe();
+}
+function kkUpdateChkKG(inp) {
+  const id = inp.getAttribute('data-kk-chk-kg');
+  const thang = (document.getElementById('kk-thang') || {}).value || '';
+  if (!thang) return;
+  let phieu = kkGetPhieu(thang);
+  let kgArr = phieu.kg || [];
+  const idx = kgArr.findIndex(s => s.id == id);
+  if (idx >= 0) kgArr[idx].checked = inp.checked;
+  else kgArr.push({ id, slThucTe: '', checked: inp.checked });
+  phieu.kg = kgArr;
+  kkSavePhieuAuto(thang, phieu);
+  renderKiemKe();
+}
+function kkMarkAllKho() {
+  const thang = (document.getElementById('kk-thang') || {}).value || '';
+  if (!thang) { al('Chọn tháng trước!', 'er'); return; }
+  let phieu = kkGetPhieu(thang);
+  const nhapAll = DB.g('nhap') || [];
+  const khoKeys = [...new Set(nhapAll.map(n => (n.ten||n.sp||'').trim()))];
+  phieu.kho = khoKeys.map(ten => {
+    const exist = (phieu.kho||[]).find(s => s.ten === ten) || {};
+    return { ...exist, ten, checked: true };
+  });
+  kkSavePhieuAuto(thang, phieu);
+  renderKiemKe();
+  al('✅ Đã tick toàn bộ kho!', 'ok');
+}
+function kkMarkAllKG() {
+  const thang = (document.getElementById('kk-thang') || {}).value || '';
+  if (!thang) { al('Chọn tháng trước!', 'er'); return; }
+  let phieu = kkGetPhieu(thang);
+  const kgAll = DB.g('kygoi') || [];
+  phieu.kg = kgAll.filter(k => k.ts !== 'returned' && k.ts !== 'sold').map(k => {
+    const exist = (phieu.kg||[]).find(s => s.id == k.id) || {};
+    return { ...exist, id: k.id, checked: true };
+  });
+  kkSavePhieuAuto(thang, phieu);
+  renderKiemKe();
+  al('✅ Đã tick toàn bộ ký gởi!', 'ok');
+}
+
+// Get/Save phieu helper
+function kkGetPhieu(thang) {
+  const all = DB.g('kiemke_phieu') || [];
+  return all.find(p => p.thang === thang) || { thang, kho: [], kg: [], savedAt: null };
+}
+function kkSavePhieuAuto(thang, phieu) {
+  let all = DB.g('kiemke_phieu') || [];
+  const idx = all.findIndex(p => p.thang === thang);
+  phieu.updatedAt = new Date().toISOString();
+  if (idx >= 0) all[idx] = phieu;
+  else all.push(phieu);
+  DB.s('kiemke_phieu', all);
+}
+function kkSavePhieu() {
+  const thang = (document.getElementById('kk-thang') || {}).value || '';
+  if (!thang) { al('Chọn tháng trước!', 'er'); return; }
+  let phieu = kkGetPhieu(thang);
+  phieu.savedAt = new Date().toISOString();
+  kkSavePhieuAuto(thang, phieu);
+  renderKiemKeHistory();
+  al('💾 Đã lưu phiếu kiểm kê ' + thang + '!', 'ok');
+}
+
+// Lịch sử phiếu
+function renderKiemKeHistory() {
+  const all = (DB.g('kiemke_phieu') || []).filter(p => p.savedAt).sort((a,b) => b.thang.localeCompare(a.thang));
+  const el = document.getElementById('t-kk-history');
+  if (!el) return;
+  if (all.length === 0) { el.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8">Chưa có phiếu kiểm kê nào được lưu. Bấm <b>💾 Lưu Phiếu</b> để lưu lại.</div>'; return; }
+  let html = '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#f8fafc"><th style="padding:8px">Tháng</th><th style="padding:8px">Lưu Lúc</th><th style="padding:8px;text-align:center">Kho (mục)</th><th style="padding:8px;text-align:center">Ký Gởi (mục)</th><th style="padding:8px;text-align:center">% Kiểm</th><th style="padding:8px">Thao Tác</th></tr></thead><tbody>';
+  all.forEach((p, idx) => {
+    const bg = idx % 2 === 0 ? '#fff' : '#f8fafc';
+    const khoTK  = (p.kho||[]).length;
+    const khoChk = (p.kho||[]).filter(s => s.checked).length;
+    const kgTK   = (p.kg||[]).length;
+    const kgChk  = (p.kg||[]).filter(s => s.checked).length;
+    const pct    = (khoTK + kgTK) > 0 ? Math.round((khoChk + kgChk) / (khoTK + kgTK) * 100) : 0;
+    html += '<tr style="background:' + bg + '">';
+    html += '<td style="padding:7px 8px;font-weight:700;color:#4338ca">' + p.thang + '</td>';
+    html += '<td style="padding:7px 8px;color:#64748b">' + (p.savedAt ? p.savedAt.replace('T',' ').substring(0,16) : '-') + '</td>';
+    html += '<td style="padding:7px;text-align:center">' + khoChk + '/' + khoTK + '</td>';
+    html += '<td style="padding:7px;text-align:center">' + kgChk + '/' + kgTK + '</td>';
+    html += '<td style="padding:7px;text-align:center"><span style="font-weight:700;color:' + (pct===100?'#15803d':pct>50?'#92400e':'#991b1b') + '">' + pct + '%</span></td>';
+    html += '<td style="padding:7px"><button class="btn b-sm b-bl" onclick="kkLoadPhieu(' + "'" + p.thang + "'" + ')">📂 Xem</button> <button class="btn b-sm" onclick="kkDeletePhieu(' + "'" + p.thang + "'" + ')" style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5">🗑️ Xóa</button></td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+function kkLoadPhieu(thang) {
+  const sel = document.getElementById('kk-thang');
+  if (sel) sel.value = thang;
+  renderKiemKe();
+}
+function kkDeletePhieu(thang) {
+  if (!confirm('Xóa phiếu kiểm kê ' + thang + '?')) return;
+  let all = (DB.g('kiemke_phieu') || []).filter(p => p.thang !== thang);
+  DB.s('kiemke_phieu', all);
+  renderKiemKeHistory();
+  al('🗑️ Đã xóa phiếu ' + thang, 'ok');
+}
+
+// Export CSV
+function kkExportCSV() {
+  const thang = (document.getElementById('kk-thang') || {}).value || 'tat-ca';
+  const nhapAll = DB.g('nhap') || [];
+  const kgAll   = DB.g('kygoi') || [];
+  const kkSaved = (DB.g('kiemke_phieu') || []).find(p => p.thang === thang) || { kho:[], kg:[] };
+
+  let csv = '\uFEFF';
+  csv += 'PHIẾU KIỂM KÊ THÁNG ' + thang + '\n';
+  csv += '\n=== TỒN KHO CHI NHÁNH ===\n';
+  csv += 'STT,Tên SP,Danh Mục,SL Hệ Thống,SL Thực Tế,Chênh Lệch,Đã Kiểm,Ghi Chú\n';
+
+  const khoMap2 = {};
+  nhapAll.forEach(n => { const k = (n.ten||n.sp||'').trim(); if (!khoMap2[k]) khoMap2[k] = { dm: n.dm||'-', sl: 0 }; khoMap2[k].sl++; });
+
+  Object.entries(khoMap2).forEach(([ten, info], idx) => {
+    const s = (kkSaved.kho||[]).find(x => x.ten === ten) || {};
+    const diff = s.slThucTe !== undefined && s.slThucTe !== '' ? (Number(s.slThucTe) - info.sl) : '';
+    csv += [idx+1, '"'+ten+'"', info.dm, info.sl, s.slThucTe||'', diff, s.checked?'Có':'', '"'+(s.note||'')+'"'].join(',') + '\n';
+  });
+
+  csv += '\n=== HÀNG KÝ GỞI ===\n';
+  csv += 'STT,Điểm Bán,Sản Phẩm,SL Hệ Thống,SL Thực Tế,Chênh Lệch,Tình Trạng,Đã Kiểm\n';
+  kgAll.filter(k => k.ts !== 'returned' && k.ts !== 'sold').forEach((k, idx) => {
+    const s = (kkSaved.kg||[]).find(x => x.id == k.id) || {};
+    const diff = s.slThucTe !== undefined && s.slThucTe !== '' ? (Number(s.slThucTe) - Number(k.sl||1)) : '';
+    csv += [idx+1, '"'+(k.dlN||k.kh||'?')+'"', '"'+(k.spN||k.ten||'?')+'"', k.sl||1, s.slThucTe||'', diff, k.ts||'active', s.checked?'Có':''].join(',') + '\n';
+  });
+
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'KiemKe_' + thang + '_' + new Date().toLocaleDateString('vi-VN').replace(/\//g,'-') + '.csv';
+  a.click();
+}
+
+// Khởi tạo khi vào tab kiemke
+const _origGo = typeof go === 'function' ? go : null;
+// Hook go() để init khi vào kiemke
+document.addEventListener('DOMContentLoaded', () => {
+  kkInitThangSelect();
+  const origGo2 = window.go;
+  if (typeof origGo2 === 'function') {
+    window.go = function(tab) {
+      origGo2(tab);
+      if (tab === 'kiemke') {
+        kkInitThangSelect();
+        renderKiemKe();
+      }
+    };
+  }
+});
+
+
+// ════════════ GỬI YÊU CẦU XÓA (NHÂN VIÊN) ════════════
+
+function requestDelNhap(spId, spName) {
+  var isVi = currentLang === 'vi';
+  var promptMsg = isVi
+    ? 'Lý do xóa "' + spName + '"?\n(Yêu cầu sẽ gửi lên Giám Đốc để phê duyệt)'
+    : 'Reason to delete "' + spName + '"?\n(Request will be sent to Director for approval)';
+  var reason = prompt(promptMsg, '');
+  if (reason === null) return; // Nhấn Hủy / Cancelled
+  reason = reason.trim();
+  if (!reason) {
+    al(isVi ? '⚠️ Vui lòng nhập lý do xóa!' : '⚠️ Please enter a reason!', 'er');
+    return;
+  }
+  var requests = DB.g('del_requests') || [];
+  requests.push({
+    id: Date.now(),
+    spId: spId,
+    spName: spName,
+    reason: reason,
+    requestedBy: (CUR_USER || {}).name || 'Unknown',
+    requestedAt: new Date().toISOString(),
+    status: 'pending'
+  });
+  DB.s('del_requests', requests);
+  al(isVi
+    ? '📨 Đã gửi yêu cầu xóa lên Giám Đốc! Chờ phê duyệt.'
+    : '📨 Delete request sent to Director! Awaiting approval.', 'ok');
+  _renderDelReqBadge();
+}
+
+// ════════════ LUONG PHE DUYET XOA HANG NHAP ════════════
+
+function _renderDelReqBadge() {
+  var pending = (DB.g('del_requests') || []).filter(function(r){ return r.status === 'pending'; });
+  var badge = document.getElementById('del-req-badge');
+  if (badge) { badge.textContent = pending.length; badge.style.display = pending.length ? '' : 'none'; }
+  var cnt = document.getElementById('del-req-count-badge');
+  if (cnt) cnt.textContent = pending.length + ' cho';
+}
+
+function _renderDelReqList() {
+  var el = document.getElementById('del-req-list');
+  if (!el) return;
+  var isAdmin = (CUR_USER || {}).role === 'admin';
+  var panel = document.getElementById('del-req-panel');
+  if (panel) panel.style.display = isAdmin ? '' : 'none';
+  var requests = DB.g('del_requests') || [];
+  var pending = requests.filter(function(r){ return r.status === 'pending'; });
+  var done = requests.filter(function(r){ return r.status !== 'pending'; }).slice(-5).reverse();
+  if (pending.length === 0 && done.length === 0) {
+    el.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:16px;font-size:13px">Khong co yeu cau nao dang cho phe duyet</div>';
+    return;
+  }
+  var h = '';
+  if (pending.length > 0) {
+    h += '<div style="font-size:12px;font-weight:700;color:#dc2626;margin:8px 0 6px">Dang Cho Duyet (' + pending.length + ')</div>';
+    pending.forEach(function(req) {
+      var dt = req.requestedAt ? new Date(req.requestedAt).toLocaleString('vi-VN') : '';
+      h += '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 12px;margin-bottom:8px">';
+      h += '<div style="font-weight:700;color:#1e293b;margin-bottom:3px">' + (req.spName||req.spId) + '</div>';
+      h += '<div style="font-size:12px;color:#64748b;margin-bottom:2px">Ly do: <b style="color:#374151">' + req.reason + '</b></div>';
+      h += '<div style="font-size:11px;color:#94a3b8">' + req.requestedBy + ' - ' + dt + '</div>';
+      if (isAdmin) {
+        h += '<div style="display:flex;gap:6px;margin-top:8px">';
+        h += '<button class="btn b-sm" style="background:#16a34a;color:#fff;border:none;font-size:12px" onclick="approveDelRequest(' + req.id + ')">Duyet Xoa</button>';
+        h += '<button class="btn b-sm b-out" style="font-size:12px;color:#dc2626;border-color:#fca5a5" onclick="openRejectDel(' + req.id + ')">Tu Choi</button>';
+        h += '</div>';
+      }
+      h += '</div>';
+    });
+  }
+  if (done.length > 0) {
+    h += '<div style="font-size:11px;font-weight:700;color:#94a3b8;margin:10px 0 4px">Lich Su Gan Day</div>';
+    done.forEach(function(req) {
+      var icon = req.status === 'approved' ? 'OK' : 'XX';
+      var color = req.status === 'approved' ? '#16a34a' : '#dc2626';
+      h += '<div style="font-size:12px;color:#64748b;padding:4px 0;border-bottom:1px solid #f1f5f9">' + icon + ' <b style="color:' + color + '">' + (req.spName||req.spId) + '</b> - ' + req.requestedBy + (req.rejectNote ? ' - ' + req.rejectNote : '') + '</div>';
+    });
+  }
+  el.innerHTML = h;
+}
+
+function approveDelRequest(reqId) {
+  if (!confirm('Xac nhan PHE DUYET xoa san pham nay khoi kho?')) return;
+  var requests = DB.g('del_requests') || [];
+  var req = null;
+  for (var i = 0; i < requests.length; i++) { if (requests[i].id == reqId) { req = requests[i]; break; } }
+  if (!req) return;
+  var nhap = DB.g('nhap') || [];
+  DB.s('nhap', nhap.filter(function(r){ return r.id != req.spId; }));
+  req.status = 'approved';
+  req.reviewedBy = (CUR_USER||{}).name || 'Admin';
+  req.reviewedAt = new Date().toISOString();
+  DB.s('del_requests', requests);
+  al('Da duyet va xoa khoi kho!', 'ok');
+  _renderDelReqBadge();
+  _renderDelReqList();
+  rNhap();
+}
+
+function openRejectDel(reqId) {
+  document.getElementById('del-reject-req-id').value = reqId;
+  document.getElementById('del-reject-reason').value = '';
+  document.getElementById('del-reject-modal').style.display = 'flex';
+}
+
+function confirmRejectDel() {
+  var reqId = document.getElementById('del-reject-req-id').value;
+  var note = (document.getElementById('del-reject-reason').value || '').trim() || 'Khong neu ly do';
+  var requests = DB.g('del_requests') || [];
+  var req = null;
+  for (var i = 0; i < requests.length; i++) { if (requests[i].id == reqId) { req = requests[i]; break; } }
+  if (!req) return;
+  req.status = 'rejected';
+  req.rejectNote = note;
+  req.reviewedBy = (CUR_USER||{}).name || 'Admin';
+  req.reviewedAt = new Date().toISOString();
+  DB.s('del_requests', requests);
+  document.getElementById('del-reject-modal').style.display = 'none';
+  al('Da tu choi yeu cau xoa!', 'ok');
+  _renderDelReqBadge();
+  _renderDelReqList();
+}
+// ════════════ END LUONG PHE DUYET ════════════
 
 </script>
 </body>
