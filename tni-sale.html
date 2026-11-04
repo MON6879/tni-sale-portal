@@ -680,12 +680,13 @@ function copyTelegramReportTemplate(gName, gId, cat) {
     <!-- Cài đặt % Lợi Nhuận & Thuế Nộp Tổng Công Ty (Ẩn UI theo yêu cầu người dùng) -->
     <input id="cfg-cty-rate" type="hidden" value="17"/>
     <a href="https://docs.google.com/spreadsheets/d/1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA" target="_blank" class="btn b-bl b-sm" style="text-decoration:none">📊 Google Sheet</a>
+    <button id="cloud-sync-badge" class="btn b-sm" onclick="DB.pullAll(true)" title="Bấm để đồng bộ 2 chiều trực tiếp với Google Sheet ngay lập tức" style="background:#dcfce7;color:#15803d;border:1.5px solid #86efac;font-weight:700;font-size:11.5px;display:inline-flex;align-items:center;gap:5px">☁️ Sheet SSOT</button>
     <!-- 👤 USER PROFILE BADGE (GOOGLE AUTH) -->
     <div id="user-profile-badge"></div>
     <button class="btn b-sm" id="lang-btn" onclick="toggleLang()" style="background:#e0f2fe;color:#0369a1;font-weight:600">🌐 EN / VN</button>
     <span id="clk" style="font-size:11.5px;color:#94a3b8"></span>
     <button class="btn b-out b-sm" onclick="exportCSV()">⬇ CSV</button>
-    <button class="btn b-sm" style="background:#f1f5f9;color:#475569" onclick="clearAllData()">🗑 Reset</button>
+    <button class="btn b-sm" style="background:#f1f5f9;color:#475569" onclick="clearAllData()" title="Xóa bộ nhớ đệm trình duyệt và tải lại dữ liệu chuẩn từ Google Sheet">🔄 Làm mới từ Sheet</button>
   </div>
 </div>
 <div id="content">
@@ -2714,99 +2715,280 @@ var GAUTH_EMAIL_KEY = window.GAUTH_EMAIL_KEY || 'tni_google_auth_email';
 var GAUTH_USER_KEY  = window.GAUTH_USER_KEY  || 'tni_google_auth_user';
 var GAUTH_OK_KEY    = window.GAUTH_OK_KEY    || 'tni_google_authed_at';
 
+let _clientLastUid = 0;
+function _genUid() {
+  // 15-digit monotonic integer (exact in JS & Google Sheets 15-digit precision, zero loop collision)
+  const base = Date.now() * 100;
+  _clientLastUid = Math.max(base, _clientLastUid + 1);
+  return _clientLastUid;
+}
+
+const SYNC_STATE_COLS = ['del_requests','kiemke_phieu','quoteups','quotesolar','acceptances','vcm_statements'];
+
+function _setSyncBadge(state, text) {
+  const el = document.getElementById('cloud-sync-badge');
+  if (!el) return;
+  if (state === 'syncing') {
+    el.style.background = '#fef3c7';
+    el.style.color = '#92400e';
+    el.style.borderColor = '#fcd34d';
+    el.innerHTML = '⏳ ' + (text || 'Đang đồng bộ Sheet...');
+  } else if (state === 'err') {
+    el.style.background = '#fee2e2';
+    el.style.color = '#dc2626';
+    el.style.borderColor = '#fca5a5';
+    el.innerHTML = '⚠️ ' + (text || 'Lỗi kết nối Sheet');
+  } else {
+    el.style.background = '#dcfce7';
+    el.style.color = '#15803d';
+    el.style.borderColor = '#86efac';
+    const nowTime = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    el.innerHTML = '☁️ ' + (text || ('Sheet SSOT (' + nowTime + ')'));
+  }
+}
+
 const DB = {
   // ── Local cache read/write ──────────────────────────────
-  g: k => JSON.parse(localStorage.getItem('u_' + k) || '[]'),
-  s: (k, v) => localStorage.setItem('u_' + k, JSON.stringify(v)),
+  g: k => {
+    const key = (k === 'camps') ? 'campaigns' : k;
+    try { return JSON.parse(localStorage.getItem('u_' + key) || '[]'); } catch(e) { return []; }
+  },
+  _setLocal: (k, v) => {
+    const key = (k === 'camps') ? 'campaigns' : k;
+    localStorage.setItem('u_' + key, JSON.stringify(v || []));
+    if (key === 'campaigns') localStorage.setItem('u_camps', JSON.stringify(v || []));
+  },
+  s: (k, v, skipCloud) => {
+    const key = (k === 'camps') ? 'campaigns' : k;
+    DB._setLocal(key, v);
+    if (!skipCloud && SYNC_STATE_COLS.includes(key) && Array.isArray(v)) {
+      DB._push('sale_sync_col', { col: key, items: v });
+    }
+  },
+
+  // ── Tombstone Guard (chống hiện lại dòng vừa xóa khi mạng đang đồng bộ) ──
+  _addTombstones: (k, ids) => {
+    try {
+      const map = JSON.parse(localStorage.getItem('u_del_tombstones') || '{}');
+      const now = Date.now();
+      (ids || []).forEach(id => { map[k + '::' + String(id).trim()] = now; });
+      localStorage.setItem('u_del_tombstones', JSON.stringify(map));
+    } catch(e) {}
+  },
+  _filterTombstones: (k, rows) => {
+    if (!Array.isArray(rows)) return [];
+    try {
+      const map = JSON.parse(localStorage.getItem('u_del_tombstones') || '{}');
+      const now = Date.now();
+      let changed = false;
+      Object.keys(map).forEach(tk => {
+        if (now - map[tk] > 120000) { delete map[tk]; changed = true; } // giữ khóa chống hồi sinh 120s
+      });
+      if (changed) localStorage.setItem('u_del_tombstones', JSON.stringify(map));
+      return rows.filter(r => !map[k + '::' + String(r.id).trim()]);
+    } catch(e) {
+      return rows;
+    }
+  },
 
   // ── Add: write local first (instant UI), then push to Sheet ──
   add: (k, item) => {
-    item.id = item.id || Date.now();
-    let d = DB.g(k);
+    const key = (k === 'camps') ? 'campaigns' : k;
+    if (!item.id || !Number.isInteger(Number(item.id))) item.id = _genUid();
+    let d = DB.g(key);
     d.push(item);
-    DB.s(k, d);
-    DB._push('sale_add', { col: k, data: item });
+    DB._setLocal(key, d);
+    DB._push('sale_add', { col: key, data: item });
     return item;
   },
 
   // ── Update field(s) locally + Sheet ──────────────────────
   upd: (k, id, fields) => {
-    let d = DB.g(k);
+    const key = (k === 'camps') ? 'campaigns' : k;
+    let d = DB.g(key);
     d = d.map(r => r.id == id ? { ...r, ...fields } : r);
-    DB.s(k, d);
-    DB._push('sale_update', { col: k, id: id, fields: fields });
+    DB._setLocal(key, d);
+    DB._push('sale_update', { col: key, id: id, fields: fields });
   },
 
   // ── Delete locally + Sheet ───────────────────────────────
   del: (k, id) => {
-    let d = DB.g(k).filter(r => r.id != id);
-    DB.s(k, d);
-    DB._push('sale_delete', { col: k, id: id });
+    const key = (k === 'camps') ? 'campaigns' : k;
+    DB._addTombstones(key, [id]);
+    let d = DB.g(key).filter(r => String(r.id).trim() !== String(id).trim());
+    DB._setLocal(key, d);
+    DB._push('sale_delete', { col: key, id: id });
   },
 
-  // ── Bulk add ─────────────────────────────────────────────
-  bulk: (k, items) => {
-    let d = DB.g(k);
-    items.forEach(item => { item.id = item.id || Date.now() + Math.random(); d.push(item); });
-    DB.s(k, d);
-    DB._push('sale_bulk', { col: k, items: items });
+  // ── Bulk Delete locally + Sheet (Single-Lock Transaction) ──
+  delBulk: (k, ids, onDone) => {
+    const key = (k === 'camps') ? 'campaigns' : k;
+    const cleanIds = (ids || []).map(x => String(x).trim()).filter(Boolean);
+    if (cleanIds.length === 0) { if (onDone) onDone(); return; }
+    DB._addTombstones(key, cleanIds);
+    const idSet = {};
+    cleanIds.forEach(x => { idSet[x] = true; });
+    let d = DB.g(key).filter(r => !idSet[String(r.id).trim()]);
+    DB._setLocal(key, d);
+
+    _setSyncBadge('syncing', 'Đang xóa ' + cleanIds.length + ' mục trên Sheet...');
+    const curEmail = localStorage.getItem(GAUTH_EMAIL_KEY) || 'phonghdpxd@gmail.com';
+    fetch(GAS_SALE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'sale_delete_bulk', col: key, ids: cleanIds, email: curEmail })
+    })
+    .then(r => r.json())
+    .then(async res => {
+      if (res && res.ok) {
+        _setSyncBadge('ok', 'Đã xóa ' + (res.deleted ?? cleanIds.length) + ' mục');
+        if (onDone) onDone(res);
+      } else {
+        // Fallback tuần tự nếu GAS chưa cập nhật sale_delete_bulk
+        for (const singleId of cleanIds) {
+          await fetch(GAS_SALE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'sale_delete', col: key, id: singleId, email: curEmail })
+          }).catch(() => {});
+        }
+        _setSyncBadge('ok');
+        if (onDone) onDone({ ok: true });
+      }
+    })
+    .catch(e => {
+      console.warn('[DB] Bulk delete failed:', e);
+      _setSyncBadge('err');
+    });
+  },
+
+  // ── Bulk add (1 lần duy nhất, không nhân đôi) ────────────
+  bulk: (k, items, onDone) => {
+    const key = (k === 'camps') ? 'campaigns' : k;
+    let d = DB.g(key);
+    items.forEach(item => {
+      if (!item.id || !Number.isInteger(Number(item.id))) item.id = _genUid();
+      d.push(item);
+    });
+    DB._setLocal(key, d);
+    DB._push('sale_bulk', { col: key, items: items }, onDone);
   },
 
   // ── Background push to GAS ────────────
-  _push: (action, body) => {
+  _push: (action, body, onDone) => {
+    _setSyncBadge('syncing');
     const curEmail = localStorage.getItem(GAUTH_EMAIL_KEY) || 'phonghdpxd@gmail.com';
     fetch(GAS_SALE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: action, email: curEmail, ...body })
-    }).catch(e => console.warn('[DB] GAS push failed:', e));
+    })
+    .then(r => r.json())
+    .then(res => {
+      if (res && res.ok) _setSyncBadge('ok');
+      else _setSyncBadge('err', res?.error || 'Lỗi lưu Sheet');
+      if (onDone) onDone(res);
+    })
+    .catch(e => {
+      console.warn('[DB] GAS push failed:', e);
+      _setSyncBadge('err');
+    });
   },
 
-  // ── Pull live data from Sheet → refresh local cache ─────
+  // ── Pull live data from Sheet → refresh local cache (Kể cả khi Sheet trống 0 dòng!) ──
   pull: async (k, onDone) => {
     try {
+      const key = (k === 'camps') ? 'campaigns' : k;
       const curEmail = localStorage.getItem(GAUTH_EMAIL_KEY) || 'phonghdpxd@gmail.com';
       const res  = await fetch(GAS_SALE_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'sale_get', col: k, email: curEmail })
+        body: JSON.stringify({ action: 'sale_get', col: key, email: curEmail })
       });
       const json = await res.json();
-      if (json.ok && Array.isArray(json.data) && json.data.length > 0) {
-        DB.s(k, json.data);
-        if (onDone) onDone(json.data);
+      if (json.ok && Array.isArray(json.data)) {
+        const cleanData = DB._filterTombstones(key, json.data);
+        DB._setLocal(key, cleanData);
+        if (onDone) onDone(cleanData);
       }
     } catch(e) {
       console.warn('[DB] Pull failed for', k, e);
     }
   },
 
-  // ── Pull all collections on page load ────────────────────
-  pullAll: () => {
-    const cols = ['nhap','ban','tamung','khaosat','daily','pp','kygoi','lienlac','kh','camps','adsresults','leads'];
-    cols.forEach(k => DB.pull(k, () => {
-      // Re-render nếu section đang hiển thị
-      const sec = document.getElementById('s-' + (k === 'tamung' ? 'tamung' : k === 'ban' ? 'banhang' : k));
-      if (sec && sec.classList.contains('on')) {
-        const fn = renders[k === 'ban' ? 'banhang' : k === 'tamung' ? 'tamung' : k];
-        if (fn) fn();
+  // ── Pull all collections on page load (1-Request Batch SSOT) ────
+  pullAll: async (isManual) => {
+    const cols = [
+      'nhap','ban','tamung','khaosat','daily','pp','kygoi','lienlac','kh',
+      'campaigns','adsresults','leads','quoteups','quotesolar','acceptances',
+      'vcm_statements','kiemke_phieu','del_requests'
+    ];
+    _setSyncBadge('syncing', 'Đang đồng bộ Sheet...');
+    try {
+      const curEmail = localStorage.getItem(GAUTH_EMAIL_KEY) || 'phonghdpxd@gmail.com';
+      const res = await fetch(GAS_SALE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'sale_get_all', cols: cols, email: curEmail })
+      });
+      const json = await res.json();
+      if (json && json.ok && json.dataMap && typeof json.dataMap === 'object') {
+        Object.keys(json.dataMap).forEach(k => {
+          const key = (k === 'camps') ? 'campaigns' : k;
+          const serverRows = Array.isArray(json.dataMap[k]) ? json.dataMap[k] : [];
+          // Với các bảng state mới tạo lần đầu trên Sheet (0 dòng) mà local đang có sẵn dữ liệu, đẩy từ local lên Sheet
+          if (SYNC_STATE_COLS.includes(key) && serverRows.length === 0) {
+            const localRows = DB.g(key);
+            if (localRows && localRows.length > 0 && key !== 'del_requests') {
+              DB._push('sale_sync_col', { col: key, items: localRows });
+              return;
+            }
+          }
+          const cleanData = DB._filterTombstones(key, serverRows);
+          DB._setLocal(key, cleanData);
+        });
+        _setSyncBadge('ok');
+        DB._refreshAllViews();
+        if (isManual) al('✅ Đã đồng bộ 100% dữ liệu trực tiếp từ Google Sheet!', 'ok');
+        return;
       }
-      // Dashboard và tonkho luôn cần refresh
-      if (['nhap','ban','tamung'].includes(k)) { rDash && rDash(); renderTK && renderTK(); }
-    }));
+    } catch(e) {
+      console.warn('[DB] Batch pullAll fallback to sequential:', e);
+    }
+
+    // Fallback tuần tự nếu endpoint sale_get_all chưa active
+    for (const k of ['nhap','ban','tamung','daily','pp','kygoi','kh','khaosat','lienlac','campaigns','adsresults','leads']) {
+      await DB.pull(k);
+    }
+    _setSyncBadge('ok');
+    DB._refreshAllViews();
+    if (isManual) al('✅ Đã đồng bộ dữ liệu từ Google Sheet!', 'ok');
+  },
+
+  _refreshAllViews: () => {
+    try {
+      if (typeof rDash === 'function') rDash();
+      if (typeof renderTK === 'function') renderTK();
+      if (typeof rNhap === 'function') rNhap();
+      if (typeof _renderDelReqBadge === 'function') _renderDelReqBadge();
+      if (typeof _renderDelReqList === 'function') _renderDelReqList();
+      const activeSec = document.querySelector('.sec.on');
+      if (activeSec && activeSec.id) {
+        const secKey = activeSec.id.replace(/^s-/, '');
+        if (renders && typeof renders[secKey] === 'function') renders[secKey]();
+      }
+    } catch(e) { console.warn('[DB] _refreshAllViews error:', e); }
   }
 };
 
-// ── Seed demo nếu chưa có dữ liệu và offline ────────────────────
-if (!localStorage.getItem('u_init')) {
-  DB.add('nhap', {ten:'UPS 650VA APC',model:'BX650LI',serial:'SN001',dm:'UPS',sl:10,gg:850000,gb:1250000,ncc:'APC VN',ngay:td(),bh:24,gc:''});
-  DB.add('nhap', {ten:'UPS 1200VA Santak',model:'TG-1200',serial:'SN002',dm:'UPS',sl:6,gg:1400000,gb:2100000,ncc:'Santak',ngay:td(),bh:24,gc:''});
-  DB.add('nhap', {ten:'Solar Panel 400W Jinko',model:'JK-400M',serial:'SN003',dm:'Solar Panel',sl:20,gg:1800000,gb:2500000,ncc:'Jinko VN',ngay:td(),bh:12,gc:''});
-  DB.add('nhap', {ten:'Inverter Growatt 5kW',model:'SPF-5000',serial:'SN004',dm:'Inverter',sl:3,gg:12000000,gb:17000000,ncc:'Growatt',ngay:td(),bh:24,gc:''});
-  DB.add('nhap', {ten:'Ắc Quy GEL 100Ah',model:'GEL-100',serial:'SN005',dm:'Ắc Quy',sl:15,gg:3200000,gb:4500000,ncc:'Deco VN',ngay:td(),bh:12,gc:''});
-  DB.add('daily', {ten:'Điện Tử Minh Khoa',chu:'Khoa Nguyễn',dt:'0965 000 000',dc:'Q.7 HCM',kv:'TP.HCM',loai:'Đại lý cấp 1',ck:10});
-  localStorage.setItem('u_init', '1');
-}
+// ── Dọn dẹp 5 sản phẩm mẫu giả (SN001..SN005) nếu trước đây từng bị u_init tự động bơm vào localStorage ──
+try {
+  const curNhap = DB.g('nhap');
+  const demoSerials = ['SN001','SN002','SN003','SN004','SN005'];
+  if (curNhap.some(r => demoSerials.includes(String(r.serial || '').trim()))) {
+    DB._setLocal('nhap', curNhap.filter(r => !demoSerials.includes(String(r.serial || '').trim())));
+  }
+} catch(e) {}
 
 // ── Sau khi trang load xong → pull dữ liệu sống từ Sheet ────────
 window.addEventListener('DOMContentLoaded', () => {
@@ -3297,28 +3479,25 @@ function confirmBulkImport() {
   const btn = document.getElementById('btn-confirm-bulk');
   if (btn) { btn.disabled = true; btn.textContent = isVi ? '⏳ Đang lưu vào hệ thống...' : '⏳ Saving to system...'; }
 
-  // 1. Lưu vào Local Database
-  validItems.forEach(it => {
-    DB.add('nhap', {
-      ten: it.ten,
-      model: it.model,
-      serial: it.serial,
-      dm: it.dm,
-      sl: it.sl,
-      gg: it.gg,
-      lnCty: it.lnCty,
-      minSell: it.minSell,
-      gb: it.gb,
-      lnBranch: it.lnBranch,
-      ncc: it.ncc,
-      ngay: td(),
-      bh: it.bh,
-      gc: it.gc
-    });
-  });
-
-  // 2. Gửi đồng bộ lên Google Sheet qua Apps Script Web App
-  syncBulkToGoogleSheet(validItems);
+  // Lưu 1 lần duy nhất vào Local + đẩy 1 batch sale_bulk lên Google Sheet (chống nhân đôi phiếu nhập)
+  const itemsToSave = validItems.map(it => ({
+    id: _genUid(),
+    ten: it.ten,
+    model: it.model,
+    serial: it.serial,
+    dm: it.dm,
+    sl: it.sl,
+    gg: it.gg,
+    lnCty: it.lnCty,
+    minSell: it.minSell,
+    gb: it.gb,
+    lnBranch: it.lnBranch,
+    ncc: it.ncc,
+    ngay: td(),
+    bh: it.bh,
+    gc: it.gc
+  }));
+  DB.bulk('nhap', itemsToSave);
 
   // 3. Cập nhật giao diện
   al(isVi ? `✅ Đã import thành công ${validItems.length} sản phẩm vào kho!` : `✅ Successfully imported ${validItems.length} products to inventory!`);
@@ -3547,7 +3726,7 @@ function rTU(){
       `<button class="btn b-xs b-gn" onclick="updTU(${r.id},'Đã hoàn trả')">↩ Hoàn</button>
        <button class="btn b-xs b-rd" onclick="del('tamung',${r.id},rTU)">🗑</button>`]));
 }
-function updTU(id,ts){let d=DB.g('tamung');d=d.map(r=>r.id==id?{...r,ts}:r);DB.s('tamung',d);rTU();al('✅ Cập nhật!');}
+function updTU(id,ts){DB.upd('tamung',id,{ts});rTU();renderTK();rDash();al('✅ Đã cập nhật & đồng bộ Sheet!');}
 
 // ═══════════════════════════════════════════════════
 // BÁN HÀNG
@@ -5431,7 +5610,7 @@ function rKG(){
     })
   );
 }
-function updKG(id,ts){let d=DB.g('kygoi');d=d.map(r=>r.id==id?{...r,ts}:r);DB.s('kygoi',d);rKG();}
+function updKG(id,ts){DB.upd('kygoi',id,{ts});rKG();renderTK();rDash();al('✅ Đã cập nhật ký gởi & đồng bộ Sheet!');}
 
 // ═══════════════════════════════════════════════════
 // KÝ GỞI / BÁN SỈ HÀNG LOẠT (BULK CONSIGNMENT IMPORT)
@@ -5727,30 +5906,30 @@ function confirmKGBulkImport() {
   const btn = document.getElementById('btn-kg-confirm-bulk');
   if (btn) { btn.disabled = true; btn.textContent = isVi ? '⏳ Đang lưu vào hệ thống...' : '⏳ Saving...'; }
 
-  // Lưu từng phiếu vào DB
-  validItems.forEach(it => {
-    DB.add('kygoi', {
-      db: it.db,
-      nn: it.nn,
-      dt: it.dt,
-      spId: +it.spId,
-      spN: it.spN,
-      model: it.model,
-      serial: it.serial,
-      sl: +it.sl,
-      giagoc: it.giagoc,
-      gia: it.giaBan,
-      hh17: it.hh17,
-      lnCty: it.lnCty,
-      tongHH17: it.tongHH17,
-      tongLNCty: it.tongLNCty,
-      ngay: it.ngay_kg || td(),
-      ngay_kg: it.ngay_kg || td(),
-      han: +it.han,
-      gc: it.gc || 'Import ký gởi hàng loạt',
-      ts: 'Đang gởi'
-    });
-  });
+  // Lưu batch 1 lần vào Local + Google Sheet (sale_bulk)
+  const kgItemsToSave = validItems.map(it => ({
+    id: _genUid(),
+    db: it.db,
+    nn: it.nn,
+    dt: it.dt,
+    spId: +it.spId,
+    spN: it.spN,
+    model: it.model,
+    serial: it.serial,
+    sl: +it.sl,
+    giagoc: it.giagoc,
+    gia: it.giaBan,
+    hh17: it.hh17,
+    lnCty: it.lnCty,
+    tongHH17: it.tongHH17,
+    tongLNCty: it.tongLNCty,
+    ngay: it.ngay_kg || td(),
+    ngay_kg: it.ngay_kg || td(),
+    han: +it.han,
+    gc: it.gc || 'Import ký gởi hàng loạt',
+    ts: 'Đang gởi'
+  }));
+  DB.bulk('kygoi', kgItemsToSave);
 
   al(isVi ? `✅ Đã import thành công ${validItems.length} phiếu ký gởi!` : `✅ Successfully imported ${validItems.length} consignment slips!`);
   document.getElementById('kg-bulk-paste-area').value = '';
@@ -5999,7 +6178,14 @@ function exportCSV(){
   a.download=`TNI_Sale_${td()}.csv`;a.click();
 }
 
-function clearAllData(){if(confirm('Xóa TOÀN BỘ dữ liệu? Không thể phục hồi!')){'nhap,ban,daily,pp,kygoi,kh,khaosat,lienlac,quoteups,quotesolar,tamung'.split(',').forEach(k=>DB.s(k,[]));localStorage.removeItem('u_init');location.reload();}}
+function clearAllData(){
+  const isVi = currentLang === 'vi';
+  if(confirm(isVi ? '🔄 Làm mới bộ nhớ trình duyệt và tải lại toàn bộ dữ liệu chuẩn từ Google Sheet?' : '🔄 Refresh browser cache and reload live data from Google Sheet?')){
+    'nhap,ban,daily,pp,kygoi,kh,khaosat,lienlac,quoteups,quotesolar,tamung,campaigns,camps,adsresults,leads,del_requests,kiemke_phieu,acceptances,vcm_statements'.split(',').forEach(k=>DB._setLocal(k,[]));
+    localStorage.removeItem('u_del_tombstones');
+    DB.pullAll(true);
+  }
+}
 
 // ═══════════════════════════════════════════════════
 // 📢 QUẢNG CÁO — CAMPAIGNS
@@ -6029,9 +6215,9 @@ function rCampaigns(){
 }
 
 function toggleCamp(id){
-  let d=DB.g('campaigns');
-  d=d.map(r=>r.id==id?{...r,status:r.status==='Đang chạy'?'Đã dừng':'Đang chạy'}:r);
-  DB.s('campaigns',d);rCampaigns();
+  const cur = DB.g('campaigns').find(r => r.id == id);
+  if (cur) DB.upd('campaigns', id, { status: cur.status === 'Đang chạy' ? 'Đã dừng' : 'Đang chạy' });
+  rCampaigns();
 }
 
 function popCamps(ids){
@@ -6128,8 +6314,8 @@ function addLead(){
 
 function updLead(){
   const id=v('ldup-id'),ts=v('ldup-ts');if(!id){al('Chọn lead cần cập nhật','er');return;}
-  let d=DB.g('leads');d=d.map(r=>r.id==id?{...r,ts,note:v('ldup-gc')}:r);DB.s('leads',d);
-  al('✅ Đã cập nhật lead!');rLeads();popLeadSel();renderFunnel();renderLeadsCards();
+  DB.upd('leads', id, { ts, note: v('ldup-gc') });
+  al('✅ Đã cập nhật lead & đồng bộ Sheet!');rLeads();popLeadSel();renderFunnel();renderLeadsCards();
 }
 
 function popLeadSel(){
@@ -10513,9 +10699,9 @@ function renderStaffUsersTable(sourceOverride, _retry) {
     rawList.forEach((r, idx) => {
       const name = String(r.name || '').trim();
       if (!name || name === 'undefined' || name.toLowerCase() === 'null') return;
-      // Skip staff without real Gmail
+      // Chỉ lọc bỏ email mẫu giả (@company.com, @email.com), cho phép nhân sự mới thêm dù chưa điền Gmail
       const rawEmail = String(r.email || '').trim().toLowerCase();
-      if (!rawEmail || rawEmail.endsWith('@company.com') || rawEmail.endsWith('@email.com')) return;
+      if (rawEmail.endsWith('@company.com') || rawEmail.endsWith('@email.com')) return;
       activeLiveNames.add(name.toLowerCase());
 
       // Giữ lại vai trò đã được điều chỉnh, nếu chưa có thì gán mặc định 'sales' (riêng HR and Finance gán 'finance')
@@ -10592,10 +10778,10 @@ function _renderStaffTable_(users, source) {
 
   // Lọc sạch tuyệt đối dữ liệu đầu vào: KHÔNG BAO GIỜ cho phép dòng undefined/rác xuất hiện
   users = (users || []).map((u, i) => normalizeStaffUser(u, i + 1)).filter(Boolean);
-  // Filter out entries without real Gmail
+  // Chỉ lọc bỏ email mẫu giả (@company.com, @email.com), giữ nguyên mọi nhân sự thật
   users = users.filter(function(u) {
     var em = (u.email || '').trim().toLowerCase();
-    return em && !em.endsWith('@company.com') && !em.endsWith('@email.com');
+    return !em.endsWith('@company.com') && !em.endsWith('@email.com');
   });
   if (users.length === 0) {
     users = DEFAULT_STAFF_USERS.map((u, i) => normalizeStaffUser(u, i + 1)).filter(Boolean).filter(function(u) {
@@ -10785,10 +10971,10 @@ function populateStaffUserSelect() {
     ? cached.map((u, i) => normalizeStaffUser(u, i + 1)).filter(Boolean)
     : DEFAULT_STAFF_USERS;
   if (!users || users.length === 0) users = DEFAULT_STAFF_USERS;
-  // Filter out staff without real Gmail
+  // Chỉ lọc bỏ email mẫu giả (@company.com, @email.com)
   users = users.filter(function(u) {
     var em = (u.email || '').trim().toLowerCase();
-    return em && !em.endsWith('@company.com') && !em.endsWith('@email.com');
+    return !em.endsWith('@company.com') && !em.endsWith('@email.com');
   });
 
   sel.innerHTML = '';
@@ -10939,16 +11125,19 @@ function saveStaffUserModal() {
   }
   
   DB.s('staff_directory', list);
-
-  // 🔄 Sync lên Google Sheet (2 chiều SSOT)
-  syncStaffDirectoryToSheet(list, function(ok, msg) {
-    if (ok) al(isVi ? `✅ Đã lưu lên Google Sheet (${msg} nhân sự)!` : `✅ Synced to Google Sheet (${msg} staff)!`, 'ok');
-    else al(isVi ? `⚠️ Lưu local OK nhưng Sheet chưa sync: ${msg}` : `⚠️ Local OK but Sheet sync failed: ${msg}`, 'er');
-    renderStaffUsersTable();
-  });
   closeAddStaffModal();
-  renderStaffUsersTable();
+  _renderStaffTable_(list, '💾 Đang lưu lên Google Sheet...');
   populateStaffUserSelect();
+
+  // 🔄 Sync lên Google Sheet (2 chiều SSOT) — chờ lưu xong mới đọc lại từ Sheet để không bị ghi đè!
+  syncStaffDirectoryToSheet(list, function(ok, msg) {
+    if (ok) {
+      al(isVi ? `✅ Đã lưu nhân sự "${name}" lên Google Sheet (${msg} nhân sự)!` : `✅ Synced "${name}" to Google Sheet (${msg} staff)!`, 'ok');
+      _renderStaffTable_(list, '☁️ Google Sheet SSOT');
+    } else {
+      al(isVi ? `⚠️ Lưu local OK nhưng Sheet chưa sync: ${msg}` : `⚠️ Local OK but Sheet sync failed: ${msg}`, 'er');
+    }
+  });
   // Scroll danh sách vào view ngay sau khi thêm/sửa
   setTimeout(() => {
     const tbl = document.getElementById('rbac-staff-table-container');
@@ -11904,17 +12093,19 @@ function approveAllDelRequests() {
   var requests = DB.g('del_requests') || [];
   var pending = requests.filter(function(r){ return r.status === 'pending'; });
   if (pending.length === 0) return;
-  if (!confirm('Xác nhận Giám Đốc PHÊ DUYỆT XÓA TẤT CẢ ' + pending.length + ' sản phẩm đang chờ khỏi Tồn Kho?')) return;
+  if (!confirm('Xác nhận Giám Đốc PHÊ DUYỆT XÓA TẤT CẢ ' + pending.length + ' sản phẩm đang chờ khỏi Tồn Kho & Google Sheet?')) return;
   var revBy = _getCurUserName();
   var revAt = new Date().toISOString();
+  var idsToDelete = [];
   pending.forEach(function(req) {
-    DB.del('nhap', req.spId);
+    idsToDelete.push(req.spId);
     req.status = 'approved';
     req.reviewedBy = revBy;
     req.reviewedAt = revAt;
   });
+  DB.delBulk('nhap', idsToDelete);
   DB.s('del_requests', requests);
-  al('✅ Giám Đốc đã duyệt và xóa ' + pending.length + ' sản phẩm khỏi kho!', 'ok');
+  al('✅ Giám Đốc đã duyệt và xóa vĩnh viễn ' + pending.length + ' sản phẩm trên cả Web & Google Sheet!', 'ok');
   _renderDelReqBadge();
   _renderDelReqList();
   if (typeof rNhap === 'function') rNhap();
