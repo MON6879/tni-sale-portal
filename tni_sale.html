@@ -2123,9 +2123,20 @@ function copyTelegramReportTemplate(gName, gId, cat) {
           <div class="f"><label>Thương Hiệu Đang Bán</label><input id="ks-th" placeholder="APC, Santak..."/></div>
           <div class="f"><label>Mức Giá Phù Hợp (₫)</label><input id="ks-mg" type="number" placeholder="0"/></div>
           <div class="f"><label>Tiềm Năng</label><select id="ks-tn"><option>Cao</option><option>Trung bình</option><option>Thấp</option></select></div>
+          <div class="f"><label>📍 Lat (Vĩ Độ - Tự bóc tách từ ảnh)</label><input id="ks-lat" placeholder="VD: 14.082345" oninput="handleCoordPasteSplit('ks')"/></div>
+          <div class="f"><label>📍 Long (Kinh Độ - Tự bóc tách từ ảnh)</label><input id="ks-lng" placeholder="VD: 98.198765" oninput="handleCoordPasteSplit('ks')"/></div>
+          <div class="f" style="grid-column:1/-1;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;padding:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+              <div style="font-size:12.5px;font-weight:800;color:#1e40af">📷 Tải Hình Khảo Sát (Tự Động Bóc Tách Tọa Độ Lat/Long &amp; Gom 1 Link Vào Folder 2.12 SALE SOLUTION - BUILDING)</div>
+              <button type="button" class="btn b-xs b-bl" onclick="getDeviceGpsForSurvey('ks')">📍 Lấy Tọa Độ Thiết Bị</button>
+            </div>
+            <input type="file" id="ks-photo-input" accept="image/*" multiple onchange="handleSurveyPhotoUpload(this, 'ks')" style="font-size:12.5px"/>
+            <div id="ks-gps-status" style="font-size:12px;color:#0369a1;margin-top:6px;font-weight:600"></div>
+            <div id="ks-photos-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"></div>
+          </div>
           <div class="f" style="grid-column:1/-1"><label>Nhận Xét</label><textarea id="ks-nx" placeholder="..."></textarea></div>
         </div>
-        <div class="fa"><button class="btn b-bl" onclick="addKS()">📝 Lưu Khảo Sát</button></div>
+        <div class="fa"><button class="btn b-bl" id="btn-save-ks" onclick="addKS()">📝 Lưu Khảo Sát</button></div>
       </div>
     </div>
     <div class="panel"><div class="ph"><h3>📊 Danh Sách Khảo Sát</h3></div><div class="pb tw" id="t-ks"></div></div>
@@ -2533,11 +2544,41 @@ function copyTelegramReportTemplate(gName, gId, cat) {
         <div class="f"><label>💰 Budget Range</label><select id="sv-ns"><option>Not determined</option><option>Under 5M</option><option>5M - 20M</option><option>20M - 50M</option><option>50M - 200M</option><option>Over 200M</option></select></div>
         <div class="f"><label>🔥 Interest Level</label><select id="sv-md"><option>🔴 Very interested (Hot)</option><option>🟡 Interested (Warm)</option><option>🔵 Exploring (Cool)</option><option>⚪ Undecided (Cold)</option></select></div>
         <div class="f"><label>🏪 Partnership Potential</label><select id="sv-ht"><option>Retail buyer</option><option>Tier 1 Dealer</option><option>Tier 2 Dealer</option><option>Consignment sales</option><option>Project partner</option></select></div>
+        <div class="f">
+          <label>🧭 Lat (Vĩ Độ - Tự bóc tách từ hình)</label>
+          <input id="sv-lat" placeholder="VD: 14.082345" oninput="handleCoordPasteSplit('sv')" style="background:#f0fdf4;font-weight:700;color:#15803d"/>
+        </div>
+        <div class="f">
+          <label>🧭 Long (Kinh Độ - Tự bóc tách từ hình)</label>
+          <input id="sv-lng" placeholder="VD: 98.198765" oninput="handleCoordPasteSplit('sv')" style="background:#f0fdf4;font-weight:700;color:#15803d"/>
+        </div>
+        <div class="f">
+          <label>🔗 Link Folder Hình Ảnh (2.12 SALE SOLUTION - BUILDING)</label>
+          <input id="sv-photo-url" placeholder="Tự động tạo 1 link gôm tất cả hình khi lưu..." readonly style="background:#f8fafc;color:#0284c7;font-size:12px"/>
+        </div>
+
+        <!-- 📷 HÌNH ẢNH KHẢO SÁT + TỰ ĐỘNG BÓC TÁCH TỌA ĐỘ LAT/LONG + GOM 1 LINK DRIVE -->
+        <div class="f" style="grid-column:1/-1;background:linear-gradient(135deg,#eff6ff,#f0fdf4);border:1.5px solid #86efac;border-radius:10px;padding:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+            <div>
+              <div style="font-size:13px;font-weight:800;color:#166534">📷 Upload Hình Khảo Sát (Tự Động Bóc Tách Tọa Độ Lat / Long &amp; Gom Vào 1 Link Folder `2.12 SALE SOLUTION - BUILDING`)</div>
+              <div style="font-size:11.5px;color:#475569;margin-top:2px">Chọn 1 hoặc nhiều ảnh có gắn tọa độ (EXIF GPS hoặc ảnh chụp từ app GPS Map Camera). Hệ thống tự động bóc tách điền vào ô <b>Lat</b> &amp; <b>Long</b> và gom toàn bộ hình vào 1 folder link trên Google Drive.</div>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button type="button" class="btn b-xs b-gn" onclick="getDeviceGpsForSurvey('sv')" title="Lấy tọa độ GPS trực tiếp từ điện thoại/máy tính">📍 Lấy GPS Hiện Tại</button>
+              <button type="button" class="btn b-xs b-out" onclick="clearSurveyPhotos('sv')">✕ Xóa Ảnh</button>
+            </div>
+          </div>
+          <input type="file" id="sv-photo-input" accept="image/*" multiple onchange="handleSurveyPhotoUpload(this, 'sv')" style="font-size:12.5px;padding:6px;background:#fff;border:1px dashed #3b82f6;border-radius:6px;width:100%"/>
+          <div id="sv-gps-status" style="font-size:12px;color:#0369a1;margin-top:8px;font-weight:700"></div>
+          <div id="sv-photos-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"></div>
+        </div>
+
         <div class="f" style="grid-column:1/-1"><label>📝 Detailed Notes</label><textarea id="sv-gc" rows="3" placeholder="Specific needs, expected purchase timeline, special notes..."></textarea></div>
       </div>
       <div class="fa">
-        <button class="btn b-bl" onclick="addSurvey()" style="font-weight:700">📝 Save Survey</button>
-        <button class="btn b-out" onclick="clrForm('sv-')">✕ Clear</button>
+        <button class="btn b-bl" id="btn-save-sv" onclick="addSurvey()" style="font-weight:700">📝 Save Survey</button>
+        <button class="btn b-out" onclick="clrForm('sv-');clearSurveyPhotos('sv')">✕ Clear</button>
       </div>
     </div>
   </div>
@@ -2981,6 +3022,7 @@ const DB = {
       if (json.ok && Array.isArray(json.data)) {
         const cleanData = DB._filterTombstones(key, json.data);
         DB._setLocal(key, cleanData);
+        if (key === 'khaosat') DB._setLocal('surveys', cleanData);
         if (onDone) onDone(cleanData);
       }
     } catch(e) {
@@ -3018,6 +3060,7 @@ const DB = {
           }
           const cleanData = DB._filterTombstones(key, serverRows);
           DB._setLocal(key, cleanData);
+          if (key === 'khaosat') DB._setLocal('surveys', cleanData);
         });
         // Đồng bộ phân quyền RBAC 2 chiều từ Cloud
         if (Date.now() - (window._lastRbacSaveTs || 0) > 6000) {
@@ -6632,12 +6675,57 @@ function rKH(){document.getElementById('t-kh').innerHTML=tbl(['#','Họ Tên','�
   DB.g('kh').map((r,i)=>[i+1,r.ten,r.dt||'-',r.cty||'-',bk(r.loai,'bl'),bk(r.qt,'or'),
     `<button class="btn b-xs b-rd" onclick="del('kh',${r.id},rKH)">🗑</button>`]));}
 
-function addKS(){const ten=v('ks-ten');if(!ten){al('Nhập tên','er');return;}
-  DB.add('khaosat',{ten,nks:v('ks-nks'),dd:v('ks-dd'),ngay:v('ks-ngay')||td(),nc:v('ks-nc'),th:v('ks-th'),mg:v('ks-mg'),tn:v('ks-tn'),nx:v('ks-nx')});
-  al('✅ Đã lưu!');clrForm('ks-');rKS();}
-function rKS(){document.getElementById('t-ks').innerHTML=tbl(['#','Đại Lý','Người KS','NC/tháng','Đang Bán','Tiềm Năng','Ngày'],
-  DB.g('khaosat').map((r,i)=>[i+1,r.ten,r.nks||'-',r.nc||'-',r.th||'-',
-    bk(r.tn,r.tn==='Cao'?'gn':r.tn==='Trung bình'?'or':'rd'),fd(r.ngay)]));}
+async function addKS(){
+  const ten=v('ks-ten');
+  if(!ten){al('Nhập tên đại lý!','er');return;}
+  const btn = document.getElementById('btn-save-ks');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang lưu & tải hình lên Drive 2.12...'; }
+  const payload = {
+    ten,
+    kh: ten,
+    nks: v('ks-nks') || getStaffName(),
+    nv: v('ks-nks') || getStaffName(),
+    dd: v('ks-dd'),
+    dc: v('ks-dd'),
+    ngay: v('ks-ngay') || td(),
+    nc: v('ks-nc'),
+    th: v('ks-th'),
+    mg: v('ks-mg'),
+    tn: v('ks-tn'),
+    lat: (v('ks-lat') || '').trim(),
+    lng: (v('ks-lng') || '').trim(),
+    nx: v('ks-nx'),
+    gc: v('ks-nx')
+  };
+  await saveSurveyWithDriveFolder_(payload, surveyUploadedPhotos.ks || [], 'ks');
+  if (btn) { btn.disabled = false; btn.textContent = '📝 Lưu Khảo Sát'; }
+}
+function rKS(){
+  const d = getUnifiedSurveyRecords_();
+  document.getElementById('t-ks').innerHTML=tbl(['#','Đại Lý / KH','Người KS','Địa Điểm','Lat','Long','Hình Ảnh (Folder 2.12)','NC/tháng','Đang Bán','Tiềm Năng','Ngày',''],
+    d.map((r,i)=>{
+      const lat = r.lat || '';
+      const lng = r.lng || r.long || '';
+      const mapHtml = (lat && lng) ? `<a href="https://www.google.com/maps?q=${encodeURIComponent(lat + ',' + lng)}" target="_blank" style="color:#0284c7;font-weight:700;text-decoration:none" title="Xem trên Google Maps">📍 ${escH_(lat)}</a>` : (lat || '-');
+      const lngHtml = (lat && lng) ? `<a href="https://www.google.com/maps?q=${encodeURIComponent(lat + ',' + lng)}" target="_blank" style="color:#0284c7;font-weight:700;text-decoration:none">${escH_(lng)}</a>` : (lng || '-');
+      const pUrl = r.photoUrl || r.driveUrl || r.folderUrl || '';
+      const photoLinkHtml = pUrl ? `<a href="${escH_(pUrl)}" target="_blank" class="btn b-xs b-gn" style="text-decoration:none;font-weight:700;white-space:nowrap">📁 Xem Hình (2.12)</a>` : '-';
+      return [
+        i+1,
+        `<b>${escH_(r.ten || r.kh || '-')}</b>`,
+        escH_(r.nks || r.nv || '-'),
+        escH_(r.dd || r.dc || '-'),
+        mapHtml,
+        lngHtml,
+        photoLinkHtml,
+        r.nc||'-',
+        r.th||'-',
+        bk(r.tn||r.md||'Cao', (r.tn==='Cao'||String(r.md).includes('🔴'))?'gn':(r.tn==='Trung bình'||String(r.md).includes('🟡'))?'or':'bl'),
+        fd(r.ngay),
+        `<button class="btn b-xs b-rd" onclick="del('khaosat',${r.id},()=>{rKS();renderSurveys();})">🗑</button>`
+      ];
+    }));
+}
 
 function addLK(){const ten=v('lk-ten');if(!ten){al('Nhập tên','er');return;}
   DB.add('lienlac',{ten,dt:v('lk-dt'),ht:v('lk-ht'),ngay:v('lk-ngay')||td(),nd:v('lk-nd'),hd:v('lk-hd'),fu:v('lk-fu')});
@@ -10699,46 +10787,493 @@ function renderMyQuotes(){
 }
 
 // ═══════════════════════════════════════════════════
-// STAFF PORTAL — SURVEYS (BILINGUAL)
+// STAFF PORTAL — SURVEYS (BILINGUAL + AUTO EXIF/WATERMARK GPS + DRIVE FOLDER 2.12)
 // ═══════════════════════════════════════════════════
-function addSurvey(){
+const surveyUploadedPhotos = { sv: [], ks: [] };
+
+// 1. Tự động tách khi người dùng dán cặp tọa độ "14.082345, 98.198765" vào ô Lat hoặc Long
+function handleCoordPasteSplit(prefix) {
+  const latEl = document.getElementById(prefix + '-lat');
+  const lngEl = document.getElementById(prefix + '-lng');
+  if (!latEl || !lngEl) return;
+  const raw = (latEl.value || '').trim();
+  const m = raw.match(/^([+-]?\d{1,2}\.\d+)\s*[,;/\s]\s*([+-]?\d{1,3}\.\d+)$/);
+  if (m) {
+    latEl.value = Number(m[1]).toFixed(6);
+    lngEl.value = Number(m[2]).toFixed(6);
+  }
+}
+
+// 2. Lấy tọa độ GPS trực tiếp từ thiết bị (Điện thoại / Máy tính)
+function getDeviceGpsForSurvey(prefix) {
   const isVi = currentLang === 'vi';
-  const nv=v('sv-nv')||getStaffName(), kh=v('sv-kh');
-  if(!nv||!kh){al(isVi ? 'Nhập tên NV và tên KH!' : 'Please enter Staff Name and Customer Name!','er');return;}
-  DB.add('surveys',{nv,type:v('sv-type'),kh,dt:v('sv-dt'),dc:v('sv-dc'),sp:v('sv-sp'),ns:v('sv-ns'),md:v('sv-md'),ht:v('sv-ht'),gc:v('sv-gc'),ngay:td()});
-  // Sync to Google Sheet
-  try{
-    const gasUrl="https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec";
-    fetch(gasUrl,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({action:"sale_add",col:"khaosat",data:{nv,type:v('sv-type'),kh,dt:v('sv-dt'),dc:v('sv-dc'),sp:v('sv-sp'),ns:v('sv-ns'),md:v('sv-md'),ht:v('sv-ht'),gc:v('sv-gc'),ngay:td()}})
+  const statusEl = document.getElementById(prefix + '-gps-status');
+  if (!navigator.geolocation) {
+    al(isVi ? 'Trình duyệt không hỗ trợ định vị GPS!' : 'Geolocation not supported!', 'er');
+    return;
+  }
+  if (statusEl) statusEl.innerHTML = `⏳ ${isVi ? 'Đang lấy tọa độ GPS từ thiết bị...' : 'Acquiring device GPS coordinates...'}`;
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const lat = pos.coords.latitude.toFixed(6);
+      const lng = pos.coords.longitude.toFixed(6);
+      const latEl = document.getElementById(prefix + '-lat');
+      const lngEl = document.getElementById(prefix + '-lng');
+      if (latEl) latEl.value = lat;
+      if (lngEl) lngEl.value = lng;
+      if (statusEl) {
+        statusEl.innerHTML = `✅ ${isVi ? 'Đã lấy tọa độ GPS thiết bị:' : 'Device GPS extracted:'} <b>Lat ${lat}, Long ${lng}</b> — <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" style="color:#15803d;text-decoration:underline">🗺️ Xem Google Maps</a>`;
+      }
+      al(`📍 GPS: ${lat}, ${lng}`, 'ok');
+    },
+    err => {
+      if (statusEl) statusEl.innerHTML = `⚠️ ${isVi ? 'Không lấy được GPS thiết bị (Hãy chọn ảnh có tọa độ hoặc nhập tay): ' : 'GPS error: '}${escH_(err.message)}`;
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+}
+
+// 3. Bộ giải mã nhị phân EXIF GPS trực tiếp từ file ảnh (JPEG / TIFF)
+function parseExifGpsFromBuffer_(arrayBuffer) {
+  try {
+    const view = new DataView(arrayBuffer);
+    if (view.byteLength < 12 || view.getUint16(0, false) !== 0xFFD8) return null;
+    let offset = 2;
+    const length = view.byteLength;
+
+    while (offset + 4 <= length) {
+      const marker = view.getUint16(offset, false);
+      offset += 2;
+      if (marker === 0xFFE1) { // APP1 (EXIF)
+        const app1Length = view.getUint16(offset, false);
+        if (offset + 8 <= length && view.getUint32(offset + 2, false) === 0x45786966 && view.getUint16(offset + 6, false) === 0x0000) {
+          const tiffOffset = offset + 8;
+          const endian = view.getUint16(tiffOffset, false);
+          const little = (endian === 0x4949);
+          if (!little && endian !== 0x4D4D) return null;
+          if (view.getUint16(tiffOffset + 2, little) !== 0x002A) return null;
+          const firstIfdOffset = view.getUint32(tiffOffset + 4, little);
+          const ifd0Start = tiffOffset + firstIfdOffset;
+          if (ifd0Start + 2 > length) return null;
+
+          const entries = view.getUint16(ifd0Start, little);
+          let gpsIfdPointer = 0;
+          for (let i = 0; i < entries; i++) {
+            const entryOffset = ifd0Start + 2 + i * 12;
+            if (entryOffset + 12 > length) break;
+            const tag = view.getUint16(entryOffset, little);
+            if (tag === 0x8825) { // GPSInfoTag
+              gpsIfdPointer = view.getUint32(entryOffset + 8, little);
+              break;
+            }
+          }
+          if (!gpsIfdPointer) return null;
+
+          const gpsStart = tiffOffset + gpsIfdPointer;
+          if (gpsStart + 2 > length) return null;
+          const gpsEntries = view.getUint16(gpsStart, little);
+          let latRef = 'N', lonRef = 'E', latValues = null, lonValues = null;
+
+          const readRational3 = (valOffset) => {
+            const pos = tiffOffset + valOffset;
+            if (pos + 24 > length) return null;
+            const arr = [];
+            for (let k = 0; k < 3; k++) {
+              const num = view.getUint32(pos + k * 8, little);
+              const den = view.getUint32(pos + k * 8 + 4, little);
+              arr.push(den ? (num / den) : 0);
+            }
+            return arr;
+          };
+
+          for (let j = 0; j < gpsEntries; j++) {
+            const eOff = gpsStart + 2 + j * 12;
+            if (eOff + 12 > length) break;
+            const gTag = view.getUint16(eOff, little);
+            const gCount = view.getUint32(eOff + 4, little);
+            const gValOff = view.getUint32(eOff + 8, little);
+
+            if (gTag === 0x0001) { // GPSLatitudeRef
+              const ch = view.getUint8(eOff + 8);
+              if (ch === 83 || ch === 115) latRef = 'S';
+            } else if (gTag === 0x0002 && gCount === 3) { // GPSLatitude
+              latValues = readRational3(gValOff);
+            } else if (gTag === 0x0003) { // GPSLongitudeRef
+              const ch = view.getUint8(eOff + 8);
+              if (ch === 87 || ch === 119) lonRef = 'W';
+            } else if (gTag === 0x0004 && gCount === 3) { // GPSLongitude
+              lonValues = readRational3(gValOff);
+            }
+          }
+
+          if (latValues && lonValues) {
+            let lat = latValues[0] + (latValues[1] / 60) + (latValues[2] / 3600);
+            let lng = lonValues[0] + (lonValues[1] / 60) + (lonValues[2] / 3600);
+            if (latRef === 'S') lat = -lat;
+            if (lonRef === 'W') lng = -lng;
+            if (isFinite(lat) && isFinite(lng) && (Math.abs(lat) > 0.0001 || Math.abs(lng) > 0.0001)) {
+              return { lat: lat.toFixed(6), lng: lng.toFixed(6), source: 'EXIF GPS' };
+            }
+          }
+        }
+        offset += app1Length;
+      } else if ((marker & 0xFF00) !== 0xFF00) {
+        break;
+      } else {
+        const segLen = view.getUint16(offset, false);
+        offset += segLen;
+      }
+    }
+  } catch (e) {
+    console.warn('[EXIF_GPS] Parse error:', e);
+  }
+  return null;
+}
+
+// 4. Bóc tách tọa độ từ chữ in trên hình (GPS Map Camera / Timestamp Camera watermark) hoặc tên file
+function parseCoordinatesFromText_(text) {
+  if (!text) return null;
+  const clean = String(text).replace(/\r?\n/g, ' ');
+
+  // Mẫu 1: "Lat 14.082345° N Long 98.198765° E" hoặc "Latitude: 14.082345, Longitude: 98.198765"
+  const m1 = clean.match(/Lat(?:itude)?\s*[:=]?\s*([+-]?\d{1,2}[.,]\d+)\s*°?\s*([NS])?[,;\s|]+Lon(?:g|gitude)?\s*[:=]?\s*([+-]?\d{1,3}[.,]\d+)\s*°?\s*([EW])?/i);
+  if (m1) {
+    let lat = parseFloat(m1[1].replace(',', '.'));
+    let lng = parseFloat(m1[3].replace(',', '.'));
+    if (m1[2] && m1[2].toUpperCase() === 'S') lat = -Math.abs(lat);
+    if (m1[4] && m1[4].toUpperCase() === 'W') lng = -Math.abs(lng);
+    if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
+      return { lat: lat.toFixed(6), lng: lng.toFixed(6), source: 'Watermark GPS Text' };
+    }
+  }
+
+  // Mẫu 2: DMS "14°04'56.4"N 98°11'55.5"E"
+  const m2 = clean.match(/(\d{1,2})\s*[°º]\s*(\d{1,2})\s*['’′]\s*(\d{1,2}(?:[.,]\d+)?)\s*["”″]?\s*([NS])\s*[,;\s]+\s*(\d{1,3})\s*[°º]\s*(\d{1,2})\s*['’′]\s*(\d{1,2}(?:[.,]\d+)?)\s*["”″]?\s*([EW])/i);
+  if (m2) {
+    let lat = Number(m2[1]) + Number(m2[2]) / 60 + parseFloat(m2[3].replace(',', '.')) / 3600;
+    let lng = Number(m2[5]) + Number(m2[6]) / 60 + parseFloat(m2[7].replace(',', '.')) / 3600;
+    if (m2[4].toUpperCase() === 'S') lat = -lat;
+    if (m2[8].toUpperCase() === 'W') lng = -lng;
+    return { lat: lat.toFixed(6), lng: lng.toFixed(6), source: 'DMS Watermark' };
+  }
+
+  // Mẫu 3: Cặp số thập phân tọa độ Myanmar / Đông Nam Á (Lat 5..29, Long 90..110)
+  const m3 = clean.match(/\b([5-9]\.\d{4,8}|[12]\d\.\d{4,8})\s*°?\s*[NS]?\s*[,;/\s|]+\s*(9\d\.\d{4,8}|10\d\.\d{4,8})\s*°?\s*[EW]?\b/i);
+  if (m3) {
+    return { lat: parseFloat(m3[1]).toFixed(6), lng: parseFloat(m3[2]).toFixed(6), source: 'Image Coordinate Stamp' };
+  }
+  return null;
+}
+
+async function extractWatermarkGpsViaOcr_(dataUrl) {
+  try {
+    if (!window.Tesseract) {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+    // Cắt 40% phần đáy ảnh (nơi GPS Map Camera / Timestamp Camera in tọa độ Lat/Long) để OCR nhanh và chính xác
+    const croppedUrl = await new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const startY = Math.floor(img.height * 0.58);
+        canvas.width = img.width;
+        canvas.height = img.height - startY;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, startY, img.width, canvas.height, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.9));
+      };
+      img.onerror = () => resolve(dataUrl);
+      img.src = dataUrl;
     });
-  }catch(e){console.warn('Survey sync:',e);}
-  al(isVi ? '✅ Đã lưu khảo sát!' : '✅ Survey saved successfully!');clrForm('sv-');renderSurveys();
+    const res = await window.Tesseract.recognize(croppedUrl, 'eng');
+    const parsed = parseCoordinatesFromText_(res?.data?.text || '');
+    if (parsed) return parsed;
+    // Thử toàn ảnh nếu tọa độ nằm ở góc trên
+    const resFull = await window.Tesseract.recognize(dataUrl, 'eng');
+    return parseCoordinatesFromText_(resFull?.data?.text || '');
+  } catch (e) {
+    console.warn('[OCR_GPS] Watermark scan skipped:', e);
+    return null;
+  }
+}
+
+function handleSurveyPhotoUpload(input, prefix) {
+  const pfx = prefix || 'sv';
+  if (!input || !input.files || !input.files.length) return;
+  const isVi = currentLang === 'vi';
+  const files = Array.from(input.files);
+  const previewBox = document.getElementById(pfx + '-photos-preview');
+  const statusEl = document.getElementById(pfx + '-gps-status');
+  if (statusEl) statusEl.innerHTML = `⏳ ${isVi ? 'Đang đọc ảnh & tự động bóc tách tọa độ Lat / Long...' : 'Reading photo & auto-extracting Lat / Long coordinates...'}`;
+
+  files.forEach(file => {
+    // 1. Kiểm tra tọa độ trong tên file trước
+    const fnCoords = parseCoordinatesFromText_(file.name);
+    if (fnCoords) applyExtractedSurveyGps_(pfx, fnCoords);
+
+    // 2. Đọc ArrayBuffer để bóc tách EXIF GPS tức thì (<30ms)
+    const bufReader = new FileReader();
+    bufReader.onload = function(ev) {
+      const exifCoords = parseExifGpsFromBuffer_(ev.target.result);
+      if (exifCoords) {
+        applyExtractedSurveyGps_(pfx, exifCoords);
+      }
+    };
+    bufReader.readAsArrayBuffer(file);
+
+    // 3. Đọc DataURL để hiển thị preview + nén hợp lý + quét OCR chữ tọa độ in trên hình (nếu ảnh chụp qua GPS Map Camera / gửi qua Viber mất EXIF)
+    const urlReader = new FileReader();
+    urlReader.onload = function(e) {
+      const rawDataUrl = e.target.result;
+      compressSurveyImage_(rawDataUrl, 1280, 0.82, function(compressedUrl) {
+        surveyUploadedPhotos[pfx].push(compressedUrl);
+        if (previewBox) {
+          const wrap = document.createElement('div');
+          wrap.style.cssText = 'position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;border:2px solid #86efac;box-shadow:0 1px 3px rgba(0,0,0,0.1)';
+          wrap.innerHTML = `<img src="${compressedUrl}" style="width:100%;height:100%;object-fit:cover"/>
+            <button type="button" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;border:none;border-radius:99px;width:18px;height:18px;font-size:10px;cursor:pointer;line-height:1" onclick="this.parentElement.remove();surveyUploadedPhotos['${pfx}']=surveyUploadedPhotos['${pfx}'].filter(u=>u!=='${compressedUrl}')">&times;</button>`;
+          previewBox.appendChild(wrap);
+        }
+
+        // Nếu sau 250ms chưa có EXIF GPS thì tự động quét chữ tọa độ in trên ảnh (GPS Map Camera watermark)
+        setTimeout(async () => {
+          const latEl = document.getElementById(pfx + '-lat');
+          const lngEl = document.getElementById(pfx + '-lng');
+          if (latEl && lngEl && (!latEl.value || !lngEl.value)) {
+            if (statusEl) statusEl.innerHTML = `🔍 ${isVi ? 'Ảnh không có EXIF ẩn — Đang tự động đọc chữ tọa độ in trên hình (GPS Map Camera)...' : 'Scanning GPS watermark text printed on image...'}`;
+            const ocrCoords = await extractWatermarkGpsViaOcr_(rawDataUrl);
+            if (ocrCoords) {
+              applyExtractedSurveyGps_(pfx, ocrCoords);
+            } else if (!latEl.value && statusEl) {
+              statusEl.innerHTML = `ℹ️ ${isVi ? 'Đã tải ảnh (' + surveyUploadedPhotos[pfx].length + ' hình). Không tìm thấy tọa độ trong ảnh — Bấm "📍 Lấy GPS Hiện Tại" hoặc nhập Lat/Long.' : 'Photo loaded. Click "Get Device GPS" or enter Lat/Long.'}`;
+            }
+          }
+        }, 250);
+      });
+    };
+    urlReader.readAsDataURL(file);
+  });
+}
+
+function applyExtractedSurveyGps_(pfx, coords) {
+  if (!coords || !coords.lat || !coords.lng) return;
+  const isVi = currentLang === 'vi';
+  const latEl = document.getElementById(pfx + '-lat');
+  const lngEl = document.getElementById(pfx + '-lng');
+  const statusEl = document.getElementById(pfx + '-gps-status');
+  if (latEl) latEl.value = coords.lat;
+  if (lngEl) lngEl.value = coords.lng;
+  if (statusEl) {
+    statusEl.innerHTML = `✅ ${isVi ? 'Đã tự động bóc tách tọa độ từ hình (' + coords.source + '):' : 'Auto-extracted coordinates (' + coords.source + '):'} <b style="color:#15803d">Lat: ${coords.lat} | Long: ${coords.lng}</b> — <a href="https://www.google.com/maps?q=${coords.lat},${coords.lng}" target="_blank" style="color:#0284c7;text-decoration:underline">🗺️ Xem vị trí trên Google Maps</a>`;
+  }
+  al(`🧭 ${isVi ? 'Đã tự động bóc tách tọa độ:' : 'Extracted GPS:'} ${coords.lat}, ${coords.lng}`, 'ok');
+}
+
+function compressSurveyImage_(dataUrl, maxDim, quality, cb) {
+  const img = new Image();
+  img.onload = function() {
+    let w = img.width, h = img.height;
+    if (w > maxDim || h > maxDim) {
+      if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+      else { w = Math.round(w * maxDim / h); h = maxDim; }
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, w, h);
+    cb(canvas.toDataURL('image/jpeg', quality || 0.82));
+  };
+  img.onerror = function() { cb(dataUrl); };
+  img.src = dataUrl;
+}
+
+function clearSurveyPhotos(prefix) {
+  const pfx = prefix || 'sv';
+  surveyUploadedPhotos[pfx] = [];
+  const p = document.getElementById(pfx + '-photos-preview');
+  if (p) p.innerHTML = '';
+  const inp = document.getElementById(pfx + '-photo-input');
+  if (inp) inp.value = '';
+  const st = document.getElementById(pfx + '-gps-status');
+  if (st) st.innerHTML = '';
+  const uEl = document.getElementById(pfx + '-photo-url');
+  if (uEl) uEl.value = '';
+}
+
+function getUnifiedSurveyRecords_() {
+  const ksList = DB.g('khaosat') || [];
+  const svList = DB.g('surveys') || [];
+  const map = new Map();
+  [...ksList, ...svList].forEach(r => {
+    if (!r) return;
+    const key = String(r.id || ((r.kh || r.ten || '') + '_' + (r.ngay || '') + '_' + (r.lat || '')));
+    map.set(key, r);
+  });
+  return Array.from(map.values()).sort((a, b) => Number(b.id || 0) - Number(a.id || 0));
+}
+
+async function saveSurveyWithDriveFolder_(recordData, photosArr, prefix) {
+  const isVi = currentLang === 'vi';
+  const curEmail = localStorage.getItem(GAUTH_EMAIL_KEY) || 'phonghdpxd@gmail.com';
+  let finalPhotoUrl = recordData.photoUrl || '';
+
+  try {
+    const res = await fetch(GAS_SALE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'sale_survey_save',
+        email: curEmail,
+        data: recordData,
+        photos: photosArr || []
+      })
+    });
+    const json = await res.json();
+    if (json && json.ok) {
+      if (json.folderUrl) finalPhotoUrl = json.folderUrl;
+      if (json.id) recordData.id = json.id;
+    }
+  } catch (e) {
+    console.warn('[SURVEY_SAVE] Cloud save fallback:', e);
+  }
+
+  recordData.photoUrl = finalPhotoUrl;
+  const urlInput = document.getElementById(prefix + '-photo-url');
+  if (urlInput && finalPhotoUrl) urlInput.value = finalPhotoUrl;
+
+  // Lưu đồng bộ vào cả surveys và khaosat trên local
+  const newId = recordData.id || Date.now();
+  const savedObj = { ...recordData, id: newId, photoUrl: finalPhotoUrl };
+  const curSv = DB.g('surveys') || [];
+  DB._setLocal('surveys', [savedObj, ...curSv.filter(x => x.id !== newId)]);
+  const curKs = DB.g('khaosat') || [];
+  DB._setLocal('khaosat', [savedObj, ...curKs.filter(x => x.id !== newId)]);
+
+  al(isVi
+    ? `✅ Đã lưu khảo sát${finalPhotoUrl ? ' & gom hình vào 1 link Folder 2.12 SALE SOLUTION - BUILDING!' : '!'}`
+    : `✅ Survey saved${finalPhotoUrl ? ' & photos grouped into 1 Drive folder link!' : '!'}`, 'ok');
+
+  clrForm(prefix + '-');
+  clearSurveyPhotos(prefix);
+  renderSurveys();
+  try { rKS(); } catch(e) {}
+}
+
+async function addSurvey(){
+  const isVi = currentLang === 'vi';
+  const nv = v('sv-nv') || getStaffName(), kh = v('sv-kh');
+  if(!nv || !kh){
+    al(isVi ? 'Nhập tên NV và tên KH!' : 'Please enter Staff Name and Customer Name!','er');
+    return;
+  }
+  const btn = document.getElementById('btn-save-sv');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = isVi ? '⏳ Đang tải hình lên Folder 2.12 & Lưu...' : '⏳ Uploading to Drive 2.12 & Saving...';
+  }
+  const payload = {
+    nv,
+    nks: nv,
+    type: v('sv-type'),
+    kh,
+    ten: kh,
+    dt: v('sv-dt'),
+    dc: v('sv-dc'),
+    dd: v('sv-dc'),
+    sp: v('sv-sp'),
+    ns: v('sv-ns'),
+    md: v('sv-md'),
+    ht: v('sv-ht'),
+    lat: (v('sv-lat') || '').trim(),
+    lng: (v('sv-lng') || '').trim(),
+    gc: v('sv-gc'),
+    nx: v('sv-gc'),
+    ngay: td()
+  };
+  await saveSurveyWithDriveFolder_(payload, surveyUploadedPhotos.sv || [], 'sv');
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = isVi ? '📝 Lưu Khảo Sát' : '📝 Save Survey';
+  }
 }
 
 function renderSurveys(){
   const isVi = currentLang === 'vi';
   const q=(v('sv-filter')||'').toLowerCase();
-  const d=DB.g('surveys').filter(r=>!q||(r.nv||'').toLowerCase().includes(q)||(r.kh||'').toLowerCase().includes(q)||(r.dc||'').toLowerCase().includes(q));
+  const allRows = getUnifiedSurveyRecords_();
+  const d = allRows.filter(r =>
+    !q ||
+    String(r.nv || r.nks || '').toLowerCase().includes(q) ||
+    String(r.kh || r.ten || '').toLowerCase().includes(q) ||
+    String(r.dc || r.dd || '').toLowerCase().includes(q)
+  );
   const svHeaders = isVi ? 
-    ['#','NV','Loại','KH / Đối Tác','SĐT','Khu Vực','Sản Phẩm','Ngân Sách','Mức Độ','Hợp Tác','Ngày',''] : 
-    ['#','Staff','Type','Customer / Partner','Phone','Area','Product','Budget','Interest','Cooperation','Date','Action'];
+    ['#','NV','Loại','KH / Đối Tác','SĐT','Khu Vực','Lat','Long','Hình Ảnh (1 Link Folder 2.12)','Sản Phẩm','Ngân Sách','Mức Độ','Hợp Tác','Ngày',''] : 
+    ['#','Staff','Type','Customer / Partner','Phone','Area','Lat','Long','Photos (1 Folder Link)','Product','Budget','Interest','Cooperation','Date','Action'];
   document.getElementById('sv-table').innerHTML=d.length?tbl(svHeaders,
-    d.map((r,i)=>[i+1,`<b>${r.nv}</b>`,bk(r.type,'bl'),`<b>${r.kh}</b>`,r.dt||'-',r.dc||'-',
-      bk(r.sp,'bl'),r.ns||'-',
-      r.md?.includes('🔴')?bk('Hot','rd'):r.md?.includes('🟡')?bk('Warm','or'):r.md?.includes('🔵')?bk('Cool','bl'):bk('Cold','gy'),
-      bk(r.ht,'pu'),fd(r.ngay),
-      `<button class="btn b-xs b-rd" onclick="del('surveys',${r.id},renderSurveys)">🗑</button>`
-    ])):`<div style="color:#94a3b8;padding:20px;text-align:center">${isVi?'Chưa có khảo sát nào':'No surveys yet'}</div>`;
+    d.map((r,i)=>{
+      const lat = r.lat || '';
+      const lng = r.lng || r.long || '';
+      const latCell = (lat && lng)
+        ? `<a href="https://www.google.com/maps?q=${encodeURIComponent(lat + ',' + lng)}" target="_blank" style="color:#15803d;font-weight:700;text-decoration:none" title="Mở vị trí trên Google Maps">📍 ${escH_(lat)}</a>`
+        : (lat ? escH_(lat) : '-');
+      const lngCell = (lat && lng)
+        ? `<a href="https://www.google.com/maps?q=${encodeURIComponent(lat + ',' + lng)}" target="_blank" style="color:#15803d;font-weight:700;text-decoration:none" title="Mở vị trí trên Google Maps">${escH_(lng)}</a>`
+        : (lng ? escH_(lng) : '-');
+      const pUrl = r.photoUrl || r.driveUrl || r.folderUrl || '';
+      const photoCell = pUrl
+        ? `<a href="${escH_(pUrl)}" target="_blank" class="btn b-xs b-gn" style="text-decoration:none;font-weight:700;white-space:nowrap" title="Mở thư mục hình khảo sát trong 2.12 SALE SOLUTION - BUILDING">📁 Xem Hình (Folder)</a>`
+        : '-';
+      return [
+        i+1,
+        `<b>${escH_(r.nv || r.nks || '-')}</b>`,
+        bk(r.type || 'Khảo sát','bl'),
+        `<b>${escH_(r.kh || r.ten || '-')}</b>`,
+        escH_(r.dt || '-'),
+        escH_(r.dc || r.dd || '-'),
+        latCell,
+        lngCell,
+        photoCell,
+        bk(r.sp || '-','bl'),
+        r.ns || '-',
+        String(r.md || '').includes('🔴')?bk('Hot','rd'):String(r.md || '').includes('🟡')?bk('Warm','or'):String(r.md || '').includes('🔵')?bk('Cool','bl'):bk(r.tn || 'Cold','gy'),
+        bk(r.ht || '-','pu'),
+        fd(r.ngay),
+        `<button class="btn b-xs b-rd" onclick="del('khaosat',${r.id},()=>{DB._setLocal('surveys',(DB.g('surveys')||[]).filter(x=>x.id!=${r.id}));renderSurveys();})">🗑</button>`
+      ];
+    })) : `<div style="color:#94a3b8;padding:20px;text-align:center">${isVi?'Chưa có khảo sát nào':'No surveys yet'}</div>`;
 }
 
 function exportSurveyCSV(){
   const isVi = currentLang === 'vi';
-  const d=DB.g('surveys');
+  const d = getUnifiedSurveyRecords_();
   if(!d.length){al(isVi ? 'Chưa có dữ liệu khảo sát!' : 'No survey data to export!','er');return;}
-  const h=isVi ? 
-    ['NV','Loại','KH','SĐT','Khu Vực','Sản Phẩm','Ngân Sách','Mức Độ','Hợp Tác','Ghi Chú','Ngày'] :
-    ['Staff','Type','Customer','Phone','Area','Product','Budget','Interest','Cooperation','Notes','Date'];
+  const h = isVi ? 
+    ['NV','Loại','KH','SĐT','Khu Vực','Lat','Long','Link Hình Ảnh (Folder 2.12)','Sản Phẩm','Ngân Sách','Mức Độ','Hợp Tác','Ghi Chú','Ngày'] :
+    ['Staff','Type','Customer','Phone','Area','Lat','Long','Photos Folder Link','Product','Budget','Interest','Cooperation','Notes','Date'];
+  const rows = d.map(r => [
+    r.nv || r.nks || '',
+    r.type || '',
+    r.kh || r.ten || '',
+    r.dt || '',
+    r.dc || r.dd || '',
+    r.lat || '',
+    r.lng || r.long || '',
+    r.photoUrl || r.driveUrl || '',
+    r.sp || '',
+    r.ns || '',
+    r.md || r.tn || '',
+    r.ht || '',
+    r.gc || r.nx || '',
+    r.ngay || ''
+  ].map(v => `"${String(v).replace(/"/g, '""')}"`));
   const csv = "\uFEFF" + h.join(',') + "\n" + rows.map(r => r.join(',')).join('\n');
   const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
   a.download=`TNI_Survey_${td()}.csv`;a.click();
