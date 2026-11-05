@@ -746,7 +746,7 @@ function copyTelegramReportTemplate(gName, gId, cat) {
     <button class="btn b-sm" id="lang-btn" onclick="toggleLang()" style="background:#e0f2fe;color:#0369a1;font-weight:600">🌐 EN / VN</button>
     <span id="clk" style="font-size:11.5px;color:#94a3b8"></span>
     <button class="btn b-out b-sm" onclick="exportCSV()">⬇ CSV</button>
-    <button class="btn b-sm" style="background:#f1f5f9;color:#475569" onclick="clearAllData()" title="Xóa bộ nhớ đệm trình duyệt và tải lại dữ liệu chuẩn từ Google Sheet">🔄 Làm mới từ Sheet</button>
+    <button id="btn-refresh-sheet" class="btn b-sm" style="background:#f1f5f9;color:#475569" onclick="clearAllData()" title="Xóa bộ nhớ đệm trình duyệt và tải lại dữ liệu chuẩn từ Google Sheet">🔄 Làm mới từ Sheet</button>
   </div>
 </div>
 <div id="content">
@@ -3012,6 +3012,7 @@ var GAS_URL = GAS_SALE_URL;
 var GAUTH_EMAIL_KEY = window.GAUTH_EMAIL_KEY || 'tni_google_auth_email';
 var GAUTH_USER_KEY  = window.GAUTH_USER_KEY  || 'tni_google_auth_user';
 var GAUTH_OK_KEY    = window.GAUTH_OK_KEY    || 'tni_google_authed_at';
+var currentLang = localStorage.getItem('ups_lang') || 'vi';
 var currentAppRole = 'admin';
 var currentStaffUser = localStorage.getItem('tni_sale_staff') || '';
 var adminPinHash = localStorage.getItem('tni_sale_admin_pin_hash') || null;
@@ -3116,24 +3117,29 @@ function _genUid() {
 const SYNC_STATE_COLS = ['del_requests','kiemke_phieu','quoteups','quotesolar','acceptances','vcm_statements'];
 
 function _setSyncBadge(state, text) {
+  window._lastSyncState = state || 'ok';
   const el = document.getElementById('cloud-sync-badge');
   if (!el) return;
+  const l = (typeof currentLang !== 'undefined' && currentLang) ? currentLang : (localStorage.getItem('ups_lang') || 'vi');
   if (state === 'syncing') {
     el.style.background = '#fef3c7';
     el.style.color = '#92400e';
     el.style.borderColor = '#fcd34d';
-    el.innerHTML = '⏳ ' + (text || 'Đang đồng bộ Sheet...');
+    const defTxt = l === 'my' ? 'Sheet ချိတ်ဆက်နေသည်...' : (l === 'en' ? 'Syncing Sheet...' : 'Đang đồng bộ Sheet...');
+    el.innerHTML = '⏳ ' + (text || defTxt);
   } else if (state === 'err') {
     el.style.background = '#fee2e2';
     el.style.color = '#dc2626';
     el.style.borderColor = '#fca5a5';
-    el.innerHTML = '⚠️ ' + (text || 'Lỗi kết nối Sheet');
+    const defErr = l === 'my' ? 'Sheet ချိတ်ဆက်မှုအမှား' : (l === 'en' ? 'Sheet Sync Error' : 'Lỗi kết nối Sheet');
+    el.innerHTML = '⚠️ ' + (text || defErr);
   } else {
     el.style.background = '#dcfce7';
     el.style.color = '#15803d';
     el.style.borderColor = '#86efac';
-    const nowTime = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    el.innerHTML = '☁️ ' + (text || ('Sheet SSOT (' + nowTime + ')'));
+    const nowTime = new Date().toLocaleTimeString(l === 'vi' ? 'vi-VN' : 'en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const defOk = l === 'my' ? ('Sheet SSOT (' + nowTime + ')') : ('Sheet SSOT (' + nowTime + ')');
+    el.innerHTML = '☁️ ' + (text || defOk);
   }
 }
 
@@ -3265,8 +3271,8 @@ const DB = {
   },
 
   // ── Background push to GAS ────────────
-  _push: (action, body, onDone) => {
-    _setSyncBadge('syncing');
+  _push: (action, body, onDone, silent) => {
+    if (!silent) _setSyncBadge('syncing');
     const curEmail = localStorage.getItem(GAUTH_EMAIL_KEY) || 'phonghdpxd@gmail.com';
     fetch(GAS_SALE_URL, {
       method: 'POST',
@@ -3276,12 +3282,12 @@ const DB = {
     .then(r => r.json())
     .then(res => {
       if (res && res.ok) _setSyncBadge('ok');
-      else _setSyncBadge('err', res?.error || 'Lỗi lưu Sheet');
+      else if (!silent) _setSyncBadge('err', res?.error || 'Lỗi lưu Sheet');
       if (onDone) onDone(res);
     })
     .catch(e => {
       console.warn('[DB] GAS push failed:', e);
-      _setSyncBadge('err');
+      if (!silent) _setSyncBadge('err');
     });
   },
 
@@ -3314,7 +3320,7 @@ const DB = {
       'campaigns','adsresults','leads','quoteups','quotesolar','acceptances',
       'vcm_statements','kiemke_phieu','del_requests','warranty_claims'
     ];
-    _setSyncBadge('syncing', 'Đang đồng bộ Sheet...');
+    _setSyncBadge('syncing');
     try {
       const curEmail = localStorage.getItem(GAUTH_EMAIL_KEY) || 'phonghdpxd@gmail.com';
       const res = await fetch(GAS_SALE_URL, {
@@ -3327,11 +3333,11 @@ const DB = {
         Object.keys(json.dataMap).forEach(k => {
           const key = (k === 'camps') ? 'campaigns' : k;
           const serverRows = Array.isArray(json.dataMap[k]) ? json.dataMap[k] : [];
-          // Với các bảng state mới tạo lần đầu trên Sheet (0 dòng) mà local đang có sẵn dữ liệu, đẩy từ local lên Sheet
+          // Với các bảng state mới tạo lần đầu trên Sheet (0 dòng) mà local đang có sẵn dữ liệu, đẩy ngầm từ local lên Sheet
           if (SYNC_STATE_COLS.includes(key) && serverRows.length === 0) {
             const localRows = DB.g(key);
             if (localRows && localRows.length > 0 && key !== 'del_requests') {
-              DB._push('sale_sync_col', { col: key, items: localRows });
+              DB._push('sale_sync_col', { col: key, items: localRows }, null, true);
               return;
             }
           }
@@ -3392,15 +3398,6 @@ const DB = {
     } catch(e) { console.warn('[DB] _refreshAllViews error:', e); }
   }
 };
-
-// ── Dọn dẹp 5 sản phẩm mẫu giả (SN001..SN005) nếu trước đây từng bị u_init tự động bơm vào localStorage ──
-try {
-  const curNhap = DB.g('nhap');
-  const demoSerials = ['SN001','SN002','SN003','SN004','SN005'];
-  if (curNhap.some(r => demoSerials.includes(String(r.serial || '').trim()))) {
-    DB._setLocal('nhap', curNhap.filter(r => !demoSerials.includes(String(r.serial || '').trim())));
-  }
-} catch(e) {}
 
 // ── ĐỒNG BỘ TỰ ĐỘNG 2 CHIỀU REAL-TIME (WEB <-> GOOGLE SHEET) ────────
 let _lastPullTs = 0;
@@ -3523,18 +3520,21 @@ function closeSidebar(){
   document.body.classList.remove('sb-open');
 }
 function sw(el,tid){
-  el.closest('.tabs').querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  const tabsWrap = el.closest('.tabs');
+  if (tabsWrap) {
+    tabsWrap.querySelectorAll('.tab').forEach(t => {
+      t.classList.remove('on');
+      const oc = t.getAttribute('onclick') || '';
+      const m = oc.match(/sw\s*\(\s*this\s*,\s*['"]([^'"]+)['"]\s*\)/);
+      if (m && m[1]) {
+        const panel = document.getElementById(m[1]);
+        if (panel) panel.style.display = 'none';
+      }
+    });
+  }
   el.classList.add('on');
-  const p=el.closest('.sec');
-  p.querySelectorAll('[id^="t"+el.closest(".tabs").id?.replace("tabs-","")],#'+tid).forEach(()=>{});
-  // hide all sibling tab panels
-  const allPanels=p.querySelectorAll('[id^="t"]');
-  // simpler: hide siblings
-  const cur=document.getElementById(tid);
-  if(!cur) return;
-  let sib=cur.parentNode.children;
-  for(let c of sib) if(c.id && c.id!==tid && !c.classList.contains('tabs')) c.style.display='none';
-  cur.style.display='';
+  const cur = document.getElementById(tid);
+  if (cur) cur.style.display = '';
 }
 function tog(id){const e=document.getElementById(id);e.style.display=e.style.display==='none'?'':'none';}
 
@@ -9804,7 +9804,7 @@ function exportAcceptancesCSV() {
 // ═══════════════════════════════════════════════════
 // 🌐 UNIFIED BILINGUAL ENGINE (VIỆT - ANH ĐỒNG BỘ 100%)
 // ═══════════════════════════════════════════════════
-let currentLang = localStorage.getItem('ups_lang') || 'vi';
+var currentLang = localStorage.getItem('ups_lang') || 'vi';
 
 const NAV_TITLES = {
   en: {
@@ -10907,6 +10907,9 @@ function applyLang(lang) {
   // 4. Update topbar labels
   const ctyEl = document.getElementById('cfg-cty-label');
   if (ctyEl) ctyEl.textContent = lang === 'my' ? '🏢 % ရုံးချုပ်:' : (lang === 'vi' ? '🏢 % Cty:' : '🏢 % HO:');
+  const btnRefSheet = document.getElementById('btn-refresh-sheet');
+  if (btnRefSheet) btnRefSheet.textContent = lang === 'my' ? '🔄 Sheet မှ ပြန်ဖတ်မည်' : (lang === 'vi' ? '🔄 Làm mới từ Sheet' : '🔄 Refresh from Sheet');
+  _setSyncBadge(window._lastSyncState || 'ok');
   
   // 5. Update dashboard panel headers
   const dNhapH3 = document.getElementById('d-nhap-h3');
@@ -11796,6 +11799,7 @@ function getBhI18n_() {
     lbl_sp: 'Tên Thiết Bị / Sản Phẩm *',
     ph_sp: 'VD: Inverter Hybrid Deye 8kW',
     lbl_model: 'Model / Mã SP',
+    ph_model: 'VD: SUN-8K-SG01LP1',
     lbl_serial: 'Số Serial Lỗi (SN) *',
     ph_serial: 'Nhập mã Serial trên máy hỏng',
     lbl_ngaymua: 'Ngày Mua Hàng',
@@ -11882,6 +11886,7 @@ function getBhI18n_() {
     lbl_sp: 'Equipment / Product Name *',
     ph_sp: 'e.g. Deye 8kW Hybrid Inverter',
     lbl_model: 'Model / Item Code',
+    ph_model: 'e.g. SUN-8K-SG01LP1',
     lbl_serial: 'Faulty Serial Number (SN) *',
     ph_serial: 'Enter serial number on defective unit',
     lbl_ngaymua: 'Purchase Date',
@@ -11968,6 +11973,7 @@ function getBhI18n_() {
     lbl_sp: 'စက်ပစ္စည်း / ကုန်ပစ္စည်းအမည် *',
     ph_sp: 'ဥပမာ - Inverter Hybrid Deye 8kW',
     lbl_model: 'မော်ဒယ် (Model)',
+    ph_model: 'ဥပမာ - SUN-8K-SG01LP1',
     lbl_serial: 'ပျက်စီးနေသော Serial နံပါတ် (SN) *',
     ph_serial: 'စက်ပျက်ပေါ်ရှိ Serial နံပါတ် ရိုက်ထည့်ပါ',
     lbl_ngaymua: 'ဝယ်ယူသည့်ရက်စွဲ',
@@ -12070,6 +12076,7 @@ function translateBaoHanhUI(lang) {
   setTxt('lbl-bh-sp', t.lbl_sp);
   setPh('bh-sp', t.ph_sp);
   setTxt('lbl-bh-model', t.lbl_model);
+  setPh('bh-model', t.ph_model);
   setTxt('lbl-bh-serial', t.lbl_serial);
   setPh('bh-serial', t.ph_serial);
   setTxt('lbl-bh-ngaymua', t.lbl_ngaymua);
@@ -12148,7 +12155,8 @@ function checkWarrantyBySerialOrPhone(q) {
     resEl.style.display = 'none';
     return;
   }
-  const l = (typeof currentLang !== 'undefined' && BH_I18N[currentLang]) ? currentLang : 'vi';
+  const dict = getBhI18n_();
+  const l = (typeof currentLang !== 'undefined' && dict[currentLang]) ? currentLang : 'vi';
   const banList = DB.g('ban') || [];
   const nhapList = DB.g('nhap') || [];
   const matchedBan = banList.filter(b =>
@@ -12214,7 +12222,8 @@ function fillWarrantyFormFromLookup(encoded) {
     setV('bh-serial', d.serial);
     setV('bh-ngaymua', d.ngayMua);
     setV('bh-han', d.hanStatus);
-    toast('✅ Đã điền tự động thông tin khách hàng & hạn bảo hành!');
+    const l = (typeof currentLang !== 'undefined' && currentLang) ? currentLang : 'vi';
+    toast(l === 'my' ? '✅ ဝယ်ယူသူအချက်အလက်နှင့် အာမခံသက်တမ်း အလိုအလျောက်ဖြည့်သွင်းပြီးပါပြီ!' : (l === 'en' ? '✅ Auto-filled customer info & warranty eligibility!' : '✅ Đã điền tự động thông tin khách hàng & hạn bảo hành!'));
   } catch (e) {}
 }
 
@@ -12230,7 +12239,19 @@ function clearWarrantyForm() {
   if (res) res.style.display = 'none';
 }
 
+function _getCurUserName() {
+  try {
+    if (typeof currentStaffUser !== 'undefined' && currentStaffUser) return currentStaffUser;
+    if (typeof getAuthedGoogleUser === 'function') {
+      const u = getAuthedGoogleUser();
+      if (u && (u.name || u.email)) return u.name || u.email;
+    }
+  } catch (e) {}
+  return localStorage.getItem('tni_sale_staff') || 'Admin';
+}
+
 async function saveWarrantyClaim() {
+  const l = (typeof currentLang !== 'undefined' && currentLang) ? currentLang : 'vi';
   const kh = (document.getElementById('bh-kh')?.value || '').trim();
   const dt = (document.getElementById('bh-dt')?.value || '').trim();
   const sp = (document.getElementById('bh-sp')?.value || '').trim();
@@ -12248,32 +12269,37 @@ async function saveWarrantyClaim() {
   let photoUrl = (document.getElementById('bh-photourl')?.value || '').trim();
 
   if (!kh || !sp || !loiMoTa) {
-    toast('⚠️ Vui lòng nhập Tên khách hàng, Thiết bị và Mô tả lỗi! / Please enter Customer, Product & Fault description!', 'err');
+    toast(l === 'my'
+      ? '⚠️ ကျေးဇူးပြု၍ ဝယ်ယူသူအမည်၊ ပစ္စည်းအမည်နှင့် ချို့ယွင်းချက်ဖော်ပြချက် ဖြည့်သွင်းပါ!'
+      : (l === 'en'
+        ? '⚠️ Please enter Customer Name, Product Name & Fault Description!'
+        : '⚠️ Vui lòng nhập Tên khách hàng, Thiết bị và Mô tả lỗi!'), 'err');
     return;
   }
 
   let photoLinks = photoUrl ? [photoUrl] : [];
   if (_bhPendingPhotos.length > 0) {
-    toast('☁️ Đang tải ảnh hiện trạng lỗi lên Google Drive (2.12 SALE SOLUTION - BUILDING)...');
-    for (let i = 0; i < _bhPendingPhotos.length; i++) {
-      try {
-        const p = _bhPendingPhotos[i];
-        const r = await fetch(GAS_SALE_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({
-            action: 'sale_upload_photo',
-            category: 'Warranty_RMA',
-            title: `${kh}_${sp}_${serial || 'RMA'}_${i + 1}`,
-            staff: nguoiNhan,
-            dataUrl: p.dataUrl
-          })
-        }).then(res => res.json());
-        if (r && r.ok && r.record && (r.record.viewUrl || r.record.url)) {
-          photoLinks.push(r.record.viewUrl || r.record.url);
-        }
-      } catch (err) {}
-    }
+    toast(l === 'my'
+      ? '☁️ ဓာတ်ပုံများကို Google Drive (2.12 SALE SOLUTION - BUILDING) သို့ တင်နေသည်...'
+      : (l === 'en'
+        ? '☁️ Uploading fault photos to Google Drive (2.12 SALE SOLUTION - BUILDING)...'
+        : '☁️ Đang tải ảnh hiện trạng lỗi lên Google Drive (2.12 SALE SOLUTION - BUILDING)...'));
+    try {
+      const r = await fetch(GAS_SALE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'sale_survey_upload_photos',
+          ngay: td(),
+          kh: `RMA_${kh}_${sp}`,
+          nv: nguoiNhan,
+          photos: _bhPendingPhotos
+        })
+      }).then(res => res.json());
+      if (r && r.ok && r.folderUrl) {
+        photoLinks.push(r.folderUrl);
+      }
+    } catch (err) {}
   }
 
   const rmaCode = 'RMA-' + new Date().toISOString().slice(2, 10).replace(/-/g, '') + '-' + String(Date.now()).slice(-4);
@@ -12288,15 +12314,25 @@ async function saveWarrantyClaim() {
   });
   clearWarrantyForm();
   rBaoHanh();
-  toast(`✅ Đã tạo phiếu bảo hành ${rec.rmaCode} và đồng bộ vào Sheet "Bảo Hành"!`);
+  toast(l === 'my'
+    ? `✅ အာမခံဖောင် ${rec.rmaCode} ဖန်တီးပြီး "Bảo Hành" Sheet သို့ ချိတ်ဆက်ပြီးပါပြီ!`
+    : (l === 'en'
+      ? `✅ Created warranty claim ${rec.rmaCode} and synced to Sheet "Bảo Hành"!`
+      : `✅ Đã tạo phiếu bảo hành ${rec.rmaCode} và đồng bộ vào Sheet "Bảo Hành"!`));
 }
 
 function updateWarrantyStatus(id, nextStatus) {
+  const l = (typeof currentLang !== 'undefined' && currentLang) ? currentLang : 'vi';
   const list = DB.g('warranty_claims') || [];
   const item = list.find(x => String(x.id) === String(id));
   if (!item) return;
   const code = item.rmaCode || item.maPhieu || id;
-  const note = prompt(`Cập nhật ghi chú / kết quả xử lý cho phiếu ${code}:`, item.gc || item.ketQua || '');
+  const promptMsg = l === 'my'
+    ? `ဖောင် ${code} အတွက် မှတ်ချက် / ပြုပြင်မှုရလဒ် ဖြည့်သွင်းပါ:`
+    : (l === 'en'
+      ? `Enter resolution note / result for ticket ${code}:`
+      : `Cập nhật ghi chú / kết quả xử lý cho phiếu ${code}:`);
+  const note = prompt(promptMsg, item.gc || item.ketQua || '');
   if (note === null) return;
   const patch = {
     trangThai: nextStatus,
@@ -12304,34 +12340,45 @@ function updateWarrantyStatus(id, nextStatus) {
   };
   DB.upd('warranty_claims', id, patch);
   rBaoHanh();
-  toast(`✅ Đã chuyển phiếu ${code} sang "${nextStatus}"!`);
+  toast(l === 'my'
+    ? `✅ ဖောင် ${code} ကို "${nextStatus}" သို့ ပြောင်းလဲပြီးပါပြီ!`
+    : (l === 'en'
+      ? `✅ Updated ticket ${code} to "${nextStatus}"!`
+      : `✅ Đã chuyển phiếu ${code} sang "${nextStatus}"!`));
 }
 
 function promptUpdateIntakeDefect(nhapId) {
+  const l = (typeof currentLang !== 'undefined' && currentLang) ? currentLang : 'vi';
   const list = DB.g('nhap') || [];
   const item = list.find(x => String(x.id) === String(nhapId));
   if (!item) {
-    toast('⚠️ Không tìm thấy lô nhập kho này!', 'err');
+    toast(l === 'my' ? '⚠️ ဤအဝင်စာရင်းကို မတွေ့ရှိပါ!' : (l === 'en' ? '⚠️ Intake batch not found!' : '⚠️ Không tìm thấy lô nhập kho này!'), 'err');
     return;
   }
-  const slLoiStr = prompt(
-    `🛠️ CẬP NHẬT HÀNG LỖI KHI NHẬN / UPDATE DEFECTIVE QTY — ${item.ten} (Total: ${item.sl})\n\nNhập số lượng bị lỗi / hỏng (Nhập 0 nếu NCC đã đổi trả xong 100%):`,
-    String(item.slLoi || 0)
-  );
+  const p1 = l === 'my'
+    ? `🛠️ လက်ခံချိန် ပစ္စည်းအပျက် အရေအတွက် ပြင်ဆင်ရန် — ${item.ten} (စုစုပေါင်း: ${item.sl})\n\nအပျက်အရေအတွက် ရိုက်ထည့်ပါ (ကုမ္ပဏီမှ ၁၀၀% အသစ်လဲပေးပြီးပါက 0 ရိုက်ပါ):`
+    : (l === 'en'
+      ? `🛠️ UPDATE DEFECTIVE QTY ON ARRIVAL — ${item.ten} (Total: ${item.sl})\n\nEnter defective quantity (Enter 0 if Supplier has replaced 100%):`
+      : `🛠️ CẬP NHẬT HÀNG LỖI KHI NHẬN — ${item.ten} (Tổng SL: ${item.sl})\n\nNhập số lượng bị lỗi / hỏng (Nhập 0 nếu NCC đã đổi trả xong 100%):`);
+  const slLoiStr = prompt(p1, String(item.slLoi || 0));
   if (slLoiStr === null) return;
   const slLoi = Math.max(0, Math.min(Number(item.sl || 0), parseInt(slLoiStr, 10) || 0));
   let serialLoi = item.serialLoi || '';
   let ttLoi = 'Không có lỗi';
   if (slLoi > 0) {
-    const sInput = prompt(
-      `Nhập mã Serial bị lỗi & nguyên nhân lỗi (VD: SN005 - Bể kính / Lỗi BMS):`,
-      serialLoi
-    );
+    const p2 = l === 'my'
+      ? `အပျက် Serial နံပါတ်နှင့် အကြောင်းရင်း ရိုက်ထည့်ပါ (ဥပမာ - SN005 - မှန်ကွဲ / BMS အမှား):`
+      : (l === 'en'
+        ? `Enter defective Serial number(s) & reason (e.g. SN005 - Cracked glass / BMS fault):`
+        : `Nhập mã Serial bị lỗi & nguyên nhân lỗi (VD: SN005 - Bể kính / Lỗi BMS):`);
+    const sInput = prompt(p2, serialLoi);
     if (sInput !== null) serialLoi = sInput.trim();
-    const choice = prompt(
-      `Chọn trạng thái xử lý với Nhà Cung Cấp (Nhập 1, 2 hoặc 3):\n1 = 🔴 Đang giữ kho lỗi (Chờ gửi NCC)\n2 = 🟠 Đã gửi trả NCC / Chờ đổi bù\n3 = 🟢 Đã đổi bảo hành xong (Đã nhập kho tốt)`,
-      item.ttLoi && item.ttLoi.includes('Đã gửi') ? '2' : '1'
-    );
+    const p3 = l === 'my'
+      ? `ကုမ္ပဏီ (NCC) နှင့် ဖြေရှင်းမှုအခြေအနေ ရွေးပါ (1, 2 သို့မဟုတ် 3 ရိုက်ပါ):\n1 = 🔴 အပျက်ဂိုဒေါင်တွင် ဖယ်ထားဆဲ (NCC သို့ပို့ရန်စောင့်ဆိုင်း)\n2 = 🟠 NCC သို့ ပြန်ပို့ထားဆဲ / အသစ်လဲရန်စောင့်ဆိုင်း\n3 = 🟢 အသစ်လဲလှယ်ပြီးစီး (အကောင်းစာရင်းသို့ ပြန်ထည့်ပြီး)`
+      : (l === 'en'
+        ? `Select Supplier Swap Status (Enter 1, 2, or 3):\n1 = 🔴 Quarantined in Defect Stock (Waiting for Supplier)\n2 = 🟠 Returned to Supplier / Awaiting Replacement\n3 = 🟢 Replacement Completed (Restored to Good Stock)`
+        : `Chọn trạng thái xử lý với Nhà Cung Cấp (Nhập 1, 2 hoặc 3):\n1 = 🔴 Đang giữ kho lỗi (Chờ gửi NCC)\n2 = 🟠 Đã gửi trả NCC / Chờ đổi bù\n3 = 🟢 Đã đổi bảo hành xong (Đã nhập kho tốt)`);
+    const choice = prompt(p3, item.ttLoi && item.ttLoi.includes('Đã gửi') ? '2' : '1');
     if (choice === '2') ttLoi = '🟠 Đã gửi trả NCC / Chờ đổi bù';
     else if (choice === '3') ttLoi = '🟢 Đã đổi bảo hành xong (Đã nhập kho tốt)';
     else ttLoi = '🔴 Đang giữ kho lỗi (Chờ gửi NCC)';
@@ -12342,7 +12389,11 @@ function promptUpdateIntakeDefect(nhapId) {
   rNhap();
   renderTK();
   if (typeof rBaoHanh === 'function') rBaoHanh();
-  toast(`✅ Đã cập nhật trạng thái hàng lỗi cho "${item.ten}" (${ttLoi})!`);
+  toast(l === 'my'
+    ? `✅ "${item.ten}" အတွက် ပစ္စည်းအပျက်အခြေအနေ (${ttLoi}) အပ်ဒိတ်လုပ်ပြီးပါပြီ!`
+    : (l === 'en'
+      ? `✅ Updated defective stock status for "${item.ten}" (${ttLoi})!`
+      : `✅ Đã cập nhật trạng thái hàng lỗi cho "${item.ten}" (${ttLoi})!`));
 }
 
 function rBaoHanh() {
