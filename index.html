@@ -1165,10 +1165,10 @@
             </button>
           </div>
         </div>
-        <button type="submit" class="auth-submit-btn">
+        <button type="submit" class="auth-submit-btn" onclick="handleDirectLoginSubmit(event)">
           <i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập Vào Hệ Thống
         </button>
-        <button type="button" onclick="quickLoginSuperAdmin()" style="width:100%; margin-top:0.75rem; background:linear-gradient(135deg, #10B981, #059669); color:#fff; border:none; padding:0.8rem; border-radius:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.5rem; font-size:0.9rem; box-shadow:0 4px 15px rgba(16,185,129,0.35); transition:all 0.2s ease;">
+        <button type="button" onclick="quickLoginSuperAdmin(event)" style="width:100%; margin-top:0.75rem; background:linear-gradient(135deg, #10B981, #059669); color:#fff; border:none; padding:0.8rem; border-radius:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.5rem; font-size:0.9rem; box-shadow:0 4px 15px rgba(16,185,129,0.35); transition:all 0.2s ease;">
           <i class="fa-solid fa-bolt"></i> ⚡ ĐĂNG NHẬP NHANH 1-CHẠM (Dành Cho Điện Thoại)
         </button>
       </form>
@@ -1211,6 +1211,68 @@ const TNI_AUTH_USER_KEY     = 'tni_auth_user';
 const TNI_CURRENT_EMAIL_KEY = 'tni_current_user_email';
 const TNI_PORTAL_AUTHED_KEY = 'tni_portal_authed_at';
 const TNI_GOOGLE_CLIENT_ID  = 'tni_google_client_id';
+window.TNI_SESSION_USER_MEM = window.TNI_SESSION_USER_MEM || null;
+
+window.DEFAULT_GMAIL_ACCOUNTS = [
+  { email: "phonghdpxd@gmail.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY", "FULL"], date: "15/10/2026" },
+  { email: "ingyinhmwe49@gmail.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
+  { email: "yelwin086683@gmail.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
+  { email: "htoolaynyaw@gmail.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
+  { email: "heinnanda683@gmail.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
+  { email: "ppoe56591@gmail.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
+  { email: "hlaing127592@gmail.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
+  { email: "shingwutthmone776@gmail.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
+  { email: "admin@tni.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY", "FULL"], date: "15/10/2026" },
+  { email: "coadmin@tni.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY", "FULL"], date: "15/10/2026" },
+  { email: "tni.technical@gmail.com", pass: "7979", perms: ["DEPT", "WO", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE"], date: "15/10/2026" }
+];
+
+function getStoredGmailAccounts() {
+  let accounts = JSON.parse(JSON.stringify(window.DEFAULT_GMAIL_ACCOUNTS));
+  try {
+    const stored = localStorage.getItem('tni_gmail_access_list_v2');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        parsed.forEach(p => {
+          if (!p || !p.email) return;
+          const idx = accounts.findIndex(a => a.email.toLowerCase() === p.email.toLowerCase());
+          if (idx >= 0) {
+            accounts[idx] = Object.assign({}, accounts[idx], p);
+          } else {
+            accounts.push(p);
+          }
+        });
+      }
+    }
+  } catch (e) {
+    console.warn('Error reading stored accounts', e);
+  }
+  const adminEmail = 'phonghdpxd@gmail.com';
+  const superAdmin = accounts.find(a => a.email.toLowerCase() === adminEmail);
+  if (!superAdmin) {
+    accounts.unshift({
+      email: adminEmail,
+      pass: "7979",
+      perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY", "FULL"],
+      date: "15/10/2026"
+    });
+  } else {
+    if (!Array.isArray(superAdmin.perms)) superAdmin.perms = ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY", "FULL"];
+    if (!superAdmin.perms.includes('FULL')) superAdmin.perms.push('FULL');
+    if (!superAdmin.perms.includes('AUTH')) superAdmin.perms.push('AUTH');
+    if (!superAdmin.pass) superAdmin.pass = '7979';
+  }
+  return accounts;
+}
+
+function saveStoredGmailAccounts(accounts) {
+  try {
+    localStorage.setItem('tni_gmail_access_list_v2', JSON.stringify(accounts));
+  } catch (e) {
+    console.warn('Error saving accounts', e);
+  }
+}
 
 
 function toggleDirectPasswordVisibility() {
@@ -1291,7 +1353,21 @@ function getLoggedInUser() {
   return null;
 }
 
-function quickLoginSuperAdmin() {
+function unlockPortalDOMNow() {
+  const overlay = document.getElementById('google-auth-overlay');
+  if (overlay) {
+    overlay.style.setProperty('display', 'none', 'important');
+  }
+  const main = document.querySelector('main');
+  if (main) {
+    main.style.setProperty('display', 'block', 'important');
+  }
+  try { if (typeof renderUserIdentityBadge === 'function') renderUserIdentityBadge(); } catch (e) {}
+  try { if (typeof updateNavTabsLockUI === 'function') updateNavTabsLockUI(); } catch (e) {}
+}
+
+function quickLoginSuperAdmin(e) {
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
   const emailInp = document.getElementById('direct-email-input');
   const pinInp = document.getElementById('direct-pin-input');
   if (emailInp) emailInp.value = 'phonghdpxd@gmail.com';
@@ -1300,7 +1376,6 @@ function quickLoginSuperAdmin() {
 }
 
 function initGoogleAuthGate() {
-  // ⚡ URL Auto-Login Token Support for Mobile / Direct Links
   try {
     const urlParams = new URLSearchParams(window.location.search);
     const authParam = urlParams.get('auth') || urlParams.get('pass') || urlParams.get('token') || urlParams.get('quick') || urlParams.get('login');
@@ -1312,21 +1387,16 @@ function initGoogleAuthGate() {
     console.warn('URL auth parse error', e);
   }
 
-  const user = getLoggedInUser();
+  const user = getLoggedInUser() || window.TNI_SESSION_USER_MEM;
   const overlay = document.getElementById('google-auth-overlay');
   const main = document.querySelector('main');
 
   if (user) {
-    // User already authenticated and in roster
-    if (overlay) overlay.style.display = 'none';
-    if (main) main.style.display = 'block';
-    renderUserIdentityBadge();
-    updateNavTabsLockUI();
+    unlockPortalDOMNow();
   } else {
-    // Lock portal completely
     if (overlay) overlay.style.display = 'flex';
     if (main) main.style.display = 'none';
-    renderUserIdentityBadge();
+    try { if (typeof renderUserIdentityBadge === 'function') renderUserIdentityBadge(); } catch (e) {}
     setupGoogleIdentityServices();
   }
 }
@@ -1458,27 +1528,32 @@ function authenticateUserEmail(rawEmail, opts) {
     <div>Xin chào <b>${found.email}</b>. Đang mở khóa hệ thống TNI BI Portal...</div>
   `);
 
-  localStorage.setItem(TNI_AUTH_USER_KEY, JSON.stringify({
+  const sessionObj = {
     email: found.email,
     name: opts.name || found.email.split('@')[0],
     picture: opts.picture || '',
     perms: found.perms,
     loginAt: Date.now()
-  }));
-  localStorage.setItem(TNI_CURRENT_EMAIL_KEY, found.email.toLowerCase());
-  localStorage.setItem(TNI_PORTAL_AUTHED_KEY, Date.now().toString());
+  };
+  window.TNI_SESSION_USER_MEM = sessionObj;
+  try {
+    localStorage.setItem(TNI_AUTH_USER_KEY, JSON.stringify(sessionObj));
+    localStorage.setItem(TNI_CURRENT_EMAIL_KEY, found.email.toLowerCase());
+    localStorage.setItem(TNI_PORTAL_AUTHED_KEY, Date.now().toString());
+  } catch (e) {
+    console.warn('localStorage write fallback to memory session', e);
+  }
 
+  // Unlock immediately (0ms) AND re-assert after 150ms & DOMContentLoaded
+  unlockPortalDOMNow();
   setTimeout(() => {
-    const overlay = document.getElementById('google-auth-overlay');
-    if (overlay) overlay.style.display = 'none';
-    const main = document.querySelector('main');
-    if (main) main.style.display = 'block';
-    renderUserIdentityBadge();
-    updateNavTabsLockUI();
-    if (typeof al === 'function') {
-      al(`Đăng nhập thành công! Chào mừng ${found.email}`, 'ok');
-    }
-  }, 450);
+    unlockPortalDOMNow();
+    try {
+      if (typeof al === 'function') {
+        al(`Đăng nhập thành công! Chào mừng ${found.email}`, 'ok');
+      }
+    } catch (e) {}
+  }, 150);
 
   return true;
 }
@@ -10269,7 +10344,7 @@ Team04>> 2Box</td>
     }
 
     /* 🔐 GMAIL ACCESS CONTROL & MULTI-PERMISSION PERSISTENCE */
-    const DEFAULT_GMAIL_ACCOUNTS = [
+    var DEFAULT_GMAIL_ACCOUNTS = window.DEFAULT_GMAIL_ACCOUNTS || [
       { email: "phonghdpxd@gmail.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY", "FULL"], date: "15/10/2026" },
       { email: "ingyinhmwe49@gmail.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
       { email: "yelwin086683@gmail.com", pass: "7979", perms: ["EXEC", "DEPT", "WO", "BOD", "PLAN", "NOTE", "STAFF_GUIDE", "SYS_GUIDE", "AUTH", "SECRETARY"], date: "15/10/2026" },
