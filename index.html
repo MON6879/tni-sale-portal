@@ -18,6 +18,7 @@
   <!-- Chart.js & Datalabels Plugin CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+  <script src="assets/bi_reports/bi_report_bundle.js"></script>
 
   <!-- Google Identity Services (Sign in with Google) -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -1560,9 +1561,14 @@ document.addEventListener('DOMContentLoaded', initGoogleAuthGate);
     <!-- AI Voice & Security Header Actions -->
     <div class="header-actions">
       <div class="ai-voice-widget">
-        <select id="voiceLang" class="lang-select">
-          <option value="en-US">🇬🇧 English AI Voice</option>
+        <select id="voicePeriod" class="lang-select" onchange="onVoicePeriodChange(this.value)" title="Chọn kỳ đọc báo cáo: Ngày / Tuần / Tháng">
+          <option value="daily">📅 Đọc Tin Ngày (Daily)</option>
+          <option value="weekly">📊 Đọc Tin Tuần (Weekly)</option>
+          <option value="monthly">📈 Đọc Tin Tháng (Monthly)</option>
+        </select>
+        <select id="voiceLang" class="lang-select" onchange="onVoiceLangChange(this.value)" title="Chọn ngôn ngữ đọc: Tiếng Việt / English / Myanmar">
           <option value="vi-VN">🇻🇳 Tiếng Việt AI Voice</option>
+          <option value="en-US">🇬🇧 English AI Voice</option>
           <option value="my-MM">🇲🇲 မြန်မာစာ AI Voice</option>
         </select>
         <button id="playVoiceBtn" class="voice-btn" onclick="toggleAIVoice()">
@@ -1580,10 +1586,118 @@ document.addEventListener('DOMContentLoaded', initGoogleAuthGate);
     <div id="exec-summary-panel" class="tab-panel active">
       
       <!-- Periodic Report Selector Bar -->
-      <div class="time-filter-bar">
-        <button class="filter-btn active" onclick="setPeriodFilter('daily', this)"><i class="fa-solid fa-calendar-day"></i> Daily Report</button>
-        <button class="filter-btn" onclick="setPeriodFilter('weekly', this)"><i class="fa-solid fa-calendar-week"></i> Weekly Report</button>
-        <button class="filter-btn" onclick="setPeriodFilter('monthly', this)"><i class="fa-solid fa-calendar-days"></i> Monthly Report</button>
+      <div class="time-filter-bar" id="exec-period-filter-bar" style="display:flex; flex-wrap:wrap; align-items:center; gap:0.6rem; width:100%; justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:0.45rem; flex-wrap:wrap;">
+          <button id="btn-period-daily" class="filter-btn active" onclick="setPeriodFilter('daily', this)"><i class="fa-solid fa-calendar-day"></i> Daily Report (Hàng Ngày)</button>
+          <button id="btn-period-weekly" class="filter-btn" onclick="setPeriodFilter('weekly', this)"><i class="fa-solid fa-calendar-week"></i> 📊 Weekly Report (Báo Cáo Tuần 30 Phút)</button>
+          <button id="btn-period-monthly" class="filter-btn" onclick="setPeriodFilter('monthly', this)"><i class="fa-solid fa-calendar-days"></i> 📈 Monthly Report (Báo Cáo Tháng 30 Phút)</button>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+          <span id="offline-ai-status-pill" style="font-size:0.74rem; font-weight:700; padding:0.35rem 0.75rem; border-radius:999px; background:rgba(16,185,129,0.16); border:1px solid rgba(16,185,129,0.4); color:#34D399;">
+            🤖 Nhân Viên AI Offline: Sẵn sàng (3 Ngôn Ngữ: 🇻🇳 🇬🇧 🇲🇲)
+          </span>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════════════════════════════════════
+           🏛️ TRUNG TÂM BÁO CÁO ĐIỀU HÀNH 30 PHÚT TUẦN & THÁNG (10 CHUYÊN GIA + AI OFFLINE + 12 GHẾ GIÁM SÁT)
+           ══════════════════════════════════════════════════════════════════════════════════════ -->
+      <div id="exec-periodic-report-hub" style="display:none; background:rgba(15, 23, 42, 0.95); border:1.5px solid rgba(56, 189, 248, 0.5); border-radius:20px; padding:1.6rem; margin-bottom:2rem; box-shadow:0 16px 40px rgba(0,0,0,0.6);">
+        
+        <!-- Top Control & Export Bar (CHỈ XUẤT PDF & POWERPOINT) -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; padding-bottom:1.1rem; border-bottom:1px solid rgba(255,255,255,0.1);">
+          <div>
+            <div style="display:flex; align-items:center; gap:0.65rem; flex-wrap:wrap;">
+              <span style="background:linear-gradient(135deg, #38BDF8, #6366F1); color:#fff; font-weight:800; font-size:0.75rem; padding:0.3rem 0.75rem; border-radius:8px; letter-spacing:0.04em;">30-MIN EXECUTIVE DOSSIER</span>
+              <h2 id="periodic-hub-title" style="font-size:1.35rem; font-weight:800; color:#F8FAFC; margin:0;">BÁO CÁO ĐIỀU HÀNH TUẦN CHI NHÁNH TNI</h2>
+            </div>
+            <p id="periodic-hub-subtitle" style="font-size:0.8rem; color:#94A3B8; margin-top:0.3rem;">
+              Tổng hợp 4 tầng: Toàn Tỉnh → BOG giao Phòng ban → Phòng ban giao 4 Team → 12 Ghế Giám Sát (0% rơi rớt thông tin)
+            </p>
+          </div>
+
+          <!-- Date Input & Strict 2-Format Export Buttons (PDF & PowerPoint ONLY) -->
+          <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:0.4rem; background:rgba(250, 204, 21, 0.14); border:1.5px solid #FACC15; padding:0.35rem 0.7rem; border-radius:10px;">
+              <label for="period-start-date-input" id="period-start-date-label" style="font-size:0.76rem; font-weight:800; color:#FDE047;">📅 Ngày bắt đầu Tuần (Ô B2):</label>
+              <input type="text" id="period-start-date-input" value="02/11/2026" placeholder="DD/MM/YYYY" style="background:#0F172A; color:#FACC15; border:1px solid rgba(250,204,21,0.5); border-radius:6px; padding:0.28rem 0.55rem; width:105px; font-weight:800; font-size:0.8rem; text-align:center;" />
+              <button type="button" onclick="refreshPeriodicReportByDate()" style="background:#FACC15; color:#0F172A; border:none; border-radius:6px; padding:0.3rem 0.65rem; font-size:0.75rem; font-weight:800; cursor:pointer;" title="Tổng hợp lại theo ngày bắt đầu và cập nhật lên Sheet">
+                <i class="fa-solid fa-bolt"></i> Tổng Hợp
+              </button>
+            </div>
+
+            <button type="button" onclick="playPeriodicReportVoice()" style="background:linear-gradient(135deg, #10B981, #059669); color:#fff; border:none; padding:0.55rem 0.95rem; border-radius:10px; font-size:0.8rem; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:0.45rem; box-shadow:0 4px 15px rgba(16,185,129,0.35);">
+              <i class="fa-solid fa-volume-high"></i> 🔊 AI Đọc Báo Cáo (Việt / Anh / Myanmar)
+            </button>
+
+            <button type="button" onclick="downloadPeriodicReport('pdf')" style="background:linear-gradient(135deg, #EF4444, #DC2626); color:#fff; border:none; padding:0.55rem 1rem; border-radius:10px; font-size:0.8rem; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:0.45rem; box-shadow:0 4px 15px rgba(239,68,68,0.35);">
+              <i class="fa-solid fa-file-pdf"></i> 📄 Xuất PDF (.pdf)
+            </button>
+
+            <button type="button" onclick="downloadPeriodicReport('pptx')" style="background:linear-gradient(135deg, #F59E0B, #D97706); color:#0F172A; border:none; padding:0.55rem 1rem; border-radius:10px; font-size:0.8rem; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:0.45rem; box-shadow:0 4px 15px rgba(245,158,11,0.35);">
+              <i class="fa-solid fa-file-powerpoint"></i> 📊 Xuất PowerPoint (.pptx)
+            </button>
+
+            <a id="periodic-sheet-link" href="https://docs.google.com/spreadsheets/d/1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8/edit#gid=1672190049" target="_blank" style="background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.4); color:#38BDF8; text-decoration:none; padding:0.5rem 0.85rem; border-radius:10px; font-size:0.76rem; font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
+              <i class="fa-solid fa-table"></i> Mở Sheet
+            </a>
+          </div>
+        </div>
+
+        <!-- 🎙️ KHỐI 1: BẢN DIỄN GIẢI BẰNG NGÔN NGỮ NÓI TỰ NHIÊN (3 THỨ TIẾNG) & 10 CHUYÊN GIA 1% THẾ GIỚI -->
+        <div style="background:rgba(30, 41, 59, 0.72); border:1px solid rgba(16, 185, 129, 0.35); border-radius:16px; padding:1.2rem; margin-top:1.2rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.6rem; margin-bottom:0.8rem;">
+            <div style="font-size:0.95rem; font-weight:800; color:#34D399; display:flex; align-items:center; gap:0.5rem;">
+              <i class="fa-solid fa-microphone-lines"></i> LỜI THUYẾT TRÌNH BẰNG "NGÔN NGỮ NÓI TỰ NHIÊN" CỦA CHUYÊN GIA &amp; AI OFFLINE:
+            </div>
+            <div style="display:flex; gap:0.4rem;">
+              <button type="button" class="filter-btn active" id="script-lang-btn-vi" onclick="switchPeriodicScriptLang('vi')" style="padding:0.3rem 0.7rem; font-size:0.75rem;">🇻🇳 Tiếng Việt (Văn nói)</button>
+              <button type="button" class="filter-btn" id="script-lang-btn-en" onclick="switchPeriodicScriptLang('en')" style="padding:0.3rem 0.7rem; font-size:0.75rem;">🇬🇧 English</button>
+              <button type="button" class="filter-btn" id="script-lang-btn-my" onclick="switchPeriodicScriptLang('my')" style="padding:0.3rem 0.7rem; font-size:0.75rem;">🇲🇲 မြန်မာဘာသာ</button>
+            </div>
+          </div>
+          <div id="periodic-spoken-script-box" style="background:rgba(15, 23, 42, 0.85); border-left:4px solid #10B981; border-radius:10px; padding:1rem 1.2rem; font-size:0.9rem; line-height:1.7; color:#F8FAFC; font-weight:500;">
+            Đang nạp bài thuyết trình ngôn ngữ nói...
+          </div>
+
+          <!-- 10 World-Class Experts Collapsible Grid -->
+          <details style="margin-top:0.9rem;">
+            <summary style="cursor:pointer; font-size:0.82rem; font-weight:800; color:#38BDF8; user-select:none;">
+              🧠 Xem Chi Tiết Bàn Luận Của Hội Đồng 10 Chuyên Gia 1% Thế Giới (Phân Tích 4 Tầng &amp; 12 Ghế Giám Sát)
+            </summary>
+            <div id="periodic-10-experts-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:0.75rem; margin-top:0.8rem;"></div>
+          </details>
+        </div>
+
+        <!-- 📊 KHỐI 2: 4 ĐỒ THỊ TRỰC QUAN CÓ SỐ LIỆU NẰM TRỰC TIẾP TRÊN ĐỒ THỊ (ON-CHART DATA LABELS) -->
+        <div style="margin-top:1.4rem;">
+          <div style="font-size:0.95rem; font-weight:800; color:#38BDF8; margin-bottom:0.85rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;">
+            <span><i class="fa-solid fa-chart-column"></i> HỆ THỐNG 4 ĐỒ THỊ ĐIỀU HÀNH (SỐ LIỆU &amp; % NẰM TRỰC TIẾP TRÊN ĐỈNH CỘT):</span>
+            <span style="font-size:0.75rem; color:#94A3B8;">Tự động nhúng vào file PDF (.pdf) và PowerPoint (.pptx)</span>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(520px, 1fr)); gap:1.1rem;">
+            <div style="background:rgba(15,23,42,0.9); border:1px solid rgba(56,189,248,0.28); border-radius:14px; padding:1rem;">
+              <div style="font-size:0.84rem; font-weight:800; color:#F8FAFC; margin-bottom:0.5rem;">1. Đồ Thị Tiến Độ WO Toàn Tỉnh &amp; 4 Đội vs Target 75%</div>
+              <canvas id="periodicChart1Wo" style="max-height:270px;"></canvas>
+            </div>
+            <div style="background:rgba(15,23,42,0.9); border:1px solid rgba(99,102,241,0.28); border-radius:14px; padding:1rem;">
+              <div style="font-size:0.84rem; font-weight:800; color:#F8FAFC; margin-bottom:0.5rem;">2. Đồ Thị Việc BOG Giao Phòng Ban (Tổng / Xong / Đang Làm / Quá Hạn)</div>
+              <canvas id="periodicChart2Bod" style="max-height:270px;"></canvas>
+            </div>
+            <div style="background:rgba(15,23,42,0.9); border:1px solid rgba(245,158,11,0.28); border-radius:14px; padding:1rem;">
+              <div style="font-size:0.84rem; font-weight:800; color:#F8FAFC; margin-bottom:0.5rem;">3. Đồ Thị Vật Tư 4d: Dầu Nhớt (Oil) &amp; Nước Làm Mát (Coolant) Theo Nhánh (Lít)</div>
+              <canvas id="periodicChart3Oil" style="max-height:270px;"></canvas>
+            </div>
+            <div style="background:rgba(15,23,42,0.9); border:1px solid rgba(16,185,129,0.28); border-radius:14px; padding:1rem;">
+              <div style="font-size:0.84rem; font-weight:800; color:#F8FAFC; margin-bottom:0.5rem;">4. Đồ Thị Điểm Sức Khỏe 12 Ghế Giám Sát Chuyên Trách (0% Rơi Rớt Thông Tin)</div>
+              <canvas id="periodicChart4Seats" style="max-height:270px;"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- 📋 KHỐI 3: BẢNG TỔNG HỢP 4 TẦNG (TỈNH -> BOG GIAO PHÒNG BAN -> PHÒNG BAN GIAO 4 ĐỘI -> 12 GHẾ GIÁM SÁT) -->
+        <div id="periodic-tables-container" style="margin-top:1.4rem; display:flex; flex-direction:column; gap:1.2rem;"></div>
+
       </div>
 
       <div class="section-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
@@ -10082,8 +10196,24 @@ Team04>> 2Box</td>
     }
 
     function setPeriodFilter(period, btn) {
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+      window.currentPeriodicMode = period;
+      var bar = document.getElementById('exec-period-filter-bar');
+      if (bar) {
+        bar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      }
+      if (btn && btn.classList) btn.classList.add('active');
+      var vPer = document.getElementById('voicePeriod');
+      if (vPer && vPer.value !== period) vPer.value = period;
+
+      var hub = document.getElementById('exec-periodic-report-hub');
+      if (hub) {
+        if (period === 'weekly' || period === 'monthly') {
+          hub.style.display = 'block';
+          renderPeriodicReportHub(period);
+        } else {
+          hub.style.display = 'none';
+        }
+      }
     }
 
     /* Modal Handlers */
@@ -10789,11 +10919,51 @@ Gửi link này cho nhân viên qua Telegram/Zalo, khi họ bấm vào hệ th�
       }
     });
 
-    /* 🤖 AI VOICE SPEECH SYNTHESIS ENGINE (DYNAMIC LIVE DATA BRIEFING WITH SENTENCE CHUNKING QUEUE) */
+    /* 🤖 AI VOICE SPEECH SYNTHESIS ENGINE (3 NGÔN NGỮ: VIỆT - ANH - MYANMAR & 3 KỲ: NGÀY - TUẦN - THÁNG)
+       Ưu tiên phát Giọng Neural Mượt Mà từ Nhân Viên AI Offline trên máy tính (127.0.0.1:8765 / assets/bi_reports/audio_*.mp3) */
     let isSpeaking = false;
     let synth = window.speechSynthesis;
+    window.activeNeuralAudio = null;
+    window.currentPeriodicMode = 'daily';
+    window.currentScriptLang = 'vi';
+    window.periodicCharts = {};
 
-    function getDynamicBriefingScript(selectedLang) {
+    function getActiveBundleData() {
+      return window.TNI_OFFLINE_AI_BUNDLE || null;
+    }
+
+    function onVoicePeriodChange(periodVal) {
+      var btnId = periodVal === 'weekly' ? 'btn-period-weekly' : (periodVal === 'monthly' ? 'btn-period-monthly' : 'btn-period-daily');
+      var btnEl = document.getElementById(btnId);
+      setPeriodFilter(periodVal, btnEl);
+    }
+
+    function onVoiceLangChange(langVal) {
+      var shortLang = langVal.indexOf('my') !== -1 ? 'my' : (langVal.indexOf('en') !== -1 ? 'en' : 'vi');
+      switchPeriodicScriptLang(shortLang);
+      if (isSpeaking) {
+        toggleAIVoice(); // stop current
+        setTimeout(function() { toggleAIVoice(); }, 150); // restart in new language
+      }
+    }
+
+    function getDynamicBriefingScript(selectedLang, selectedPeriod) {
+      var period = selectedPeriod || (document.getElementById('voicePeriod') ? document.getElementById('voicePeriod').value : window.currentPeriodicMode) || 'daily';
+      var langKey = (selectedLang || '').indexOf('my') !== -1 ? 'my' : ((selectedLang || '').indexOf('en') !== -1 ? 'en' : 'vi');
+      var bundle = getActiveBundleData();
+
+      if (bundle) {
+        if (period === 'weekly' && bundle.weekly && bundle.weekly.scripts && bundle.weekly.scripts[langKey]) {
+          return bundle.weekly.scripts[langKey];
+        }
+        if (period === 'monthly' && bundle.monthly && bundle.monthly.scripts && bundle.monthly.scripts[langKey]) {
+          return bundle.monthly.scripts[langKey];
+        }
+        if (period === 'daily' && bundle.daily_scripts && bundle.daily_scripts[langKey]) {
+          return bundle.daily_scripts[langKey];
+        }
+      }
+
       function parseNum(id, fallback) {
         var el = document.getElementById(id);
         if (!el) return fallback;
@@ -10802,73 +10972,65 @@ Gửi link này cho nhân viên qua Telegram/Zalo, khi họ bấm vào hệ th�
       }
 
       var exportEl = document.getElementById('sheet-export-time');
-      var rawTime = (exportEl && exportEl.textContent && exportEl.textContent.trim()) || new Date().toLocaleDateString('en-GB') + ' ' + new Date().toLocaleTimeString('en-GB');
-      var m = rawTime.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-      var day = m ? m[1] : new Date().getDate().toString();
-      var month = m ? m[2] : (new Date().getMonth() + 1).toString();
-      var year = m ? m[3] : new Date().getFullYear().toString();
-      var dateVi = "ng\u00E0y " + day + " th\u00E1ng " + month + " n\u0103m " + year;
-      var dateEn = (month.length === 1 ? '0' + month : month) + '/' + (day.length === 1 ? '0' + day : day) + '/' + year;
-
+      var rawTime = (exportEl && exportEl.textContent && exportEl.textContent.trim()) || new Date().toLocaleDateString('en-GB');
       var td = window.latestTeamData || {};
-      var t1 = td.team1 || { name: 'Team 1 Dawei', totalAssigned: parseNum('t1-assigned', 325), fotClose: parseNum('t1-fot', 77), cdNotYet: parseNum('t1-cdnotyet', 2), pct: 23, rank: 4 };
-      var t2 = td.team2 || { name: 'Team 2 Myeik', totalAssigned: parseNum('t2-assigned', 324), fotClose: parseNum('t2-fot', 126), cdNotYet: parseNum('t2-cdnotyet', 13), pct: 39, rank: 3 };
-      var t3 = td.team3 || { name: 'Team 3 Bokpyin', totalAssigned: parseNum('t3-assigned', 99), fotClose: parseNum('t3-fot', 48), cdNotYet: parseNum('t3-cdnotyet', 4), pct: 48, rank: 2 };
-      var t4 = td.team4 || { name: 'Team 4 Kawthoung', totalAssigned: parseNum('t4-assigned', 71), fotClose: parseNum('t4-fot', 60), cdNotYet: parseNum('t4-cdnotyet', 1), pct: 83, rank: 1 };
-
-      var teams = [
-        { key: 'team1', nameVi: '\u0110\u1ED9i 1 Dawei', nameEn: 'Team 1 Dawei', leaderEn: 'Paing Aung Soe', d: t1 },
-        { key: 'team2', nameVi: '\u0110\u1ED9i 2 Myeik', nameEn: 'Team 2 Myeik', leaderEn: 'Nay Myo Thu', d: t2 },
-        { key: 'team3', nameVi: '\u0110\u1ED9i 3 Bokpyin', nameEn: 'Team 3 Bokpyin', leaderEn: 'Pyae Phyo Zaw', d: t3 },
-        { key: 'team4', nameVi: '\u0110\u1ED9i 4 Kawthoung', nameEn: 'Team 4 Kawthoung', leaderEn: 'Naing Myo Htun', d: t4 }
-      ];
-
-      teams.sort(function(a, b) {
-        var rA = a.d.rank || 99;
-        var rB = b.d.rank || 99;
-        if (rA !== rB) return rA - rB;
-        return (b.d.pct || 0) - (a.d.pct || 0);
-      });
+      var t1 = td.team1 || { name: 'Team 1 Dawei', totalAssigned: parseNum('t1-assigned', 296), fotClose: parseNum('t1-fot', 94), cdNotYet: parseNum('t1-cdnotyet', 4), pct: 31.8, rank: 2 };
+      var t2 = td.team2 || { name: 'Team 2 Myeik', totalAssigned: parseNum('t2-assigned', 250), fotClose: parseNum('t2-fot', 56), cdNotYet: parseNum('t2-cdnotyet', 7), pct: 22.4, rank: 3 };
+      var t3 = td.team3 || { name: 'Team 3 Bokpyin', totalAssigned: parseNum('t3-assigned', 99), fotClose: parseNum('t3-fot', 40), cdNotYet: parseNum('t3-cdnotyet', 7), pct: 40.4, rank: 1 };
+      var t4 = td.team4 || { name: 'Team 4 Kawthoung', totalAssigned: parseNum('t4-assigned', 82), fotClose: parseNum('t4-fot', 18), cdNotYet: parseNum('t4-cdnotyet', 4), pct: 22.0, rank: 4 };
 
       var totalAssigned = (t1.totalAssigned || 0) + (t2.totalAssigned || 0) + (t3.totalAssigned || 0) + (t4.totalAssigned || 0);
       var totalClose = (t1.fotClose || 0) + (t2.fotClose || 0) + (t3.fotClose || 0) + (t4.fotClose || 0);
-      var totalCd = (t1.cdNotYet || 0) + (t2.cdNotYet || 0) + (t3.cdNotYet || 0) + (t4.cdNotYet || 0);
+      var provPct = totalAssigned > 0 ? ((totalClose / totalAssigned) * 100).toFixed(1) : 28.7;
 
-      if (selectedLang === 'vi-VN') {
-        return "Ch\u00E0o m\u1EEBng b\u1EA1n \u0111\u1EBFn v\u1EDBi C\u1ED5ng th\u00F4ng tin B\u00E1o c\u00E1o V\u1EADn h\u00E0nh TNI BI. Sau \u0111\u00E2y l\u00E0 b\u1EA3n tin t\u1ED5ng h\u1EE3p chi ti\u1EBFt t\u00ECnh h\u00ECnh v\u1EADn h\u00E0nh to\u00E0n m\u1EA1ng Tanintharyi t\u00EDnh \u0111\u1EBFn " + dateVi + ". " +
-               "T\u1ED5ng s\u1ED1 Work Orders \u0111\u01B0\u1EE3c giao to\u00E0n h\u1EC7 th\u1ED1ng l\u00E0 " + totalAssigned + " Work Orders. " +
-               "To\u00E0n m\u1EA1ng \u0111\u00E3 ho\u00E0n th\u00E0nh \u0111\u00FAng " + totalClose + " Work Orders, s\u1ED1 Work Orders ch\u01B0a \u0111\u00F3ng C\u1ED9t A l\u00E0 " + totalCd + " Work Orders. " +
-               "Chi ti\u1EBFt t\u00ECnh h\u00ECnh 4 \u0111\u1ED9i khu v\u1EF1c: " +
-               "V\u1ECB tr\u00ED D\u1EABn \u0110\u1EA7u Rank 1 thu\u1ED9c v\u1EC1 " + teams[0].nameVi + " do " + teams[0].leaderEn + " l\u00E0m \u0111\u1ED9i tr\u01B0\u1EDFng, \u0111\u1EA1t t\u1EF7 l\u1EC7 ho\u00E0n th\u00E0nh " + teams[0].d.pct + " ph\u1EA7n tr\u0103m v\u1EDBi " + teams[0].d.fotClose + " Work Orders ho\u00E0n th\u00E0nh. " +
-               "V\u1ECB tr\u00ED Rank 2 thu\u1ED9c v\u1EC1 " + teams[1].nameVi + " do " + teams[1].leaderEn + " l\u00E0m \u0111\u1ED9i tr\u01B0\u1EDFng, \u0111\u1EA1t t\u1EF7 l\u1EC7 ho\u00E0n th\u00E0nh " + teams[1].d.pct + " ph\u1EA7n tr\u0103m v\u1EDBi " + teams[1].d.fotClose + " Work Orders ho\u00E0n th\u00E0nh. " +
-               "V\u1ECB tr\u00ED Rank 3 thu\u1ED9c v\u1EC1 " + teams[2].nameVi + " do " + teams[2].leaderEn + " l\u00E0m \u0111\u1ED9i tr\u01B0\u1EDFng, \u0111\u1EA1t t\u1EF7 l\u1EC7 " + teams[2].d.pct + " ph\u1EA7n tr\u0103m v\u1EDBi " + teams[2].d.fotClose + " Work Orders ho\u00E0n th\u00E0nh. " +
-               "V\u1ECB tr\u00ED Rank 4 thu\u1ED9c v\u1EC1 " + teams[3].nameVi + " do " + teams[3].leaderEn + " l\u00E0m \u0111\u1ED9i tr\u01B0\u1EDFng, hi\u1EC7n c\u00F3 " + teams[3].d.totalAssigned + " Work Orders \u0111\u01B0\u1EE3c giao v\u00E0 " + (teams[3].d.cdNotYet || 0) + " Work Orders ch\u01B0a \u0111\u00F3ng C\u1ED9t A. " +
-               "Xin c\u1EA3m \u01A1n b\u1EA1n \u0111\u00E3 l\u1EAFng nghe b\u1EA3n tin \u0111i\u1EC1u h\u00E0nh BI.";
+      if (langKey === 'my') {
+        return "မင်္ဂလာပါ ဒါရိုက်တာ ဖုန်းရှင့်။ တနင်္သာရီတိုင်းဒေသကြီး ရုံးခွဲ၏ လုပ်ငန်းလည်ပတ်မှု အစီရင်ခံစာကို တင်ပြအပ်ပါသည်။ " +
+               "တိုင်းဒေသကြီး တစ်ခုလုံးတွင် စုစုပေါင်း လုပ်ငန်းတာဝန် " + totalAssigned + " ခု ရှိသည့်အနက် " + totalClose + " ခု ပြီးစီးခဲ့ပြီး " + provPct + " ရာခိုင်နှုန်း ရရှိထားပါသည်။ " +
+               "အဖွဲ့ ၁ ထားဝယ် သည် " + t1.pct + " ရာခိုင်နှုန်း၊ အဖွဲ့ ၂ မြိတ် သည် " + t2.pct + " ရာခိုင်နှုန်း၊ အဖွဲ့ ၃ ဘုတ်ပြင်း သည် " + t3.pct + " ရာခိုင်နှုန်း နှင့် အဖွဲ့ ၄ ကော့သောင်း သည် " + t4.pct + " ရာခိုင်နှုန်း အသီးသီး ပြီးစီးထားပါသည်။ " +
+               "ကြီးကြပ်ရေး ထိုင်ခုံ ၁၂ ခုလုံး ပုံမှန်အလုပ်လုပ်နေပြီး အချက်အလက် လွတ်ကျမှု လုံးဝမရှိပါရှင့်။";
+      } else if (langKey === 'vi') {
+        return "Dạ, chào anh Phong. Em xin phép điểm nhanh tình hình vận hành toàn chi nhánh Tanintharyi. " +
+               "Tổng số đầu việc toàn tỉnh là " + totalAssigned + " việc, đã đóng được " + totalClose + " việc, đạt tỷ lệ " + provPct + " phần trăm. " +
+               "Về tiến độ bốn đội: Đội 1 Dawei đạt " + t1.pct + " phần trăm, Đội 2 Myeik đạt " + t2.pct + " phần trăm, Đội 3 Bokpyin đạt " + t3.pct + " phần trăm, và Đội 4 Kawthoung đạt " + t4.pct + " phần trăm. " +
+               "Toàn bộ mười hai ghế giám sát từ việc Ban Giám Đốc giao phòng ban, phòng ban giao bốn đội, đến vật tư dầu nhớt, nước làm mát máy nổ và điểm danh nghỉ phép Viber đều đã được tổng hợp đầy đủ ạ.";
       } else {
-        return "Welcome to TNI Operations BI Executive Management Portal. Here is the operational summary for Tanintharyi region as of " + rawTime + ". " +
-               "Total assigned Work Orders system wide is " + totalAssigned + " Work Orders, with " + totalClose + " closed and " + totalCd + " pending close in Column A. " +
-               "Regional Team Rankings: " +
-               "Rank number 1 goes to " + teams[0].nameEn + " led by " + teams[0].leaderEn + ", achieving " + teams[0].d.pct + " percent completion rate with " + teams[0].d.fotClose + " closed Work Orders. " +
-               "Rank number 2 goes to " + teams[1].nameEn + " led by " + teams[1].leaderEn + ", with " + teams[1].d.pct + " percent completion rate. " +
-               "Rank number 3 goes to " + teams[2].nameEn + " led by " + teams[2].leaderEn + ", achieving " + teams[2].d.pct + " percent completion rate. " +
-               "Rank number 4 goes to " + teams[3].nameEn + " led by " + teams[3].leaderEn + ", with " + teams[3].d.totalAssigned + " total assigned Work Orders and " + (teams[3].d.cdNotYet || 0) + " Work Orders pending close. " +
-               "Thank you for listening to the TNI BI Executive Audio Report.";
+        return "Hello Director Phong. Here is the executive operational briefing for the Tanintharyi branch as of " + rawTime + ". " +
+               "Across the entire province, total assigned work orders are " + totalAssigned + ", with " + totalClose + " completed, achieving " + provPct + " percent. " +
+               "Team 1 Dawei is at " + t1.pct + " percent, Team 2 Myeik is at " + t2.pct + " percent, Team 3 Bokpyin is at " + t3.pct + " percent, and Team 4 Kawthoung is at " + t4.pct + " percent. " +
+               "All twelve monitoring seats are synchronized with zero information loss.";
       }
     }
 
-    function toggleAIVoice() {
-      if (!synth) return;
+    function stopAllAIVoice() {
+      isSpeaking = false;
+      if (synth) {
+        try { synth.cancel(); } catch (e) {}
+      }
+      if (window.activeNeuralAudio) {
+        try {
+          window.activeNeuralAudio.pause();
+          window.activeNeuralAudio.currentTime = 0;
+        } catch (e) {}
+        window.activeNeuralAudio = null;
+      }
       const playBtn = document.getElementById('playVoiceBtn');
       const voiceIcon = document.getElementById('voiceIcon');
       const voiceText = document.getElementById('voiceText');
-      const selectedLang = document.getElementById('voiceLang').value;
+      if (playBtn) playBtn.classList.remove('speaking');
+      if (voiceIcon) voiceIcon.className = "fa-solid fa-volume-high";
+      if (voiceText) voiceText.textContent = "AI Audio Briefing";
+    }
+
+    function toggleAIVoice() {
+      const playBtn = document.getElementById('playVoiceBtn');
+      const voiceIcon = document.getElementById('voiceIcon');
+      const voiceText = document.getElementById('voiceText');
+      const selectedLang = document.getElementById('voiceLang') ? document.getElementById('voiceLang').value : 'vi-VN';
+      const selectedPeriod = document.getElementById('voicePeriod') ? document.getElementById('voicePeriod').value : (window.currentPeriodicMode || 'daily');
+      const shortLang = selectedLang.indexOf('my') !== -1 ? 'my' : (selectedLang.indexOf('en') !== -1 ? 'en' : 'vi');
 
       if (isSpeaking) {
-        synth.cancel();
-        isSpeaking = false;
-        playBtn.classList.remove('speaking');
-        voiceIcon.className = "fa-solid fa-volume-high";
-        voiceText.textContent = "AI Audio Briefing";
+        stopAllAIVoice();
         return;
       }
 
@@ -10876,67 +11038,371 @@ Gửi link này cho nhân viên qua Telegram/Zalo, khi họ bấm vào hệ th�
         window.ChiefSecretaryAgent.stopSpeaking();
       }
 
-      const scriptText = getDynamicBriefingScript(selectedLang);
-      
-      // Split full text into sentence chunks to bypass Chrome/Windows 15-second cutoff bug
+      isSpeaking = true;
+      if (playBtn) playBtn.classList.add('speaking');
+      if (voiceIcon) voiceIcon.className = "fa-solid fa-circle-pause";
+      if (voiceText) voiceText.textContent = "Stop AI Voice (" + selectedPeriod.toUpperCase() + ")";
+
+      // TẦNG 1 (ƯU TIÊN SỐ 1): Phát file âm thanh Neural mượt mà từ Máy Offline (127.0.0.1:8765 hoặc assets/bi_reports/audio_<period>_<lang>.mp3)
+      var localUrls = [
+        "http://127.0.0.1:8765/audio?period=" + encodeURIComponent(selectedPeriod) + "&lang=" + encodeURIComponent(shortLang) + "&t=" + Date.now(),
+        "assets/bi_reports/audio_" + selectedPeriod + "_" + shortLang + ".mp3?v=" + Date.now()
+      ];
+
+      function tryPlayAudioUrl(idx) {
+        if (!isSpeaking) return;
+        if (idx >= localUrls.length) {
+          fallbackBrowserTTS(selectedLang, selectedPeriod, shortLang);
+          return;
+        }
+        var audio = new Audio(localUrls[idx]);
+        window.activeNeuralAudio = audio;
+        var started = false;
+        audio.oncanplaythrough = function() {
+          if (!isSpeaking || started) return;
+          started = true;
+          audio.play().catch(function() {
+            tryPlayAudioUrl(idx + 1);
+          });
+        };
+        audio.onended = function() {
+          stopAllAIVoice();
+        };
+        audio.onerror = function() {
+          if (!started) {
+            tryPlayAudioUrl(idx + 1);
+          } else {
+            stopAllAIVoice();
+          }
+        };
+        audio.load();
+      }
+
+      tryPlayAudioUrl(0);
+    }
+
+    function fallbackBrowserTTS(selectedLang, selectedPeriod, shortLang) {
+      if (!synth || !isSpeaking) {
+        stopAllAIVoice();
+        return;
+      }
+      const scriptText = getDynamicBriefingScript(selectedLang, selectedPeriod);
       const sentences = scriptText.match(/[^.!?။]+[.!?။]+/g) || [scriptText];
       let sentenceIndex = 0;
-
       const availableVoices = synth.getVoices();
-      let targetVoice = availableVoices.find(v => v.lang.includes('my') || v.name.toLowerCase().includes('myanmar') || v.name.toLowerCase().includes('burmese'));
 
       function speakSentence() {
         if (sentenceIndex >= sentences.length || !isSpeaking) {
-          isSpeaking = false;
-          playBtn.classList.remove('speaking');
-          voiceIcon.className = "fa-solid fa-volume-high";
-          voiceText.textContent = "AI Audio Briefing";
+          stopAllAIVoice();
           return;
         }
-
         const currentText = sentences[sentenceIndex].trim();
         if (!currentText) {
           sentenceIndex++;
           speakSentence();
           return;
         }
-
         const utter = new SpeechSynthesisUtterance(currentText);
-        utter.rate = 0.92;
-
-        if (selectedLang === 'my-MM') {
-          if (targetVoice) {
-            utter.voice = targetVoice;
-            utter.lang = targetVoice.lang;
-          } else {
-            utter.lang = 'en-US';
-          }
-        } else {
-          utter.lang = selectedLang;
-          let matched = availableVoices.find(v => v.lang.startsWith(selectedLang.split('-')[0]));
-          if (matched) utter.voice = matched;
-        }
-
-        utter.onend = () => {
-          sentenceIndex++;
-          speakSentence();
-        };
-
-        utter.onerror = () => {
-          sentenceIndex++;
-          speakSentence();
-        };
-
+        utter.rate = 0.95;
+        utter.lang = selectedLang;
+        let matched = availableVoices.find(v => (v.lang || '').toLowerCase().includes(shortLang) && (v.name.includes('Natural') || v.name.includes('Online'))) ||
+                      availableVoices.find(v => (v.lang || '').toLowerCase().includes(shortLang));
+        if (matched) utter.voice = matched;
+        utter.onend = () => { sentenceIndex++; speakSentence(); };
+        utter.onerror = () => { sentenceIndex++; speakSentence(); };
         synth.speak(utter);
       }
 
-      isSpeaking = true;
-      playBtn.classList.add('speaking');
-      voiceIcon.className = "fa-solid fa-circle-pause";
-      voiceText.textContent = "Stop AI Voice";
-
-      synth.cancel(); // Clear any ongoing speech
+      synth.cancel();
       speakSentence();
+    }
+
+    function playPeriodicReportVoice() {
+      var pSel = document.getElementById('voicePeriod');
+      if (pSel && (window.currentPeriodicMode === 'weekly' || window.currentPeriodicMode === 'monthly')) {
+        pSel.value = window.currentPeriodicMode;
+      }
+      if (isSpeaking) stopAllAIVoice();
+      toggleAIVoice();
+    }
+
+    function switchPeriodicScriptLang(langCode) {
+      window.currentScriptLang = langCode;
+      ['vi', 'en', 'my'].forEach(function(k) {
+        var b = document.getElementById('script-lang-btn-' + k);
+        if (b) {
+          if (k === langCode) b.classList.add('active');
+          else b.classList.remove('active');
+        }
+      });
+      var vLang = document.getElementById('voiceLang');
+      if (vLang) {
+        vLang.value = langCode === 'my' ? 'my-MM' : (langCode === 'en' ? 'en-US' : 'vi-VN');
+      }
+      var bundle = getActiveBundleData();
+      var mode = (window.currentPeriodicMode === 'monthly') ? 'monthly' : 'weekly';
+      var pData = bundle && bundle[mode] ? bundle[mode] : null;
+      var box = document.getElementById('periodic-spoken-script-box');
+      if (box && pData && pData.scripts) {
+        box.textContent = pData.scripts[langCode] || pData.scripts.vi || '';
+      }
+    }
+
+    function renderPeriodicReportHub(mode) {
+      var bundle = getActiveBundleData();
+      if (!bundle) return;
+      var pData = mode === 'monthly' ? bundle.monthly : bundle.weekly;
+      if (!pData) return;
+
+      var titleEl = document.getElementById('periodic-hub-title');
+      var subEl = document.getElementById('periodic-hub-subtitle');
+      var lblDate = document.getElementById('period-start-date-label');
+      var inpDate = document.getElementById('period-start-date-input');
+      var shLink = document.getElementById('periodic-sheet-link');
+
+      if (titleEl) titleEl.textContent = pData.title_vi;
+      if (subEl) subEl.textContent = "Kỳ báo cáo: " + pData.start_date + " → " + pData.end_date + " | Cập nhật từ Sheet: " + pData.export_time + " | 12/12 Ghế Giám Sát Khép Kín (0% Rơi Rớt Thông Tin)";
+      if (lblDate) lblDate.textContent = mode === 'monthly' ? "📅 Ngày bắt đầu Tháng (Ô B2):" : "📅 Ngày bắt đầu Tuần (Ô B2):";
+      if (inpDate) inpDate.value = pData.start_date;
+      if (shLink) {
+        var gid = mode === 'monthly' ? '688071172' : '1672190049';
+        shLink.href = "https://docs.google.com/spreadsheets/d/1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8/edit#gid=" + gid;
+        shLink.innerHTML = '<i class="fa-solid fa-table"></i> Mở Sheet ' + (mode === 'monthly' ? 'Monthly Report' : 'Weekly Report');
+      }
+
+      switchPeriodicScriptLang(window.currentScriptLang || 'vi');
+
+      // Render 10 Experts Grid
+      var expGrid = document.getElementById('periodic-10-experts-grid');
+      if (expGrid && pData.experts) {
+        expGrid.innerHTML = pData.experts.map(function(ex) {
+          return '<div style="background:rgba(15,23,42,0.85); border:1px solid rgba(56,189,248,0.25); border-radius:10px; padding:0.75rem;">' +
+                 '<div style="font-size:0.78rem; font-weight:800; color:#38BDF8;">' + ex.role + '</div>' +
+                 '<div style="font-size:0.7rem; color:#F59E0B; font-weight:700; margin:0.2rem 0;">🎯 Trọng tâm: ' + ex.focus + '</div>' +
+                 '<div style="font-size:0.75rem; color:#E2E8F0; line-height:1.45;">' + ex.insight + '</div>' +
+                 '</div>';
+        }).join('');
+      }
+
+      // Render 4 Charts with ChartDataLabels (Numbers directly on top of bars!)
+      var commonOptions = {
+        responsive: true,
+        plugins: {
+          legend: { labels: { color: '#F8FAFC', font: { weight: 'bold', size: 11 } } },
+          datalabels: {
+            anchor: 'end',
+            align: 'top',
+            color: '#FFFFFF',
+            backgroundColor: 'rgba(15, 23, 42, 0.85)',
+            borderRadius: 4,
+            padding: { top: 2, bottom: 2, left: 4, right: 4 },
+            font: { weight: 'bold', size: 10.5 },
+            formatter: function(val) { return val > 0 ? val : ''; }
+          }
+        },
+        scales: {
+          x: { ticks: { color: '#CBD5E1', font: { weight: '600', size: 10.5 } } },
+          y: { ticks: { color: '#94A3B8' }, grace: '18%' }
+        }
+      };
+
+      // Chart 1: Province & 4 Teams WO
+      var ctx1 = document.getElementById('periodicChart1Wo')?.getContext('2d');
+      if (ctx1) {
+        if (window.periodicCharts.c1) window.periodicCharts.c1.destroy();
+        var tList = pData.teams || [];
+        window.periodicCharts.c1 = new Chart(ctx1, {
+          type: 'bar',
+          plugins: [ChartDataLabels],
+          data: {
+            labels: tList.map(function(t) { return t.name.replace('TOÀN TỈNH TANINTHARYI (TOTAL TNI)', 'Toàn Tỉnh') + ' (' + t.pct + '%)'; }),
+            datasets: [
+              { label: 'Tổng WO Giao', data: tList.map(function(t){return t.total_wo;}), backgroundColor: '#38BDF8', borderRadius: 5 },
+              { label: 'WO Đã Đóng', data: tList.map(function(t){return t.closed_wo;}), backgroundColor: '#10B981', borderRadius: 5 },
+              { label: 'WO Quá Hạn', data: tList.map(function(t){return t.overdue_wo;}), backgroundColor: '#EF4444', borderRadius: 5 }
+            ]
+          },
+          options: commonOptions
+        });
+      }
+
+      // Chart 2: BOG Assign to Departments
+      var ctx2 = document.getElementById('periodicChart2Bod')?.getContext('2d');
+      if (ctx2) {
+        if (window.periodicCharts.c2) window.periodicCharts.c2.destroy();
+        var bList = (pData.bod_depts || []).slice(1, 9);
+        window.periodicCharts.c2 = new Chart(ctx2, {
+          type: 'bar',
+          plugins: [ChartDataLabels],
+          data: {
+            labels: bList.map(function(d) { return d.dept + ' (' + d.pct + '%)'; }),
+            datasets: [
+              { label: 'Tổng Việc BOG Giao', data: bList.map(function(d){return d.total;}), backgroundColor: '#6366F1', borderRadius: 5 },
+              { label: 'Đã Hoàn Thành', data: bList.map(function(d){return d.done;}), backgroundColor: '#10B981', borderRadius: 5 },
+              { label: 'Đang Thực Hiện', data: bList.map(function(d){return d.in_progress;}), backgroundColor: '#F59E0B', borderRadius: 5 },
+              { label: 'Quá Hạn', data: bList.map(function(d){return d.overdue;}), backgroundColor: '#EF4444', borderRadius: 5 }
+            ]
+          },
+          options: commonOptions
+        });
+      }
+
+      // Chart 3: DG Oil & Coolant by Branch
+      var ctx3 = document.getElementById('periodicChart3Oil')?.getContext('2d');
+      if (ctx3) {
+        if (window.periodicCharts.c3) window.periodicCharts.c3.destroy();
+        var oList = (pData.oil_coolant || []).filter(function(x){ return x.branch.indexOf('Total') === -1; });
+        window.periodicCharts.c3 = new Chart(ctx3, {
+          type: 'bar',
+          plugins: [ChartDataLabels],
+          data: {
+            labels: oList.map(function(x){ return x.branch; }),
+            datasets: [
+              { label: 'Nhớt Cần (L)', data: oList.map(function(x){return x.oil_need;}), backgroundColor: '#F59E0B', borderRadius: 5 },
+              { label: 'Nhớt Đang Có (L)', data: oList.map(function(x){return x.oil_have;}), backgroundColor: '#10B981', borderRadius: 5 },
+              { label: 'Nhớt Thiếu Diff (L)', data: oList.map(function(x){return x.oil_diff;}), backgroundColor: '#EF4444', borderRadius: 5 },
+              { label: 'Nước Mát Thiếu (L)', data: oList.map(function(x){return x.cool_diff;}), backgroundColor: '#A855F7', borderRadius: 5 }
+            ]
+          },
+          options: commonOptions
+        });
+      }
+
+      // Chart 4: 12 Monitoring Seats Health Score
+      var ctx4 = document.getElementById('periodicChart4Seats')?.getContext('2d');
+      if (ctx4) {
+        if (window.periodicCharts.c4) window.periodicCharts.c4.destroy();
+        var sList = pData.seats || [];
+        window.periodicCharts.c4 = new Chart(ctx4, {
+          type: 'bar',
+          plugins: [ChartDataLabels],
+          data: {
+            labels: sList.map(function(s){ return s.code.replace('SEAT-', 'Ghế '); }),
+            datasets: [
+              {
+                label: 'Điểm Sức Khỏe Ghế Giám Sát (%)',
+                data: sList.map(function(s){ return s.score; }),
+                backgroundColor: sList.map(function(s){ return s.score >= 85 ? '#10B981' : (s.score >= 75 ? '#38BDF8' : '#F59E0B'); }),
+                borderRadius: 5
+              }
+            ]
+          },
+          options: commonOptions
+        });
+      }
+
+      // Render 4 Comprehensive Tables
+      var tblCont = document.getElementById('periodic-tables-container');
+      if (tblCont) {
+        var h = '';
+        // Bảng I: Toàn Tỉnh & 4 Đội
+        h += '<div style="background:rgba(15,23,42,0.85); border:1px solid rgba(56,189,248,0.3); border-radius:14px; padding:1rem; overflow-x:auto;">';
+        h += '<div style="font-size:0.88rem; font-weight:800; color:#38BDF8; margin-bottom:0.6rem;">I. BẢNG TỔNG HỢP TOÀN TỈNH TANINTHARYI TRƯỚC &amp; 4 ĐỘI HIỆN TRƯỜNG</div>';
+        h += '<table class="data-table"><thead><tr><th>Đơn Vị / Khu Vực</th><th>Đội Trưởng</th><th>Quân Số</th><th>Tổng WO</th><th>WO Đã Đóng</th><th>% Hoàn Thành</th><th>Target</th><th>Wait CD</th><th>CD Chưa Đóng</th><th>WO Quá Hạn</th></tr></thead><tbody>';
+        (pData.teams || []).forEach(function(t) {
+          var isTot = t.name.indexOf('TOÀN TỈNH') !== -1;
+          var st = isTot ? 'background:rgba(16,185,129,0.15); font-weight:800; color:#34D399;' : '';
+          h += '<tr style="' + st + '"><td>' + t.name + '</td><td>' + t.leader + '</td><td>' + t.staff + '</td><td>' + t.total_wo + '</td><td>' + t.closed_wo + '</td><td><strong>' + t.pct + '%</strong></td><td>' + t.target + '%</td><td>' + t.wait_cd + '</td><td>' + t.cd_not_close + '</td><td style="color:#F87171; font-weight:700;">' + t.overdue_wo + '</td></tr>';
+        });
+        h += '</tbody></table></div>';
+
+        // Bảng II: BOG giao Phòng ban
+        h += '<div style="background:rgba(15,23,42,0.85); border:1px solid rgba(99,102,241,0.3); border-radius:14px; padding:1rem; overflow-x:auto;">';
+        h += '<div style="font-size:0.88rem; font-weight:800; color:#818CF8; margin-bottom:0.6rem;">II. NỘI DUNG TỪ PHÒNG BAN MÀ BAN GIÁM ĐỐC (BOG) GIAO VIỆC (SHEET 'BOD assign')</div>';
+        h += '<table class="data-table"><thead><tr><th>Phòng Ban Nhận Việc</th><th>Tổng Việc BOG Giao</th><th>Đã Hoàn Thành</th><th>Đang Thực Hiện</th><th>Quá Hạn</th><th>% Đạt</th><th>Trạng Thái</th><th>Nội Dung Trọng Tâm Cần Lưu Ý</th></tr></thead><tbody>';
+        (pData.bod_depts || []).forEach(function(d) {
+          var isTot = d.dept.indexOf('TỔNG') !== -1;
+          var st = isTot ? 'background:rgba(99,102,241,0.18); font-weight:800;' : '';
+          h += '<tr style="' + st + '"><td><strong>' + d.dept + '</strong></td><td>' + d.total + '</td><td style="color:#34D399;">' + d.done + '</td><td style="color:#FBBF24;">' + d.in_progress + '</td><td style="color:#F87171; font-weight:700;">' + d.overdue + '</td><td>' + d.pct + '%</td><td>' + d.status + '</td><td style="font-size:0.76rem; color:#CBD5E1;">' + (d.highlight || '-') + '</td></tr>';
+        });
+        h += '</tbody></table></div>';
+
+        // Bảng III: Phòng ban giao 4 Team + Dầu nhớt & Nước làm mát
+        h += '<div style="background:rgba(15,23,42,0.85); border:1px solid rgba(245,158,11,0.3); border-radius:14px; padding:1rem; overflow-x:auto;">';
+        h += '<div style="font-size:0.88rem; font-weight:800; color:#FBBF24; margin-bottom:0.6rem;">III. PHÒNG BAN GIAO VIỆC XUỐNG TỪNG TEAM TASK &amp; ĐỊNH MỨC DẦU NHỚT / NƯỚC LÀM MÁT MÁY NỔ</div>';
+        h += '<table class="data-table" style="margin-bottom:0.9rem;"><thead><tr><th>Đội Nhận Việc (Team)</th><th>Tổng Task Giao</th><th>Đã Đóng</th><th>Còn Tồn</th><th>% Đóng</th><th>Manager / Admin</th><th>Asset / Finance</th><th>CM / PM</th><th>M&amp;E / Construction</th></tr></thead><tbody>';
+        (pData.team_tasks || []).forEach(function(tt) {
+          h += '<tr><td><strong>' + tt.team + '</strong></td><td>' + tt.total + '</td><td>' + tt.done + '</td><td style="color:#FBBF24; font-weight:700;">' + tt.remain + '</td><td>' + tt.pct + '%</td><td>' + tt.mgr_adm + '</td><td>' + tt.ast_fin + '</td><td>' + tt.cm_pm + '</td><td>' + tt.me_cons + '</td></tr>';
+        });
+        h += '</tbody></table>';
+
+        h += '<table class="data-table"><thead><tr><th>Nhánh / Đội</th><th>Cấu Hình Máy Nổ Cần Thay Nhớt</th><th>Nhớt Cần (L)</th><th>Nhớt Có (L)</th><th>Nhớt Diff (L)</th><th>Nước Mát Cần (L)</th><th>Nước Mát Có (L)</th><th>Nước Mát Diff (L)</th><th>Bộ Lọc (Diff)</th></tr></thead><tbody>';
+        (pData.oil_coolant || []).forEach(function(oc) {
+          var isTot = oc.branch.indexOf('Total') !== -1;
+          var st = isTot ? 'background:rgba(245,158,11,0.18); font-weight:800; color:#FDE047;' : '';
+          h += '<tr style="' + st + '"><td><strong>' + oc.branch + '</strong></td><td style="font-size:0.75rem;">' + oc.oil_kva + '</td><td>' + oc.oil_need + ' L</td><td>' + oc.oil_have + ' L</td><td style="color:#38BDF8; font-weight:800;">/' + oc.oil_diff + ' L</td><td>' + oc.cool_need + ' L</td><td>' + oc.cool_have + ' L</td><td style="color:#A855F7; font-weight:800;">/' + oc.cool_diff + ' L</td><td style="font-size:0.75rem;">' + oc.filters + '</td></tr>';
+        });
+        h += '</tbody></table></div>';
+
+        // Bảng IV: 12 Ghế Giám Sát
+        h += '<div style="background:rgba(15,23,42,0.85); border:1px solid rgba(16,185,129,0.35); border-radius:14px; padding:1rem; overflow-x:auto;">';
+        h += '<div style="font-size:0.88rem; font-weight:800; color:#34D399; margin-bottom:0.6rem;">IV. MA TRẬN 12 GHẾ GIÁM SÁT TOÀN HỆ THỐNG — CAM KẾT 0% RƠI RỚT THÔNG TIN</div>';
+        h += '<table class="data-table"><thead><tr><th>Mã Ghế</th><th>Tên Ghế Giám Sát</th><th>Số Liệu Cốt Lõi Trong Kỳ</th><th>Điểm Sức Khỏe</th><th>Trạng Thái</th><th>Điểm Nghẽn Phát Hiện</th><th>Hành Động Điều Hành 30 Phút</th></tr></thead><tbody>';
+        (pData.seats || []).forEach(function(s) {
+          h += '<tr><td><code>' + s.code + '</code></td><td><strong>' + s.name + '</strong></td><td style="color:#38BDF8; font-weight:700;">' + s.metric + '</td><td><strong>' + s.score + '%</strong></td><td>' + s.status + '</td><td style="color:#FBBF24;">' + s.bottleneck + '</td><td style="color:#34D399; font-weight:700;">' + s.action + '</td></tr>';
+        });
+        h += '</tbody></table></div>';
+
+        tblCont.innerHTML = h;
+      }
+    }
+
+    function refreshPeriodicReportByDate() {
+      var inp = document.getElementById('period-start-date-input');
+      var dateVal = inp ? inp.value.trim() : '';
+      var mode = window.currentPeriodicMode === 'monthly' ? 'monthly' : 'weekly';
+      var pill = document.getElementById('offline-ai-status-pill');
+      if (pill) pill.textContent = "⏳ AI Offline đang tổng hợp lại theo ngày " + dateVal + "...";
+
+      var payload = {};
+      if (mode === 'monthly') payload.month_start = dateVal;
+      else payload.week_start = dateVal;
+
+      fetch("http://127.0.0.1:8765/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(resp) {
+        if (resp && resp.bundle) {
+          window.TNI_OFFLINE_AI_BUNDLE = resp.bundle;
+          renderPeriodicReportHub(mode);
+          if (pill) pill.textContent = "✅ Đã cập nhật Sheet & File PDF/PPTX theo ngày " + dateVal;
+        }
+      })
+      .catch(function() {
+        var bundle = getActiveBundleData();
+        if (bundle && bundle[mode]) {
+          bundle[mode].start_date = dateVal;
+          renderPeriodicReportHub(mode);
+        }
+        // Sync directly to GAS Sheet
+        fetch("https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec", {
+          method: "POST",
+          mode: "no-cors",
+          body: JSON.stringify({
+            action: "sync_weekly_monthly_report",
+            week_start: mode === 'weekly' ? dateVal : undefined,
+            month_start: mode === 'monthly' ? dateVal : undefined,
+            report_data: bundle
+          })
+        });
+        if (pill) pill.textContent = "✅ Đã đồng bộ ngày bắt đầu " + dateVal + " lên Google Sheet!";
+      });
+    }
+
+    function downloadPeriodicReport(format) {
+      var mode = window.currentPeriodicMode === 'monthly' ? 'monthly' : 'weekly';
+      var fmt = format === 'pptx' ? 'pptx' : 'pdf';
+      var fileName = (mode === 'monthly' ? 'Bao_Cao_Thang_TNI.' : 'Bao_Cao_Tuan_TNI.') + fmt;
+      // Try static pre-generated asset first (works both locally and on Vercel!)
+      var a = document.createElement('a');
+      a.href = 'assets/bi_reports/' + fileName + '?v=' + Date.now();
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
 
     // 🚆 CHUYẾN TÀU SỐ 4: Dynamic Auto-Sync between Cards (Hình 1) and Chart (Hình 2)
