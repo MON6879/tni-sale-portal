@@ -10,20 +10,61 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bl:#2563eb;--bl2:#1d4ed8;--gn:#16a34a;--rd:#dc2626;--or:#ea580c;--yw:#ca8a04;--pu:#7c3aed;--gray:#f1f5f9;--dark:#1e293b;--tx:#334155;--bd:#e2e8f0;--wh:#fff}
-body{font-family:'Segoe UI',sans-serif;background:#f0f4f8;color:var(--tx);display:flex;height:100vh;overflow:hidden}
-/* SIDEBAR */
-#sb{width:210px;background:var(--dark);flex-shrink:0;display:flex;flex-direction:column;overflow-y:auto}
-#sb .logo{padding:18px 14px 14px;font-size:17px;font-weight:700;color:#fff;border-bottom:1px solid #334155}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f0f4f8;color:var(--tx);display:flex;height:100vh;height:100dvh;width:100vw;max-width:100%;overflow:hidden}
+/* SIDEBAR & RESPONSIVE DRAWER */
+#sb-backdrop{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);backdrop-filter:blur(3px);z-index:10008;opacity:0;transition:opacity .25s ease}
+#sb{width:215px;background:var(--dark);flex-shrink:0;display:flex;flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch;transition:margin-left .25s cubic-bezier(.4,0,.2,1),transform .25s cubic-bezier(.4,0,.2,1);z-index:10009}
+body.sb-collapsed #sb{margin-left:-215px}
+#sb .logo{padding:16px 14px 14px;font-size:17px;font-weight:700;color:#fff;border-bottom:1px solid #334155;display:flex;align-items:center;justify-content:space-between;gap:8px}
 #sb .logo span{color:#38bdf8}
+#sb-close-btn{display:none;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#e2e8f0;width:30px;height:30px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;align-items:center;justify-content:center;flex-shrink:0}
 #sb nav a{display:flex;align-items:center;gap:9px;padding:10px 14px;cursor:pointer;font-size:13px;color:#94a3b8;text-decoration:none;border-left:3px solid transparent;transition:.15s}
 #sb nav a:hover{background:#334155;color:#e2e8f0}
 #sb nav a.active{background:#1e3a5f;color:#fff;border-left-color:#38bdf8}
 #sb .lbl{padding:12px 14px 3px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#475569}
 /* MAIN */
-#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
-#topbar{background:#fff;border-bottom:1px solid var(--bd);padding:10px 22px;display:flex;align-items:center;justify-content:space-between}
-#topbar h2{font-size:16px;font-weight:600;color:var(--dark)}
-#content{flex:1;overflow-y:auto;padding:18px 22px}
+#main{flex:1;min-width:0;width:100%;display:flex;flex-direction:column;overflow:hidden}
+#topbar{background:#fff;border-bottom:1px solid var(--bd);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+#topbar-left{display:flex;align-items:center;gap:10px;min-width:0}
+#sb-toggle-btn{background:#f1f5f9;border:1px solid #cbd5e1;color:#1e293b;width:36px;height:36px;border-radius:8px;font-size:18px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+#sb-toggle-btn:hover{background:#e2e8f0;color:#2563eb;border-color:#94a3b8}
+#topbar h2{font-size:16px;font-weight:700;color:var(--dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#topbar-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+#content{flex:1;min-width:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:18px 22px}
+/* MOBILE BOTTOM NAVIGATION BAR */
+#mobile-bottom-nav{display:none;position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #cbd5e1;box-shadow:0 -4px 16px rgba(15,23,42,0.08);z-index:10005;padding:4px 6px calc(4px + env(safe-area-inset-bottom,0px));justify-content:space-around;align-items:center}
+#mobile-bottom-nav button{flex:1;background:none;border:none;padding:5px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#64748b;font-size:10.5px;font-weight:600;cursor:pointer;border-radius:8px;transition:.15s}
+#mobile-bottom-nav button .mb-ico{font-size:17px;line-height:1.1}
+#mobile-bottom-nav button.active{color:#2563eb;background:#eff6ff;font-weight:700}
+/* RESPONSIVE MOBILE & TABLET BREAKPOINTS */
+@media(max-width:960px){
+  #sb{position:fixed;top:0;left:0;bottom:0;width:265px;max-width:84vw;margin-left:0!important;transform:translateX(-105%);box-shadow:8px 0 32px rgba(0,0,0,0.45)}
+  body.sb-open #sb{transform:translateX(0)}
+  body.sb-open #sb-backdrop{display:block;opacity:1}
+  #sb-close-btn{display:inline-flex}
+  #sb nav a{padding:12px 16px;font-size:13.5px}
+  #content{padding:14px 12px 82px}
+  #mobile-bottom-nav{display:flex}
+}
+@media(max-width:640px){
+  #topbar{padding:8px 10px;gap:6px}
+  #topbar-left{width:100%;justify-content:space-between}
+  #topbar h2{font-size:15px;flex:1}
+  #topbar-actions{width:100%;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;padding-bottom:2px;scrollbar-width:none}
+  #topbar-actions::-webkit-scrollbar{display:none}
+  #topbar-actions > *{flex-shrink:0}
+  .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px}
+  .card{padding:10px 12px}
+  .card .val{font-size:17px}
+  .ph{padding:10px 12px}
+  .pb{padding:10px 12px}
+  .fg{grid-template-columns:1fr!important;gap:9px}
+  .f input,.f select,.f textarea{font-size:16px;padding:9px 10px}
+  .qrow{flex-wrap:wrap;gap:6px}
+  .qrow > *{min-width:calc(50% - 6px)!important;flex:1 1 auto!important}
+  #sk-q{width:100%!important;min-width:140px}
+  #alert{left:12px;right:12px;top:12px;min-width:0}
+}
 /* CARDS */
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px}
 .card{background:#fff;border-radius:10px;padding:14px;border:1px solid var(--bd)}
@@ -623,9 +664,15 @@ function copyTelegramReportTemplate(gName, gId, cat) {
 
 </script>
 
+<!-- ══ SIDEBAR BACKDROP (MOBILE DRAWER) ══ -->
+<div id="sb-backdrop" onclick="closeSidebar()"></div>
+
 <!-- ══ SIDEBAR ══ -->
 <div id="sb">
-  <div class="logo" title="TNI Bán hàng — TNI Sale">⚡ TNI <span>Bán hàng</span></div>
+  <div class="logo" title="TNI Bán hàng — TNI Sale">
+    <div>⚡ TNI <span>Bán hàng</span></div>
+    <button type="button" id="sb-close-btn" onclick="closeSidebar()" title="Đóng menu">✕</button>
+  </div>
   <nav>
     <div class="lbl" data-nav-lbl="overview">Overview</div>
     <a class="active" onclick="go('dashboard')" data-nav-a="dashboard">📊 Dashboard</a>
@@ -671,8 +718,11 @@ function copyTelegramReportTemplate(gName, gId, cat) {
 <!-- ══ MAIN ══ -->
 <div id="main">
 <div id="topbar">
-  <h2 id="ptitle">📊 Dashboard</h2>
-  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+  <div id="topbar-left">
+    <button type="button" id="sb-toggle-btn" onclick="toggleSidebar()" title="Đóng / Mở thanh menu bên trái (☰)">☰</button>
+    <h2 id="ptitle">📊 Tổng Quan</h2>
+  </div>
+  <div id="topbar-actions">
     <!-- 📁 NÚT XEM KHO ẢNH DRIVE (1 LINK XEM HẾT TẤT CẢ HÌNH ẢNH) -->
     <a href="https://drive.google.com/drive/folders/12V-UaZM1cSha8LihCjBHTOU_BEAk74p-" target="_blank" class="btn b-sm" style="background:#fef3c7;color:#92400e;border:1.5px solid #fde68a;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:6px" title="Xem tất cả hình ảnh thu thập theo template trên Google Drive">
       📁 <span>Kho Ảnh Drive (Photos)</span>
@@ -3081,7 +3131,33 @@ function go(id){
   if (activeLink) activeLink.classList.add('active');
   else if(event?.target?.closest('a')) event.target.closest('a').classList.add('active');
 
+  // Highlight mobile bottom navigation bar
+  document.querySelectorAll('#mobile-bottom-nav button[data-mb-nav]').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-mb-nav') === id);
+  });
+
+  // Auto-close sidebar drawer on mobile/tablet after selecting a tab
+  if (window.innerWidth <= 960) {
+    closeSidebar();
+  }
+
+  // Scroll content back to top on tab switch
+  const contentEl = document.getElementById('content');
+  if (contentEl) contentEl.scrollTop = 0;
+
   if(renders[id]) renders[id]();
+}
+
+function toggleSidebar(){
+  if (window.innerWidth <= 960) {
+    document.body.classList.toggle('sb-open');
+  } else {
+    document.body.classList.toggle('sb-collapsed');
+  }
+}
+
+function closeSidebar(){
+  document.body.classList.remove('sb-open');
 }
 function sw(el,tid){
   el.closest('.tabs').querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
@@ -3984,6 +4060,30 @@ function printDispatchNote(){
       <div><p><b>${isVi?'Thủ Kho / Người Giao':'Storekeeper / Dispatcher'}</b></p><br/><br/><p>(Ký, ghi rõ họ tên)</p></div>
     </div>
     <script>window.onload=function(){window.print();}<\/script>
+
+<!-- ══ MOBILE BOTTOM QUICK NAVIGATION BAR ══ -->
+<nav id="mobile-bottom-nav" class="no-print" aria-label="Điều hướng nhanh trên điện thoại">
+  <button type="button" class="active" data-mb-nav="dashboard" onclick="go('dashboard')">
+    <span class="mb-ico">📊</span>
+    <span data-mb-lbl="dashboard">Tổng Quan</span>
+  </button>
+  <button type="button" data-mb-nav="nhap" onclick="go('nhap')">
+    <span class="mb-ico">📦</span>
+    <span data-mb-lbl="nhap">Nhập Hàng</span>
+  </button>
+  <button type="button" data-mb-nav="tonkho" onclick="go('tonkho')">
+    <span class="mb-ico">🗄️</span>
+    <span data-mb-lbl="tonkho">Tồn Kho</span>
+  </button>
+  <button type="button" data-mb-nav="banhang" onclick="go('banhang')">
+    <span class="mb-ico">🛒</span>
+    <span data-mb-lbl="banhang">Bán Hàng</span>
+  </button>
+  <button type="button" onclick="toggleSidebar()">
+    <span class="mb-ico">☰</span>
+    <span data-mb-lbl="menu">Menu</span>
+  </button>
+</nav>
 </body></html>
   `);
   w.document.close();
