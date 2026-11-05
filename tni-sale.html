@@ -880,6 +880,8 @@ function copyTelegramReportTemplate(gName, gId, cat) {
 
 <!-- ══ TỒN KHO ══ -->
 <div class="sec" id="s-tonkho">
+  <!-- 🔒 THANH PHÂN QUYỀN & LỌC TỒN KHO THEO TÀI KHOẢN GOOGLE / ĐỐI TÁC KÝ GỞI -->
+  <div id="tk-account-scope-bar" style="margin-bottom:14px"></div>
   <!-- ═══ ADMIN / DIRECTOR: PHE DUYET YEU CAU XOA TON KHO ═══ -->
   <div id="del-req-panel-tk" class="ph" style="margin-bottom:16px;border:2px solid #fecaca;border-radius:10px;background:#fff;display:block">
     <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #fecaca;background:#fef2f2;border-radius:8px 8px 0 0;flex-wrap:wrap">
@@ -892,8 +894,8 @@ function copyTelegramReportTemplate(gName, gId, cat) {
     </div>
   </div>
   <div class="panel">
-    <div class="ph"><h3>🗄️ Tồn Kho Hiện Tại</h3>
-      <div style="display:flex;gap:6px">
+    <div class="ph"><h3 id="tk-panel-title">🗄️ Tồn Kho Hiện Tại</h3>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
         <input id="sk-q" placeholder="🔍 Tìm sản phẩm..." oninput="renderTK()" style="padding:6px 10px;border:1px solid var(--bd);border-radius:6px;font-size:12.5px;width:200px"/>
         <select id="sk-dm" onchange="renderTK()" style="padding:6px 8px;border:1px solid var(--bd);border-radius:6px;font-size:12.5px">
           <option value="">Tất cả danh mục</option>
@@ -916,11 +918,14 @@ function copyTelegramReportTemplate(gName, gId, cat) {
 
 <!-- ══ TẠM ỨNG HÀNG ══ -->
 <div class="sec" id="s-tamung">
+  <div id="tu-account-scope-bar" style="margin-bottom:14px"></div>
   <div class="panel">
     <div class="ph"><h3>🧑‍💼 Tạo Phiếu Tạm Ứng Hàng</h3></div>
     <div class="pb">
       <div class="fg">
+        <div class="f"><label>Tài Khoản Google / Chọn Nhanh NV</label><select id="tu-acc-sel" onchange="onSelectAccountForForm('tu')" style="background:#f0f9ff;font-weight:600;color:#0369a1"><option value="">-- Chọn nhân sự / Gmail (Tự điền tên) --</option></select></div>
         <div class="f"><label>Nhân Viên *</label><input id="tu-nv" placeholder="Họ tên nhân viên"/></div>
+        <div class="f"><label>Email Google (Để phân quyền xem riêng)</label><input id="tu-email" placeholder="example@gmail.com"/></div>
         <div class="f"><label>Mã NV / Phòng Ban</label><input id="tu-ma" placeholder="NV001 / Kinh doanh"/></div>
         <div class="f"><label>Sản Phẩm *</label><select id="tu-sp"></select></div>
         <div class="f"><label>Số Lượng *</label><input id="tu-sl" type="number" min="1" placeholder="0"/></div>
@@ -940,6 +945,7 @@ function copyTelegramReportTemplate(gName, gId, cat) {
 
 <!-- ══ BÁN HÀNG ══ -->
 <div class="sec" id="s-banhang">
+  <div id="ban-account-scope-bar" style="margin-bottom:14px"></div>
   <div class="panel">
     <div class="ph"><h3 data-lang="dispatch_title">🚚 Bán Hàng &amp; Xuất Kho Cho... (Smart Dispatch)</h3></div>
     <div class="pb">
@@ -951,6 +957,12 @@ function copyTelegramReportTemplate(gName, gId, cat) {
             <option value="dealer">🏪 Đại Lý Phân Phối (Dealer Wholesale)</option>
             <option value="pos">📋 Điểm Bán Ký Gởi (POS / Consignment)</option>
             <option value="staff">🧑‍💼 Nhân Viên Tạm Ứng / Đi Công Trình (Staff)</option>
+          </select>
+        </div>
+        <div class="f">
+          <label>Tài Khoản Google Đối Tác / NV (Phân quyền xem riêng)</label>
+          <select id="b-acc-sel" onchange="onSelectAccountForForm('b')" style="background:#f0fdf4;font-weight:600;color:#15803d">
+            <option value="">-- Chọn Tài Khoản / Đối tác (Tự điền tên &amp; SĐT) --</option>
           </select>
         </div>
         <div class="f">
@@ -1843,6 +1855,7 @@ function copyTelegramReportTemplate(gName, gId, cat) {
 
 <!-- ══ KÝ GỞI ══ -->
 <div class="sec" id="s-kygoi">
+  <div id="kg-account-scope-bar" style="margin-bottom:14px"></div>
   <!-- Chuyển đổi chế độ: Đơn lẻ vs Import Hàng loạt -->
   <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;justify-content:space-between;flex-wrap:wrap">
     <div style="display:flex;gap:6px">
@@ -1862,7 +1875,9 @@ function copyTelegramReportTemplate(gName, gId, cat) {
       <div class="ph"><h3>📋 Tạo Phiếu Ký Gởi</h3></div>
       <div class="pb">
         <div class="fg">
+          <div class="f"><label>Tài Khoản Đối Tác Ký Gởi / NV (Chọn nhanh)</label><select id="kg-acc-sel" onchange="onSelectAccountForForm('kg')" style="background:#fff7ed;font-weight:600;color:#c2410c"><option value="">-- Chọn Đối tác / Tài khoản Google (Tự điền Điểm bán &amp; SĐT) --</option></select></div>
           <div class="f"><label>Điểm Bán *</label><input id="kg-db" placeholder="Tên điểm bán"/></div>
+          <div class="f"><label>Email Google Đối Tác (Để chỉ xem hàng của mình)</label><input id="kg-email" placeholder="doitackygoi@gmail.com"/></div>
           <div class="f"><label>Người Nhận</label><input id="kg-nn" placeholder="Họ tên"/></div>
           <div class="f"><label>Điện Thoại</label><input id="kg-dt" placeholder="0xxxxxxx"/></div>
           <div class="f"><label>Tên Sản Phẩm *</label><select id="kg-sp" onchange="autoPrice('kg-sp','kg-gia');calcKGProfit()"></select></div>
@@ -3767,12 +3782,413 @@ function rNhap(){
 }
 
 // ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+// 🔒 CÁCH LY DỮ LIỆU TỒN KHO / KÝ GỞI / TẠM ỨNG THEO TỪNG TÀI KHOẢN GOOGLE & ĐỐI TÁC KÝ GỞI
+// ═══════════════════════════════════════════════════
+window.currentAccountViewFilter = 'ALL';
+
+function getAccountDirectoryOptions_() {
+  const map = new Map();
+  const addEntry = (name, email, role, phone, typeLabel) => {
+    const cleanName = String(name || '').trim();
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    if (!cleanName && !cleanEmail) return;
+    if (cleanName === 'undefined' || cleanName === '-') return;
+    if (cleanEmail.endsWith('@company.com') || cleanEmail.endsWith('@email.com')) return;
+    const key = (cleanEmail || cleanName).toLowerCase();
+    if (!map.has(key)) {
+      map.set(key, {
+        key: cleanEmail || cleanName,
+        name: cleanName || cleanEmail,
+        email: cleanEmail,
+        role: role || 'sales',
+        phone: String(phone || '').trim(),
+        typeLabel: typeLabel || 'Nhân sự'
+      });
+    } else {
+      const ex = map.get(key);
+      if (!ex.email && cleanEmail) ex.email = cleanEmail;
+      if (!ex.phone && phone) ex.phone = String(phone).trim();
+    }
+  };
+
+  // 1. Từ danh bạ nhân sự & đối tác RBAC
+  const staff = DB.g('staff_directory') || [];
+  staff.forEach(u => {
+    if (!u) return;
+    const isPartner = u.role === 'dealer' || String(u.id || '').startsWith('PARTNER') || String(u.title || '').toLowerCase().includes('ký gởi') || String(u.title || '').toLowerCase().includes('đại lý');
+    addEntry(u.name, u.email, u.role, u.phone, isPartner ? '🤝 Đối tác / Đại lý' : '👤 Nhân sự');
+  });
+
+  // 2. Từ danh sách Điểm bán Ký gởi hiện có
+  (DB.g('kygoi') || []).forEach(r => {
+    if (r && r.db) addEntry(r.db, r.email || '', 'dealer', r.dt || '', '📋 Điểm Ký Gởi');
+  });
+
+  // 3. Từ danh sách Nhân viên Tạm ứng hiện có
+  (DB.g('tamung') || []).forEach(r => {
+    if (r && r.nv) addEntry(r.nv, r.email || '', 'sales', '', '🧑‍💼 NV Tạm Ứng');
+  });
+
+  // 4. Từ danh sách Đại lý
+  (DB.g('daily') || []).forEach(r => {
+    if (r && r.ten) addEntry(r.ten, r.email || '', 'dealer', r.dt || '', '🏪 Đại Lý');
+  });
+
+  return Array.from(map.values());
+}
+
+function canUserViewAllWarehouse_() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('scope') === 'own' || params.get('partner') === '1') return false;
+
+  const authed = (typeof getAuthedGoogleUser === 'function') ? getAuthedGoogleUser() : null;
+  const staffList = DB.g('staff_directory') || [];
+  const activeName = String(currentStaffUser || authed?.name || '').trim().toLowerCase();
+  const activeEmail = String(authed?.email || '').trim().toLowerCase();
+
+  // Kiểm tra cấu hình Phạm Vi Kho (dataScope) riêng của từng người trong bảng RBAC
+  const matchedUser = staffList.find(u =>
+    u && (
+      (activeEmail && u.email && String(u.email).trim().toLowerCase() === activeEmail) ||
+      (activeName && u.name && String(u.name).trim().toLowerCase() === activeName)
+    )
+  );
+  if (matchedUser && matchedUser.dataScope) {
+    if (matchedUser.dataScope === 'own') return false;
+    if (matchedUser.dataScope === 'all') return true;
+  }
+
+  // Mặc định theo Vai trò: Chỉ Ban Giám Đốc (admin), Kế Toán Trưởng (finance), Thủ Kho (warehouse) mới xem toàn bộ kho tổng
+  // Còn Kinh Doanh (sales), Kỹ Thuật (tech), Đại Lý / Đối tác ký gởi (dealer) chỉ nhìn thấy hàng của chính mình!
+  return ['admin', 'finance', 'warehouse'].includes(currentAppRole);
+}
+
+function getEffectiveAccountFilter_() {
+  const authed = (typeof getAuthedGoogleUser === 'function') ? getAuthedGoogleUser() : null;
+  const staffList = DB.g('staff_directory') || [];
+  const canAll = canUserViewAllWarehouse_();
+
+  if (!canAll) {
+    const myEmail = String(authed?.email || '').trim().toLowerCase();
+    const myName = String(currentStaffUser || authed?.name || myEmail || 'Tài khoản hiện tại').trim();
+    const matched = staffList.find(u =>
+      u && (
+        (myEmail && u.email && String(u.email).trim().toLowerCase() === myEmail) ||
+        (myName && u.name && String(u.name).trim().toLowerCase() === myName.toLowerCase())
+      )
+    );
+    return {
+      mode: 'isolated',
+      isAdminPreview: false,
+      key: matched?.email || matched?.name || myEmail || myName,
+      email: (matched?.email || myEmail || '').toLowerCase(),
+      name: matched?.name || myName,
+      label: `${matched?.name || myName}${(matched?.email || myEmail) ? ' (' + (matched?.email || myEmail) + ')' : ''}`
+    };
+  }
+
+  // Người có quyền Toàn Kho (Admin / Kế toán / Thủ kho) nhưng đang chọn lọc xem 1 tài khoản/đối tác cụ thể
+  const filterVal = String(window.currentAccountViewFilter || 'ALL').trim();
+  if (!filterVal || filterVal === 'ALL') {
+    return { mode: 'all', isAdminPreview: true };
+  }
+
+  const opts = getAccountDirectoryOptions_();
+  const found = opts.find(o =>
+    o.key.toLowerCase() === filterVal.toLowerCase() ||
+    (o.email && o.email.toLowerCase() === filterVal.toLowerCase()) ||
+    (o.name && o.name.toLowerCase() === filterVal.toLowerCase())
+  );
+  return {
+    mode: 'isolated',
+    isAdminPreview: true,
+    key: filterVal,
+    email: (found?.email || (filterVal.includes('@') ? filterVal : '')).toLowerCase(),
+    name: found?.name || filterVal,
+    label: found ? `${found.name}${found.email ? ' (' + found.email + ')' : ''}` : filterVal
+  };
+}
+
+function isRecordOwnedByAccount_(r, acc) {
+  if (!r || !acc || acc.mode === 'all') return true;
+  const targetEmail = String(acc.email || '').trim().toLowerCase();
+  const targetName = String(acc.name || '').trim().toLowerCase();
+
+  const recEmails = [r.email, r.accountEmail, r._by]
+    .map(x => String(x || '').trim().toLowerCase())
+    .filter(Boolean);
+
+  const recNames = [r.db, r.nn, r.nv, r.kh, r.dlN, r.customerName]
+    .map(x => String(x || '').trim().toLowerCase())
+    .filter(Boolean);
+
+  const gcLower = String(r.gc || '').toLowerCase();
+
+  if (targetEmail) {
+    if (recEmails.includes(targetEmail)) return true;
+    if (recNames.some(n => n === targetEmail || n.includes(targetEmail))) return true;
+    if (gcLower.includes(targetEmail)) return true;
+  }
+  if (targetName && targetName.length >= 2) {
+    if (recNames.some(n => n === targetName || n.includes(targetName) || targetName.includes(n))) return true;
+    if (gcLower.includes('[acc:' + targetName + ']') || gcLower.includes(targetName)) return true;
+  }
+  return false;
+}
+
+function setAccountViewFilter(val) {
+  window.currentAccountViewFilter = val || 'ALL';
+  try { renderTK(); } catch(e) {}
+  try { rKG(); } catch(e) {}
+  try { rTU(); } catch(e) {}
+  try { rBan(); } catch(e) {}
+}
+
+function viewAccountInventory(emailOrName, displayName) {
+  window.currentAccountViewFilter = emailOrName || displayName || 'ALL';
+  go('tonkho');
+  setAccountViewFilter(window.currentAccountViewFilter);
+  al(`📦 Đang xem tồn kho & hàng ký gởi riêng của: ${displayName || emailOrName}`, 'ok');
+}
+
+function populateAccountFormSelects_() {
+  const opts = getAccountDirectoryOptions_();
+  const ids = ['tu-acc-sel', 'b-acc-sel', 'kg-acc-sel'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const curVal = el.value;
+    let html = `<option value="">-- Chọn Tài Khoản Google / Nhân Sự / Đối Tác (Tự điền tên & SĐT) --</option>`;
+    opts.forEach(o => {
+      const val = escH_(o.email || o.name);
+      const lbl = `${escH_(o.typeLabel)}: ${escH_(o.name)}${o.email ? ' (' + escH_(o.email) + ')' : ''}`;
+      html += `<option value="${val}" data-name="${escH_(o.name)}" data-email="${escH_(o.email)}" data-phone="${escH_(o.phone)}">${lbl}</option>`;
+    });
+    el.innerHTML = html;
+    if (curVal) el.value = curVal;
+  });
+}
+
+function onSelectAccountForForm(prefix) {
+  const sel = document.getElementById(prefix + '-acc-sel');
+  if (!sel || !sel.selectedOptions[0]) return;
+  const opt = sel.selectedOptions[0];
+  const name = opt.getAttribute('data-name') || '';
+  const email = opt.getAttribute('data-email') || '';
+  const phone = opt.getAttribute('data-phone') || '';
+  if (!name && !email) return;
+
+  if (prefix === 'kg') {
+    const dbEl = document.getElementById('kg-db');
+    const nnEl = document.getElementById('kg-nn');
+    const dtEl = document.getElementById('kg-dt');
+    const emEl = document.getElementById('kg-email');
+    if (dbEl && !dbEl.value) dbEl.value = name;
+    if (nnEl) nnEl.value = name;
+    if (dtEl && phone) dtEl.value = phone;
+    if (emEl) emEl.value = email;
+  } else if (prefix === 'tu') {
+    const nvEl = document.getElementById('tu-nv');
+    const emEl = document.getElementById('tu-email');
+    if (nvEl) nvEl.value = name;
+    if (emEl) emEl.value = email;
+  } else if (prefix === 'b') {
+    const khEl = document.getElementById('b-kh');
+    const dtEl = document.getElementById('b-dt');
+    if (khEl) khEl.value = name;
+    if (dtEl && phone) dtEl.value = phone;
+  }
+}
+
+function renderAccountScopeBar_(containerId, secName) {
+  const box = document.getElementById(containerId);
+  if (!box) return;
+  const isVi = currentLang === 'vi';
+  const canAll = canUserViewAllWarehouse_();
+  const acc = getEffectiveAccountFilter_();
+  const opts = getAccountDirectoryOptions_();
+
+  if (canAll) {
+    let optionsHtml = `<option value="ALL" ${acc.mode === 'all' ? 'selected' : ''}>🌐 ${isVi ? 'Tổng Thể Toàn Kho (Xem tất cả Kho Tổng + Mọi Điểm Bán & Nhân Sự)' : 'Full Warehouse View (All Stock & Partners)'}</option>`;
+    opts.forEach(o => {
+      const val = o.email || o.name;
+      const isSel = acc.mode === 'isolated' && (String(acc.key).toLowerCase() === String(val).toLowerCase() || String(acc.name).toLowerCase() === String(o.name).toLowerCase());
+      optionsHtml += `<option value="${escH_(val)}" ${isSel ? 'selected' : ''}>🔒 ${escH_(o.typeLabel)}: ${escH_(o.name)}${o.email ? ' (' + escH_(o.email) + ')' : ''}</option>`;
+    });
+
+    box.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-radius:10px;background:${acc.mode === 'all' ? 'linear-gradient(135deg,#eff6ff,#f8fafc)' : 'linear-gradient(135deg,#fff7ed,#ffedd5)'};border:1.5px solid ${acc.mode === 'all' ? '#bfdbfe' : '#fdba74'};flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:260px">
+          <span style="font-size:20px">${acc.mode === 'all' ? '🌐' : '👤'}</span>
+          <div>
+            <div style="font-size:12.5px;font-weight:800;color:${acc.mode === 'all' ? '#1e40af' : '#c2410c'}">
+              ${acc.mode === 'all'
+                ? (isVi ? 'CHẾ ĐỘ QUẢN TRỊ / THỦ KHO: ĐANG XEM TỔNG THỂ TOÀN KHO' : 'ADMIN / WAREHOUSE MODE: VIEWING FULL WAREHOUSE')
+                : (isVi ? 'CHẾ ĐỘ KIỂM TRA KHO CÁ NHÂN / ĐỐI TÁC KÝ GỞI: ' + escH_(acc.label) : 'INSPECTING ACCOUNT STOCK: ' + escH_(acc.label))}
+            </div>
+            <div style="font-size:11.5px;color:#475569;margin-top:2px">
+              ${acc.mode === 'all'
+                ? (isVi ? 'Bạn có thể chọn 1 Nhân viên hoặc Đối tác ký gởi ở ô bên phải để xem đúng màn hình tồn kho riêng của người đó.' : 'Select any staff or consignment partner on the right to preview their isolated inventory.')
+                : (isVi ? 'Chỉ hiển thị hàng hóa, số lượng & serial của tài khoản này. Giá gốc 83%, LN Cty 17% và hàng của người khác đã được ẩn hoàn toàn.' : 'Showing only items and serials assigned to this account. Base cost & other accounts are hidden.')}
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <select onchange="setAccountViewFilter(this.value)" style="padding:7px 12px;border-radius:8px;border:1.5px solid ${acc.mode === 'all' ? '#3b82f6' : '#ea580c'};font-size:12.5px;font-weight:700;color:#0f172a;background:#fff;min-width:280px;cursor:pointer">
+            ${optionsHtml}
+          </select>
+          ${acc.mode === 'isolated' ? `<button type="button" class="btn b-xs b-bl" onclick="setAccountViewFilter('ALL')" style="padding:7px 12px;font-weight:700">↺ ${isVi ? 'Về Kho Tổng' : 'Reset Full View'}</button>` : ''}
+        </div>
+      </div>`;
+  } else {
+    box.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-radius:10px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:20px">🔒</span>
+          <div>
+            <div style="font-size:12.5px;font-weight:800;color:#166534">
+              ${isVi ? 'KHO CÁ NHÂN & ĐỐI TÁC KÝ GỞI: ' : 'PERSONAL / PARTNER INVENTORY: '}<span style="color:#0284c7">${escH_(acc.label)}</span>
+            </div>
+            <div style="font-size:11.5px;color:#15803d;margin-top:2px">
+              ${isVi ? 'Hệ thống tự động phân quyền theo Tài khoản Google của bạn: Chỉ hiển thị số lượng hàng, serial & lịch sử giao dịch thuộc về bạn (Không hiển thị hàng của người khác).' : 'Isolated by your Google Account: Only showing stock, serials, and transactions belonging to you.'}
+            </div>
+          </div>
+        </div>
+        <span style="background:#16a34a;color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px">🛡️ ${isVi ? 'Bảo Mật Cá Nhân Hóa 100%' : '100% Account Isolated'}</span>
+      </div>`;
+  }
+}
+
 // TỒN KHO
 // ═══════════════════════════════════════════════════
 function renderTK(){
   const isVi = currentLang === 'vi';
+  renderAccountScopeBar_('tk-account-scope-bar', 'tonkho');
+  populateAccountFormSelects_();
+
+  const accFilter = getEffectiveAccountFilter_();
+  const canSeeCost = !!(ROLES[currentAppRole]?.canViewCostPrice || ROLES[currentAppRole]?.canViewFinance) && accFilter.mode === 'all';
+  const isAdminFull = (currentAppRole === 'admin') && accFilter.mode === 'all';
+
+  const delPanel = document.getElementById('del-req-panel-tk');
+  if (delPanel) delPanel.style.display = isAdminFull ? 'block' : 'none';
+  const bulkBar = document.getElementById('tk-bulk-bar');
+  if (bulkBar && !isAdminFull) bulkBar.style.display = 'none';
+
+  const titleEl = document.getElementById('tk-panel-title');
+  if (titleEl) {
+    titleEl.innerHTML = accFilter.mode === 'isolated'
+      ? `🗄️ ${isVi ? 'Tồn Kho & Hàng Đang Giữ Của: ' : 'Inventory Held By: '}<span style="color:#ea580c">${escH_(accFilter.label)}</span>`
+      : `🗄️ ${isVi ? 'Tồn Kho Thực Tế Toàn Hệ Thống' : 'Full Warehouse Inventory'}`;
+  }
+
   const q=(v('sk-q')||'').toLowerCase(),dm=v('sk-dm');
   const allData=getTK();
+
+  // ── TRƯỜNG HỢP 1: CHẾ ĐỘ CÁCH LY THEO TÀI KHOẢN / ĐỐI TÁC KÝ GỞI (ISOLATED ACCOUNT VIEW) ──
+  if (accFilter.mode === 'isolated') {
+    const myKGList = (DB.g('kygoi') || []).filter(r => isRecordOwnedByAccount_(r, accFilter));
+    const myTUList = (DB.g('tamung') || []).filter(r => isRecordOwnedByAccount_(r, accFilter));
+    const myBanList = (DB.g('ban') || []).filter(r => isRecordOwnedByAccount_(r, accFilter));
+
+    const personalRows = [];
+    allData.forEach(r => {
+      const kgActive = myKGList.filter(x => x.spId == r.id && x.ts === 'Đang gởi');
+      const kgSold   = myKGList.filter(x => x.spId == r.id && x.ts === 'Đã bán');
+      const tuActive = myTUList.filter(x => x.spId == r.id && x.ts === 'Đang ứng');
+      const banItems = myBanList.filter(x => x.spId == r.id || x.spN === r.ten);
+
+      const slKG = kgActive.reduce((s, x) => s + Number(x.sl || 0), 0);
+      const slTU = tuActive.reduce((s, x) => s + Number(x.sl || 0), 0);
+      const slBan = kgSold.reduce((s, x) => s + Number(x.sl || 0), 0) + banItems.reduce((s, x) => s + Number(x.sl || 0), 0);
+      const slDangGiu = slKG + slTU;
+      const slTongNhan = slDangGiu + slBan;
+
+      if (slTongNhan <= 0) return;
+
+      // Tập hợp Serial của riêng người này
+      const mySerials = [];
+      [...kgActive, ...tuActive, ...banItems].forEach(x => {
+        if (x.serial && x.serial !== '-') {
+          splitSerials(x.serial).forEach(sn => { if (!mySerials.includes(sn)) mySerials.push(sn); });
+        }
+      });
+
+      const donGia = Number(kgActive[0]?.gia || r.giaban || 0);
+      personalRows.push({
+        ...r,
+        myKG: slKG,
+        myTU: slTU,
+        myBan: slBan,
+        myDangGiu: slDangGiu,
+        myTongNhan: slTongNhan,
+        mySerials,
+        myDonGia: donGia,
+        myGiaTriGiu: slDangGiu * donGia
+      });
+    });
+
+    const filteredPersonal = personalRows.filter(r =>
+      (!q || (r.ten + r.model + r.mySerials.join(' ')).toLowerCase().includes(q)) && (!dm || r.dm === dm)
+    );
+
+    const totNhan = personalRows.reduce((s, r) => s + r.myTongNhan, 0);
+    const totKG   = personalRows.reduce((s, r) => s + r.myKG, 0);
+    const totTU   = personalRows.reduce((s, r) => s + r.myTU, 0);
+    const totBan  = personalRows.reduce((s, r) => s + r.myBan, 0);
+    const totGiu  = personalRows.reduce((s, r) => s + r.myDangGiu, 0);
+    const totValBan = personalRows.reduce((s, r) => s + r.myGiaTriGiu, 0);
+
+    const personalCardsHtml = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px">
+        <div class="card c-bl"><div class="lbl2">📦 ${isVi?'Tổng Đã Nhận':'Total Received'}</div><div class="val">${totNhan}</div><div class="sub">${isVi?'Ký gởi + Tạm ứng + Xuất':'Assigned to you'}</div></div>
+        <div class="card c-or"><div class="lbl2">📋 ${isVi?'Đang Ký Gởi':'Active Consigned'}</div><div class="val">${totKG}</div><div class="sub">${isVi?'Hàng ký gởi tại điểm':'At your POS'}</div></div>
+        <div class="card c-pu"><div class="lbl2">🧑‍💼 ${isVi?'Đang Tạm Ứng':'Active Advance'}</div><div class="val">${totTU}</div><div class="sub">${isVi?'Hàng NV đang giữ':'Held by staff'}</div></div>
+        <div class="card c-gn"><div class="lbl2">🛒 ${isVi?'Đã Bán / Xuất':'Sold / Completed'}</div><div class="val">${totBan}</div><div class="sub">${isVi?'Đã tiêu thụ':'Sold items'}</div></div>
+        <div class="card c-yw"><div class="lbl2">🟢 ${isVi?'Tồn Đang Giữ':'Current Holding'}</div><div class="val">${totGiu}</div><div class="sub">${isVi?'Còn tại điểm / cá nhân':'Remaining in hand'}</div></div>
+        <div class="card c-bl"><div class="lbl2">💵 ${isVi?'Giá Trị Đang Giữ':'Holding Value'}</div><div class="val" style="font-size:16px">${fn(totValBan)}₫</div><div class="sub">${isVi?'Tính theo giá bán':'At selling price'}</div></div>
+      </div>`;
+
+    document.getElementById('tk-warn').innerHTML = personalCardsHtml;
+
+    const pHeaders = isVi
+      ? ['#','Tên Sản Phẩm','Model','Serial Của Bạn','Danh Mục','Đang Ký Gởi','Đang Tạm Ứng','Đã Bán','Tồn Đang Giữ','Đơn Giá Bán','Giá Trị Đang Giữ','Trạng Thái']
+      : ['#','Product','Model','Your Serials','Category','Consigned','Advanced','Sold','Current Holding','Selling Price','Holding Value','Status'];
+
+    if (filteredPersonal.length === 0) {
+      document.getElementById('t-tonkho').innerHTML = `<div style="text-align:center;padding:32px 16px;color:#64748b;background:#f8fafc;border-radius:10px;border:1px dashed #cbd5e1">
+        <div style="font-size:28px;margin-bottom:8px">📭</div>
+        <div style="font-weight:700;color:#334155;font-size:14px">${isVi ? 'Chưa có sản phẩm tồn kho / ký gởi / tạm ứng nào gắn với tài khoản:' : 'No inventory or consignment records linked to:'} <span style="color:#0284c7">${escH_(accFilter.label)}</span></div>
+        <div style="font-size:12px;margin-top:4px">${isVi ? 'Khi Thủ kho hoặc Admin tạo phiếu Ký Gởi / Tạm Ứng / Xuất Kho gắn với Tên hoặc Email của bạn, danh sách tồn kho riêng sẽ tự động hiển thị tại đây.' : 'Items consigned or advanced to your name/email will automatically appear here.'}</div>
+      </div>`;
+      return;
+    }
+
+    document.getElementById('t-tonkho').innerHTML = tbl(pHeaders,
+      filteredPersonal.map((r, idx) => {
+        const snStr = r.mySerials.length ? r.mySerials.join(', ') : '-';
+        const snDisplay = snStr !== '-' ? `<span style="background:#f3e8ff;color:#6d28d9;padding:2px 7px;border-radius:6px;font-weight:700;font-size:11.5px;white-space:nowrap">🏷️ ${snStr}</span>` : '-';
+        return [
+          idx + 1,
+          `<b>${r.ten}</b>`,
+          r.model || '-',
+          snDisplay,
+          bk(r.dm, 'bl'),
+          `<span style="color:var(--or);font-weight:700">${r.myKG}</span>`,
+          `<span style="color:#7c3aed;font-weight:700">${r.myTU}</span>`,
+          `<b style="color:var(--gn)">${r.myBan}</b>`,
+          `<b style="font-size:14px;color:${r.myDangGiu > 0 ? '#0284c7' : '#64748b'}">${r.myDangGiu}</b>`,
+          `<b>${fn(r.myDonGia)}₫</b>`,
+          `<b style="color:#0f172a">${fn(r.myGiaTriGiu)}₫</b>`,
+          r.myDangGiu > 0 ? bk(isVi ? 'Đang giữ hàng' : 'Holding', 'gn') : bk(isVi ? 'Đã bán hết' : 'Sold out', 'gy')
+        ];
+      })
+    );
+    return;
+  }
+
+  // ── TRƯỜNG HỢP 2: XEM TỔNG THỂ TOÀN KHO (ADMIN / KẾ TOÁN / THỦ KHO) ──
   const data=allData.filter(r=>(!q||(r.ten+r.model+(r.serial||'')+(r.allSerials||[]).join(' ')).toLowerCase().includes(q))&&(!dm||r.dm===dm));
 
   // Tính tổng các chỉ số
@@ -3794,18 +4210,27 @@ function renderTK(){
       <div class="card c-pu"><div class="lbl2">🧑‍💼 ${isVi?'Đang Tạm Ứng':'Advanced'}</div><div class="val">${totTU}</div><div class="sub">${isVi?'NV demo / bán':'Staff demo / sale'}</div></div>
       <div class="card c-yw"><div class="lbl2">🗄️ ${isVi?'Tồn Kho Tổng':'Total Stock'}</div><div class="val">${totTon}</div><div class="sub">${isVi?'Nhập - Bán - PP':'In - Out - Dist'}</div></div>
       <div class="card c-gn"><div class="lbl2">🟢 ${isVi?'Tồn Khả Dụng':'Available'}</div><div class="val">${totKD}</div><div class="sub">${isVi?'Sẵn sàng xuất':'Ready to ship'}</div></div>
-      <div class="card c-bl"><div class="lbl2">💰 ${isVi?'Giá Trị Tồn Gốc':'Stock Asset Value'}</div><div class="val" style="font-size:16px">${fn(totVal)}₫</div><div class="sub">${isVi?'Theo giá vốn (83%)':'At base cost (83%)'}</div></div>
+      ${canSeeCost ? `<div class="card c-bl"><div class="lbl2">💰 ${isVi?'Giá Trị Tồn Gốc':'Stock Asset Value'}</div><div class="val" style="font-size:16px">${fn(totVal)}₫</div><div class="sub">${isVi?'Theo giá vốn (83%)':'At base cost (83%)'}</div></div>` : ''}
     </div>`;
 
   const warn=data.filter(r=>r.ton>0&&r.ton<=3);
   const warnHtml = warn.length?`<div class="warn">⚠️ ${isVi?'Sắp hết hàng:':'Low stock:'} ${warn.map(r=>`<b>${r.ten}</b> (${isVi?'Tồn':'Stock'}: ${r.ton} | ${isVi?'Khả dụng':'Available'}: ${r.khaDung})`).join(', ')}</div>`:'';
   
   document.getElementById('tk-warn').innerHTML = cardsHtml + warnHtml;
-  const tkHeaders = isVi ?
-    ['<input type="checkbox" id="tk-chk-all" onchange="tkToggleAll(this)" title="Chọn tất cả">','Tên SP','Model','Serial','DM','Đã Nhập','Đã Bán','Ký Gởi','Tồn Kho','Khả Dụng','Giá Gốc (83%)','LN Cty 17%','Giá Sàn (100%)','Giá Thực Bán','LN Chi Nhánh','Tổng LN Cty','Tổng LN Chi Nhánh','Giá Trị Tồn Gốc','Trạng Thái','Xóa Nhập'] :
-    ['<input type="checkbox" id="tk-chk-all" onchange="tkToggleAll(this)" title="Select all">','Product','Model','Serial','Category','Intake','Sold','Consigned','Total Stock','Available','Base Cost (83%)','HO Profit 17%','Min Price (100%)','Actual Price','Branch Profit','Total HO Profit','Total Branch Profit','Total Stock Cost','Status','Delete'];
+
+  const allKG = DB.g('kygoi') || [];
+  const allTU = DB.g('tamung') || [];
+
+  const tkHeaders = canSeeCost
+    ? (isVi ?
+      ['<input type="checkbox" id="tk-chk-all" onchange="tkToggleAll(this)" title="Chọn tất cả">','Tên SP','Model','Serial','DM','Đã Nhập','Đã Bán','Ký Gởi','Tồn Kho','Khả Dụng','📍 Phân Bổ Đang Giữ','Giá Gốc (83%)','LN Cty 17%','Giá Sàn (100%)','Giá Thực Bán','LN Chi Nhánh','Tổng LN Cty','Tổng LN Chi Nhánh','Giá Trị Tồn Gốc','Trạng Thái','Xóa Nhập'] :
+      ['<input type="checkbox" id="tk-chk-all" onchange="tkToggleAll(this)" title="Select all">','Product','Model','Serial','Category','Intake','Sold','Consigned','Total Stock','Available','📍 Holders / POS','Base Cost (83%)','HO Profit 17%','Min Price (100%)','Actual Price','Branch Profit','Total HO Profit','Total Branch Profit','Total Stock Cost','Status','Delete'])
+    : (isVi ?
+      ['#','Tên SP','Model','Serial','DM','Đã Nhập','Đã Bán','Ký Gởi','Tồn Kho','Khả Dụng','📍 Phân Bổ Đang Giữ','Giá Thực Bán','Trạng Thái'] :
+      ['#','Product','Model','Serial','Category','Intake','Sold','Consigned','Total Stock','Available','📍 Holders / POS','Selling Price','Status']);
+
   document.getElementById('t-tonkho').innerHTML=tbl(tkHeaders,
-    data.map(r=>{
+    data.map((r, idx)=>{
       const gg = Number(r.giagoc || 0);
       const lnCty = gg > 0 ? Math.round(gg / 83 * 17) : 0;
       const minSell = gg + lnCty;
@@ -3818,6 +4243,40 @@ function renderTK(){
       const snStr = snList.length ? snList.join(', ') : (r.serial || '');
       const snDisplay = snStr ? `<span style="background:#f3e8ff;color:#6d28d9;padding:2px 7px;border-radius:6px;font-weight:700;font-size:11.5px;white-space:nowrap">🏷️ ${snStr}</span>` : '-';
       const fullSpLabel = ((r.ten||'SP') + (snStr ? ' [Serial: ' + snStr + ']' : '')).replace(/'/g,'').replace(/"/g,'');
+
+      // Chi tiết ai đang giữ hàng (Kho chính + Điểm Ký Gởi + NV Tạm ứng)
+      const holderBadges = [];
+      if (r.khaDung > 0) holderBadges.push(`<span style="background:#dcfce7;color:#166534;padding:2px 6px;border-radius:4px;font-size:10.5px;font-weight:700">🏢 Kho chính: ${r.khaDung}</span>`);
+      allKG.filter(x => x.spId == r.id && x.ts === 'Đang gởi').forEach(x => {
+        const who = escH_(x.db || x.nn || 'Điểm bán');
+        const clickArg = escH_(JSON.stringify(String(x.email || x.db || '')));
+        holderBadges.push(`<span onclick="setAccountViewFilter(${clickArg})" title="Bấm để xem riêng kho của ${who}" style="cursor:pointer;background:#ffedd5;color:#c2410c;padding:2px 6px;border-radius:4px;font-size:10.5px;font-weight:700">📋 ${who}: ${x.sl}</span>`);
+      });
+      allTU.filter(x => x.spId == r.id && x.ts === 'Đang ứng').forEach(x => {
+        const who = escH_(x.nv || 'NV');
+        const clickArg = escH_(JSON.stringify(String(x.email || x.nv || '')));
+        holderBadges.push(`<span onclick="setAccountViewFilter(${clickArg})" title="Bấm để xem riêng kho của ${who}" style="cursor:pointer;background:#f3e8ff;color:#6d28d9;padding:2px 6px;border-radius:4px;font-size:10.5px;font-weight:700">🧑‍💼 ${who}: ${x.sl}</span>`);
+      });
+      const holderHtml = holderBadges.length ? `<div style="display:flex;flex-wrap:wrap;gap:3px;max-width:220px">${holderBadges.join('')}</div>` : '-';
+
+      if (!canSeeCost) {
+        return [
+          idx + 1,
+          `<b>${r.ten}</b>`,
+          r.model||'-',
+          snDisplay,
+          bk(r.dm,'bl'),
+          r.nhap,
+          `<b style="color:var(--gn)">${r.ban}</b>`,
+          `<span style="color:var(--or);font-weight:600">${r.kg}</span>`,
+          `<b>${r.ton}</b>`,
+          `<b style="color:${r.khaDung>0?'var(--gn)':'var(--rd)'}">${r.khaDung}</b>`,
+          holderHtml,
+          `<b>${fn(gb)}₫</b>`,
+          r.khaDung>5?bk('Sẵn hàng','gn'):r.khaDung>0?bk('Sắp hết','or'):bk('Hết hàng','rd')
+        ];
+      }
+
       return [
         `<input type="checkbox" class="tk-chk" data-id="${r.id}" data-name="${fullSpLabel}" onchange="tkUpdateBulkBar()">`,
         `<b>${r.ten}</b>`,
@@ -3829,6 +4288,7 @@ function renderTK(){
         `<span style="color:var(--or);font-weight:600">${r.kg}</span>`,
         `<b>${r.ton}</b>`,
         `<b style="color:${r.khaDung>0?'var(--gn)':'var(--rd)'}">${r.khaDung}</b>`,
+        holderHtml,
         fn(gg)+'₫',
         `<span style="color:#1e40af;font-weight:600">${fn(lnCty)}₫</span>`,
         `<span style="color:var(--or);font-weight:600">${fn(minSell)}₫</span>`,
@@ -3849,20 +4309,28 @@ function renderTK(){
 // ═══════════════════════════════════════════════════
 function addTamUng(){
   const nv=v('tu-nv'),spId=v('tu-sp'),sl=v('tu-sl');
+  const email=(v('tu-email')||'').trim().toLowerCase();
   if(!nv||!spId||!sl){al('Nhập đủ: NV, SP, SL','er');return;}
   const sp=getTK().find(r=>r.id==spId);
   if(+sl>sp.ton){al(`Không đủ hàng! Tồn: ${sp.ton}`,'er');return;}
-  DB.add('tamung',{nv,ma:v('tu-ma'),spId:+spId,spN:sp.ten,sl:+sl,md:v('tu-md'),ngay:v('tu-ngay')||td(),han:v('tu-han'),gc:v('tu-gc'),ts:'Đang ứng'});
+  const rawGc = v('tu-gc') || '';
+  const gcWithAcc = email && !rawGc.includes(email) ? `${rawGc}${rawGc ? ' ' : ''}[ACC:${email}]` : rawGc;
+  DB.add('tamung',{nv,email,ma:v('tu-ma'),spId:+spId,spN:sp.ten,sl:+sl,md:v('tu-md'),ngay:v('tu-ngay')||td(),han:v('tu-han'),gc:gcWithAcc,ts:'Đang ứng'});
   al('✅ Đã ghi nhận tạm ứng!'); clrForm('tu-'); rTU(); popSP(['b-sp','pp-sp','kg-sp']);
 }
 function rTU(){
   popSP(['tu-sp']);
-  const d=DB.g('tamung');
-  document.getElementById('t-tamung').innerHTML=tbl(['#','Nhân Viên','Mã NV','Sản Phẩm','SL','Mục Đích','Ngày Lấy','Hạn HT','Trạng Thái',''],
-    d.map((r,i)=>[i+1,r.nv,r.ma||'-',r.spN,r.sl,r.md,fd(r.ngay),fd(r.han)||'-',
+  renderAccountScopeBar_('tu-account-scope-bar', 'tamung');
+  populateAccountFormSelects_();
+  const accFilter = getEffectiveAccountFilter_();
+  const allD = DB.g('tamung') || [];
+  const d = accFilter.mode === 'isolated' ? allD.filter(r => isRecordOwnedByAccount_(r, accFilter)) : allD;
+  const canManage = ['admin', 'finance', 'warehouse'].includes(currentAppRole) && accFilter.mode === 'all';
+  document.getElementById('t-tamung').innerHTML=tbl(['#','Nhân Viên & Email','Mã NV','Sản Phẩm','SL','Mục Đích','Ngày Lấy','Hạn HT','Trạng Thái',''],
+    d.map((r,i)=>[i+1,`<b>${escH_(r.nv)}</b>${r.email ? `<br><small style="color:#0284c7">${escH_(r.email)}</small>` : ''}`,r.ma||'-',r.spN,r.sl,r.md,fd(r.ngay),fd(r.han)||'-',
       bk(r.ts,r.ts==='Đang ứng'?'or':r.ts==='Đã hoàn trả'?'gn':'rd'),
-      `<button class="btn b-xs b-gn" onclick="updTU(${r.id},'Đã hoàn trả')">↩ Hoàn</button>
-       <button class="btn b-xs b-rd" onclick="del('tamung',${r.id},rTU)">🗑</button>`]));
+      canManage ? `<button class="btn b-xs b-gn" onclick="updTU(${r.id},'Đã hoàn trả')">↩ Hoàn</button>
+       <button class="btn b-xs b-rd" onclick="del('tamung',${r.id},rTU)">🗑</button>` : '-']));
 }
 function updTU(id,ts){DB.upd('tamung',id,{ts});rTU();renderTK();rDash();al('✅ Đã cập nhật & đồng bộ Sheet!');}
 
@@ -3991,6 +4459,11 @@ function addBan(){
     return;
   }
 
+  const bAccSel = document.getElementById('b-acc-sel');
+  const selEmail = (bAccSel && bAccSel.selectedOptions[0]) ? (bAccSel.selectedOptions[0].getAttribute('data-email') || '') : '';
+  const rawGc = v('b-gc') || '';
+  const gcWithAcc = selEmail && !rawGc.includes(selEmail) ? `${rawGc}${rawGc ? ' ' : ''}[ACC:${selEmail}]` : rawGc;
+
   const orderItem = {
     spId: +spId,
     spN: sp.ten,
@@ -4005,13 +4478,14 @@ function addBan(){
     lnBranch,
     target,
     kh: v('b-kh') || (isVi ? 'Khách lẻ' : 'Retail Buyer'),
+    email: selEmail,
     dt: v('b-dt') || '-',
     tt,
     hoPaid: false,
     photos: [...bUploadedPhotos],
     driveUrl: driveUrl,
     ngay: v('b-ngay') || td(),
-    gc: v('b-gc') || '',
+    gc: gcWithAcc,
     source: 'web'
   };
 
@@ -4119,7 +4593,17 @@ function printDispatchNote(){
 function rBan(){
   const isVi = currentLang === 'vi';
   const isMy = currentLang === 'my';
-  const ban = DB.g('ban');
+  renderAccountScopeBar_('ban-account-scope-bar', 'banhang');
+  populateAccountFormSelects_();
+  const accFilter = getEffectiveAccountFilter_();
+  const canSeeCost = !!(ROLES[currentAppRole]?.canViewCostPrice || ROLES[currentAppRole]?.canViewFinance) && accFilter.mode === 'all';
+  const finBox = document.getElementById('ban-financial-box');
+  if (finBox) finBox.style.display = canSeeCost ? 'grid' : 'none';
+
+  const allBan = DB.g('ban') || [];
+  const ban = accFilter.mode === 'isolated' ? allBan.filter(r => isRecordOwnedByAccount_(r, accFilter)) : allBan;
+  const canDel = (currentAppRole === 'admin' || currentAppRole === 'warehouse') && accFilter.mode === 'all';
+
   const headers = isVi ?
     ['#','Nguồn','Loại Xuất','Sản Phẩm','SL','Serial','Đơn Giá','Tổng Tiền','Đã Thu','Còn Nợ','Người Nhận','SĐT','Ngày',''] :
     (isMy ?
@@ -4150,10 +4634,10 @@ function rBan(){
         `<b>${fn(total)}₫</b>`,
         `<span style="color:var(--gn)">${fn(depositVal)}₫</span>`,
         debtText,
-        customer,
+        `<b>${escH_(customer)}</b>${r.email ? `<br><small style="color:#0284c7">${escH_(r.email)}</small>` : ''}`,
         phone,
         fd(r.ngay),
-        `<button class="btn b-xs b-rd" onclick="del('ban',${r.id},()=>{rBan();popSP(['b-sp']);})">🗑</button>`
+        canDel ? `<button class="btn b-xs b-rd" onclick="del('ban',${r.id},()=>{rBan();popSP(['b-sp']);})">🗑</button>` : '-'
       ];
     }));
 }
@@ -5706,8 +6190,10 @@ function addKG(){
     return;
   }
 
+  const email = (v('kg-email') || '').trim().toLowerCase();
   DB.add('kygoi',{
     db,
+    email,
     nn:v('kg-nn'),
     dt:v('kg-dt'),
     spId:+spId,
@@ -5726,6 +6212,7 @@ function addKG(){
     han:v('kg-han')||30,
     photos: [...kgUploadedPhotos],
     driveUrl: driveUrl,
+    gc: email ? `[ACC:${email}]` : '',
     ts:'Đang gởi'
   });
   al(isVi ? '✅ Đã tạo phiếu ký gởi!' : '✅ Consignment created successfully!'); 
@@ -5737,11 +6224,24 @@ function addKG(){
 
 function rKG(){
   popSP(['kg-sp']);
-  const nhap = DB.g('nhap');
-  const d = DB.g('kygoi');
+  renderAccountScopeBar_('kg-account-scope-bar', 'kygoi');
+  populateAccountFormSelects_();
+  const accFilter = getEffectiveAccountFilter_();
+  const canSeeCost = !!(ROLES[currentAppRole]?.canViewCostPrice || ROLES[currentAppRole]?.canViewFinance) && accFilter.mode === 'all';
+  const calcBox = document.getElementById('kg-calc-box');
+  if (calcBox) calcBox.style.display = canSeeCost ? 'grid' : 'none';
+
+  const nhap = DB.g('nhap') || [];
+  const allD = DB.g('kygoi') || [];
+  const d = accFilter.mode === 'isolated' ? allD.filter(r => isRecordOwnedByAccount_(r, accFilter)) : allD;
+  const canManage = ['admin', 'finance', 'warehouse'].includes(currentAppRole) && accFilter.mode === 'all';
+
+  const headers = canSeeCost
+    ? ['#','Điểm Bán & Tài Khoản','Sản Phẩm & Serial','SL','Giá Gốc','Giá Bán','17% Điểm Bán','LN Còn Lại Cty','Ngày Ký Gởi','Hạn','Trạng Thái','']
+    : ['#','Điểm Bán & Tài Khoản','Sản Phẩm & Serial','SL','Giá Bán Tại Điểm','17% Hoa Hồng Điểm Bán','Tổng Giá Trị','Ngày Ký Gởi','Hạn','Trạng Thái',''];
 
   document.getElementById('t-kygoi').innerHTML=tbl(
-    ['#','Điểm Bán','Sản Phẩm & Serial','SL','Giá Gốc','Giá Bán','17% Điểm Bán','LN Còn Lại Cty','Ngày Ký Gởi','Hạn','Trạng Thái',''],
+    headers,
     d.map((r,i)=>{
       const sp = nhap.find(n => n.id == r.spId);
       const gg = r.giagoc !== undefined ? r.giagoc : Number(sp?.gg || 0);
@@ -5752,10 +6252,29 @@ function rKG(){
       const tongLNCty = r.tongLNCty !== undefined ? r.tongLNCty : (lnCty * r.sl);
       const displaySerial = r.serial && r.serial !== '-' ? r.serial : (sp?.serial || '-');
       const displayDate = r.ngay_kg || r.ngay || td();
+      const dbDisplay = `<b>${escH_(r.db)}</b><br><small style="color:#64748b">${escH_(r.nn||'-')} (${escH_(r.dt||'-')})</small>${r.email ? `<br><small style="color:#0284c7">✉️ ${escH_(r.email)}</small>` : ''}`;
+
+      if (!canSeeCost) {
+        return [
+          i+1,
+          dbDisplay,
+          `<b>${r.spN}</b><br><small style="color:#0284c7">SN: ${displaySerial} | M: ${r.model||'-'}</small>`,
+          `<b>${r.sl}</b>`,
+          `<b>${fn(gb)}₫</b>`,
+          `<span style="color:var(--or);font-weight:600">${fn(tongHH17)}₫</span><br><small style="color:#64748b">(${fn(hh17)}₫/sp)</small>`,
+          `<b>${fn(gb * r.sl)}₫</b>`,
+          `<b>${fd(displayDate)}</b>`,
+          r.han+'ng',
+          bk(r.ts,r.ts==='Đang gởi'?'or':r.ts==='Đã bán'?'gn':'gy'),
+          canManage ? `<button class="btn b-xs b-gn" onclick="updKG(${r.id},'Đã bán')">✅ Bán</button>
+           <button class="btn b-xs b-gy" onclick="updKG(${r.id},'Đã thu hồi')">↩</button>
+           <button class="btn b-xs b-rd" onclick="del('kygoi',${r.id},rKG)">🗑</button>` : `<button class="btn b-xs b-gn" onclick="updKG(${r.id},'Đã bán')">✅ Báo Đã Bán</button>`
+        ];
+      }
 
       return [
         i+1,
-        `<b>${r.db}</b><br><small style="color:#64748b">${r.nn||'-'} (${r.dt||'-'})</small>`,
+        dbDisplay,
         `<b>${r.spN}</b><br><small style="color:#0284c7">SN: ${displaySerial} | M: ${r.model||'-'}</small>`,
         `<b>${r.sl}</b>`,
         fn(gg)+'₫',
@@ -10548,10 +11067,14 @@ function changeAppRole(newRole, staffName, bypassPin) {
     }
   }
 
-  // Re-render RBAC matrix if active
+  // Re-render RBAC matrix and inventory tabs if active
   if (document.getElementById('s-rbac')?.classList.contains('on')) {
     renderRBACMatrix();
   }
+  try { renderTK(); } catch(e) {}
+  try { rKG(); } catch(e) {}
+  try { rTU(); } catch(e) {}
+  try { rBan(); } catch(e) {}
 }
 
 function updateSidebarAccessState(roleId) {
@@ -10916,8 +11439,10 @@ function normalizeStaffUser(u, fallbackIdx) {
   const phone = String(u.phone || u['Phone (Số Điện Thoại)'] || u['Phone'] || u['Số Điện Thoại'] || u['SĐT'] || '').trim();
   const note = String(u.note || u['Note (Ghi Chú)'] || u['Note'] || u['Ghi Chú'] || '').trim();
   const status = String(u.status || u['Status (Trạng Thái: active/inactive)'] || 'active').trim();
+  const defaultScope = ['admin', 'finance', 'warehouse'].includes(role) ? 'all' : 'own';
+  const dataScope = (u.dataScope === 'all' || u.dataScope === 'own') ? u.dataScope : defaultScope;
 
-  return { id: cleanId, name, title, role, email, phone, note, status };
+  return { id: cleanId, name, title, role, email, phone, note, status, dataScope };
 }
 
 // ── Đồng bộ danh sách nhân sự lên Google Sheet (2 chiều SSOT, POST text/plain không bị chặn CORS) ──
@@ -10974,8 +11499,13 @@ function renderStaffUsersTable(sourceOverride, _retry) {
     if (!Array.isArray(rawList) || rawList.length === 0) return;
     const existing = DB.g('staff_directory') || [];
     const roleMap = {};
+    const scopeMap = {};
     existing.forEach(u => {
-      if (u && u.name) roleMap[u.name.toLowerCase().trim()] = u.role;
+      if (u && u.name) {
+        const k = u.name.toLowerCase().trim();
+        roleMap[k] = u.role;
+        if (u.dataScope) scopeMap[k] = u.dataScope;
+      }
     });
 
     const activeLiveNames = new Set();
@@ -10997,17 +11527,31 @@ function renderStaffUsersTable(sourceOverride, _retry) {
         else if (titleLower.includes('director') || titleLower.includes('admin')) assignedRole = 'admin';
         else assignedRole = 'sales';
       }
+      const defaultScope = ['admin', 'finance', 'warehouse'].includes(assignedRole) ? 'all' : 'own';
+      const assignedScope = scopeMap[name.toLowerCase()] || r.dataScope || defaultScope;
 
       updatedList.push({
         id: r.id || ('ST' + String(idx + 1).padStart(4, '0')),
         name: name,
         title: r.title || 'Sales Rep',
         role: assignedRole,
+        dataScope: assignedScope,
         email: r.email || '',
         phone: r.phone || '',
         status: 'active',
         note: r.note || r.title || ''
       });
+    });
+
+    // Giữ lại các Đối tác ký gởi / Đại lý do Admin thêm thủ công trên Web mà chưa có trong tab input HR
+    existing.forEach(u => {
+      if (!u || !u.name) return;
+      const k = u.name.toLowerCase().trim();
+      const isManualPartner = u.role === 'dealer' || String(u.id || '').startsWith('PARTNER') || String(u.title || '').toLowerCase().includes('ký gởi') || String(u.title || '').toLowerCase().includes('đại lý');
+      if (isManualPartner && !activeLiveNames.has(k)) {
+        activeLiveNames.add(k);
+        updatedList.push(normalizeStaffUser(u, updatedList.length + 1));
+      }
     });
 
     if (updatedList.length > 0) {
@@ -11090,9 +11634,10 @@ function _renderStaffTable_(users, source) {
   let html = '<table class="data-table" style="width:100%;border-collapse:collapse;font-size:12px">';
   html += '<thead style="background:#f8fafc;color:#334155">';
   html += '<tr>';
-  html += `<th style="padding:8px;text-align:left">${isVi ? 'Nhân Sự' : 'Staff Member'}</th>`;
+  html += `<th style="padding:8px;text-align:left">${isVi ? 'Nhân Sự / Đối Tác' : 'Staff / Partner'}</th>`;
   html += `<th style="padding:8px;text-align:left">${isVi ? 'Chức Danh' : 'Job Title'}</th>`;
   html += `<th style="padding:8px;text-align:center">${isVi ? 'Vai Trò Gán' : 'Assigned Role'}</th>`;
+  html += `<th style="padding:8px;text-align:center">${isVi ? 'Phạm Vi Kho (Data Scope)' : 'Inventory Scope'}</th>`;
   html += `<th style="padding:8px;text-align:center">${isVi ? 'Thao Tác' : 'Actions'}</th>`;
   html += '</tr></thead><tbody>';
 
@@ -11102,7 +11647,9 @@ function _renderStaffTable_(users, source) {
     // JS string literals, HTML-attribute-escaped: a name like  x');alert(1);//  can no longer break out
     const safeId = escH_(JSON.stringify(String(u.id || '')));
     const safeName = escH_(JSON.stringify(String(u.name || '')));
+    const safeEmailOrName = escH_(JSON.stringify(String(u.email || u.name || '')));
     const safeRole = escH_(JSON.stringify(String(u.role || 'sales')));
+    const curScope = u.dataScope || (['admin', 'finance', 'warehouse'].includes(u.role) ? 'all' : 'own');
 
     html += `<tr style="border-bottom:1px solid #f1f5f9">`;
     html += `<td style="padding:8px">`;
@@ -11117,8 +11664,14 @@ function _renderStaffTable_(users, source) {
       html += `<option value="${rk}" ${u.role === rk ? 'selected' : ''}>${ROLES[rk].icon} ${optName}</option>`;
     });
     html += `</select></td>`;
+    html += `<td style="padding:8px;text-align:center">`;
+    html += `<select onchange="updateStaffDataScope(${safeId}, this.value)" style="padding:4px 8px;border:1.5px solid ${curScope === 'own' ? '#86efac' : '#93c5fd'};background:${curScope === 'own' ? '#f0fdf4' : '#eff6ff'};border-radius:6px;font-size:11px;font-weight:700;color:${curScope === 'own' ? '#15803d' : '#1d4ed8'}">`;
+    html += `<option value="own" ${curScope === 'own' ? 'selected' : ''}>🔒 ${isVi ? 'Chỉ kho riêng của mình' : 'Own Stock Only'}</option>`;
+    html += `<option value="all" ${curScope === 'all' ? 'selected' : ''}>🌐 ${isVi ? 'Xem toàn bộ kho tổng' : 'Full Warehouse'}</option>`;
+    html += `</select></td>`;
     html += `<td style="padding:6px;text-align:center;white-space:nowrap">`;
     html += `<div style="display:flex;gap:5px;justify-content:center;align-items:center;flex-wrap:wrap">`;
+    html += `<button class="btn b-xs" onclick="viewAccountInventory(${safeEmailOrName}, ${safeName})" title="${isVi ? 'Xem tồn kho & hàng ký gởi riêng của người này' : 'Inspect this account inventory'}" style="background:#fff7ed;color:#c2410c;border:1.5px solid #fdba74;cursor:pointer;font-weight:700">📦 ${isVi ? 'Xem Kho' : 'Stock'}</button>`;
     html += `<button class="btn b-xs" onclick="openAddStaffModal(${safeId})" title="${isVi ? 'Chỉnh sửa thông tin nhân sự' : 'Edit staff info'}" style="background:#f1f5f9;color:#334155;border:1.5px solid #cbd5e1;cursor:pointer;font-weight:700">✏️ ${isVi ? 'Sửa' : 'Edit'}</button>`;
     html += `<button class="btn b-xs b-bl" onclick="selectStaffForLinkGen(${safeName}, ${safeRole})" title="${isVi ? 'Tạo link gửi cho nhân viên' : 'Generate personal login link'}">🔗 Link</button>`;
     html += `<button class="btn b-xs" onclick="deleteStaffUser(${safeId},${safeName})" title="${isVi ? 'Xóa nhân sự này khỏi danh sách' : 'Delete staff member'}" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;font-weight:700;cursor:pointer">🗑 ${isVi ? 'Xóa' : 'Delete'}</button>`;
@@ -11153,13 +11706,31 @@ function updateStaffAssignedRole(userId, newRole) {
   const isVi = currentLang === 'vi';
   const cached = DB.g('staff_directory');
   let list = (cached && cached.length > 0) ? cached.map((u, i) => normalizeStaffUser(u, i + 1)).filter(Boolean) : DEFAULT_STAFF_USERS;
-  list = list.map(u => u.id === userId ? { ...u, role: newRole } : u);
+  const newDefaultScope = ['admin', 'finance', 'warehouse'].includes(newRole) ? 'all' : 'own';
+  list = list.map(u => u.id === userId ? { ...u, role: newRole, dataScope: newDefaultScope } : u);
   DB.s('staff_directory', list);
-  al(isVi ? 'Đã cập nhật vai trò nhân sự thành công!' : 'Staff role updated successfully!', 'ok');
+  al(isVi ? 'Đã cập nhật vai trò & phạm vi kho thành công!' : 'Staff role & inventory scope updated!', 'ok');
   populateStaffUserSelect();
   renderStaffUsersTable();
   // Tự động đồng bộ vai trò mới lên Google Sheet
   syncStaffDirectoryToSheet(list);
+}
+
+function updateStaffDataScope(userId, newScope) {
+  const isVi = currentLang === 'vi';
+  const cached = DB.g('staff_directory');
+  let list = (cached && cached.length > 0) ? cached.map((u, i) => normalizeStaffUser(u, i + 1)).filter(Boolean) : DEFAULT_STAFF_USERS;
+  list = list.map(u => u.id === userId ? { ...u, dataScope: newScope } : u);
+  DB.s('staff_directory', list);
+  al(isVi
+    ? `✅ Đã cập nhật phạm vi kho: ${newScope === 'own' ? '🔒 Chỉ xem kho riêng của mình' : '🌐 Xem toàn bộ kho tổng'}`
+    : `✅ Updated inventory scope: ${newScope === 'own' ? 'Own stock only' : 'Full warehouse'}`, 'ok');
+  renderStaffUsersTable();
+  syncStaffDirectoryToSheet(list);
+  try { renderTK(); } catch(e) {}
+  try { rKG(); } catch(e) {}
+  try { rTU(); } catch(e) {}
+  try { rBan(); } catch(e) {}
 }
 
 // 🗑 Xóa nhân sự (khi nghỉ việc) — Đồng bộ 2 chiều tức thì lên Google Sheet
