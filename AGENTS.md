@@ -3217,3 +3217,21 @@ Reason: [Lý do]`
 >      - Deploy `apps_script_sitedown` lên Version **`@126`** (`AKfycbyCibIj4QN7oG5BZc_ju1iS-DUmd9nNdrMn9UN-WD8qf6jVoU_OKOf2yfbi10qGMFF-`).
 >      - Chạy live `botlookup_relay.py --force`, `process_aw_az` và `sweep_orphan_eta.py`: Cào thành công trong 4s (`msg_id > 148064`), cập nhật 41 dòng vào Cột A (`25/10/2026 05:00:00`), gửi chuẩn xác Tin 1 (`05:00`), ETA (`05:14`) và Tin 2 (`05:22`) trên cả 5 nhóm, dọn sạch toàn bộ tin cũ ngày `24/10/2026`.
 >      - Khóa Thép Site Down tự động đóng lại bảo vệ hệ thống.
+
+
+> **PM-112 (05/11/2026) — Quy Tắc Bắt Buộc Ghế Giám Sát `AUDITOR-SALE-GUIDE` Giữ Sheet `Guide` Online 24/7 & Kỷ Luật Cập Nhật Sổ Tay Hướng Dẫn Ngay Khi Có Thay Đổi (`@544`)**:
+> - **Quy tắc Ghế Giám Sát `AUDITOR-SALE-GUIDE` (Always-Online Guide Sheet Sentinel)**:
+>   1. Trên bảng tính Google Sheet **`TNI Bán hàng — TNI Sale`** (`1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA`), tab **`Guide`** (`📖 Hướng Dẫn Sử Dụng`) BẮT BUỘC luôn hiện diện ở vị trí đầu bảng tính (ngay sau `Tổng Hợp`) và luôn **ONLINE 24/7**.
+>   2. Ghế Giám Sát **`AUDITOR-SALE-GUIDE`** (`ensureSaleGuideSheetOnline_(ss)` trong `sale_backend.gs`) tự động kiểm tra và tự phục hồi (Self-Healing) tab `Guide` tại:
+>      - Mỗi nhịp tàu 5 phút trong `toaTauThoiGianSales()` (thuộc đoàn tàu tuần tự duy nhất `dispatchTrain5Min()`).
+>      - Mỗi lần Web BI gọi `sale_get_all` hoặc `sale_guide_sync`.
+>      - Endpoint giám sát trực tiếp: `?action=audit_sale_guide`.
+> - **Kỷ Luật Bắt Buộc Cập Nhật Hướng Dẫn Ngay Khi Có Thay Đổi (Mandatory Live Guide Sync on Every Change)**:
+>   1. **BẤT KỲ KHI NÀO** có sự thay đổi, bổ sung, nâng cấp tính năng, thêm/bớt cột, thêm/bớt phân hệ hoặc điều chỉnh quy trình vận hành trên Web BI (`sale.html`) hoặc Backend (`sale_backend.gs`), AI **BẮT BUỘC PHẢI CẬP NHẬT NGAY LẬP TỨC** nội dung hướng dẫn sử dụng tương ứng vào:
+>      - Hàm `getSaleGuideRowsSpec_()` + tăng `SALE_GUIDE_VERSION` trong `QLTC_GAS/sale_backend.gs` (để tự động đồng bộ lên tab **`Guide`** của Google Sheet).
+>      - Mảng `SOP_GUIDE_SECTIONS` trong `Task and WO/sale.html` & `TNI-Search/sale.html` (hiển thị tại mục **`📖 Hướng Dẫn Sử Dụng`** trên Web BI).
+>   2. **TUYỆT ĐỐI CẤM** sửa code / nâng cấp tính năng mà quên cập nhật vào Sheet `Guide` và Web BI `Guide` trong cùng phiên làm việc!
+> - **Chuẩn Hóa 24/24 Sheet Liên Kết Web BI & Quy Trình Hàng Lỗi Khi Nhận + Bảo Hành RMA (`@544`)**:
+>   1. **Hệ thống hóa 24/24 Sheet liên kết 2 chiều với Web BI**: Giữ lại đúng 24 tab chuẩn (`Tổng Hợp`, `Guide`, `Nhập Hàng`, `Tồn Kho`, `Bảo Hành`, `Bán Hàng`, `Tạm Ứng`, `Báo Giá Thiết Bị`, `Báo Giá Solar`, `Thực Thi`, `Nghiệm Thu`, `Đại Lý`, `Ký Gởi`, `CRM`, `Quảng Cáo`, `Leads`, `Chi Phí`, `Nộp Tiền`, `Đợt Nộp VCM`, `Báo Cáo Tháng`, `Khảo Sát`, `Hình Ảnh`, `Nhân Sự`, `Phân Quyền`); xóa sạch các tab rác/backup không liên kết.
+>   2. **Hàng lỗi khi nhận (`Nhập Hàng` + `Tồn Kho`)**: Bổ sung 3 cột `slLoi`, `serialLoi`, `ttLoi`. Công thức chuẩn: $\text{Khả Dụng} = \max(0, \text{Tồn Kho} - \text{Ký Gởi} - \text{Tạm Ứng} - \text{Hàng Lỗi})$. Tự động ẩn Serial lỗi khỏi danh sách xuất bán và tự động cộng hoàn lại Khả Dụng khi trạng thái chuyển sang `🟢 Đã đổi bảo hành xong (Đã nhập kho tốt)`.
+>   3. **Hàng hỏng bảo hành khách hàng (`Bảo Hành` / `warranty_claims`)**: Quản lý 4 bước RMA (`📥 Mới tiếp nhận` $\rightarrow$ `🔧 Đang sửa / Đã gửi hãng VCM` $\rightarrow$ `✅ Đã sửa xong - Chờ trả khách` $\rightarrow$ `🏁 Đã bàn giao hoàn tất`), tra cứu tự động hạn bảo hành theo Serial/SĐT và tải ảnh lỗi trực tiếp vào folder Google Drive `2.12 SALE  SOLUTION - BUILDING`.

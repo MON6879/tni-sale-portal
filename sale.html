@@ -687,6 +687,7 @@ function copyTelegramReportTemplate(gName, gId, cat) {
     <div class="lbl" data-nav-lbl="warehouse">Warehouse</div>
     <a onclick="go('nhap')" data-nav-a="nhap" style="position:relative">📦 Goods Intake <span id="del-req-badge" style="display:none;background:#dc2626;color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:4px">0</span></a>
     <a onclick="go('tonkho')" data-nav-a="tonkho" style="position:relative">🗄️ Inventory <span id="del-req-badge-tk" style="display:none;background:#dc2626;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:auto">0</span></a>
+    <a onclick="go('baohanh')" data-nav-a="baohanh" style="color:#dc2626;font-weight:700">🛠️ <span data-lang="nav_baohanh">Bảo Hành &amp; Hàng Lỗi</span> <small style="background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:auto;font-weight:700">RMA</small></a>
     <a onclick="go('tamung')" data-nav-a="tamung">🧑‍💼 Stock Advance</a>
     <a onclick="go('kiemke')" data-nav-a="kiemke" style="color:#7c3aed;font-weight:700">📊 <span data-lang="nav_kiemke">Kiểm Kê</span> <small data-lang="nav_kiemke_badge" style="background:#ede9fe;color:#6d28d9;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:auto;font-weight:700">Tháng</small></a>
 
@@ -718,6 +719,7 @@ function copyTelegramReportTemplate(gName, gId, cat) {
     <a onclick="go('mysurvey')" data-nav-a="mysurvey">📝 My Surveys</a>
 
     <div class="lbl" data-nav-lbl="system" style="color:#7c3aed">⚙️ Hệ Thống &amp; Phân Quyền</div>
+    <a onclick="go('guide')" data-nav-a="guide" style="color:#0284c7;font-weight:700">📖 <span data-lang="nav_guide">Hướng Dẫn Sử Dụng</span> <small style="background:#dcfce7;color:#15803d;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:auto;font-weight:700">ONLINE</small></a>
     <a onclick="go('rbac')" data-nav-a="rbac" style="color:#6d28d9;font-weight:700">🛡️ Phân Quyền Vai Trò <small style="background:#ede9fe;color:#6d28d9;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:auto;font-weight:700">RBAC</small></a>
   </nav>
 </div>
@@ -730,6 +732,7 @@ function copyTelegramReportTemplate(gName, gId, cat) {
     <h2 id="ptitle">📊 Tổng Quan</h2>
   </div>
   <div id="topbar-actions">
+    <button type="button" class="btn b-sm" onclick="go('guide')" style="background:#eff6ff;color:#1d4ed8;border:1.5px solid #93c5fd;font-weight:800;display:inline-flex;align-items:center;gap:5px" title="Mở Hướng Dẫn Sử Dụng Toàn Hệ Thống (Ghế AUDITOR-SALE-GUIDE Online 24/7)">📖 Guide (SOP)</button>
     <!-- 📁 NÚT XEM KHO ẢNH DRIVE (1 LINK XEM HẾT TẤT CẢ HÌNH ẢNH) -->
     <a href="https://drive.google.com/drive/folders/12V-UaZM1cSha8LihCjBHTOU_BEAk74p-" target="_blank" class="btn b-sm" style="background:#fef3c7;color:#92400e;border:1.5px solid #fde68a;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:6px" title="Xem tất cả hình ảnh thu thập theo template trên Google Drive">
       📁 <span>Kho Ảnh Drive (Photos)</span>
@@ -808,6 +811,16 @@ function copyTelegramReportTemplate(gName, gId, cat) {
           <div class="f"><label data-lang="p_supplier">Nhà Cung Cấp</label><input id="n-ncc" placeholder="Tên NCC"/></div>
           <div class="f"><label data-lang="p_date">Ngày Nhập</label><input id="n-ngay" type="date"/></div>
           <div class="f"><label data-lang="p_warranty">Bảo Hành (tháng)</label><input id="n-bh" type="number" placeholder="12"/></div>
+          <div class="f"><label style="color:#dc2626;font-weight:700">⚠️ SL Lỗi / Hỏng Khi Nhận (Nếu có)</label><input id="n-slloi" type="number" min="0" value="0" placeholder="0" style="border:1.5px solid #fca5a5;background:#fef2f2;font-weight:700;color:#dc2626"/></div>
+          <div class="f"><label style="color:#dc2626;font-weight:700">🏷️ Serial Lỗi &amp; Lý Do Hỏng</label><input id="n-serialloi" placeholder="VD: SN009 - Vỡ kính / Lỗi nguồn DOA" style="border:1.5px solid #fca5a5"/></div>
+          <div class="f"><label style="color:#dc2626;font-weight:700">🔄 Trạng Thái Xử Lý Hàng Lỗi</label>
+            <select id="n-ttloi" style="border:1.5px solid #fca5a5;font-weight:600">
+              <option value="Không có lỗi">🟢 Không có lỗi (100% Đạt chuẩn)</option>
+              <option value="🔴 Đang giữ kho lỗi (Chờ gửi NCC)">🔴 Đang giữ kho lỗi (Chờ gửi NCC)</option>
+              <option value="🟠 Đã gửi trả NCC / Chờ đổi bù">🟠 Đã gửi trả NCC / Chờ đổi bù</option>
+              <option value="🟢 Đã đổi bảo hành xong (Đã nhập kho tốt)">🟢 Đã đổi bảo hành xong (Đã nhập kho tốt)</option>
+            </select>
+          </div>
           <div class="f" style="grid-column:1/-1"><label data-lang="p_note">Ghi Chú</label><textarea id="n-gc" placeholder="..."></textarea></div>
         </div>
 
@@ -2809,6 +2822,169 @@ function copyTelegramReportTemplate(gName, gId, cat) {
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- 🛠️ PHÂN HỆ BẢO HÀNH & XỬ LÝ HÀNG LỖI (WARRANTY RMA & DEFECTIVE INTAKE) -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div class="sec" id="s-baohanh">
+  <div id="bh-kpi-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px;margin-bottom:16px"></div>
+
+  <div class="tabs">
+    <div class="tab on" onclick="sw(this,'tbh-rma')">🛠️ 1. Phiếu Bảo Hành Khách Hàng / Đại Lý (RMA)</div>
+    <div class="tab" onclick="sw(this,'tbh-defect')">🔴 2. Hàng Lỗi Khi Nhập Kho (Đang Khóa / Chờ Đổi NCC)</div>
+  </div>
+
+  <!-- SUB-TAB 1: PHIẾU BẢO HÀNH RMA (SAU KHI BÁN) -->
+  <div id="tbh-rma">
+    <!-- TRA CỨU HẠN BẢO HÀNH TỰ ĐỘNG THEO SERIAL / SĐT -->
+    <div class="panel" style="margin-bottom:14px;border:1.5px solid #93c5fd">
+      <div class="ph" style="background:#eff6ff">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;width:100%">
+          <div>
+            <h3 style="margin:0;color:#1e40af;font-size:14px">🔍 Bước 1: Tra Cứu Tự Động Hạn Bảo Hành Theo Serial Hoặc SĐT Khách Hàng</h3>
+            <div style="font-size:11.5px;color:#475569;margin-top:2px">Đối chiếu tức thì từ bảng Bán Hàng &amp; Nhập Hàng để kiểm tra ngày mua, thời hạn bảo hành (tháng) và tự điền vào phiếu bên dưới.</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input id="bh-lookup-q" placeholder="🔍 Nhập mã Serial (SN) hoặc SĐT KH..." oninput="checkWarrantyBySerialOrPhone(this.value)" style="padding:7px 12px;border:1.5px solid #3b82f6;border-radius:8px;font-size:12.5px;font-weight:700;width:270px"/>
+            <button type="button" class="btn b-bl b-sm" onclick="checkWarrantyBySerialOrPhone(document.getElementById('bh-lookup-q').value)">🔎 Kiểm Tra Hạn BH</button>
+          </div>
+        </div>
+      </div>
+      <div class="pb" id="bh-lookup-result" style="display:none;background:#f8fafc;font-size:12.5px"></div>
+    </div>
+
+    <!-- FORM LẬP PHIẾU TIẾP NHẬN BẢO HÀNH -->
+    <div class="panel" style="margin-bottom:14px">
+      <div class="ph" style="background:#fef2f2">
+        <h3 style="margin:0;color:#991b1b;font-size:14px">🛠️ Bước 2: Lập Phiếu Tiếp Nhận Hàng Hỏng Cần Bảo Hành / Sửa Chữa (Lưu vào Tab [Bảo Hành])</h3>
+      </div>
+      <div class="pb">
+        <div class="fg">
+          <div class="f"><label>Khách Hàng / Đại Lý *</label><input id="bh-kh" placeholder="Họ tên khách hàng hoặc tên Đại lý"/></div>
+          <div class="f"><label>Số Điện Thoại *</label><input id="bh-dt" placeholder="09xxxxxxxxx"/></div>
+          <div class="f"><label>Tên Thiết Bị / Sản Phẩm *</label><input id="bh-sp" placeholder="VD: Inverter Hybrid Deye 8kW"/></div>
+          <div class="f"><label>Model / Mã SP</label><input id="bh-model" placeholder="VD: SUN-8K-SG01LP1"/></div>
+          <div class="f"><label style="color:#dc2626;font-weight:700">Số Serial Lỗi (SN) *</label><input id="bh-serial" placeholder="Nhập mã Serial trên máy hỏng" style="font-weight:700;color:#dc2626;border-color:#fca5a5"/></div>
+          <div class="f"><label>Ngày Mua Hàng</label><input id="bh-ngaymua" type="date"/></div>
+          <div class="f"><label>Tình Trạng Hạn Bảo Hành</label>
+            <select id="bh-han">
+              <option value="🟢 Còn hạn bảo hành">🟢 Còn hạn bảo hành (Đủ điều kiện BH)</option>
+              <option value="🔴 Hết hạn bảo hành">🔴 Hết hạn bảo hành</option>
+              <option value="🟠 Lỗi người dùng (Sét đánh/Vào nước/Quá tải)">🟠 Lỗi người dùng (Sét đánh/Vào nước/Quá tải)</option>
+            </select>
+          </div>
+          <div class="f"><label>Phân Loại Xử Lý</label>
+            <select id="bh-loai">
+              <option value="Bảo hành miễn phí (Lỗi NSX)">🛡️ Bảo hành miễn phí (Lỗi NSX)</option>
+              <option value="Đổi mới 1-1 (Lỗi DOA trong 7 ngày)">🔄 Đổi mới 1-1 (Lỗi DOA mới lắp)</option>
+              <option value="Sửa chữa tính phí (Hết BH / Lỗi người dùng)">💰 Sửa chữa tính phí (Hết BH / Lỗi người dùng)</option>
+            </select>
+          </div>
+          <div class="f"><label>Phương Án Kỹ Thuật &amp; Kho</label>
+            <select id="bh-phuongan">
+              <option value="Thu hồi máy lỗi về trạm KT kiểm tra">🔧 Thu hồi máy lỗi về trạm KT kiểm tra</option>
+              <option value="Gửi trả về Hãng / Tổng Cty VCM bảo hành">📦 Gửi trả về Hãng / Tổng Cty VCM bảo hành</option>
+              <option value="Xuất 1 máy kho cho khách mượn dùng tạm">🧑‍💼 Xuất 1 máy kho cho khách mượn dùng tạm</option>
+              <option value="Xuất kho đổi mới 1-1 ngay cho khách">🔄 Xuất kho đổi mới 1-1 ngay cho khách</option>
+            </select>
+          </div>
+          <div class="f"><label>Serial Máy Đổi / Cho Mượn (Nếu có)</label><input id="bh-serialdoi" placeholder="Ghi SN máy xuất cho mượn/đổi"/></div>
+          <div class="f"><label>Chi Phí Sửa Chữa Thu Khách (Nếu có)</label><input id="bh-chiphi" type="number" value="0" placeholder="0"/></div>
+          <div class="f"><label>Người Tiếp Nhận (Kỹ Thuật / Thủ Kho)</label><input id="bh-nguoinhan" placeholder="Tên nhân sự tiếp nhận"/></div>
+          <div class="f"><label>Trạng Thái Tiến Độ</label>
+            <select id="bh-trangthai">
+              <option value="📥 Mới tiếp nhận">📥 Mới tiếp nhận</option>
+              <option value="🔧 Đang sửa / Đã gửi hãng VCM">🔧 Đang sửa / Đã gửi hãng VCM</option>
+              <option value="✅ Đã sửa xong - Chờ trả khách">✅ Đã sửa xong - Chờ trả khách</option>
+              <option value="🏁 Đã bàn giao hoàn tất">🏁 Đã bàn giao hoàn tất</option>
+            </select>
+          </div>
+          <div class="f" style="grid-column:1/-1"><label>Mô Tả Chi Tiết Triệu Chứng Lỗi Kỹ Thuật *</label>
+            <textarea id="bh-mota" rows="2" placeholder="VD: Báo mã lỗi F08, không sạc vào pin lưu trữ, quạt kêu to..."></textarea>
+          </div>
+          <div class="f" style="grid-column:1/-1;background:#fff7ed;border:1.5px dashed #fdba74;border-radius:10px;padding:12px">
+            <label style="font-weight:700;color:#9a3412">📷 Đính Kèm Hình Ảnh Thiết Bị Lỗi / Tem Serial (Tự động gom vào 1 Link Folder trong [2.12 SALE  SOLUTION - BUILDING])</label>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:6px">
+              <input type="file" id="bh-photo-input" accept="image/*" multiple onchange="handleBhPhotoSelect_(this)" style="font-size:12px"/>
+              <input id="bh-photourl" placeholder="Link folder ảnh Google Drive (tự động tạo khi bấm Lưu)..." style="flex:1;min-width:240px;font-size:12px"/>
+            </div>
+            <div id="bh-photo-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"></div>
+          </div>
+        </div>
+        <div class="fa" style="margin-top:12px">
+          <button type="button" class="btn b-rd" id="btn-save-bh" onclick="saveWarrantyClaim()" style="font-weight:700">💾 Lưu Phiếu Bảo Hành &amp; Đồng Bộ Sheet</button>
+          <button type="button" class="btn b-out" onclick="clearWarrantyForm()">✕ Làm Mới</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DANH SÁCH CA BẢO HÀNH RMA -->
+    <div class="panel">
+      <div class="ph" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <h3 style="margin:0;font-size:14px">📋 Danh Sách Theo Dõi Hàng Cần Bảo Hành (Tab Google Sheet: [Bảo Hành])</h3>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="bh-filter-q" placeholder="🔍 Tìm KH, SĐT, Serial, Mã BH..." oninput="rBaoHanh()" style="padding:5px 10px;border:1px solid var(--bd);border-radius:6px;font-size:12px;width:220px"/>
+        </div>
+      </div>
+      <div class="pb tw" id="t-baohanh"></div>
+    </div>
+  </div>
+
+  <!-- SUB-TAB 2: HÀNG LỖI LÚC NHẬP KHO (QUARANTINE / CHỜ ĐỔI TRẢ NCC) -->
+  <div id="tbh-defect" style="display:none">
+    <div style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;padding:14px 18px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-weight:800;color:#991b1b;font-size:13.5px">🔴 CƠ CHẾ CÁCH LY HÀNG LỖI KHI NHẬP KHO (QUARANTINE GUARD)</div>
+        <div style="font-size:12px;color:#7f1d1d;margin-top:3px">
+          • Mọi sản phẩm có <b>SL Lỗi / Hỏng &gt; 0</b> (chưa đổi xong) đều được hệ thống <b>TỰ ĐỘNG TRỪ KHỎI [TỒN KHẢ DỤNG]</b> để nhân viên không xuất bán nhầm.<br/>
+          • Khi Nhà cung cấp (NCC / VCM) đã đổi bù hàng tốt về kho, bấm nút <b>"✅ Đã Đổi Xong (Mở Khóa Kho)"</b> bên dưới để cộng trả lại số lượng vào Tồn Khả Dụng.
+        </div>
+      </div>
+      <button type="button" class="btn b-bl b-sm" onclick="go('nhap')" style="font-weight:700">➕ Về Màn Hình Nhập Hàng</button>
+    </div>
+
+    <div class="panel">
+      <div class="ph">
+        <h3 style="margin:0;font-size:14px">📦 Danh Sách Lô Hàng Nhập Có Phát Sinh Lỗi / Đổi Trả Nhà Cung Cấp</h3>
+      </div>
+      <div class="pb tw" id="t-intake-defects"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- 📖 HƯỚNG DẪN SỬ DỤNG TOÀN HỆ THỐNG (SHEET GUIDE — GHẾ AUDITOR-SALE-GUIDE) -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div class="sec" id="s-guide">
+  <div style="background:linear-gradient(135deg,#0f172a,#1e3a8a);color:#fff;border-radius:12px;padding:18px 22px;margin-bottom:16px;box-shadow:0 4px 12px rgba(15,23,42,0.2)">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:32px">📖</span>
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <h2 style="margin:0;font-size:18px;font-weight:900">CẨM NANG HƯỚNG DẪN SỬ DỤNG CHUẨN CHUYÊN GIA (SOP GUIDE)</h2>
+            <span id="guide-sentinel-badge" style="background:#16a34a;color:#fff;font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px">🛡️ Ghế AUDITOR-SALE-GUIDE: ONLINE 24/7</span>
+          </div>
+          <div style="font-size:12.5px;opacity:0.9;margin-top:4px">
+            Đồng bộ trực tiếp 2 chiều với tab <b>[Guide]</b> trên Google Sheet <b>TNI Bán hàng — TNI Sale</b>. Khi nhân sự quên thao tác có thể tra cứu ngay tại đây hoặc trên Sheet.
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a href="https://docs.google.com/spreadsheets/d/1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA/edit" target="_blank" class="btn b-sm" style="background:#38bdf8;color:#0f172a;font-weight:800;text-decoration:none">📊 Mở Sheet [Guide]</a>
+        <button type="button" class="btn b-sm" onclick="syncSaleGuideNow()" style="background:#fff;color:#1e3a8a;font-weight:800">🔄 Đồng Bộ &amp; Kiểm Tra Guide Ngay</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="ph" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <h3 style="margin:0;font-size:14px">📚 Bảng Quy Trình Thao Tác Chuẩn Từng Bước Cho Từng Phân Hệ (12 Mục Cốt Lõi)</h3>
+      <input id="guide-search-q" placeholder="🔍 Tìm quy trình (VD: hàng lỗi, bảo hành, khảo sát, ký gởi...)" oninput="rGuide()" style="padding:6px 12px;border:1.5px solid #3b82f6;border-radius:8px;font-size:12.5px;width:310px"/>
+    </div>
+    <div class="pb tw" id="t-guide-table"></div>
+  </div>
+</div>
+
 </div><!-- /content -->
 </div><!-- /main -->
 
@@ -3035,7 +3211,7 @@ const DB = {
     const cols = [
       'nhap','ban','tamung','khaosat','daily','pp','kygoi','lienlac','kh',
       'campaigns','adsresults','leads','quoteups','quotesolar','acceptances',
-      'vcm_statements','kiemke_phieu','del_requests'
+      'vcm_statements','kiemke_phieu','del_requests','warranty_claims'
     ];
     _setSyncBadge('syncing', 'Đang đồng bộ Sheet...');
     try {
@@ -3170,15 +3346,15 @@ function v(id){return document.getElementById(id)?.value?.trim()||'';}
 // ═══════════════════════════════════════════════════
 // NAV
 // ═══════════════════════════════════════════════════
-const ptitles={dashboard:'📊 Dashboard',nhap:'📦 Goods Intake',tonkho:'🗄️ Inventory',tamung:'🧑‍💼 Stock Advance',
+const ptitles={dashboard:'📊 Dashboard',nhap:'📦 Goods Intake',tonkho:'🗄️ Inventory',baohanh:'🛠️ Bảo Hành & Hàng Lỗi (RMA)',tamung:'🧑‍💼 Stock Advance',
   banhang:'🛒 Sales Orders',baogiaups:'📄 Device Quotation',baogiasolar:'☀️ Solar Quotation',thucthi:'🚀 Team Thực Thi (Field Operations Hub)',acceptance:'⚡ Handover & Acceptance',
   daily:'🏪 Distribution & Dealers',kygoi:'📋 Consignment',telegram:'💬 Nhóm Telegram (Sales Groups)',crm:'👥 CRM & Survey',
   quangcao:'📢 Ads Campaigns',leads:'🎯 Leads & Conversion',
   loinhuan:'💰 Financial & Cashflow',statement:'📑 VCM Payment Statement',baocao:'📈 Reports',
-  mystats:'📊 My Performance',myquotes:'📄 My Quotations',mysurvey:'📝 My Surveys',rbac:'🛡️ Role Permissions (RBAC)','access-denied':'🔒 Access Restricted'};
+  mystats:'📊 My Performance',myquotes:'📄 My Quotations',mysurvey:'📝 My Surveys',guide:'📖 Hướng Dẫn Sử Dụng (SOP Guide)',rbac:'🛡️ Role Permissions (RBAC)','access-denied':'🔒 Access Restricted'};
 
 const renders={
-  dashboard:rDash,nhap:()=>{rNhap();_renderDelReqBadge();_renderDelReqList();},tonkho:()=>{renderTK();_renderDelReqBadge();_renderDelReqList();},tamung:rTU,
+  dashboard:rDash,nhap:()=>{rNhap();_renderDelReqBadge();_renderDelReqList();},tonkho:()=>{renderTK();_renderDelReqBadge();_renderDelReqList();},baohanh:()=>{if(typeof rBaoHanh==='function')rBaoHanh();},tamung:rTU,
   banhang:()=>{popSP(['b-sp']);rBan();},
   baogiaups:()=>{if(!document.getElementById('qu-items').children.length)addQRow('qu-items');rQuUPS();populateOldQuoteSelectUPS();},
   baogiasolar:()=>{if(!document.getElementById('qs-table-body')?.children.length)addSolarItemRow();if(typeof rQuSolar==='function')rQuSolar();},
@@ -3190,6 +3366,7 @@ const renders={
   quangcao:()=>{rCampaigns();popCamps(['adr-camp']);rAdsResults();renderAdsSummary();},
   leads:()=>{popCamps(['ld-camp']);rLeads();popLeadSel();renderFunnel();renderLeadsCards();},
   loinhuan:renderLN,statement:()=>{rVCMStatements();populateStatementSources();calcStatementFields();},baocao:rBC,
+  guide:()=>{if(typeof rGuide==='function')rGuide();},
   rbac:()=>{try{if(typeof updateRBACPanelStaticTexts==='function')updateRBACPanelStaticTexts();}catch(e){console.warn(e);}try{renderRBACColToggles();}catch(e){console.warn(e);}try{renderRBACMatrix();}catch(e){console.warn(e);}try{renderStaffUsersTable();}catch(e){console.warn(e);}try{populateStaffUserSelect();}catch(e){console.warn(e);}}
 };
 
@@ -3275,10 +3452,22 @@ function al(msg,type='ok'){
 function getTK(){
   const nhap=DB.g('nhap'),ban=DB.g('ban'),pp=DB.g('pp'),kg=DB.g('kygoi'),tu=DB.g('tamung');
   const m={};
+  const defectSerials = {};
   nhap.forEach(r=>{
     const rawSn = r.serial || r.se || '';
-    if(!m[r.id]) m[r.id]={id:r.id,ten:r.ten,model:r.model||'',serial:rawSn,dm:r.dm,giagoc:r.gg,giaban:r.gb,nhap:0,ban:0,pp:0,kg:0,tu:0,bh:r.bh,allSerials:[]};
+    if(!m[r.id]) m[r.id]={id:r.id,ten:r.ten,model:r.model||'',serial:rawSn,dm:r.dm,giagoc:r.gg,giaban:r.gb,nhap:0,ban:0,pp:0,kg:0,tu:0,loi:0,serialLoi:r.serialLoi||'',ttLoi:r.ttLoi||'Không có lỗi',bh:r.bh,allSerials:[]};
     m[r.id].nhap+=Number(r.sl);
+    const rawLoi = Number(r.slLoi || 0);
+    const ttLoi = String(r.ttLoi || '');
+    if(rawLoi > 0 && !ttLoi.includes('Đã đổi bảo hành xong')){
+      m[r.id].loi += rawLoi;
+      if(r.serialLoi){
+        String(r.serialLoi).split(/[,;\n\r\s-]+/).forEach(s=>{
+          const clean = s.trim().toLowerCase();
+          if(clean && clean.length >= 3) defectSerials[clean] = true;
+        });
+      }
+    }
     if(rawSn){
       const sArr = String(rawSn).split(/[,;\n\r]+/).map(s=>s.trim()).filter(Boolean);
       m[r.id].allSerials.push(...sArr);
@@ -3302,8 +3491,8 @@ function getTK(){
 
   return Object.values(m).map(r=>{
     const tonTong = r.nhap - r.ban - r.pp;
-    const khaDung = Math.max(0, tonTong - r.kg - r.tu);
-    const availableSerials = (r.allSerials || []).filter(s => !soldSerials[s.toLowerCase()]);
+    const khaDung = Math.max(0, tonTong - r.kg - r.tu - (r.loi || 0));
+    const availableSerials = (r.allSerials || []).filter(s => !soldSerials[s.toLowerCase()] && !defectSerials[s.toLowerCase()]);
     return {...r, ton: tonTong, tonTong: tonTong, khaDung: khaDung, giaTriTon: tonTong * Number(r.giagoc||0), availableSerials};
   });
 }
@@ -3773,20 +3962,27 @@ function addNhap(){
   const gNV = +v('n-g-nv') || minSell;
   const lnBranch = Math.max(0, gb - minSell);
 
+  const slLoi = Math.max(0, Number(v('n-slloi') || 0));
+  const serialLoi = v('n-serialloi') || '';
+  const ttLoi = slLoi > 0 ? (v('n-ttloi') !== 'Không có lỗi' ? v('n-ttloi') : '🔴 Đang giữ kho lỗi (Chờ gửi NCC)') : 'Không có lỗi';
+
   DB.add('nhap',{
     ten,model:v('n-model'),serial:v('n-serial'),dm:v('n-dm'),
     sl:+sl,gg:cost,rate,lnCty,minSell,gb,gDaily,gDiemBan,gNV,lnBranch,
-    ncc:v('n-ncc'),ngay:v('n-ngay')||td(),bh:+v('n-bh')||12,gc:v('n-gc')
+    ncc:v('n-ncc'),ngay:v('n-ngay')||td(),bh:+v('n-bh')||12,
+    slLoi,serialLoi,ttLoi,gc:v('n-gc')
   });
-  al(isVi ? '✅ Đã lưu phiếu nhập thành công!' : '✅ Goods intake saved successfully!'); clrForm('n-'); rNhap();
+  al(isVi ? '✅ Đã lưu phiếu nhập thành công!' : '✅ Goods intake saved successfully!'); clrForm('n-');
+  const slLoiEl = document.getElementById('n-slloi'); if (slLoiEl) slLoiEl.value = '0';
+  rNhap(); renderTK();
 }
 
 function rNhap(){
   const isVi = currentLang === 'vi';
   const d=DB.g('nhap');
   const headers = isVi ?
-    ['#','Tên SP','Model','Serial','Danh Mục','Số Lượng','Giá Gốc (83%)','LN Cty (17%)','Giá Sàn','Giá Bán Lẻ','Giá Đại Lý','Giá Điểm Bán','Giá Cho NV','LN Chi Nhánh','NCC','Bảo Hành','Ngày Nhập','Ghi Chú',''] :
-    ['#','Product','Model','Serial','Category','Qty','Base Cost (83%)','HO Profit (17%)','Floor Price','Retail Price','Dealer Price','POS Price','Staff Price','Branch Profit','Supplier','Warranty','Date','Note',''];
+    ['#','Tên SP','Model','Serial','Danh Mục','Số Lượng','⚠️ Hàng Lỗi','Giá Gốc (83%)','LN Cty (17%)','Giá Sàn','Giá Bán Lẻ','Giá Đại Lý','Giá Điểm Bán','Giá Cho NV','LN Chi Nhánh','NCC','Bảo Hành','Ngày Nhập','Ghi Chú','Thao Tác'] :
+    ['#','Product','Model','Serial','Category','Qty','⚠️ Defective','Base Cost (83%)','HO Profit (17%)','Floor Price','Retail Price','Dealer Price','POS Price','Staff Price','Branch Profit','Supplier','Warranty','Date','Note','Actions'];
   document.getElementById('t-nhap').innerHTML=tbl(headers,
     d.map((r,i)=>{
       const gg = Number(r.gg || 0);
@@ -3800,6 +3996,14 @@ function rNhap(){
       const lnBranch = r.lnBranch !== undefined ? Number(r.lnBranch) : Math.max(0, gb - minSell);
       const snVal = (r.serial || r.se || '').trim();
       const snBadge = snVal ? `<span style="background:#f3e8ff;color:#6d28d9;padding:2px 7px;border-radius:6px;font-weight:700;font-size:11.5px;white-space:nowrap">🏷️ ${snVal}</span>` : '-';
+      const slLoi = Number(r.slLoi || 0);
+      const ttLoi = String(r.ttLoi || 'Không có lỗi');
+      const isReplaced = ttLoi.includes('Đã đổi bảo hành xong');
+      const loiBadge = slLoi > 0
+        ? (isReplaced
+            ? `<span style="background:#dcfce7;color:#15803d;padding:2px 6px;border-radius:5px;font-size:11px;font-weight:700">🟢 Đã đổi (${slLoi})</span>`
+            : `<span style="background:#fee2e2;color:#b91c1c;padding:2px 6px;border-radius:5px;font-size:11px;font-weight:700" title="${escH_(r.serialLoi || '')}">🔴 Lỗi: ${slLoi}<br><small>${escH_(ttLoi)}</small></span>`)
+        : `<span style="color:#16a34a;font-size:11px;font-weight:600">✓ 0 lỗi</span>`;
       return [
         i+1,
         `<b>${r.ten}</b>`,
@@ -3807,6 +4011,7 @@ function rNhap(){
         snBadge,
         bk(r.dm,'bl'),
         r.sl,
+        loiBadge,
         fn(gg)+'₫',
         `<span style="color:#1e40af;font-weight:600">${fn(lnCty)}₫</span>`,
         `<span style="color:var(--or);font-weight:600">${fn(minSell)}₫</span>`,
@@ -3819,7 +4024,10 @@ function rNhap(){
         (r.bh||'-')+'th',
         fd(r.ngay),
         r.gc||'-',
-        `<button class="btn b-xs b-rd" onclick="requestDelNhap(${r.id},'${(r.ten||r.sp||'SP').replace(/'/g,'')}')" title="Gửi yêu cầu xóa lên Giám Đốc" style="background:#fff7ed;color:#ea580c;border:1px solid #fed7aa;font-size:11px;padding:2px 7px">📨 Xóa</button>`
+        `<div style="display:flex;gap:4px;flex-wrap:wrap">
+          <button class="btn b-xs" onclick="promptUpdateIntakeDefect(${r.id})" title="Báo hàng lỗi hoặc xác nhận NCC đã đổi hàng tốt" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;font-size:11px;padding:2px 7px;font-weight:700">🛠️ Lỗi/Đổi</button>
+          <button class="btn b-xs b-rd" onclick="requestDelNhap(${r.id},'${(r.ten||r.sp||'SP').replace(/'/g,'')}')" title="Gửi yêu cầu xóa lên Giám Đốc" style="background:#fff7ed;color:#ea580c;border:1px solid #fed7aa;font-size:11px;padding:2px 7px">📨 Xóa</button>
+        </div>`
       ];
     }));
 }
@@ -4240,19 +4448,21 @@ function renderTK(){
   const totPP   = allData.reduce((s,r)=>s+r.pp,0);
   const totKG   = allData.reduce((s,r)=>s+r.kg,0);
   const totTU   = allData.reduce((s,r)=>s+r.tu,0);
+  const totLoi  = allData.reduce((s,r)=>s+(r.loi||0),0);
   const totTon  = allData.reduce((s,r)=>s+r.ton,0);
   const totKD   = allData.reduce((s,r)=>s+r.khaDung,0);
   const totVal  = allData.reduce((s,r)=>s+r.giaTriTon,0);
 
   // Thẻ tổng quan
   const cardsHtml = `
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:10px;margin-bottom:14px">
       <div class="card c-bl"><div class="lbl2">📦 ${isVi?'Đã Nhập':'Total In'}</div><div class="val">${totNhap}</div><div class="sub">${isVi?'Toàn bộ kho':'Total warehouse'}</div></div>
       <div class="card c-gn"><div class="lbl2">🛒 ${isVi?'Đã Bán':'Sold'}</div><div class="val">${totBan}</div><div class="sub">${isVi?'Khách lẻ & DN':'Retail & B2B'}</div></div>
       <div class="card c-or"><div class="lbl2">📋 ${isVi?'Đang Ký Gởi':'Consigned'}</div><div class="val">${totKG}</div><div class="sub">${isVi?'Tại các điểm bán':'At POS outlets'}</div></div>
       <div class="card c-pu"><div class="lbl2">🧑‍💼 ${isVi?'Đang Tạm Ứng':'Advanced'}</div><div class="val">${totTU}</div><div class="sub">${isVi?'NV demo / bán':'Staff demo / sale'}</div></div>
+      <div class="card c-rd" style="cursor:pointer" onclick="go('baohanh')" title="Bấm để mở Quản lý Hàng Lỗi & Bảo Hành"><div class="lbl2">🔴 ${isVi?'Hàng Lỗi (Khóa)':'Defective (Locked)'}</div><div class="val" style="color:#dc2626">${totLoi}</div><div class="sub">${isVi?'Đang chờ đổi NCC':'Quarantined'}</div></div>
       <div class="card c-yw"><div class="lbl2">🗄️ ${isVi?'Tồn Kho Tổng':'Total Stock'}</div><div class="val">${totTon}</div><div class="sub">${isVi?'Nhập - Bán - PP':'In - Out - Dist'}</div></div>
-      <div class="card c-gn"><div class="lbl2">🟢 ${isVi?'Tồn Khả Dụng':'Available'}</div><div class="val">${totKD}</div><div class="sub">${isVi?'Sẵn sàng xuất':'Ready to ship'}</div></div>
+      <div class="card c-gn"><div class="lbl2">🟢 ${isVi?'Tồn Khả Dụng':'Available'}</div><div class="val">${totKD}</div><div class="sub">${isVi?'Tồn - KG - TU - Lỗi':'Ready to ship'}</div></div>
       ${canSeeCost ? `<div class="card c-bl"><div class="lbl2">💰 ${isVi?'Giá Trị Tồn Gốc':'Stock Asset Value'}</div><div class="val" style="font-size:16px">${fn(totVal)}₫</div><div class="sub">${isVi?'Theo giá vốn (83%)':'At base cost (83%)'}</div></div>` : ''}
     </div>`;
 
@@ -4266,11 +4476,11 @@ function renderTK(){
 
   const tkHeaders = canSeeCost
     ? (isVi ?
-      ['<input type="checkbox" id="tk-chk-all" onchange="tkToggleAll(this)" title="Chọn tất cả">','Tên SP','Model','Serial','DM','Đã Nhập','Đã Bán','Ký Gởi','Tồn Kho','Khả Dụng','📍 Phân Bổ Đang Giữ','Giá Gốc (83%)','LN Cty 17%','Giá Sàn (100%)','Giá Thực Bán','LN Chi Nhánh','Tổng LN Cty','Tổng LN Chi Nhánh','Giá Trị Tồn Gốc','Trạng Thái','Xóa Nhập'] :
-      ['<input type="checkbox" id="tk-chk-all" onchange="tkToggleAll(this)" title="Select all">','Product','Model','Serial','Category','Intake','Sold','Consigned','Total Stock','Available','📍 Holders / POS','Base Cost (83%)','HO Profit 17%','Min Price (100%)','Actual Price','Branch Profit','Total HO Profit','Total Branch Profit','Total Stock Cost','Status','Delete'])
+      ['<input type="checkbox" id="tk-chk-all" onchange="tkToggleAll(this)" title="Chọn tất cả">','Tên SP','Model','Serial','DM','Đã Nhập','Đã Bán','Ký Gởi','⚠️ Hàng Lỗi','Tồn Kho','Khả Dụng','📍 Phân Bổ Đang Giữ','Giá Gốc (83%)','LN Cty 17%','Giá Sàn (100%)','Giá Thực Bán','LN Chi Nhánh','Tổng LN Cty','Tổng LN Chi Nhánh','Giá Trị Tồn Gốc','Trạng Thái','Thao Tác'] :
+      ['<input type="checkbox" id="tk-chk-all" onchange="tkToggleAll(this)" title="Select all">','Product','Model','Serial','Category','Intake','Sold','Consigned','⚠️ Defective','Total Stock','Available','📍 Holders / POS','Base Cost (83%)','HO Profit 17%','Min Price (100%)','Actual Price','Branch Profit','Total HO Profit','Total Branch Profit','Total Stock Cost','Status','Actions'])
     : (isVi ?
-      ['#','Tên SP','Model','Serial','DM','Đã Nhập','Đã Bán','Ký Gởi','Tồn Kho','Khả Dụng','📍 Phân Bổ Đang Giữ','Giá Thực Bán','Trạng Thái'] :
-      ['#','Product','Model','Serial','Category','Intake','Sold','Consigned','Total Stock','Available','📍 Holders / POS','Selling Price','Status']);
+      ['#','Tên SP','Model','Serial','DM','Đã Nhập','Đã Bán','Ký Gởi','⚠️ Hàng Lỗi','Tồn Kho','Khả Dụng','📍 Phân Bổ Đang Giữ','Giá Thực Bán','Trạng Thái'] :
+      ['#','Product','Model','Serial','Category','Intake','Sold','Consigned','⚠️ Defective','Total Stock','Available','📍 Holders / POS','Selling Price','Status']);
 
   document.getElementById('t-tonkho').innerHTML=tbl(tkHeaders,
     data.map((r, idx)=>{
@@ -4287,9 +4497,10 @@ function renderTK(){
       const snDisplay = snStr ? `<span style="background:#f3e8ff;color:#6d28d9;padding:2px 7px;border-radius:6px;font-weight:700;font-size:11.5px;white-space:nowrap">🏷️ ${snStr}</span>` : '-';
       const fullSpLabel = ((r.ten||'SP') + (snStr ? ' [Serial: ' + snStr + ']' : '')).replace(/'/g,'').replace(/"/g,'');
 
-      // Chi tiết ai đang giữ hàng (Kho chính + Điểm Ký Gởi + NV Tạm ứng)
+      // Chi tiết ai đang giữ hàng (Kho chính + Điểm Ký Gởi + NV Tạm ứng + Kho Lỗi)
       const holderBadges = [];
       if (r.khaDung > 0) holderBadges.push(`<span style="background:#dcfce7;color:#166534;padding:2px 6px;border-radius:4px;font-size:10.5px;font-weight:700">🏢 Kho chính: ${r.khaDung}</span>`);
+      if (r.loi > 0) holderBadges.push(`<span onclick="promptUpdateIntakeDefect(${r.id})" style="cursor:pointer;background:#fee2e2;color:#b91c1c;padding:2px 6px;border-radius:4px;font-size:10.5px;font-weight:700" title="Bấm để cập nhật đổi trả NCC">🔴 Kho lỗi: ${r.loi}</span>`);
       allKG.filter(x => x.spId == r.id && x.ts === 'Đang gởi').forEach(x => {
         const who = escH_(x.db || x.nn || 'Điểm bán');
         const clickArg = escH_(JSON.stringify(String(x.email || x.db || '')));
@@ -4301,6 +4512,8 @@ function renderTK(){
         holderBadges.push(`<span onclick="setAccountViewFilter(${clickArg})" title="Bấm để xem riêng kho của ${who}" style="cursor:pointer;background:#f3e8ff;color:#6d28d9;padding:2px 6px;border-radius:4px;font-size:10.5px;font-weight:700">🧑‍💼 ${who}: ${x.sl}</span>`);
       });
       const holderHtml = holderBadges.length ? `<div style="display:flex;flex-wrap:wrap;gap:3px;max-width:220px">${holderBadges.join('')}</div>` : '-';
+      const loiColHtml = r.loi > 0 ? `<b style="color:#dc2626">${r.loi}</b>` : `<span style="color:#94a3b8">0</span>`;
+      const statusBadge = r.khaDung>5?bk('Sẵn hàng','gn'):r.khaDung>0?bk('Sắp hết','or'):(r.loi>0?bk('Khóa hàng lỗi','rd'):bk('Hết hàng','rd'));
 
       if (!canSeeCost) {
         return [
@@ -4312,11 +4525,12 @@ function renderTK(){
           r.nhap,
           `<b style="color:var(--gn)">${r.ban}</b>`,
           `<span style="color:var(--or);font-weight:600">${r.kg}</span>`,
+          loiColHtml,
           `<b>${r.ton}</b>`,
           `<b style="color:${r.khaDung>0?'var(--gn)':'var(--rd)'}">${r.khaDung}</b>`,
           holderHtml,
           `<b>${fn(gb)}₫</b>`,
-          r.khaDung>5?bk('Sẵn hàng','gn'):r.khaDung>0?bk('Sắp hết','or'):bk('Hết hàng','rd')
+          statusBadge
         ];
       }
 
@@ -4329,6 +4543,7 @@ function renderTK(){
         r.nhap,
         `<b style="color:var(--gn)">${r.ban}</b>`,
         `<span style="color:var(--or);font-weight:600">${r.kg}</span>`,
+        loiColHtml,
         `<b>${r.ton}</b>`,
         `<b style="color:${r.khaDung>0?'var(--gn)':'var(--rd)'}">${r.khaDung}</b>`,
         holderHtml,
@@ -4340,8 +4555,11 @@ function renderTK(){
         `<span style="color:#1e40af;font-weight:700">${fn(totLnCty)}₫</span>`,
         `<span style="color:var(--gn);font-weight:700">${fn(totLnBranch)}₫</span>`,
         fn(valTonGoc)+'₫',
-        r.khaDung>5?bk('Sẵn hàng','gn'):r.khaDung>0?bk('Sắp hết','or'):bk('Hết hàng','rd'),
-        `<button class="btn b-xs" onclick="requestDelNhap(${r.id},'${fullSpLabel}')" title="Xóa phiếu nhập → Tồn kho tự giảm (cần GĐ duyệt)" style="background:#fff7ed;color:#ea580c;border:1px solid #fed7aa;font-size:11px;padding:2px 7px">📨 Xóa</button>`
+        statusBadge,
+        `<div style="display:flex;gap:4px;flex-wrap:wrap">
+          <button class="btn b-xs" onclick="promptUpdateIntakeDefect(${r.id})" title="Báo lỗi khi nhận hoặc xác nhận NCC đã đổi hàng tốt" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;font-size:11px;padding:2px 7px;font-weight:700">🛠️ Lỗi/Đổi</button>
+          <button class="btn b-xs" onclick="requestDelNhap(${r.id},'${fullSpLabel}')" title="Xóa phiếu nhập → Tồn kho tự giảm (cần GĐ duyệt)" style="background:#fff7ed;color:#ea580c;border:1px solid #fed7aa;font-size:11px;padding:2px 7px">📨 Xóa</button>
+        </div>`
       ];
     })
   );
@@ -11317,11 +11535,11 @@ const ROLES = {
     canViewFinance: true,
     canViewCostPrice: true,
     allowedTabs: [
-      'dashboard', 'nhap', 'tonkho', 'tamung',
+      'dashboard', 'nhap', 'tonkho', 'tamung', 'baohanh',
       'banhang', 'baogiaups', 'baogiasolar', 'thucthi', 'acceptance', 'daily', 'kygoi',
       'crm', 'quangcao', 'leads',
       'loinhuan', 'statement', 'baocao',
-      'mystats', 'myquotes', 'mysurvey', 'rbac'
+      'mystats', 'myquotes', 'mysurvey', 'rbac', 'guide'
     ]
   },
   finance: {
@@ -11335,11 +11553,11 @@ const ROLES = {
     canViewFinance: true,
     canViewCostPrice: true,
     allowedTabs: [
-      'dashboard', 'nhap', 'tonkho', 'tamung',
+      'dashboard', 'nhap', 'tonkho', 'tamung', 'baohanh',
       'banhang', 'baogiaups', 'baogiasolar', 'thucthi', 'acceptance', 'daily', 'kygoi',
       'crm',
       'loinhuan', 'statement', 'baocao',
-      'mystats', 'myquotes', 'rbac'
+      'mystats', 'myquotes', 'rbac', 'guide'
     ]
   },
   sales: {
@@ -11353,10 +11571,10 @@ const ROLES = {
     canViewFinance: false,
     canViewCostPrice: true,
     allowedTabs: [
-      'dashboard', 'nhap', 'tonkho', 'tamung',
+      'dashboard', 'nhap', 'tonkho', 'tamung', 'baohanh',
       'banhang', 'baogiaups', 'baogiasolar', 'daily', 'kygoi',
       'crm', 'quangcao', 'leads',
-      'mystats', 'myquotes', 'mysurvey'
+      'mystats', 'myquotes', 'mysurvey', 'guide'
     ]
   },
   tech: {
@@ -11370,10 +11588,10 @@ const ROLES = {
     canViewFinance: false,
     canViewCostPrice: false,
     allowedTabs: [
-      'dashboard',
+      'dashboard', 'baohanh',
       'baogiasolar', 'thucthi', 'acceptance',
       'crm',
-      'mystats', 'myquotes', 'mysurvey'
+      'mystats', 'myquotes', 'mysurvey', 'guide'
     ]
   },
   warehouse: {
@@ -11387,9 +11605,9 @@ const ROLES = {
     canViewFinance: false,
     canViewCostPrice: false,
     allowedTabs: [
-      'dashboard', 'nhap', 'tonkho', 'tamung',
+      'dashboard', 'nhap', 'tonkho', 'tamung', 'baohanh',
       'banhang', 'kygoi',
-      'mystats'
+      'mystats', 'guide'
     ]
   },
   dealer: {
@@ -11404,7 +11622,7 @@ const ROLES = {
     canViewCostPrice: false,
     allowedTabs: [
       'dashboard',
-      'baogiaups', 'baogiasolar', 'daily', 'kygoi'
+      'baogiaups', 'baogiasolar', 'daily', 'kygoi', 'guide'
     ]
   }
 };
@@ -11414,6 +11632,7 @@ const SYSTEM_MODULES = [
   { id: 'nhap', name: '📦 Nhập Hàng (Goods Intake)', name_en: '📦 Goods Intake', cat: 'Kho Hàng', secLevel: 'Cấp 2 - Vốn Gốc 83%', desc: 'Phiếu nhập kho, quản lý serial và giá vốn gốc', desc_en: 'Stock intake, serial tracking & 83% base cost' },
   { id: 'tonkho', name: '🗄️ Tồn Kho Thực Tế (Inventory)', name_en: '🗄️ Inventory Management', cat: 'Kho Hàng', secLevel: 'Cấp 3 - Quản Lý Kho', desc: 'Số lượng tồn thực tế, khả dụng và cảnh báo hết hàng', desc_en: 'Real-time on-hand stock, available units & low stock alerts' },
   { id: 'tamung', name: '🧑‍💼 Tạm Ứng Hàng (Stock Advance)', name_en: '🧑‍💼 Stock Advance', cat: 'Kho Hàng', secLevel: 'Cấp 3 - Quản Lý Kho', desc: 'Thiết bị nhân viên mượn đi lắp đặt công trình', desc_en: 'Equipment advanced to field staff for installations' },
+  { id: 'baohanh', name: '🛠️ Bảo Hành & Hàng Lỗi (RMA)', name_en: '🛠️ Warranty & Defective Goods (RMA)', cat: 'Kho Hàng', secLevel: 'Cấp 3 - Quản Lý Kho & Kỹ Thuật', desc: 'Quản lý hàng lỗi khi nhập kho và phiếu bảo hành RMA khách hàng', desc_en: 'Defective intake batch tracking & customer warranty RMA claims' },
   { id: 'banhang', name: '🛒 Bán Hàng & Xuất Kho', name_en: '🛒 Sales & Dispatch', cat: 'Bán Hàng & Báo Giá', secLevel: 'Cấp 3 - Bán Hàng', desc: 'Đơn xuất kho, người nhận, hình thức thanh toán', desc_en: 'Sales orders, dispatch records, payment terms' },
   { id: 'baogiaups', name: '📄 Báo Giá Thiết Bị / UPS', name_en: '📄 Device & UPS Quote', cat: 'Bán Hàng & Báo Giá', secLevel: 'Cấp 4 - Bán Hàng', desc: 'Lập và in báo giá thiết bị đơn lẻ', desc_en: 'Create & print individual device/UPS quotations' },
   { id: 'baogiasolar', name: '☀️ Báo Giá Solar (Chuẩn VCM)', name_en: '☀️ Solar Quote (VCM Standard)', cat: 'Bán Hàng & Báo Giá', secLevel: 'Cấp 4 - Bán Hàng', desc: 'Lập báo giá hệ thống điện mặt trời trọn gói', desc_en: 'Create turnkey solar power system quotations' },
@@ -11430,8 +11649,389 @@ const SYSTEM_MODULES = [
   { id: 'mystats', name: '📊 Tiến Độ Cá Nhân', name_en: '📊 My Performance KPI', cat: 'Cổng Nhân Viên', secLevel: 'Cấp 4 - Cá Nhân', desc: 'Báo cáo KPI, doanh số và hoa hồng của từng nhân viên', desc_en: 'Personal sales KPI, revenue target & commissions' },
   { id: 'myquotes', name: '📄 Báo Giá Của Tôi', name_en: '📄 My Quotations', cat: 'Cổng Nhân Viên', secLevel: 'Cấp 4 - Cá Nhân', desc: 'Danh sách các báo giá do nhân viên tự lập', desc_en: 'Archive of quotations created by current staff member' },
   { id: 'mysurvey', name: '📝 Khảo Sát Của Tôi', name_en: '📝 My Field Surveys', cat: 'Cổng Nhân Viên', secLevel: 'Cấp 4 - Cá Nhân', desc: 'Phiếu khảo sát khách hàng do nhân viên thực hiện', desc_en: 'Customer survey forms recorded by current staff member' },
-  { id: 'rbac', name: '🛡️ Phân Quyền Vai Trò (RBAC)', name_en: '🛡️ Role Permissions (RBAC)', cat: 'Hệ Thống & Phân Quyền', secLevel: '🔴 CẤP 1 - QUẢN TRỊ', desc: 'Ma trận phân quyền & phân vai trò nhân viên', desc_en: 'Access matrix & staff organizational role assignments', isSensitive: true }
+  { id: 'rbac', name: '🛡️ Phân Quyền Vai Trò (RBAC)', name_en: '🛡️ Role Permissions (RBAC)', cat: 'Hệ Thống & Phân Quyền', secLevel: '🔴 CẤP 1 - QUẢN TRỊ', desc: 'Ma trận phân quyền & phân vai trò nhân viên', desc_en: 'Access matrix & staff organizational role assignments', isSensitive: true },
+  { id: 'guide', name: '📖 Hướng Dẫn Sử Dụng (Guide)', name_en: '📖 User Manual & SOP Guide', cat: 'Hệ Thống & Phân Quyền', secLevel: 'Cấp 4 - Công Khai', desc: 'Sổ tay hướng dẫn sử dụng chuẩn SOP luôn online 24/7', desc_en: 'Always-online SOP handbook & troubleshooting guide' }
 ];
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🛠️ MODULE BẢO HÀNH & HÀNG LỖI (RMA + DEFECTIVE INTAKE) + 📖 SỔ TAY GUIDE SOP
+// ═══════════════════════════════════════════════════════════════════════════════
+
+let _bhPendingPhotos = [];
+
+function handleBhPhotoSelect_(input) {
+  const files = Array.from((input && input.files) || []);
+  const prev = document.getElementById('bh-photo-preview');
+  if (!files.length) return;
+  _bhPendingPhotos = [];
+  if (prev) prev.innerHTML = '<span style="font-size:11px;color:#0284c7;font-weight:700">⏳ Đang nén ảnh hiện trạng lỗi...</span>';
+  Promise.all(files.slice(0, 4).map(file => new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxDim = 1280;
+        let w = img.width, h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+          else { w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve({ name: file.name, dataUrl: canvas.toDataURL('image/jpeg', 0.8) });
+      };
+      img.onerror = () => resolve(null);
+      img.src = e.target.result;
+    };
+    reader.onerror = () => resolve(null);
+    reader.readAsDataURL(file);
+  }))).then(list => {
+    _bhPendingPhotos = list.filter(Boolean);
+    if (prev) {
+      prev.innerHTML = _bhPendingPhotos.map((p, idx) =>
+        `<div style="position:relative;border:1px solid #cbd5e1;border-radius:6px;padding:3px;background:#fff;display:flex;align-items:center;gap:6px">
+          <img src="${p.dataUrl}" style="width:42px;height:42px;object-fit:cover;border-radius:4px">
+          <span style="font-size:10.5px;font-weight:700;color:#334155;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.name)}</span>
+        </div>`
+      ).join('');
+    }
+  });
+}
+
+function checkWarrantyBySerialOrPhone(q) {
+  const resEl = document.getElementById('bh-lookup-result');
+  const query = String(q || '').trim().toLowerCase();
+  if (!resEl) return;
+  if (!query || query.length < 2) {
+    resEl.style.display = 'none';
+    return;
+  }
+  const banList = DB.g('ban') || [];
+  const nhapList = DB.g('nhap') || [];
+  const matchedBan = banList.filter(b =>
+    String(b.serial || '').toLowerCase().includes(query) ||
+    String(b.dt || '').toLowerCase().includes(query) ||
+    String(b.kh || '').toLowerCase().includes(query) ||
+    String(b.sp || '').toLowerCase().includes(query)
+  );
+  resEl.style.display = 'block';
+  if (!matchedBan.length) {
+    resEl.innerHTML = `<div style="padding:8px 12px;background:#fff1f2;border:1px solid #fecdd3;border-radius:6px;color:#be123c;font-size:11.5px;font-weight:700">⚠️ Không tìm thấy đơn bán hàng nào khớp với "${esc(q)}". Bạn vẫn có thể nhập thông tin thủ công bên dưới.</div>`;
+    return;
+  }
+  resEl.innerHTML = matchedBan.slice(0, 5).map(b => {
+    const nhapItem = nhapList.find(n => (n.ten || '').trim().toLowerCase() === (b.sp || '').trim().toLowerCase());
+    const bhMonths = Number((nhapItem && nhapItem.bh) || 12);
+    const ngayMua = b.ngay || (b._ts ? b._ts.slice(0, 10) : '');
+    let isValid = true;
+    let expText = `${bhMonths} tháng`;
+    if (ngayMua) {
+      const d = new Date(ngayMua);
+      if (!isNaN(d.getTime())) {
+        d.setMonth(d.getMonth() + bhMonths);
+        const expDate = d.toISOString().slice(0, 10);
+        isValid = new Date().toISOString().slice(0, 10) <= expDate;
+        expText = `${bhMonths} tháng (Hạn: ${expDate})`;
+      }
+    }
+    const badge = isValid
+      ? `<span class="badge b-gn">🟢 Còn hạn bảo hành (${esc(expText)})</span>`
+      : `<span class="badge b-rd">🔴 Hết hạn bảo hành (${esc(expText)})</span>`;
+    const payload = encodeURIComponent(JSON.stringify({
+      kh: b.kh || '', dt: b.dt || '', sp: b.sp || '',
+      model: (nhapItem && nhapItem.model) || '',
+      serial: b.serial || '', ngayMua,
+      hanStatus: isValid ? '🟢 Còn hạn bảo hành (Miễn phí)' : '🔴 Hết hạn bảo hành (Tính phí sửa chữa)'
+    }));
+    return `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 10px;background:#fff;border:1px solid #bae6fd;border-radius:6px;margin-bottom:5px;flex-wrap:wrap">
+      <div style="font-size:11.5px">
+        <strong style="color:#0f172a">👤 ${esc(b.kh || 'Khách lẻ')} (${esc(b.dt || '—')})</strong> — 📦 <strong style="color:#0369a1">${esc(b.sp)}</strong>
+        | 🔢 Serial: <code style="font-weight:700;color:#b91c1c">${esc(b.serial || '—')}</code> | 📅 Ngày mua: <strong>${esc(ngayMua || '—')}</strong> ${badge}
+      </div>
+      <button type="button" class="btn btn-p btn-sm" onclick="fillWarrantyFormFromLookup('${payload}')">⚡ Chọn đơn này</button>
+    </div>`;
+  }).join('');
+}
+
+function fillWarrantyFormFromLookup(encoded) {
+  try {
+    const d = JSON.parse(decodeURIComponent(encoded));
+    const setV = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+    setV('bh-kh', d.kh);
+    setV('bh-dt', d.dt);
+    setV('bh-sp', d.sp);
+    setV('bh-model', d.model);
+    setV('bh-serial', d.serial);
+    setV('bh-ngaymua', d.ngayMua);
+    setV('bh-han', d.hanStatus);
+    toast('✅ Đã điền tự động thông tin khách hàng & hạn bảo hành!');
+  } catch (e) {}
+}
+
+function clearWarrantyForm() {
+  ['bh-kh', 'bh-dt', 'bh-sp', 'bh-model', 'bh-serial', 'bh-loi', 'bh-maytam', 'bh-ketqua', 'bh-chiphi', 'bh-search-serial'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  _bhPendingPhotos = [];
+  const prev = document.getElementById('bh-photo-preview');
+  if (prev) prev.innerHTML = '';
+  const res = document.getElementById('bh-lookup-result');
+  if (res) res.style.display = 'none';
+}
+
+async function saveWarrantyClaim() {
+  const kh = (document.getElementById('bh-kh')?.value || '').trim();
+  const dt = (document.getElementById('bh-dt')?.value || '').trim();
+  const sp = (document.getElementById('bh-sp')?.value || '').trim();
+  const model = (document.getElementById('bh-model')?.value || '').trim();
+  const serial = (document.getElementById('bh-serial')?.value || '').trim();
+  const ngayMua = document.getElementById('bh-ngaymua')?.value || '';
+  const hanBaoHanh = document.getElementById('bh-han')?.value || '🟢 Còn hạn bảo hành (Miễn phí)';
+  const moTaLoi = (document.getElementById('bh-loi')?.value || '').trim();
+  const huongXuLy = document.getElementById('bh-huong')?.value || '🔧 Sửa chữa tại chỗ (Thay linh kiện tại trạm TNI)';
+  const serialMayTam = (document.getElementById('bh-maytam')?.value || '').trim();
+  const ketQua = (document.getElementById('bh-ketqua')?.value || '').trim();
+  const chiPhi = +(document.getElementById('bh-chiphi')?.value || 0);
+  const trangThai = document.getElementById('bh-tt')?.value || '📥 Mới tiếp nhận';
+
+  if (!kh || !sp || !moTaLoi) {
+    toast('⚠️ Vui lòng nhập Tên khách hàng, Thiết bị và Mô tả lỗi!', 'err');
+    return;
+  }
+
+  let photoLinks = [];
+  if (_bhPendingPhotos.length > 0) {
+    toast('☁️ Đang tải ảnh hiện trạng lỗi lên Google Drive (2.12 SALE SOLUTION - BUILDING)...');
+    for (let i = 0; i < _bhPendingPhotos.length; i++) {
+      try {
+        const p = _bhPendingPhotos[i];
+        const r = await fetch(GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'sale_upload_photo',
+            category: 'Warranty_RMA',
+            title: `${kh}_${sp}_${serial || 'RMA'}_${i + 1}`,
+            staff: (typeof RBAC !== 'undefined' && RBAC.getCurrentStaffName) ? RBAC.getCurrentStaffName() : 'Admin',
+            dataUrl: p.dataUrl
+          })
+        }).then(res => res.json());
+        if (r && r.ok && r.record && (r.record.viewUrl || r.record.url)) {
+          photoLinks.push(r.record.viewUrl || r.record.url);
+        }
+      } catch (err) {}
+    }
+  }
+
+  const maPhieu = 'RMA-' + new Date().toISOString().slice(2, 10).replace(/-/g, '') + '-' + String(Date.now()).slice(-4);
+  const rec = DB.add('warranty_claims', {
+    maPhieu,
+    ngayNhan: td(),
+    kh, dt, sp, model, serial,
+    ngayMua, hanBaoHanh, moTaLoi, huongXuLy,
+    serialMayTam, ketQua, chiPhi,
+    hinhAnhLoi: photoLinks.join(' | '),
+    nguoiPhuTrach: (typeof RBAC !== 'undefined' && RBAC.getCurrentStaffName) ? RBAC.getCurrentStaffName() : 'Admin',
+    trangThai,
+    ngayHoanin: trangThai.includes('Đã bàn giao') ? td() : '',
+    gc: ''
+  });
+  clearWarrantyForm();
+  rBaoHanh();
+  toast(`✅ Đã tạo phiếu bảo hành ${rec.maPhieu} và đồng bộ vào Sheet "Bảo Hành"!`);
+}
+
+function updateWarrantyStatus(id, nextStatus) {
+  const list = DB.g('warranty_claims') || [];
+  const item = list.find(x => String(x.id) === String(id));
+  if (!item) return;
+  const ketQua = prompt(`Cập nhật kết quả sửa chữa / đổi mới cho phiếu ${item.maPhieu || id}:`, item.ketQua || '');
+  if (ketQua === null) return;
+  const patch = {
+    trangThai: nextStatus,
+    ketQua: ketQua.trim() || item.ketQua || '',
+    ngayHoanin: nextStatus.includes('Đã bàn giao') ? td() : (item.ngayHoanin || '')
+  };
+  DB.upd('warranty_claims', id, patch);
+  rBaoHanh();
+  toast(`✅ Đã chuyển phiếu ${item.maPhieu || id} sang "${nextStatus}"!`);
+}
+
+function promptUpdateIntakeDefect(nhapId) {
+  const list = DB.g('nhap') || [];
+  const item = list.find(x => String(x.id) === String(nhapId));
+  if (!item) {
+    toast('⚠️ Không tìm thấy lô nhập kho này!', 'err');
+    return;
+  }
+  const slLoiStr = prompt(
+    `🛠️ CẬP NHẬT HÀNG LỖI KHI NHẬN — Lô: ${item.ten} (Tổng SL nhập: ${item.sl})\n\nNhập số lượng bị lỗi / hỏng (Nhập 0 nếu đã đổi trả xong 100%):`,
+    String(item.slLoi || 0)
+  );
+  if (slLoiStr === null) return;
+  const slLoi = Math.max(0, Math.min(Number(item.sl || 0), parseInt(slLoiStr, 10) || 0));
+  let serialLoi = item.serialLoi || '';
+  let ttLoi = 'Không có lỗi';
+  if (slLoi > 0) {
+    const sInput = prompt(
+      `Nhập mã Serial bị lỗi & nguyên nhân lỗi (VD: SN005 - Bể kính / Lỗi BMS):`,
+      serialLoi
+    );
+    if (sInput !== null) serialLoi = sInput.trim();
+    const choice = prompt(
+      `Chọn trạng thái xử lý với Nhà Cung Cấp (Nhập 1, 2 hoặc 3):\n1 = 🔴 Đang giữ kho lỗi (Chờ gửi NCC)\n2 = 🟠 Đã gửi trả NCC / Chờ đổi bù\n3 = 🟢 Đã đổi bảo hành xong (Đã nhập kho tốt)`,
+      item.ttLoi && item.ttLoi.includes('Đã gửi') ? '2' : '1'
+    );
+    if (choice === '2') ttLoi = '🟠 Đã gửi trả NCC / Chờ đổi bù';
+    else if (choice === '3') ttLoi = '🟢 Đã đổi bảo hành xong (Đã nhập kho tốt)';
+    else ttLoi = '🔴 Đang giữ kho lỗi (Chờ gửi NCC)';
+  } else {
+    ttLoi = (item.slLoi > 0) ? '🟢 Đã đổi bảo hành xong (Đã nhập kho tốt)' : 'Không có lỗi';
+  }
+  DB.upd('nhap', nhapId, { slLoi, serialLoi, ttLoi });
+  rNhap();
+  renderTK();
+  if (typeof rBaoHanh === 'function') rBaoHanh();
+  toast(`✅ Đã cập nhật trạng thái hàng lỗi cho "${item.ten}" (${ttLoi})!`);
+}
+
+function rBaoHanh() {
+  const claims = DB.g('warranty_claims') || [];
+  const nhap = DB.g('nhap') || [];
+  const defectBatches = nhap.filter(n => (+(n.slLoi || 0) > 0) || (n.ttLoi && n.ttLoi !== 'Không có lỗi'));
+  const activeDefects = defectBatches.filter(n => !String(n.ttLoi || '').includes('Đã đổi bảo hành xong')).reduce((s, n) => s + (+(n.slLoi || 0)), 0);
+  const openClaims = claims.filter(c => !String(c.trangThai || '').includes('Đã bàn giao')).length;
+  const doneClaims = claims.filter(c => String(c.trangThai || '').includes('Đã bàn giao')).length;
+  const totalFee = claims.reduce((s, c) => s + (+(c.chiPhi || 0)), 0);
+
+  const kpiEl = document.getElementById('bh-kpi-cards');
+  if (kpiEl) {
+    kpiEl.innerHTML = `
+      <div class="stat r"><div class="sl">⚠️ Hàng Lỗi Khi Nhận (Chờ Đổi NCC)</div><div class="sv">${activeDefects}</div><div class="ss">${defectBatches.length} lô nhập có ghi nhận lỗi</div></div>
+      <div class="stat o"><div class="sl">🔧 Đang Xử Lý Bảo Hành (RMA)</div><div class="sv">${openClaims}</div><div class="ss">Phiếu khách hàng đang chờ trả</div></div>
+      <div class="stat g"><div class="sl">🏁 Đã Bảo Hành Hoàn Tất</div><div class="sv">${doneClaims}</div><div class="ss">Tổng ${claims.length} phiếu RMA</div></div>
+      <div class="stat b"><div class="sl">💰 Thu Phí Sửa Chữa Ngoài BH</div><div class="sv">${fmt(totalFee)}</div><div class="ss">Hết hạn BH / Lỗi người dùng</div></div>
+    `;
+  }
+
+  const q = (document.getElementById('bh-filter-q')?.value || '').trim().toLowerCase();
+  const stFilter = document.getElementById('bh-filter-status')?.value || '';
+  const filtered = claims.filter(c => {
+    if (stFilter && c.trangThai !== stFilter) return false;
+    if (!q) return true;
+    return [c.maPhieu, c.kh, c.dt, c.sp, c.serial, c.moTaLoi, c.ketQua].some(v => String(v || '').toLowerCase().includes(q));
+  });
+
+  const tb = document.getElementById('t-baohanh');
+  if (tb) {
+    tb.innerHTML = filtered.length ? filtered.map((c, i) => {
+      const st = c.trangThai || '📥 Mới tiếp nhận';
+      const stBadge = st.includes('Đã bàn giao') ? 'b-gn' : st.includes('Đã sửa xong') ? 'b-bl' : st.includes('Đang sửa') ? 'b-or' : 'b-rd';
+      const photos = String(c.hinhAnhLoi || '').split('|').map(s => s.trim()).filter(Boolean);
+      const photoHtml = photos.length
+        ? photos.map((u, idx) => `<a href="${esc(u)}" target="_blank" class="badge b-bl" style="text-decoration:none;margin-right:3px">🖼️ Ảnh ${idx + 1}</a>`).join('')
+        : '<span style="color:#94a3b8;font-size:11px">—</span>';
+      return `<tr>
+        <td>${i + 1}</td>
+        <td><strong style="color:#0369a1">${esc(c.maPhieu || 'RMA-' + c.id)}</strong></td>
+        <td>${esc(c.ngayNhan || '—')}</td>
+        <td><strong>${esc(c.kh)}</strong><br><span style="font-size:11px;color:#64748b">📞 ${esc(c.dt || '—')}</span></td>
+        <td><strong>${esc(c.sp)}</strong>${c.model ? `<br><span style="font-size:10.5px;color:#64748b">${esc(c.model)}</span>` : ''}</td>
+        <td><code style="font-weight:700;color:#b91c1c">${esc(c.serial || '—')}</code></td>
+        <td><span class="badge ${String(c.hanBaoHanh || '').includes('Còn hạn') ? 'b-gn' : 'b-rd'}">${esc(c.hanBaoHanh || '—')}</span></td>
+        <td style="max-width:200px;white-space:normal;font-size:11.5px">${esc(c.moTaLoi)}</td>
+        <td style="font-size:11.5px">${esc(c.huongXuLy)}</td>
+        <td>${c.serialMayTam ? `<span class="badge b-pu">🔄 ${esc(c.serialMayTam)}</span>` : '—'}</td>
+        <td style="max-width:180px;white-space:normal;font-size:11.5px">${esc(c.ketQua || 'Đang kiểm tra')}</td>
+        <td>${+(c.chiPhi || 0) > 0 ? `<strong style="color:#0284c7">${fmt(c.chiPhi)}</strong>` : '<span class="badge b-gn">Miễn phí (0đ)</span>'}</td>
+        <td>${photoHtml}</td>
+        <td><span class="badge ${stBadge}">${esc(st)}</span></td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-s btn-sm" onclick="updateWarrantyStatus('${c.id}','🔧 Đang sửa / Đã gửi hãng VCM')" title="Chuyển sang Đang sửa">🔧</button>
+          <button class="btn btn-s btn-sm" onclick="updateWarrantyStatus('${c.id}','✅ Đã sửa xong - Chờ trả khách')" title="Đã sửa xong">✅</button>
+          <button class="btn btn-p btn-sm" onclick="updateWarrantyStatus('${c.id}','🏁 Đã bàn giao hoàn tất')" title="Bàn giao hoàn tất">🏁 Trả khách</button>
+          <button class="btn btn-d btn-sm" onclick="delRow('warranty_claims','${c.id}',rBaoHanh)">✕</button>
+        </td>
+      </tr>`;
+    }).join('') : `<tr><td colspan="15"><div class="empty"><div class="ei">🛠️</div><p>Chưa có phiếu bảo hành RMA nào. Khi khách báo hỏng, hãy gõ Serial hoặc SĐT ở khung trên để tiếp nhận!</p></div></td></tr>`;
+  }
+
+  const tbDef = document.getElementById('t-intake-defects');
+  if (tbDef) {
+    tbDef.innerHTML = defectBatches.length ? defectBatches.map((n, i) => {
+      const done = String(n.ttLoi || '').includes('Đã đổi bảo hành xong');
+      const goodQty = Math.max(0, (+n.sl || 0) - (done ? 0 : (+n.slLoi || 0)));
+      return `<tr style="${done ? 'background:#f0fdf4' : 'background:#fff1f2'}">
+        <td>${i + 1}</td>
+        <td>${esc(n.ngay || '—')}</td>
+        <td><strong>${esc(n.ten)}</strong></td>
+        <td>${esc(n.model || '—')}</td>
+        <td>${esc(n.ncc || '—')}</td>
+        <td><strong>${n.sl}</strong></td>
+        <td><span class="badge ${done ? 'b-gn' : 'b-rd'}" style="font-size:12px">⚠️ ${n.slLoi || 0}</span></td>
+        <td><strong style="color:#15803d">${goodQty}</strong></td>
+        <td style="max-width:240px;white-space:normal;font-size:11.5px;color:#be123c;font-weight:600">${esc(n.serialLoi || '—')}</td>
+        <td><span class="badge ${done ? 'b-gn' : String(n.ttLoi || '').includes('Đã gửi') ? 'b-or' : 'b-rd'}">${esc(n.ttLoi || '🔴 Đang giữ kho lỗi')}</span></td>
+        <td>
+          <button class="btn btn-p btn-sm" onclick="promptUpdateIntakeDefect('${n.id}')">🛠️ Cập nhật / Đổi xong</button>
+        </td>
+      </tr>`;
+    }).join('') : `<tr><td colspan="11"><div class="empty"><div class="ei">✅</div><p>Tuyệt vời! Hiện không có lô hàng nhập kho nào bị lỗi cần chờ Nhà cung cấp đổi trả.</p></div></td></tr>`;
+  }
+}
+
+const SOP_GUIDE_SECTIONS = [
+  { stt: '01', module: '🌐 Tổng Quan & Nguyên Tắc SSOT', steps: '1. Mở Web BI tại https://tni-bot.vercel.app/sale\n2. Đăng nhập bằng chọn tài khoản nhân sự hoặc link cá nhân hóa (?staff=TEN)\n3. Mọi thao tác Lưu trên Web BI tự động đẩy thẳng vào Google Sheet "TNI Bán hàng — TNI Sale" (24/24 Sheet liên kết 2 chiều).', notes: 'Không tự ý đổi tên tab hoặc xóa dòng tiêu đề dòng 1 trên Google Sheet. Ghế Giám Sát AUDITOR-SALE-GUIDE trực chiến 24/7.', sheetTab: 'Guide / Tổng Hợp' },
+  { stt: '02', module: '📦 Nhập Hàng & Xử Lý Hàng Lỗi Khi Nhận', steps: '1. Vào tab "📦 Nhập Hàng" -> Điền Tên SP, Model, Serial, Số lượng tổng (SL), Giá gốc 83%, Giá bán.\n2. NẾU PHÁT HIỆN HÀNG LỖI KHI NHẬN: Nhập tổng SL trên phiếu giao hàng vào ô "Số Lượng", nhập số cái hỏng vào ô "⚠️ SL Lỗi Khi Nhận", ghi rõ mã Serial hỏng vào "🔢 Serial Lỗi & Lý Do", chọn trạng thái "🔴 Đang giữ kho lỗi (Chờ gửi NCC)".\n3. Hệ thống tự động khóa số lượng & Serial lỗi, trừ khỏi Tồn Kho Khả Dụng để nhân viên không xuất bán nhầm.\n4. Khi NCC đổi hàng tốt về: Bấm nút "🛠️ Lỗi/Đổi" chuyển trạng thái sang "🟢 Đã đổi bảo hành xong" -> Kho tự động cộng lại Khả Dụng!', notes: 'Tuyệt đối không tự sửa giảm tổng SL nhập làm lệch công nợ 83% với Tổng Công Ty VCM.', sheetTab: 'Nhập Hàng' },
+  { stt: '03', module: '🗄️ Tồn Kho Thực Tế & Phân Quyền Cách Ly (Account Isolation)', steps: '1. Vào tab "🗄️ Tồn Kho Thực Tế" để xem Tồn Kho, Ký Gởi, Tạm Ứng, ⚠️ Hàng Lỗi và Khả Dụng.\n2. Công thức chuẩn: Khả Dụng = Tồn Kho - Ký Gởi - Tạm Ứng - Hàng Lỗi.\n3. Phân quyền cách ly: Admin/Kế toán/Thủ kho thấy toàn bộ kho; Nhân viên kinh doanh chỉ thấy kho cá nhân của mình; Đại lý/Đối tác ký gởi chỉ thấy đúng hàng đang ký gởi tại điểm của họ.', notes: 'Khi Khả Dụng <= 5 hệ thống cảnh báo "Sắp hết", bằng 0 cảnh báo "Hết hàng".', sheetTab: 'Tồn Kho' },
+  { stt: '04', module: '🧑‍💼 Tạm Ứng Hàng Đi Công Trình', steps: '1. Vào tab "🧑‍💼 Tạm Ứng Hàng" -> Chọn Nhân viên nhận, Thiết bị, Số lượng, Mục đích.\n2. Khi nhân viên lắp xong hoặc trả hàng thừa về kho -> Bấm cập nhật trạng thái "Đã hoàn ứng".', notes: 'Hàng đang tạm ứng sẽ tạm trừ khỏi Khả Dụng cho đến khi hoàn ứng hoặc chốt đơn bán.', sheetTab: 'Tạm Ứng' },
+  { stt: '05', module: '🛠️ Hàng Hỏng Bảo Hành Khách Hàng (RMA 4 Bước)', steps: '1. Vào tab "🛠️ Bảo Hành & Hàng Lỗi" -> Gõ mã Serial hoặc SĐT khách hàng vào ô tra cứu tự động để kiểm tra còn hạn hay hết hạn bảo hành.\n2. Điền Mô tả lỗi, chọn Hướng xử lý (Sửa tại chỗ / Đổi mới 1-1 / Cấp máy tạm mượn & gửi hãng VCM) và chụp ảnh hiện trạng lỗi (tự động lưu vào folder Drive 2.12 SALE SOLUTION - BUILDING).\n3. Bấm "💾 Lưu Phiếu Bảo Hành (RMA)".\n4. Cập nhật tiến độ 4 bước trên bảng: 📥 Mới tiếp nhận -> 🔧 Đang sửa / Đã gửi hãng VCM -> ✅ Đã sửa xong - Chờ trả khách -> 🏁 Đã bàn giao hoàn tất.', notes: 'Nếu còn hạn BH (lỗi NSX): Chi phí = 0 MMK. Nếu hết hạn BH hoặc lỗi người dùng (vỡ, vô nước, sét đánh): Nhập phí sửa chữa.', sheetTab: 'Bảo Hành' },
+  { stt: '06', module: '🛒 Bán Hàng & Xuất Kho (1-Click)', steps: '1. Vào tab "🛒 Bán Hàng" -> Chọn Sản phẩm, chọn mã Serial khả dụng, nhập Tên khách, SĐT, Giá bán và Hình thức thanh toán.\n2. Hệ thống tự động tính Giá vốn gốc (83%), Quỹ nộp VCM (17%), Thuế (5%) và Lợi nhuận ròng chi nhánh.', notes: 'Mã Serial đang nằm trong danh sách Hàng Lỗi sẽ tự động ẩn để chống bán nhầm hàng hỏng.', sheetTab: 'Bán Hàng' },
+  { stt: '07', module: '📄 Báo Giá Thiết Bị / UPS & ☀️ Báo Giá Solar', steps: '1. Vào tab "📄 Báo Giá Thiết Bị" hoặc "☀️ Báo Giá Solar" để lập báo giá nhanh cho khách.\n2. Hỗ trợ xuất PDF/In báo giá chuẩn thương hiệu VCM đa ngôn ngữ (VN / EN / MM).', notes: 'Toàn bộ báo giá tự động lưu vào tab "Báo Giá Thiết Bị" và "Báo Giá Solar".', sheetTab: 'Báo Giá Thiết Bị / Báo Giá Solar' },
+  { stt: '08', module: '🚀 Team Thực Thi (HUB) & ⚡ Nghiệm Thu Hiện Trường', steps: '1. Vào "🚀 Team Thực Thi" để giao việc khảo sát/lắp đặt cho kỹ thuật viên.\n2. Sau khi lắp xong, vào "⚡ Nghiệm Thu Hiện Trường" tải ảnh nghiệm thu và ký xác nhận hoàn tất.', notes: 'Ảnh nghiệm thu tự động lưu vào Google Drive "2.12 SALE SOLUTION - BUILDING".', sheetTab: 'Thực Thi / Nghiệm Thu' },
+  { stt: '09', module: '🏪 Đại Lý & 📋 Hàng Ký Gởi', steps: '1. Quản lý danh sách Đại lý phân phối tại "🏪 Đại Lý".\n2. Khi xuất hàng gửi bán tại Đại lý/Trưởng thôn, ghi nhận tại "📋 Hàng Ký Gởi". Khi đại lý bán được hàng, bấm chốt thu tiền.', notes: 'Đối tác đăng nhập bằng tên của mình chỉ nhìn thấy đúng số lượng ký gởi của chính họ.', sheetTab: 'Đại Lý / Ký Gởi' },
+  { stt: '10', module: '👥 CRM & 📝 Khảo Sát Thực Địa (Tự Bóc Tách GPS EXIF + Ảnh)', steps: '1. Nhân viên hiện trường vào "📝 Khảo Sát Của Tôi" hoặc "👥 CRM & Khảo Sát".\n2. Bấm "📷 Chọn / Chụp Hình Khảo Sát": Hệ thống tự động bóc tách tọa độ GPS (EXIF) từ ảnh hoặc GPS thiết bị để điền vào 2 cột Vĩ độ (Lat) và Kinh độ (Long).\n3. Khi bấm Lưu, toàn bộ ảnh tự động tải vào folder Google Drive "2.12 SALE SOLUTION - BUILDING" và gom thành 1 cột Link Hình Ảnh duy nhất trên Sheet.', notes: 'Bấm vào tọa độ Lat/Long hoặc nút Xem Ảnh trên bảng để mở Google Maps và hình ảnh thực địa ngay lập tức.', sheetTab: 'Khảo Sát / CRM' },
+  { stt: '11', module: '💰 Tài Chính, Lợi Nhuận & 📑 Tờ Trình Quyết Toán VCM (83% - 17%)', steps: '1. Dành riêng cho Ban Giám Đốc (Admin) và Kế Toán Trưởng (Finance).\n2. Theo dõi chính xác Doanh thu, Giá vốn 83% hoàn trả VCM, Quỹ 17% nộp Tổng Công Ty, Chi phí vận hành và Lợi nhuận ròng chi nhánh.', notes: 'Các vai trò Sales, Kỹ thuật, Thủ kho, Đại lý bị khóa tuyệt đối (Zero Cost Leakage).', sheetTab: 'Chi Phí / Nộp Tiền / Đợt Nộp VCM' },
+  { stt: '12', module: '🛡️ Phân Quyền Vai Trò (RBAC) & 🪑 Ghế Giám Sát AUDITOR-SALE-GUIDE', steps: '1. Admin vào "🛡️ Phân Quyền Vai Trò" để bật/tắt quyền truy cập từng tab cho 6 nhóm chức danh và gán vai trò cho từng email nhân sự.\n2. Ghế Giám Sát AUDITOR-SALE-GUIDE tự động kiểm tra ở mỗi nhịp tàu 5 phút để đảm bảo tab "Guide" luôn online 24/7 ở vị trí đầu bảng tính.\n3. QUY TẮC BẮT BUỘC: Bất kỳ khi nào hệ thống có thay đổi/nâng cấp tính năng, hướng dẫn tại tab "Guide" và mục "📖 Hướng Dẫn Sử Dụng" phải được cập nhật ngay lập tức!', notes: 'Nhân sự quên thao tác có thể mở tab "Guide" trên Sheet hoặc bấm nút "📖 Guide (SOP)" trên Web BI bất cứ lúc nào.', sheetTab: 'Guide / Nhân Sự / Phân Quyền' }
+];
+
+function rGuide() {
+  const q = (document.getElementById('guide-search-q')?.value || '').trim().toLowerCase();
+  const tb = document.getElementById('t-guide-table');
+  if (!tb) return;
+  const rows = SOP_GUIDE_SECTIONS.filter(r => !q || [r.stt, r.module, r.steps, r.notes, r.sheetTab].some(v => String(v || '').toLowerCase().includes(q)));
+  tb.innerHTML = rows.map(r => `
+    <tr>
+      <td style="text-align:center;font-weight:800;color:#1e3a8a;font-size:13px">${esc(r.stt)}</td>
+      <td style="font-weight:800;color:#0f172a;font-size:12.5px;white-space:normal">${esc(r.module)}</td>
+      <td style="white-space:pre-line;font-size:12px;line-height:1.6;color:#1e293b">${esc(r.steps)}</td>
+      <td style="white-space:pre-line;font-size:11.5px;line-height:1.5;color:#b45309;background:#fffbeb;font-weight:600">${esc(r.notes)}</td>
+      <td style="text-align:center"><span class="badge b-bl" style="font-size:11px">${esc(r.sheetTab)}</span></td>
+    </tr>
+  `).join('');
+}
+
+async function syncSaleGuideNow() {
+  toast('🔄 Đang kích hoạt Ghế Giám Sát AUDITOR-SALE-GUIDE đồng bộ Sheet "Guide"...');
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'sale_guide_sync', forceRebuild: true })
+    }).then(r => r.json());
+    if (res && res.ok) {
+      const badge = document.getElementById('guide-sentinel-badge');
+      if (badge) badge.textContent = `🪑 AUDITOR-SALE-GUIDE: ONLINE (${res.version || 'v2026.11.05'})`;
+      toast(`✅ Đã đồng bộ Sheet "Guide" (${res.rowCount || 12} mục SOP) lên Google Sheet thành công!`);
+    } else {
+      toast('⚠️ Không thể đồng bộ Sheet Guide: ' + ((res && res.error) || 'Lỗi kết nối'), 'err');
+    }
+  } catch (e) {
+    toast('⚠️ Lỗi kết nối khi đồng bộ Sheet Guide!', 'err');
+  }
+}
 
 const DEFAULT_STAFF_USERS = [
   { id: 'adm_001', name: 'Hà Đức Phong', email: 'phonghdpxd@gmail.com', role: 'admin', title: 'Master Admin / Owner', phone: '' },
