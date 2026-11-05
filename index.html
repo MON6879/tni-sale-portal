@@ -1863,7 +1863,7 @@ document.addEventListener('DOMContentLoaded', initGoogleAuthGate);
         <div style="margin-top:1.2rem;">
           <div style="font-size:0.82rem; font-weight:800; color:#F8FAFC; margin-bottom:0.75rem; display:flex; align-items:center; justify-content:space-between;">
             <span style="display:flex; align-items:center; gap:0.4rem;">
-              <i class="fa-solid fa-chair"></i> BẢNG TRẠNG THÁI 11 GHẾ GIÁM SÁT HỆ THỐNG &amp; SENTINEL (LIVE STATUS):
+              <i class="fa-solid fa-chair"></i> BẢNG TRẠNG THÁI 12 GHẾ GIÁM SÁT HỆ THỐNG &amp; SENTINEL (LIVE STATUS):
             </span>
             <span style="font-size:0.72rem; color:#38BDF8; font-weight:600;">
               Chế độ: Bọc Thép Khép Kín · Không Trùng Lặp · Chạy Tuần Tự
@@ -1871,6 +1871,33 @@ document.addEventListener('DOMContentLoaded', initGoogleAuthGate);
           </div>
           
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:0.85rem;" id="supervisory-seats-grid">
+            
+            <!-- Ghế 0: BI-WEEKLY-MONTHLY-SYNC (Ghế Giám Sát & Đồng Bộ Báo Cáo BI Tuần / Tháng) -->
+            <div class="seat-card" id="seat-card-bi-weekly-monthly" style="background:linear-gradient(135deg, rgba(30,41,59,0.75), rgba(15,23,42,0.85)); border:1px solid rgba(56,189,248,0.55); border-radius:12px; padding:0.9rem; box-shadow:0 4px 16px rgba(56,189,248,0.12);">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                  <span style="font-size:1.15rem; color:#38BDF8;">📅</span>
+                  <div>
+                    <strong style="color:#F8FAFC; font-size:0.84rem;">BI-WEEKLY-MONTHLY (Báo Cáo Tuần &amp; Tháng)</strong>
+                    <div style="font-size:0.7rem; color:#38BDF8; font-weight:700;">Đồng Bộ 2 Tabs Sheet + AI Offline 12 Ghế</div>
+                  </div>
+                </div>
+                <span class="seat-status-pill" id="seat-status-bi-weekly-monthly" style="background:rgba(16,185,129,0.22); color:#34D399; font-weight:800; font-size:0.68rem; padding:0.2rem 0.5rem; border-radius:6px; border:1px solid rgba(16,185,129,0.45);">
+                  ✅ 12/12 Ghế Đã Cập Nhật (63 Dòng/Tab)
+                </span>
+              </div>
+              <div style="font-size:0.72rem; color:#CBD5E1; margin-top:0.45rem; line-height:1.45;">
+                Đã tổng hợp đủ 4 tầng (Tỉnh &rarr; BOG Giao 9 Phòng Ban &rarr; Phòng Ban Giao 4 Đội &rarr; Nhớt/Nước Mát/Dầu/Cáp/Điểm Danh) vào 2 tab riêng trên Sheet Master:
+              </div>
+              <div style="display:flex; gap:0.45rem; flex-wrap:wrap; margin-top:0.55rem;">
+                <a href="https://docs.google.com/spreadsheets/d/1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8/edit#gid=1672190049" target="_blank" style="text-decoration:none; background:rgba(56,189,248,0.18); border:1px solid rgba(56,189,248,0.45); color:#38BDF8; font-size:0.68rem; font-weight:800; padding:0.25rem 0.55rem; border-radius:6px; display:inline-flex; align-items:center; gap:0.3rem;">
+                  <i class="fa-solid fa-table"></i> Mở Tab Weekly Report (B2: 02/11/2026)
+                </a>
+                <a href="https://docs.google.com/spreadsheets/d/1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8/edit#gid=688071172" target="_blank" style="text-decoration:none; background:rgba(245,158,11,0.18); border:1px solid rgba(245,158,11,0.45); color:#FBBF24; font-size:0.68rem; font-weight:800; padding:0.25rem 0.55rem; border-radius:6px; display:inline-flex; align-items:center; gap:0.3rem;">
+                  <i class="fa-solid fa-calendar-days"></i> Mở Tab Monthly Report (B2: 21/10/2026)
+                </a>
+              </div>
+            </div>
             
                         <!-- Ghế 12: Giám Sát Cẩm Nang & Đồng Bộ Slide Gốc -->
             <div class="seat-card" style="background:rgba(30,41,59,0.55); border:1px solid rgba(245,158,11,0.35); border-radius:12px; padding:0.9rem;">
