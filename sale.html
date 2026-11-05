@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -455,12 +455,19 @@ function googleSignOut() {
 
 function updateTopbarUserProfile(u) {
   const p = document.getElementById('user-profile-badge');
-  if (!p || !u) return;
+  if (!p) return;
+  const userObj = u || getAuthedGoogleUser();
+  if (!userObj) return;
+  const activeRole = (typeof currentAppRole !== 'undefined' && currentAppRole) ? currentAppRole : (userObj.role || 'admin');
+  const isPreviewingOtherRole = (userObj.role === 'admin' || userObj.email === MASTER_ADMIN_EMAIL) && activeRole !== 'admin';
+  const roleBadgeClass = activeRole === 'admin' ? 'bk-rd' : activeRole === 'finance' ? 'bk-bl' : 'bk-gn';
+  const roleLabel = isPreviewingOtherRole ? (`VIEW: ${activeRole.toUpperCase()}`) : activeRole.toUpperCase();
   p.innerHTML = `
     <div style="display:flex;align-items:center;gap:7px;background:#f1f5f9;border:1px solid #cbd5e1;padding:3px 10px;border-radius:20px;font-size:12px">
       <span style="font-size:14px">👤</span>
-      <span style="font-weight:700;color:#1e293b">${u.name}</span>
-      <span class="bk ${u.role === 'admin' ? 'bk-rd' : u.role === 'finance' ? 'bk-bl' : 'bk-gn'}" style="font-size:10px">${u.role.toUpperCase()}</span>
+      <span style="font-weight:700;color:#1e293b">${userObj.name}</span>
+      <span class="bk ${roleBadgeClass}" style="font-size:10px;cursor:pointer" onclick="go('rbac')" title="Bấm để mở Bảng Phân Quyền Vai Trò">${roleLabel}</span>
+      ${isPreviewingOtherRole ? `<button onclick="changeAppRole('admin', null, true)" title="Quay về quyền Admin gốc" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:10px;font-size:10px;font-weight:800;padding:1px 6px;cursor:pointer">↩ Admin</button>` : ''}
       <button onclick="googleSignOut()" title="Đăng xuất" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:12px;padding:0 2px;margin-left:2px">✕</button>
     </div>
   `;
@@ -2997,6 +3004,26 @@ const DB = {
           const cleanData = DB._filterTombstones(key, serverRows);
           DB._setLocal(key, cleanData);
         });
+        // Đồng bộ phân quyền RBAC 2 chiều từ Cloud
+        if (Date.now() - (window._lastRbacSaveTs || 0) > 6000) {
+          if (json.customRoles && Array.isArray(json.customRoles) && json.customRoles.length > 0) {
+            localStorage.setItem('tni_custom_roles', JSON.stringify(json.customRoles));
+          }
+          if (json.rbacOverrides && typeof json.rbacOverrides === 'object' && !Array.isArray(json.rbacOverrides)) {
+            localStorage.setItem('tni_rbac_overrides', JSON.stringify(json.rbacOverrides));
+            if (typeof updateSidebarAccessState === 'function' && typeof currentAppRole !== 'undefined') {
+              updateSidebarAccessState(currentAppRole);
+            }
+            if (document.getElementById('s-rbac')?.classList.contains('on') && typeof renderRBACMatrix === 'function') {
+              renderRBACMatrix();
+            }
+          } else if (json.rbacOverrides === null) {
+            const localOvr = (typeof getRBACOverrides === 'function') ? getRBACOverrides() : {};
+            if (Object.keys(localOvr).length > 0 && typeof saveRBACOverrides === 'function') {
+              saveRBACOverrides(localOvr, true);
+            }
+          }
+        }
         _setSyncBadge('ok');
         DB._refreshAllViews();
         if (isManual) al('✅ Đã đồng bộ 100% dữ liệu trực tiếp từ Google Sheet!', 'ok');
@@ -10404,21 +10431,67 @@ async function saveNewPin_(newPin) {
 }
 
 function getRBACOverrides() {
-  return {};
+  try {
+    const raw = localStorage.getItem('tni_rbac_overrides') || localStorage.getItem('u_rbac_overrides');
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : {};
+  } catch(e) {
+    return {};
+  }
 }
 
-function saveRBACOverrides(obj) {
-  // Không cần ghi đè
+function saveRBACOverrides(obj, skipCloud) {
+  try {
+    const cleanObj = (obj && typeof obj === 'object' && !Array.isArray(obj)) ? obj : {};
+    localStorage.setItem('tni_rbac_overrides', JSON.stringify(cleanObj));
+    localStorage.setItem('u_rbac_overrides', JSON.stringify(cleanObj));
+    window._lastRbacSaveTs = Date.now();
+    if (!skipCloud) {
+      const curEmail = localStorage.getItem(GAUTH_EMAIL_KEY) || 'phonghdpxd@gmail.com';
+      const customRoles = (typeof getCustomRoles === 'function') ? getCustomRoles() : [];
+      fetch(GAS_SALE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'sale_rbac_save', email: curEmail, overrides: cleanObj, customRoles: customRoles })
+      }).catch(err => console.warn('[RBAC] Cloud sync error:', err));
+    }
+  } catch(e) {
+    console.error('Failed to save rbac overrides', e);
+  }
 }
 
-// 🌐 ĐÃ CHIA SẺ QUA GMAIL: Mở toàn quyền 100% tất cả các phân hệ, không giới hạn vai trò
+function _mergeCustomRolesIntoRuntime_() {
+  if (typeof getCustomRoles !== 'function') return;
+  const custom = getCustomRoles();
+  custom.forEach(cr => {
+    if (cr && cr.id) {
+      if (!ROLES[cr.id]) ROLES[cr.id] = cr;
+      if (!ROLE_NAMES_BILINGUAL[cr.id]) {
+        ROLE_NAMES_BILINGUAL[cr.id] = { vi: cr.name, en: cr.name, shortVi: cr.shortName || cr.name, shortEn: cr.shortName || cr.name };
+      }
+    }
+  });
+}
+
 function isTabAllowedForRole(tabId, roleId) {
-  return true;
+  _mergeCustomRolesIntoRuntime_();
+  const rk = (roleId && ROLES[roleId]) ? roleId : (currentAppRole || 'admin');
+  const overrides = getRBACOverrides();
+  const overrideKey = `${rk}__${tabId}`;
+  if (overrideKey in overrides) {
+    return !!overrides[overrideKey];
+  }
+  const r = ROLES[rk] || ROLES.admin;
+  return Array.isArray(r.allowedTabs) ? r.allowedTabs.includes(tabId) : false;
 }
 
 function changeAppRole(newRole, staffName, bypassPin) {
-  currentAppRole = 'admin';
-  localStorage.setItem('tni_sale_role', 'admin');
+  _mergeCustomRolesIntoRuntime_();
+  if (!newRole || !ROLES[newRole]) newRole = 'admin';
+
+  currentAppRole = newRole;
+  localStorage.setItem('tni_sale_role', newRole);
 
   if (staffName) {
     currentStaffUser = staffName;
@@ -10426,16 +10499,54 @@ function changeAppRole(newRole, staffName, bypassPin) {
   }
 
   const sel = document.getElementById('app-role-select');
-  if (sel) sel.value = 'admin';
+  if (sel) sel.value = newRole;
 
   const pill = document.getElementById('role-badge-pill');
   if (pill) {
-    pill.textContent = 'Toàn Quyền';
-    pill.style.background = '#fef2f2'; pill.style.color = '#dc2626';
+    const roleMeta = ROLES[newRole] || ROLES.admin;
+    pill.textContent = roleMeta.shortName || newRole;
+    if (newRole === 'admin') {
+      pill.style.background = '#fef2f2'; pill.style.color = '#dc2626';
+    } else if (newRole === 'finance') {
+      pill.style.background = '#e0f2fe'; pill.style.color = '#0284c7';
+    } else if (newRole === 'sales' || newRole === 'tech') {
+      pill.style.background = '#dcfce7'; pill.style.color = '#15803d';
+    } else if (newRole === 'warehouse') {
+      pill.style.background = '#fef3c7'; pill.style.color = '#d97706';
+    } else {
+      pill.style.background = '#f3e8ff'; pill.style.color = '#9333ea';
+    }
+  }
+
+  // Highlight active role quick card in RBAC header
+  document.querySelectorAll('.role-quick-card').forEach(c => {
+    c.style.borderColor = 'rgba(255,255,255,0.2)';
+    c.style.background = 'rgba(255,255,255,0.12)';
+  });
+  const activeQc = document.getElementById('rqc-' + newRole);
+  if (activeQc) {
+    activeQc.style.borderColor = '#fff';
+    activeQc.style.background = 'rgba(255,255,255,0.28)';
+  }
+
+  // Update topbar user profile badge
+  if (typeof updateTopbarUserProfile === 'function') {
+    updateTopbarUserProfile(getAuthedGoogleUser());
   }
 
   // Update Sidebar items & section categories
-  updateSidebarAccessState('admin');
+  updateSidebarAccessState(newRole);
+
+  // If currently on a blocked tab (except rbac when Admin is configuring), redirect to access denied
+  const curSec = document.querySelector('.sec.on');
+  if (curSec) {
+    const secId = curSec.id.replace(/^s-/, '');
+    const authedUser = (typeof getAuthedGoogleUser === 'function') ? getAuthedGoogleUser() : null;
+    const isMasterAdmin = authedUser && (authedUser.role === 'admin' || authedUser.email === MASTER_ADMIN_EMAIL);
+    if (secId !== 'access-denied' && !(secId === 'rbac' && isMasterAdmin) && !isTabAllowedForRole(secId, newRole)) {
+      showAccessDenied(secId, newRole);
+    }
+  }
 
   // Re-render RBAC matrix if active
   if (document.getElementById('s-rbac')?.classList.contains('on')) {
@@ -10444,29 +10555,57 @@ function changeAppRole(newRole, staffName, bypassPin) {
 }
 
 function updateSidebarAccessState(roleId) {
-  // 1. Hiển thị 100% tất cả các liên kết menu (Đã chia sẻ qua Gmail, không ẩn mục nào)
+  _mergeCustomRolesIntoRuntime_();
+  const rk = roleId || currentAppRole || 'admin';
+  const authedUser = (typeof getAuthedGoogleUser === 'function') ? getAuthedGoogleUser() : null;
+  const isMasterAdmin = authedUser && (authedUser.role === 'admin' || authedUser.email === MASTER_ADMIN_EMAIL);
+
+  // 1. Ẩn hoặc hiện từng liên kết menu theo đúng ma trận phân quyền RBAC
   document.querySelectorAll('#sb nav a[data-nav-a]').forEach(a => {
+    const tabId = a.getAttribute('data-nav-a');
+    // Master Admin luôn giữ được lối vào tab RBAC để không bị tự khóa khi đang test vai trò khác
+    const isAllowed = (tabId === 'rbac' && isMasterAdmin) ? true : isTabAllowedForRole(tabId, rk);
+
     const oldLock = a.querySelector('.nav-lock-badge');
     if (oldLock) oldLock.remove();
-    a.style.display = '';
-    a.style.opacity = '1.0';
-    a.title = '';
+
+    if (!isAllowed) {
+      a.style.display = 'none';
+      a.title = '';
+    } else {
+      a.style.display = '';
+      a.style.opacity = '1.0';
+      a.title = '';
+    }
   });
 
-  // 2. Hiển thị 100% tất cả các tiêu đề phân mục (lbl)
+  // 2. Ẩn tiêu đề phân mục (lbl) nếu toàn bộ liên kết con bên dưới mục đó đều bị ẩn
   document.querySelectorAll('#sb nav .lbl[data-nav-lbl]').forEach(lbl => {
-    lbl.style.display = '';
+    let nextEl = lbl.nextElementSibling;
+    let hasVisibleChild = false;
+    while (nextEl && !nextEl.classList.contains('lbl')) {
+      if (nextEl.tagName === 'A' && nextEl.style.display !== 'none') {
+        hasVisibleChild = true;
+        break;
+      }
+      nextEl = nextEl.nextElementSibling;
+    }
+    lbl.style.display = hasVisibleChild ? '' : 'none';
   });
 }
 
 function showAccessDenied(targetId, roleId) {
+  _mergeCustomRolesIntoRuntime_();
   const roleMeta = ROLES[roleId] || ROLES.admin;
   const modMeta = SYSTEM_MODULES.find(m => m.id === targetId) || { name: targetId, cat: 'Hệ Thống' };
 
-  // Determine allowed roles for this module
+  // Determine allowed roles for this module (respecting live overrides)
   const allowedRoleNames = [];
-  Object.values(ROLES).forEach(r => {
-    if (r.allowedTabs.includes(targetId)) allowedRoleNames.push(r.icon + ' ' + r.shortName);
+  Object.keys(ROLES).forEach(rk => {
+    if (isTabAllowedForRole(targetId, rk)) {
+      const r = ROLES[rk];
+      allowedRoleNames.push(r.icon + ' ' + r.shortName);
+    }
   });
 
   const nameEl = document.getElementById('denied-target-name');
@@ -10542,6 +10681,7 @@ function promptAddNewJobTitle() {
 
   customList.push(newRoleObj);
   localStorage.setItem('tni_custom_roles', JSON.stringify(customList));
+  saveRBACOverrides(getRBACOverrides());
 
   // Cập nhật ROLES runtime
   ROLES[slug] = newRoleObj;
@@ -11065,6 +11205,7 @@ function deleteStaffUser(userId, userName) {
 
 // 🔄 Toggle thủ công Được Xem / Bị Khóa trong bảng RBAC
 function toggleRBACPermission(roleKey, moduleId) {
+  _mergeCustomRolesIntoRuntime_();
   // 🔒 Require admin PIN unlock before changing any permission
   if (!adminSessionUnlocked) {
     const isVi = currentLang === 'vi';
@@ -11085,10 +11226,7 @@ function toggleRBACPermission(roleKey, moduleId) {
   }
   saveRBACOverrides(overrides);
   renderRBACMatrix();
-
-  if (roleKey === currentAppRole) {
-    updateSidebarAccessState(roleKey);
-  }
+  updateSidebarAccessState(currentAppRole);
 
   const roleMeta = ROLES[roleKey] || ROLES.admin;
   const isVi = currentLang === 'vi';
@@ -11464,12 +11602,12 @@ function exportRBACMatrixCSV() {
     `"${m.name.replace(/"/g, '""')}"`,
     `"${m.cat}"`,
     `"${m.secLevel}"`,
-    ROLES.admin.allowedTabs.includes(m.id) ? 'YES' : 'NO',
-    ROLES.finance.allowedTabs.includes(m.id) ? 'YES' : 'NO',
-    ROLES.sales.allowedTabs.includes(m.id) ? 'YES' : 'NO',
-    ROLES.tech.allowedTabs.includes(m.id) ? 'YES' : 'NO',
-    ROLES.warehouse.allowedTabs.includes(m.id) ? 'YES' : 'NO',
-    ROLES.dealer.allowedTabs.includes(m.id) ? 'YES' : 'NO',
+    isTabAllowedForRole(m.id, 'admin') ? 'YES' : 'NO',
+    isTabAllowedForRole(m.id, 'finance') ? 'YES' : 'NO',
+    isTabAllowedForRole(m.id, 'sales') ? 'YES' : 'NO',
+    isTabAllowedForRole(m.id, 'tech') ? 'YES' : 'NO',
+    isTabAllowedForRole(m.id, 'warehouse') ? 'YES' : 'NO',
+    isTabAllowedForRole(m.id, 'dealer') ? 'YES' : 'NO',
     `"${m.desc.replace(/"/g, '""')}"`
   ]);
 
@@ -11484,11 +11622,39 @@ function exportRBACMatrixCSV() {
 // 🌐 RBAC INITIALIZATION HOOK ON LOAD
 // ═══════════════════════════════════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => {
-  // 🌐 ĐÃ CHIA SẺ QUA GMAIL: Mặc định toàn quyền 100% tất cả các phân hệ cho mọi người
-  currentAppRole = 'admin';
-  localStorage.setItem('tni_sale_role', 'admin');
-  changeAppRole('admin', currentStaffUser, true);
-  updateSidebarAccessState('admin');
+  _mergeCustomRolesIntoRuntime_();
+  const params = new URLSearchParams(window.location.search);
+  const paramRole = params.get('role');
+  const paramStaff = params.get('staff') || params.get('user') || params.get('email');
+
+  let resolvedRole = paramRole;
+  let resolvedStaff = paramStaff || '';
+
+  if (resolvedStaff) {
+    const list = DB.g('staff_directory') || DEFAULT_STAFF_USERS;
+    const found = list.find(u =>
+      (u.name && u.name.toLowerCase() === resolvedStaff.toLowerCase()) ||
+      (u.email && u.email.toLowerCase() === resolvedStaff.toLowerCase()) ||
+      (u.id && u.id.toLowerCase() === resolvedStaff.toLowerCase())
+    );
+    if (found) {
+      resolvedRole = resolvedRole || found.role;
+      resolvedStaff = found.name;
+    }
+  }
+
+  if (!resolvedRole || !ROLES[resolvedRole]) {
+    const authedUser = (typeof getAuthedGoogleUser === 'function') ? getAuthedGoogleUser() : null;
+    if (authedUser && authedUser.role && ROLES[authedUser.role]) {
+      resolvedRole = authedUser.role;
+      resolvedStaff = resolvedStaff || authedUser.name || '';
+    } else {
+      const savedRole = localStorage.getItem('tni_sale_role');
+      resolvedRole = (savedRole && ROLES[savedRole]) ? savedRole : 'admin';
+    }
+  }
+
+  changeAppRole(resolvedRole, resolvedStaff || currentStaffUser, true);
 
   // Populate staff selects and render matrix
   setTimeout(() => {
