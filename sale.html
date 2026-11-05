@@ -2952,7 +2952,7 @@ function copyTelegramReportTemplate(gName, gId, cat) {
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════════════════ -->
-<!-- 📖 HƯỚNG DẪN SỬ DỤNG TOÀN HỆ THỐNG (SHEET GUIDE — GHẾ AUDITOR-SALE-GUIDE) -->
+<!-- 📖 HƯỚNG DẪN SỬ DỤNG TOÀN HỆ THỐNG 3 NGÔN NGỮ (VN / EN / MM — AUDITOR-SALE-GUIDE) -->
 <!-- ══════════════════════════════════════════════════════════════════════════ -->
 <div class="sec" id="s-guide">
   <div style="background:linear-gradient(135deg,#0f172a,#1e3a8a);color:#fff;border-radius:12px;padding:18px 22px;margin-bottom:16px;box-shadow:0 4px 12px rgba(15,23,42,0.2)">
@@ -2961,16 +2961,16 @@ function copyTelegramReportTemplate(gName, gId, cat) {
         <span style="font-size:32px">📖</span>
         <div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <h2 style="margin:0;font-size:18px;font-weight:900">CẨM NANG HƯỚNG DẪN SỬ DỤNG CHUẨN CHUYÊN GIA (SOP GUIDE)</h2>
-            <span id="guide-sentinel-badge" style="background:#16a34a;color:#fff;font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px">🛡️ Ghế AUDITOR-SALE-GUIDE: ONLINE 24/7</span>
+            <h2 id="guide-main-title" style="margin:0;font-size:18px;font-weight:900">SỔ TAY HƯỚNG DẪN SỬ DỤNG 3 NGÔN NGỮ (VN • EN • MM)</h2>
+            <span id="guide-sentinel-badge" style="background:#16a34a;color:#fff;font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px">🛡️ AUDITOR-SALE-GUIDE: ONLINE 24/7 (3 LANG)</span>
           </div>
-          <div style="font-size:12.5px;opacity:0.9;margin-top:4px">
-            Đồng bộ trực tiếp 2 chiều với tab <b>[Guide]</b> trên Google Sheet <b>TNI Bán hàng — TNI Sale</b>. Khi nhân sự quên thao tác có thể tra cứu ngay tại đây hoặc trên Sheet.
+          <div id="guide-main-sub" style="font-size:12.5px;opacity:0.92;margin-top:4px">
+            🇻🇳 Tiếng Việt • 🇬🇧 English • 🇲🇲 မြန်မာဘာသာ — Đồng bộ trực tiếp 2 chiều với tab <b>[Guide]</b> trên Google Sheet <b>TNI Bán hàng — TNI Sale</b>.
           </div>
         </div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <a href="https://docs.google.com/spreadsheets/d/1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA/edit" target="_blank" class="btn b-sm" style="background:#38bdf8;color:#0f172a;font-weight:800;text-decoration:none">📊 Mở Sheet [Guide]</a>
+        <a href="https://docs.google.com/spreadsheets/d/1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA/edit" target="_blank" class="btn b-sm" style="background:#38bdf8;color:#0f172a;font-weight:800;text-decoration:none">📊 Mở Sheet [Guide] (3 Ngôn Ngữ)</a>
         <button type="button" class="btn b-sm" onclick="syncSaleGuideNow()" style="background:#fff;color:#1e3a8a;font-weight:800">🔄 Đồng Bộ &amp; Kiểm Tra Guide Ngay</button>
       </div>
     </div>
@@ -2978,8 +2978,16 @@ function copyTelegramReportTemplate(gName, gId, cat) {
 
   <div class="panel">
     <div class="ph" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-      <h3 style="margin:0;font-size:14px">📚 Bảng Quy Trình Thao Tác Chuẩn Từng Bước Cho Từng Phân Hệ (12 Mục Cốt Lõi)</h3>
-      <input id="guide-search-q" placeholder="🔍 Tìm quy trình (VD: hàng lỗi, bảo hành, khảo sát, ký gởi...)" oninput="rGuide()" style="padding:6px 12px;border:1.5px solid #3b82f6;border-radius:8px;font-size:12.5px;width:310px"/>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <h3 style="margin:0;font-size:14px">📚 12 Quy Trình Chuẩn (SOP):</h3>
+        <div id="guide-lang-btns" style="display:inline-flex;gap:6px;background:#f1f5f9;padding:4px;border-radius:8px;border:1px solid #cbd5e1">
+          <button type="button" class="btn b-sm" id="glang-all" onclick="setGuideLang('all')" style="background:#1e3a8a;color:#fff;font-weight:800;padding:4px 10px;font-size:11.5px">🌐 Cả 3 Ngôn Ngữ (VN•EN•MM)</button>
+          <button type="button" class="btn b-sm" id="glang-vi" onclick="setGuideLang('vi')" style="background:#fff;color:#0f172a;font-weight:700;padding:4px 10px;font-size:11.5px">🇻🇳 Tiếng Việt</button>
+          <button type="button" class="btn b-sm" id="glang-en" onclick="setGuideLang('en')" style="background:#fff;color:#0f172a;font-weight:700;padding:4px 10px;font-size:11.5px">🇬🇧 English</button>
+          <button type="button" class="btn b-sm" id="glang-my" onclick="setGuideLang('my')" style="background:#fff;color:#0f172a;font-weight:700;padding:4px 10px;font-size:11.5px">🇲🇲 မြန်မာဘာသာ</button>
+        </div>
+      </div>
+      <input id="guide-search-q" placeholder="🔍 Tìm quy trình / Search / ရှာဖွေရန် (RMA, GPS, 83%...)" oninput="rGuide()" style="padding:6px 12px;border:1.5px solid #3b82f6;border-radius:8px;font-size:12.5px;width:320px"/>
     </div>
     <div class="pb tw" id="t-guide-table"></div>
   </div>
@@ -11982,39 +11990,275 @@ function rBaoHanh() {
   }
 }
 
+let _guideLangMode = 'all';
+
+function setGuideLang(mode) {
+  _guideLangMode = mode || 'all';
+  ['all', 'vi', 'en', 'my'].forEach(k => {
+    const btn = document.getElementById('glang-' + k);
+    if (!btn) return;
+    if (k === _guideLangMode) {
+      btn.style.background = '#1e3a8a';
+      btn.style.color = '#fff';
+      btn.style.fontWeight = '800';
+    } else {
+      btn.style.background = '#fff';
+      btn.style.color = '#0f172a';
+      btn.style.fontWeight = '700';
+    }
+  });
+  rGuide();
+}
+
 const SOP_GUIDE_SECTIONS = [
-  { stt: '01', module: '🌐 Tổng Quan & Nguyên Tắc SSOT', steps: '1. Mở Web BI tại https://tni-bot.vercel.app/sale\n2. Đăng nhập bằng chọn tài khoản nhân sự hoặc link cá nhân hóa (?staff=TEN)\n3. Mọi thao tác Lưu trên Web BI tự động đẩy thẳng vào Google Sheet "TNI Bán hàng — TNI Sale" (24/24 Sheet liên kết 2 chiều).', notes: 'Không tự ý đổi tên tab hoặc xóa dòng tiêu đề dòng 1 trên Google Sheet. Ghế Giám Sát AUDITOR-SALE-GUIDE trực chiến 24/7.', sheetTab: 'Guide / Tổng Hợp' },
-  { stt: '02', module: '📦 Nhập Hàng & Xử Lý Hàng Lỗi Khi Nhận', steps: '1. Vào tab "📦 Nhập Hàng" -> Điền Tên SP, Model, Serial, Số lượng tổng (SL), Giá gốc 83%, Giá bán.\n2. NẾU PHÁT HIỆN HÀNG LỖI KHI NHẬN: Nhập tổng SL trên phiếu giao hàng vào ô "Số Lượng", nhập số cái hỏng vào ô "⚠️ SL Lỗi Khi Nhận", ghi rõ mã Serial hỏng vào "🔢 Serial Lỗi & Lý Do", chọn trạng thái "🔴 Đang giữ kho lỗi (Chờ gửi NCC)".\n3. Hệ thống tự động khóa số lượng & Serial lỗi, trừ khỏi Tồn Kho Khả Dụng để nhân viên không xuất bán nhầm.\n4. Khi NCC đổi hàng tốt về: Bấm nút "🛠️ Lỗi/Đổi" chuyển trạng thái sang "🟢 Đã đổi bảo hành xong" -> Kho tự động cộng lại Khả Dụng!', notes: 'Tuyệt đối không tự sửa giảm tổng SL nhập làm lệch công nợ 83% với Tổng Công Ty VCM.', sheetTab: 'Nhập Hàng' },
-  { stt: '03', module: '🗄️ Tồn Kho Thực Tế & Phân Quyền Cách Ly (Account Isolation)', steps: '1. Vào tab "🗄️ Tồn Kho Thực Tế" để xem Tồn Kho, Ký Gởi, Tạm Ứng, ⚠️ Hàng Lỗi và Khả Dụng.\n2. Công thức chuẩn: Khả Dụng = Tồn Kho - Ký Gởi - Tạm Ứng - Hàng Lỗi.\n3. Phân quyền cách ly: Admin/Kế toán/Thủ kho thấy toàn bộ kho; Nhân viên kinh doanh chỉ thấy kho cá nhân của mình; Đại lý/Đối tác ký gởi chỉ thấy đúng hàng đang ký gởi tại điểm của họ.', notes: 'Khi Khả Dụng <= 5 hệ thống cảnh báo "Sắp hết", bằng 0 cảnh báo "Hết hàng".', sheetTab: 'Tồn Kho' },
-  { stt: '04', module: '🧑‍💼 Tạm Ứng Hàng Đi Công Trình', steps: '1. Vào tab "🧑‍💼 Tạm Ứng Hàng" -> Chọn Nhân viên nhận, Thiết bị, Số lượng, Mục đích.\n2. Khi nhân viên lắp xong hoặc trả hàng thừa về kho -> Bấm cập nhật trạng thái "Đã hoàn ứng".', notes: 'Hàng đang tạm ứng sẽ tạm trừ khỏi Khả Dụng cho đến khi hoàn ứng hoặc chốt đơn bán.', sheetTab: 'Tạm Ứng' },
-  { stt: '05', module: '🛠️ Hàng Hỏng Bảo Hành Khách Hàng (RMA 4 Bước)', steps: '1. Vào tab "🛠️ Bảo Hành & Hàng Lỗi" -> Gõ mã Serial hoặc SĐT khách hàng vào ô tra cứu tự động để kiểm tra còn hạn hay hết hạn bảo hành.\n2. Điền Mô tả lỗi, chọn Hướng xử lý (Sửa tại chỗ / Đổi mới 1-1 / Cấp máy tạm mượn & gửi hãng VCM) và chụp ảnh hiện trạng lỗi (tự động lưu vào folder Drive 2.12 SALE SOLUTION - BUILDING).\n3. Bấm "💾 Lưu Phiếu Bảo Hành (RMA)".\n4. Cập nhật tiến độ 4 bước trên bảng: 📥 Mới tiếp nhận -> 🔧 Đang sửa / Đã gửi hãng VCM -> ✅ Đã sửa xong - Chờ trả khách -> 🏁 Đã bàn giao hoàn tất.', notes: 'Nếu còn hạn BH (lỗi NSX): Chi phí = 0 MMK. Nếu hết hạn BH hoặc lỗi người dùng (vỡ, vô nước, sét đánh): Nhập phí sửa chữa.', sheetTab: 'Bảo Hành' },
-  { stt: '06', module: '🛒 Bán Hàng & Xuất Kho (1-Click)', steps: '1. Vào tab "🛒 Bán Hàng" -> Chọn Sản phẩm, chọn mã Serial khả dụng, nhập Tên khách, SĐT, Giá bán và Hình thức thanh toán.\n2. Hệ thống tự động tính Giá vốn gốc (83%), Quỹ nộp VCM (17%), Thuế (5%) và Lợi nhuận ròng chi nhánh.', notes: 'Mã Serial đang nằm trong danh sách Hàng Lỗi sẽ tự động ẩn để chống bán nhầm hàng hỏng.', sheetTab: 'Bán Hàng' },
-  { stt: '07', module: '📄 Báo Giá Thiết Bị / UPS & ☀️ Báo Giá Solar', steps: '1. Vào tab "📄 Báo Giá Thiết Bị" hoặc "☀️ Báo Giá Solar" để lập báo giá nhanh cho khách.\n2. Hỗ trợ xuất PDF/In báo giá chuẩn thương hiệu VCM đa ngôn ngữ (VN / EN / MM).', notes: 'Toàn bộ báo giá tự động lưu vào tab "Báo Giá Thiết Bị" và "Báo Giá Solar".', sheetTab: 'Báo Giá Thiết Bị / Báo Giá Solar' },
-  { stt: '08', module: '🚀 Team Thực Thi (HUB) & ⚡ Nghiệm Thu Hiện Trường', steps: '1. Vào "🚀 Team Thực Thi" để giao việc khảo sát/lắp đặt cho kỹ thuật viên.\n2. Sau khi lắp xong, vào "⚡ Nghiệm Thu Hiện Trường" tải ảnh nghiệm thu và ký xác nhận hoàn tất.', notes: 'Ảnh nghiệm thu tự động lưu vào Google Drive "2.12 SALE SOLUTION - BUILDING".', sheetTab: 'Thực Thi / Nghiệm Thu' },
-  { stt: '09', module: '🏪 Đại Lý & 📋 Hàng Ký Gởi', steps: '1. Quản lý danh sách Đại lý phân phối tại "🏪 Đại Lý".\n2. Khi xuất hàng gửi bán tại Đại lý/Trưởng thôn, ghi nhận tại "📋 Hàng Ký Gởi". Khi đại lý bán được hàng, bấm chốt thu tiền.', notes: 'Đối tác đăng nhập bằng tên của mình chỉ nhìn thấy đúng số lượng ký gởi của chính họ.', sheetTab: 'Đại Lý / Ký Gởi' },
-  { stt: '10', module: '👥 CRM & 📝 Khảo Sát Thực Địa (Tự Bóc Tách GPS EXIF + Ảnh)', steps: '1. Nhân viên hiện trường vào "📝 Khảo Sát Của Tôi" hoặc "👥 CRM & Khảo Sát".\n2. Bấm "📷 Chọn / Chụp Hình Khảo Sát": Hệ thống tự động bóc tách tọa độ GPS (EXIF) từ ảnh hoặc GPS thiết bị để điền vào 2 cột Vĩ độ (Lat) và Kinh độ (Long).\n3. Khi bấm Lưu, toàn bộ ảnh tự động tải vào folder Google Drive "2.12 SALE SOLUTION - BUILDING" và gom thành 1 cột Link Hình Ảnh duy nhất trên Sheet.', notes: 'Bấm vào tọa độ Lat/Long hoặc nút Xem Ảnh trên bảng để mở Google Maps và hình ảnh thực địa ngay lập tức.', sheetTab: 'Khảo Sát / CRM' },
-  { stt: '11', module: '💰 Tài Chính, Lợi Nhuận & 📑 Tờ Trình Quyết Toán VCM (83% - 17%)', steps: '1. Dành riêng cho Ban Giám Đốc (Admin) và Kế Toán Trưởng (Finance).\n2. Theo dõi chính xác Doanh thu, Giá vốn 83% hoàn trả VCM, Quỹ 17% nộp Tổng Công Ty, Chi phí vận hành và Lợi nhuận ròng chi nhánh.', notes: 'Các vai trò Sales, Kỹ thuật, Thủ kho, Đại lý bị khóa tuyệt đối (Zero Cost Leakage).', sheetTab: 'Chi Phí / Nộp Tiền / Đợt Nộp VCM' },
-  { stt: '12', module: '🛡️ Phân Quyền Vai Trò (RBAC) & 🪑 Ghế Giám Sát AUDITOR-SALE-GUIDE', steps: '1. Admin vào "🛡️ Phân Quyền Vai Trò" để bật/tắt quyền truy cập từng tab cho 6 nhóm chức danh và gán vai trò cho từng email nhân sự.\n2. Ghế Giám Sát AUDITOR-SALE-GUIDE tự động kiểm tra ở mỗi nhịp tàu 5 phút để đảm bảo tab "Guide" luôn online 24/7 ở vị trí đầu bảng tính.\n3. QUY TẮC BẮT BUỘC: Bất kỳ khi nào hệ thống có thay đổi/nâng cấp tính năng, hướng dẫn tại tab "Guide" và mục "📖 Hướng Dẫn Sử Dụng" phải được cập nhật ngay lập tức!', notes: 'Nhân sự quên thao tác có thể mở tab "Guide" trên Sheet hoặc bấm nút "📖 Guide (SOP)" trên Web BI bất cứ lúc nào.', sheetTab: 'Guide / Nhân Sự / Phân Quyền' }
+  {
+    stt: '01',
+    sheetTab: 'Guide / Tổng Hợp',
+    module_vi: '🌐 Tổng Quan & Nguyên Tắc SSOT',
+    module_en: '🌐 Web BI Portal & Real-Time SSOT Sync',
+    module_my: '🌐 Web BI စနစ်နှင့် ဒေတာတိုက်ရိုက်ချိတ်ဆက်မှု (SSOT)',
+    steps_vi: '1. Mở Web BI tại https://tni-bot.vercel.app/sale\n2. Đăng nhập bằng tài khoản nhân sự hoặc link cá nhân hóa (?staff=TEN).\n3. Đổi ngôn ngữ 🇻🇳 VN / 🇬🇧 EN / 🇲🇲 MM ở góc trên bên phải.\n4. Mọi thao tác Lưu trên Web BI tự động đẩy thẳng vào Google Sheet "TNI Bán hàng — TNI Sale" (24/24 Sheet liên kết 2 chiều).',
+    steps_en: '1. Open Web BI at https://tni-bot.vercel.app/sale\n2. Sign in via staff selector or personalized link (?staff=NAME).\n3. Switch language (🇻🇳 VN / 🇬🇧 EN / 🇲🇲 MM) on the top-right bar.\n4. Every saved action syncs 2-way in real time with the 24 linked tabs on Google Sheet "TNI Bán hàng — TNI Sale".',
+    steps_my: '1. https://tni-bot.vercel.app/sale သို့ ဝင်ရောက်ပါ။\n2. ဝန်ထမ်းအကောင့်ရွေးပါ သို့မဟုတ် သီးသန့်လင့်ခ် (?staff=NAME) ဖြင့်ဝင်ပါ။\n3. ညာဘက်အပေါ်ထောင့်တွင် ဘာသာစကား (🇻🇳 VN / 🇬🇧 EN / 🇲🇲 MM) ပြောင်းနိုင်သည်။\n4. Web BI တွင် သိမ်းဆည်းသမျှ ဒေတာအားလုံး Google Sheet ရှိ Sheet ၂၄ ခုနှင့် တိုက်ရိုက်ချိတ်ဆက်ထားသည်။',
+    notes_vi: 'Không tự ý đổi tên tab hoặc xóa dòng tiêu đề dòng 1 trên Google Sheet. Ghế Giám Sát AUDITOR-SALE-GUIDE trực chiến 24/7.',
+    notes_en: 'Never rename sheet tabs or delete Row 1 headers. Sentinel Seat AUDITOR-SALE-GUIDE guards this sheet 24/7.',
+    notes_my: 'Sheet အမည်များနှင့် ပထမဆုံးအတန်း (Row 1) ခေါင်းစဉ်များကို မပြင်ရ/မဖျက်ရပါ။ AUDITOR-SALE-GUIDE မှ ၂၄ နာရီ စောင့်ကြည့်ပေးသည်။'
+  },
+  {
+    stt: '02',
+    sheetTab: 'Nhập Hàng',
+    module_vi: '📦 Nhập Hàng & Xử Lý Hàng Lỗi Khi Nhận',
+    module_en: '📦 Goods Intake & Defective Intake Quarantine',
+    module_my: '📦 ပစ္စည်းအဝင် စာရင်းသွင်းခြင်းနှင့် အပျက်အစီး ဖယ်ထားခြင်း',
+    steps_vi: '1. Vào tab "📦 Nhập Hàng" -> Điền Tên SP, Model, Serial, Số lượng tổng (SL), Giá gốc 83%, Giá bán.\n2. NẾU PHÁT HIỆN HÀNG LỖI KHI NHẬN: Giữ nguyên tổng SL trên phiếu giao, nhập số cái hỏng vào ô "⚠️ SL Lỗi Khi Nhận", ghi rõ mã Serial hỏng vào "🔢 Serial Lỗi & Lý Do", chọn trạng thái "🔴 Đang giữ kho lỗi (Chờ gửi NCC)".\n3. Hệ thống tự động khóa số lượng & Serial lỗi, trừ khỏi Tồn Kho Khả Dụng để nhân viên không xuất bán nhầm.\n4. Khi NCC đổi hàng tốt về: Bấm nút "🛠️ Lỗi/Đổi" chuyển trạng thái sang "🟢 Đã đổi bảo hành xong" -> Kho tự động cộng lại Khả Dụng!',
+    steps_en: '1. Open "📦 Goods Intake" -> Enter Product Name, Model, Serial, Total Qty, 83% Base Cost, Retail/Dealer Prices.\n2. IF DEFECTIVE ON ARRIVAL: Keep total invoiced Qty, enter damaged count in "⚠️ Defective Qty", list faulty Serials in "🔢 Defective Serial & Reason", and select "🔴 Quarantined (Waiting for Supplier)".\n3. System automatically locks defective units & serials, deducting them from Available Stock.\n4. When Supplier replaces with good units: Click "🛠️ Defect/Replace" and set to "🟢 Replacement Completed" -> Available Stock is restored automatically!',
+    steps_my: '1. "📦 Nhập Hàng (ပစ္စည်းအဝင်)" သို့ဝင်ပြီး ပစ္စည်းအမည်၊ မော်ဒယ်၊ Serial၊ စုစုပေါင်းအရေအတွက်၊ မူရင်းဈေး 83% နှင့် ရောင်းဈေးတို့ကို ဖြည့်ပါ။\n2. ပစ္စည်းလက်ခံချိန်တွင် အပျက်ပါလာပါက - စုစုပေါင်းအရေအတွက်ကို မလျှော့ဘဲ "⚠️ SL Lỗi" တွင် အပျက်အရေအတွက်နှင့် Serial အမှတ်ကို မှတ်တမ်းတင်ပါ။\n3. စနစ်မှ အပျက်အရေအတွက်ကို ရောင်းချနိုင်သောလက်ကျန် (Khả Dụng) မှ အလိုအလျောက် နှုတ်ပေးထားမည် (မှားမရောင်းမိစေရန်)။\n4. ကုမ္ပဏီ (NCC) မှ ပစ္စည်းအကောင်း ပြန်လဲပေးသောအခါ "🛠️ Lỗi/Đổi" ကိုနှိပ်ပြီး "🟢 Đã đổi bảo hành xong" သို့ ပြောင်းလိုက်ပါက လက်ကျန်စာရင်းသို့ အလိုအလျောက် ပြန်ပေါင်းပေးမည်။',
+    notes_vi: 'Tuyệt đối không tự sửa giảm tổng SL nhập làm lệch công nợ 83% với Tổng Công Ty VCM.',
+    notes_en: 'Never reduce total invoice Qty; always use Defective Qty so 83% VCM payable stays accurate.',
+    notes_my: 'VCM ရုံးချုပ်နှင့် 83% စာရင်းမလွဲစေရန် စုစုပေါင်းအဝင်အရေအတွက်ကို မလျှော့ရပါ။'
+  },
+  {
+    stt: '03',
+    sheetTab: 'Tồn Kho',
+    module_vi: '🗄️ Tồn Kho Thực Tế & Phân Quyền Cách Ly',
+    module_en: '🗄️ Live Inventory & Account Isolation',
+    module_my: '🗄️ လက်ကျန်ပစ္စည်းစာရင်းနှင့် အကောင့်အလိုက် ခွဲခြားပြသမှု',
+    steps_vi: '1. Vào tab "🗄️ Tồn Kho Thực Tế" để xem Tồn Kho, Ký Gởi, Tạm Ứng, ⚠️ Hàng Lỗi và Khả Dụng.\n2. Công thức chuẩn: Khả Dụng = Tồn Kho - Ký Gởi - Tạm Ứng - Hàng Lỗi.\n3. Phân quyền cách ly: Admin/Kế toán/Thủ kho thấy toàn bộ kho; Nhân viên kinh doanh chỉ thấy kho cá nhân của mình; Đại lý/Đối tác ký gởi chỉ thấy đúng hàng đang ký gởi tại điểm của họ.',
+    steps_en: '1. Open "🗄️ Inventory Management" to view On-Hand, Consignment, Advance, ⚠️ Defective, and Available Stock.\n2. Formula: Available = On-Hand - Consignment - Advance - Defective.\n3. Account Isolation: Admin/Finance/Warehouse see all stock; Sales staff see only their assigned stock; Dealers/Partners see only consignment stock at their location.',
+    steps_my: '1. "🗄️ Tồn Kho Thực Tế" တွင် လက်ကျန်၊ အပ်နှံထားသောပစ္စည်း၊ ယာယီထုတ်ယူ၊ ⚠️ အပျက်အစီး နှင့် ရောင်းချနိုင်သောလက်ကျန် (Khả Dụng) တို့ကို ကြည့်ပါ။\n2. တွက်ချက်ပုံ - Khả Dụng = လက်ကျန် - အပ်နှံပစ္စည်း - ယာယီထုတ်ယူ - အပျက်အစီး။\n3. အကောင့်အလိုက်ခွဲခြားမှု - Admin/စာရင်းကိုင်/ဂိုဒေါင်မှူးသာ အားလုံးမြင်ရပြီး အရောင်းဝန်ထမ်းနှင့် မိတ်ဖက်ဆိုင်များသည် မိမိနှင့်သက်ဆိုင်သော ပစ္စည်းစာရင်းကိုသာ မြင်ရမည်။',
+    notes_vi: 'Khi Khả Dụng <= 5 hệ thống cảnh báo "Sắp hết", bằng 0 cảnh báo "Hết hàng".',
+    notes_en: 'Available <= 5 triggers "Low Stock" warning; 0 triggers "Out of Stock".',
+    notes_my: 'ရောင်းချနိုင်သောလက်ကျန် ၅ ခုအောက်ဆိုလျှင် ပစ္စည်းနည်းနေကြောင်း သတိပေးချက်ပြသမည်။'
+  },
+  {
+    stt: '04',
+    sheetTab: 'Tạm Ứng Hàng / Kiểm Kê',
+    module_vi: '🧑‍💼 Tạm Ứng Hàng & 📊 Kiểm Kê Kho',
+    module_en: '🧑‍💼 Stock Advance & 📊 Inventory Audit',
+    module_my: '🧑‍💼 ပစ္စည်းယာယီထုတ်ယူခြင်းနှင့် 📊 လက်ကျန်စစ်ဆေးခြင်း',
+    steps_vi: '1. Vào tab "🧑‍💼 Tạm Ứng Hàng" -> Chọn Nhân viên nhận (gắn đúng Email), Thiết bị, Số lượng, Mục đích.\n2. Khi nhân viên lắp xong hoặc trả hàng thừa về kho -> Bấm cập nhật trạng thái "Đã hoàn ứng".\n3. Cuối kỳ mở "📊 Kiểm Kê" để đối chiếu Tồn Hệ Thống và Tồn Thực Tế.',
+    steps_en: '1. Open "🧑‍💼 Stock Advance" -> Select receiving Staff (with Email), Item, Qty, Purpose.\n2. Once installed or returned to warehouse -> Click "Returned" to restore stock.\n3. At month-end, open "📊 Inventory Audit" to reconcile System vs. Physical stock.',
+    steps_my: '1. "🧑‍💼 Tạm Ứng Hàng" တွင် ထုတ်ယူသူဝန်ထမ်း (Email အမှန်ဖြင့်)၊ ပစ္စည်း၊ အရေအတွက်နှင့် ရည်ရွယ်ချက် ရွေးချယ်ပါ။\n2. တပ်ဆင်ပြီးစီး သို့မဟုတ် ပစ္စည်းပြန်အပ်လျှင် "Đã hoàn ứng (ပြန်အပ်ပြီး)" ကိုနှိပ်ပါ။\n3. လကုန်တွင် "📊 Kiểm Kê" ၌ စာရင်းရှိလက်ကျန်နှင့် မြေပြင်လက်ကျန် စစ်ဆေးပါ။',
+    notes_vi: 'Hàng đang tạm ứng sẽ tạm trừ khỏi Khả Dụng cho đến khi hoàn ứng.',
+    notes_en: 'Advanced items are deducted from Available Stock until returned.',
+    notes_my: 'ယာယီထုတ်ယူထားသော ပစ္စည်းများကို ပြန်မအပ်မချင်း Khả Dụng မှ ခေတ္တနှုတ်ထားမည်။'
+  },
+  {
+    stt: '05',
+    sheetTab: 'Bảo Hành',
+    module_vi: '🛠️ Hàng Hỏng Bảo Hành Khách Hàng (RMA 4 Bước)',
+    module_en: '🛠️ Customer Warranty & RMA Claims (4 Stages)',
+    module_my: '🛠️ ဝယ်ယူသူ ပစ္စည်းအာမခံနှင့် ပြုပြင်မှု (RMA ၄ ဆင့်)',
+    steps_vi: '1. Vào tab "🛠️ Bảo Hành & Hàng Lỗi" -> Gõ mã Serial hoặc SĐT khách hàng vào ô tra cứu tự động để kiểm tra còn hạn hay hết hạn bảo hành.\n2. Điền Mô tả lỗi, chọn Hướng xử lý (Sửa tại chỗ / Đổi mới 1-1 / Cấp máy tạm mượn & gửi hãng VCM) và chụp ảnh hiện trạng lỗi (tự động lưu vào folder Drive 2.12 SALE SOLUTION - BUILDING).\n3. Bấm "💾 Lưu Phiếu Bảo Hành (RMA)".\n4. Cập nhật tiến độ 4 bước: 📥 Mới tiếp nhận -> 🔧 Đang sửa / Đã gửi hãng VCM -> ✅ Đã sửa xong - Chờ trả khách -> 🏁 Đã bàn giao hoàn tất.',
+    steps_en: '1. Open "🛠️ Warranty & Defective Goods" -> Enter Serial or Customer Phone in Quick Lookup to auto-verify In-Warranty or Expired status.\n2. Enter Fault Description, select Resolution (On-site repair / 1-1 Replacement / Loaner unit & send to VCM), and attach fault photos (auto-saved to Drive 2.12 SALE SOLUTION - BUILDING).\n3. Click "💾 Save RMA Claim".\n4. Update 4-stage progress: 📥 Received -> 🔧 Repairing / Sent to VCM -> ✅ Ready for Customer -> 🏁 Handed Over.',
+    steps_my: '1. "🛠️ Bảo Hành & Hàng Lỗi" သို့ဝင်ပြီး Serial သို့မဟုတ် ဖုန်းနံပါတ် ရိုက်ထည့်ပါက အာမခံသက်တမ်း ကျန်/မကျန် အလိုအလျောက် စစ်ဆေးပေးမည်။\n2. ချို့ယွင်းချက်အကြောင်းရင်း၊ ဖြေရှင်းမည့်နည်းလမ်း (နေရာတွင်ပြင်ခြင်း / 1-1 အသစ်လဲခြင်း / ယာယီစက်ငှားပေးပြီး VCM ရုံးချုပ်သို့ပို့ခြင်း) ရွေးချယ်ပြီး ပျက်စီးနေသောပုံများ တင်ပါ (Drive 2.12 SALE SOLUTION - BUILDING သို့ အလိုအလျောက်သိမ်းမည်)။\n3. "💾 Lưu Phiếu Bảo Hành (RMA)" ကိုနှိပ်ပါ။\n4. အဆင့် ၄ ဆင့်ဖြင့် စောင့်ကြည့်ပါ - 📥 လက်ခံရရှိ -> 🔧 ပြုပြင်နေဆဲ -> ✅ ပြင်ဆင်ပြီး -> 🏁 ပြန်လည်ပေးအပ်ပြီး။',
+    notes_vi: 'Nếu còn hạn BH (lỗi NSX): Chi phí = 0 MMK. Nếu hết hạn BH hoặc lỗi người dùng (vỡ, vô nước, sét đánh): Nhập phí sửa chữa.',
+    notes_en: 'In-warranty (factory defect): Fee = 0 MMK. Out-of-warranty or user damage (water/lightning/drop): Enter repair fee.',
+    notes_my: 'အာမခံကာလအတွင်း (စက်ရုံချို့ယွင်းချက်) အခမဲ့ 0 MMK။ သက်တမ်းကျော် သို့မဟုတ် သုံးစွဲသူကြောင့် ပျက်စီးပါက ပြင်ဆင်စရိတ် ထည့်သွင်းပါ။'
+  },
+  {
+    stt: '06',
+    sheetTab: 'Bán Hàng & Xuất Kho',
+    module_vi: '🛒 Bán Hàng & Xuất Kho (1-Click)',
+    module_en: '🛒 Sales Orders & Dispatch (1-Click)',
+    module_my: '🛒 ပစ္စည်းရောင်းချခြင်းနှင့် ဂိုဒေါင်ထုတ်ပေးခြင်း',
+    steps_vi: '1. Vào tab "🛒 Bán Hàng & Xuất Kho" -> Chọn Sản phẩm, chọn mã Serial khả dụng, nhập Tên khách, SĐT, Giá bán và Hình thức thanh toán.\n2. Đính kèm ảnh xác thực xuất kho -> Bấm Lưu & In phiếu xuất kho.\n3. Hệ thống tự động tính Giá vốn gốc (83%), Quỹ nộp VCM (17%), Thuế (5%) và Lợi nhuận ròng chi nhánh.',
+    steps_en: '1. Open "🛒 Sales & Dispatch" -> Select Product, available Serial, Customer Name, Phone, Price, and Payment Method.\n2. Attach dispatch verification photo -> Click Save & Print dispatch slip.\n3. System auto-calculates Base Cost (83%), VCM Quota (17%), Tax (5%), and Net Branch Profit.',
+    steps_my: '1. "🛒 Bán Hàng & Xuất Kho" သို့ဝင်ပြီး ပစ္စည်း၊ ရောင်းချနိုင်သော Serial၊ ဝယ်ယူသူအမည်၊ ဖုန်းနံပါတ်၊ ရောင်းဈေးနှင့် ငွေပေးချေမှုပုံစံ ရွေးချယ်ပါ။\n2. ဂိုဒေါင်ထုတ် ဓာတ်ပုံတွဲတင်၍ သိမ်းဆည်းပြီး ဘောင်ချာထုတ်ယူပါ။\n3. စနစ်မှ မူရင်းတန်ဖိုး (83%)၊ VCM ရုံးချုပ်ပေးသွင်းငွေ (17%)၊ အခွန် (5%) နှင့် အသားတင်အမြတ်ကို အလိုအလျောက် တွက်ချက်ပေးသည်။',
+    notes_vi: 'Mã Serial đang nằm trong danh sách Hàng Lỗi sẽ tự động ẩn để chống bán nhầm hàng hỏng.',
+    notes_en: 'Serials marked as Defective are automatically hidden from the sale selector.',
+    notes_my: 'အပျက်စာရင်းဝင် Serial များကို မှားမရောင်းမိစေရန် အလိုအလျောက် ဖျောက်ထားပေးသည်။'
+  },
+  {
+    stt: '07',
+    sheetTab: 'Báo Giá Thiết Bị / Báo Giá Solar',
+    module_vi: '📄 Báo Giá Thiết Bị / UPS & ☀️ Báo Giá Solar',
+    module_en: '📄 Device/UPS & ☀️ Turnkey Solar Quotations',
+    module_my: '📄 UPS နှင့် ☀️ ဆိုလာစနစ် ဈေးနှုန်းတွက်ချက်လွှာများ',
+    steps_vi: '1. Vào tab "📄 Báo Giá Thiết Bị" hoặc "☀️ Báo Giá Solar" để lập báo giá nhanh cho khách.\n2. Hỗ trợ xuất PDF/In báo giá chuẩn thương hiệu VCM đa ngôn ngữ (VN / EN / MM).',
+    steps_en: '1. Open "📄 Device & UPS Quote" or "☀️ Solar Quote" to build instant customer proposals.\n2. Print or export VCM-branded PDF quotations in 3 languages (VN / EN / MM).',
+    steps_my: '1. "📄 Báo Giá Thiết Bị" သို့မဟုတ် "☀️ Báo Giá Solar" တွင် ဝယ်ယူသူအတွက် ဈေးနှုန်းတွက်ချက်လွှာ အမြန်ပြုလုပ်နိုင်သည်။\n2. VCM အမှတ်တံဆိပ်ဖြင့် (VN / EN / MM) ၃ ဘာသာ PDF ထုတ်ယူနိုင်သည်။',
+    notes_vi: 'Toàn bộ báo giá tự động lưu vào tab "Báo Giá Thiết Bị" và "Báo Giá Solar".',
+    notes_en: 'All quotations are saved automatically to "Báo Giá Thiết Bị" and "Báo Giá Solar" tabs.',
+    notes_my: 'ဈေးနှုန်းလွှာအားလုံး Google Sheet တွင် အလိုအလျောက် သိမ်းဆည်းထားသည်။'
+  },
+  {
+    stt: '08',
+    sheetTab: 'Thực Thi / Nghiệm Thu Hiện Trường',
+    module_vi: '🚀 Team Thực Thi (HUB) & ⚡ Nghiệm Thu Hiện Trường',
+    module_en: '🚀 Field Operations (HUB) & ⚡ Site Acceptance',
+    module_my: '🚀 မြေပြင်တပ်ဆင်ရေးအဖွဲ့ (HUB) နှင့် ⚡ လုပ်ငန်းလက်ခံစစ်ဆေးခြင်း',
+    steps_vi: '1. Vào "🚀 Team Thực Thi" để giao việc khảo sát/lắp đặt cho kỹ thuật viên.\n2. Sau khi lắp xong, vào "⚡ Nghiệm Thu Hiện Trường" tải ảnh nghiệm thu và ký xác nhận hoàn tất.',
+    steps_en: '1. Open "🚀 Field Operations Team" to assign installation/survey tasks to technicians.\n2. Upon completion, open "⚡ Field Acceptance" to upload site photos and sign off.',
+    steps_my: '1. "🚀 Team Thực Thi" တွင် ကျွမ်းကျင်ဝန်ထမ်းများအား တပ်ဆင်ရေးတာဝန်များ ချထားပေးပါ။\n2. တပ်ဆင်ပြီးစီးပါက "⚡ Nghiệm Thu Hiện Trường" တွင် မှတ်တမ်းဓာတ်ပုံများတင်၍ အတည်ပြုသိမ်းဆည်းပါ။',
+    notes_vi: 'Ảnh nghiệm thu tự động lưu vào Google Drive "2.12 SALE SOLUTION - BUILDING".',
+    notes_en: 'Acceptance photos are saved directly to Google Drive "2.12 SALE SOLUTION - BUILDING".',
+    notes_my: 'လုပ်ငန်းပြီးစီးမှု ဓာတ်ပုံများကို Google Drive "2.12 SALE SOLUTION - BUILDING" သို့ အလိုအလျောက်သိမ်းဆည်းပေးသည်။'
+  },
+  {
+    stt: '09',
+    sheetTab: 'Đại Lý / Phân Phối / Hàng Ký Gởi',
+    module_vi: '🏪 Đại Lý & 📋 Hàng Ký Gởi 17%',
+    module_en: '🏪 Authorized Dealers & 📋 Consignment Stock',
+    module_my: '🏪 ကိုယ်စားလှယ်ဆိုင်များနှင့် 📋 ပစ္စည်းအပ်နှံရောင်းချခြင်း',
+    steps_vi: '1. Quản lý danh sách Đại lý phân phối tại "🏪 Đại Lý".\n2. Khi xuất hàng gửi bán tại Đại lý/Trưởng thôn, ghi nhận tại "📋 Hàng Ký Gởi" kèm Email đối tác.\n3. Khi đại lý bán được hàng, bấm chốt thu tiền; khi thu hồi về kho bấm "Đã thu hồi".',
+    steps_en: '1. Manage authorized dealers in "🏪 Authorized Dealers".\n2. Record consignment stock placed at village heads/retailers in "📋 Consignment Stock" with partner Email.\n3. Mark as "Sold" when settled, or "Recalled" when returned to warehouse.',
+    steps_my: '1. ကိုယ်စားလှယ်စာရင်းကို "🏪 Đại Lý" တွင် စီမံခန့်ခွဲပါ။\n2. ကျေးရွာ/ရပ်ကွက်ဆိုင်များတွင် ပစ္စည်းအပ်နှံရောင်းချပါက "📋 Hàng Ký Gởi" တွင် မိတ်ဖက် Email ဖြင့် မှတ်တမ်းတင်ပါ။\n3. ရောင်းချပြီးပါက ငွေရှင်းပြီးကြောင်း အတည်ပြုပြီး၊ ပြန်သိမ်းပါက "Đã thu hồi" သို့ပြောင်းပါ။',
+    notes_vi: 'Đối tác đăng nhập bằng tên/email của mình chỉ nhìn thấy đúng số lượng ký gởi của chính họ.',
+    notes_en: 'Consignment partners logging in only see stock assigned to their own location.',
+    notes_my: 'မိတ်ဖက်ဆိုင်များသည် မိမိဆိုင်သို့ အပ်နှံထားသော ပစ္စည်းစာရင်းကိုသာ မြင်တွေ့နိုင်သည်။'
+  },
+  {
+    stt: '10',
+    sheetTab: 'Khảo Sát / Khách Hàng / Liên Lạc',
+    module_vi: '👥 CRM & 📝 Khảo Sát Thực Địa (Tự Bóc Tách GPS Lat/Long + Ảnh)',
+    module_en: '👥 CRM & 📝 Field Surveys (Auto GPS Lat/Long + Photo Folder)',
+    module_my: '👥 CRM နှင့် 📝 မြေပြင်ကွင်းဆင်းစစ်ဆေးခြင်း (GPS Lat/Long အလိုအလျောက်ဖတ်ယူမှု)',
+    steps_vi: '1. Nhân viên hiện trường vào "📝 Khảo Sát Của Tôi" hoặc "👥 CRM & Khảo Sát".\n2. Bấm "📷 Chọn / Chụp Hình Khảo Sát": Hệ thống tự động bóc tách tọa độ GPS (EXIF hoặc OCR chữ trên ảnh GPS Map Camera) để điền vào 2 cột Vĩ độ (Lat) và Kinh độ (Long).\n3. Khi bấm Lưu, toàn bộ ảnh tự động tải vào folder Google Drive "2.12 SALE SOLUTION - BUILDING" và gom thành 1 cột Link Hình Ảnh duy nhất trên Sheet.',
+    steps_en: '1. Field staff open "📝 My Field Surveys" or "👥 CRM & Customer Surveys".\n2. Click "📷 Upload Survey Photos": System auto-extracts GPS coordinates (from EXIF or stamped GPS Map Camera text) into the Latitude (Lat) and Longitude (Long) columns.\n3. On Save, all photos upload into a dedicated folder inside Google Drive "2.12 SALE SOLUTION - BUILDING" and record as 1 combined folder link.',
+    steps_my: '1. ကွင်းဆင်းဝန်ထမ်းများ "📝 Khảo Sát Của Tôi (My Surveys)" သို့မဟုတ် "👥 CRM & Khảo Sát" သို့ဝင်ပါ။\n2. "📷 ဓာတ်ပုံတင်ရန်" ကိုနှိပ်ပါ - ဓာတ်ပုံ EXIF သို့မဟုတ် GPS Map Camera စာသားမှ တည်နေရာ Lat (လတ္တီတွဒ်) နှင့် Long (လောင်ဂျီတွဒ်) ကို အလိုအလျောက် ဖတ်ယူဖြည့်သွင်းပေးမည်။\n3. သိမ်းဆည်းလိုက်ပါက ဓာတ်ပုံအားလုံးကို Google Drive "2.12 SALE SOLUTION - BUILDING" အတွင်း ဖိုင်တွဲတစ်ခုတည်းအဖြစ် စုစည်းပြီး လင့်ခ် (၁) ခုတည်းဖြင့် သိမ်းဆည်းပေးမည်။',
+    notes_vi: 'Bấm vào tọa độ Lat/Long hoặc nút Xem Ảnh trên bảng để mở Google Maps và hình ảnh thực địa ngay lập tức.',
+    notes_en: 'Click any Lat/Long coordinate or Photo Link in the table to open Google Maps or Drive folder instantly.',
+    notes_my: 'ဇယားရှိ Lat/Long သို့မဟုတ် ဓာတ်ပုံလင့်ခ်ကို နှိပ်၍ Google Maps နှင့် ပုံများကို တိုက်ရိုက်ကြည့်ရှုနိုင်သည်။'
+  },
+  {
+    stt: '11',
+    sheetTab: 'Tờ Trình Quyết Toán VCM / Chiến Dịch Quảng Cáo',
+    module_vi: '💰 Tài Chính, Lợi Nhuận & 📑 Tờ Trình Quyết Toán VCM (83% - 17%)',
+    module_en: '💰 Financials, Profit & 📑 VCM Settlement Statement (83% - 17%)',
+    module_my: '💰 ဘဏ္ဍာရေး၊ အမြတ်အစွန်းနှင့် 📑 VCM ရုံးချုပ် စာရင်းရှင်းတမ်း (83% - 17%)',
+    steps_vi: '1. Dành riêng cho Ban Giám Đốc (Admin) và Kế Toán Trưởng (Finance).\n2. Theo dõi chính xác Doanh thu 100%, Giá vốn 83% hoàn trả VCM, Quỹ 17% nộp Tổng Công Ty, Chi phí vận hành và Lợi nhuận ròng chi nhánh.',
+    steps_en: '1. Strictly reserved for Executive Board (Admin) and Chief Accountant (Finance).\n2. Track 100% Revenue, 83% Base Cost payable to VCM, 17% HO Quota, Operating Expenses, and Net Branch Profit.',
+    steps_my: '1. ဒါရိုက်တာအဖွဲ့ (Admin) နှင့် စာရင်းကိုင်ချုပ် (Finance) တို့အတွက်သာ သီးသန့်ဖြစ်သည်။\n2. ရောင်းရငွေ 100%၊ VCM မူရင်းတန်ဖိုး 83%၊ ရုံးချုပ်ပေးသွင်းငွေ 17%၊ အသုံးစရိတ်နှင့် အသားတင်အမြတ်ငွေတို့ကို တိကျစွာ စစ်ဆေးနိုင်သည်။',
+    notes_vi: 'Các vai trò Sales, Kỹ thuật, Thủ kho, Đại lý bị khóa tuyệt đối (Zero Cost Leakage).',
+    notes_en: 'Sales, Tech, Warehouse, and Dealer roles are strictly blocked from viewing cost/profit (Zero Cost Leakage).',
+    notes_my: 'အရောင်း၊ ကျွမ်းကျင်၊ ဂိုဒေါင်နှင့် ကိုယ်စားလှယ်များ မူရင်းဈေးနှင့် အမြတ်စာရင်း ကြည့်ရှုခွင့် လုံးဝပိတ်ထားသည် (Zero Cost Leakage)။'
+  },
+  {
+    stt: '12',
+    sheetTab: 'Guide / staff / input HR',
+    module_vi: '🛡️ Phân Quyền Vai Trò (RBAC) & 🪑 Ghế Giám Sát AUDITOR-SALE-GUIDE',
+    module_en: '🛡️ Role Permissions (RBAC) & 🪑 AUDITOR-SALE-GUIDE Sentinel',
+    module_my: '🛡️ လုပ်ပိုင်ခွင့်သတ်မှတ်ချက် (RBAC) နှင့် 🪑 AUDITOR-SALE-GUIDE စောင့်ကြည့်ရေးစနစ်',
+    steps_vi: '1. Admin vào "🛡️ Phân Quyền Vai Trò" để bật/tắt quyền truy cập từng tab cho 6 nhóm chức danh và gán vai trò cho từng email nhân sự.\n2. Ghế Giám Sát AUDITOR-SALE-GUIDE tự động kiểm tra ở mỗi nhịp tàu 5 phút để đảm bảo tab "Guide" 3 ngôn ngữ luôn online 24/7 ở vị trí đầu bảng tính.\n3. QUY TẮC BẮT BUỘC (PM-112): Bất kỳ khi nào hệ thống có thay đổi/nâng cấp tính năng, hướng dẫn tại tab "Guide" và mục "📖 Hướng Dẫn Sử Dụng" (cả 3 ngôn ngữ VN / EN / MM) phải được cập nhật ngay lập tức!',
+    steps_en: '1. Admin opens "🛡️ Role Permissions (RBAC)" to toggle tab access for 6 role groups and assign staff emails.\n2. Sentinel Seat AUDITOR-SALE-GUIDE runs every 5 minutes to ensure the trilingual "Guide" tab stays online 24/7 at the front of the spreadsheet.\n3. MANDATORY RULE (PM-112): Whenever any feature or workflow changes, both the Google Sheet "Guide" tab and Web BI Guide must be updated immediately in all 3 languages (VN / EN / MM)!',
+    steps_my: '1. Admin မှ "🛡️ Phân Quyền Vai Trò" တွင် ရာထူးအဖွဲ့ ၆ ခုအတွက် ဝင်ရောက်ကြည့်ရှုခွင့်များကို ပိတ်/ဖွင့် ပြုလုပ်နိုင်သည်။\n2. AUDITOR-SALE-GUIDE စောင့်ကြည့်ရေးစနစ်မှ ၅ မိနစ်တစ်ကြိမ် စစ်ဆေးပြီး ဘာသာစကား (၃) မျိုးပါဝင်သော "Guide" Sheet ကို ၂၄ နာရီ အမြဲတမ်း Online ဖြစ်နေစေရန် ထိန်းသိမ်းပေးသည်။\n3. အထူးစည်းမျဉ်း (PM-112) - စနစ်အတွင်း ပြောင်းလဲမှု/အဆင့်မြှင့်တင်မှု ရှိတိုင်း Sheet "Guide" နှင့် Web BI လမ်းညွှန်စာအုပ်တွင် ဘာသာစကား (၃) မျိုးလုံးဖြင့် ချက်ချင်း အပ်ဒိတ်လုပ်ရမည်။',
+    notes_vi: 'Nhân sự quên thao tác có thể mở tab "Guide" trên Sheet hoặc bấm nút "📖 Guide (SOP)" trên Web BI bất cứ lúc nào.',
+    notes_en: 'Staff can check the "Guide" tab on Google Sheet or click "📖 Guide (SOP)" on Web BI anytime.',
+    notes_my: 'ဝန်ထမ်းများ လုပ်ငန်းစဉ်မေ့လျော့ပါက Sheet ရှိ "Guide" သို့မဟုတ် Web BI ရှိ "📖 Guide (SOP)" ကို အချိန်မရွေး ဖွင့်ကြည့်နိုင်သည်။'
+  }
 ];
 
 function rGuide() {
   const q = (document.getElementById('guide-search-q')?.value || '').trim().toLowerCase();
   const tb = document.getElementById('t-guide-table');
   if (!tb) return;
-  const rows = SOP_GUIDE_SECTIONS.filter(r => !q || [r.stt, r.module, r.steps, r.notes, r.sheetTab].some(v => String(v || '').toLowerCase().includes(q)));
-  tb.innerHTML = rows.map(r => `
-    <tr>
-      <td style="text-align:center;font-weight:800;color:#1e3a8a;font-size:13px">${esc(r.stt)}</td>
-      <td style="font-weight:800;color:#0f172a;font-size:12.5px;white-space:normal">${esc(r.module)}</td>
-      <td style="white-space:pre-line;font-size:12px;line-height:1.6;color:#1e293b">${esc(r.steps)}</td>
-      <td style="white-space:pre-line;font-size:11.5px;line-height:1.5;color:#b45309;background:#fffbeb;font-weight:600">${esc(r.notes)}</td>
-      <td style="text-align:center"><span class="badge b-bl" style="font-size:11px">${esc(r.sheetTab)}</span></td>
-    </tr>
-  `).join('');
+  const rows = SOP_GUIDE_SECTIONS.filter(r => !q || [
+    r.stt, r.sheetTab,
+    r.module_vi, r.module_en, r.module_my,
+    r.steps_vi, r.steps_en, r.steps_my,
+    r.notes_vi, r.notes_en, r.notes_my
+  ].some(v => String(v || '').toLowerCase().includes(q)));
+
+  if (_guideLangMode === 'all') {
+    tb.innerHTML = `<table style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr style="background:#0f172a;color:#fff;font-size:11.5px">
+          <th style="padding:10px 8px;width:45px;text-align:center">#</th>
+          <th style="padding:10px;width:190px">Phân Hệ / Module / ကဏ္ဍ</th>
+          <th style="padding:10px;width:27%">🇻🇳 Quy Trình Chuẩn (Tiếng Việt)</th>
+          <th style="padding:10px;width:27%">🇬🇧 Standard SOP (English)</th>
+          <th style="padding:10px;width:27%">🇲🇲 လုပ်ငန်းလမ်းညွှန် (မြန်မာဘာသာ)</th>
+          <th style="padding:10px;width:130px;text-align:center">Sheet Liên Kết</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(r => `
+          <tr style="border-bottom:1px solid #e2e8f0">
+            <td style="text-align:center;font-weight:900;color:#1e3a8a;font-size:13px;vertical-align:top;padding:10px 6px">${esc(r.stt)}</td>
+            <td style="vertical-align:top;padding:10px;white-space:normal">
+              <div style="font-weight:800;color:#0f172a;font-size:12.5px;margin-bottom:4px">${esc(r.module_vi)}</div>
+              <div style="font-weight:700;color:#0369a1;font-size:11.5px;margin-bottom:4px">${esc(r.module_en)}</div>
+              <div style="font-weight:700;color:#047857;font-size:11.5px">${esc(r.module_my)}</div>
+            </td>
+            <td style="vertical-align:top;padding:10px;white-space:pre-line;font-size:11.8px;line-height:1.55;color:#1e293b">
+              ${esc(r.steps_vi)}
+              <div style="margin-top:6px;padding:5px 8px;background:#fffbeb;border-left:3px solid #f59e0b;color:#b45309;font-size:11px;font-weight:600">🔒 ${esc(r.notes_vi)}</div>
+            </td>
+            <td style="vertical-align:top;padding:10px;white-space:pre-line;font-size:11.8px;line-height:1.55;color:#1e293b;background:#f8fafc">
+              ${esc(r.steps_en)}
+              <div style="margin-top:6px;padding:5px 8px;background:#eff6ff;border-left:3px solid #3b82f6;color:#1d4ed8;font-size:11px;font-weight:600">🔒 ${esc(r.notes_en)}</div>
+            </td>
+            <td style="vertical-align:top;padding:10px;white-space:pre-line;font-size:11.8px;line-height:1.65;color:#1e293b">
+              ${esc(r.steps_my)}
+              <div style="margin-top:6px;padding:5px 8px;background:#ecfdf5;border-left:3px solid #10b981;color:#047857;font-size:11px;font-weight:600">🔒 ${esc(r.notes_my)}</div>
+            </td>
+            <td style="vertical-align:top;padding:10px;text-align:center">
+              <span class="badge b-bl" style="font-size:11px;white-space:normal;line-height:1.4">${esc(r.sheetTab)}</span>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>`;
+    return;
+  }
+
+  const lang = _guideLangMode; // 'vi' | 'en' | 'my'
+  const hdrs = {
+    vi: ['#', 'Phân Hệ / Chức Năng', '🇻🇳 Quy Trình Thao Tác Chuẩn Từng Bước (SOP)', '🔒 Quy Tắc Khóa Thép & Lưu Ý', 'Sheet Liên Kết'],
+    en: ['#', 'System Module', '🇬🇧 Standard Operating Procedure (Step-by-Step)', '🔒 Steel Rules & Important Notes', 'Linked Sheet Tab'],
+    my: ['#', 'စနစ်ကဏ္ဍ (Module)', '🇲🇲 လုပ်ငန်းလမ်းညွှန် အဆင့်ဆင့် (SOP)', '🔒 အရေးကြီးစည်းမျဉ်းနှင့် သတိပြုရန်', 'ချိတ်ဆက်ထားသော Sheet']
+  }[lang] || ['#', 'Module', 'SOP', 'Notes', 'Sheet'];
+
+  tb.innerHTML = `<table style="width:100%;border-collapse:collapse">
+    <thead>
+      <tr style="background:#0f172a;color:#fff;font-size:12px">
+        <th style="padding:10px;width:50px;text-align:center">${hdrs[0]}</th>
+        <th style="padding:10px;width:230px">${hdrs[1]}</th>
+        <th style="padding:10px">${hdrs[2]}</th>
+        <th style="padding:10px;width:280px">${hdrs[3]}</th>
+        <th style="padding:10px;width:150px;text-align:center">${hdrs[4]}</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rows.map(r => {
+        const mod = r['module_' + lang] || r.module_vi;
+        const stp = r['steps_' + lang] || r.steps_vi;
+        const nts = r['notes_' + lang] || r.notes_vi;
+        return `<tr style="border-bottom:1px solid #e2e8f0">
+          <td style="text-align:center;font-weight:900;color:#1e3a8a;font-size:13px;vertical-align:top;padding:10px">${esc(r.stt)}</td>
+          <td style="font-weight:800;color:#0f172a;font-size:12.5px;white-space:normal;vertical-align:top;padding:10px">${esc(mod)}</td>
+          <td style="white-space:pre-line;font-size:12.5px;line-height:1.65;color:#1e293b;vertical-align:top;padding:10px">${esc(stp)}</td>
+          <td style="white-space:pre-line;font-size:11.8px;line-height:1.55;color:#b45309;background:#fffbeb;font-weight:600;vertical-align:top;padding:10px">🔒 ${esc(nts)}</td>
+          <td style="text-align:center;vertical-align:top;padding:10px"><span class="badge b-bl" style="font-size:11px;white-space:normal">${esc(r.sheetTab)}</span></td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table>`;
 }
 
 async function syncSaleGuideNow() {
-  toast('🔄 Đang kích hoạt Ghế Giám Sát AUDITOR-SALE-GUIDE đồng bộ Sheet "Guide"...');
+  toast('🔄 Đang kích hoạt Ghế Giám Sát AUDITOR-SALE-GUIDE đồng bộ Sheet "Guide" (3 ngôn ngữ VN/EN/MM)...');
   try {
     const res = await fetch(GAS_URL, {
       method: 'POST',
@@ -12022,9 +12266,10 @@ async function syncSaleGuideNow() {
       body: JSON.stringify({ action: 'sale_guide_sync', forceRebuild: true })
     }).then(r => r.json());
     if (res && res.ok) {
+      const st = res.guideStatus || {};
       const badge = document.getElementById('guide-sentinel-badge');
-      if (badge) badge.textContent = `🪑 AUDITOR-SALE-GUIDE: ONLINE (${res.version || 'v2026.11.05'})`;
-      toast(`✅ Đã đồng bộ Sheet "Guide" (${res.rowCount || 12} mục SOP) lên Google Sheet thành công!`);
+      if (badge) badge.textContent = `🛡️ AUDITOR-SALE-GUIDE: ONLINE (${st.version || 'v2026.11.05-TRILINGUAL-v3'})`;
+      toast(`✅ Đã đồng bộ Sheet "Guide" 3 ngôn ngữ (VN • EN • MM — ${st.rows || 12} mục SOP) lên Google Sheet thành công!`);
     } else {
       toast('⚠️ Không thể đồng bộ Sheet Guide: ' + ((res && res.error) || 'Lỗi kết nối'), 'err');
     }
