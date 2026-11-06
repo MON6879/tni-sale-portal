@@ -2283,16 +2283,31 @@ def audit_oil_coolant_col_ab():
             for r_idx, row in enumerate(rows):
                 if r_idx < skip_rows:
                     continue
+                wo_code = row[18].strip() if len(row) > 18 and row[18] else ""
+                val_x = row[23].strip() if len(row) > 23 and row[23] else ""
+                val_y = row[24].strip() if len(row) > 24 and row[24] else ""
+                val_z = row[25].strip() if len(row) > 25 and row[25] else ""
                 val_aa = row[26].strip() if len(row) > 26 and row[26] else ""
                 val_ab = row[27].strip() if len(row) > 27 and row[27] else ""
-                if not val_aa or "closed time" in val_aa.lower():
+                if "closed time" in val_aa.lower() or "wo code" in wo_code.lower() or val_ab.lower() == "team":
+                    continue
+                if not (wo_code.startswith("WO_") or val_aa or val_y):
                     continue
                 total_checked += 1
+                missing_cols = []
+                if not val_x:
+                    missing_cols.append("X(End Time)")
+                if not val_z:
+                    missing_cols.append("Z(FT completed)")
+                if not val_aa:
+                    missing_cols.append("AA(Closed Time)")
                 if not val_ab or val_ab == "0" or val_ab.startswith("#") or val_ab.lower() == "error":
-                    wo_code = row[18].strip() if len(row) > 18 and row[18] else "(không rõ WO)"
+                    missing_cols.append(f"AB(Team={val_ab or 'TRỐNG'})")
+                if missing_cols:
                     site_code = row[20].strip()[:28] if len(row) > 20 and row[20] else ""
+                    staff_code = row[22].strip() if len(row) > 22 and row[22] else ""
                     missing_items.append(
-                        f"[{tab_name}] Dòng {r_idx + 1}: AA='{val_aa}' nhưng AB='{val_ab or '(TRỐNG)'}' (WO: {wo_code} | {site_code})"
+                        f"[{tab_name}] Dòng {r_idx + 1}: Thiếu [{', '.join(missing_cols)}] (WO: {wo_code or '(không rõ)'} | {staff_code} | {site_code})"
                     )
 
         if missing_items:
