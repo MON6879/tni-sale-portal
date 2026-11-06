@@ -970,6 +970,31 @@
       font-weight: 900;
       cursor: pointer;
     }
+
+    /* DISTINCT REPAIR & RE-AUDIT MODE THEME (KHI ĐANG XEM LẠI / CHỈNH SỬA / PHÚC TRA CHECK LIST) */
+    body.is-audit-repair-mode {
+      background: #fef3c7 !important;
+      background-image: radial-gradient(#fde68a 1px, transparent 1px) !important;
+      background-size: 18px 18px !important;
+    }
+    body.is-audit-repair-mode #view-inspection-form > .meta-panel {
+      border: 3px solid #d97706 !important;
+      background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 85px, #ffffff 240px) !important;
+      box-shadow: 0 10px 28px rgba(180, 83, 9, 0.22) !important;
+    }
+    body.is-audit-repair-mode #view-inspection-form .filter-bar {
+      border: 2.5px solid #d97706 !important;
+      background: #fffbeb !important;
+      box-shadow: 0 6px 18px rgba(217, 119, 6, 0.2) !important;
+    }
+    body.is-audit-repair-mode .bottom-bar {
+      background: linear-gradient(90deg, #7c2d12 0%, #b45309 50%, #d97706 100%) !important;
+      border-top: 3px solid #fde047 !important;
+    }
+    body.is-audit-repair-mode .bottom-status {
+      color: #fef08a !important;
+      font-weight: 900 !important;
+    }
   </style>
 </head>
 <body>
@@ -1053,6 +1078,23 @@
 
     <!-- VIEW 1: ACTIVE CHECKLIST INSPECTION FORM (MOBILE + DESKTOP - CLEAN & UNCLUTTERED FOR FIELD STAFF) -->
     <section id="view-inspection-form">
+      <!-- TOP STICKY ALERT BANNER WHEN IN REPAIR & RE-AUDIT MODE -->
+      <div id="audit-repair-mode-alert-banner" style="display:none;position:sticky;top:58px;z-index:85;background:linear-gradient(135deg,#9a3412 0%,#c2410c 50%,#d97706 100%);color:#fff;border:2.5px solid #fde047;border-radius:14px;padding:12px 16px;margin-bottom:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;box-shadow:0 8px 24px rgba(154,52,18,0.38);">
+        <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:260px;">
+          <div style="font-size:14.5px;font-weight:900;color:#fef08a;display:flex;align-items:center;gap:7px;letter-spacing:0.2px;" id="audit-banner-main-title">
+            🛠️ ⚠️ CẢNH BÁO: BẠN ĐANG Ở TRANG SỬA CHỮA &amp; PHÚC TRA LẠI CHECK LIST!
+          </div>
+          <div style="font-size:12px;font-weight:800;color:#fff;line-height:1.45;" id="audit-banner-sub-text">
+            🇬🇧 REPAIR &amp; RE-AUDIT MODE (Viewing &amp; editing existing checklist) • 🇲🇲 ပြင်ဆင်ခြင်းနှင့် ပြန်လည်စစ်ဆေးခြင်း စာမျက်နှာတွင် ရောက်ရှိနေပါသည်
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <button type="button" onclick="resetCurrentChecklist()" style="background:#fff;color:#9a3412;border:2px solid #fde047;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:900;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,0.2);">
+            ➕ Thoát Trang Sửa → Tạo Phiếu Mới (Exit to New Inspection)
+          </button>
+        </div>
+      </div>
+
       <div class="meta-panel">
         <div class="meta-header">
           <div class="checklist-heading">
@@ -2193,6 +2235,7 @@
 
       updateSeatAndTrainTelemetry();
       if (typeKey === "bi_dashboard") {
+        document.body.classList.remove("is-audit-repair-mode");
         formSec.style.display = "none";
         biSec.style.display = "block";
         if (appSec) appSec.style.display = "none";
@@ -2201,6 +2244,7 @@
       }
 
       if (typeKey === "approvers_mgr") {
+        document.body.classList.remove("is-audit-repair-mode");
         formSec.style.display = "none";
         biSec.style.display = "none";
         if (appSec) appSec.style.display = "block";
@@ -5306,30 +5350,48 @@
       const filterBar = document.querySelector("#view-inspection-form .filter-bar");
       const itemsContainer = document.getElementById("checklist-items-container");
 
+      const topAuditBanner = document.getElementById("audit-repair-mode-alert-banner");
+      const topAuditTitle = document.getElementById("audit-banner-main-title");
+      const topAuditSub = document.getElementById("audit-banner-sub-text");
+
       // KHI PHÚC TRA LẠI / SỬA CHỮA TRẠM ĐÃ KIỂM TRA (SAU KHI BẤM SEARCH / CHỌN TRẠM -> currentSessionId ĐÃ CÓ):
-      // MỞ KHÓA LUÔN 100% ĐỂ KÉO XUỐNG DƯỚI PHÚC TRA & SỬA NGAY!
+      // ĐỔI SANG MÀU CAM-VÀNG NỔI BẬT + HIỆN CẢNH BÁO ĐANG Ở TRANG SỬA & PHÚC TRA + MỞ KHÓA LUÔN 100%!
       if (currentSessionId) {
-        if (siteEl) siteEl.style.borderColor = "#10b981";
-        if (staffEl) staffEl.style.borderColor = "#10b981";
-        if (dateEl) dateEl.style.borderColor = "#10b981";
-        if (teamBox) teamBox.style.borderColor = "#10b981";
+        const curSite = ((siteEl && siteEl.value) || "TNI-SITE").trim();
+        const curTeam = normalizeTeamName(teamEl ? teamEl.value : "") || "Team 1";
+        document.body.classList.add("is-audit-repair-mode");
+        if (topAuditBanner) topAuditBanner.style.display = "flex";
+        if (topAuditTitle) {
+          topAuditTitle.textContent = "🛠️ ⚠️ CẢNH BÁO: ĐANG Ở TRANG SỬA CHỮA & PHÚC TRA LẠI CHECK LIST — TRẠM [" + curSite + "] (" + curTeam + ")";
+        }
+        if (topAuditSub) {
+          topAuditSub.textContent = "🇬🇧 REPAIR & RE-AUDIT MODE: Reviewing & editing inspected site [" + curSite + "] (Session: " + currentSessionId + ") • 🇲🇲 ပြင်ဆင်ခြင်းနှင့် ပြန်လည်စစ်ဆေးခြင်း စာမျက်နှာ (Repair & Audit Mode) တွင် ရောက်ရှိနေပါသည်။";
+        }
+        if (siteEl) siteEl.style.borderColor = "#d97706";
+        if (staffEl) staffEl.style.borderColor = "#d97706";
+        if (dateEl) dateEl.style.borderColor = "#d97706";
+        if (teamBox) teamBox.style.borderColor = "#d97706";
         if (warnBox) {
-          warnBox.style.borderColor = "#3b82f6";
-          warnBox.style.background = "linear-gradient(90deg,#eff6ff 0%,#ecfdf5 100%)";
+          warnBox.style.borderColor = "#d97706";
+          warnBox.style.background = "linear-gradient(90deg,#fef3c7 0%,#ffedd5 100%)";
         }
         if (warnTitle) {
-          warnTitle.style.color = "#1e3a8a";
-          warnTitle.textContent = "🔎 ĐANG PHÚC TRA / CẬP NHẬT TRẠM ĐÃ KIỂM TRA (" + ((siteEl && siteEl.value) || "") + ") — KÉO XUỐNG DƯỚI ĐỂ PHÚC TRA & APPROVE!";
+          warnTitle.style.color = "#9a3412";
+          warnTitle.textContent = "🛠️ ⚠️ CẢNH BÁO: BẠN ĐANG Ở TRANG SỬA CHỮA & PHÚC TRA LẠI TRẠM [" + curSite + " • " + curTeam + "] — KÉO XUỐNG DƯỚI ĐỂ CẬP NHẬT SỬA LỖI HOẶC TICK APPROVE!";
         }
         if (warnSub) {
-          warnSub.style.color = "#047857";
-          warnSub.textContent = "🇬🇧 Inspected site loaded via Search. Scroll down to repair NOK items or tick Technical Dept Approve • 🇲🇲 ရှာဖွေထားသော စခန်းပွင့်နေပါပြီ။ အောက်သို့ဆွဲချ၍ စစ်ဆေး/အတည်ပြုနိုင်ပါပြီ။";
+          warnSub.style.color = "#b45309";
+          warnSub.textContent = "🇬🇧 REPAIR & RE-AUDIT MODE ACTIVE: Scroll down to upload Fixed (After) photos or tick Technical Dept Approve • 🇲🇲 လက်ရှိစစ်ဆေးပြီးသား စခန်းကို ပြင်ဆင်/အတည်ပြုသည့် စာမျက်နှာဖြစ်ပါသည်။";
         }
         if (pillsBox) pillsBox.innerHTML = "";
         if (filterBar) filterBar.style.display = "flex";
         if (itemsContainer) itemsContainer.style.display = "block";
         return true;
       }
+
+      // Khi ở chế độ Tạo Kiểm Tra Mới (currentSessionId rỗng) -> Tắt màu chế độ sửa & ẩn banner cảnh báo sửa
+      document.body.classList.remove("is-audit-repair-mode");
+      if (topAuditBanner) topAuditBanner.style.display = "none";
 
       const siteVal = (siteEl ? siteEl.value : "").trim();
       const staffVal = (staffEl ? staffEl.value : "").trim();
