@@ -980,11 +980,11 @@
       <div class="brand-box">
         <div class="brand-logo">☑️</div>
         <div>
-          <div class="brand-title" id="ui-app-title">TNI Field Checklist BI — Hệ Thống Kiểm Tra & Đối Chiếu Trước/Sau (1440×1088)</div>
-          <div class="brand-sub">
+          <div class="brand-title" id="ui-app-title">🇬🇧 TNI Field Checklist BI — Inspection &amp; Before/After Audit (1440×1088)</div>
+          <div class="brand-sub" id="ui-brand-sub">
             <span>5 Dedicated Sheets SSOT</span> •
             <span>📷 Timestamp Camera (GPS)</span> •
-            <span>🖼️ Chuẩn 1440×1088 px</span>
+            <span>🖼️ 1440×1088 px Standard</span>
           </div>
         </div>
       </div>
@@ -992,11 +992,8 @@
       <div class="top-actions">
         <a class="pill-btn" href="/" title="TNI Operations BI Hub">🏛️ BI Hub</a>
         <a class="pill-btn" href="/sale" title="TNI Sale BI">💰 TNI Sale</a>
-        <a class="pill-btn sheet" id="top-sheet-link" href="https://docs.google.com/spreadsheets/d/1Y9QkgXe24kspNmkrPEVQ0AAD_GmZ4gnqMCD6ja4-9kI/edit#gid=992508475" target="_blank" rel="noopener">📊 Mở Sheet Lưu Riêng</a>
-        <a class="pill-btn drive" href="https://drive.google.com/drive/folders/1VsQapLjSaJl9QkcOrOFXbqfaKH1AJh-d" target="_blank" rel="noopener">📁 Drive 2.14 Check list photo</a>
-        <button class="pill-btn expert" onclick="openExpertModal()">🧠 10 Chuyên Gia 1% & Giám Sát 7 Ghế</button>
         <div class="lang-group">
-          <button class="lang-btn active" id="lang-en" onclick="setLang('en')">🇬🇧 EN (Std)</button>
+          <button class="lang-btn active" id="lang-en" onclick="setLang('en')">🇬🇧 EN</button>
           <button class="lang-btn" id="lang-vi" onclick="setLang('vi')">🇻🇳 VN</button>
           <button class="lang-btn" id="lang-my" onclick="setLang('my')">🇲🇲 MM</button>
         </div>
@@ -1028,8 +1025,8 @@
         <div class="mode-tab-sub"><span id="tab5-sub">Sheet: 5. Checklist Solar</span><span id="tab5-sub2">9 Sec</span></div>
       </button>
       <button class="mode-tab" data-type="bi_dashboard" onclick="switchChecklistType('bi_dashboard')">
-        <div class="mode-tab-top"><span id="tab6-title">🔍 6. Photo Audit &amp; BI</span><span class="sheet-chip" id="bi-count-badge">Live</span></div>
-        <div class="mode-tab-sub"><span id="tab6-sub">Before/After &amp; Tech Approve</span><span>1440×1088</span></div>
+        <div class="mode-tab-top"><span id="tab6-title">📊 6. Summary &amp; Photo Audit</span><span class="sheet-chip" id="bi-count-badge">Live</span></div>
+        <div class="mode-tab-sub"><span id="tab6-sub">Tab Tổng Hợp Riêng • စုစည်းချက်</span><span>1440×1088</span></div>
       </button>
       <button class="mode-tab" data-type="approvers_mgr" onclick="switchChecklistType('approvers_mgr')">
         <div class="mode-tab-top"><span id="tab7-title">🛡️ 7. Approver Gmail</span><span class="sheet-chip" id="approvers-count-badge">6 Gmail</span></div>
@@ -1037,84 +1034,41 @@
       </button>
     </div>
 
-    <!-- LIVE SEAT SUPERVISION & SEQUENTIAL TRAIN TELEMETRY BAR -->
-    <div id="seat-train-monitor-bar" style="background:linear-gradient(90deg,#0f172a 0%,#1e293b 100%);color:#fff;border-radius:12px;padding:9px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;box-shadow:0 4px 12px rgba(15,23,42,0.16);border:1px solid #334155;">
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        <span id="seat-online-pill" style="background:#065f46;border:1px solid #10b981;color:#d1fae5;font-size:11.5px;font-weight:900;padding:3px 10px;border-radius:99px;display:inline-flex;align-items:center;gap:5px;">
-          🟢 ONLINE • Auto-Sync Sheet &amp; Drive 2.14 Ready
-        </span>
-        <span id="seat-active-label" style="background:#1e3a8a;border:1px solid #60a5fa;color:#dbeafe;font-size:11.5px;font-weight:800;padding:3px 10px;border-radius:99px;">
-          🪑 Seat 1 (SEAT-CL-01): 1. Check Site (BTS) • GID 16375926
-        </span>
-        <span id="train-queue-pill" style="background:#334155;color:#f8fafc;font-size:11.5px;font-weight:800;padding:3px 10px;border-radius:99px;">
-          🚂 Photo Upload Train (FIFO): ✅ 0 uploaded
-        </span>
-      </div>
-      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-        <button type="button" id="btn-ping-sheet" onclick="pingChecklistCloudHealth(true)" style="background:#0284c7;color:#fff;border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:800;cursor:pointer;">
-          📡 Check Sheet Connection
-        </button>
-        <button type="button" id="btn-open-experts" onclick="openExpertModal()" style="background:#7c3aed;color:#fff;border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:800;cursor:pointer;">
-          🧠 10 Experts Report
-        </button>
-      </div>
-    </div>
-
     <!-- WEAK NETWORK / FAILED PHOTO UPLOAD ALERT BANNER (HIDDEN UNLESS UPLOAD ERROR OCCURS) -->
     <div id="weak-network-error-banner" style="display:none;background:#fef2f2;border:2px solid #ef4444;border-radius:12px;padding:11px 14px;margin-bottom:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;box-shadow:0 4px 14px rgba(239,68,68,0.18);">
       <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:260px;">
         <div style="font-size:13px;font-weight:900;color:#991b1b;" id="weak-net-title">
-          ⚠️ CẢNH BÁO MẠNG YẾU (WEAK NETWORK): Có ảnh chưa tải lên được Google Drive 2.14!
+          ⚠️ WEAK NETWORK • MẠNG YẾU • လိုင်းမကောင်းပါ: Some photos have not finished uploading to Drive 2.14!
         </div>
         <div style="font-size:11.5px;font-weight:700;color:#b91c1c;" id="weak-net-desc">
-          Ảnh đã được giữ an toàn trong bộ nhớ máy. Khi có mạng trở lại hệ thống sẽ tự động tải lên, hoặc bấm nút [🔄 Tải Lại Ngay] bên phải / bấm vào nút đỏ ở góc trên hộp ảnh để gửi lại.
+          🇬🇧 Photos are safely cached on device and will auto-retry, or tap [🔄 Retry All] • 🇻🇳 Ảnh đã giữ an toàn trong máy, tự động tải lại hoặc bấm [🔄 Retry All] • 🇲🇲 ပုံများကို ဖုန်းထဲတွင် လုံခြုံစွာ သိမ်းထားပြီး ပြန်တင်ပေးပါမည်။
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
         <button type="button" onclick="retryAllFailedPhotoUploads()" style="background:#dc2626;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:900;cursor:pointer;box-shadow:0 3px 10px rgba(220,38,38,0.3);">
-          🔄 Tải Lại Tất Cả Ảnh Lỗi Mạng (Retry All)
+          🔄 Retry All • Tải Lại Tất Cả • အားလုံးပြန်တင်ရန်
         </button>
       </div>
     </div>
 
-    <!-- VIEW 1: ACTIVE CHECKLIST INSPECTION FORM (MOBILE + DESKTOP) -->
+    <!-- VIEW 1: ACTIVE CHECKLIST INSPECTION FORM (MOBILE + DESKTOP - CLEAN & UNCLUTTERED FOR FIELD STAFF) -->
     <section id="view-inspection-form">
       <div class="meta-panel">
         <div class="meta-header">
           <div class="checklist-heading">
             <div class="checklist-icon-lg" id="cur-cl-icon">📡</div>
             <div>
-              <div class="checklist-title-main" id="cur-cl-title">1. Check Site (Trạm BTS - 64 Mục)</div>
-              <div class="checklist-pass-rule" id="cur-cl-rule">Tiêu chuẩn: ≥ 95 Good | 90–94 Acceptable | < 90 Not Acceptable • Lưu riêng tại Sheet: 1. Check Site (BTS)</div>
+              <div class="checklist-title-main" id="cur-cl-title">🇬🇧 1. Post-Maintenance BTS Inspection (64 Items)  |  🇻🇳 1. Check Site (Trạm BTS - 64 Mục)  |  🇲🇲 ၁။ BTS စခန်း ပြုပြင်ထိန်းသိမ်းမှု စစ်ဆေးချက် (၆၄ ချက်)</div>
+              <div class="checklist-pass-rule" id="cur-cl-rule">Standard / Tiêu chuẩn / စံချိန်စံညွှန်း: ≥ 95: Good | 90–94: Acceptable | &lt; 90: Not Acceptable • Dedicated Sheet: [1. Check Site (BTS)]</div>
             </div>
           </div>
           <div class="score-badges">
-            <div class="score-pill pts" id="live-score-pill">🏆 Điểm: 100 / 100</div>
+            <div class="score-pill pts" id="live-score-pill">🏆 Score / Điểm / ရမှတ်: 100 / 100</div>
             <div class="score-pill ok" id="live-ok-pill">✅ OK: 64</div>
-            <div class="score-pill nok" id="live-nok-pill">❌ Lỗi (NOK): 0</div>
-            <div class="score-pill fix" id="live-fix-pill">🔧 Đã sửa: 0/0</div>
-            <div class="score-pill" id="live-tech-pill" style="background:#dcfce7;color:#166534;border:1px solid #86efac;">☑️ Phòng KT duyệt: 0/0</div>
+            <div class="score-pill nok" id="live-nok-pill">❌ NOK / Lỗi / အပျက်: 0</div>
+            <div class="score-pill fix" id="live-fix-pill">🔧 Fixed / Đã sửa / ပြင်ပြီး: 0/0</div>
+            <div class="score-pill" id="live-tech-pill" style="background:#dcfce7;color:#166534;border:1px solid #86efac;">☑️ Approved / KT duyệt / အတည်ပြုပြီး: 0/0</div>
             <button type="button" id="btn-hdr-pdf" class="pill-btn" style="background:#dc2626;border-color:#f87171;color:#fff;cursor:pointer;" onclick="exportChecklistPdfNoPhotos()">📄 Export PDF (English Only)</button>
-            <a class="pill-btn sheet" id="cur-dedicated-sheet-btn" href="https://docs.google.com/spreadsheets/d/1Y9QkgXe24kspNmkrPEVQ0AAD_GmZ4gnqMCD6ja4-9kI/edit#gid=16375926" target="_blank" rel="noopener">📊 Open Dedicated Sheet</a>
-            <button type="button" id="btn-hdr-audit" class="pill-btn" style="background:#7c3aed;border-color:#a78bfa;color:#fff;cursor:pointer;" onclick="jumpToPhotoAuditTab()">🔍 Photo Audit Tab (Before/After)</button>
-          </div>
-        </div>
-
-        <!-- 3-STEP ROLE GUIDE BAR (ENGLISH PRIMARY + TRILINGUAL LINKED) -->
-        <div style="background:#0f172a;color:#fff;border-radius:12px;padding:9px 13px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;border:1.5px solid #38bdf8;">
-          <div style="font-size:12px;font-weight:900;color:#bae6fd;display:flex;align-items:center;gap:6px;">
-            <span id="ui-role-guide-label">🎓 Quick Workflow Guide • Chọn Nhanh Vai Trò • လုပ်ငန်းစဉ်ရွေးရန်:</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
-            <button type="button" id="btn-role-inspector" onclick="quickStartRoleMode('INSPECTOR')" style="background:#2563eb;color:#fff;border:1px solid #60a5fa;border-radius:8px;padding:6px 11px;font-size:11.5px;font-weight:900;cursor:pointer;">
-              ① 👷 QC Inspect New Site • Đi Kiểm Tra Mới • စခန်းအသစ်စစ်ဆေးရန်
-            </button>
-            <button type="button" id="btn-role-tech" onclick="quickStartRoleMode('TECHNICIAN')" style="background:#dc2626;color:#fff;border:1px solid #f87171;border-radius:8px;padding:6px 11px;font-size:11.5px;font-weight:900;cursor:pointer;">
-              ② 🔧 Technician Fix NOK • Thợ Vào Sửa Lỗi • အပျက်ပြင်ဆင်ရန်
-            </button>
-            <button type="button" id="btn-role-approver" onclick="quickStartRoleMode('APPROVER')" style="background:#059669;color:#fff;border:1px solid #34d399;border-radius:8px;padding:6px 11px;font-size:11.5px;font-weight:900;cursor:pointer;">
-              ③ 🛡️ Tech Dept Approve • Phòng KT Duyệt • အတည်ပြုရန် (Approve)
-            </button>
           </div>
         </div>
 
@@ -1237,7 +1191,6 @@
           <button type="button" class="f-pill" data-filter="has_photo" onclick="setItemFilter('has_photo')" id="fp-photo">📸 Có hình ảnh (1440×1088)</button>
           <button type="button" id="btn-mark-all-ok" class="f-pill" onclick="markAllItemsOk()" style="background:#ecfdf5;color:#047857;border-color:#6ee7b7;">⚡ Mark All = OK</button>
           <button type="button" id="btn-filter-pdf" class="f-pill" onclick="exportChecklistPdfNoPhotos()" style="background:#fef2f2;color:#b91c1c;border-color:#fca5a5;">📄 Export PDF (English Only)</button>
-          <button type="button" id="btn-filter-audit" class="f-pill" onclick="jumpToPhotoAuditTab()" style="background:#f5f3ff;color:#6d28d9;border-color:#c4b5fd;">🔍 Photo Audit Tab (Before/After)</button>
         </div>
         <div class="search-box">
           <input type="text" id="inp-search-item" placeholder="Tìm mã mục, nội dung kiểm tra (VD: 1.2.1, grounding, closure)..." oninput="renderChecklistItems()" />
@@ -1248,28 +1201,51 @@
       <div id="checklist-items-container"></div>
     </section>
 
-    <!-- VIEW 2: EXECUTIVE WEB BI DASHBOARD & BEFORE/AFTER PHOTO COMPARISON WALL -->
+    <!-- VIEW 2: DEDICATED SUMMARY & PHOTO AUDIT TAB (TAB 6 - TỔNG HỢP RIÊNG) -->
     <section id="view-bi-dashboard" style="display:none;">
+      <!-- LIVE SEAT SUPERVISION & SEQUENTIAL TRAIN TELEMETRY BAR (MOVED INTO DEDICATED SUMMARY TAB 6) -->
+      <div id="seat-train-monitor-bar" style="background:linear-gradient(90deg,#0f172a 0%,#1e293b 100%);color:#fff;border-radius:12px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;box-shadow:0 4px 12px rgba(15,23,42,0.16);border:1px solid #334155;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span id="seat-online-pill" style="background:#065f46;border:1px solid #10b981;color:#d1fae5;font-size:11.5px;font-weight:900;padding:4px 10px;border-radius:99px;display:inline-flex;align-items:center;gap:5px;">
+            🟢 ONLINE • Auto-Sync Sheet &amp; Drive 2.14 Ready • Sẵn Sàng • အဆင်သင့်ဖြစ်သည်
+          </span>
+          <span id="seat-active-label" style="background:#1e3a8a;border:1px solid #60a5fa;color:#dbeafe;font-size:11.5px;font-weight:800;padding:4px 10px;border-radius:99px;">
+            🪑 SEAT-CL-06 (Seat 6 / Ghế 6 / ထိုင်ခုံ ၆): Summary BI &amp; Photo Audit • GID 1841227739
+          </span>
+          <span id="train-queue-pill" style="background:#334155;color:#f8fafc;font-size:11.5px;font-weight:800;padding:4px 10px;border-radius:99px;">
+            🚂 FIFO Upload Train: ✅ 0 uploaded / đã tải / တင်ပြီး
+          </span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <button type="button" id="btn-ping-sheet" onclick="pingChecklistCloudHealth(true)" style="background:#0284c7;color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:800;cursor:pointer;">
+            📡 Check Sheet Connection • Kiểm Tra Kết Nối • ချိတ်ဆက်မှုစစ်ရန်
+          </button>
+          <button type="button" id="btn-open-experts" onclick="openExpertModal()" style="background:#7c3aed;color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:800;cursor:pointer;">
+            🧠 10 Experts Report • Báo Cáo 10 Chuyên Gia • ပညာရှင် ၁၀ ဦး
+          </button>
+        </div>
+      </div>
+
       <div class="bi-kpi-grid">
         <div class="bi-kpi-card">
-          <div class="bi-kpi-label">📋 Tổng Số Phiếu Kiểm Tra (Sessions)</div>
+          <div class="bi-kpi-label" id="bi-lbl-kpi1">📋 Total Inspected Sessions • Tổng Phiếu • စုစုပေါင်းစစ်ဆေးချက်</div>
           <div class="bi-kpi-val" id="bi-total-sessions">0</div>
-          <div class="bi-kpi-sub">Trên 5 Sheet Check List Lưu Riêng</div>
+          <div class="bi-kpi-sub" id="bi-sub-kpi1">Across 5 Dedicated Checklist Sheets • Trên 5 Sheet Riêng</div>
         </div>
         <div class="bi-kpi-card">
-          <div class="bi-kpi-label">🏆 Điểm Chất Lượng Trung Bình</div>
+          <div class="bi-kpi-label" id="bi-lbl-kpi2">🏆 Average Quality Score • Điểm TB • ပျမ်းမျှရမှတ်</div>
           <div class="bi-kpi-val" id="bi-avg-score" style="color:#2563eb;">100%</div>
-          <div class="bi-kpi-sub">Tự động chấm điểm theo chuẩn VCM/Mytel</div>
+          <div class="bi-kpi-sub" id="bi-sub-kpi2">Auto-scored by VCM/Mytel Standard • Chuẩn VCM/Mytel</div>
         </div>
         <div class="bi-kpi-card">
-          <div class="bi-kpi-label">❌ Tổng Hạng Mục Lỗi Phát Hiện (NOK)</div>
+          <div class="bi-kpi-label" id="bi-lbl-kpi3">❌ Total Defects Found (NOK) • Tổng Lỗi • စုစုပေါင်းအပျက်</div>
           <div class="bi-kpi-val" id="bi-total-nok" style="color:#dc2626;">0</div>
-          <div class="bi-kpi-sub">Có vị trí lỗi & ảnh chụp 1440×1088</div>
+          <div class="bi-kpi-sub" id="bi-sub-kpi3">With fault note &amp; 1440×1088 photo • Có ảnh 1440×1088</div>
         </div>
         <div class="bi-kpi-card">
-          <div class="bi-kpi-label">✅ Đã Sửa Khắc Phục / Chờ Sửa</div>
+          <div class="bi-kpi-label" id="bi-lbl-kpi4">✅ Fixed / Total NOK • Đã Sửa / Tổng Lỗi • ပြင်ပြီး / အပျက်</div>
           <div class="bi-kpi-val" id="bi-fixed-ratio" style="color:#059669;">0 / 0</div>
-          <div class="bi-kpi-sub">Đối chiếu song song Ảnh Lỗi & Ảnh Đã Sửa</div>
+          <div class="bi-kpi-sub" id="bi-sub-kpi4">Side-by-side Before &amp; After Audit • Đối chiếu Trước/Sau</div>
         </div>
       </div>
 
@@ -1331,21 +1307,21 @@
 
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:#f8fafc;padding:12px;border-radius:12px;border:1px solid #cbd5e1;">
             <div>
-              <h3 style="font-size:15.5px;font-weight:900;color:#0f172a;">🔍 Bảng Phúc Tra Hình Ảnh: Trước Khi Sửa (Lỗi) vs. Sau Khi Hoàn Thiện (1440×1088)</h3>
-              <p style="font-size:12px;color:var(--muted);">Kiểm tra nhân viên đã cập nhật hình ảnh sau khi hoàn thiện chưa • Phòng Kỹ Thuật tick xác nhận hoàn thành sửa chữa trực tiếp tại đây.</p>
+              <h3 style="font-size:15.5px;font-weight:900;color:#0f172a;">🔍 Before vs. After Photo Audit Wall (1440×1088) • Bảng Phúc Tra Hình Ảnh Trước &amp; Sau • မပြင်မီနှင့် ပြင်ပြီးပုံ စစ်ဆေးချက်</h3>
+              <p style="font-size:12px;color:var(--muted);">🇬🇧 Verify After photos &amp; Technical Dept approval • 🇻🇳 Kiểm tra ảnh sau sửa &amp; Phòng KT tick xác nhận • 🇲🇲 ပြင်ဆင်ပြီးပုံနှင့် နည်းပညာဌာန အတည်ပြုချက် စစ်ဆေးရန်</p>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-              <input type="text" id="bi-site-search" class="field-input" style="width:185px;background:#fff;" placeholder="🔎 Tìm mã trạm (VD: TNI0012)..." oninput="renderBiDashboard()" />
+              <input type="text" id="bi-site-search" class="field-input" style="width:195px;background:#fff;" placeholder="🔎 Search Site (e.g. TNI0012)..." oninput="renderBiDashboard()" />
               <select id="bi-fix-filter" class="field-input" style="width:auto;background:#fff;" onchange="renderBiDashboard()">
-                <option value="ALL">❌ Chỉ hiện mục Lỗi (NOK) / Có ảnh (Mặc định)</option>
-                <option value="PENDING_PHOTO">⏳ Chưa cập nhật ảnh Sau sửa</option>
-                <option value="HAS_AFTER_PHOTO">✅ Đã cập nhật ảnh Sau sửa</option>
-                <option value="PENDING_TECH_VERIFY">🛡️ Chờ Phòng KT Tick xác nhận</option>
-                <option value="TECH_VERIFIED">☑️ Phòng KT Đã Tick xác nhận</option>
-                <option value="SHOW_ALL_ITEMS">📋 Xem tất cả hạng mục (Thấy hết cả mục OK &amp; NOK)</option>
+                <option value="ALL">❌ Defects (NOK) / Has Photos (Mặc định • အပျက်များ)</option>
+                <option value="PENDING_PHOTO">⏳ Pending After Photo (Chưa có ảnh sửa • ပြင်ပြီးပုံမရှိသေး)</option>
+                <option value="HAS_AFTER_PHOTO">✅ Has After Photo (Đã có ảnh sửa • ပြင်ပြီးပုံရှိ)</option>
+                <option value="PENDING_TECH_VERIFY">🛡️ Pending Approve (Chờ KT duyệt • အတည်ပြုရန်ကျန်)</option>
+                <option value="TECH_VERIFIED">☑️ Approved (Phòng KT đã duyệt • အတည်ပြုပြီး)</option>
+                <option value="SHOW_ALL_ITEMS">📋 Show All 100% Items (Tất cả OK &amp; NOK • အားလုံးပြရန်)</option>
               </select>
               <select id="bi-type-filter" class="field-input" style="width:auto;background:#fff;" onchange="renderBiDashboard()">
-                <option value="ALL">Tất cả 5 loại Check List</option>
+                <option value="ALL">All 5 Checklists • Tất cả 5 loại • ၅ မျိုးလုံး</option>
                 <option value="site_bts">1. Check Site (BTS)</option>
                 <option value="dg_gen">2. Checklist DG</option>
                 <option value="cable_route">3. Checklist Cable Route</option>
@@ -1505,7 +1481,6 @@
       <div class="bottom-actions">
         <button type="button" id="btn-bottom-new" class="btn-reset-form" onclick="resetCurrentChecklist()">🔄 New Inspection</button>
         <button type="button" id="btn-bottom-pdf" class="btn-reset-form" style="background:#fef2f2;color:#b91c1c;border-color:#fca5a5;" onclick="exportChecklistPdfNoPhotos()">📄 Export PDF (English Only)</button>
-        <button type="button" id="btn-bottom-audit" class="btn-reset-form" style="background:#f5f3ff;color:#6d28d9;border-color:#c4b5fd;" onclick="jumpToPhotoAuditTab()">🔍 Photo Audit Tab</button>
         <button type="button" class="btn-save-cloud" id="btn-submit-checklist" onclick="submitChecklistToCloud()">
           💾 Lưu Vào Sheet Riêng & Upload Ảnh 1440×1088 Lên Drive 2.14
         </button>
@@ -2134,12 +2109,17 @@
       setTxt("tab3-chip", "44 " + unitTxt);
       setTxt("tab4-chip", "37 " + unitTxt);
       setTxt("tab5-chip", "43 " + unitTxt);
-      setTxt("tab6-title", currentLang === "vi" ? "🔍 6. Phúc Tra Hình Ảnh & BI" : (currentLang === "my" ? "🔍 ၆။ ပုံစစ်ဆေးချက်နှင့် BI" : "🔍 6. Photo Audit & BI"));
-      setTxt("tab6-sub", currentLang === "vi" ? "Kiểm tra ảnh & Phòng KT Tick duyệt" : (currentLang === "my" ? "မပြင်မီ/ပြင်ပြီးပုံ နှင့် အတည်ပြုချက်" : "Before/After & Tech Approve"));
+      setHtml("ui-brand-sub", currentLang === "vi"
+        ? "<span>5 Sheet Lưu Riêng SSOT</span> • <span>📷 Timestamp Camera (GPS)</span> • <span>🖼️ Chuẩn 1440×1088 px</span>"
+        : (currentLang === "my"
+          ? "<span>သီးသန့် Sheet ၅ ခု SSOT</span> • <span>📷 Timestamp Camera (GPS)</span> • <span>🖼️ 1440×1088 px စံနှုန်း</span>"
+          : "<span>5 Dedicated Sheets SSOT</span> • <span>📷 Timestamp Camera (GPS)</span> • <span>🖼️ 1440×1088 px Standard</span>"));
+      setTxt("tab6-title", currentLang === "vi" ? "📊 6. Tab Tổng Hợp & Phúc Tra" : (currentLang === "my" ? "📊 ၆။ စုစည်းချက်နှင့် ပုံစစ်ဆေးချက်" : "📊 6. Summary & Photo Audit"));
+      setTxt("tab6-sub", currentLang === "vi" ? "Tổng hợp riêng • Kiểm tra ảnh & Duyệt" : (currentLang === "my" ? "စုစည်းချက် • ပုံစစ်ဆေးချက်နှင့် အတည်ပြုချက်" : "Dedicated Summary • Photo Audit & Approve"));
       setTxt("tab7-title", currentLang === "vi" ? "🛡️ 7. Gmail Phê Duyệt" : (currentLang === "my" ? "🛡️ ၇။ အတည်ပြုခွင့် Gmail" : "🛡️ 7. Approver Gmail"));
       setTxt("tab7-sub", currentLang === "vi" ? "Danh sách người phê duyệt" : (currentLang === "my" ? "အတည်ပြုခွင့်ရှိသူများ စာရင်း" : "Authorized Approvers List"));
-      setTxt("btn-ping-sheet", currentLang === "vi" ? "📡 Kiểm Tra Kết Nối Sheet" : (currentLang === "my" ? "📡 Sheet ချိတ်ဆက်မှု စစ်ရန်" : "📡 Check Sheet Connection"));
-      setTxt("btn-open-experts", currentLang === "vi" ? "🧠 Báo Cáo 10 Chuyên Gia 1%" : (currentLang === "my" ? "🧠 ပညာရှင် ၁၀ ဦး အစီရင်ခံစာ" : "🧠 10 Experts Report"));
+      setTxt("btn-ping-sheet", currentLang === "vi" ? "📡 Kiểm Tra Kết Nối Sheet (Check Connection)" : (currentLang === "my" ? "📡 Sheet ချိတ်ဆက်မှု စစ်ရန် (Check Connection)" : "📡 Check Sheet Connection • Kiểm Tra Kết Nối"));
+      setTxt("btn-open-experts", currentLang === "vi" ? "🧠 Báo Cáo 10 Chuyên Gia (10 Experts)" : (currentLang === "my" ? "🧠 ပညာရှင် ၁၀ ဦး အစီရင်ခံစာ (10 Experts)" : "🧠 10 Experts Report • Báo Cáo 10 Chuyên Gia"));
 
       populateSavedSessionsDropdown();
       updateSeatAndTrainTelemetry();
@@ -2196,8 +2176,10 @@
       document.getElementById("cur-cl-rule").textContent =
         "Standard / Tiêu chuẩn / စံချိန်စံညွှန်း: " + tpl.passRule + " • Dedicated Sheet: [" + tpl.tabName + "] • 📄 PDF Export: 100% English Only";
       const sheetUrl = "https://docs.google.com/spreadsheets/d/" + CHECKLIST_SS_ID + "/edit#gid=" + tpl.gid;
-      document.getElementById("cur-dedicated-sheet-btn").href = sheetUrl;
-      document.getElementById("top-sheet-link").href = sheetUrl;
+      const curSheetBtn = document.getElementById("cur-dedicated-sheet-btn");
+      if (curSheetBtn) curSheetBtn.href = sheetUrl;
+      const topSheetBtn = document.getElementById("top-sheet-link");
+      if (topSheetBtn) topSheetBtn.href = sheetUrl;
       recalcLiveScore();
     }
 
@@ -2237,10 +2219,18 @@
       });
 
       const scoreRounded = Math.round(totalEval * 10) / 10;
-      const scoreLbl = currentLang === "vi" ? "🏆 Điểm: " : (currentLang === "my" ? "🏆 ရမှတ်: " : "🏆 Score: ");
-      const nokLbl = currentLang === "vi" ? "❌ Lỗi (NOK): " : (currentLang === "my" ? "❌ အပျက် (NOK): " : "❌ NOK: ");
-      const fixLbl = currentLang === "vi" ? "🔧 Đã sửa: " : (currentLang === "my" ? "🔧 ပြင်ပြီး: " : "🔧 Fixed: ");
-      const techLbl = currentLang === "vi" ? "☑️ Phòng KT duyệt: " : (currentLang === "my" ? "☑️ အတည်ပြုပြီး: " : "☑️ Approved: ");
+      const scoreLbl = currentLang === "vi"
+        ? "🏆 Điểm / Score / ရမှတ်: "
+        : (currentLang === "my" ? "🏆 ရမှတ် / Score / Điểm: " : "🏆 Score / Điểm / ရမှတ်: ");
+      const nokLbl = currentLang === "vi"
+        ? "❌ Lỗi (NOK) / အပျက်: "
+        : (currentLang === "my" ? "❌ အပျက် (NOK) / Lỗi: " : "❌ NOK / Lỗi / အပျက်: ");
+      const fixLbl = currentLang === "vi"
+        ? "🔧 Đã sửa / Fixed / ပြင်ပြီး: "
+        : (currentLang === "my" ? "🔧 ပြင်ပြီး / Fixed / Đã sửa: " : "🔧 Fixed / Đã sửa / ပြင်ပြီး: ");
+      const techLbl = currentLang === "vi"
+        ? "☑️ KT duyệt / Approved / အတည်ပြုပြီး: "
+        : (currentLang === "my" ? "☑️ အတည်ပြုပြီး / Approved / KT duyệt: " : "☑️ Approved / KT duyệt / အတည်ပြုပြီး: ");
       document.getElementById("live-score-pill").textContent = scoreLbl + scoreRounded + " / " + totalStd;
       document.getElementById("live-ok-pill").textContent = "✅ OK: " + okCnt;
       document.getElementById("live-nok-pill").textContent = nokLbl + nokCnt;
@@ -2248,7 +2238,7 @@
       const techPill = document.getElementById("live-tech-pill");
       if (techPill) techPill.textContent = techLbl + techCnt + "/" + nokCnt;
       document.getElementById("bottom-summary-text").textContent =
-        tpl.tabName + " • " + scoreLbl + scoreRounded + "/" + totalStd + " • OK: " + okCnt + " • NOK: " + nokCnt + " (" + fixLbl + fixCnt + ")";
+        tpl.tabName + " • Score: " + scoreRounded + "/" + totalStd + " • OK: " + okCnt + " • NOK: " + nokCnt + " (Fixed: " + fixCnt + "/" + nokCnt + ")";
     }
 
     function setItemFilter(f) {
@@ -3511,13 +3501,13 @@
     // SEQUENTIAL FIFO PHOTO UPLOAD TRAIN & WEAK-NETWORK ERROR / TICK XANH ENGINE
     // =========================================================================
     const SEAT_DEFINITIONS = {
-      site_bts:      { seatId: "SEAT-CL-01 (Ghế 1)", label: "1. Check Site (BTS) • GID 16375926" },
-      dg_gen:        { seatId: "SEAT-CL-02 (Ghế 2)", label: "2. Checklist DG • GID 1167502418" },
-      cable_route:   { seatId: "SEAT-CL-03 (Ghế 3)", label: "3. Checklist Cable Route • GID 1610772768" },
-      ug_cable:      { seatId: "SEAT-CL-04 (Ghế 4)", label: "4. Checklist UG Cable • GID 1237701259" },
-      solar:         { seatId: "SEAT-CL-05 (Ghế 5)", label: "5. Checklist Solar • GID 1984316283" },
-      bi_dashboard:  { seatId: "SEAT-CL-06 (Ghế 6)", label: "0. Tổng Hợp BI & Phúc Tra Ảnh • GID 1841227739" },
-      approvers_mgr: { seatId: "SEAT-CL-07 (Ghế 7)", label: "6. Gmail Phê Duyệt (Approvers) • GID 1521044256" }
+      site_bts:      { seatId: "SEAT-CL-01 (Seat 1 / Ghế 1 / ထိုင်ခုံ ၁)", label: "1. Check Site (BTS) • GID 16375926" },
+      dg_gen:        { seatId: "SEAT-CL-02 (Seat 2 / Ghế 2 / ထိုင်ခုံ ၂)", label: "2. Checklist DG • GID 1167502418" },
+      cable_route:   { seatId: "SEAT-CL-03 (Seat 3 / Ghế 3 / ထိုင်ခုံ ၃)", label: "3. Checklist Cable Route • GID 1610772768" },
+      ug_cable:      { seatId: "SEAT-CL-04 (Seat 4 / Ghế 4 / ထိုင်ခုံ ၄)", label: "4. Checklist UG Cable • GID 1237701259" },
+      solar:         { seatId: "SEAT-CL-05 (Seat 5 / Ghế 5 / ထိုင်ခုံ ၅)", label: "5. Checklist Solar • GID 1984316283" },
+      bi_dashboard:  { seatId: "SEAT-CL-06 (Seat 6 / Ghế 6 / ထိုင်ခုံ ၆)", label: "0. Summary BI & Photo Audit • GID 1841227739" },
+      approvers_mgr: { seatId: "SEAT-CL-07 (Seat 7 / Ghế 7 / ထိုင်ခုံ ၇)", label: "6. Approver Gmail List • GID 1521044256" }
     };
 
     let photoTrainQueue = [];
@@ -3553,15 +3543,15 @@
         if (failedItems.length > 0) {
           trainPill.style.background = "#991b1b";
           trainPill.style.color = "#fef2f2";
-          trainPill.textContent = "🚂 Đoàn Tàu Upload: ✅ " + uploadedCnt + " đã Tick Xanh • ❌ " + failedItems.length + " lỗi mạng chờ gửi lại";
+          trainPill.textContent = "🚂 FIFO Upload Train: ✅ " + uploadedCnt + " OK • ❌ " + failedItems.length + " Failed (Lỗi mạng / လိုင်းကျ)";
         } else if (uploadingCnt > 0) {
           trainPill.style.background = "#b45309";
           trainPill.style.color = "#fffbeb";
-          trainPill.textContent = "🚂 Đoàn Tàu Upload (FIFO): ⏳ Đang tải " + uploadingCnt + " ảnh... (✅ " + uploadedCnt + " xong)";
+          trainPill.textContent = "🚂 FIFO Upload Train: ⏳ Uploading " + uploadingCnt + " photos... (✅ " + uploadedCnt + " done)";
         } else {
           trainPill.style.background = "#334155";
           trainPill.style.color = "#f8fafc";
-          trainPill.textContent = "🚂 Đoàn Tàu Upload Ảnh (FIFO): ✅ " + uploadedCnt + " ảnh đã Tick Xanh";
+          trainPill.textContent = "🚂 FIFO Upload Train: ✅ " + uploadedCnt + " uploaded / đã tải / တင်ပြီး";
         }
       }
 
@@ -3572,13 +3562,13 @@
           onlinePill.style.borderColor = "#f87171";
           onlinePill.style.color = "#fef2f2";
           onlinePill.textContent = !navigator.onLine
-            ? "🔴 OFFLINE (Mất kết nối mạng) • Ảnh đang giữ an toàn trong máy"
-            : ("🟠 MẠNG YẾU • Có " + failedItems.length + " ảnh chưa lên được Drive (Bấm Tải Lại)");
+            ? "🔴 OFFLINE • Cached safely on device / Đã lưu tạm trong máy / ဖုန်းထဲသိမ်းထားသည်"
+            : ("🟠 WEAK NETWORK • " + failedItems.length + " pending retry / Chờ tải lại / ပြန်တင်ရန်ကျန်");
         } else {
           onlinePill.style.background = "#065f46";
           onlinePill.style.borderColor = "#10b981";
           onlinePill.style.color = "#d1fae5";
-          onlinePill.textContent = "🟢 ONLINE • Link Sheet & Drive 2.14 Sẵn Sàng";
+          onlinePill.textContent = "🟢 ONLINE • Auto-Sync Sheet & Drive 2.14 Ready • Sẵn Sàng • အဆင်သင့်ဖြစ်သည်";
         }
       }
 
