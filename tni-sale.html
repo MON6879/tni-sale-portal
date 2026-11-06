@@ -733,6 +733,7 @@ function copyTelegramReportTemplate(gName, gId, cat) {
   </div>
   <div id="topbar-actions">
     <button type="button" class="btn b-sm" onclick="go('guide')" style="background:#eff6ff;color:#1d4ed8;border:1.5px solid #93c5fd;font-weight:800;display:inline-flex;align-items:center;gap:5px" title="Mở Hướng Dẫn Sử Dụng Toàn Hệ Thống (Ghế AUDITOR-SALE-GUIDE Online 24/7)">📖 Guide (SOP)</button>
+      <a href="/checklist" target="_blank" style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:8px;background:#ecfdf5;color:#047857;border:1px solid #6ee7b7;font-size:11.5px;font-weight:800;text-decoration:none;cursor:pointer;white-space:nowrap" title="Mở Web BI Check List 5 Phân Hệ (1440x1088)">☑️ Check List BI</a>
     <!-- 📁 NÚT XEM KHO ẢNH DRIVE (1 LINK XEM HẾT TẤT CẢ HÌNH ẢNH) -->
     <a href="https://drive.google.com/drive/folders/12V-UaZM1cSha8LihCjBHTOU_BEAk74p-" target="_blank" class="btn b-sm" style="background:#fef3c7;color:#92400e;border:1.5px solid #fde68a;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:6px" title="Xem tất cả hình ảnh thu thập theo template trên Google Drive">
       📁 <span>Kho Ảnh Drive (Photos)</span>
@@ -1029,9 +1030,20 @@ function copyTelegramReportTemplate(gName, gId, cat) {
           <div style="font-size:12.5px;font-weight:700;color:#166534;margin-bottom:6px" data-lang="dispatch_photo_sec_title">📷 Hình Ảnh Xuất Bán Hàng &amp; Link Folder Drive (Bắt buộc):</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div>
-              <label style="font-size:11.5px;color:#166534;font-weight:600" data-lang="dispatch_select_photo_lbl">Chọn ảnh serial / giao hàng:</label>
-              <input type="file" id="b-photo-input" accept="image/*" multiple onchange="handleBPhotoUpload(this)" style="font-size:12px;margin-top:4px"/>
-              <div id="b-photos-preview" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap">
+                <label style="font-size:11.5px;color:#166534;font-weight:700" data-lang="dispatch_select_photo_lbl">📷 Chụp Trực Tiếp Ảnh Serial / Giao Hàng (Đóng dấu Tên KH + NV + Tọa Độ + Ngày Giờ):</label>
+                <div style="display:flex;gap:4px;align-items:center">
+                  <span id="b-photo-count-pill" style="background:#dcfce7;color:#166534;border:1px solid #86efac;padding:2px 8px;border-radius:999px;font-size:10.5px;font-weight:800">📸 Đã gắn: 0 ảnh</span>
+                  <button type="button" class="btn b-out b-xs" onclick="clearBPhotos()">✕ Xóa Ảnh</button>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px">
+                <button type="button" onclick="triggerSaleDirectCameraCapture('b')" style="flex:1;min-width:220px;background:linear-gradient(135deg,#dc2626,#ea580c);color:#fff;padding:10px 14px;border-radius:10px;font-size:12.5px;font-weight:900;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 12px rgba(220,38,38,0.28);border:2px solid #fecaca">
+                  📷 Chụp Ảnh Xuất Kho Trực Tiếp (1440×1088 • Nhiều Ảnh)
+                </button>
+              </div>
+              <div id="b-gps-status" style="margin-top:5px;font-size:11px;font-weight:700;color:#0369a1"></div>
+              <div id="b-photos-preview" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:8px"></div>
             </div>
             <div>
               <label style="font-size:11.5px;color:#166534;font-weight:600" data-lang="dispatch_drive_link_lbl">Link Google Drive lưu trữ hồ sơ KH:</label>
@@ -1446,13 +1458,22 @@ function copyTelegramReportTemplate(gName, gId, cat) {
         <b style="font-size:12.5px;color:#065f46;display:block;margin-top:14px;border-top:1px dashed #cbd5e1;padding-top:10px">
           5. Hình Ảnh Hiện Trường Nghiệm Thu (Tủ điện, Giàn pin, Đồng hồ 220V):
         </b>
-        <div style="margin-top:6px;background:#f8fafc;padding:10px;border-radius:8px;border:1px solid #cbd5e1">
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <input type="file" id="acc-photo-input" accept="image/*" multiple onchange="handleAccPhotoUpload(this)" style="font-size:12px"/>
-            <button class="btn b-out b-xs" onclick="clearAccPhotos()">✕ Xóa Hết Ảnh</button>
+        <div style="margin-top:6px;background:#f0fdf4;padding:12px;border-radius:10px;border:2px dashed #10b981">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+            <span style="font-size:11.5px;color:#065f46;font-weight:700">📸 Chụp trực tiếp nhiều ảnh nghiệm thu bằng Camera Điện Thoại (Tự động in Tên KH, Kỹ sư, GPS Lat/Long, Ngày giờ chuẩn 1440×1088 — Không chọn ảnh từ file):</span>
+            <div style="display:flex;gap:6px;align-items:center">
+              <span id="acc-photo-count-pill" style="background:#dcfce7;color:#166534;border:1px solid #86efac;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800">📸 Đã gắn: 0 ảnh</span>
+              <button type="button" class="btn b-out b-xs" onclick="clearAccPhotos()">✕ Xóa Hết Ảnh</button>
+            </div>
           </div>
-          <div id="acc-photos-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-            <!-- Thumbnail ảnh tải lên -->
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <button type="button" onclick="triggerSaleDirectCameraCapture('acc')" style="flex:1;min-width:260px;background:linear-gradient(135deg,#dc2626,#ea580c);color:#fff;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:900;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 12px rgba(220,38,38,0.28);border:2px solid #fecaca">
+              📷 Capture Acceptance Photo • Chụp Ảnh Nghiệm Thu Trực Tiếp (1440×1088)
+            </button>
+          </div>
+          <div id="acc-gps-status" style="margin-top:6px;font-size:11.5px;font-weight:700;color:#0369a1"></div>
+          <div id="acc-photos-preview" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:10px;margin-top:10px">
+            <!-- Thumbnail ảnh chụp trực tiếp -->
           </div>
           <div style="margin-top:8px">
             <label style="font-size:11.5px;color:#64748b">Hoặc link Google Drive lưu trữ ảnh:</label>
@@ -1905,9 +1926,20 @@ function copyTelegramReportTemplate(gName, gId, cat) {
             <div style="font-size:12.5px;font-weight:700;color:#9a3412;margin-bottom:6px">📷 Hình Ảnh Phiếu Ký Gởi / Serial &amp; Link Folder Drive (Bắt buộc):</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
               <div>
-                <label style="font-size:11.5px;color:#9a3412;font-weight:600">Chọn ảnh serial / điểm bán ký gởi:</label>
-                <input type="file" id="kg-photo-input" accept="image/*" multiple onchange="handleKGPhotoUpload(this)" style="font-size:12px;margin-top:4px"/>
-                <div id="kg-photos-preview" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap">
+                  <label style="font-size:11.5px;color:#9a3412;font-weight:700">📷 Chụp Trực Tiếp Ảnh Serial / Điểm Bán Ký Gởi (Đóng dấu KH + NV + GPS + Ngày Giờ):</label>
+                  <div style="display:flex;gap:4px;align-items:center">
+                    <span id="kg-photo-count-pill" style="background:#ffedd5;color:#9a3412;border:1px solid #fdba74;padding:2px 8px;border-radius:999px;font-size:10.5px;font-weight:800">📸 Đã gắn: 0 ảnh</span>
+                    <button type="button" class="btn b-out b-xs" onclick="clearKGPhotos()">✕ Xóa Ảnh</button>
+                  </div>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px">
+                  <button type="button" onclick="triggerSaleDirectCameraCapture('kg')" style="flex:1;min-width:220px;background:linear-gradient(135deg,#dc2626,#ea580c);color:#fff;padding:10px 14px;border-radius:10px;font-size:12.5px;font-weight:900;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 12px rgba(220,38,38,0.28);border:2px solid #fecaca">
+                    📷 Chụp Ảnh Ký Gởi Trực Tiếp (1440×1088 • Nhiều Ảnh)
+                  </button>
+                </div>
+                <div id="kg-gps-status" style="margin-top:5px;font-size:11px;font-weight:700;color:#0369a1"></div>
+                <div id="kg-photos-preview" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:8px"></div>
               </div>
               <div>
                 <label style="font-size:11.5px;color:#9a3412;font-weight:600">Link Google Drive lưu trữ hồ sơ ký gởi:</label>
@@ -2138,14 +2170,26 @@ function copyTelegramReportTemplate(gName, gId, cat) {
           <div class="f"><label>Tiềm Năng</label><select id="ks-tn"><option>Cao</option><option>Trung bình</option><option>Thấp</option></select></div>
           <div class="f"><label>📍 Lat (Vĩ Độ - Tự bóc tách từ ảnh)</label><input id="ks-lat" placeholder="VD: 14.082345" oninput="handleCoordPasteSplit('ks')"/></div>
           <div class="f"><label>📍 Long (Kinh Độ - Tự bóc tách từ ảnh)</label><input id="ks-lng" placeholder="VD: 98.198765" oninput="handleCoordPasteSplit('ks')"/></div>
-          <div class="f" style="grid-column:1/-1;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;padding:12px">
-            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
-              <div style="font-size:12.5px;font-weight:800;color:#1e40af">📷 Tải Hình Khảo Sát (Tự Động Bóc Tách Tọa Độ Lat/Long &amp; Gom 1 Link Vào Folder 2.12 SALE SOLUTION - BUILDING)</div>
-              <button type="button" class="btn b-xs b-bl" onclick="getDeviceGpsForSurvey('ks')">📍 Lấy Tọa Độ Thiết Bị</button>
+          <div class="f" style="grid-column:1/-1;background:linear-gradient(135deg,#eff6ff,#f0fdf4);border:1.5px solid #38bdf8;border-radius:10px;padding:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+              <div>
+                <div style="font-size:13px;font-weight:800;color:#0f172a">📷 Chụp Ảnh Khảo Sát Trực Tiếp (Chuẩn BI Checklist 1440×1088 • Tự Đóng Dấu Tên KH + Tên NV + Ngày Giờ + Lat, Long)</div>
+                <div style="font-size:11.5px;color:#475569;margin-top:2px">Chụp trực tiếp trên điện thoại 1 hoặc nhiều ảnh liên tiếp (không nhập ảnh từ file). Hệ thống tự động đóng dấu <b>Tên KH • Tên NV • Tọa độ Lat, Long • Ngày Giờ</b> lên ảnh 1440×1088 và gom vào 1 Link Folder <code>2.12 SALE SOLUTION - BUILDING</code>.</div>
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <button type="button" class="btn b-xs b-bl" onclick="getDeviceGpsForSurvey('ks')">📍 Lấy GPS Hiện Tại</button>
+                <button type="button" class="btn b-xs b-out" onclick="clearSurveyPhotos('ks')">✕ Xóa Ảnh</button>
+              </div>
             </div>
-            <input type="file" id="ks-photo-input" accept="image/*" multiple onchange="handleSurveyPhotoUpload(this, 'ks')" style="font-size:12.5px"/>
-            <div id="ks-gps-status" style="font-size:12px;color:#0369a1;margin-top:6px;font-weight:600"></div>
-            <div id="ks-photos-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <button type="button" onclick="triggerSaleDirectCameraCapture('ks')" style="background:linear-gradient(135deg,#dc2626 0%,#ea580c 100%);color:#fff;border:none;border-radius:9px;padding:10px 18px;font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 4px 12px rgba(220,38,38,0.3);display:inline-flex;flex-direction:column;align-items:center;line-height:1.3">
+                <span>📷 Capture Survey Photo • Chụp Ảnh Khảo Sát Trực Tiếp (1440×1088)</span>
+                <span style="font-size:10.5px;font-weight:700;opacity:0.95">🇲🇲 တိုက်ရိုက်ဓာတ်ပုံရိုက်ရန် (Chụp Nhiều Ảnh • Tên KH + Tên NV + GPS + Ngày Giờ)</span>
+              </button>
+              <span id="ks-photo-count-pill" style="background:#dcfce7;color:#166534;font-weight:800;font-size:12px;padding:6px 12px;border-radius:99px;border:1px solid #86efac">📸 Đã gắn: 0 ảnh (1440×1088)</span>
+            </div>
+            <div id="ks-gps-status" style="font-size:12px;color:#0369a1;margin-top:8px;font-weight:700"></div>
+            <div id="ks-photos-preview" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:10px"></div>
           </div>
           <div class="f" style="grid-column:1/-1"><label>Nhận Xét</label><textarea id="ks-nx" placeholder="..."></textarea></div>
         </div>
@@ -2570,22 +2614,115 @@ function copyTelegramReportTemplate(gName, gId, cat) {
           <input id="sv-photo-url" placeholder="Tự động tạo 1 link gôm tất cả hình khi lưu..." readonly style="background:#f8fafc;color:#0284c7;font-size:12px"/>
         </div>
 
-        <!-- 📷 HÌNH ẢNH KHẢO SÁT + TỰ ĐỘNG BÓC TÁCH TỌA ĐỘ LAT/LONG + GOM 1 LINK DRIVE -->
+        <!-- 📷 CHỤP ẢNH KHẢO SÁT TRỰC TIẾP GIỐNG BI CHECKLIST (1440x1088 • TÊN KH + TÊN NV + TỌA ĐỘ + NGÀY GIỜ + NHIỀU ẢNH • KHÔNG NHẬP TỪ FILE) -->
         <div class="f" style="grid-column:1/-1;background:linear-gradient(135deg,#eff6ff,#f0fdf4);border:1.5px solid #86efac;border-radius:10px;padding:14px">
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
             <div>
-              <div style="font-size:13px;font-weight:800;color:#166534">📷 Upload Hình Khảo Sát (Tự Động Bóc Tách Tọa Độ Lat / Long &amp; Gom Vào 1 Link Folder `2.12 SALE SOLUTION - BUILDING`)</div>
-              <div style="font-size:11.5px;color:#475569;margin-top:2px">Chọn 1 hoặc nhiều ảnh có gắn tọa độ (EXIF GPS hoặc ảnh chụp từ app GPS Map Camera). Hệ thống tự động bóc tách điền vào ô <b>Lat</b> &amp; <b>Long</b> và gom toàn bộ hình vào 1 folder link trên Google Drive.</div>
+              <div style="font-size:13px;font-weight:800;color:#166534">📷 Chụp Ảnh Khảo Sát Trực Tiếp Trên Điện Thoại (Chuẩn BI Checklist 1440×1088 • Gom Vào 1 Link Folder `2.12 SALE SOLUTION - BUILDING`)</div>
+              <div style="font-size:11.5px;color:#475569;margin-top:2px">Chụp trực tiếp trên điện thoại 1 hoặc nhiều ảnh liên tiếp (không nhập ảnh từ file). Hệ thống tự động đóng dấu <b>Tên KH • Tên Nhân Viên • Tọa Độ Lat, Long • Ngày Giờ Chụp</b> lên ảnh 1440×1088 và gom toàn bộ hình vào 1 folder link trên Google Drive.</div>
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <button type="button" class="btn b-xs b-gn" onclick="getDeviceGpsForSurvey('sv')" title="Lấy tọa độ GPS trực tiếp từ điện thoại/máy tính">📍 Lấy GPS Hiện Tại</button>
+              <button type="button" class="btn b-xs b-gn" onclick="getDeviceGpsForSurvey('sv')" title="Lấy tọa độ GPS trực tiếp từ điện thoại">📍 Lấy GPS Hiện Tại</button>
               <button type="button" class="btn b-xs b-out" onclick="clearSurveyPhotos('sv')">✕ Xóa Ảnh</button>
             </div>
           </div>
-          <input type="file" id="sv-photo-input" accept="image/*" multiple onchange="handleSurveyPhotoUpload(this, 'sv')" style="font-size:12.5px;padding:6px;background:#fff;border:1px dashed #3b82f6;border-radius:6px;width:100%"/>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <button type="button" onclick="triggerSaleDirectCameraCapture('sv')" style="background:linear-gradient(135deg,#dc2626 0%,#ea580c 100%);color:#fff;border:none;border-radius:9px;padding:10px 18px;font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 4px 12px rgba(220,38,38,0.3);display:inline-flex;flex-direction:column;align-items:center;line-height:1.3">
+              <span>📷 Capture Survey Photo • Chụp Ảnh Khảo Sát Trực Tiếp (1440×1088)</span>
+              <span style="font-size:10.5px;font-weight:700;opacity:0.95">🇲🇲 တိုက်ရိုက်ဓာတ်ပုံရိုက်ရန် (Multi-Shot • Tên KH + Tên NV + Lat, Long + Ngày Giờ)</span>
+            </button>
+            <span id="sv-photo-count-pill" style="background:#dcfce7;color:#166534;font-weight:800;font-size:12px;padding:6px 12px;border-radius:99px;border:1px solid #86efac">📸 Đã gắn: 0 ảnh (1440×1088)</span>
+          </div>
           <div id="sv-gps-status" style="font-size:12px;color:#0369a1;margin-top:8px;font-weight:700"></div>
-          <div id="sv-photos-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"></div>
+          <div id="sv-photos-preview" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:10px"></div>
         </div>
+
+<!-- MODAL: BUILT-IN WEB LIVE TIMESTAMP CAMERA GIỐNG BI CHECKLIST (1440x1088 PX • CUSTOMER NAME + STAFF NAME + DATE/TIME + LAT, LONG + MULTI-SHOT & TICK SELECT) -->
+<div id="modal-sale-web-timestamp-cam" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.82);z-index:99990;align-items:center;justify-content:center;padding:12px;overflow-y:auto">
+  <div style="width:100%;max-width:860px;padding:14px;background:#0f172a;color:#fff;border:2px solid #38bdf8;border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,0.6);margin:auto">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;border-bottom:1px solid #334155;padding-bottom:10px;margin-bottom:10px">
+      <div>
+        <h3 style="font-size:15.5px;font-weight:900;color:#38bdf8;display:flex;align-items:center;gap:6px;margin:0" id="sale-webcam-modal-title">
+          📷 Web Timestamp Camera Trực Tiếp (Chuẩn 1440×1088 px • Tự Đóng Dấu Tên KH + Tên NV + Ngày Giờ + Lat, Long)
+        </h3>
+        <div style="font-size:11.5px;color:#cbd5e1;margin-top:3px" id="sale-webcam-modal-sub">
+          Chụp 1 hoặc nhiều ảnh liên tiếp (2–5+ ảnh), tick chọn ảnh ưng ý và bấm [✅ Xác Nhận &amp; Gắn] để đính kèm thẳng vào khảo sát!
+        </div>
+      </div>
+      <button type="button" style="background:#ef4444;color:#fff;border:none;border-radius:8px;width:32px;height:32px;font-size:15px;font-weight:900;cursor:pointer;flex-shrink:0" onclick="closeSaleWebTimestampCameraModal()">✕</button>
+    </div>
+
+    <!-- LIVE EDITABLE META BAR INSIDE CAMERA (STAFF NAME, CUSTOMER NAME, LAT/LONG) -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:10px;background:#1e293b;padding:9px 11px;border-radius:10px;border:1px solid #334155">
+      <div>
+        <label style="font-size:10.5px;font-weight:800;color:#93c5fd;display:block;margin-bottom:2px">👤 Tên Nhân Viên (In lên ảnh) *</label>
+        <input type="text" id="sale-webcam-inp-staff" placeholder="Nhập tên nhân viên..." style="width:100%;padding:5px 8px;border-radius:6px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:12px;font-weight:800" oninput="syncSaleWebCamInputsToForm();syncSaleWebCamOverlayText()" />
+      </div>
+      <div>
+        <label style="font-size:10.5px;font-weight:800;color:#fde047;display:block;margin-bottom:2px">🏢 Tên Khách Hàng / Đại Lý (In lên ảnh) *</label>
+        <input type="text" id="sale-webcam-inp-kh" placeholder="Nhập tên KH / Đại lý..." style="width:100%;padding:5px 8px;border-radius:6px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:12px;font-weight:800" oninput="syncSaleWebCamInputsToForm();syncSaleWebCamOverlayText()" />
+      </div>
+      <input type="hidden" id="sale-webcam-inp-gps" value="" />
+    </div>
+
+    <!-- LIVE 4:3 (1440x1088) CAMERA VIEWPORT WITH REAL-TIME TIMESTAMP OVERLAY (GIỐNG HỆT BI CHECKLIST) -->
+    <div style="position:relative;width:100%;aspect-ratio:1440/1088;background:#000;border-radius:12px;overflow:hidden;border:2px solid #475569">
+      <video id="sale-webcam-live-video" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;display:block"></video>
+
+      <!-- Flash effect layer when snapping -->
+      <div id="sale-webcam-flash-layer" style="position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity 0.15s"></div>
+
+      <!-- SINGLE CLEAN TIMESTAMP OVERLAY (1 DATE/TIME • 1 COORDINATE • 1 STAFF NAME • 1 CUSTOMER NAME) -->
+      <div style="position:absolute;bottom:10px;right:12px;text-align:right;background:rgba(15,23,42,0.76);padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.25);pointer-events:none;font-size:12.5px;line-height:1.45;text-shadow:0 1px 3px #000">
+        <div style="font-weight:900;color:#fff;font-size:13px" id="sale-webcam-ov-clock">2026-11-06 14:30:00</div>
+        <div style="font-weight:900;color:#34d399;font-size:12.5px" id="sale-webcam-ov-gps">Lat, Long: 14.08234, 98.19876</div>
+        <div style="font-weight:800;color:#fde68a" id="sale-webcam-ov-staff">Staff: -</div>
+        <div style="font-weight:800;color:#93c5fd" id="sale-webcam-ov-kh">Customer: -</div>
+      </div>
+
+      <!-- Error/Fallback message if camera permission denied in WebView -->
+      <div id="sale-webcam-error-box" style="display:none;position:absolute;inset:0;background:rgba(15,23,42,0.94);flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;gap:10px">
+        <div style="font-size:14px;font-weight:900;color:#f87171" id="sale-webcam-error-msg">⚠️ Không mở được ống kính trực tiếp trên trình duyệt này.</div>
+        <div style="font-size:12px;color:#cbd5e1;max-width:460px">Bấm nút bên dưới để mở trực tiếp Camera điện thoại — hệ thống tự động đóng dấu Tên KH + Tên Nhân Viên + Ngày Giờ + Lat, Long và chuẩn hóa 1440×1088 px!</div>
+        <button type="button" onclick="triggerSaleFallbackSystemCamWithStamp()" style="background:#059669;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:900;cursor:pointer">
+          📸 Chụp Bằng Camera Máy (Tự Đóng Dấu Tên KH + Tên NV + Giờ + Lat, Long 1440×1088)
+        </button>
+      </div>
+    </div>
+
+    <!-- CAMERA CONTROLS BAR: SWITCH CAM • SNAP PHOTO (1440x1088) • CONFIRM & ATTACH TICKED PHOTOS -->
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:10px">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <button type="button" onclick="switchSaleWebCamFacingMode()" style="background:#334155;color:#fff;border:1px solid #64748b;border-radius:9px;padding:9px 12px;font-size:12px;font-weight:800;cursor:pointer">
+          🔄 Đổi Cam Trước/Sau
+        </button>
+      </div>
+
+      <button type="button" id="btn-sale-webcam-snap" onclick="snapPhotoFromSaleWebTimestampCam()" style="background:linear-gradient(135deg,#dc2626 0%,#ea580c 100%);color:#fff;border:2px solid #fca5a5;border-radius:99px;padding:11px 24px;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 4px 14px rgba(220,38,38,0.45);display:inline-flex;align-items:center;gap:7px">
+        📸 BẤM CHỤP ẢNH (1440×1088) • SNAP
+      </button>
+
+      <button type="button" id="btn-sale-webcam-confirm" onclick="confirmAndAttachSaleWebCamPhotos()" style="background:linear-gradient(135deg,#10b981 0%,#059669 100%);color:#fff;border:2px solid #6ee7b7;border-radius:10px;padding:11px 18px;font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 4px 14px rgba(16,185,129,0.4)">
+        ✅ Xác Nhận &amp; Gắn (0 ảnh đã Tick)
+      </button>
+    </div>
+
+    <!-- CAPTURED PHOTOS TRAY (MULTI-SHOT PREVIEW WITH TICK CHECKBOXES GIỐNG HỆT BI CHECKLIST) -->
+    <div style="margin-top:10px;background:#1e293b;border-radius:10px;padding:9px 11px;border:1px solid #334155">
+      <div style="font-size:11.5px;font-weight:800;color:#93c5fd;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px">
+        <span id="sale-webcam-tray-title">🖼️ Khay Ảnh Vừa Chụp Trong Lượt Này (0 ảnh) — Tick ☑️ những ảnh muốn gắn vào khảo sát:</span>
+        <span style="color:#34d399;font-size:11px">Có thể bấm [📸 BẤM CHỤP ẢNH] liên tiếp 2–5+ tấm rồi bấm [✅ Xác Nhận]!</span>
+      </div>
+      <div id="sale-webcam-captured-tray" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px;max-height:210px;overflow-y:auto">
+        <div style="grid-column:1/-1;text-align:center;color:#64748b;font-size:11.5px;padding:10px">
+          Chưa chụp tấm nào. Hãy hướng camera vào vị trí khảo sát và bấm nút <strong>[📸 BẤM CHỤP ẢNH (1440×1088)]</strong>!
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<input type="file" id="sale-hidden-camera-direct-input" accept="image/*" capture="environment" style="display:none" onchange="handleSaleSystemCameraFallbackSelected(event)" />
+
 
         <div class="f" style="grid-column:1/-1"><label>📝 Detailed Notes</label><textarea id="sv-gc" rows="3" placeholder="Specific needs, expected purchase timeline, special notes..."></textarea></div>
       </div>
@@ -2901,13 +3038,23 @@ function copyTelegramReportTemplate(gName, gId, cat) {
           <div class="f" style="grid-column:1/-1"><label id="lbl-bh-mota">Mô Tả Chi Tiết Triệu Chứng Lỗi Kỹ Thuật *</label>
             <textarea id="bh-mota" rows="2" placeholder="VD: Báo mã lỗi F08, không sạc vào pin lưu trữ, quạt kêu to..."></textarea>
           </div>
-          <div class="f" style="grid-column:1/-1;background:#fff7ed;border:1.5px dashed #fdba74;border-radius:10px;padding:12px">
-            <label id="lbl-bh-photo" style="font-weight:700;color:#9a3412">📷 Đính Kèm Hình Ảnh Thiết Bị Lỗi / Tem Serial (Tự động gom vào 1 Link Folder trong [2.12 SALE  SOLUTION - BUILDING])</label>
-            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:6px">
-              <input type="file" id="bh-photo-input" accept="image/*" multiple onchange="handleBhPhotoSelect_(this)" style="font-size:12px"/>
+          <div class="f" style="grid-column:1/-1;background:#fff7ed;border:2px dashed #f97316;border-radius:10px;padding:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+              <label id="lbl-bh-photo" style="font-weight:700;color:#9a3412;margin:0">📷 Chụp Trực Tiếp Hình Ảnh Thiết Bị Lỗi / Tem Serial (Đóng dấu Tên KH + NV + Tọa Độ GPS + Ngày Giờ • Gom vào [2.12 SALE SOLUTION - BUILDING])</label>
+              <div style="display:flex;gap:6px;align-items:center">
+                <span id="bh-photo-count-pill" style="background:#ffedd5;color:#9a3412;border:1px solid #fdba74;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800">📸 Đã gắn: 0 ảnh</span>
+                <button type="button" class="btn b-out b-xs" onclick="clearSurveyPhotos('bh')">✕ Xóa Ảnh</button>
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px">
+              <button type="button" onclick="triggerSaleDirectCameraCapture('bh')" style="flex:1;min-width:260px;background:linear-gradient(135deg,#dc2626,#ea580c);color:#fff;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:900;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 12px rgba(220,38,38,0.28);border:2px solid #fecaca">
+                📷 Capture RMA Fault Photo • Chụp Ảnh Bảo Hành Trực Tiếp (1440×1088)
+              </button>
               <input id="bh-photourl" placeholder="Link folder ảnh Google Drive (tự động tạo khi bấm Lưu)..." style="flex:1;min-width:240px;font-size:12px"/>
             </div>
-            <div id="bh-photo-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"></div>
+            <div id="bh-gps-status" style="margin-top:6px;font-size:11.5px;font-weight:700;color:#0369a1"></div>
+            <div id="bh-photos-preview" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:10px;margin-top:10px"></div>
+            <div id="bh-photo-preview" style="display:none"></div>
           </div>
         </div>
         <div class="fa" style="margin-top:12px">
@@ -3049,7 +3196,7 @@ var DEFAULT_STAFF_USERS = [
   { id: 'emp_034', name: 'Ingyin Hmwe', email: 'ingyinhmwe49@gmail.com', role: 'sales', title: 'Asset', phone: '09794307646\'09680129666' },
 ];
 var SALE_GAS_URL = GAS_SALE_URL;
-var surveyUploadedPhotos = { sv: [], ks: [] };
+var surveyUploadedPhotos = { sv: [], ks: [], b: [], acc: [], kg: [], bh: [] };
 var _guideLangMode = 'all';
 var _kkActiveTab = 'kho';
 var ROLES = {
@@ -4885,10 +5032,10 @@ function handleBPhotoUpload(input) {
 }
 function clearBPhotos() {
   bUploadedPhotos = [];
-  const c = document.getElementById('b-photos-preview');
-  if (c) c.innerHTML = '';
-  const inp = document.getElementById('b-photo-input');
-  if (inp) inp.value = '';
+  if (typeof surveyUploadedPhotos !== 'undefined') surveyUploadedPhotos.b = [];
+  if (typeof renderSaleAttachedPhotosGallery_ === 'function') renderSaleAttachedPhotosGallery_('b');
+  const st = document.getElementById('b-gps-status');
+  if (st) st.innerHTML = '';
 }
 
 function printDispatchNote(){
@@ -6527,10 +6674,10 @@ function handleKGPhotoUpload(input) {
 }
 function clearKGPhotos() {
   kgUploadedPhotos = [];
-  const c = document.getElementById('kg-photos-preview');
-  if (c) c.innerHTML = '';
-  const inp = document.getElementById('kg-photo-input');
-  if (inp) inp.value = '';
+  if (typeof surveyUploadedPhotos !== 'undefined') surveyUploadedPhotos.kg = [];
+  if (typeof renderSaleAttachedPhotosGallery_ === 'function') renderSaleAttachedPhotosGallery_('kg');
+  const st = document.getElementById('kg-gps-status');
+  if (st) st.innerHTML = '';
 }
 
 function addKG(){
@@ -8123,10 +8270,10 @@ function handleAccPhotoUpload(input) {
 
 function clearAccPhotos() {
   accUploadedPhotos = [];
-  const container = document.getElementById('acc-photos-preview');
-  if (container) container.innerHTML = '';
-  const inp = document.getElementById('acc-photo-input');
-  if (inp) inp.value = '';
+  if (typeof surveyUploadedPhotos !== 'undefined') surveyUploadedPhotos.acc = [];
+  if (typeof renderSaleAttachedPhotosGallery_ === 'function') renderSaleAttachedPhotosGallery_('acc');
+  const st = document.getElementById('acc-gps-status');
+  if (st) st.innerHTML = '';
 }
 
 function calcAccFinancials() {
@@ -8523,13 +8670,9 @@ function loadSelectedAcceptance(id) {
 
   // Photos
   accUploadedPhotos = [...(r.photos || [])];
-  const photoContainer = document.getElementById('acc-photos-preview');
-  if (photoContainer) {
-    photoContainer.innerHTML = accUploadedPhotos.map(url => `
-      <div style="position:relative;width:80px;height:80px;border-radius:6px;overflow:hidden;border:1px solid #cbd5e1">
-        <img src="${url}" style="width:100%;height:100%;object-fit:cover"/>
-      </div>
-    `).join('');
+  if (typeof surveyUploadedPhotos !== 'undefined') surveyUploadedPhotos.acc = [...accUploadedPhotos];
+  if (typeof renderSaleAttachedPhotosGallery_ === 'function') {
+    renderSaleAttachedPhotosGallery_('acc');
   }
 
   // Signature
@@ -11334,62 +11477,593 @@ async function extractWatermarkGpsViaOcr_(dataUrl) {
   }
 }
 
-function handleSurveyPhotoUpload(input, prefix) {
-  const pfx = prefix || 'sv';
-  if (!input || !input.files || !input.files.length) return;
-  const isVi = currentLang === 'vi';
-  const files = Array.from(input.files);
-  const previewBox = document.getElementById(pfx + '-photos-preview');
-  const statusEl = document.getElementById(pfx + '-gps-status');
-  if (statusEl) statusEl.innerHTML = `⏳ ${isVi ? 'Đang đọc ảnh & tự động bóc tách tọa độ Lat / Long...' : 'Reading photo & auto-extracting Lat / Long coordinates...'}`;
+// =========================================================================
+// BUILT-IN WEB LIVE TIMESTAMP CAMERA ENGINE GIỐNG HỆT BI CHECKLIST
+// (1440x1088 + CUSTOMER NAME + STAFF NAME + DATE/TIME + LAT, LONG + MULTI-SHOT TRAY)
+// =========================================================================
+var saleWebCamStream_ = null;
+var saleWebCamFacingMode_ = 'environment';
+var saleWebCamClockTimer_ = null;
+var saleWebCamCapturedShots_ = []; // [{ id, dataUrl, checked, timestampStr, gpsStr, staffName, customerName }]
+var saleGpsWatchId_ = null;
+var saleActiveSurveyPrefix_ = 'sv';
 
-  files.forEach(file => {
-    // 1. Kiểm tra tọa độ trong tên file trước
-    const fnCoords = parseCoordinatesFromText_(file.name);
-    if (fnCoords) applyExtractedSurveyGps_(pfx, fnCoords);
+function formatSaleNowTimestampStr_() {
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' +
+         pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+}
 
-    // 2. Đọc ArrayBuffer để bóc tách EXIF GPS tức thì (<30ms)
-    const bufReader = new FileReader();
-    bufReader.onload = function(ev) {
-      const exifCoords = parseExifGpsFromBuffer_(ev.target.result);
-      if (exifCoords) {
-        applyExtractedSurveyGps_(pfx, exifCoords);
+function getSaleCurrentFormattedGps_(prefix) {
+  const pfx = prefix || saleActiveSurveyPrefix_ || 'sv';
+  const lat = (document.getElementById(pfx + '-lat')?.value || '').trim();
+  const lng = (document.getElementById(pfx + '-lng')?.value || '').trim();
+  if (lat && lng) return `${lat}, ${lng}`;
+  const wcGps = (document.getElementById('sale-webcam-inp-gps')?.value || '').trim();
+  if (wcGps) return wcGps;
+  if (window._lastSaleLiveGps) return window._lastSaleLiveGps;
+  return 'Đang lấy GPS...';
+}
+
+function startSaleBackgroundGpsTracker_(prefix) {
+  const pfx = prefix || saleActiveSurveyPrefix_ || 'sv';
+  if (!navigator.geolocation) return;
+  try {
+    navigator.geolocation.getCurrentPosition(pos => {
+      const lat = pos.coords.latitude.toFixed(6);
+      const lng = pos.coords.longitude.toFixed(6);
+      const coord = `${lat}, ${lng}`;
+      window._lastSaleLiveGps = coord;
+      const latEl = document.getElementById(pfx + '-lat');
+      const lngEl = document.getElementById(pfx + '-lng');
+      if (latEl) latEl.value = lat;
+      if (lngEl) lngEl.value = lng;
+      const wcGps = document.getElementById('sale-webcam-inp-gps');
+      if (wcGps) wcGps.value = coord;
+      syncSaleWebCamOverlayText();
+    }, () => {}, { enableHighAccuracy: true, timeout: 10000, maximumAge: 10000 });
+
+    if (saleGpsWatchId_ === null) {
+      saleGpsWatchId_ = navigator.geolocation.watchPosition(pos => {
+        const curPfx = saleActiveSurveyPrefix_ || 'sv';
+        const lat = pos.coords.latitude.toFixed(6);
+        const lng = pos.coords.longitude.toFixed(6);
+        const coord = `${lat}, ${lng}`;
+        window._lastSaleLiveGps = coord;
+        const latEl = document.getElementById(curPfx + '-lat');
+        const lngEl = document.getElementById(curPfx + '-lng');
+        if (latEl) latEl.value = lat;
+        if (lngEl) lngEl.value = lng;
+        const wcGps = document.getElementById('sale-webcam-inp-gps');
+        if (wcGps) wcGps.value = coord;
+        syncSaleWebCamOverlayText();
+      }, () => {}, { enableHighAccuracy: true, maximumAge: 8000 });
+    }
+  } catch (e) {}
+}
+
+function getSalePrefixDomMap_(prefix) {
+  const pfx = prefix || saleActiveSurveyPrefix_ || 'sv';
+  const map = {
+    sv:  { staffId: 'sv-nv',          khId: 'sv-kh',  fallbackKhId: '' },
+    ks:  { staffId: 'ks-nks',         khId: 'ks-ten', fallbackKhId: '' },
+    b:   { staffId: '',               khId: 'b-kh',   fallbackKhId: '' },
+    acc: { staffId: 'acc-eng',        khId: 'acc-kh', fallbackKhId: 'acc-code' },
+    kg:  { staffId: '',               khId: 'kg-db',  fallbackKhId: 'kg-nn' },
+    bh:  { staffId: 'bh-nguoinhan',   khId: 'bh-kh',  fallbackKhId: 'bh-sp' }
+  };
+  return map[pfx] || map.sv;
+}
+
+function syncSalePrefixPhotoArrays_(prefix) {
+  const pfx = prefix || saleActiveSurveyPrefix_ || 'sv';
+  const list = surveyUploadedPhotos[pfx] || [];
+  if (pfx === 'b') {
+    bUploadedPhotos = [...list];
+  } else if (pfx === 'acc') {
+    accUploadedPhotos = [...list];
+  } else if (pfx === 'kg') {
+    kgUploadedPhotos = [...list];
+  } else if (pfx === 'bh') {
+    _bhPendingPhotos = list.map((u, idx) => ({ name: 'RMA_Cam_' + (idx + 1) + '.jpg', dataUrl: u }));
+  }
+}
+
+function syncSaleWebCamInputsToForm() {
+  const pfx = saleActiveSurveyPrefix_ || 'sv';
+  const domMap = getSalePrefixDomMap_(pfx);
+  const wcStaff = document.getElementById('sale-webcam-inp-staff');
+  const wcKh = document.getElementById('sale-webcam-inp-kh');
+  const formStaff = domMap.staffId ? document.getElementById(domMap.staffId) : null;
+  const formKh = domMap.khId ? document.getElementById(domMap.khId) : null;
+  if (formStaff && wcStaff && wcStaff.value.trim()) formStaff.value = wcStaff.value.trim();
+  if (formKh && wcKh && wcKh.value.trim()) formKh.value = wcKh.value.trim();
+}
+
+function syncSaleWebCamOverlayText() {
+  const pfx = saleActiveSurveyPrefix_ || 'sv';
+  const domMap = getSalePrefixDomMap_(pfx);
+  const formStaffVal = domMap.staffId ? (document.getElementById(domMap.staffId)?.value || '') : '';
+  const formKhVal = (domMap.khId ? (document.getElementById(domMap.khId)?.value || '') : '') ||
+                    (domMap.fallbackKhId ? (document.getElementById(domMap.fallbackKhId)?.value || '') : '');
+  const staff = ((document.getElementById('sale-webcam-inp-staff')?.value) || formStaffVal || (typeof getStaffName === 'function' ? getStaffName() : '') || (typeof _getCurUserName === 'function' ? _getCurUserName() : '') || 'TNI-Staff').trim();
+  const kh = ((document.getElementById('sale-webcam-inp-kh')?.value) || formKhVal || 'Customer').trim();
+  const gps = getSaleCurrentFormattedGps_(pfx);
+  const nowStr = formatSaleNowTimestampStr_();
+
+  const clk = document.getElementById('sale-webcam-ov-clock');
+  if (clk) clk.textContent = nowStr;
+  const gpsEl = document.getElementById('sale-webcam-ov-gps');
+  if (gpsEl) gpsEl.textContent = 'Lat, Long: ' + gps;
+  const stEl = document.getElementById('sale-webcam-ov-staff');
+  if (stEl) stEl.textContent = 'Staff: ' + staff;
+  const khEl = document.getElementById('sale-webcam-ov-kh');
+  if (khEl) khEl.textContent = 'Customer: ' + kh;
+}
+
+function triggerSaleDirectCameraCapture(prefix) {
+  saleActiveSurveyPrefix_ = prefix || 'sv';
+  openSaleWebTimestampCameraModal();
+}
+
+async function openSaleWebTimestampCameraModal() {
+  const pfx = saleActiveSurveyPrefix_ || 'sv';
+  const modal = document.getElementById('modal-sale-web-timestamp-cam');
+  if (!modal) return;
+
+  saleWebCamCapturedShots_ = [];
+  renderSaleWebCamCapturedTray();
+
+  const domMap = getSalePrefixDomMap_(pfx);
+  const formStaffEl = domMap.staffId ? document.getElementById(domMap.staffId) : null;
+  if (formStaffEl && !formStaffEl.value.trim()) {
+    const autoName = (typeof getStaffName === 'function' ? getStaffName() : '') || (typeof _getCurUserName === 'function' ? _getCurUserName() : '') || '';
+    if (autoName && autoName !== 'Admin') formStaffEl.value = autoName;
+  }
+
+  const mainStaff = (formStaffEl?.value || (typeof getStaffName === 'function' ? getStaffName() : '') || (typeof _getCurUserName === 'function' ? _getCurUserName() : '') || '').trim();
+  const mainKh = ((domMap.khId ? (document.getElementById(domMap.khId)?.value || '') : '') ||
+                  (domMap.fallbackKhId ? (document.getElementById(domMap.fallbackKhId)?.value || '') : '')).trim();
+  const wcStaff = document.getElementById('sale-webcam-inp-staff');
+  const wcKh = document.getElementById('sale-webcam-inp-kh');
+  const wcGps = document.getElementById('sale-webcam-inp-gps');
+  if (wcStaff) wcStaff.value = mainStaff;
+  if (wcKh) wcKh.value = mainKh;
+  if (wcGps) wcGps.value = getSaleCurrentFormattedGps_(pfx);
+
+  startSaleBackgroundGpsTracker_(pfx);
+  syncSaleWebCamOverlayText();
+
+  if (saleWebCamClockTimer_) clearInterval(saleWebCamClockTimer_);
+  saleWebCamClockTimer_ = setInterval(syncSaleWebCamOverlayText, 1000);
+
+  modal.style.display = 'flex';
+  await startSaleWebCamVideoStream();
+}
+
+async function startSaleWebCamVideoStream() {
+  stopSaleWebCamVideoStream();
+  const videoEl = document.getElementById('sale-webcam-live-video');
+  const errBox = document.getElementById('sale-webcam-error-box');
+  if (errBox) errBox.style.display = 'none';
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    if (errBox) errBox.style.display = 'flex';
+    return;
+  }
+
+  try {
+    saleWebCamStream_ = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: saleWebCamFacingMode_ },
+        width: { ideal: 1920 },
+        height: { ideal: 1440 }
+      },
+      audio: false
+    });
+    if (videoEl) {
+      videoEl.srcObject = saleWebCamStream_;
+      await videoEl.play().catch(() => {});
+    }
+  } catch (err) {
+    try {
+      saleWebCamStream_ = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      if (videoEl) {
+        videoEl.srcObject = saleWebCamStream_;
+        await videoEl.play().catch(() => {});
       }
+    } catch (err2) {
+      if (errBox) {
+        errBox.style.display = 'flex';
+        const msgEl = document.getElementById('sale-webcam-error-msg');
+        if (msgEl) msgEl.textContent = '⚠️ Trình duyệt chưa cấp quyền Camera (' + (err2.message || 'Permission') + '). Hãy bấm nút bên dưới để chụp ảnh có đóng dấu!';
+      }
+    }
+  }
+}
+
+function stopSaleWebCamVideoStream() {
+  if (saleWebCamStream_) {
+    try {
+      saleWebCamStream_.getTracks().forEach(t => t.stop());
+    } catch (e) {}
+    saleWebCamStream_ = null;
+  }
+  const videoEl = document.getElementById('sale-webcam-live-video');
+  if (videoEl) videoEl.srcObject = null;
+}
+
+function switchSaleWebCamFacingMode() {
+  saleWebCamFacingMode_ = saleWebCamFacingMode_ === 'environment' ? 'user' : 'environment';
+  startSaleWebCamVideoStream();
+}
+
+function closeSaleWebTimestampCameraModal(skipUnattachedCheck) {
+  if (!skipUnattachedCheck && saleWebCamCapturedShots_.some(x => x.checked)) {
+    const cnt = saleWebCamCapturedShots_.filter(x => x.checked).length;
+    if (confirm('📸 Bạn vừa chụp ' + cnt + ' bức ảnh đã tick chọn trong khay. Bạn có muốn GẮN LUÔN ' + cnt + ' ảnh này vào khảo sát trước khi đóng không?')) {
+      confirmAndAttachSaleWebCamPhotos();
+      return;
+    }
+  }
+  stopSaleWebCamVideoStream();
+  if (saleWebCamClockTimer_) {
+    clearInterval(saleWebCamClockTimer_);
+    saleWebCamClockTimer_ = null;
+  }
+  const modal = document.getElementById('modal-sale-web-timestamp-cam');
+  if (modal) modal.style.display = 'none';
+}
+
+function drawSaleFullTimestampWatermark1440_(ctx, meta) {
+  const TARGET_W = 1440;
+  const TARGET_H = 1088;
+  const nowStr = (meta && meta.nowStr) ? meta.nowStr : formatSaleNowTimestampStr_();
+  const staffName = ((meta && meta.staffName) || 'TNI-Staff').trim();
+  const customerName = ((meta && meta.customerName) || 'Customer').trim();
+  const gpsStr = ((meta && meta.gps) ? meta.gps : getSaleCurrentFormattedGps_()).trim();
+
+  // ĐÚNG CHUẨN BI CHECKLIST 1440x1088: Khung góc phải dưới (Ngày giờ • Lat, Long • Staff • Customer)
+  const timeLine = `${nowStr}`;
+  const gpsLine = `Lat, Long: ${gpsStr}`;
+  const staffLine = `Staff: ${staffName}`;
+  const khLine = `Customer: ${customerName}`;
+
+  ctx.font = 'bold 24px Inter, Segoe UI, Arial, sans-serif';
+  const maxTextW = Math.max(
+    ctx.measureText(timeLine).width,
+    ctx.measureText(gpsLine).width,
+    ctx.measureText(staffLine).width,
+    ctx.measureText(khLine).width
+  );
+  const boxW = Math.min(TARGET_W - 40, Math.max(460, Math.ceil(maxTextW + 48)));
+  const boxH = 136;
+  const boxX = TARGET_W - boxW - 18;
+  const boxY = TARGET_H - boxH - 18;
+
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.72)';
+  ctx.fillRect(boxX, boxY, boxW, boxH);
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+  ctx.textAlign = 'right';
+  const rightX = TARGET_W - 34;
+
+  ctx.font = 'bold 24px Inter, Segoe UI, Arial, sans-serif';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(timeLine, rightX, boxY + 32);
+
+  ctx.font = 'bold 23px Inter, Segoe UI, Arial, sans-serif';
+  ctx.fillStyle = '#34d399';
+  ctx.fillText(gpsLine, rightX, boxY + 64);
+
+  ctx.font = 'bold 22px Inter, Segoe UI, Arial, sans-serif';
+  ctx.fillStyle = '#fde68a';
+  ctx.fillText(staffLine, rightX, boxY + 95);
+
+  ctx.font = 'bold 22px Inter, Segoe UI, Arial, sans-serif';
+  ctx.fillStyle = '#93c5fd';
+  ctx.fillText(khLine, rightX, boxY + 124);
+
+  ctx.textAlign = 'left';
+}
+
+function snapPhotoFromSaleWebTimestampCam() {
+  const pfx = saleActiveSurveyPrefix_ || 'sv';
+  const wcStaff = document.getElementById('sale-webcam-inp-staff');
+  const wcKh = document.getElementById('sale-webcam-inp-kh');
+  if (wcKh && !wcKh.value.trim()) {
+    al('⚠️ Vui lòng nhập Tên Khách Hàng / Đại Lý vào ô phía trên Camera trước khi bấm chụp!', 'wr');
+    wcKh.focus();
+    return;
+  }
+  if (wcStaff && !wcStaff.value.trim()) {
+    al('⚠️ Vui lòng nhập Tên Nhân Viên vào ô phía trên Camera trước khi bấm chụp!', 'wr');
+    wcStaff.focus();
+    return;
+  }
+  syncSaleWebCamInputsToForm();
+
+  const videoEl = document.getElementById('sale-webcam-live-video');
+  if (!videoEl || !videoEl.videoWidth) {
+    triggerSaleFallbackSystemCamWithStamp();
+    return;
+  }
+
+  const flashEl = document.getElementById('sale-webcam-flash-layer');
+  if (flashEl) {
+    flashEl.style.opacity = '0.85';
+    setTimeout(() => { flashEl.style.opacity = '0'; }, 160);
+  }
+
+  const TARGET_W = 1440;
+  const TARGET_H = 1088;
+  const canvas = document.createElement('canvas');
+  canvas.width = TARGET_W;
+  canvas.height = TARGET_H;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, TARGET_W, TARGET_H);
+
+  const vw = videoEl.videoWidth;
+  const vh = videoEl.videoHeight;
+  const srcRatio = vw / vh;
+  const dstRatio = TARGET_W / TARGET_H;
+  let sx = 0, sy = 0, sw = vw, sh = vh;
+  if (srcRatio > dstRatio) {
+    sw = Math.round(vh * dstRatio);
+    sx = Math.round((vw - sw) / 2);
+  } else if (srcRatio < dstRatio) {
+    sh = Math.round(vw / dstRatio);
+    sy = Math.round((vh - sh) / 2);
+  }
+  ctx.drawImage(videoEl, sx, sy, sw, sh, 0, 0, TARGET_W, TARGET_H);
+
+  const staff = (wcStaff?.value || 'TNI-Staff').trim();
+  const kh = (wcKh?.value || 'Customer').trim();
+  const gps = getSaleCurrentFormattedGps_(pfx);
+  const nowStr = formatSaleNowTimestampStr_();
+
+  drawSaleFullTimestampWatermark1440_(ctx, {
+    staffName: staff,
+    customerName: kh,
+    gps: gps,
+    nowStr: nowStr
+  });
+
+  const dataUrl1440 = canvas.toDataURL('image/jpeg', 0.88);
+  saleWebCamCapturedShots_.push({
+    id: 'sale-wc-' + Date.now() + '-' + saleWebCamCapturedShots_.length,
+    dataUrl: dataUrl1440,
+    checked: true,
+    timestampStr: nowStr,
+    gpsStr: gps,
+    staffName: staff,
+    customerName: kh
+  });
+
+  renderSaleWebCamCapturedTray();
+}
+
+function triggerSaleFallbackSystemCamWithStamp() {
+  const wcKh = document.getElementById('sale-webcam-inp-kh');
+  if (wcKh && !wcKh.value.trim()) {
+    al('⚠️ Vui lòng nhập Tên Khách Hàng / Đại Lý vào ô phía trên trước khi chụp!', 'wr');
+    wcKh.focus();
+    return;
+  }
+  syncSaleWebCamInputsToForm();
+  const inp = document.getElementById('sale-hidden-camera-direct-input');
+  if (inp) {
+    inp.value = '';
+    inp.click();
+  }
+}
+
+function handleSaleSystemCameraFallbackSelected(ev) {
+  const rawFiles = Array.from((ev.target && ev.target.files) || []);
+  const files = rawFiles.filter(f => (f.type && f.type.indexOf('image/') === 0) || /\.(jpe?g|png|webp|heic|bmp|gif)$/i.test(f.name || ''));
+  if (!files.length) return;
+  const pfx = saleActiveSurveyPrefix_ || 'sv';
+  const staff = (document.getElementById('sale-webcam-inp-staff')?.value || 'TNI-Staff').trim();
+  const kh = (document.getElementById('sale-webcam-inp-kh')?.value || 'Customer').trim();
+
+  files.forEach((file, idx) => {
+    const bufReader = new FileReader();
+    bufReader.onload = function(bEv) {
+      const exifCoords = parseExifGpsFromBuffer_(bEv.target.result);
+      if (exifCoords) applyExtractedSurveyGps_(pfx, exifCoords);
     };
     bufReader.readAsArrayBuffer(file);
 
-    // 3. Đọc DataURL để hiển thị preview + nén hợp lý + quét OCR chữ tọa độ in trên hình (nếu ảnh chụp qua GPS Map Camera / gửi qua Viber mất EXIF)
     const urlReader = new FileReader();
-    urlReader.onload = function(e) {
-      const rawDataUrl = e.target.result;
-      compressSurveyImage_(rawDataUrl, 1280, 0.82, function(compressedUrl) {
-        surveyUploadedPhotos[pfx].push(compressedUrl);
-        if (previewBox) {
-          const wrap = document.createElement('div');
-          wrap.style.cssText = 'position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;border:2px solid #86efac;box-shadow:0 1px 3px rgba(0,0,0,0.1)';
-          wrap.innerHTML = `<img src="${compressedUrl}" style="width:100%;height:100%;object-fit:cover"/>
-            <button type="button" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;border:none;border-radius:99px;width:18px;height:18px;font-size:10px;cursor:pointer;line-height:1" onclick="this.parentElement.remove();surveyUploadedPhotos['${pfx}']=surveyUploadedPhotos['${pfx}'].filter(u=>u!=='${compressedUrl}')">&times;</button>`;
-          previewBox.appendChild(wrap);
-        }
+    urlReader.onload = function(uEv) {
+      const img = new Image();
+      img.onload = function() {
+        const TARGET_W = 1440;
+        const TARGET_H = 1088;
+        const canvas = document.createElement('canvas');
+        canvas.width = TARGET_W;
+        canvas.height = TARGET_H;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, TARGET_W, TARGET_H);
 
-        // Nếu sau 250ms chưa có EXIF GPS thì tự động quét chữ tọa độ in trên ảnh (GPS Map Camera watermark)
-        setTimeout(async () => {
-          const latEl = document.getElementById(pfx + '-lat');
-          const lngEl = document.getElementById(pfx + '-lng');
-          if (latEl && lngEl && (!latEl.value || !lngEl.value)) {
-            if (statusEl) statusEl.innerHTML = `🔍 ${isVi ? 'Ảnh không có EXIF ẩn — Đang tự động đọc chữ tọa độ in trên hình (GPS Map Camera)...' : 'Scanning GPS watermark text printed on image...'}`;
-            const ocrCoords = await extractWatermarkGpsViaOcr_(rawDataUrl);
-            if (ocrCoords) {
-              applyExtractedSurveyGps_(pfx, ocrCoords);
-            } else if (!latEl.value && statusEl) {
-              statusEl.innerHTML = `ℹ️ ${isVi ? 'Đã tải ảnh (' + surveyUploadedPhotos[pfx].length + ' hình). Không tìm thấy tọa độ trong ảnh — Bấm "📍 Lấy GPS Hiện Tại" hoặc nhập Lat/Long.' : 'Photo loaded. Click "Get Device GPS" or enter Lat/Long.'}`;
-            }
-          }
-        }, 250);
-      });
+        const vw = img.width, vh = img.height;
+        const srcRatio = vw / vh, dstRatio = TARGET_W / TARGET_H;
+        let sx = 0, sy = 0, sw = vw, sh = vh;
+        if (srcRatio > dstRatio) { sw = Math.round(vh * dstRatio); sx = Math.round((vw - sw) / 2); }
+        else if (srcRatio < dstRatio) { sh = Math.round(vw / dstRatio); sy = Math.round((vh - sh) / 2); }
+        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, TARGET_W, TARGET_H);
+
+        const gps = getSaleCurrentFormattedGps_(pfx);
+        const nowStr = formatSaleNowTimestampStr_();
+        drawSaleFullTimestampWatermark1440_(ctx, {
+          staffName: staff,
+          customerName: kh,
+          gps: gps,
+          nowStr: nowStr
+        });
+        const dataUrl1440 = canvas.toDataURL('image/jpeg', 0.88);
+        saleWebCamCapturedShots_.push({
+          id: 'sale-sys-' + Date.now() + '-' + idx + '-' + saleWebCamCapturedShots_.length,
+          dataUrl: dataUrl1440,
+          checked: true,
+          timestampStr: nowStr,
+          gpsStr: gps,
+          staffName: staff,
+          customerName: kh
+        });
+        renderSaleWebCamCapturedTray();
+      };
+      img.src = uEv.target.result;
     };
     urlReader.readAsDataURL(file);
   });
+}
+
+function renderSaleWebCamCapturedTray() {
+  const trayEl = document.getElementById('sale-webcam-captured-tray');
+  const titleEl = document.getElementById('sale-webcam-tray-title');
+  const confirmBtn = document.getElementById('btn-sale-webcam-confirm');
+  const checkedCount = saleWebCamCapturedShots_.filter(x => x.checked).length;
+
+  if (titleEl) {
+    titleEl.textContent = `🖼️ Khay Ảnh Vừa Chụp (${saleWebCamCapturedShots_.length} ảnh, Đã tick chọn: ${checkedCount} ảnh) — Tick ☑️ những ảnh muốn gắn vào khảo sát:`;
+  }
+  if (confirmBtn) {
+    confirmBtn.innerHTML = `✅ Xác Nhận &amp; Gắn (${checkedCount} ảnh đã Tick)`;
+  }
+  if (!trayEl) return;
+
+  if (saleWebCamCapturedShots_.length === 0) {
+    trayEl.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:#94a3b8;font-size:11.5px;padding:10px">Chưa chụp tấm nào. Hãy hướng camera vào vị trí khảo sát và bấm nút <strong>[📸 BẤM CHỤP ẢNH (1440×1088)]</strong>!</div>`;
+    return;
+  }
+
+  trayEl.innerHTML = saleWebCamCapturedShots_.map((shot, idx) => `
+    <div style="position:relative;border:2px solid ${shot.checked ? '#10b981' : '#475569'};border-radius:8px;overflow:hidden;background:#0f172a">
+      <img src="${shot.dataUrl}" style="width:100%;aspect-ratio:1440/1088;object-fit:cover;display:block;cursor:pointer" onclick="toggleSaleWebCamShotCheck(${idx})" />
+      <label style="position:absolute;top:5px;left:5px;background:rgba(15,23,42,0.88);color:#fff;padding:3px 7px;border-radius:6px;font-size:11px;font-weight:900;display:inline-flex;align-items:center;gap:4px;cursor:pointer;border:1px solid #10b981">
+        <input type="checkbox" ${shot.checked ? 'checked' : ''} onchange="toggleSaleWebCamShotCheck(${idx})" style="width:15px;height:15px;accent-color:#10b981;cursor:pointer" />
+        <span>Ảnh #${idx + 1}</span>
+      </label>
+      <button type="button" onclick="removeSaleWebCamShot(${idx})" style="position:absolute;top:5px;right:5px;background:rgba(220,38,38,0.92);color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10.5px;font-weight:900;cursor:pointer">✕</button>
+      <div style="font-size:9.5px;color:#cbd5e1;padding:3px 5px;background:rgba(15,23,42,0.9);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+        🏢 ${escH_(shot.customerName)} • 📍 ${escH_(shot.gpsStr)}
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleSaleWebCamShotCheck(idx) {
+  if (!saleWebCamCapturedShots_[idx]) return;
+  saleWebCamCapturedShots_[idx].checked = !saleWebCamCapturedShots_[idx].checked;
+  renderSaleWebCamCapturedTray();
+}
+
+function removeSaleWebCamShot(idx) {
+  saleWebCamCapturedShots_.splice(idx, 1);
+  renderSaleWebCamCapturedTray();
+}
+
+function confirmAndAttachSaleWebCamPhotos() {
+  const selectedShots = saleWebCamCapturedShots_.filter(x => x.checked);
+  if (selectedShots.length === 0) {
+    snapPhotoFromSaleWebTimestampCam();
+    const retrySelected = saleWebCamCapturedShots_.filter(x => x.checked);
+    if (retrySelected.length === 0) {
+      alert('⚠️ Vui lòng bấm nút [📸 BẤM CHỤP ẢNH (1440×1088)] để chụp ít nhất 1 tấm ảnh!');
+      return;
+    }
+    return confirmAndAttachSaleWebCamPhotos();
+  }
+
+  const pfx = saleActiveSurveyPrefix_ || 'sv';
+  if (!surveyUploadedPhotos[pfx]) surveyUploadedPhotos[pfx] = [];
+  selectedShots.forEach(shot => {
+    surveyUploadedPhotos[pfx].push(shot.dataUrl);
+  });
+  syncSalePrefixPhotoArrays_(pfx);
+
+  closeSaleWebTimestampCameraModal(true);
+  renderSaleAttachedPhotosGallery_(pfx);
+
+  const statusEl = document.getElementById(pfx + '-gps-status');
+  const lastShot = selectedShots[selectedShots.length - 1];
+  if (statusEl && lastShot) {
+    statusEl.innerHTML = `✅ Đã gắn <b>${surveyUploadedPhotos[pfx].length} ảnh chuẩn 1440×1088</b> (Đã đóng dấu KH: <b>${escH_(lastShot.customerName)}</b> • NV: <b>${escH_(lastShot.staffName)}</b> • GPS: <b>${escH_(lastShot.gpsStr)}</b> • Giờ: <b>${escH_(lastShot.timestampStr)}</b>)`;
+  }
+}
+
+function renderSaleAttachedPhotosGallery_(prefix) {
+  const pfx = prefix || 'sv';
+  const previewBox = document.getElementById(pfx + '-photos-preview');
+  const pillEl = document.getElementById(pfx + '-photo-count-pill');
+  const list = surveyUploadedPhotos[pfx] || [];
+
+  if (pillEl) {
+    pillEl.innerHTML = `📸 Đã gắn: ${list.length} ảnh (1440×1088)`;
+  }
+  if (!previewBox) return;
+
+  if (!list.length) {
+    previewBox.innerHTML = '';
+    return;
+  }
+
+  const cards = list.map((dataUrl, i) => `
+    <div style="position:relative;border:2px solid #10b981;border-radius:10px;overflow:hidden;background:#0f172a;box-shadow:0 2px 8px rgba(0,0,0,0.15)">
+      <img src="${dataUrl}" alt="Survey Photo #${i + 1}" style="width:100%;aspect-ratio:1440/1088;object-fit:cover;display:block;cursor:pointer" onclick="previewSalePhotoFullModal_('${pfx}', ${i})" title="Bấm để xem rõ ảnh 1440×1088 & chữ đóng dấu" />
+      <button type="button" onclick="removeSaleAttachedPhoto_('${pfx}', ${i})" style="position:absolute;top:6px;right:6px;background:rgba(220,38,38,0.92);color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:900;cursor:pointer">✕ #${i + 1}</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:rgba(5,150,105,0.92);color:#fff;font-size:10.5px;font-weight:800">
+        <span>📸 ẢNH #${i + 1}/${list.length}</span>
+        <span>✅ 1440×1088 Stamped</span>
+      </div>
+    </div>
+  `).join('');
+
+  const addMoreCard = `
+    <div style="display:flex;align-items:center;justify-content:center;border:2px dashed #10b981;border-radius:10px;background:#ecfdf5;min-height:135px;padding:10px">
+      <button type="button" onclick="triggerSaleDirectCameraCapture('${pfx}')" style="background:transparent;border:none;color:#047857;font-size:12px;font-weight:900;cursor:pointer;text-align:center;line-height:1.4">
+        ➕ 📷 Chụp Thêm Ảnh Khảo Sát<br/><span style="font-size:11px;color:#059669">(#${list.length + 1} • 1440×1088)</span>
+      </button>
+    </div>
+  `;
+
+  previewBox.innerHTML = cards + addMoreCard;
+}
+
+function removeSaleAttachedPhoto_(prefix, index) {
+  const pfx = prefix || 'sv';
+  if (!surveyUploadedPhotos[pfx]) return;
+  surveyUploadedPhotos[pfx].splice(index, 1);
+  syncSalePrefixPhotoArrays_(pfx);
+  renderSaleAttachedPhotosGallery_(pfx);
+}
+
+function previewSalePhotoFullModal_(prefix, index) {
+  const pfx = prefix || 'sv';
+  const dataUrl = (surveyUploadedPhotos[pfx] || [])[index];
+  if (!dataUrl) return;
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.9);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px';
+  modal.onclick = () => modal.remove();
+  modal.innerHTML = `
+    <div style="max-width:95vw;max-height:88vh;position:relative" onclick="event.stopPropagation()">
+      <img src="${dataUrl}" style="max-width:95vw;max-height:82vh;border-radius:12px;border:2px solid #38bdf8;box-shadow:0 12px 32px rgba(0,0,0,0.5)" />
+      <div style="text-align:center;margin-top:10px">
+        <button type="button" class="btn b-rd" onclick="this.closest('div[style*="position:fixed"]').remove()">✕ Đóng Xem Ảnh #${index + 1} (1440×1088)</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function handleSurveyPhotoUpload(input, prefix) {
+  triggerSaleDirectCameraCapture(prefix || 'sv');
 }
 
 function applyExtractedSurveyGps_(pfx, coords) {
@@ -11400,10 +12074,13 @@ function applyExtractedSurveyGps_(pfx, coords) {
   const statusEl = document.getElementById(pfx + '-gps-status');
   if (latEl) latEl.value = coords.lat;
   if (lngEl) lngEl.value = coords.lng;
+  window._lastSaleLiveGps = `${coords.lat}, ${coords.lng}`;
+  const wcGps = document.getElementById('sale-webcam-inp-gps');
+  if (wcGps) wcGps.value = window._lastSaleLiveGps;
+  syncSaleWebCamOverlayText();
   if (statusEl) {
-    statusEl.innerHTML = `✅ ${isVi ? 'Đã tự động bóc tách tọa độ từ hình (' + coords.source + '):' : 'Auto-extracted coordinates (' + coords.source + '):'} <b style="color:#15803d">Lat: ${coords.lat} | Long: ${coords.lng}</b> — <a href="https://www.google.com/maps?q=${coords.lat},${coords.lng}" target="_blank" style="color:#0284c7;text-decoration:underline">🗺️ Xem vị trí trên Google Maps</a>`;
+    statusEl.innerHTML = `✅ ${isVi ? 'Đã tự động cập nhật tọa độ (' + coords.source + '):' : 'Auto-extracted coordinates (' + coords.source + '):'} <b style="color:#15803d">Lat: ${coords.lat} | Long: ${coords.lng}</b> — <a href="https://www.google.com/maps?q=${coords.lat},${coords.lng}" target="_blank" style="color:#0284c7;text-decoration:underline">🗺️ Xem vị trí trên Google Maps</a>`;
   }
-  al(`🧭 ${isVi ? 'Đã tự động bóc tách tọa độ:' : 'Extracted GPS:'} ${coords.lat}, ${coords.lng}`, 'ok');
 }
 
 function compressSurveyImage_(dataUrl, maxDim, quality, cb) {
@@ -11428,10 +12105,8 @@ function compressSurveyImage_(dataUrl, maxDim, quality, cb) {
 function clearSurveyPhotos(prefix) {
   const pfx = prefix || 'sv';
   surveyUploadedPhotos[pfx] = [];
-  const p = document.getElementById(pfx + '-photos-preview');
-  if (p) p.innerHTML = '';
-  const inp = document.getElementById(pfx + '-photo-input');
-  if (inp) inp.value = '';
+  syncSalePrefixPhotoArrays_(pfx);
+  renderSaleAttachedPhotosGallery_(pfx);
   const st = document.getElementById(pfx + '-gps-status');
   if (st) st.innerHTML = '';
   const uEl = document.getElementById(pfx + '-photo-url');
@@ -12233,6 +12908,10 @@ function clearWarrantyForm() {
     if (el) el.value = id === 'bh-chiphi' ? '0' : '';
   });
   _bhPendingPhotos = [];
+  if (typeof surveyUploadedPhotos !== 'undefined') surveyUploadedPhotos.bh = [];
+  if (typeof renderSaleAttachedPhotosGallery_ === 'function') renderSaleAttachedPhotosGallery_('bh');
+  const st = document.getElementById('bh-gps-status');
+  if (st) st.innerHTML = '';
   const prev = document.getElementById('bh-photo-preview');
   if (prev) prev.innerHTML = '';
   const res = document.getElementById('bh-lookup-result');
