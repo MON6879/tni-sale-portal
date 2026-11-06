@@ -652,10 +652,9 @@
     }
     .btn-cam-capture.before-btn { background: #dc2626; }
     .btn-cam-capture.after-btn { background: #059669; }
-    .btn-cam-capture.ts-app-btn {
-      background: #1e293b;
-      flex: 0 0 auto;
-      padding: 7px 9px;
+    .btn-cam-capture.choose-btn {
+      background: #2563eb;
+      flex: 1;
     }
     .fix-status-select {
       padding: 4px 7px;
@@ -1119,9 +1118,8 @@
           <div class="camera-banner-actions">
             <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;color:#0f172a;cursor:pointer;">
               <input type="checkbox" id="chk-auto-stamp" checked />
-              <span id="lbl-auto-stamp">Tự đóng dấu GPS + Giờ + Mã Trạm lên ảnh nếu chụp thường</span>
+              <span id="lbl-auto-stamp">Tự đóng dấu GPS + Giờ + Mã Trạm lên ảnh (1440×1088)</span>
             </label>
-            <button type="button" class="btn-tscam" onclick="launchTimestampCameraApp()">📍 Mở App Timestamp Camera (GPS)</button>
           </div>
         </div>
       </div>
@@ -1412,44 +1410,9 @@
     </div>
   </div>
 
-  <!-- HIDDEN FILE INPUT FOR GALLERY / TIMESTAMP CAMERA & DIRECT CAMERA CAPTURE -->
+  <!-- HIDDEN FILE INPUT FOR GALLERY / PHOTO PICKER & DIRECT CAMERA CAPTURE -->
   <input type="file" id="hidden-photo-input" accept="image/*" style="display:none;" onchange="handlePhotoFileSelected(event)" />
   <input type="file" id="hidden-camera-direct-input" accept="image/*" capture="environment" style="display:none;" onchange="handlePhotoFileSelected(event)" />
-
-  <!-- MODAL 0: TIMESTAMP CAMERA DIRECT LAUNCH & 1-TAP ATTACH WHEN RETURNING -->
-  <div class="modal-backdrop" id="modal-tscam-return">
-    <div class="modal-box" style="max-width:520px;text-align:center;padding:20px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;padding-bottom:10px;margin-bottom:14px;">
-        <div style="font-size:15.5px;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:6px;">
-          <span>📍 Timestamp Camera — Chụp &amp; Đính Kèm Ảnh (1440×1088)</span>
-        </div>
-        <button class="btn-close-modal" onclick="closeModal('modal-tscam-return')">✕</button>
-      </div>
-      <div id="tscam-modal-target-badge" style="display:inline-block;background:#eff6ff;border:1.5px solid #93c5fd;color:#1e3a8a;font-weight:900;font-size:13px;padding:6px 14px;border-radius:99px;margin-bottom:12px;">
-        Mục: -
-      </div>
-      <p style="font-size:13px;color:#334155;font-weight:600;line-height:1.5;margin-bottom:14px;">
-        1️⃣ Hệ thống đã tự động mở ứng dụng <strong>Timestamp Camera</strong> trên điện thoại để bạn chụp ảnh có tọa độ GPS.<br/>
-        2️⃣ Sau khi bấm chụp xong trong ứng dụng Timestamp Camera, quay lại màn hình này và bấm nút <strong>[📥 Lấy Ảnh Vừa Chụp]</strong> bên dưới để lưu liền lên Drive 2.14:
-      </p>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <button type="button" style="width:100%;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,#059669,#10b981);color:#fff;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 6px 18px rgba(5,150,105,0.3);" onclick="pickPhotoAfterTimestampCam()">
-          📥 BẤM VÀO ĐÂY ĐỂ ĐÍNH KÈM ẢNH VỪA CHỤP (1440×1088)
-        </button>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button type="button" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid #2563eb;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:800;cursor:pointer;" onclick="openNativeTimestampCameraIntent()">
-            🔄 Mở Lại App Timestamp Camera
-          </button>
-          <button type="button" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid #0f172a;background:#f8fafc;color:#0f172a;font-size:12px;font-weight:800;cursor:pointer;" onclick="captureDirectInBrowserCamera()">
-            📷 Chụp Trực Tiếp Ngay Tại Đây (Auto GPS)
-          </button>
-        </div>
-        <a href="https://play.google.com/store/apps/details?id=com.jeyluta.timestampcamerafree" target="_blank" rel="noopener" style="font-size:11.5px;color:#64748b;text-decoration:underline;margin-top:4px;">
-          📲 Chưa cài ứng dụng? Bấm tải Timestamp Camera (Google Play) tại đây ↗
-        </a>
-      </div>
-    </div>
-  </div>
 
   <!-- MODAL 1: SIDE-BY-SIDE BEFORE / AFTER 1440x1088 COMPARISON -->
   <div class="modal-backdrop" id="modal-compare">
@@ -1549,8 +1512,10 @@
         colFixedTitle: "🌟 CỘT 2: ĐÃ SỬA & ẢNH SO SÁNH (AFTER)",
         defectPlaceholder: "⚠️ Ghi rõ sai ở đâu / lỗi gì để biết chỗ sửa...",
         afterPlaceholder: "✅ Ghi chú kết quả đã sửa / thông số đo...",
-        btnTakeDefect: "📷 Chụp Ảnh Lỗi (1440×1088)",
-        btnTakeFixed: "📷 Chụp Ảnh Đã Sửa (1440×1088)",
+        btnTakeDefect: "📷 Chụp Ảnh Lỗi",
+        btnChooseDefect: "🖼️ Chọn Ảnh",
+        btnTakeFixed: "📷 Chụp Ảnh Đã Sửa",
+        btnChooseFixed: "🖼️ Chọn Ảnh",
         btnCompare: "👁️ So Sánh Ảnh Trước & Sau (1440×1088)",
         btnSaveCloud: "💾 Lưu Vào Sheet Riêng & Upload Ảnh 1440×1088 Lên Drive 2.14"
       },
@@ -1571,8 +1536,10 @@
         colFixedTitle: "🌟 COL 2: RECTIFIED / AFTER PHOTO (1440×1088)",
         defectPlaceholder: "⚠️ Describe exact fault location & what needs fixing...",
         afterPlaceholder: "✅ Describe rectification result / post-maintenance value...",
-        btnTakeDefect: "📷 Capture Defect (1440×1088)",
-        btnTakeFixed: "📷 Capture Fixed (1440×1088)",
+        btnTakeDefect: "📷 Capture Defect",
+        btnChooseDefect: "🖼️ Choose Photo",
+        btnTakeFixed: "📷 Capture Fixed",
+        btnChooseFixed: "🖼️ Choose Photo",
         btnCompare: "👁️ Compare Before & After (1440×1088)",
         btnSaveCloud: "💾 Save to Dedicated Sheet & Upload 1440×1088 Photos to Drive 2.14"
       },
@@ -1593,8 +1560,10 @@
         colFixedTitle: "🌟 ကော်လံ ၂ - ပြင်ဆင်ပြီးပုံ နှိုင်းယှဉ်ချက် (AFTER)",
         defectPlaceholder: "⚠️ မှားယွင်း/ပျက်စီးနေသော နေရာနှင့် ပြင်ရမည့်အချက်ကို ရေးပါ...",
         afterPlaceholder: "✅ ပြင်ဆင်ပြီးအခြေအနေ / တိုင်းတာချက်ကို ရေးပါ...",
-        btnTakeDefect: "📷 အပျက်ပုံရိုက်ရန် (1440×1088)",
-        btnTakeFixed: "📷 ပြင်ဆင်ပြီးပုံရိုက်ရန် (1440×1088)",
+        btnTakeDefect: "📷 အပျက်ပုံရိုက်ရန်",
+        btnChooseDefect: "🖼️ ပုံရွေးရန်",
+        btnTakeFixed: "📷 ပြင်ပြီးပုံရိုက်ရန်",
+        btnChooseFixed: "🖼️ ပုံရွေးရန်",
         btnCompare: "👁️ မပြင်မီနှင့် ပြင်ပြီးပုံ နှိုင်းယှဉ်ကြည့်ရန် (1440×1088)",
         btnSaveCloud: "💾 သီးသန့် Sheet နှင့် Drive 2.14 သို့ (1440×1088 ပုံ) သိမ်းဆည်းမည်"
       }
@@ -1908,8 +1877,8 @@
             </div>
             <input type="text" class="note-input" placeholder="${escAttr(t.defectPlaceholder)}" value="${escAttr(st.defectNote || '')}" oninput="updateItemField('${codeEsc}', 'defectNote', this.value)" />
             <div class="photo-btn-row">
-              <button type="button" class="btn-cam-capture before-btn" onclick="triggerPhotoCapture('${codeEsc}', 'BEFORE')">${t.btnTakeDefect}</button>
-              <button type="button" class="btn-cam-capture ts-app-btn" onclick="launchTimestampCameraAndPick('${codeEsc}', 'BEFORE')" title="Mở Timestamp Camera có tọa độ GPS">📍 TimestampCam</button>
+              <button type="button" class="btn-cam-capture before-btn" onclick="triggerDirectCameraCapture('${codeEsc}', 'BEFORE')" title="Mở Camera chụp trực tiếp">${t.btnTakeDefect}</button>
+              <button type="button" class="btn-cam-capture choose-btn" onclick="triggerPhotoCapture('${codeEsc}', 'BEFORE')" title="Chọn ảnh có sẵn từ thư viện / máy">${t.btnChooseDefect || '🖼️ Chọn Ảnh'}</button>
             </div>
             <div class="thumb-wrap ${beforeImgSrc ? 'has-img' : ''}">
               <img src="${escAttr(beforeImgSrc)}" alt="Before 1440x1088" onclick="openCompareModalForItem('${codeEsc}')" />
@@ -1932,8 +1901,8 @@
             </div>
             <input type="text" class="note-input" placeholder="${escAttr(t.afterPlaceholder)}" value="${escAttr(st.afterNote || '')}" oninput="updateItemField('${codeEsc}', 'afterNote', this.value)" />
             <div class="photo-btn-row">
-              <button type="button" class="btn-cam-capture after-btn" onclick="triggerPhotoCapture('${codeEsc}', 'AFTER')">${t.btnTakeFixed}</button>
-              <button type="button" class="btn-cam-capture ts-app-btn" onclick="launchTimestampCameraAndPick('${codeEsc}', 'AFTER')" title="Mở Timestamp Camera có tọa độ GPS">📍 TimestampCam</button>
+              <button type="button" class="btn-cam-capture after-btn" onclick="triggerDirectCameraCapture('${codeEsc}', 'AFTER')" title="Mở Camera chụp trực tiếp ảnh đã sửa">${t.btnTakeFixed}</button>
+              <button type="button" class="btn-cam-capture choose-btn" onclick="triggerPhotoCapture('${codeEsc}', 'AFTER')" title="Chọn ảnh đã sửa có sẵn từ thư viện">${t.btnChooseFixed || '🖼️ Chọn Ảnh'}</button>
             </div>
             <div class="thumb-wrap ${afterImgSrc ? 'has-img' : ''}">
               <img src="${escAttr(afterImgSrc)}" alt="After 1440x1088" onclick="openCompareModalForItem('${codeEsc}')" />
@@ -2111,6 +2080,27 @@
       }
     }
 
+    function triggerDirectCameraCapture(code, stage, sessionIdForBi) {
+      pendingPhotoTarget = {
+        type: currentType,
+        code: code,
+        stage: stage,
+        sessionIdForBi: sessionIdForBi || null
+      };
+      if (navigator.geolocation) {
+        try {
+          navigator.geolocation.getCurrentPosition(pos => {
+            window._lastExifGps = pos.coords.latitude.toFixed(6) + ", " + pos.coords.longitude.toFixed(6);
+          }, () => {}, { enableHighAccuracy: true, timeout: 5000 });
+        } catch (e) {}
+      }
+      const inp = document.getElementById("hidden-camera-direct-input") || document.getElementById("hidden-photo-input");
+      if (inp) {
+        inp.value = "";
+        inp.click();
+      }
+    }
+
     function triggerPhotoCapture(code, stage, sessionIdForBi) {
       pendingPhotoTarget = {
         type: currentType,
@@ -2119,8 +2109,10 @@
         sessionIdForBi: sessionIdForBi || null
       };
       const inp = document.getElementById("hidden-photo-input");
-      inp.value = "";
-      inp.click();
+      if (inp) {
+        inp.value = "";
+        inp.click();
+      }
     }
 
     async function handlePhotoFileSelected(ev) {
@@ -3721,8 +3713,8 @@
                       <div style="padding:10px;">
                         <div style="margin-bottom:6px;color:#dc2626;font-weight:800;font-size:11.5px;">❌ Pending After Photo / Chưa cập nhật ảnh sau sửa / ပြင်ဆင်ပြီးပုံ မတင်ရသေးပါ</div>
                         <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center;">
-                          <button type="button" class="btn-cam-capture after-btn" onclick="triggerPhotoCapture('${escAttr(it.code)}', 'AFTER', '${escAttr(sess.sessionId)}')">📷 Chọn Ảnh Đã Sửa</button>
-                          <button type="button" class="btn-cam-capture ts-app-btn" onclick="launchTimestampCameraAndPick('${escAttr(it.code)}', 'AFTER', '${escAttr(sess.sessionId)}')">📍 Mở TimestampCam</button>
+                          <button type="button" class="btn-cam-capture after-btn" onclick="triggerDirectCameraCapture('${escAttr(it.code)}', 'AFTER', '${escAttr(sess.sessionId)}')">📷 Chụp Ảnh Đã Sửa</button>
+                          <button type="button" class="btn-cam-capture choose-btn" onclick="triggerPhotoCapture('${escAttr(it.code)}', 'AFTER', '${escAttr(sess.sessionId)}')">🖼️ Chọn Ảnh Đã Sửa</button>
                         </div>
                       </div>
                     `}
