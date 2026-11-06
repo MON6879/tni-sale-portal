@@ -976,6 +976,7 @@
       background: #fef3c7 !important;
       background-image: radial-gradient(#fde68a 1px, transparent 1px) !important;
       background-size: 18px 18px !important;
+      padding-top: 78px !important;
     }
     body.is-audit-repair-mode #view-inspection-form > .meta-panel {
       border: 3px solid #d97706 !important;
@@ -1078,21 +1079,19 @@
 
     <!-- VIEW 1: ACTIVE CHECKLIST INSPECTION FORM (MOBILE + DESKTOP - CLEAN & UNCLUTTERED FOR FIELD STAFF) -->
     <section id="view-inspection-form">
-      <!-- TOP STICKY ALERT BANNER WHEN IN REPAIR & RE-AUDIT MODE -->
-      <div id="audit-repair-mode-alert-banner" style="display:none;position:sticky;top:58px;z-index:85;background:linear-gradient(135deg,#9a3412 0%,#c2410c 50%,#d97706 100%);color:#fff;border:2.5px solid #fde047;border-radius:14px;padding:12px 16px;margin-bottom:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;box-shadow:0 8px 24px rgba(154,52,18,0.38);">
-        <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:220px;">
-          <div style="font-size:15px;font-weight:900;color:#fef08a;display:flex;align-items:center;gap:7px;letter-spacing:0.2px;" id="audit-banner-main-title">
+      <!-- TOP FIXED ALERT BANNER FLUSH AT TOP OF VIEWPORT WHEN IN REPAIR & RE-AUDIT MODE (3-4 COMPACT LINES EN & MM ONLY) -->
+      <div id="audit-repair-mode-alert-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:linear-gradient(135deg,#9a3412 0%,#c2410c 50%,#d97706 100%);color:#fff;border-bottom:3px solid #fde047;padding:7px 12px;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;box-shadow:0 6px 20px rgba(154,52,18,0.45);">
+        <div style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:190px;">
+          <div style="font-size:13.5px;font-weight:900;color:#fef08a;line-height:1.25;" id="audit-banner-main-title">
             ⚠️ Warning: Re-auditing TNI0250
           </div>
-          <div style="font-size:13px;font-weight:800;color:#fff;line-height:1.45;" id="audit-banner-sub-text">
+          <div style="font-size:12px;font-weight:800;color:#fff;line-height:1.3;" id="audit-banner-sub-text">
             🇲🇲 သတိပေးချက်: TNI0250 ကို ပြန်လည်စစ်ဆေးနေသည်
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          <button type="button" onclick="resetCurrentChecklist()" style="background:#fff;color:#9a3412;border:2px solid #fde047;border-radius:10px;padding:8px 14px;font-size:12.5px;font-weight:900;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,0.2);">
-            Exit to new Inspection
-          </button>
-        </div>
+        <button type="button" onclick="resetCurrentChecklist(true)" style="background:#fff;color:#9a3412;border:2px solid #fde047;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.2);">
+          Exit to new Inspection
+        </button>
       </div>
 
       <div class="meta-panel">
@@ -1118,12 +1117,12 @@
         <div style="background:linear-gradient(90deg,#eff6ff 0%,#ecfdf5 100%);border:2px solid #60a5fa;border-radius:12px;padding:11px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1;min-width:280px;">
             <span id="ui-step1-search-lbl" style="font-size:13px;font-weight:900;color:#1e3a8a;white-space:nowrap;">🔎 Step 1. Search Site (Tìm Trạm / စခန်းရှာရန်):</span>
-            <input type="text" id="inp-find-saved-site" class="field-input" style="max-width:195px;padding:6px 10px;font-size:12.5px;background:#fff;border-color:#3b82f6;font-weight:800;" placeholder="Site ID (e.g. TNI0012)..." onfocus="autoRefreshCloudSessionsIfNeeded()" oninput="populateSavedSessionsDropdown()" onkeydown="if(event.key==='Enter'){event.preventDefault();executeSiteSearchByFilterDropdown();}" />
+            <input type="text" id="inp-find-saved-site" class="field-input" style="max-width:195px;padding:6px 10px;font-size:12.5px;background:#fff;border-color:#3b82f6;font-weight:800;" placeholder="Site ID (e.g. TNI0012)..." onfocus="autoRefreshCloudSessionsIfNeeded()" oninput="populateSavedSessionsDropdown(true)" onchange="if(this.value.trim()){executeSiteSearchByFilterDropdown();}" onkeydown="if(event.key==='Enter'){event.preventDefault();executeSiteSearchByFilterDropdown();}" />
             <select id="sel-saved-sessions" class="field-input" style="flex:1;min-width:220px;padding:6px 10px;font-size:12px;background:#fff;" onfocus="autoRefreshCloudSessionsIfNeeded()" onchange="onSelectSavedSessionChange()">
               <option value="">-- Select inspected site from Google Sheet --</option>
             </select>
             <span id="ui-step2-filter-lbl" style="font-size:12.5px;font-weight:900;color:#b91c1c;white-space:nowrap;">🎯 Step 2. Filter (Chọn Lọc / စစ်ထုတ်ရန်):</span>
-            <select id="sel-search-filter-mode" class="field-input" style="width:auto;min-width:210px;padding:6px 10px;font-size:12px;background:#fff5f5;border-color:#f87171;color:#991b1b;font-weight:900;" onchange="if(currentSessionId){setItemFilter(this.value);}">
+            <select id="sel-search-filter-mode" class="field-input" style="width:auto;min-width:210px;padding:6px 10px;font-size:12px;background:#fff5f5;border-color:#f87171;color:#991b1b;font-weight:900;" onchange="if(currentSessionId){setItemFilter(this.value);}else{executeSiteSearchByFilterDropdown();}">
               <option value="nok" selected id="opt-filter-nok">❌ Not OK (Defects Only • Vị trí Lỗi NOK • အပျက်များသာ)</option>
               <option value="pending_approve" id="opt-filter-pend-app">🔧 Fixed - Pending Approve (Chờ Duyệt • အတည်ပြုရန်ကျန်)</option>
               <option value="approved" id="opt-filter-app">☑️ Approved Completed (Đã Duyệt • အတည်ပြုပြီး)</option>
@@ -1142,9 +1141,9 @@
               🟢 Auto-Sync Sheet: ON
             </span>
           </div>
-          <div id="editing-session-banner" style="display:none;align-items:center;gap:8px;background:#fef3c7;border:1px solid #f59e0b;color:#92400e;padding:5px 10px;border-radius:8px;font-size:12px;font-weight:800;">
-            <span id="editing-session-text">✏️ Editing Session: -</span>
-            <button type="button" id="btn-exit-session" style="background:#dc2626;color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:800;cursor:pointer;" onclick="resetCurrentChecklist()">✕ New / Tạo Mới</button>
+          <div id="editing-session-banner" style="display:none;align-items:center;gap:8px;background:#fef3c7;border:1.5px solid #d97706;color:#9a3412;padding:6px 10px;border-radius:8px;font-size:12px;font-weight:900;">
+            <span id="editing-session-text">⚠️ Warning: Re-auditing</span>
+            <button type="button" id="btn-exit-session" style="background:#9a3412;color:#fff;border:1px solid #fde047;border-radius:6px;padding:4px 10px;font-size:11.5px;font-weight:900;cursor:pointer;" onclick="resetCurrentChecklist(true)">Exit to new Inspection</button>
           </div>
         </div>
 
@@ -2096,7 +2095,7 @@
         });
       });
 
-      loadLocalDraft();
+      clearStationFormExceptDate();
       startBackgroundGpsTracker();
       setLang(currentLang);
       switchChecklistType("site_bts");
@@ -2223,7 +2222,8 @@
       }
     }
 
-    function switchChecklistType(typeKey) {
+    function switchChecklistType(typeKey, keepReauditSession) {
+      const prevType = currentType;
       currentType = typeKey;
       document.querySelectorAll(".mode-tab").forEach(btn => {
         btn.classList.toggle("active", btn.getAttribute("data-type") === typeKey);
@@ -2232,10 +2232,12 @@
       const formSec = document.getElementById("view-inspection-form");
       const biSec = document.getElementById("view-bi-dashboard");
       const appSec = document.getElementById("view-approvers-manager");
+      const topAuditBanner = document.getElementById("audit-repair-mode-alert-banner");
 
       updateSeatAndTrainTelemetry();
       if (typeKey === "bi_dashboard") {
         document.body.classList.remove("is-audit-repair-mode");
+        if (topAuditBanner) topAuditBanner.style.display = "none";
         formSec.style.display = "none";
         biSec.style.display = "block";
         if (appSec) appSec.style.display = "none";
@@ -2245,11 +2247,18 @@
 
       if (typeKey === "approvers_mgr") {
         document.body.classList.remove("is-audit-repair-mode");
+        if (topAuditBanner) topAuditBanner.style.display = "none";
         formSec.style.display = "none";
         biSec.style.display = "none";
         if (appSec) appSec.style.display = "block";
         renderApproversManager();
         return;
+      }
+
+      // Khi chuyển qua lại giữa phúc tra và kiểm tra mới (không phải gọi từ loadSessionIntoEditor) -> Xóa bỏ thông tin cũ để điền mới trừ ngày tháng!
+      if (!keepReauditSession && (currentSessionId || prevType !== typeKey)) {
+        resetChecklistItemsStateForType(typeKey);
+        clearStationFormExceptDate();
       }
 
       formSec.style.display = "block";
@@ -4799,7 +4808,7 @@
     // =========================================================================
     // SITE SEARCH & LOAD EXISTING CHECKLIST FOR STAFF REPAIR UPDATES
     // =========================================================================
-    function populateSavedSessionsDropdown() {
+    function populateSavedSessionsDropdown(fromUserInput) {
       const sel = document.getElementById("sel-saved-sessions");
       if (!sel) return;
       const q = ((document.getElementById("inp-find-saved-site") && document.getElementById("inp-find-saved-site").value) || "").trim().toLowerCase();
@@ -4811,18 +4820,30 @@
       });
 
       const currentVal = sel.value;
-      let html = `<option value="">-- Chọn trạm đã kiểm tra (${matches.length} phiếu) để vào cập nhật sửa chữa --</option>`;
+      let html = `<option value="">-- Select inspected site (${matches.length}) --</option>`;
       matches.forEach(s => {
         const nok = Number(s.nokCount || 0);
         const fix = Number(s.fixedCount || 0);
-        const statusTag = nok === 0 ? "✅ 0 lỗi" : (fix >= nok ? `🌟 Đã sửa đủ ${fix}/${nok}` : `⚠️ Cần sửa: ${fix}/${nok} lỗi`);
-        const label = `[${s.siteCode || 'N/A'}] • ${s.dedicatedTabName || s.checklistType} • ${statusTag} • Điểm: ${s.totalScore} • NV: ${s.inspector || '-'} (${s.ts || ''})`;
+        const statusTag = nok === 0 ? "✅ 0 NOK" : (fix >= nok ? `🌟 Fixed ${fix}/${nok}` : `⚠️ NOK: ${fix}/${nok}`);
+        const label = `[${s.siteCode || 'N/A'}] • ${s.dedicatedTabName || s.checklistType} • ${statusTag} • Score: ${s.totalScore} • ${s.inspector || '-'} (${s.ts || ''})`;
         html += `<option value="${escAttr(s.sessionId)}" ${s.sessionId === currentVal ? 'selected' : ''}>${escHtml(label)}</option>`;
       });
       sel.innerHTML = html;
 
-      if (q && matches.length > 0 && !sel.value) {
-        sel.value = matches[0].sessionId;
+      if (q && matches.length > 0) {
+        const exactSameType = matches.find(s => String(s.siteCode || "").trim().toLowerCase() === q && s.checklistType === currentType);
+        const exactAnyType = matches.find(s => String(s.siteCode || "").trim().toLowerCase() === q);
+        const bestExact = exactSameType || exactAnyType;
+        if (bestExact) {
+          sel.value = bestExact.sessionId;
+          if (fromUserInput && bestExact.sessionId !== currentSessionId) {
+            const modeSel = document.getElementById("sel-search-filter-mode");
+            const chosenFilter = modeSel ? modeSel.value : "nok";
+            loadSessionIntoEditor(bestExact.sessionId, chosenFilter === "nok", chosenFilter);
+          }
+        } else if (!sel.value) {
+          sel.value = matches[0].sessionId;
+        }
       }
     }
 
@@ -5383,7 +5404,7 @@
           warnSub.textContent = "🇲🇲 သတိပေးချက်: " + curSite + " ကို ပြန်လည်စစ်ဆေးနေသည်";
         }
         if (pillsBox) {
-          pillsBox.innerHTML = '<button type="button" onclick="resetCurrentChecklist()" style="background:#9a3412;color:#fff;border:1.5px solid #fde047;border-radius:8px;padding:6px 14px;font-size:12.5px;font-weight:900;cursor:pointer;">Exit to new Inspection</button>';
+          pillsBox.innerHTML = '<button type="button" onclick="resetCurrentChecklist(true)" style="background:#9a3412;color:#fff;border:1.5px solid #fde047;border-radius:8px;padding:6px 14px;font-size:12.5px;font-weight:900;cursor:pointer;">Exit to new Inspection</button>';
         }
         if (filterBar) filterBar.style.display = "flex";
         if (itemsContainer) itemsContainer.style.display = "block";
@@ -5872,12 +5893,12 @@
       const bannerTxt = document.getElementById("editing-session-text");
       if (banner && bannerTxt) {
         banner.style.display = "inline-flex";
-        bannerTxt.textContent = `✏️ Đang cập nhật sửa chữa Trạm: ${sess.siteCode} (Mã phiếu: ${sess.sessionId} • Lỗi NOK: ${sess.nokCount || 0})`;
+        bannerTxt.textContent = `⚠️ Warning: Re-auditing ${sess.siteCode} • 🇲🇲 သတိပေးချက်: ${sess.siteCode} ကို ပြန်လည်စစ်ဆေးနေသည်`;
       }
       const hintEl = document.getElementById("site-existing-hint");
       if (hintEl) hintEl.style.display = "none";
 
-      switchChecklistType(tKey);
+      switchChecklistType(tKey, true);
       const targetFilter = explicitFilterMode || (focusNokForRepair ? "nok" : "all");
       if (targetFilter === "nok" && Number(sess.nokCount || 0) === 0) {
         setItemFilter("all");
@@ -5925,67 +5946,93 @@
     }
 
     function saveLocalDraft() {
+      if (currentSessionId) return;
       try {
         const gpsEl = document.getElementById("inp-gps");
         const meta = {
-          siteCode: document.getElementById("inp-site-code").value,
-          inspector: document.getElementById("inp-inspector").value,
           date: document.getElementById("inp-date").value,
-          gps: gpsEl ? gpsEl.value : "",
-          extra: document.getElementById("inp-extra-meta").value,
-          comment: document.getElementById("inp-comment").value
+          gps: gpsEl ? gpsEl.value : ""
         };
         localStorage.setItem("tni_cl_meta_v1", JSON.stringify(meta));
       } catch (e) {}
     }
 
     function loadLocalDraft() {
-      try {
-        const raw = localStorage.getItem("tni_cl_meta_v1");
-        if (!raw) return;
-        const meta = JSON.parse(raw);
-        if (meta.siteCode) document.getElementById("inp-site-code").value = meta.siteCode;
-        if (meta.inspector) document.getElementById("inp-inspector").value = meta.inspector;
-        const gpsEl = document.getElementById("inp-gps");
-        if (meta.gps && gpsEl) gpsEl.value = meta.gps;
-        if (meta.extra) selectInspectionTeam(meta.extra);
-        if (meta.comment) document.getElementById("inp-comment").value = meta.comment;
-      } catch (e) {}
+      clearStationFormExceptDate();
     }
 
-    function resetCurrentChecklist() {
-      if (!confirm("Tạo phiếu kiểm tra mới cho loại Check List này?")) return;
+    function resetChecklistItemsStateForType(typeKey) {
+      const tpl = CHECKLIST_TEMPLATES[typeKey];
+      if (!tpl) return;
+      if (!itemStates[typeKey]) itemStates[typeKey] = {};
+      tpl.items.forEach(it => {
+        itemStates[typeKey][it.code] = {
+          status: "OK",
+          evalPoint: it.stdPoint,
+          defectNote: "",
+          beforeDataUrl: "",
+          beforeThumbUrl: "",
+          beforeDriveUrl: "",
+          beforePhotos: [],
+          fixStatus: "Chưa sửa (Pending Fix)",
+          afterNote: "",
+          afterDataUrl: "",
+          afterThumbUrl: "",
+          afterDriveUrl: "",
+          afterPhotos: [],
+          gps: "",
+          uploadingBefore: false,
+          uploadErrorBefore: false,
+          uploadingAfter: false,
+          uploadErrorAfter: false,
+          techVerified: false,
+          techVerifiedBy: "",
+          techVerifiedEmail: "",
+          techVerifiedAt: ""
+        };
+      });
+    }
+
+    function clearStationFormExceptDate() {
       currentSessionId = "";
-      const banner = document.getElementById("editing-session-banner");
-      if (banner) banner.style.display = "none";
-      const sel = document.getElementById("sel-saved-sessions");
-      if (sel) sel.value = "";
-      const tpl = CHECKLIST_TEMPLATES[currentType];
-      if (tpl) {
-        tpl.items.forEach(it => {
-          itemStates[currentType][it.code] = {
-            status: "OK",
-            evalPoint: it.stdPoint,
-            defectNote: "",
-            beforeDataUrl: "",
-            beforeThumbUrl: "",
-            beforeDriveUrl: "",
-            fixStatus: "Chưa sửa (Pending Fix)",
-            afterNote: "",
-            afterDataUrl: "",
-            afterThumbUrl: "",
-            afterDriveUrl: "",
-            gps: "",
-            techVerified: false,
-            techVerifiedBy: "",
-            techVerifiedEmail: "",
-            techVerifiedAt: ""
-          };
-        });
+      window._matchedSiteSessionId = "";
+      try { localStorage.removeItem("tni_cl_meta_v1"); } catch (e) {}
+      const siteEl = document.getElementById("inp-site-code");
+      const staffEl = document.getElementById("inp-inspector");
+      const commentEl = document.getElementById("inp-comment");
+      const findEl = document.getElementById("inp-find-saved-site");
+      const selEl = document.getElementById("sel-saved-sessions");
+      const hintEl = document.getElementById("site-existing-hint");
+      const editBanner = document.getElementById("editing-session-banner");
+      const topAuditBanner = document.getElementById("audit-repair-mode-alert-banner");
+      const dateEl = document.getElementById("inp-date");
+
+      if (siteEl) siteEl.value = "";
+      if (staffEl) staffEl.value = "";
+      if (commentEl) commentEl.value = "";
+      if (findEl) findEl.value = "";
+      if (selEl) selEl.value = "";
+      if (hintEl) hintEl.style.display = "none";
+      if (editBanner) editBanner.style.display = "none";
+      if (topAuditBanner) topAuditBanner.style.display = "none";
+      document.body.classList.remove("is-audit-repair-mode");
+      if (dateEl && !dateEl.value) {
+        dateEl.value = new Date().toISOString().slice(0, 10);
       }
+      selectInspectionTeam("");
+    }
+
+    function resetCurrentChecklist(skipConfirm) {
+      if (!skipConfirm && !currentSessionId) {
+        if (!confirm("Start a new inspection and clear current form (except Date)? / အသစ်ပြန်စမည်လား?")) return;
+      }
+      resetChecklistItemsStateForType(currentType);
+      clearStationFormExceptDate();
       setItemFilter("all");
       recalcLiveScore();
       renderChecklistItems();
+      checkBasicStationInfoGate();
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     function escHtml(s) {
