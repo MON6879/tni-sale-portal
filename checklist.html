@@ -1143,13 +1143,7 @@
             <label id="lbl-inspector">Nhân Viên Kiểm Tra / Cập Nhật Sửa (Staff) *</label>
             <input type="text" class="field-input" id="inp-inspector" placeholder="Nhập tên nhân viên (in lên ảnh 1440×1088)..." oninput="saveLocalDraft();syncWebCamOverlayText();" />
           </div>
-          <div class="field-group">
-            <label id="lbl-gps">📍 Tọa Độ GPS (Lat, Long • VD: 10.33532, 98.35353)</label>
-            <div style="display:flex;gap:5px;">
-              <input type="text" class="field-input" id="inp-gps" style="flex:1;font-weight:800;color:#047857;" placeholder="10.33532, 98.35353" oninput="window._lastExifGps=this.value.trim();saveLocalDraft();syncWebCamOverlayText();" />
-              <button type="button" id="btn-fetch-gps" onclick="fetchLiveGps(true)" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:0 10px;font-size:11.5px;font-weight:900;cursor:pointer;white-space:nowrap;" title="Get current GPS Lat, Long">📍 Get GPS</button>
-            </div>
-          </div>
+          <input type="hidden" id="inp-gps" value="" />
           <div class="field-group">
             <label id="lbl-date">Ngày Kiểm Tra (Inspection Date)</label>
             <input type="date" class="field-input" id="inp-date" onchange="saveLocalDraft()" />
@@ -1565,13 +1559,7 @@
           <label style="font-size:10.5px;font-weight:800;color:#93c5fd;display:block;margin-bottom:2px;">📡 Mã Trạm / Tuyến (Site ID)</label>
           <input type="text" id="webcam-inp-site" placeholder="VD: TNI0012" style="width:100%;padding:5px 8px;border-radius:6px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:12px;font-weight:800;" oninput="document.getElementById('inp-site-code').value=this.value;saveLocalDraft();syncWebCamOverlayText();" />
         </div>
-        <div>
-          <label style="font-size:10.5px;font-weight:800;color:#6ee7b7;display:block;margin-bottom:2px;">📍 Tọa Độ Lat, Long (VD: 10.33532, 98.35353)</label>
-          <div style="display:flex;gap:4px;">
-            <input type="text" id="webcam-inp-gps" placeholder="10.33532, 98.35353" style="flex:1;padding:5px 8px;border-radius:6px;border:1px solid #10b981;background:#0f172a;color:#34d399;font-size:12px;font-weight:800;" oninput="window._lastExifGps=this.value.trim();if(document.getElementById('inp-gps'))document.getElementById('inp-gps').value=this.value.trim();saveLocalDraft();syncWebCamOverlayText();" />
-            <button type="button" onclick="fetchLiveGps(false)" style="background:#059669;color:#fff;border:none;border-radius:6px;padding:0 8px;font-size:11px;font-weight:800;cursor:pointer;" title="Lấy lại GPS">📍</button>
-          </div>
-        </div>
+        <input type="hidden" id="webcam-inp-gps" value="" />
       </div>
 
       <!-- LIVE 4:3 (1440x1088) CAMERA VIEWPORT WITH REAL-TIME TIMESTAMP OVERLAY -->
@@ -2122,8 +2110,6 @@
       setTxt("lbl-comment", t.comment);
       setPh("inp-comment", t.commentPh);
 
-      setHtml("ts-banner-text", t.tsBannerHtml);
-      setTxt("lbl-auto-stamp", t.lblAutoStamp);
 
       setTxt("fp-all", t.allItems);
       setTxt("fp-nok", t.nokOnly);
@@ -2820,12 +2806,12 @@
           if (coord) {
             window._lastExifGps = coord;
             const gpsInp = document.getElementById("inp-gps");
-            if (gpsInp && !gpsInp.value.trim()) gpsInp.value = coord;
+            if (gpsInp) gpsInp.value = coord;
             const wcGps = document.getElementById("webcam-inp-gps");
             if (wcGps) wcGps.value = coord;
             syncWebCamOverlayText();
           }
-        }, () => {}, { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
+        }, () => {}, { enableHighAccuracy: true, timeout: 10000, maximumAge: 15000 });
 
         if (gpsWatchId === null) {
           gpsWatchId = navigator.geolocation.watchPosition(pos => {
@@ -2833,12 +2819,12 @@
             if (coord) {
               window._lastExifGps = coord;
               const gpsInp = document.getElementById("inp-gps");
-              if (gpsInp && !gpsInp.value.trim()) gpsInp.value = coord;
+              if (gpsInp) gpsInp.value = coord;
               const wcGps = document.getElementById("webcam-inp-gps");
-              if (wcGps && (!wcGps.value.trim() || wcGps.value.indexOf("Đang") !== -1)) wcGps.value = coord;
+              if (wcGps) wcGps.value = coord;
               syncWebCamOverlayText();
             }
-          }, () => {}, { enableHighAccuracy: true, maximumAge: 15000 });
+          }, () => {}, { enableHighAccuracy: true, maximumAge: 10000 });
         }
       } catch (e) {}
     }
@@ -3460,7 +3446,7 @@
       const target = pendingPhotoTarget;
       const siteCode = (document.getElementById("inp-site-code").value || "TNI-SITE").trim();
       const inspectorName = (document.getElementById("inp-inspector").value || "TNI-Staff").trim();
-      const stampEnabled = document.getElementById("chk-auto-stamp") ? document.getElementById("chk-auto-stamp").checked : true;
+      const stampEnabled = true;
 
       // If triggered from Tab 6 BI Comparison Wall: support uploading all selected After photos sequentially!
       if (target.sessionIdForBi) {
