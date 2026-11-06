@@ -37,6 +37,19 @@ function doPostCollector_(e) {
   try {
     const body  = JSON.parse(e.postData.contents);
 
+    // ── Fast-path Nocpro Sync (KHÔNG mở SHEET_ID không liên quan để tránh treo/chậm) ──
+    if (body.action === "nocpro_sync_sheet") return handleNocproSyncSheet_(body);
+    if (body.action === "nocpro_sync_clear_history") return handleNocproSyncClearHistory_(body);
+
+    // ── Fast-path Sale Backend (KHÔNG mở SHEET_ID không liên quan) ──────────
+    if (body.action && (body.action.startsWith('sale_') ||
+        body.action.startsWith('staff_') ||
+        body.action === 'google_auth_verify' ||
+        body.action === 'template_sale_get' ||
+        body.action === 'telegram_groups_get')) {
+      return handleSalePost_(body);
+    }
+
     // Route Telegram Callback Query (nút bấm nhận việc)
     if (body.callback_query) return handleCallbackQuery(body);
 
@@ -199,6 +212,18 @@ function doGetCollector_(e) {
     // ── Ghế Giám Sát: AUDITOR-3.1 (Check status của Ghế BOT-REFUEL-9 & Lettel Progress) ──
     if (action === "audit_refuel") {
       return doGetRefuelPlan_(e);
+    }
+
+    // ── Ghế Giám Sát: AUDITOR-SALE-GUIDE (Giữ Sheet Guide Bán Hàng & Bảo Hành Online 24/7) ──
+    if (action === "audit_sale_guide") {
+      const st = (typeof ensureSaleGuideSheetOnline_ === "function") ? ensureSaleGuideSheetOnline_(null, false) : null;
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "ok",
+        supervisor_seat: "AUDITOR-SALE-GUIDE",
+        monitored_sheet: "TNI Bán hàng — TNI Sale [Tab: Guide]",
+        audit: st,
+        timestamp: new Date().toISOString()
+      })).setMimeType(ContentService.MimeType.JSON);
     }
 
     // ── Tham số tìm kiếm Nocpro Clear & Door (Đọc trực tiếp từ Sheet SSOT siêu tốc qua GViz OAuth + Fallback) ──
@@ -379,6 +404,24 @@ function doGetCollector_(e) {
         .setMimeType(ContentService.MimeType.JSON);
     }
 
+    if (action === "check_and_send_team_progress_reports") {
+      if (typeof checkAndSendTeamProgressReports === "function") {
+        return ContentService.createTextOutput(JSON.stringify(checkAndSendTeamProgressReports()))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+      return ContentService.createTextOutput(JSON.stringify({ error: "checkAndSendTeamProgressReports not found" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (action === "audit_team_progress_reports") {
+      if (typeof auditTeamProgressReports_ === "function") {
+        return ContentService.createTextOutput(JSON.stringify(auditTeamProgressReports_()))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+      return ContentService.createTextOutput(JSON.stringify({ error: "auditTeamProgressReports_ not found" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
     // ── Construction Sheet Initialization Endpoint ──
     if (action === "init_input_construction") {
       if (typeof initInputConstructionSheet === "function") {
@@ -496,6 +539,13 @@ function doGetCollector_(e) {
     if (action === "run_auto_copy") {
       runAutoCopyProcessor(true);
       return json({ status: "ok", message: "Auto copy processor executed successfully" });
+    }
+    if (action === "audit_oil_ab") {
+      const force = String((e && e.parameter && e.parameter.force) || "") === "1";
+      const res = (typeof auditOilCloseWoColAB_ === "function")
+        ? auditOilCloseWoColAB_(force)
+        : { status: "error", message: "auditOilCloseWoColAB_ not found" };
+      return json({ status: "ok", result: res });
     }
     if (action === "run_partner_auto_update") {
       const res = (typeof runPartnerAutoRefuelUpdate === "function")
@@ -4082,13 +4132,13 @@ function setupReadGroupCleanupTrigger() {
 // Đồng bộ dữ liệu Alarm xuất từ Nocpro vào Sheet 1. Input New (A:AA)
 // ============================================================
 function handleNocproSyncSheet_(body) {
+  const sourceFile = String((body && body.source_file) || "").trim();
   try {
     const TARGET_SS_ID = "1aAMxzyhiiYYZ1Hl8n8VYgXTfu3Cx_ivX6X-WSzXbFcI";
     const TARGET_TAB_NAME = "1. Input New";
     const TARGET_GID = "85422169";
 
     const rows = body.rows || [];
-    const sourceFile = (body.source_file || "").trim();
 
     // 🔒 KHÓA THÉP ZERO-WIPE GUARD (RULE PM-89):
     // Tuyệt đối không xóa dữ liệu trên sheet nếu không có file export thực tế hoặc không đủ số dòng tối thiểu.
@@ -4124,28 +4174,10 @@ function handleNocproSyncSheet_(body) {
       return json({ status: "error", code: "SEAT_GUARD_NOT_NEW", message: endedRows + " rows have End time -> not 'New alarm' data. Refused for '1. Input New'. Nothing written." });
     }
 
-    const ss = SpreadsheetApp.openById(TARGET_SS_ID);
-    let ws = null;
-    for (const s of ss.getSheets()) {
-      if (s.getSheetId().toString() === TARGET_GID) {
-        ws = s;
-        break;
-      }
-    }
-    if (!ws || ws.getName() !== TARGET_TAB_NAME) {
-      return json({ status: "error", message: "Worksheet GID " + TARGET_GID + " / '" + TARGET_TAB_NAME + "' mismatch. Nothing written." });
-    }
-
     const neededRows = rows.length;
-    const currentLastRow = Math.max(ws.getLastRow(), 1);
 
-    // 1. Đảm bảo sheet đủ số dòng
-    const maxRows = ws.getMaxRows();
-    if (neededRows > maxRows) {
-      ws.insertRowsAfter(maxRows, neededRows - maxRows);
-    }
-
-    // 2. Chuẩn hóa ma trận đủ 27 cột (A:AA)
+    const t0 = Date.now();
+    // 1. Chuẩn hóa ma trận đủ 27 cột (A:AA) thuần JS trên RAM trước khi mở Sheet
     const formattedRows = rows.map(function(r) {
       const rowArr = Array.isArray(r) ? r : [];
       const newRow = [];
@@ -4155,32 +4187,108 @@ function handleNocproSyncSheet_(body) {
       return newRow;
     });
 
-    // 3. Ghi đè trực tiếp dữ liệu mới vào A1:AA{neededRows} (atomic, không làm rỗng bảng, không đứt công thức)
-    ws.getRange(1, 1, neededRows, 27).setValues(formattedRows);
+    let writeEngine = "";
+    let lastWriteErr = null;
 
-    // 4. Nếu trước đó có nhiều dòng hơn (ví dụ còn dư từ lần xuất lỗi), chỉ xóa phần dư từ neededRows + 1
-    if (currentLastRow > neededRows) {
-      ws.getRange(neededRows + 1, 1, currentLastRow - neededRows, 27).clearContent();
+    // 2. TẦNG 1 (SIÊU TỐC ~2-5s): Ghi trực tiếp qua Google Sheets API v4 (Advanced Service `Sheets`)
+    // Không cần tải toàn bộ DOM SpreadsheetApp (tránh hoàn toàn lỗi "Dịch vụ Bảng tính đã hết thời gian chờ")
+    if (typeof Sheets !== "undefined" && Sheets.Spreadsheets && Sheets.Spreadsheets.Values) {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const writeRange = "'" + TARGET_TAB_NAME + "'!A1:AA" + neededRows;
+          Sheets.Spreadsheets.Values.update(
+            { values: formattedRows },
+            TARGET_SS_ID,
+            writeRange,
+            { valueInputOption: "USER_ENTERED" }
+          );
+          try {
+            const clearRange = "'" + TARGET_TAB_NAME + "'!A" + (neededRows + 1) + ":AA10000";
+            Sheets.Spreadsheets.Values.clear({}, TARGET_SS_ID, clearRange);
+          } catch (clrErr) {}
+          writeEngine = "SheetsAPI_v4";
+          lastWriteErr = null;
+          break;
+        } catch (sErr) {
+          lastWriteErr = sErr;
+          if (attempt < 2) Utilities.sleep(1500 * (attempt + 1));
+        }
+      }
     }
-    
-    // Định dạng rõ ràng ô A1 (Exported Time) để luôn hiển thị chữ đen, đậm, dễ quan sát
-    try {
-      ws.getRange(1, 1).setFontColor("#000000").setFontWeight("bold");
-    } catch(fErr) {}
 
-    // 5. Lưu trạng thái kiểm toán cho Ghế Giám Sát AUDITOR-NOCPRO-9.3 (lưu ngay sau khi setValues)
+    // 3. TẦNG 2 (FALLBACK REST v4 qua UrlFetchApp OAuth nếu Advanced Service chưa bật)
+    if (!writeEngine) {
+      try {
+        const token = ScriptApp.getOAuthToken();
+        const encRange = encodeURIComponent("'" + TARGET_TAB_NAME + "'!A1:AA" + neededRows);
+        const putUrl = "https://sheets.googleapis.com/v4/spreadsheets/" + TARGET_SS_ID + "/values/" + encRange + "?valueInputOption=USER_ENTERED";
+        const putResp = UrlFetchApp.fetch(putUrl, {
+          method: "put",
+          contentType: "application/json",
+          headers: { Authorization: "Bearer " + token },
+          payload: JSON.stringify({ values: formattedRows }),
+          muteHttpExceptions: true
+        });
+        if (putResp.getResponseCode() === 200) {
+          try {
+            const encClear = encodeURIComponent("'" + TARGET_TAB_NAME + "'!A" + (neededRows + 1) + ":AA10000");
+            const clrUrl = "https://sheets.googleapis.com/v4/spreadsheets/" + TARGET_SS_ID + "/values/" + encClear + ":clear";
+            UrlFetchApp.fetch(clrUrl, {
+              method: "post",
+              contentType: "application/json",
+              headers: { Authorization: "Bearer " + token },
+              payload: "{}",
+              muteHttpExceptions: true
+            });
+          } catch (cErr) {}
+          writeEngine = "UrlFetch_SheetsV4";
+          lastWriteErr = null;
+        } else {
+          lastWriteErr = new Error("REST v4 HTTP " + putResp.getResponseCode() + ": " + putResp.getContentText().slice(0, 200));
+        }
+      } catch (uErr) {
+        lastWriteErr = uErr;
+      }
+    }
+
+    // 4. TẦNG 3 (FALLBACK SpreadsheetApp.openById — 1 lần thử duy nhất để không vượt 6 phút)
+    if (!writeEngine) {
+      try {
+        const ss = SpreadsheetApp.openById(TARGET_SS_ID);
+        const ws = ss.getSheetByName(TARGET_TAB_NAME);
+        if (!ws || ws.getSheetId().toString() !== TARGET_GID) {
+          return json({ status: "error", message: "Worksheet GID " + TARGET_GID + " / '" + TARGET_TAB_NAME + "' mismatch. Nothing written." });
+        }
+        const blankRow27 = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""];
+        const padRows = formattedRows.slice();
+        while (padRows.length < neededRows + 200) padRows.push(blankRow27);
+        ws.getRange(1, 1, padRows.length, 27).setValues(padRows);
+        writeEngine = "SpreadsheetApp";
+        lastWriteErr = null;
+      } catch (wErr) {
+        lastWriteErr = wErr;
+      }
+    }
+
+    if (!writeEngine && lastWriteErr) {
+      throw lastWriteErr;
+    }
+
+    const elapsedMs = Date.now() - t0;
+
+    // 5. Lưu trạng thái kiểm toán cho Ghế Giám Sát AUDITOR-NOCPRO-9.3
     const auditInfo = {
       seat: "DESK-NOCPRO-1",
       supervisor_seat: "AUDITOR-NOCPRO-9.3",
       rows_synced: neededRows,
       source_file: sourceFile,
+      engine: writeEngine,
+      elapsed_ms: elapsedMs,
       timestamp: new Date().toISOString(),
       status: "OK",
       action: body.sub_action || "export_access_alarm"
     };
     PropertiesService.getScriptProperties().setProperty("AUDIT_DESK_NOCPRO_1", JSON.stringify(auditInfo));
-
-    SpreadsheetApp.flush();
 
     return json({
       status: "ok",
@@ -4188,6 +4296,8 @@ function handleNocproSyncSheet_(body) {
       supervisor_seat: "AUDITOR-NOCPRO-9.3",
       rows_written: neededRows,
       cols_written: 27,
+      engine: writeEngine,
+      elapsed_ms: elapsedMs,
       tab: TARGET_TAB_NAME,
       source_file: sourceFile,
       timestamp: auditInfo.timestamp
@@ -4197,6 +4307,7 @@ function handleNocproSyncSheet_(body) {
     const errAudit = {
       seat: "DESK-NOCPRO-1",
       supervisor_seat: "AUDITOR-NOCPRO-9.3",
+      source_file: sourceFile,
       timestamp: new Date().toISOString(),
       status: "FAIL",
       error: err.message
@@ -4323,56 +4434,105 @@ function handleNocproSyncClearHistory_(body) {
     const normTab_ = function (t) { return String(t).replace(/\s+/g, " ").trim().toLowerCase(); };
     let targetEndRow = 0;
     let lastWriteErr = null;
+    let writeEngine = "";
 
-    // 3. Mở Sheet và ghi nối tiếp với cơ chế Retry 3 lần (chống lỗi khóa tạm thời Dịch vụ Bảng tính)
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        const ss = SpreadsheetApp.openById(TARGET_SS_ID);
-        let ws = ss.getSheetByName(TARGET_TAB_NAME);
-        if (!ws) {
-          for (const s of ss.getSheets()) {
-            if (s.getSheetId().toString() === TARGET_GID) {
-              ws = s;
-              break;
+    // 3A. TẦNG 1 (SIÊU TỐC ~2s): Nếu đã xác định được firstBlankRow qua GViz OAuth, ghi thẳng qua Sheets API v4
+    if (firstBlankRow >= minBlankRow && typeof Sheets !== "undefined" && Sheets.Spreadsheets && Sheets.Spreadsheets.Values) {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          targetEndRow = firstBlankRow + neededRows - 1;
+          const writeRange = "'" + TARGET_TAB_NAME + "'!A" + firstBlankRow + ":AA" + targetEndRow;
+          Sheets.Spreadsheets.Values.update(
+            { values: formattedRows },
+            TARGET_SS_ID,
+            writeRange,
+            { valueInputOption: "USER_ENTERED" }
+          );
+          if (dtCols.indexOf(9) >= 0 && dtCols.indexOf(10) >= 0) {
+            try {
+              Sheets.Spreadsheets.batchUpdate({
+                requests: [{
+                  repeatCell: {
+                    range: {
+                      sheetId: parseInt(TARGET_GID, 10),
+                      startRowIndex: firstBlankRow - 1,
+                      endRowIndex: targetEndRow,
+                      startColumnIndex: 9,
+                      endColumnIndex: 11
+                    },
+                    cell: {
+                      userEnteredFormat: {
+                        numberFormat: { type: "DATE_TIME", pattern: "dd/mm/yyyy hh:mm:ss" }
+                      }
+                    },
+                    fields: "userEnteredFormat.numberFormat"
+                  }
+                }]
+              }, TARGET_SS_ID);
+            } catch (fmtErr) {}
+          }
+          writeEngine = "SheetsAPI_v4";
+          lastWriteErr = null;
+          break;
+        } catch (sErr) {
+          lastWriteErr = sErr;
+          if (attempt < 2) Utilities.sleep(1500 * (attempt + 1));
+        }
+      }
+    }
+
+    // 3B. TẦNG 2 (FALLBACK SpreadsheetApp.openById)
+    if (!writeEngine) {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const ss = SpreadsheetApp.openById(TARGET_SS_ID);
+          let ws = ss.getSheetByName(TARGET_TAB_NAME);
+          if (!ws) {
+            for (const s of ss.getSheets()) {
+              if (s.getSheetId().toString() === TARGET_GID) {
+                ws = s;
+                break;
+              }
             }
           }
-        }
-        if (!ws) {
-          return json({ status: "error", message: "Worksheet GID " + TARGET_GID + " not found" });
-        }
-        if (normTab_(ws.getName()) !== normTab_(TARGET_TAB_NAME)) {
-          return json({ status: "error", message: "Worksheet name mismatch: GID " + TARGET_GID + " is '" + ws.getName() + "', expected '" + TARGET_TAB_NAME + "'. Nothing written." });
-        }
+          if (!ws) {
+            return json({ status: "error", message: "Worksheet GID " + TARGET_GID + " not found" });
+          }
+          if (normTab_(ws.getName()) !== normTab_(TARGET_TAB_NAME)) {
+            return json({ status: "error", message: "Worksheet name mismatch: GID " + TARGET_GID + " is '" + ws.getName() + "', expected '" + TARGET_TAB_NAME + "'. Nothing written." });
+          }
 
-        if (!firstBlankRow) {
-          const colAValues = ws.getRange("A1:A" + Math.max(ws.getLastRow(), 1)).getValues();
-          firstBlankRow = minBlankRow;
-          for (let i = colAValues.length - 1; i >= 0; i--) {
-            const val = colAValues[i][0];
-            if (val !== "" && val !== null && val !== undefined) {
-              firstBlankRow = Math.max(i + 2, minBlankRow);
-              break;
+          if (!firstBlankRow) {
+            const colAValues = ws.getRange("A1:A" + Math.max(ws.getLastRow(), 1)).getValues();
+            firstBlankRow = minBlankRow;
+            for (let i = colAValues.length - 1; i >= 0; i--) {
+              const val = colAValues[i][0];
+              if (val !== "" && val !== null && val !== undefined) {
+                firstBlankRow = Math.max(i + 2, minBlankRow);
+                break;
+              }
             }
           }
-        }
 
-        targetEndRow = firstBlankRow + neededRows - 1;
-        const maxRows = ws.getMaxRows();
-        if (targetEndRow > maxRows) {
-          ws.insertRowsAfter(maxRows, targetEndRow - maxRows + 20);
-        }
+          targetEndRow = firstBlankRow + neededRows - 1;
+          const maxRows = ws.getMaxRows();
+          if (targetEndRow > maxRows) {
+            ws.insertRowsAfter(maxRows, targetEndRow - maxRows + 20);
+          }
 
-        // Ghi nối tiếp (Zero Read-After-Write để không kích hoạt 4 lần tính lại công thức toàn bảng)
-        ws.getRange(firstBlankRow, 1, neededRows, 27).setValues(formattedRows);
-        if (dtCols.indexOf(9) >= 0 && dtCols.indexOf(10) >= 0) {
-          ws.getRange(firstBlankRow, 10, neededRows, 2).setNumberFormat("dd/mm/yyyy hh:mm:ss");
-        }
-        lastWriteErr = null;
-        break;
-      } catch (wErr) {
-        lastWriteErr = wErr;
-        if (attempt < 2) {
-          Utilities.sleep(2500 * (attempt + 1));
+          // Ghi nối tiếp (Zero Read-After-Write để không kích hoạt 4 lần tính lại công thức toàn bảng)
+          ws.getRange(firstBlankRow, 1, neededRows, 27).setValues(formattedRows);
+          if (dtCols.indexOf(9) >= 0 && dtCols.indexOf(10) >= 0) {
+            ws.getRange(firstBlankRow, 10, neededRows, 2).setNumberFormat("dd/mm/yyyy hh:mm:ss");
+          }
+          writeEngine = "SpreadsheetApp";
+          lastWriteErr = null;
+          break;
+        } catch (wErr) {
+          lastWriteErr = wErr;
+          if (attempt < 2) {
+            Utilities.sleep(2500 * (attempt + 1));
+          }
         }
       }
     }

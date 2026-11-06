@@ -266,6 +266,14 @@ SCHEDULE_RULES = [
         "target_times": ["17:30"],
         "title_patterns": [r"TNI\s*SALE\s*&(?:amp;)?\s*OPERATIONS\s*SUMMARY", r"SALE\s*&(?:amp;)?\s*SERVICE\s*DISPATCH", r"Sale\s*Summary"],
         "max_delay_min": 15
+    },
+    {
+        "report_name": "Operation Progress Report (11:46 & 17:21)",
+        "group_key": "CONTROL",
+        "target_times": ["11:46", "17:21"],
+        "superseded_by_times": ["17:21"],
+        "title_patterns": [r"OVERALL\s*OPERATION\s*PROGRESS\s*MATRIX", r"OPERATION\s*PROGRESS\s*REPORT"],
+        "max_delay_min": 18
     }
 ]
 
@@ -1527,6 +1535,87 @@ def audit_refuel_collector_and_letter_sync():
     return results
 
 
+def audit_team_progress_report_sync():
+    """
+    Kiểm toán & Tự động bù (Auto-Heal) Báo cáo Tiến độ Vận hành Đội:
+    OPERATION PROGRESS REPORT (T1..T4) & OVERALL OPERATION PROGRESS MATRIX (CONTROL)
+    Lịch chạy: 11:46 & 17:21 MMT hàng ngày.
+    """
+    results = []
+    gas_base = "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec"
+    try:
+        r = requests.get(f"{gas_base}?action=audit_team_progress_reports", timeout=20, allow_redirects=True)
+        if r.status_code == 200:
+            data = r.json()
+            now_mmt = datetime.now(TZ_MM)
+            today_iso = now_mmt.strftime("%Y-%m-%d")
+            yesterday_iso = (now_mmt - timedelta(days=1)).strftime("%Y-%m-%d")
+            curr_min = now_mmt.hour * 60 + now_mmt.minute
+
+            last_sent_at = (data.get("last_sent_at") or "").strip()
+            last_sent_date = (data.get("last_sent_date") or "").strip()
+            sent_1146 = (data.get("sent_1146_today") or "").strip()
+            sent_1721 = (data.get("sent_1721_today") or "").strip()
+
+            need_auto_heal = False
+            miss_reason = ""
+
+            # 1. Nếu chưa từng ghi nhận hoặc cũ hơn hôm qua -> Cần gửi bù ngay
+            if not last_sent_date or last_sent_date not in (today_iso, yesterday_iso):
+                need_auto_heal = True
+                miss_reason = f"Chưa gửi từ '{last_sent_date or 'N/A'}'"
+            # 2. Sau 12:05 MMT mà hôm nay chưa gửi bản tin nào
+            elif curr_min >= (12 * 60 + 5) and last_sent_date != today_iso:
+                need_auto_heal = True
+                miss_reason = "Trễ nhịp 11:46 MMT hôm nay"
+            # 3. Sau 17:38 MMT mà chưa gửi nhịp 17:21 (và lần gửi cuối trước 17:15)
+            elif curr_min >= (17 * 60 + 38) and not sent_1721:
+                if not (" 17:" in last_sent_at or " 18:" in last_sent_at or " 19:" in last_sent_at or " 20:" in last_sent_at or " 21:" in last_sent_at):
+                    need_auto_heal = True
+                    miss_reason = "Trễ nhịp 17:21 MMT hôm nay"
+
+            if need_auto_heal:
+                logger.warning(f"🔄 [AUDITOR-1.2] Phát hiện Operation Progress Report bị trễ ({miss_reason}) -> Kích hoạt Auto-Heal gửi bù ngay...")
+                heal_r = requests.get(f"{gas_base}?action=send_team_progress_reports", timeout=90, allow_redirects=True)
+                if heal_r.status_code == 200 and heal_r.json().get("ok"):
+                    ts = heal_r.json().get("timestamp", now_mmt.strftime("%d/%m/%Y %H:%M:%S"))
+                    results.append({
+                        "component": "Operation Progress Report (11:46 & 17:21)",
+                        "status": "PASS",
+                        "label": "🟢 AUTO-HEALED",
+                        "detail": f"Đã tự động gửi bù thành công lúc {ts} MMT"
+                    })
+                else:
+                    results.append({
+                        "component": "Operation Progress Report (11:46 & 17:21)",
+                        "status": "FAIL",
+                        "label": "🔴 MISSED & HEAL FAILED",
+                        "detail": f"{miss_reason} | Gửi bù lỗi HTTP {heal_r.status_code}"
+                    })
+            else:
+                results.append({
+                    "component": "Operation Progress Report (11:46 & 17:21)",
+                    "status": "PASS",
+                    "label": "OK",
+                    "detail": f"Hoạt động đúng giờ (11:46 & 17:21 MMT | Gửi gần nhất: {last_sent_at} MMT)"
+                })
+        else:
+            results.append({
+                "component": "Operation Progress Report (11:46 & 17:21)",
+                "status": "WARN",
+                "label": f"HTTP {r.status_code}",
+                "detail": f"Không đọc được trạng thái audit_team_progress_reports (HTTP {r.status_code})"
+            })
+    except Exception as e:
+        results.append({
+            "component": "Operation Progress Report (11:46 & 17:21)",
+            "status": "WARN",
+            "label": "Exception",
+            "detail": str(e)[:60]
+        })
+    return results
+
+
 # ── 4. KIỂM TRA ĐÚNG GIỜ & PHÁT HIỆN NHÂN ĐÔI TIN NHẮN (TELETHON AUDIT) ─────
 async def audit_telegram_messages_telethon():
     """
@@ -1579,6 +1668,7 @@ async def audit_telegram_messages_telethon():
                                 "date_str": msg_date_mmt.strftime("%d/%m/%Y"),
                                 "total_min": msg_date_mmt.hour * 60 + msg_date_mmt.minute,
                                 "sender_id": msg.sender_id,
+                                "reply_to_msg_id": getattr(msg, "reply_to_msg_id", None),
                                 "text": msg.text,
                                 "first_line": msg.text.split("\n")[0].strip()
                             })
@@ -1848,9 +1938,20 @@ async def audit_telegram_messages_telethon():
                         cat = _rc.classify(txt)
                         if not cat:
                             continue
-                        # Kiểm tra xem có tin xác nhận của Bot trong vòng 10 phút sau tin này (hoặc đã ghi nhận trong Sheet) không
+                        # Kiểm tra xem có tin xác nhận của Bot (reply trực tiếp, trong vòng 15 phút, hoặc xác nhận cùng loại sau thời điểm gửi tin) không
+                        cat_kw_map = {
+                            "PLAN": "plan refuel",
+                            "REFUELED": "refueled",
+                            "REQUEST": "team request",
+                            "FT_MONITOR": "ft follow monitor",
+                            "LETTER_SUBMIT": "letter submit",
+                            "LETTER_APPROVED": "letter approved",
+                        }
+                        cat_kw = cat_kw_map.get(cat, "").lower()
                         has_reply = any(
-                            0 <= (bc["date"] - m["date"]).total_seconds() <= 600
+                            (bc.get("reply_to_msg_id") and bc.get("reply_to_msg_id") == m.get("id")) or
+                            (0 <= (bc["date"] - m["date"]).total_seconds() <= 900) or
+                            (bc["date"] >= m["date"] and cat_kw and cat_kw in bc.get("text", "").lower())
                             for bc in bot_confirmations
                         )
                         if not has_reply:
@@ -1875,7 +1976,7 @@ async def audit_telegram_messages_telethon():
                                 pass
 
                             if not already_in_sheet:
-                                # Tự động bù (Auto-Heal) gửi lên GAS để không mất dữ liệu của người dùng!
+                                # Tự động bù (Auto-Heal) gửi lên GAS (có dedup chống trùng dòng) & gửi bù phản hồi xác nhận vào Group 9!
                                 heal_res = _rc.post_gas({
                                     "action": "collect_message",
                                     "group_id": "5469544739",
@@ -1886,21 +1987,36 @@ async def audit_telegram_messages_telethon():
                                     "category": cat,
                                 })
                                 healed_ok = heal_res.get("status") == "ok" and bool(heal_res.get("def"))
-                                if healed_ok and m.get("id"):
-                                    healed_ids.add(m["id"])
+                                if healed_ok:
                                     try:
-                                        with open(healed_cache_path, "w", encoding="utf-8") as hf:
-                                            json.dump(list(healed_ids)[-200:], hf)
-                                    except Exception:
-                                        pass
+                                        if not _rc.REFUEL_BOT_TOKEN:
+                                            _rc.REFUEL_BOT_TOKEN = (os.environ.get("REFUEL_BOT_TOKEN") or "").strip()
+                                        if _rc.REFUEL_BOT_TOKEN:
+                                            reply_txt = _rc.build_confirmation_reply(
+                                                category=cat,
+                                                result=heal_res,
+                                                text=txt,
+                                                sender="",
+                                                sender_id=str(m.get("sender_id") or ""),
+                                            )
+                                            _rc.tg_reply("-5469544739", reply_txt, reply_to_message_id=m.get("id"))
+                                    except Exception as e_rep:
+                                        logger.warning(f"[AUDITOR-3.1] Lỗi gửi bù phản hồi xác nhận Group 9: {e_rep}")
+                                    if m.get("id"):
+                                        healed_ids.add(m["id"])
+                                        try:
+                                            with open(healed_cache_path, "w", encoding="utf-8") as hf:
+                                                json.dump(list(healed_ids)[-200:], hf)
+                                        except Exception:
+                                            pass
                                 quality_results.append({
                                     "report": f"Refuel Collector ({cat})",
                                     "group": "REFUEL",
-                                    "status": "WARN" if healed_ok else "FAIL",
-                                    "label": "🟡 AUTO-HEALED UNCOLLECTED" if healed_ok else "🔴 UNCOLLECTED REFUEL MSG",
+                                    "status": "PASS" if healed_ok else "FAIL",
+                                    "label": "🟢 AUTO-HEALED & CONFIRMED" if healed_ok else "🔴 UNCOLLECTED REFUEL MSG",
                                     "detail": (
-                                        f"Tin '{ m['first_line'][:40] }' lúc {m['time_str']} bị sót phản hồi Bot -> "
-                                        + (f"Ghế AUDITOR-3.1 đã tự động thu thập bù (DEF {heal_res.get('def')}) ✅" if healed_ok else f"Tự động bù thất bại: {heal_res}")
+                                        f"Tin '{ m['first_line'][:40] }' lúc {m['time_str']} -> "
+                                        + (f"Ghế AUDITOR-3.1 đã xác thực/bù Sheet & phản hồi Group 9 (DEF {heal_res.get('def')}) ✅" if healed_ok else f"Tự động bù thất bại: {heal_res}")
                                     )
                                 })
                 except Exception as rf_err:
@@ -2132,6 +2248,131 @@ def audit_construction_guide_sync():
     return results
 
 
+def audit_oil_coolant_col_ab():
+    """
+    🛢️ GHẾ GIÁM SÁT AUDITOR-OIL-9.8 — Giám sát Cột AA/AB trên bảng 2.1 Control Oil and water coolant at Team
+    (Spreadsheet ID: 1EmECb3aPXMRxSyUzhV6wKU2oDq_32Ga-lwpwmkcHdh0)
+    - Kiểm tra cả 2 tab: 'Input Close WO DG paste 123' (GID 1378310796) và 'Update Close WO' (GID 1508195088).
+    - Nếu phát hiện bất kỳ dòng nào có dữ liệu ở Cột AA (Closed Time) mà Cột AB (Team) bị trống (""), bằng "0", hoặc lỗi hàm (#N/A, #REF!, #VALUE!):
+      + Báo FAIL kèm danh sách dòng thiếu để cảnh báo Telegram DM Admin (6859790680) kiểm tra hàm QUERY / XLOOKUP (xung đột kiểu Text và Số 0).
+      + Đồng thời gọi GAS endpoint ?action=audit_oil_ab để kích hoạt cảnh báo chi tiết từ GAS.
+    """
+    results = []
+    OIL_SHEET_ID = "1EmECb3aPXMRxSyUzhV6wKU2oDq_32Ga-lwpwmkcHdh0"
+    tabs_to_check = [
+        ("Input Close WO DG paste 123", "1378310796", 1),
+        ("Update Close WO", "1508195088", 2),
+    ]
+    missing_items = []
+    total_checked = 0
+
+    try:
+        import csv as csv_mod
+        for tab_name, gid, skip_rows in tabs_to_check:
+            url = f"https://docs.google.com/spreadsheets/d/{OIL_SHEET_ID}/export?format=csv&gid={gid}"
+            resp = requests.get(url, timeout=15)
+            if resp.status_code != 200:
+                results.append({
+                    "name": f"Oil & Coolant Col AB ({tab_name})",
+                    "status": "FAIL",
+                    "reason": f"Không đọc được tab {tab_name} (HTTP {resp.status_code})"
+                })
+                continue
+
+            rows = list(csv_mod.reader(io.StringIO(resp.text)))
+            for r_idx, row in enumerate(rows):
+                if r_idx < skip_rows:
+                    continue
+                val_aa = row[26].strip() if len(row) > 26 and row[26] else ""
+                val_ab = row[27].strip() if len(row) > 27 and row[27] else ""
+                if not val_aa or "closed time" in val_aa.lower():
+                    continue
+                total_checked += 1
+                if not val_ab or val_ab == "0" or val_ab.startswith("#") or val_ab.lower() == "error":
+                    wo_code = row[18].strip() if len(row) > 18 and row[18] else "(không rõ WO)"
+                    site_code = row[20].strip()[:28] if len(row) > 20 and row[20] else ""
+                    missing_items.append(
+                        f"[{tab_name}] Dòng {r_idx + 1}: AA='{val_aa}' nhưng AB='{val_ab or '(TRỐNG)'}' (WO: {wo_code} | {site_code})"
+                    )
+
+        if missing_items:
+            # Gửi cảnh báo Telegram trực tiếp về DM Admin (6859790680) để kiểm tra hàm QUERY / XLOOKUP (dedup theo chữ ký lỗi trong ngày)
+            try:
+                today_sig_date = datetime.now(TZ_MM).strftime("%d/%m/%Y")
+                sig_str = f"{today_sig_date}|{len(missing_items)}|" + "|".join(missing_items[:5])
+                cache_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".oil_ab_alert_cache.json")
+                force_alert = "--force-oil-alert" in sys.argv
+                last_sig = ""
+                if os.path.exists(cache_file) and not force_alert:
+                    try:
+                        with open(cache_file, "r", encoding="utf-8") as cf:
+                            last_sig = json.load(cf).get("sig", "")
+                    except Exception:
+                        pass
+
+                if force_alert or sig_str != last_sig:
+                    now_str = datetime.now(TZ_MM).strftime("%d/%m/%Y %H:%M:%S")
+                    alert_lines = [
+                        "🚨 <b>[GHẾ GIÁM SÁT CỘT AB — 2.1 CONTROL OIL &amp; WATER COOLANT]</b>",
+                        f"⏰ <b>Thời gian phát hiện:</b> {now_str} (MMT)",
+                        "📂 <b>Bảng tính:</b> <code>2.1 Control Oil and water coolant at Team</code>",
+                        f"⚠️ <b>Sự cố:</b> Phát hiện <b>{len(missing_items)} dòng</b> có dữ liệu <b>Cột AA (Closed Time)</b> nhưng <b>Cột AB (Team) bị trống / lỗi</b>!",
+                        "──────────────────────────",
+                    ]
+                    for item in missing_items[:10]:
+                        alert_lines.append(f"• {html.escape(item)}")
+                    if len(missing_items) > 10:
+                        alert_lines.append(f"<i>... và {len(missing_items) - 10} dòng khác.</i>")
+                    alert_lines.extend([
+                        "──────────────────────────",
+                        "🔍 <b>Nguyên nhân nghi vấn cần kiểm tra hàm:</b>",
+                        "1️⃣ <b>Xung đột kiểu dữ liệu (Text vs Số) trong hàm <code>QUERY</code>:</b> Cột <code>BJ (Team)</code> bên <code>'WoList input'</code> trả về số <code>0</code> (khi <code>XLOOKUP(..., 0)</code> trượt) trộn lẫn với chuỗi Text (<code>\"T1\"</code>, <code>\"T2\"</code>, <code>\"T2 S1\"</code>) khiến hàm <code>QUERY(..., \"select Col1..Col26,Col28\")</code> làm rỗng giá trị.",
+                        "2️⃣ <b>Lệch dòng / Dán thiếu cột AB:</b> Dữ liệu dán tay hoặc công thức tại <code>'M&amp;E Cross Check'!AC</code> / <code>'Input Close WO DG paste 123'!AB</code> chưa kéo xuống đủ dòng.",
+                        "🛡️ <b>Chốt chặn:</b> Script Auto-Copy đã tự động chặn không dán đè dòng bị trống Cột AB cho đến khi hàm hiển thị đủ Team."
+                    ])
+                    if SEND_BOT_TOKEN and ADMIN_CHAT_ID:
+                        requests.post(
+                            f"https://api.telegram.org/bot{SEND_BOT_TOKEN}/sendMessage",
+                            json={
+                                "chat_id": ADMIN_CHAT_ID,
+                                "text": "\n".join(alert_lines),
+                                "parse_mode": "HTML"
+                            },
+                            timeout=15
+                        )
+                        try:
+                            with open(cache_file, "w", encoding="utf-8") as cf:
+                                json.dump({"sig": sig_str, "ts": now_str}, cf, ensure_ascii=False)
+                        except Exception:
+                            pass
+            except Exception as tg_e:
+                logger.warning(f"Lỗi gửi cảnh báo Ghế AUDITOR-OIL-9.8: {tg_e}")
+
+            preview = "; ".join(missing_items[:4])
+            if len(missing_items) > 4:
+                preview += f" (+{len(missing_items) - 4} dòng khác)"
+            results.append({
+                "name": "Ghế AUDITOR-OIL-9.8 (Cột AA/AB Oil & Coolant)",
+                "status": "FAIL",
+                "reason": f"Phát hiện {len(missing_items)} dòng có Cột AA nhưng thiếu Cột AB (Team): {preview} — Nghi vấn QUERY xung đột Text/Số 0 hoặc lệch dòng!"
+            })
+        else:
+            results.append({
+                "name": "Ghế AUDITOR-OIL-9.8 (Cột AA/AB Oil & Coolant)",
+                "status": "PASS",
+                "reason": f"100% dòng có AA đều đủ AB ({total_checked} dòng trên 2 tab Input & Update Close WO)"
+            })
+    except Exception as e:
+        logger.error(f"❌ audit_oil_coolant_col_ab error: {e}")
+        results.append({
+            "name": "Ghế AUDITOR-OIL-9.8 (Cột AA/AB Oil & Coolant)",
+            "status": "FAIL",
+            "reason": f"Exception: {str(e)[:80]}"
+        })
+
+    return results
+
+
 
 
 def build_supervisory_seats_status(eval_data: dict) -> list[str]:
@@ -2166,6 +2407,17 @@ def build_supervisory_seats_status(eval_data: dict) -> list[str]:
     else:
         seats_output.append(f"⚠️ <b>Ghế AUDITOR-1.1 (Giám sát Report 1-4 &amp; BOD)</b>: Hoạt động (Trễ/thiếu {len(r14_fails)} báo cáo)")
 
+    # 2B. Ghế AUDITOR-1.2 (Giám sát Operation Progress Report 11:46 & 17:21 MMT)
+    tpr_audit_res = eval_data.get("tpr_audit_res", [])
+    tpr_sched = [s for s in schedule_res if "Operation Progress Report" in s.get("report", "")]
+    tpr_fails = [t for t in tpr_audit_res if t.get("status") in ("FAIL", "WARN")] + [s for s in tpr_sched if s.get("status") in ("FAIL", "WARN")]
+    if not tpr_fails:
+        tpr_detail = html.escape(str(next((t.get("detail", "") for t in tpr_audit_res if t.get("status") == "PASS"), "11:46 & 17:21 MMT OK")))
+        seats_output.append(f"✅ <b>Ghế AUDITOR-1.2 (Giám sát Operation Progress Report)</b>: {tpr_detail}")
+    else:
+        tpr_err = html.escape(str(tpr_fails[0].get("detail", "Trễ/thiếu Operation Progress Report")))
+        seats_output.append(f"❌ <b>Ghế AUDITOR-1.2 (Giám sát Operation Progress Report)</b>: {tpr_err}")
+
     # 3. Ghế AUDITOR-2.1 (Giám sát Báo cáo Cáp Cable)
     cable_wh = [w for w in webhook_res if "Cable" in w.get("name", "")]
     cable_ok = all(w.get("status") == "PASS" for w in cable_wh) if cable_wh else True
@@ -2180,7 +2432,7 @@ def build_supervisory_seats_status(eval_data: dict) -> list[str]:
     refuel_fails = [s for s in refuel_sched if s.get("status") in ("FAIL", "WARN")]
     refuel_audit_res = eval_data.get("refuel_audit_res", [])
     rf_audit_fails = [r for r in refuel_audit_res if r.get("status") in ("FAIL", "WARN")]
-    rf_qual_fails = [q for q in eval_data.get("quality_res", []) if q.get("group") == "REFUEL"]
+    rf_qual_fails = [q for q in eval_data.get("quality_res", []) if q.get("group") == "REFUEL" and q.get("status") in ("FAIL", "WARN")]
     if not refuel_fails and not refuel_dups and not rf_audit_fails and not rf_qual_fails:
         lp_info = html.escape(str(next((r.get("detail", "") for r in refuel_audit_res if r.get("status") == "PASS"), "Lọc trùng & tiến độ")))
         seats_output.append(f"✅ <b>Ghế AUDITOR-3.1 (Giám sát Nhiên liệu Refuel)</b>: Hoạt động chuẩn xác (6/6 mẫu classify OK | {lp_info})")
@@ -2284,6 +2536,15 @@ def build_supervisory_seats_status(eval_data: dict) -> list[str]:
     elif dept_fails:
         seats_output.append(f"❌ <b>Ghế AUDITOR-DEPT-9.7 (Giám sát Tiến độ Phòng Dep)</b>: {html.escape(str(dept_fails[0].get('reason', 'Lỗi kiểm toán')))}")
 
+    # 17. Ghế AUDITOR-OIL-9.8 (Giám sát Cột AA/AB Oil & Coolant - GID 1378310796 & 1508195088)
+    oil_ab_res = eval_data.get("oil_ab_res", [])
+    oil_ab_fails = [o for o in oil_ab_res if o.get("status") in ("FAIL", "WARN")]
+    if not oil_ab_fails and oil_ab_res:
+        oil_ab_info = html.escape(str(oil_ab_res[0].get("reason", "OK")))
+        seats_output.append(f"✅ <b>Ghế AUDITOR-OIL-9.8 (Giám sát Cột AA/AB Oil &amp; Coolant)</b>: Hoạt động ({oil_ab_info})")
+    elif oil_ab_fails:
+        seats_output.append(f"❌ <b>Ghế AUDITOR-OIL-9.8 (Giám sát Cột AA/AB Oil &amp; Coolant)</b>: {html.escape(str(oil_ab_fails[0].get('reason', 'Thiếu cột AB')))}")
+
     return seats_output
 
 
@@ -2309,6 +2570,7 @@ def build_supervisory_clean_report(eval_data: dict = None) -> str:
         seats = [
             ("AUDITOR-9.1", "Master Sentinel", "09:00 MMT Hàng Ngày", "7 Webhooks, GAS Cloud, Sheets SSOT OK"),
             ("AUDITOR-1.1", "Giám sát Report 1-4 &amp; BOD", "05:46/05:51 &amp; 15:46/15:51 MMT", "Đúng giờ, đủ quân số"),
+            ("AUDITOR-1.2", "Giám sát Operation Progress Report", "11:46 &amp; 17:21 MMT", "Tự động kiểm toán &amp; gửi bù T1-T4 + CONTROL"),
             ("AUDITOR-2.1", "Giám sát Báo cáo Cáp Cable", ":16 &amp; :46 MMT", "Sheet cáp &amp; Webhook kết nối tốt"),
             ("AUDITOR-3.1", "Giám sát Nhiên liệu Refuel", "10:06, 14:11 &amp; 20:56 MMT", "Lọc trùng &amp; tiến độ chuẩn xác"),
             ("AUDITOR-4.1", "Giám sát Daily Plan 5A-5C", "6 mốc giờ Plan", "Tiến độ gửi thông suốt"),
@@ -2323,6 +2585,7 @@ def build_supervisory_clean_report(eval_data: dict = None) -> str:
             ("AUDITOR-AD-GUARD-9.5", "Lá chắn Diệt Quảng Cáo &amp; Lôi Kéo", "24/7 Thời gian thực", "Zero Ads, Outbound &amp; Inbound Purge Sentry ON"),
             ("AUDITOR-SECRETS-9.6", "Bọc Thép Secrets GitHub Public", "Mỗi nhịp Train", "Mã hóa 100% Secrets, Không lộ Token/PII"),
             ("AUDITOR-DEPT-9.7", "Giám sát Tiến độ Phòng Dep", "Mỗi nhịp Train", "Xác thực 355 đầu việc &amp; hạn hoàn thành"),
+            ("AUDITOR-OIL-9.8", "Giám sát Cột AA/AB Oil &amp; Coolant", "Mỗi nhịp Auto-Copy &amp; Kiểm toán", "Kiểm tra 100% dòng có AA phải đủ AB (Team)"),
         ]
         for code, name, sched, res in seats:
             lines.append(f" ✅ <b>Ghế {code} ({name})</b>: Hoạt động ({sched} — {res})")
@@ -2354,6 +2617,8 @@ def build_master_audit_report():
     inventory_res = audit_sale_inventory()
     nocpro_res = audit_nocpro_alarm_sync()
     refuel_audit_res = audit_refuel_collector_and_letter_sync()
+    tpr_audit_res = audit_team_progress_report_sync()
+    oil_ab_res = audit_oil_coolant_col_ab()
 
     # 2. Chạy kiểm tra Telethon (Đúng giờ & Nhân đôi)
     try:
@@ -2380,13 +2645,15 @@ def build_master_audit_report():
         "inventory_res": inventory_res,
         "nocpro_res": nocpro_res,
         "refuel_audit_res": refuel_audit_res,
+        "tpr_audit_res": tpr_audit_res,
+        "oil_ab_res": oil_ab_res,
         "schedule_res": schedule_res,
         "duplicate_res": duplicate_res,
         "quality_res": quality_res
     }
 
     # 4. Tính toán sự cố (Chỉ tính status FAIL là lỗi thực sự)
-    all_static_checks = webhook_res + gas_res + sheets_res + roster_res + template_res + dept_task_res + bi_anomaly_res + cons_menu_res + guide_sync_res + inventory_res + nocpro_res + refuel_audit_res
+    all_static_checks = webhook_res + gas_res + sheets_res + roster_res + template_res + dept_task_res + bi_anomaly_res + cons_menu_res + guide_sync_res + inventory_res + nocpro_res + refuel_audit_res + tpr_audit_res + oil_ab_res
     fail_checks = sum(1 for c in all_static_checks if c["status"] == "FAIL")
     warn_checks = sum(1 for c in all_static_checks if c["status"] == "WARN")
 
@@ -2411,9 +2678,10 @@ def build_master_audit_report():
     lines.append("──────────────────────────")
 
     # 1. Báo cáo lỗi Chất Lượng Nội Dung & Quân Số
-    if quality_res:
-        lines.append(f"\n📋 <b>LỖI CHẤT LƯỢNG NỘI DUNG &amp; QUÂN SỐ ({len(quality_res)} mục):</b>")
-        for q in quality_res:
+    qual_fails = [q for q in quality_res if q.get("status") in ("FAIL", "WARN")]
+    if qual_fails:
+        lines.append(f"\n📋 <b>LỖI CHẤT LƯỢNG NỘI DUNG &amp; QUÂN SỐ ({len(qual_fails)} mục):</b>")
+        for q in qual_fails:
             lines.append(f"   {q['label']} <b>{html.escape(str(q['report']))}</b> ({html.escape(str(q['group']))})")
             lines.append(f"      └ <i>{html.escape(str(q['detail']))}</i>")
 
@@ -2490,10 +2758,10 @@ def build_master_audit_report():
             lines.append(f"   {html.escape(str(r['label']))} (<i>{html.escape(str(r['component']))}</i>)")
             lines.append(f"      └ {html.escape(str(r['detail']))}")
 
-    # 12. Báo cáo Nocpro, Refuel Collector & Dept Task nếu có lỗi
-    extra_fails = [r for r in (nocpro_res + refuel_audit_res + dept_task_res) if r["status"] != "PASS"]
+    # 12. Báo cáo Nocpro, Refuel Collector, Dept Task & Oil/Coolant Col AB nếu có lỗi
+    extra_fails = [r for r in (nocpro_res + refuel_audit_res + dept_task_res + oil_ab_res) if r["status"] != "PASS"]
     if extra_fails:
-        lines.append("\n⚙️ <b>CẢNH BÁO ĐỒNG BỘ NOCPRO / REFUEL / DEPT TASK:</b>")
+        lines.append("\n⚙️ <b>CẢNH BÁO ĐỒNG BỘ NOCPRO / REFUEL / DEPT TASK / OIL COL AB:</b>")
         for r in extra_fails:
             r_title = r.get("name") or r.get("component") or r.get("label") or "Audit Check"
             r_desc = r.get("reason") or r.get("detail") or ""
