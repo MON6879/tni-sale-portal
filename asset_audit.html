@@ -739,14 +739,20 @@
           </span>
         </div>
         <div class="sheet-cell-actions">
+          <button id="btnFilterDiffOnly" class="btn btn-warning" style="padding:5px 9px;font-size:11.5px;" onclick="toggleDiscrepancyOnlyFilter()">
+            ⚠️ Show Discrepancies Only: OFF
+          </button>
           <button class="btn btn-outline" style="padding:5px 9px;font-size:11.5px;" onclick="markAllUnchangedMatched()">
-            ✅ Set All Default Matched
+            ✅ Reset Unchanged (Diff=0)
+          </button>
+          <button class="btn btn-outline" style="padding:5px 9px;font-size:11.5px;border-color:#16a34a;color:#15803d;" onclick="markAllDiscrepanciesDoneForBalance()">
+            ☑️ Asset: Tick All Done for Balance
           </button>
           <button class="btn btn-primary" style="padding:5px 10px;font-size:11.5px;" onclick="triggerSiteWidePhoto()">
-            📷 Take Site Watermarked Photo (<span id="sitePhotoCount">0</span>)
+            📷 Site Photo (<span id="sitePhotoCount">0</span>)
           </button>
           <button class="btn btn-success" style="padding:5px 12px;font-size:12px;" onclick="saveAuditReportToSheet()">
-            💾 Save Audit Report
+            💾 Save Audit & Balance
           </button>
         </div>
       </div>
@@ -768,24 +774,27 @@
               <th class="team-upd-light">write serial different</th>
               <th class="team-upd-light">In system formula (Auto 61K Lookup)</th>
               <th class="team-upd-light">Photo (1440×1088 + GPS + Time)</th>
+              <th style="background:#fef08a;color:#854d0e;" colspan="2">👑 ASSET DEPARTMENT CHECK &amp; DONE FOR BALANCE</th>
             </tr>
             <tr class="col-hdr">
-              <th style="width:64px;">No</th>
-              <th style="width:125px;">Site/Cable/MW</th>
-              <th style="min-width:250px;">Name</th>
-              <th style="width:82px;">Code</th>
-              <th style="width:165px;">Serial</th>
-              <th style="width:72px;">Quality</th>
-              <th class="col-diff" style="width:140px;">Different (= Quality - Reality)</th>
-              <th class="col-team" style="width:98px;">Reality have</th>
-              <th class="col-team" style="width:155px;">Write serial different</th>
-              <th class="col-team" style="min-width:210px;">In system formula</th>
-              <th class="col-team" style="width:145px;">Photo</th>
+              <th style="width:60px;">No</th>
+              <th style="width:118px;">Site/Cable/MW</th>
+              <th style="min-width:230px;">Name</th>
+              <th style="width:76px;">Code</th>
+              <th style="width:155px;">Serial</th>
+              <th style="width:68px;">Quality</th>
+              <th class="col-diff" style="width:130px;">Different (= Quality - Reality)</th>
+              <th class="col-team" style="width:92px;">Reality have</th>
+              <th class="col-team" style="width:148px;">Write serial different</th>
+              <th class="col-team" style="min-width:195px;">In system formula</th>
+              <th class="col-team" style="width:125px;">Photo</th>
+              <th style="background:#fef9c3;color:#854d0e;width:145px;">☑️ Done for Balance</th>
+              <th style="background:#fef9c3;color:#854d0e;min-width:230px;">✍️ Asset Staff Name &amp; Handling Info</th>
             </tr>
           </thead>
           <tbody id="auditTableBody">
             <tr>
-              <td colspan="11" style="text-align:center;padding:28px;font-weight:700;color:var(--muted);">
+              <td colspan="13" style="text-align:center;padding:28px;font-weight:700;color:var(--muted);">
                 Select a Station / Cable / MW above (or click <b>Load Demo: TNI0351</b>) to load system assets from Google Sheet 1.
               </td>
             </tr>
@@ -808,7 +817,7 @@
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
           <button class="btn btn-success" style="padding:10px 22px;font-size:14px;" onclick="saveAuditReportToSheet()">
-            💾 Save Audit Report to Google Sheet 2
+            💾 Save Audit Report &amp; Asset Balance to Google Sheet 2
           </button>
         </div>
       </div>
@@ -822,10 +831,10 @@
         <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;">
           <div>
             <h3 style="font-size:15px;font-weight:800;color:#1e3a8a;">
-              ⚖️ Discrepancy & Asset Transfer Approval Center
+              ⚖️ Discrepancy &amp; Asset "Done for Balance" Processing Center
             </h3>
             <p style="font-size:12px;color:var(--muted);">
-              Lists all audited items with quantity/serial discrepancies or extra unrecorded items. Only authorized Asset Staff / Approvers can approve <b>"Transferred & Matched Reality"</b>.
+              Lists all audited items where <b>Different (Quality - Reality) != 0</b>, serial differs, or extra items exist. Authorized Asset Staff can enter their <b>Name &amp; Check/Handling Info</b> and tick <b>"☑️ Done for Balance"</b> per row or in batch.
             </p>
           </div>
           <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
@@ -838,13 +847,14 @@
               <option value="Warehouse">Warehouse & NOC</option>
             </select>
             <select id="discStatusFilter" class="input-sm" onchange="renderDiscrepancyTable()">
-              <option value="ALL">All Approval Statuses</option>
-              <option value="PENDING">Pending Asset Approval</option>
-              <option value="APPROVED">Transferred & Matched Reality</option>
+              <option value="ALL">All Balance Statuses</option>
+              <option value="PENDING">⏳ Pending Asset Balance</option>
+              <option value="APPROVED">☑️ Done for Balance</option>
             </select>
-            <input id="discNoteInput" class="input-sm" style="width:210px;" placeholder="Approval note / transfer ref..." />
-            <button id="btnApproveTransfer" class="btn btn-success" onclick="approveSelectedDiscrepancies('Transferred & Matched Reality')">
-              ✅ Approve Selected: Transferred & Matched Reality
+            <input id="discAssetStaffInput" class="input-sm" style="width:165px;background:#fefce8;border-color:#eab308;" placeholder="✍️ Asset Staff Name..." value="Ingyin Hmwe" />
+            <input id="discNoteInput" class="input-sm" style="width:220px;background:#fefce8;border-color:#eab308;" placeholder="✍️ Asset check & handling info..." />
+            <button id="btnApproveTransfer" class="btn btn-success" onclick="approveSelectedDiscrepancies('Done for Balance')">
+              ☑️ Tick Selected: Done for Balance
             </button>
             <button class="btn btn-outline" onclick="refreshDashboardAndDiscrepancies()">🔄 Refresh</button>
           </div>
@@ -856,22 +866,21 @@
               <tr class="col-hdr">
                 <th style="width:36px;"><input type="checkbox" id="chkAllDisc" onchange="toggleSelectAllDisc(this.checked)" /></th>
                 <th>Audit ID</th>
-                <th>Date (MMT)</th>
-                <th>Team</th>
-                <th>Site / Cable</th>
-                <th>Equipment Name & Code</th>
-                <th>System Serial & Qty</th>
-                <th class="col-diff">Different</th>
-                <th class="col-team">Reality Qty & Actual Serial</th>
+                <th>Date &amp; Auditor</th>
+                <th>Team &amp; Site</th>
+                <th>Equipment Name &amp; Code</th>
+                <th>System Serial &amp; Qty</th>
+                <th class="col-diff">Different (= Quality - Reality)</th>
+                <th class="col-team">Reality Qty &amp; Actual Serial</th>
                 <th class="col-team">In System Formula (61K Lookup)</th>
                 <th>Photo</th>
-                <th>Transfer Approval Status</th>
-                <th>Approved By</th>
+                <th style="background:#fef9c3;color:#854d0e;width:150px;">☑️ Done for Balance</th>
+                <th style="background:#fef9c3;color:#854d0e;min-width:250px;">✍️ Asset Staff Name &amp; Check / Handling Info</th>
               </tr>
             </thead>
             <tbody id="discrepancyTableBody">
               <tr>
-                <td colspan="13" style="text-align:center;padding:24px;color:var(--muted);font-weight:700;">
+                <td colspan="12" style="text-align:center;padding:24px;color:var(--muted);font-weight:700;">
                   Loading discrepancy records from Sheet 2...
                 </td>
               </tr>
@@ -1355,22 +1364,31 @@
         STATE.sitePhotos = [];
         renderSitePhotosStrip();
 
-        STATE.rows = (res.items || []).map((it, idx) => ({
-          rowIdx: idx,
-          no: it.no || "",
-          siteCode: it.siteCode || STATE.currentTarget,
-          equipmentName: it.equipmentName || "",
-          code: it.code || "",
-          serial: it.serial || "",
-          quality: it.quality !== undefined ? String(it.quality) : "1",
-          different: "0",
-          realityHave: it.quality !== undefined ? String(it.quality) : "1",
-          writeSerialDifferent: "",
-          inSystemFormula: "",
-          photoUrls: [],
-          note: "",
-          isExtraItem: false
-        }));
+        STATE.rows = (res.items || []).map((it, idx) => {
+          const qVal = it.quality !== undefined ? String(it.quality) : "1";
+          const rVal = it.realityHave !== undefined && it.realityHave !== "" ? String(it.realityHave) : qVal;
+          const dVal = it.different !== undefined && it.different !== "" ? String(it.different) : String(calcDiffNumber(qVal, rVal));
+          return {
+            rowIdx: idx,
+            auditId: it.auditId || "",
+            no: it.no || "",
+            siteCode: it.siteCode || STATE.currentTarget,
+            equipmentName: it.equipmentName || "",
+            code: it.code || "",
+            serial: it.serial || "",
+            quality: qVal,
+            different: dVal,
+            realityHave: rVal,
+            writeSerialDifferent: it.writeSerialDifferent || "",
+            inSystemFormula: it.inSystemFormula || "",
+            photoUrls: Array.isArray(it.photoUrls) ? it.photoUrls : [],
+            note: it.note || "",
+            doneForBalance: Boolean(it.doneForBalance),
+            assetStaffName: it.assetStaffName || "",
+            assetHandlingNote: it.assetHandlingNote || "",
+            isExtraItem: Boolean(it.isExtraItem)
+          };
+        });
 
         document.getElementById("bannerTargetCode").textContent = STATE.currentTarget;
         document.getElementById("bannerTeamTag").textContent = STATE.currentTeam;
@@ -1423,6 +1441,41 @@
       `;
     }
 
+    function renderAssetBalanceCellHtml(r, idx) {
+      const isDiff = isRowDiscrepancy(r);
+      const checkedAttr = r.doneForBalance ? "checked" : "";
+      const bg = r.doneForBalance ? "#dcfce7" : (isDiff ? "#fef08a" : "#f8fafc");
+      const border = r.doneForBalance ? "#22c55e" : (isDiff ? "#eab308" : "#cbd5e1");
+      const color = r.doneForBalance ? "#166534" : (isDiff ? "#854d0e" : "#475569");
+      const labelTxt = r.doneForBalance
+        ? "☑️ Done for Balance"
+        : (isDiff ? "☐ Tick Done for Balance" : "Balanced (Diff=0)");
+      return `
+        <label style="display:flex;align-items:center;gap:6px;padding:5px 7px;border-radius:6px;background:${bg};border:1px solid ${border};color:${color};font-weight:800;font-size:11.5px;cursor:pointer;">
+          <input type="checkbox" ${checkedAttr} onchange="onToggleDoneForBalance(${idx}, this.checked)" style="width:15px;height:15px;cursor:pointer;" />
+          <span>${labelTxt}</span>
+        </label>
+      `;
+    }
+
+    function renderAssetInfoCellHtml(r, idx) {
+      const disabledAttr = STATE.staff.canApproveTransfer ? "" : "readonly title='Only Authorized Asset Staff can edit'";
+      return `
+        <div style="display:flex;flex-direction:column;gap:3px;">
+          <input class="cell-input" style="background:#fefce8;border-color:#eab308;font-size:11.5px;"
+            placeholder="✍️ Asset Staff Name..."
+            value="${escapeHtml(r.assetStaffName || "")}"
+            ${disabledAttr}
+            onchange="onAssetInfoInput(${idx}, 'assetStaffName', this.value)" />
+          <input class="cell-input" style="background:#fff;font-size:11.5px;"
+            placeholder="📋 Check & handling note..."
+            value="${escapeHtml(r.assetHandlingNote || "")}"
+            ${disabledAttr}
+            onchange="onAssetInfoInput(${idx}, 'assetHandlingNote', this.value)" />
+        </div>
+      `;
+    }
+
     function renderAuditTable(filterText = "") {
       const tbody = document.getElementById("auditTableBody");
       const q = String(filterText || document.getElementById("rowFilterInput").value || "").trim().toLowerCase();
@@ -1430,7 +1483,7 @@
       if (STATE.rows.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="11" style="text-align:center;padding:24px;font-weight:700;color:var(--muted);">
+            <td colspan="13" style="text-align:center;padding:24px;font-weight:700;color:var(--muted);">
               No system rows found for <b>${escapeHtml(STATE.currentTarget || "this selection")}</b>. You can click <b>+ Add Extra Item Row</b> below to record items on site.
             </td>
           </tr>
@@ -1441,14 +1494,18 @@
 
       const htmlRows = [];
       STATE.rows.forEach((r, idx) => {
+        const isDiff = isRowDiscrepancy(r);
+        if (STATE.showDiscrepancyOnly && !isDiff) return;
+
         if (q) {
-          const hay = `${r.no} ${r.siteCode} ${r.equipmentName} ${r.code} ${r.serial} ${r.writeSerialDifferent} ${r.inSystemFormula}`.toLowerCase();
+          const hay = `${r.no} ${r.siteCode} ${r.equipmentName} ${r.code} ${r.serial} ${r.writeSerialDifferent} ${r.inSystemFormula} ${r.assetStaffName} ${r.assetHandlingNote}`.toLowerCase();
           if (!hay.includes(q)) return;
         }
 
-        const isDiff = isRowDiscrepancy(r);
         const rowClass = r.isExtraItem ? "row-extra" : (isDiff ? "row-diff" : "");
         const diffHtml = renderDiffBadgeHtml(r, idx);
+        const assetBalHtml = renderAssetBalanceCellHtml(r, idx);
+        const assetInfoHtml = renderAssetInfoCellHtml(r, idx);
 
         const thumbsHtml = (r.photoUrls || []).map((u, pIdx) =>
           `<a href="${escapeHtml(u)}" target="_blank" rel="noopener" class="thumb-pill">🖼️ #${pIdx + 1}</a>`
@@ -1487,6 +1544,8 @@
                   ${thumbsHtml}
                 </div>
               </td>
+              <td class="td-team-input" id="assetBalTd_${idx}">${assetBalHtml}</td>
+              <td class="td-team-input" id="assetInfoTd_${idx}">${assetInfoHtml}</td>
             </tr>
           `);
         } else {
@@ -1521,17 +1580,89 @@
                   ${thumbsHtml}
                 </div>
               </td>
+              <td class="td-team-input" id="assetBalTd_${idx}">${assetBalHtml}</td>
+              <td class="td-team-input" id="assetInfoTd_${idx}">${assetInfoHtml}</td>
             </tr>
           `);
         }
       });
 
-      tbody.innerHTML = htmlRows.join("");
+      if (htmlRows.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="13" style="text-align:center;padding:24px;font-weight:700;color:var(--ok);">
+              ✅ No discrepancy rows found on this station (all rows have Different = 0 and no serial mismatch).
+            </td>
+          </tr>
+        `;
+      } else {
+        tbody.innerHTML = htmlRows.join("");
+      }
       updateBannerCounters();
     }
 
     function filterLoadedRows(q) {
       renderAuditTable(q);
+    }
+
+    function toggleDiscrepancyOnlyFilter() {
+      STATE.showDiscrepancyOnly = !STATE.showDiscrepancyOnly;
+      const btn = document.getElementById("btnFilterDiffOnly");
+      if (btn) {
+        btn.textContent = STATE.showDiscrepancyOnly
+          ? "⚠️ Show Discrepancies Only: ON"
+          : "⚠️ Show Discrepancies Only: OFF";
+        btn.className = STATE.showDiscrepancyOnly ? "btn btn-danger" : "btn btn-warning";
+      }
+      renderAuditTable();
+    }
+
+    function onToggleDoneForBalance(idx, checked) {
+      const r = STATE.rows[idx];
+      if (!r) return;
+      if (!STATE.staff.canApproveTransfer) {
+        showToast("🔒 Only Authorized Asset Staff (Ingyin Hmwe, Ye Lwin, BOD, etc.) can tick 'Done for Balance'.", "err");
+        renderAuditTable();
+        return;
+      }
+      r.doneForBalance = Boolean(checked);
+      if (checked && !String(r.assetStaffName || "").trim()) {
+        r.assetStaffName = STATE.staff.name;
+      }
+      const balTd = document.getElementById(`assetBalTd_${idx}`);
+      if (balTd) balTd.innerHTML = renderAssetBalanceCellHtml(r, idx);
+      const infoTd = document.getElementById(`assetInfoTd_${idx}`);
+      if (infoTd) infoTd.innerHTML = renderAssetInfoCellHtml(r, idx);
+      updateBannerCounters();
+    }
+
+    function onAssetInfoInput(idx, field, val) {
+      const r = STATE.rows[idx];
+      if (!r) return;
+      if (!STATE.staff.canApproveTransfer) {
+        showToast("🔒 Only Authorized Asset Staff can enter Asset Check & Handling Info.", "err");
+        return;
+      }
+      r[field] = val;
+    }
+
+    function markAllDiscrepanciesDoneForBalance() {
+      if (!STATE.staff.canApproveTransfer) {
+        showToast("🔒 Only Authorized Asset Staff can tick 'Done for Balance'.", "err");
+        return;
+      }
+      let cnt = 0;
+      STATE.rows.forEach(r => {
+        if (isRowDiscrepancy(r)) {
+          r.doneForBalance = true;
+          if (!String(r.assetStaffName || "").trim()) {
+            r.assetStaffName = STATE.staff.name;
+          }
+          cnt++;
+        }
+      });
+      renderAuditTable();
+      showToast(`Ticked "Done for Balance" on ${cnt} discrepancy row(s) as ${STATE.staff.name}. Click Save to commit!`, "ok");
     }
 
     function updateRowField(idx, field, val) {
@@ -1547,6 +1678,8 @@
       r.different = String(calcDiffNumber(r.quality, val));
       const diffTd = document.getElementById(`diffTd_${idx}`);
       if (diffTd) diffTd.innerHTML = renderDiffBadgeHtml(r, idx);
+      const balTd = document.getElementById(`assetBalTd_${idx}`);
+      if (balTd) balTd.innerHTML = renderAssetBalanceCellHtml(r, idx);
       const trEl = document.getElementById(`auditRow_${idx}`);
       if (trEl) {
         const isDiff = isRowDiscrepancy(r);
@@ -1601,6 +1734,7 @@
       }
       STATE.rows.push({
         rowIdx: STATE.rows.length,
+        auditId: "",
         no: "EXTRA",
         siteCode: STATE.currentTarget,
         equipmentName: "",
@@ -1613,6 +1747,9 @@
         inSystemFormula: "Extra unrecorded item on site",
         photoUrls: [],
         note: "EXTRA_ITEM",
+        doneForBalance: false,
+        assetStaffName: "",
+        assetHandlingNote: "",
         isExtraItem: true
       });
       renderAuditTable();
@@ -1637,14 +1774,17 @@
 
     function updateBannerCounters() {
       const total = STATE.rows.length;
-      let matched = 0, diff = 0, photos = STATE.sitePhotos.length;
+      let matched = 0, diff = 0, doneBal = 0, photos = STATE.sitePhotos.length;
       STATE.rows.forEach(r => {
         if (!isRowDiscrepancy(r)) matched++;
-        else diff++;
+        else {
+          diff++;
+          if (r.doneForBalance) doneBal++;
+        }
         photos += (r.photoUrls || []).length;
       });
       document.getElementById("bannerCounters").textContent =
-        `${total} Rows | ${matched} Matched (Diff=0) | ${diff} Discrepancy/Extra | ${photos} Photos`;
+        `${total} Rows | ${matched} Matched (Diff=0) | ${diff} Discrepancy (${doneBal} Done for Balance) | ${photos} Photos`;
       document.getElementById("sitePhotoCount").textContent = STATE.sitePhotos.length;
     }
 
@@ -1801,6 +1941,7 @@
       const itemsPayload = STATE.rows.map(r => {
         const mergedPhotos = [...(r.photoUrls || []), ...siteWideUrls];
         return {
+          auditId: r.auditId || "",
           no: r.no,
           siteCode: r.siteCode || siteCode,
           equipmentName: r.equipmentName,
@@ -1813,6 +1954,9 @@
           inSystemFormula: r.inSystemFormula,
           photoUrls: mergedPhotos,
           note: r.note,
+          doneForBalance: Boolean(r.doneForBalance),
+          assetStaffName: r.assetStaffName || "",
+          assetHandlingNote: r.assetHandlingNote || "",
           isExtraItem: Boolean(r.isExtraItem)
         };
       });
@@ -1888,15 +2032,15 @@
       if (filtered.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="13" style="text-align:center;padding:24px;color:var(--muted);font-weight:700;">
-              No discrepancy items match the current filter. When an auditor marks an item as "Different", "Missing", or "Extra Item" in Tab 1, it appears here automatically.
+            <td colspan="12" style="text-align:center;padding:24px;color:var(--muted);font-weight:700;">
+              No discrepancy items match the current filter. When an auditor records a row with Different != 0, a serial difference, or an Extra Item in Tab 1, it appears here automatically.
             </td>
           </tr>
         `;
         return;
       }
 
-      tbody.innerHTML = filtered.map(r => {
+      tbody.innerHTML = filtered.map((r, dIdx) => {
         const auditId = r[0] || "";
         const dateStr = r[1] || "";
         const team = r[2] || "";
@@ -1907,13 +2051,14 @@
         const eqCode = r[8] || "";
         const sysSer = r[9] || "";
         const sysQty = r[10] || "";
-        const diffFlag = r[11] || "";
+        const diffFlag = r[11] !== undefined && r[11] !== "" ? r[11] : "0";
         const realQty = r[12] || "";
         const realSer = r[13] || "";
         const formula = r[14] || "";
         const photosRaw = String(r[15] || "").trim();
+        const itemNote = String(r[16] || "").trim();
         const appStatus = r[17] || "Pending Asset Approval";
-        const appBy = r[18] || "-";
+        const appBy = r[18] || "";
         const appTime = r[19] || "";
 
         const photoLinks = photosRaw
@@ -1922,7 +2067,12 @@
             ).join(" ")
           : "-";
 
-        const isApproved = appStatus.toLowerCase().includes("transferred") || appStatus.toLowerCase().includes("approved");
+        const isApproved = appStatus.toLowerCase().includes("done for balance") ||
+                           appStatus.toLowerCase().includes("transferred") ||
+                           appStatus.toLowerCase().includes("approved");
+
+        const prefillStaff = appBy || (STATE.staff.canApproveTransfer ? STATE.staff.name : "");
+        const prefillNote = appStatus.includes("—") ? appStatus.split("—").slice(1).join("—").trim() : itemNote;
 
         return `
           <tr class="${isApproved ? '' : 'row-diff'}">
@@ -1930,21 +2080,38 @@
               <input type="checkbox" class="disc-chk" value="${escapeHtml(auditId)}" />
             </td>
             <td style="font-family:monospace;font-weight:700;font-size:11px;">${escapeHtml(auditId)}</td>
-            <td style="font-size:11.5px;">${escapeHtml(dateStr)}<br><span style="color:var(--muted);">${escapeHtml(auditor)}</span></td>
-            <td style="font-weight:700;">${escapeHtml(team)}</td>
-            <td style="font-weight:800;color:var(--brand);">${escapeHtml(site)}</td>
+            <td style="font-size:11.5px;">${escapeHtml(dateStr)}<br><span style="color:var(--muted);">👤 ${escapeHtml(auditor)}</span></td>
+            <td>
+              <span class="badge badge-team">${escapeHtml(team)}</span><br>
+              <b style="color:var(--brand);font-size:13px;">${escapeHtml(site)}</b>
+            </td>
             <td><b>${escapeHtml(eqName)}</b><br><span style="font-size:11px;color:var(--muted);">No: ${escapeHtml(noId)} | Code: ${escapeHtml(eqCode)}</span></td>
             <td style="font-family:monospace;">Serial: <b>${escapeHtml(sysSer || "-")}</b><br>System Qty: <b>${escapeHtml(sysQty)}</b></td>
-            <td class="td-diff" style="text-align:center;font-weight:800;">${escapeHtml(diffFlag)}</td>
+            <td class="td-diff" style="text-align:center;font-weight:900;font-size:14px;">${escapeHtml(diffFlag)}</td>
             <td>Reality Qty: <b>${escapeHtml(realQty)}</b><br>Actual Serial: <b style="color:#b91c1c;">${escapeHtml(realSer || "-")}</b></td>
             <td class="td-formula">${escapeHtml(formula || "-")}</td>
             <td>${photoLinks}</td>
-            <td>
-              <span class="badge ${isApproved ? 'badge-approver' : 'badge-auditor'}">
-                ${isApproved ? '✅ ' : '⏳ '}${escapeHtml(appStatus)}
-              </span>
+            <td style="background:${isApproved ? '#dcfce7' : '#fef9c3'};">
+              <label style="display:flex;align-items:center;gap:6px;font-weight:800;color:${isApproved ? '#166534' : '#854d0e'};cursor:pointer;">
+                <input type="checkbox" id="discDoneChk_${dIdx}" ${isApproved ? 'checked' : ''}
+                  onchange="onSingleDiscDoneToggle(${dIdx}, '${escapeJs(auditId)}', this.checked)"
+                  style="width:16px;height:16px;cursor:pointer;" />
+                <span>${isApproved ? '☑️ Done for Balance' : '☐ Done for Balance'}</span>
+              </label>
+              <div style="font-size:10px;color:var(--muted);margin-top:3px;">${escapeHtml(appTime)}</div>
             </td>
-            <td style="font-size:11px;">${escapeHtml(appBy)}<br>${escapeHtml(appTime)}</td>
+            <td style="background:#fefce8;">
+              <div style="display:flex;flex-direction:column;gap:4px;">
+                <input id="discStaffRow_${dIdx}" class="cell-input" style="font-size:11.5px;background:#fff;"
+                  placeholder="✍️ Asset Staff Name..." value="${escapeHtml(prefillStaff)}" />
+                <div style="display:flex;gap:4px;">
+                  <input id="discNoteRow_${dIdx}" class="cell-input" style="font-size:11.5px;background:#fff;"
+                    placeholder="📋 Check & handling note..." value="${escapeHtml(prefillNote)}" />
+                  <button class="photo-mini-btn" style="background:#16a34a;white-space:nowrap;"
+                    onclick="saveSingleDiscRowBalance(${dIdx}, '${escapeJs(auditId)}')">💾 Save</button>
+                </div>
+              </div>
+            </td>
           </tr>
         `;
       }).join("");
@@ -1954,29 +2121,76 @@
       document.querySelectorAll(".disc-chk").forEach(cb => { cb.checked = checked; });
     }
 
+    async function onSingleDiscDoneToggle(dIdx, auditId, checked) {
+      if (!STATE.staff.canApproveTransfer) {
+        showToast("🔒 Only Authorized Asset Staff can tick 'Done for Balance'.", "err");
+        renderDiscrepancyTable();
+        return;
+      }
+      if (checked) {
+        await saveSingleDiscRowBalance(dIdx, auditId, "Done for Balance");
+      } else {
+        await saveSingleDiscRowBalance(dIdx, auditId, "Pending Asset Approval");
+      }
+    }
+
+    async function saveSingleDiscRowBalance(dIdx, auditId, explicitStatus) {
+      if (!STATE.staff.canApproveTransfer) {
+        showToast("🔒 Only Authorized Asset Staff (Ingyin Hmwe, Ye Lwin, BOD, etc.) can save Asset Balance.", "err");
+        return;
+      }
+      const chkEl = document.getElementById(`discDoneChk_${dIdx}`);
+      const isDone = explicitStatus ? (explicitStatus === "Done for Balance") : (chkEl ? chkEl.checked : true);
+      const statusLabel = isDone ? "Done for Balance" : "Pending Asset Approval";
+      const staffName = (document.getElementById(`discStaffRow_${dIdx}`)?.value || STATE.staff.name).trim();
+      const note = (document.getElementById(`discNoteRow_${dIdx}`)?.value || "").trim();
+
+      showToast(`Saving "${statusLabel}" for ${auditId} by ${staffName}...`, "info");
+      try {
+        const res = await apiPost({
+          action: "asset_approve_transfer",
+          approverCode: STATE.staff.code,
+          assetStaffName: staffName,
+          auditIds: [auditId],
+          approvalStatus: statusLabel,
+          approvalNote: note
+        });
+        if (res && res.ok) {
+          showToast(`Saved "${statusLabel}" by ${res.approvedBy}!`, "ok");
+          refreshDashboardAndDiscrepancies();
+        } else {
+          showToast((res && res.error) || "Save failed.", "err");
+        }
+      } catch (e) {
+        showToast("Save error: " + e.message, "err");
+      }
+    }
+
     async function approveSelectedDiscrepancies(statusLabel) {
       if (!STATE.staff.canApproveTransfer) {
-        showToast("Unauthorized: Only Asset Approvers (Ingyin Hmwe, Ye Lwin, BOD, etc.) can approve transfers.", "err");
+        showToast("Unauthorized: Only Asset Approvers (Ingyin Hmwe, Ye Lwin, BOD, etc.) can tick Done for Balance.", "err");
         return;
       }
       const checked = Array.from(document.querySelectorAll(".disc-chk:checked")).map(cb => cb.value);
       if (checked.length === 0) {
-        showToast("Please tick at least one discrepancy item to approve.", "err");
+        showToast("Please tick at least one discrepancy item on the left to batch approve.", "err");
         return;
       }
+      const staffName = (document.getElementById("discAssetStaffInput")?.value || STATE.staff.name).trim();
       const note = document.getElementById("discNoteInput").value.trim();
-      showToast(`Approving ${checked.length} item(s) as "${statusLabel}"...`, "info");
+      showToast(`Marking ${checked.length} item(s) as "${statusLabel}" by ${staffName}...`, "info");
 
       try {
         const res = await apiPost({
           action: "asset_approve_transfer",
           approverCode: STATE.staff.code,
+          assetStaffName: staffName,
           auditIds: checked,
           approvalStatus: statusLabel,
           approvalNote: note
         });
         if (res && res.ok) {
-          showToast(`Approved ${res.updatedCount} item(s) by ${res.approvedBy}!`, "ok");
+          showToast(`Marked ${res.updatedCount} item(s) as Done for Balance by ${res.approvedBy}!`, "ok");
           refreshDashboardAndDiscrepancies();
         } else {
           showToast((res && res.error) || "Approval failed.", "err");
