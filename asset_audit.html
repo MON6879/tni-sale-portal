@@ -763,7 +763,7 @@
           <thead>
             <tr class="group-hdr">
               <th colspan="6">MASTER SYSTEM DATA (READ-ONLY FROM 61,000-ROW GOOGLE SHEET 1)</th>
-              <th class="team-upd-blue">Team update</th>
+              <th class="team-upd-blue">Formula: Quality - Reality</th>
               <th class="team-upd-light">Team update</th>
               <th class="team-upd-light">write serial different</th>
               <th class="team-upd-light">In system formula (Auto 61K Lookup)</th>
@@ -776,7 +776,7 @@
               <th style="width:82px;">Code</th>
               <th style="width:165px;">Serial</th>
               <th style="width:72px;">Quality</th>
-              <th class="col-diff" style="width:140px;">Different</th>
+              <th class="col-diff" style="width:140px;">Different (= Quality - Reality)</th>
               <th class="col-team" style="width:98px;">Reality have</th>
               <th class="col-team" style="width:155px;">Write serial different</th>
               <th class="col-team" style="min-width:210px;">In system formula</th>
@@ -1363,7 +1363,7 @@
           code: it.code || "",
           serial: it.serial || "",
           quality: it.quality !== undefined ? String(it.quality) : "1",
-          different: "Matched",
+          different: "0",
           realityHave: it.quality !== undefined ? String(it.quality) : "1",
           writeSerialDifferent: "",
           inSystemFormula: "",
@@ -1384,6 +1384,43 @@
       } catch (e) {
         showToast("Error loading station assets: " + e.message, "err");
       }
+    }
+
+    function calcDiffNumber(sysQty, realQty) {
+      const q = Number(String(sysQty === undefined || sysQty === null ? "0" : sysQty).replace(",", ".")) || 0;
+      const r = (realQty === "" || realQty === null || realQty === undefined)
+        ? q
+        : (Number(String(realQty).replace(",", ".")) || 0);
+      return Math.round((q - r) * 10000) / 10000;
+    }
+
+    function isRowDiscrepancy(r) {
+      const diffNum = calcDiffNumber(r.quality, r.realityHave);
+      return Boolean(r.isExtraItem || diffNum !== 0 || String(r.writeSerialDifferent || "").trim() !== "");
+    }
+
+    function renderDiffBadgeHtml(r, idx) {
+      const diffNum = calcDiffNumber(r.quality, r.realityHave);
+      r.different = String(diffNum);
+      const hasSerDiff = String(r.writeSerialDifferent || "").trim() !== "";
+      let cls = "status-matched";
+      let tag = "Matched";
+      if (diffNum > 0) {
+        cls = "status-missing";
+        tag = "Shortage";
+      } else if (diffNum < 0 || r.isExtraItem) {
+        cls = "status-diff";
+        tag = r.isExtraItem ? "Extra" : "Surplus";
+      } else if (hasSerDiff) {
+        cls = "status-diff";
+        tag = "Serial Diff";
+      }
+      return `
+        <div id="diffBox_${idx}" class="cell-select ${cls}" style="display:flex;align-items:center;justify-content:space-between;gap:4px;font-weight:900;">
+          <span style="font-size:13px;font-family:monospace;">${diffNum}</span>
+          <span style="font-size:10px;opacity:0.9;">${tag}</span>
+        </div>
+      `;
     }
 
     function renderAuditTable(filterText = "") {
@@ -1409,11 +1446,9 @@
           if (!hay.includes(q)) return;
         }
 
-        const isDiff = r.different !== "Matched";
+        const isDiff = isRowDiscrepancy(r);
         const rowClass = r.isExtraItem ? "row-extra" : (isDiff ? "row-diff" : "");
-        const selClass = r.different === "Matched"
-          ? "status-matched"
-          : (r.different === "Missing" ? "status-missing" : "status-diff");
+        const diffHtml = renderDiffBadgeHtml(r, idx);
 
         const thumbsHtml = (r.photoUrls || []).map((u, pIdx) =>
           `<a href="${escapeHtml(u)}" target="_blank" rel="noopener" class="thumb-pill">🖼️ #${pIdx + 1}</a>`
@@ -1421,22 +1456,19 @@
 
         if (r.isExtraItem) {
           htmlRows.push(`
-            <tr class="${rowClass}" data-idx="${idx}">
+            <tr id="auditRow_${idx}" class="${rowClass}" data-idx="${idx}">
               <td style="font-weight:800;color:#0369a1;">EXTRA-${idx + 1}</td>
               <td><input class="cell-input" value="${escapeHtml(r.siteCode)}" onchange="updateRowField(${idx},'siteCode',this.value)" /></td>
               <td><input class="cell-input" placeholder="Type any equipment/goods name (free text)..." value="${escapeHtml(r.equipmentName)}" onchange="updateRowField(${idx},'equipmentName',this.value)" /></td>
               <td><input class="cell-input" placeholder="Code..." value="${escapeHtml(r.code)}" onchange="updateRowField(${idx},'code',this.value)" /></td>
               <td><input class="cell-input" placeholder="System serial (if any)" value="${escapeHtml(r.serial)}" onchange="updateRowField(${idx},'serial',this.value)" /></td>
-              <td style="text-align:center;font-weight:700;">0</td>
-              <td class="td-diff">
-                <select class="cell-select status-diff" onchange="updateRowField(${idx},'different',this.value)">
-                  <option value="Extra Item" ${r.different === 'Extra Item' ? 'selected' : ''}>Extra Item</option>
-                  <option value="Different" ${r.different === 'Different' ? 'selected' : ''}>Different</option>
-                  <option value="Damaged / Broken" ${r.different === 'Damaged / Broken' ? 'selected' : ''}>Damaged / Broken</option>
-                </select>
+              <td style="text-align:right;font-weight:800;">0</td>
+              <td class="td-diff" id="diffTd_${idx}">
+                ${diffHtml}
               </td>
               <td class="td-team-input">
-                <input type="number" step="any" class="cell-input" value="${escapeHtml(r.realityHave)}" onchange="updateRowField(${idx},'realityHave',this.value)" />
+                <input type="number" step="any" class="cell-input" value="${escapeHtml(r.realityHave)}"
+                  oninput="onRealityQtyInput(${idx}, this.value)" />
               </td>
               <td class="td-team-input">
                 <div style="display:flex;gap:3px;">
@@ -1459,25 +1491,19 @@
           `);
         } else {
           htmlRows.push(`
-            <tr class="${rowClass}" data-idx="${idx}">
+            <tr id="auditRow_${idx}" class="${rowClass}" data-idx="${idx}">
               <td style="font-weight:700;">${escapeHtml(r.no)}</td>
               <td style="font-weight:700;">${escapeHtml(r.siteCode)}</td>
               <td>${escapeHtml(r.equipmentName)}</td>
               <td style="font-family:monospace;font-weight:700;">${escapeHtml(r.code)}</td>
               <td style="font-family:monospace;font-weight:700;">${escapeHtml(r.serial)}</td>
               <td style="text-align:right;font-weight:800;">${escapeHtml(r.quality)}</td>
-              <td class="td-diff">
-                <select class="cell-select ${selClass}" onchange="updateRowField(${idx},'different',this.value)">
-                  <option value="Matched" ${r.different === 'Matched' ? 'selected' : ''}>Matched</option>
-                  <option value="Different" ${r.different === 'Different' ? 'selected' : ''}>Different</option>
-                  <option value="Qty Mismatch" ${r.different === 'Qty Mismatch' ? 'selected' : ''}>Qty Mismatch</option>
-                  <option value="Missing" ${r.different === 'Missing' ? 'selected' : ''}>Missing</option>
-                  <option value="Damaged / Broken" ${r.different === 'Damaged / Broken' ? 'selected' : ''}>Damaged / Broken</option>
-                </select>
+              <td class="td-diff" id="diffTd_${idx}">
+                ${diffHtml}
               </td>
               <td class="td-team-input">
                 <input type="number" step="any" class="cell-input" value="${escapeHtml(r.realityHave)}"
-                  onchange="onRealityQtyChange(${idx}, this.value)" />
+                  oninput="onRealityQtyInput(${idx}, this.value)" />
               </td>
               <td class="td-team-input">
                 <div style="display:flex;gap:3px;">
@@ -1514,18 +1540,19 @@
       renderAuditTable();
     }
 
-    function onRealityQtyChange(idx, val) {
+    function onRealityQtyInput(idx, val) {
       const r = STATE.rows[idx];
       if (!r) return;
       r.realityHave = val;
-      if (String(val).trim() !== "" && Number(val) !== Number(r.quality)) {
-        if (Number(val) === 0) {
-          r.different = "Missing";
-        } else if (r.different === "Matched") {
-          r.different = "Qty Mismatch";
-        }
+      r.different = String(calcDiffNumber(r.quality, val));
+      const diffTd = document.getElementById(`diffTd_${idx}`);
+      if (diffTd) diffTd.innerHTML = renderDiffBadgeHtml(r, idx);
+      const trEl = document.getElementById(`auditRow_${idx}`);
+      if (trEl) {
+        const isDiff = isRowDiscrepancy(r);
+        trEl.className = r.isExtraItem ? "row-extra" : (isDiff ? "row-diff" : "");
       }
-      renderAuditTable();
+      updateBannerCounters();
     }
 
     // =========================================================================
@@ -1535,9 +1562,7 @@
       const r = STATE.rows[idx];
       if (!r) return;
       r.writeSerialDifferent = String(val || "").trim();
-      if (r.writeSerialDifferent && r.different === "Matched" && !r.isExtraItem) {
-        r.different = "Different";
-      }
+      r.different = String(calcDiffNumber(r.quality, r.realityHave));
       if (r.writeSerialDifferent.length >= 3) {
         await lookupRowSerial(idx);
       } else {
@@ -1561,9 +1586,7 @@
         const res = await apiGet({ action: "lookup_serial", q: q });
         if (res && res.ok) {
           r.inSystemFormula = res.formula || `${q} = Not Found`;
-          if (r.different === "Matched" && !r.isExtraItem) {
-            r.different = "Different";
-          }
+          r.different = String(calcDiffNumber(r.quality, r.realityHave));
           renderAuditTable();
           showToast(`In System Formula: ${r.inSystemFormula}`, res.found ? "ok" : "info");
         }
@@ -1584,7 +1607,7 @@
         code: "",
         serial: "",
         quality: "0",
-        different: "Extra Item",
+        different: "-1",
         realityHave: "1",
         writeSerialDifferent: "",
         inSystemFormula: "Extra unrecorded item on site",
@@ -1604,24 +1627,24 @@
     function markAllUnchangedMatched() {
       STATE.rows.forEach(r => {
         if (!r.isExtraItem && !r.writeSerialDifferent) {
-          r.different = "Matched";
           r.realityHave = r.quality;
+          r.different = "0";
         }
       });
       renderAuditTable();
-      showToast("All unchanged system rows marked as Matched with System Quantity.", "ok");
+      showToast("All unchanged system rows reset to Reality = Quality (Different = 0).", "ok");
     }
 
     function updateBannerCounters() {
       const total = STATE.rows.length;
       let matched = 0, diff = 0, photos = STATE.sitePhotos.length;
       STATE.rows.forEach(r => {
-        if (r.different === "Matched" && !r.isExtraItem) matched++;
+        if (!isRowDiscrepancy(r)) matched++;
         else diff++;
         photos += (r.photoUrls || []).length;
       });
       document.getElementById("bannerCounters").textContent =
-        `${total} Rows | ${matched} Matched | ${diff} Discrepancy/Extra | ${photos} Photos`;
+        `${total} Rows | ${matched} Matched (Diff=0) | ${diff} Discrepancy/Extra | ${photos} Photos`;
       document.getElementById("sitePhotoCount").textContent = STATE.sitePhotos.length;
     }
 
