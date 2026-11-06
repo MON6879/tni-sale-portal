@@ -1024,9 +1024,9 @@
         <div class="mode-tab-top"><span id="tab5-title">☀️ 5. Checklist Solar</span><span class="sheet-chip" id="tab5-chip">43 Items</span></div>
         <div class="mode-tab-sub"><span id="tab5-sub">Sheet: 5. Checklist Solar</span><span id="tab5-sub2">9 Sec</span></div>
       </button>
-      <button class="mode-tab" data-type="bi_dashboard" onclick="switchChecklistType('bi_dashboard')">
-        <div class="mode-tab-top"><span id="tab6-title">📊 6. Summary &amp; Photo Audit</span><span class="sheet-chip" id="bi-count-badge">Live</span></div>
-        <div class="mode-tab-sub"><span id="tab6-sub">Tab Tổng Hợp Riêng • စုစည်းချက်</span><span>1440×1088</span></div>
+      <button class="mode-tab" data-type="bi_dashboard" onclick="openInspectedSitesTab()">
+        <div class="mode-tab-top"><span id="tab6-title">📋 6. Inspected Sites &amp; Summary</span><span class="sheet-chip" id="bi-count-badge">Live</span></div>
+        <div class="mode-tab-sub"><span id="tab6-sub">Danh Sách Trạm Theo Team • စစ်ဆေးပြီးစာရင်း</span><span>A→Z</span></div>
       </button>
       <button class="mode-tab" data-type="approvers_mgr" onclick="switchChecklistType('approvers_mgr')">
         <div class="mode-tab-top"><span id="tab7-title">🛡️ 7. Approver Gmail</span><span class="sheet-chip" id="approvers-count-badge">6 Gmail</span></div>
@@ -1093,6 +1093,9 @@
             <button type="button" id="btn-load-all-100" class="pill-btn" style="background:#059669;border-color:#10b981;color:#fff;padding:7px 11px;cursor:pointer;" onclick="loadSelectedSavedSession(false)">
               📋 All (100%)
             </button>
+            <button type="button" id="btn-open-inspected-list" class="pill-btn" style="background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);border-color:#60a5fa;color:#fff;padding:7px 14px;font-size:12.5px;font-weight:900;cursor:pointer;box-shadow:0 3px 10px rgba(37,99,235,0.28);" onclick="openInspectedSitesTab()">
+              📋 Danh Sách Trạm Đã Kiểm Tra Theo Team (Inspected Sites List) ↗
+            </button>
             <span id="auto-sync-live-pill" style="font-size:11px;font-weight:900;color:#065f46;background:#d1fae5;border:1px solid #34d399;padding:5px 9px;border-radius:99px;white-space:nowrap;">
               🟢 Auto-Sync Sheet: ON
             </span>
@@ -1151,9 +1154,34 @@
             <label id="lbl-date">Ngày Kiểm Tra (Inspection Date)</label>
             <input type="date" class="field-input" id="inp-date" onchange="saveLocalDraft()" />
           </div>
-          <div class="field-group" id="extra-meta-container">
-            <label id="lbl-extra-meta">Thông Tin Bổ Sung (Branch / Model / KM)</label>
-            <input type="text" class="field-input" id="inp-extra-meta" value="TNI" placeholder="TNI / Denyo / 10KM" oninput="saveLocalDraft()" />
+          <div class="field-group" id="extra-meta-container" style="grid-column:1/-1;background:#f8fafc;border:1.5px solid #93c5fd;border-radius:10px;padding:10px 12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:7px;">
+              <label id="lbl-extra-meta" style="font-size:13px;font-weight:900;color:#1e3a8a;margin:0;">
+                👥 Tick Chọn Team Phụ Trách Trạm (Select Team • Chọn Team • အဖွဲ့ရွေးချယ်ရန်) *
+              </label>
+              <select class="field-input" id="inp-extra-meta" style="width:auto;min-width:180px;padding:5px 10px;font-size:12.5px;font-weight:900;color:#1e3a8a;background:#fff;border-color:#3b82f6;" onchange="selectInspectionTeam(this.value)">
+                <option value="Team 1">Team 1</option>
+                <option value="Team 1 S1">Team 1 S1</option>
+                <option value="Team 1 S2">Team 1 S2</option>
+                <option value="Team 1 S3">Team 1 S3</option>
+                <option value="Team 2">Team 2</option>
+                <option value="Team 2 S1">Team 2 S1</option>
+                <option value="Team 3">Team 3</option>
+                <option value="Team 3 S1">Team 3 S1</option>
+                <option value="Team 4">Team 4</option>
+              </select>
+            </div>
+            <div id="team-tick-chips-group" style="display:flex;flex-wrap:wrap;gap:6px;">
+              <button type="button" class="team-tick-chip" data-team="Team 1" onclick="selectInspectionTeam('Team 1')" style="padding:6px 12px;border-radius:8px;border:1.5px solid #2563eb;background:#2563eb;color:#fff;font-size:12px;font-weight:900;cursor:pointer;">☑️ Team 1</button>
+              <button type="button" class="team-tick-chip" data-team="Team 1 S1" onclick="selectInspectionTeam('Team 1 S1')" style="padding:6px 12px;border-radius:8px;border:1.5px solid #cbd5e1;background:#fff;color:#1e293b;font-size:12px;font-weight:800;cursor:pointer;">⬜ Team 1 S1</button>
+              <button type="button" class="team-tick-chip" data-team="Team 1 S2" onclick="selectInspectionTeam('Team 1 S2')" style="padding:6px 12px;border-radius:8px;border:1.5px solid #cbd5e1;background:#fff;color:#1e293b;font-size:12px;font-weight:800;cursor:pointer;">⬜ Team 1 S2</button>
+              <button type="button" class="team-tick-chip" data-team="Team 1 S3" onclick="selectInspectionTeam('Team 1 S3')" style="padding:6px 12px;border-radius:8px;border:1.5px solid #cbd5e1;background:#fff;color:#1e293b;font-size:12px;font-weight:800;cursor:pointer;">⬜ Team 1 S3</button>
+              <button type="button" class="team-tick-chip" data-team="Team 2" onclick="selectInspectionTeam('Team 2')" style="padding:6px 12px;border-radius:8px;border:1.5px solid #cbd5e1;background:#fff;color:#1e293b;font-size:12px;font-weight:800;cursor:pointer;">⬜ Team 2</button>
+              <button type="button" class="team-tick-chip" data-team="Team 2 S1" onclick="selectInspectionTeam('Team 2 S1')" style="padding:6px 12px;border-radius:8px;border:1.5px solid #cbd5e1;background:#fff;color:#1e293b;font-size:12px;font-weight:800;cursor:pointer;">⬜ Team 2 S1</button>
+              <button type="button" class="team-tick-chip" data-team="Team 3" onclick="selectInspectionTeam('Team 3')" style="padding:6px 12px;border-radius:8px;border:1.5px solid #cbd5e1;background:#fff;color:#1e293b;font-size:12px;font-weight:800;cursor:pointer;">⬜ Team 3</button>
+              <button type="button" class="team-tick-chip" data-team="Team 3 S1" onclick="selectInspectionTeam('Team 3 S1')" style="padding:6px 12px;border-radius:8px;border:1.5px solid #cbd5e1;background:#fff;color:#1e293b;font-size:12px;font-weight:800;cursor:pointer;">⬜ Team 3 S1</button>
+              <button type="button" class="team-tick-chip" data-team="Team 4" onclick="selectInspectionTeam('Team 4')" style="padding:6px 12px;border-radius:8px;border:1.5px solid #cbd5e1;background:#fff;color:#1e293b;font-size:12px;font-weight:800;cursor:pointer;">⬜ Team 4</button>
+            </div>
           </div>
           <div class="field-group">
             <label id="lbl-comment">Ghi Chú Chung / Đề Xuất (General Comment)</label>
@@ -1249,44 +1277,89 @@
         </div>
       </div>
 
-      <!-- 5 DEDICATED SHEETS + DRIVE 2.14 LINKS -->
       <div class="meta-panel">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
-          <h3 id="ui-bi-sheets-hdr" style="font-size:15px;font-weight:900;">🗂️ 5 Dedicated Google Sheets &amp; Drive 2.14 Photo Folder (1440×1088) • Hệ Thống 5 Sheet Lưu Riêng</h3>
-          <span id="ui-bi-autosync-badge" style="font-size:11.5px;font-weight:900;color:#065f46;background:#d1fae5;border:1px solid #34d399;padding:5px 11px;border-radius:99px;">🟢 Real-Time Auto-Sync with Google Sheet (Tự động đồng bộ 100%)</span>
-        </div>
-        <div class="sheet-links-grid">
-          <a class="sheet-link-card" href="https://docs.google.com/spreadsheets/d/1Y9QkgXe24kspNmkrPEVQ0AAD_GmZ4gnqMCD6ja4-9kI/edit#gid=16375926" target="_blank">
-            <div><div style="font-weight:900;font-size:13px;">📡 1. Check Site (BTS)</div><div style="font-size:11px;color:#64748b;">Sheet lưu riêng Trạm BTS (64 mục)</div></div>
-            <span style="font-size:12px;font-weight:800;color:#2563eb;">Mở Sheet ↗</span>
-          </a>
-          <a class="sheet-link-card" href="https://docs.google.com/spreadsheets/d/1Y9QkgXe24kspNmkrPEVQ0AAD_GmZ4gnqMCD6ja4-9kI/edit#gid=1050845509" target="_blank">
-            <div><div style="font-weight:900;font-size:13px;">⚡ 2. Checklist DG</div><div style="font-size:11px;color:#64748b;">Sheet lưu riêng Máy Phát Điện (39 mục)</div></div>
-            <span style="font-size:12px;font-weight:800;color:#d97706;">Mở Sheet ↗</span>
-          </a>
-          <a class="sheet-link-card" href="https://docs.google.com/spreadsheets/d/1Y9QkgXe24kspNmkrPEVQ0AAD_GmZ4gnqMCD6ja4-9kI/edit#gid=1952267372" target="_blank">
-            <div><div style="font-weight:900;font-size:13px;">🌐 3. Checklist Cable Route</div><div style="font-size:11px;color:#64748b;">Sheet lưu riêng Cáp Treo (44 mục)</div></div>
-            <span style="font-size:12px;font-weight:800;color:#059669;">Mở Sheet ↗</span>
-          </a>
-          <a class="sheet-link-card" href="https://docs.google.com/spreadsheets/d/1Y9QkgXe24kspNmkrPEVQ0AAD_GmZ4gnqMCD6ja4-9kI/edit#gid=1066188442" target="_blank">
-            <div><div style="font-weight:900;font-size:13px;">🕳️ 4. Checklist UG Cable</div><div style="font-size:11px;color:#64748b;">Sheet lưu riêng Cáp Ngầm (37 mục)</div></div>
-            <span style="font-size:12px;font-weight:800;color:#7c3aed;">Mở Sheet ↗</span>
-          </a>
-          <a class="sheet-link-card" href="https://docs.google.com/spreadsheets/d/1Y9QkgXe24kspNmkrPEVQ0AAD_GmZ4gnqMCD6ja4-9kI/edit#gid=998308117" target="_blank">
-            <div><div style="font-weight:900;font-size:13px;">☀️ 5. Checklist Solar</div><div style="font-size:11px;color:#64748b;">Sheet lưu riêng Điện Mặt Trời (43 mục)</div></div>
-            <span style="font-size:12px;font-weight:800;color:#ea580c;">Mở Sheet ↗</span>
-          </a>
-          <a class="sheet-link-card" href="https://drive.google.com/drive/folders/1VsQapLjSaJl9QkcOrOFXbqfaKH1AJh-d" target="_blank" style="background:#fffbeb;border-color:#fcd34d;">
-            <div><div style="font-weight:900;font-size:13px;">📁 2.14 Check list photo</div><div style="font-size:11px;color:#92400e;">Folder Drive lưu toàn bộ ảnh 1440×1088</div></div>
-            <span style="font-size:12px;font-weight:800;color:#b45309;">Mở Drive ↗</span>
-          </a>
+        <!-- 1. INSPECTED SITES BY TEAM & CHECKLIST TABLE (AT THE VERY TOP OF TAB 6 - UNCONFIRMED ON TOP, SORTED BY TEAM A-Z & CHECKLIST A-Z) -->
+        <div id="inspected-sites-team-panel" style="margin-bottom:18px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:linear-gradient(90deg,#0f172a 0%,#1e3a8a 100%);color:#fff;padding:12px 15px;border-radius:12px;margin-bottom:10px;">
+            <div>
+              <h3 style="font-size:16px;font-weight:900;color:#fff;margin:0;">
+                📋 Danh Sách Trạm Đã Kiểm Tra Theo Team &amp; Check List (A → Z) • Inspected Sites by Team
+              </h3>
+              <div style="font-size:12px;color:#bae6fd;margin-top:3px;font-weight:700;">
+                ⚡ Ưu tiên Trạm <strong>Chưa Xác Nhận Phòng Kỹ Thuật nằm trên cùng</strong> • Sắp xếp theo <strong>Team (A→Z)</strong> &amp; <strong>Check List (A→Z)</strong> • Bấm vào trạm để vào sửa hoặc duyệt ngay!
+              </div>
+            </div>
+            <span id="ui-bi-autosync-badge" style="font-size:11.5px;font-weight:900;color:#065f46;background:#d1fae5;border:1px solid #34d399;padding:5px 11px;border-radius:99px;">
+              🟢 Real-Time Auto-Sync Sheet (100%)
+            </span>
+          </div>
+
+          <!-- TEAM QUICK FILTER CHIPS + CHECKLIST & CONFIRMATION FILTERS -->
+          <div style="background:#f8fafc;border:1.5px solid #cbd5e1;border-radius:12px;padding:10px 12px;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;" id="bi-team-filter-pills">
+              <span style="font-size:12px;font-weight:900;color:#1e3a8a;margin-right:4px;">👥 Lọc Theo Team (Filter by Team):</span>
+              <button type="button" class="bi-team-pill" data-team="ALL" onclick="setBiTeamFilter('ALL')" style="padding:5px 11px;border-radius:8px;border:1.5px solid #1e3a8a;background:#1e3a8a;color:#fff;font-size:11.5px;font-weight:900;cursor:pointer;">☑️ Tất Cả Team (All)</button>
+              <button type="button" class="bi-team-pill" data-team="Team 1" onclick="setBiTeamFilter('Team 1')" style="padding:5px 10px;border-radius:8px;border:1.5px solid #cbd5e1;background:#fff;color:#0f172a;font-size:11.5px;font-weight:800;cursor:pointer;">Team 1</button>
+              <button type="button" class="bi-team-pill" data-team="Team 1 S1" onclick="setBiTeamFilter('Team 1 S1')" style="padding:5px 10px;border-radius:8px;border:1.5px solid #cbd5e1;background:#fff;color:#0f172a;font-size:11.5px;font-weight:800;cursor:pointer;">Team 1 S1</button>
+              <button type="button" class="bi-team-pill" data-team="Team 1 S2" onclick="setBiTeamFilter('Team 1 S2')" style="padding:5px 10px;border-radius:8px;border:1.5px solid #cbd5e1;background:#fff;color:#0f172a;font-size:11.5px;font-weight:800;cursor:pointer;">Team 1 S2</button>
+              <button type="button" class="bi-team-pill" data-team="Team 1 S3" onclick="setBiTeamFilter('Team 1 S3')" style="padding:5px 10px;border-radius:8px;border:1.5px solid #cbd5e1;background:#fff;color:#0f172a;font-size:11.5px;font-weight:800;cursor:pointer;">Team 1 S3</button>
+              <button type="button" class="bi-team-pill" data-team="Team 2" onclick="setBiTeamFilter('Team 2')" style="padding:5px 10px;border-radius:8px;border:1.5px solid #cbd5e1;background:#fff;color:#0f172a;font-size:11.5px;font-weight:800;cursor:pointer;">Team 2</button>
+              <button type="button" class="bi-team-pill" data-team="Team 2 S1" onclick="setBiTeamFilter('Team 2 S1')" style="padding:5px 10px;border-radius:8px;border:1.5px solid #cbd5e1;background:#fff;color:#0f172a;font-size:11.5px;font-weight:800;cursor:pointer;">Team 2 S1</button>
+              <button type="button" class="bi-team-pill" data-team="Team 3" onclick="setBiTeamFilter('Team 3')" style="padding:5px 10px;border-radius:8px;border:1.5px solid #cbd5e1;background:#fff;color:#0f172a;font-size:11.5px;font-weight:800;cursor:pointer;">Team 3</button>
+              <button type="button" class="bi-team-pill" data-team="Team 3 S1" onclick="setBiTeamFilter('Team 3 S1')" style="padding:5px 10px;border-radius:8px;border:1.5px solid #cbd5e1;background:#fff;color:#0f172a;font-size:11.5px;font-weight:800;cursor:pointer;">Team 3 S1</button>
+              <button type="button" class="bi-team-pill" data-team="Team 4" onclick="setBiTeamFilter('Team 4')" style="padding:5px 10px;border-radius:8px;border:1.5px solid #cbd5e1;background:#fff;color:#0f172a;font-size:11.5px;font-weight:800;cursor:pointer;">Team 4</button>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <input type="text" id="bi-site-search" class="field-input" style="width:210px;background:#fff;font-weight:800;" placeholder="🔎 Tìm Mã Trạm / NV (VD: TNI0012)..." oninput="renderBiDashboard()" />
+              <select id="bi-type-filter" class="field-input" style="width:auto;background:#fff;font-weight:800;" onchange="renderBiDashboard()">
+                <option value="ALL">📋 Tất cả 5 Check List (A → Z)</option>
+                <option value="site_bts">1. Check Site (BTS)</option>
+                <option value="dg_gen">2. Checklist DG</option>
+                <option value="cable_route">3. Checklist Cable Route</option>
+                <option value="ug_cable">4. Checklist UG Cable</option>
+                <option value="solar">5. Checklist Solar</option>
+              </select>
+              <select id="bi-confirm-filter" class="field-input" style="width:auto;background:#fff;font-weight:800;color:#b91c1c;" onchange="renderBiDashboard()">
+                <option value="ALL">⚡ Tất cả (Chưa xác nhận nằm trên cùng)</option>
+                <option value="UNCONFIRMED">⏳ Chưa xác nhận Phòng Kỹ Thuật (Pending Approve)</option>
+                <option value="CONFIRMED">☑️ Đã xác nhận Phòng Kỹ Thuật (Approved)</option>
+              </select>
+              <select id="bi-fix-filter" class="field-input" style="width:auto;background:#fff;" onchange="renderBiDashboard()">
+                <option value="ALL">📸 Bộ lọc Ảnh: Mục Lỗi (NOK) / Có ảnh</option>
+                <option value="PENDING_PHOTO">⏳ Chưa có ảnh Sau sửa</option>
+                <option value="HAS_AFTER_PHOTO">✅ Đã có ảnh Sau sửa</option>
+                <option value="PENDING_TECH_VERIFY">🛡️ Chờ Phòng KT Tick xác nhận</option>
+                <option value="TECH_VERIFIED">☑️ Phòng KT Đã Tick xác nhận</option>
+                <option value="SHOW_ALL_ITEMS">📋 Xem tất cả hạng mục (100%)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="overflow-x:auto;border:1.5px solid #cbd5e1;border-radius:12px;background:#fff;">
+            <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+              <thead>
+                <tr style="background:#0f172a;color:#fff;text-align:left;">
+                  <th style="padding:10px 9px;">📋 Check List (A→Z)</th>
+                  <th style="padding:10px 9px;">👥 Team (A→Z)</th>
+                  <th style="padding:10px 9px;">📡 Trạm / Tuyến (A→Z)</th>
+                  <th style="padding:10px 9px;text-align:center;background:#1e3a8a;">🏆 Điểm Trạm<br/><span style="font-size:10.5px;color:#93c5fd;">(Station Score)</span></th>
+                  <th style="padding:10px 9px;text-align:center;background:#7f1d1d;">❌ Điểm Lỗi<br/><span style="font-size:10.5px;color:#fca5a5;">(Defect Score)</span></th>
+                  <th style="padding:10px 9px;text-align:center;background:#1e40af;">🔧 Điểm Sửa Chữa<br/><span style="font-size:10.5px;color:#bfdbfe;">(Repaired Score)</span></th>
+                  <th style="padding:10px 9px;text-align:center;background:#065f46;">☑️ Điểm Xác Nhận Phòng KT<br/><span style="font-size:10.5px;color:#a7f3d0;">(Chưa xác nhận nằm trên)</span></th>
+                  <th style="padding:10px 9px;">⚡ Bấm Vào Trạm Để Sửa / Phúc Tra / PDF</th>
+                </tr>
+              </thead>
+              <tbody id="bi-sessions-tbody"></tbody>
+            </table>
+          </div>
         </div>
 
-        <!-- BEFORE vs AFTER PHOTO COMPARISON WALL (TAB PHÚC TRA HÌNH ẢNH & PHÒNG KỸ THUẬT TICK XÁC NHẬN) -->
+        <!-- 2. BEFORE vs AFTER PHOTO COMPARISON WALL (TAB PHÚC TRA HÌNH ẢNH & PHÒNG KỸ THUẬT TICK XÁC NHẬN) -->
         <div id="photo-audit-section" style="border-top:1px solid var(--line);padding-top:14px;margin-top:8px;">
           <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-              <span style="font-size:13px;font-weight:900;color:#065f46;">🛡️ Gmail Phòng Kỹ Thuật Đang Phúc Tra & Tick Xác Nhận:</span>
+              <span style="font-size:13px;font-weight:900;color:#065f46;">🛡️ Gmail Phòng Kỹ Thuật Đang Phúc Tra &amp; Tick Xác Nhận:</span>
               <select id="sel-tech-gmail-bi" class="field-input" style="max-width:340px;padding:5px 10px;font-size:12px;background:#fff;font-weight:800;color:#065f46;" onchange="onTechGmailChange(this.value)">
                 <option value="">-- Chọn Gmail Phòng Kỹ Thuật để Tick xác nhận --</option>
                 <option value="yelwin086683@gmail.com">Ye Lwin — Technical Manager (yelwin086683@gmail.com)</option>
@@ -1310,49 +1383,40 @@
               <h3 style="font-size:15.5px;font-weight:900;color:#0f172a;">🔍 Before vs. After Photo Audit Wall (1440×1088) • Bảng Phúc Tra Hình Ảnh Trước &amp; Sau • မပြင်မီနှင့် ပြင်ပြီးပုံ စစ်ဆေးချက်</h3>
               <p style="font-size:12px;color:var(--muted);">🇬🇧 Verify After photos &amp; Technical Dept approval • 🇻🇳 Kiểm tra ảnh sau sửa &amp; Phòng KT tick xác nhận • 🇲🇲 ပြင်ဆင်ပြီးပုံနှင့် နည်းပညာဌာန အတည်ပြုချက် စစ်ဆေးရန်</p>
             </div>
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-              <input type="text" id="bi-site-search" class="field-input" style="width:195px;background:#fff;" placeholder="🔎 Search Site (e.g. TNI0012)..." oninput="renderBiDashboard()" />
-              <select id="bi-fix-filter" class="field-input" style="width:auto;background:#fff;" onchange="renderBiDashboard()">
-                <option value="ALL">❌ Defects (NOK) / Has Photos (Mặc định • အပျက်များ)</option>
-                <option value="PENDING_PHOTO">⏳ Pending After Photo (Chưa có ảnh sửa • ပြင်ပြီးပုံမရှိသေး)</option>
-                <option value="HAS_AFTER_PHOTO">✅ Has After Photo (Đã có ảnh sửa • ပြင်ပြီးပုံရှိ)</option>
-                <option value="PENDING_TECH_VERIFY">🛡️ Pending Approve (Chờ KT duyệt • အတည်ပြုရန်ကျန်)</option>
-                <option value="TECH_VERIFIED">☑️ Approved (Phòng KT đã duyệt • အတည်ပြုပြီး)</option>
-                <option value="SHOW_ALL_ITEMS">📋 Show All 100% Items (Tất cả OK &amp; NOK • အားလုံးပြရန်)</option>
-              </select>
-              <select id="bi-type-filter" class="field-input" style="width:auto;background:#fff;" onchange="renderBiDashboard()">
-                <option value="ALL">All 5 Checklists • Tất cả 5 loại • ၅ မျိုးလုံး</option>
-                <option value="site_bts">1. Check Site (BTS)</option>
-                <option value="dg_gen">2. Checklist DG</option>
-                <option value="cable_route">3. Checklist Cable Route</option>
-                <option value="ug_cable">4. Checklist UG Cable</option>
-                <option value="solar">5. Checklist Solar</option>
-              </select>
-            </div>
           </div>
           <div class="comp-wall-grid" id="bi-comparison-wall"></div>
         </div>
 
-        <!-- SESSIONS HISTORY TABLE -->
+        <!-- 3. 5 DEDICATED SHEETS + DRIVE 2.14 LINKS -->
         <div style="border-top:1px solid var(--line);padding-top:14px;margin-top:18px;">
-          <h3 style="font-size:15px;font-weight:900;margin-bottom:10px;">📜 Danh Sách Trạm Đã Kiểm Tra Trên Google Sheet (Vào Cập Nhật Sửa Chữa • Phòng KT Tick Duyệt • Xuất PDF Không Ảnh)</h3>
-          <div style="overflow-x:auto;">
-            <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
-              <thead>
-                <tr style="background:#0f172a;color:#fff;text-align:left;">
-                  <th style="padding:9px 10px;">Mã Phiếu</th>
-                  <th style="padding:9px 10px;">Thời Gian (MMT)</th>
-                  <th style="padding:9px 10px;">Loại Check List & Sheet Riêng</th>
-                  <th style="padding:9px 10px;">Trạm / Tuyến</th>
-                  <th style="padding:9px 10px;">Nhân Viên</th>
-                  <th style="padding:9px 10px;">Điểm / Kết Luận</th>
-                  <th style="padding:9px 10px;">OK / Lỗi / Đã Sửa / KT Duyệt</th>
-                  <th style="padding:9px 10px;">Kiểm Tra Hình Ảnh (Sheet & Drive)</th>
-                  <th style="padding:9px 10px;">Cập Nhật Sửa • KT Tick • Xuất PDF</th>
-                </tr>
-              </thead>
-              <tbody id="bi-sessions-tbody"></tbody>
-            </table>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+            <h3 id="ui-bi-sheets-hdr" style="font-size:15px;font-weight:900;">🗂️ 5 Dedicated Google Sheets &amp; Drive 2.14 Photo Folder (1440×1088) • Hệ Thống 5 Sheet Lưu Riêng</h3>
+          </div>
+          <div class="sheet-links-grid">
+            <a class="sheet-link-card" href="https://docs.google.com/spreadsheets/d/1Y9QkgXe24kspNmkrPEVQ0AAD_GmZ4gnqMCD6ja4-9kI/edit#gid=16375926" target="_blank">
+              <div><div style="font-weight:900;font-size:13px;">📡 1. Check Site (BTS)</div><div style="font-size:11px;color:#64748b;">Sheet lưu riêng Trạm BTS (64 mục)</div></div>
+              <span style="font-size:12px;font-weight:800;color:#2563eb;">Mở Sheet ↗</span>
+            </a>
+            <a class="sheet-link-card" href="https://docs.google.com/spreadsheets/d/1Y9QkgXe24kspNmkrPEVQ0AAD_GmZ4gnqMCD6ja4-9kI/edit#gid=1050845509" target="_blank">
+              <div><div style="font-weight:900;font-size:13px;">⚡ 2. Checklist DG</div><div style="font-size:11px;color:#64748b;">Sheet lưu riêng Máy Phát Điện (39 mục)</div></div>
+              <span style="font-size:12px;font-weight:800;color:#d97706;">Mở Sheet ↗</span>
+            </a>
+            <a class="sheet-link-card" href="https://docs.google.com/spreadsheets/d/1Y9QkgXe24kspNmkrPEVQ0AAD_GmZ4gnqMCD6ja4-9kI/edit#gid=1952267372" target="_blank">
+              <div><div style="font-weight:900;font-size:13px;">🌐 3. Checklist Cable Route</div><div style="font-size:11px;color:#64748b;">Sheet lưu riêng Cáp Treo (44 mục)</div></div>
+              <span style="font-size:12px;font-weight:800;color:#059669;">Mở Sheet ↗</span>
+            </a>
+            <a class="sheet-link-card" href="https://docs.google.com/spreadsheets/d/1Y9QkgXe24kspNmkrPEVQ0AAD_GmZ4gnqMCD6ja4-9kI/edit#gid=1066188442" target="_blank">
+              <div><div style="font-weight:900;font-size:13px;">🕳️ 4. Checklist UG Cable</div><div style="font-size:11px;color:#64748b;">Sheet lưu riêng Cáp Ngầm (37 mục)</div></div>
+              <span style="font-size:12px;font-weight:800;color:#7c3aed;">Mở Sheet ↗</span>
+            </a>
+            <a class="sheet-link-card" href="https://docs.google.com/spreadsheets/d/1Y9QkgXe24kspNmkrPEVQ0AAD_GmZ4gnqMCD6ja4-9kI/edit#gid=998308117" target="_blank">
+              <div><div style="font-weight:900;font-size:13px;">☀️ 5. Checklist Solar</div><div style="font-size:11px;color:#64748b;">Sheet lưu riêng Điện Mặt Trời (43 mục)</div></div>
+              <span style="font-size:12px;font-weight:800;color:#ea580c;">Mở Sheet ↗</span>
+            </a>
+            <a class="sheet-link-card" href="https://drive.google.com/drive/folders/1VsQapLjSaJl9QkcOrOFXbqfaKH1AJh-d" target="_blank" style="background:#fffbeb;border-color:#fcd34d;">
+              <div><div style="font-weight:900;font-size:13px;">📁 2.14 Check list photo</div><div style="font-size:11px;color:#92400e;">Folder Drive lưu toàn bộ ảnh 1440×1088</div></div>
+              <span style="font-size:12px;font-weight:800;color:#b45309;">Mở Drive ↗</span>
+            </a>
           </div>
         </div>
       </div>
@@ -2068,7 +2132,8 @@
       setPh("inp-inspector", t.inspectorPh);
       setTxt("lbl-date", t.date);
       setTxt("lbl-gps", t.gps);
-      setTxt("lbl-extra-meta", t.extraMeta);
+      setTxt("lbl-extra-meta", currentLang === "vi" ? "👥 Tick Chọn Team Phụ Trách Trạm (Team 1 .. Team 4) *" : (currentLang === "my" ? "👥 တာဝန်ကျ Team ရွေးချယ်ရန် (Team 1 .. Team 4) *" : "👥 Select Station Team (Tick Team 1 .. Team 4) *"));
+      setTxt("btn-open-inspected-list", currentLang === "vi" ? "📋 Danh Sách Trạm Đã Kiểm Tra Theo Team ↗" : (currentLang === "my" ? "📋 စစ်ဆေးပြီး စခန်းစာရင်း (Team အလိုက်) ↗" : "📋 Inspected Sites List by Team (A→Z) ↗"));
       setTxt("lbl-comment", t.comment);
       setPh("inp-comment", t.commentPh);
 
@@ -5210,19 +5275,168 @@
       printWin.document.close();
     }
 
+    const VALID_TEAMS = [
+      "Team 1", "Team 1 S1", "Team 1 S2", "Team 1 S3",
+      "Team 2", "Team 2 S1",
+      "Team 3", "Team 3 S1",
+      "Team 4"
+    ];
+    let currentBiTeamFilter = "ALL";
+
+    function normalizeTeamName(raw) {
+      const s = String(raw || "").trim();
+      if (!s || s.toUpperCase() === "TNI") return "Team 1";
+      const found = VALID_TEAMS.find(t => t.toLowerCase() === s.toLowerCase());
+      return found || s;
+    }
+
+    function selectInspectionTeam(teamVal) {
+      const clean = normalizeTeamName(teamVal);
+      const sel = document.getElementById("inp-extra-meta");
+      if (sel) sel.value = clean;
+      document.querySelectorAll(".team-tick-chip").forEach(btn => {
+        const t = btn.getAttribute("data-team");
+        const active = (t === clean);
+        btn.style.background = active ? "#2563eb" : "#fff";
+        btn.style.color = active ? "#fff" : "#1e293b";
+        btn.style.borderColor = active ? "#2563eb" : "#cbd5e1";
+        btn.style.fontWeight = active ? "900" : "800";
+        btn.textContent = (active ? "☑️ " : "⬜ ") + t;
+      });
+      saveLocalDraft();
+      if (currentSessionId) scheduleAutoSyncSheet(800);
+    }
+
+    function setBiTeamFilter(teamVal) {
+      currentBiTeamFilter = teamVal || "ALL";
+      document.querySelectorAll(".bi-team-pill").forEach(btn => {
+        const t = btn.getAttribute("data-team");
+        const active = (t === currentBiTeamFilter);
+        btn.style.background = active ? "#1e3a8a" : "#fff";
+        btn.style.color = active ? "#fff" : "#0f172a";
+        btn.style.borderColor = active ? "#1e3a8a" : "#cbd5e1";
+        btn.style.fontWeight = active ? "900" : "800";
+        btn.textContent = (active ? "☑️ " : "") + (t === "ALL" ? "Tất Cả Team (All)" : t);
+      });
+      renderBiDashboard();
+    }
+
+    function openInspectedSitesTab() {
+      switchChecklistType("bi_dashboard");
+      setTimeout(() => {
+        const panel = document.getElementById("inspected-sites-team-panel");
+        if (panel) panel.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 80);
+    }
+
+    function computeSessionScoreBreakdown(s) {
+      const tpl = CHECKLIST_TEMPLATES[s.checklistType] || CHECKLIST_TEMPLATES.site_bts;
+      const tplMap = {};
+      let stdTotal = 0;
+      if (tpl && Array.isArray(tpl.items)) {
+        tpl.items.forEach(it => {
+          tplMap[it.code] = it;
+          stdTotal += Number(it.stdPoint || 0);
+        });
+      }
+      if (!stdTotal) stdTotal = 100;
+
+      const items = Array.isArray(s.items) ? s.items : [];
+      let defectPts = 0;
+      let repairedPts = 0;
+      let approvedPts = 0;
+      let nokCnt = 0;
+      let fixedCnt = 0;
+      let approvedCnt = 0;
+
+      items.forEach(it => {
+        const isNok = (it.status === "NOK");
+        if (isNok) {
+          nokCnt++;
+          const pt = Number(it.stdPoint !== undefined ? it.stdPoint : ((tplMap[it.code] && tplMap[it.code].stdPoint) || 1.5));
+          defectPts += pt;
+          const isFixed = !!(it.afterThumbUrl || it.afterDriveUrl || String(it.fixStatus || "").indexOf("Đã sửa") === 0 || String(it.fixStatus || "").toLowerCase().indexOf("fixed") !== -1 || it.techVerified);
+          if (isFixed) {
+            fixedCnt++;
+            repairedPts += pt;
+          }
+          if (it.techVerified) {
+            approvedCnt++;
+            approvedPts += pt;
+          }
+        }
+      });
+
+      if (nokCnt === 0 && Number(s.nokCount || 0) > 0) {
+        nokCnt = Number(s.nokCount || 0);
+        fixedCnt = Number(s.fixedCount || 0);
+        approvedCnt = Number(s.techVerifiedCount || 0);
+        defectPts = Math.max(0, Math.round((stdTotal - Number(s.totalScore || stdTotal)) * 10) / 10);
+        if (defectPts === 0 && nokCnt > 0) defectPts = Math.round(nokCnt * 1.5 * 10) / 10;
+        repairedPts = nokCnt > 0 ? Math.round((defectPts * (fixedCnt / nokCnt)) * 10) / 10 : 0;
+        approvedPts = nokCnt > 0 ? Math.round((defectPts * (approvedCnt / nokCnt)) * 10) / 10 : 0;
+      }
+
+      defectPts = Math.round(defectPts * 10) / 10;
+      repairedPts = Math.round(repairedPts * 10) / 10;
+      approvedPts = Math.round(approvedPts * 10) / 10;
+      const stationScore = Math.round(Math.min(stdTotal, Math.max(0, stdTotal - defectPts + repairedPts)) * 10) / 10;
+      // Unconfirmed if there are NOK items not yet approved by Tech Dept (approvedCnt < nokCnt), or if 0 NOK items and not yet verified
+      const isConfirmedByTech = (nokCnt > 0) ? (approvedCnt >= nokCnt) : (approvedCnt > 0 || !!s.techVerifiedAll);
+      const isUnconfirmed = !isConfirmedByTech;
+
+      return {
+        stdTotal,
+        stationScore,
+        defectPts,
+        repairedPts,
+        approvedPts,
+        nokCnt,
+        fixedCnt,
+        approvedCnt,
+        isConfirmedByTech,
+        isUnconfirmed,
+        teamName: normalizeTeamName(s.branch),
+        checklistLabel: (tpl && tpl.tabName) || s.dedicatedTabName || s.checklistType || "1. Check Site (BTS)"
+      };
+    }
+
     function renderBiDashboard() {
       syncTechGmailDropdowns();
       const filterType = (document.getElementById("bi-type-filter").value || "ALL");
       const fixFilter = (document.getElementById("bi-fix-filter") ? document.getElementById("bi-fix-filter").value : "ALL");
+      const confirmFilter = (document.getElementById("bi-confirm-filter") ? document.getElementById("bi-confirm-filter").value : "ALL");
       const siteQuery = ((document.getElementById("bi-site-search") ? document.getElementById("bi-site-search").value : "") || "").trim().toLowerCase();
 
       const filtered = cloudSessions.filter(s => {
         if (filterType !== "ALL" && s.checklistType !== filterType) return false;
+        const sc = computeSessionScoreBreakdown(s);
+        if (currentBiTeamFilter !== "ALL" && sc.teamName !== currentBiTeamFilter) return false;
+        if (confirmFilter === "UNCONFIRMED" && !sc.isUnconfirmed) return false;
+        if (confirmFilter === "CONFIRMED" && sc.isUnconfirmed) return false;
         if (siteQuery) {
-          const hay = ((s.siteCode || "") + " " + (s.sessionId || "") + " " + (s.inspector || "")).toLowerCase();
+          const hay = ((s.siteCode || "") + " " + (s.sessionId || "") + " " + (s.inspector || "") + " " + sc.teamName).toLowerCase();
           if (hay.indexOf(siteQuery) === -1) return false;
         }
         return true;
+      });
+
+      // SORTING: 1) Unconfirmed on top (cái nào chưa xác nhận nằm trên) -> 2) Team A-Z -> 3) Check List A-Z -> 4) Site Code A-Z
+      filtered.sort((a, b) => {
+        const sa = computeSessionScoreBreakdown(a);
+        const sb = computeSessionScoreBreakdown(b);
+        // Priority 1: Unconfirmed with NOK defects at very top (0), Unconfirmed 0-NOK (1), Confirmed (2)
+        const rankA = sa.isUnconfirmed ? (sa.nokCnt > 0 ? 0 : 1) : 2;
+        const rankB = sb.isUnconfirmed ? (sb.nokCnt > 0 ? 0 : 1) : 2;
+        if (rankA !== rankB) return rankA - rankB;
+        // Priority 2: Team A -> Z
+        const cmpTeam = sa.teamName.localeCompare(sb.teamName, undefined, { numeric: true, sensitivity: "base" });
+        if (cmpTeam !== 0) return cmpTeam;
+        // Priority 3: Check List A -> Z
+        const cmpCl = sa.checklistLabel.localeCompare(sb.checklistLabel, undefined, { numeric: true, sensitivity: "base" });
+        if (cmpCl !== 0) return cmpCl;
+        // Priority 4: Site Code A -> Z
+        return String(a.siteCode || "").localeCompare(String(b.siteCode || ""), undefined, { numeric: true, sensitivity: "base" });
       });
 
       document.getElementById("bi-total-sessions").textContent = filtered.length;
@@ -5362,42 +5576,68 @@
         ? defectCardsHtml.join("")
         : `<div style="grid-column:1/-1;padding:24px;text-align:center;background:#f8fafc;border-radius:12px;color:#64748b;font-weight:700;">Không có hạng mục lỗi (NOK) nào khớp bộ lọc hiện tại hoặc tất cả các mục đều đạt chuẩn 100%.</div>`;
 
-      // Render sessions table (without GPS column, with direct Sheet link, Photo Audit filter, Tech Dept Verify, Repair Load & Text PDF Export)
+      // Render Inspected Sites Table sorted by: Unconfirmed on top -> Team (A-Z) -> Check List (A-Z) -> Site (A-Z)
       const tbody = document.getElementById("bi-sessions-tbody");
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" style="padding:20px;text-align:center;color:#64748b;font-weight:700;">Chưa có phiếu kiểm tra nào khớp tìm kiếm. Hãy chọn Tab 1–5 để tạo phiếu kiểm tra!</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="padding:22px;text-align:center;color:#64748b;font-weight:800;">Chưa có trạm nào khớp bộ lọc hiện tại. Hãy chọn Tab 1–5 để kiểm tra trạm!</td></tr>`;
       } else {
         tbody.innerHTML = filtered.map(s => {
           const tpl = CHECKLIST_TEMPLATES[s.checklistType] || CHECKLIST_TEMPLATES.site_bts;
           const sheetUrl = "https://docs.google.com/spreadsheets/d/" + CHECKLIST_SS_ID + "/edit#gid=" + (tpl ? tpl.gid : 16375926);
-          const itemsArr = Array.isArray(s.items) ? s.items : [];
-          const techCnt = s.techVerifiedCount !== undefined ? s.techVerifiedCount : itemsArr.filter(x => x.status === "NOK" && x.techVerified).length;
+          const sc = computeSessionScoreBreakdown(s);
+          const rowBg = sc.isUnconfirmed ? (sc.nokCnt > 0 ? "#fff5f5" : "#fffbeb") : "#f0fdf4";
+          const confirmBadge = sc.isUnconfirmed
+            ? (sc.nokCnt > 0
+                ? `<div style="font-size:11px;font-weight:900;color:#fff;background:#dc2626;padding:3px 8px;border-radius:99px;display:inline-block;margin-bottom:3px;">⏳ CHƯA XÁC NHẬN (${sc.approvedCnt}/${sc.nokCnt} mục)</div>`
+                : `<div style="font-size:11px;font-weight:900;color:#92400e;background:#fef3c7;border:1px solid #f59e0b;padding:3px 8px;border-radius:99px;display:inline-block;margin-bottom:3px;">⏳ Chờ KT Xác Nhận (0 lỗi)</div>`)
+            : `<div style="font-size:11px;font-weight:900;color:#065f46;background:#dcfce7;border:1px solid #34d399;padding:3px 8px;border-radius:99px;display:inline-block;margin-bottom:3px;">☑️ ĐÃ XÁC NHẬN ĐỦ (${sc.approvedCnt}/${sc.nokCnt} mục)</div>`;
+
           return `
-          <tr style="border-bottom:1px solid #e2e8f0;">
-            <td style="padding:9px 10px;font-weight:800;">${escHtml(s.sessionId)}</td>
-            <td style="padding:9px 10px;">${escHtml(s.ts)}</td>
-            <td style="padding:9px 10px;font-weight:800;color:#1d4ed8;">${escHtml(s.dedicatedTabName || s.checklistType)}</td>
-            <td style="padding:9px 10px;font-weight:900;color:#0f172a;">${escHtml(s.siteCode)}</td>
-            <td style="padding:9px 10px;">${escHtml(s.inspector)}</td>
-            <td style="padding:9px 10px;font-weight:800;">${escHtml(String(s.totalScore))} (${escHtml(s.rating)})</td>
-            <td style="padding:9px 10px;">
-              <span style="color:#059669;font-weight:800;">OK: ${s.okCount}</span> •
-              <span style="color:#dc2626;font-weight:800;">NOK: ${s.nokCount}</span> •
-              <span style="color:#2563eb;font-weight:800;">Đã sửa: ${s.fixedCount}/${s.nokCount}</span> •
-              <span style="color:#065f46;font-weight:900;background:#dcfce7;padding:2px 6px;border-radius:6px;">☑️ KT duyệt: ${techCnt}/${s.nokCount}</span>
+          <tr style="border-bottom:1.5px solid #cbd5e1;background:${rowBg};">
+            <td style="padding:10px 9px;font-weight:900;color:#1d4ed8;">
+              <div>${escHtml(sc.checklistLabel)}</div>
+              <div style="font-size:10.5px;color:#64748b;font-weight:700;">Mã phiếu: ${escHtml(s.sessionId)}</div>
             </td>
-            <td style="padding:9px 10px;">
-              <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                <a href="${escAttr(sheetUrl)}" target="_blank" style="color:#059669;font-weight:800;text-decoration:underline;">📊 Mở Sheet ↗</a>
-                ${s.sessionFolderUrl ? `<a href="${escAttr(s.sessionFolderUrl)}" target="_blank" style="color:#d97706;font-weight:800;text-decoration:underline;">📁 Folder 2.14 ↗</a>` : ``}
+            <td style="padding:10px 9px;">
+              <span style="background:#1e3a8a;color:#fff;font-weight:900;font-size:12px;padding:4px 10px;border-radius:8px;display:inline-block;">
+                👥 ${escHtml(sc.teamName)}
+              </span>
+            </td>
+            <td style="padding:10px 9px;">
+              <div style="font-size:14px;font-weight:900;color:#0f172a;cursor:pointer;text-decoration:underline;" onclick="loadSessionIntoEditor('${escAttr(s.sessionId)}', true)" title="Bấm vào trạm để mở phiếu kiểm tra">
+                📡 ${escHtml(s.siteCode)}
               </div>
+              <div style="font-size:11px;color:#475569;font-weight:700;">👤 ${escHtml(s.inspector)} • 🕒 ${escHtml(s.ts)}</div>
             </td>
-            <td style="padding:9px 10px;">
+            <!-- CỘT 1: ĐIỂM TRẠM (STATION SCORE) -->
+            <td style="padding:10px 9px;text-align:center;background:rgba(30,58,138,0.05);">
+              <div style="font-size:15px;font-weight:900;color:#1e3a8a;">${sc.stationScore} / ${sc.stdTotal} pt</div>
+              <div style="font-size:11px;font-weight:800;color:#475569;">${escHtml(s.rating || (sc.stationScore >= 95 ? 'Good' : 'Acceptable'))}</div>
+            </td>
+            <!-- CỘT 2: ĐIỂM LỖI (DEFECT SCORE) -->
+            <td style="padding:10px 9px;text-align:center;background:rgba(220,38,38,0.06);">
+              <div style="font-size:15px;font-weight:900;color:#dc2626;">${sc.defectPts} pt</div>
+              <div style="font-size:11px;font-weight:800;color:#991b1b;">❌ ${sc.nokCnt} mục lỗi (NOK)</div>
+            </td>
+            <!-- CỘT 3: ĐIỂM SỬA CHỮA (REPAIRED SCORE) -->
+            <td style="padding:10px 9px;text-align:center;background:rgba(37,99,235,0.06);">
+              <div style="font-size:15px;font-weight:900;color:#2563eb;">${sc.repairedPts} / ${sc.defectPts} pt</div>
+              <div style="font-size:11px;font-weight:800;color:#1d4ed8;">🔧 Đã sửa: ${sc.fixedCnt}/${sc.nokCnt} mục</div>
+            </td>
+            <!-- CỘT 4: ĐIỂM XÁC NHẬN PHÒNG KỸ THUẬT (TECH DEPT APPROVED SCORE - UNCONFIRMED ON TOP) -->
+            <td style="padding:10px 9px;text-align:center;background:rgba(5,150,105,0.07);">
+              ${confirmBadge}
+              <div style="font-size:14.5px;font-weight:900;color:#065f46;">${sc.approvedPts} / ${sc.defectPts} pt</div>
+            </td>
+            <!-- THAO TÁC NHANH -->
+            <td style="padding:10px 9px;">
               <div style="display:flex;gap:5px;flex-wrap:wrap;">
-                <button type="button" class="pill-btn guide" style="background:#dc2626;border-color:#f87171;color:#fff;padding:4px 8px;font-size:11px;cursor:pointer;" onclick="loadSessionIntoEditor('${escAttr(s.sessionId)}', true)">🔧 Sửa Mục Lỗi (NOK)</button>
-                <button type="button" class="pill-btn guide" style="background:#2563eb;border-color:#60a5fa;color:#fff;padding:4px 8px;font-size:11px;cursor:pointer;" onclick="loadSessionIntoEditor('${escAttr(s.sessionId)}', false)">📋 Xem Tất Cả (100%)</button>
-                <button type="button" class="pill-btn guide" style="background:#0f766e;border-color:#14b8a6;color:#fff;padding:4px 8px;font-size:11px;cursor:pointer;" onclick="toggleTechVerifyFromBi('${escAttr(s.sessionId)}', 'ALL', true)">☑️ KT Tick Duyệt Trạm</button>
-                <button type="button" class="pill-btn guide" style="background:#dc2626;border-color:#f87171;color:#fff;padding:4px 8px;font-size:11px;cursor:pointer;" onclick="exportChecklistPdfNoPhotos('${escAttr(s.sessionId)}')">📄 Xuất PDF (English Only)</button>
+                <button type="button" class="pill-btn guide" style="background:#dc2626;border-color:#f87171;color:#fff;padding:5px 9px;font-size:11px;cursor:pointer;" onclick="loadSessionIntoEditor('${escAttr(s.sessionId)}', true, 'nok')">🔧 Vào Sửa Lỗi (NOK)</button>
+                <button type="button" class="pill-btn guide" style="background:#059669;border-color:#34d399;color:#fff;padding:5px 9px;font-size:11px;cursor:pointer;" onclick="loadSessionIntoEditor('${escAttr(s.sessionId)}', false, 'pending_approve')">☑️ Vào Phúc Tra &amp; Approve</button>
+                <button type="button" class="pill-btn guide" style="background:#0f766e;border-color:#14b8a6;color:#fff;padding:5px 9px;font-size:11px;cursor:pointer;" onclick="toggleTechVerifyFromBi('${escAttr(s.sessionId)}', 'ALL', true)">⚡ Duyệt Nhanh Trạm</button>
+                <button type="button" class="pill-btn guide" style="background:#2563eb;border-color:#60a5fa;color:#fff;padding:5px 9px;font-size:11px;cursor:pointer;" onclick="loadSessionIntoEditor('${escAttr(s.sessionId)}', false, 'all')">📋 Xem 100%</button>
+                <button type="button" class="pill-btn guide" style="background:#0f172a;border-color:#475569;color:#fff;padding:5px 9px;font-size:11px;cursor:pointer;" onclick="exportChecklistPdfNoPhotos('${escAttr(s.sessionId)}')">📄 PDF</button>
+                <a href="${escAttr(sheetUrl)}" target="_blank" style="font-size:11px;font-weight:800;color:#059669;text-decoration:underline;align-self:center;margin-left:3px;">📊 Sheet ↗</a>
               </div>
             </td>
           </tr>
@@ -5443,8 +5683,8 @@
       const gpsEl = document.getElementById("inp-gps");
       if (gpsEl) gpsEl.value = sess.gpsCoords || "";
       window._lastExifGps = sess.gpsCoords || "";
-      if (sess.branch && document.getElementById("inp-extra-meta")) {
-        document.getElementById("inp-extra-meta").value = sess.branch;
+      if (sess.branch) {
+        selectInspectionTeam(sess.branch);
       }
       document.getElementById("inp-comment").value = sess.generalComment || "";
 
@@ -5561,7 +5801,7 @@
         if (meta.inspector) document.getElementById("inp-inspector").value = meta.inspector;
         const gpsEl = document.getElementById("inp-gps");
         if (meta.gps && gpsEl) gpsEl.value = meta.gps;
-        if (meta.extra) document.getElementById("inp-extra-meta").value = meta.extra;
+        if (meta.extra) selectInspectionTeam(meta.extra);
         if (meta.comment) document.getElementById("inp-comment").value = meta.comment;
       } catch (e) {}
     }
