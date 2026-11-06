@@ -1006,8 +1006,8 @@
         <div class="mode-tab-sub"><span>Sheet: 5. Checklist Solar</span><span>9 phần</span></div>
       </button>
       <button class="mode-tab" data-type="bi_dashboard" onclick="switchChecklistType('bi_dashboard')">
-        <div class="mode-tab-top"><span>📊 6. Web BI & So Sánh</span><span class="sheet-chip" id="bi-count-badge">Live</span></div>
-        <div class="mode-tab-sub"><span>Đối chiếu Trước / Sau</span><span>1440×1088</span></div>
+        <div class="mode-tab-top"><span>🔍 6. Phúc Tra Hình Ảnh & BI</span><span class="sheet-chip" id="bi-count-badge">Live</span></div>
+        <div class="mode-tab-sub"><span>Kiểm tra ảnh & Phòng KT Tick duyệt</span><span>1440×1088</span></div>
       </button>
     </div>
 
@@ -1027,29 +1027,69 @@
             <div class="score-pill ok" id="live-ok-pill">✅ OK: 64</div>
             <div class="score-pill nok" id="live-nok-pill">❌ Lỗi (NOK): 0</div>
             <div class="score-pill fix" id="live-fix-pill">🔧 Đã sửa: 0/0</div>
-            <a class="pill-btn sheet" id="cur-dedicated-sheet-btn" href="https://docs.google.com/spreadsheets/d/1Y9QkgXe24kspNmkrPEVQ0AAD_GmZ4gnqMCD6ja4-9kI/edit#gid=16375926" target="_blank" rel="noopener">📄 Mở Sheet Của Check List Này</a>
+            <div class="score-pill" id="live-tech-pill" style="background:#dcfce7;color:#166534;border:1px solid #86efac;">☑️ Phòng KT duyệt: 0/0</div>
+            <button type="button" class="pill-btn" style="background:#dc2626;border-color:#f87171;color:#fff;cursor:pointer;" onclick="exportChecklistPdfNoPhotos()">📄 Xuất PDF (Không Ảnh)</button>
+            <a class="pill-btn sheet" id="cur-dedicated-sheet-btn" href="https://docs.google.com/spreadsheets/d/1Y9QkgXe24kspNmkrPEVQ0AAD_GmZ4gnqMCD6ja4-9kI/edit#gid=16375926" target="_blank" rel="noopener">📊 Mở Sheet Kiểm Tra Hình Ảnh</a>
+            <button type="button" class="pill-btn" style="background:#7c3aed;border-color:#a78bfa;color:#fff;cursor:pointer;" onclick="jumpToPhotoAuditTab()">🔍 Nhảy Sang Tab Phúc Tra Hình Ảnh</button>
           </div>
+        </div>
+
+        <!-- QUICK SEARCH & LOAD EXISTING INSPECTED SITE FOR STAFF REPAIR UPDATES + TECH DEPT GMAIL VERIFICATION -->
+        <div style="background:linear-gradient(90deg,#eff6ff 0%,#ecfdf5 100%);border:1.5px solid #93c5fd;border-radius:12px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1;min-width:280px;">
+            <span style="font-size:13px;font-weight:900;color:#1e3a8a;white-space:nowrap;">🔎 Tìm Trạm Đã Kiểm Tra Để Cập Nhật Sửa Chữa:</span>
+            <input type="text" id="inp-find-saved-site" class="field-input" style="max-width:200px;padding:6px 10px;font-size:12.5px;background:#fff;" placeholder="Nhập mã trạm (VD: TNI0012)..." oninput="populateSavedSessionsDropdown()" />
+            <select id="sel-saved-sessions" class="field-input" style="flex:1;min-width:240px;padding:6px 10px;font-size:12.5px;background:#fff;" onchange="onSelectSavedSessionChange()">
+              <option value="">-- Chọn trạm / phiếu đã kiểm tra trên Google Sheet --</option>
+            </select>
+            <button type="button" class="pill-btn" style="background:#059669;border-color:#10b981;color:#fff;padding:7px 12px;cursor:pointer;" onclick="loadSelectedSavedSession(true)">
+              🔧 Nạp Trạm & Cập Nhật Đã Sửa
+            </button>
+            <button type="button" class="pill-btn" style="background:#2563eb;border-color:#60a5fa;color:#fff;padding:7px 10px;cursor:pointer;" onclick="fetchCloudSessions(true)" title="Tải lại danh sách trạm từ Sheet">
+              🔄 Tải Lại
+            </button>
+          </div>
+          <div id="editing-session-banner" style="display:none;align-items:center;gap:8px;background:#fef3c7;border:1px solid #f59e0b;color:#92400e;padding:5px 10px;border-radius:8px;font-size:12px;font-weight:800;">
+            <span id="editing-session-text">✏️ Đang cập nhật phiếu: -</span>
+            <button type="button" style="background:#dc2626;color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:800;cursor:pointer;" onclick="resetCurrentChecklist()">✕ Thoát / Tạo Mới</button>
+          </div>
+        </div>
+
+        <!-- TECHNICAL DEPARTMENT GMAIL VERIFICATION BAR -->
+        <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:9px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1;">
+            <span style="font-size:12.5px;font-weight:900;color:#065f46;">🛡️ Gmail Phòng Kỹ Thuật Tick Xác Nhận Hoàn Thành Sửa Chữa:</span>
+            <select id="sel-tech-gmail" class="field-input" style="max-width:340px;padding:5px 10px;font-size:12px;background:#fff;font-weight:800;color:#065f46;" onchange="onTechGmailChange(this.value)">
+              <option value="">-- Chọn Gmail Phòng Kỹ Thuật để Tick xác nhận --</option>
+              <option value="yelwin086683@gmail.com">Ye Lwin — Technical Manager (yelwin086683@gmail.com)</option>
+              <option value="shingwutthmone776@gmail.com">Shing Wutt Hmone Oo — CM Engineer (shingwutthmone776@gmail.com)</option>
+              <option value="ppoe56591@gmail.com">Poe Hmyin Thoun — Infrastructure (ppoe56591@gmail.com)</option>
+              <option value="heinnanda683@gmail.com">Hein Nanda — M&E Engineer (heinnanda683@gmail.com)</option>
+              <option value="htoolaynyaw@gmail.com">Naw Oh Nyaw — PM Engineer (htoolaynyaw@gmail.com)</option>
+              <option value="phonghdpxd@gmail.com">Hà Đức Phong — Master Admin / BOD (phonghdpxd@gmail.com)</option>
+            </select>
+            <span id="tech-gmail-status-badge" style="font-size:11.5px;font-weight:800;color:#047857;background:#dcfce7;padding:4px 9px;border-radius:99px;">
+              Chỉ Gmail trong danh sách Phòng Kỹ Thuật mới được tick xác nhận hoàn thành sửa chữa
+            </span>
+          </div>
+          <button type="button" class="pill-btn" style="background:#047857;border-color:#10b981;color:#fff;padding:6px 12px;font-size:12px;cursor:pointer;" onclick="techVerifyAllCurrentSession(true)">
+            ☑️ Phòng KT Tick Xác Nhận Hoàn Thành Tất Cả Mục Lỗi Của Trạm Này
+          </button>
         </div>
 
         <div class="meta-grid">
           <div class="field-group">
             <label id="lbl-site-code">Mã Trạm / Tuyến (Site / Route Code) *</label>
-            <input type="text" class="field-input" id="inp-site-code" placeholder="VD: TNI0012 / TNIDW01" oninput="saveLocalDraft()" />
+            <input type="text" class="field-input" id="inp-site-code" placeholder="VD: TNI0012 / TNIDW01" oninput="onSiteCodeInput()" />
+            <div id="site-existing-hint" style="display:none;margin-top:4px;font-size:11.5px;font-weight:800;color:#1d4ed8;background:#dbeafe;padding:4px 8px;border-radius:6px;cursor:pointer;" onclick="loadMatchedSiteSession()"></div>
           </div>
           <div class="field-group">
-            <label id="lbl-inspector">Nhân Viên Kiểm Tra (Inspector) *</label>
+            <label id="lbl-inspector">Nhân Viên Kiểm Tra / Cập Nhật Sửa (Staff) *</label>
             <input type="text" class="field-input" id="inp-inspector" placeholder="Nhập tên kỹ thuật viên..." oninput="saveLocalDraft()" />
           </div>
           <div class="field-group">
             <label id="lbl-date">Ngày Kiểm Tra (Inspection Date)</label>
             <input type="date" class="field-input" id="inp-date" onchange="saveLocalDraft()" />
-          </div>
-          <div class="field-group">
-            <label id="lbl-gps">Tọa Độ GPS (Timestamp Camera Lat, Long)</label>
-            <div class="gps-row">
-              <input type="text" class="field-input" id="inp-gps" placeholder="14.0823, 98.1915" oninput="saveLocalDraft()" />
-              <button type="button" class="btn-gps" onclick="fetchLiveGps()">📍 Lấy GPS</button>
-            </div>
           </div>
           <div class="field-group" id="extra-meta-container">
             <label id="lbl-extra-meta">Thông Tin Bổ Sung (Branch / Model / KM)</label>
@@ -1089,6 +1129,8 @@
           <button type="button" class="f-pill" data-filter="fixed" onclick="setItemFilter('fixed')" id="fp-fixed">✅ Đã sửa xong</button>
           <button type="button" class="f-pill" data-filter="has_photo" onclick="setItemFilter('has_photo')" id="fp-photo">📸 Có hình ảnh (1440×1088)</button>
           <button type="button" class="f-pill" onclick="markAllItemsOk()" style="background:#ecfdf5;color:#047857;border-color:#6ee7b7;">⚡ Đặt tất cả = OK</button>
+          <button type="button" class="f-pill" onclick="exportChecklistPdfNoPhotos()" style="background:#fef2f2;color:#b91c1c;border-color:#fca5a5;">📄 Xuất PDF (Không Ảnh)</button>
+          <button type="button" class="f-pill" onclick="jumpToPhotoAuditTab()" style="background:#f5f3ff;color:#6d28d9;border-color:#c4b5fd;">🔍 Phúc Tra Hình Ảnh Trước/Sau</button>
         </div>
         <div class="search-box">
           <input type="text" id="inp-search-item" placeholder="Tìm mã mục, nội dung kiểm tra (VD: 1.2.1, grounding, closure)..." oninput="renderChecklistItems()" />
@@ -1157,28 +1199,54 @@
           </a>
         </div>
 
-        <!-- BEFORE vs AFTER PHOTO COMPARISON WALL -->
-        <div style="border-top:1px solid var(--line);padding-top:14px;margin-top:8px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-            <div>
-              <h3 style="font-size:15px;font-weight:900;">🔍 Bảng Đối Chiếu Trực Quan: Cột Ảnh Lỗi (Trước Sửa) vs. Cột Ảnh Đã Sửa (1440×1088)</h3>
-              <p style="font-size:12px;color:var(--muted);">Hiển thị toàn bộ các hạng mục phát hiện lỗi (NOK) hoặc có ảnh chụp để Ban Giám Đốc & Kỹ Thuật nghiệm thu Trước & Sau.</p>
+        <!-- BEFORE vs AFTER PHOTO COMPARISON WALL (TAB PHÚC TRA HÌNH ẢNH & PHÒNG KỸ THUẬT TICK XÁC NHẬN) -->
+        <div id="photo-audit-section" style="border-top:1px solid var(--line);padding-top:14px;margin-top:8px;">
+          <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="font-size:13px;font-weight:900;color:#065f46;">🛡️ Gmail Phòng Kỹ Thuật Đang Phúc Tra & Tick Xác Nhận:</span>
+              <select id="sel-tech-gmail-bi" class="field-input" style="max-width:340px;padding:5px 10px;font-size:12px;background:#fff;font-weight:800;color:#065f46;" onchange="onTechGmailChange(this.value)">
+                <option value="">-- Chọn Gmail Phòng Kỹ Thuật để Tick xác nhận --</option>
+                <option value="yelwin086683@gmail.com">Ye Lwin — Technical Manager (yelwin086683@gmail.com)</option>
+                <option value="shingwutthmone776@gmail.com">Shing Wutt Hmone Oo — CM Engineer (shingwutthmone776@gmail.com)</option>
+                <option value="ppoe56591@gmail.com">Poe Hmyin Thoun — Infrastructure (ppoe56591@gmail.com)</option>
+                <option value="heinnanda683@gmail.com">Hein Nanda — M&E Engineer (heinnanda683@gmail.com)</option>
+                <option value="htoolaynyaw@gmail.com">Naw Oh Nyaw — PM Engineer (htoolaynyaw@gmail.com)</option>
+                <option value="phonghdpxd@gmail.com">Hà Đức Phong — Master Admin / BOD (phonghdpxd@gmail.com)</option>
+              </select>
             </div>
-            <select id="bi-type-filter" class="field-input" style="width:auto;" onchange="renderBiDashboard()">
-              <option value="ALL">Tất cả 5 loại Check List</option>
-              <option value="site_bts">1. Check Site (BTS)</option>
-              <option value="dg_gen">2. Checklist DG</option>
-              <option value="cable_route">3. Checklist Cable Route</option>
-              <option value="ug_cable">4. Checklist UG Cable</option>
-              <option value="solar">5. Checklist Solar</option>
-            </select>
+            <span style="font-size:11.5px;color:#047857;font-weight:800;">☑️ Tick vào ô xác nhận trên từng mục ảnh bên dưới để xác nhận nhân viên đã hoàn thành sửa chữa</span>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:#f8fafc;padding:12px;border-radius:12px;border:1px solid #cbd5e1;">
+            <div>
+              <h3 style="font-size:15.5px;font-weight:900;color:#0f172a;">🔍 Bảng Phúc Tra Hình Ảnh: Trước Khi Sửa (Lỗi) vs. Sau Khi Hoàn Thiện (1440×1088)</h3>
+              <p style="font-size:12px;color:var(--muted);">Kiểm tra nhân viên đã cập nhật hình ảnh sau khi hoàn thiện chưa • Phòng Kỹ Thuật tick xác nhận hoàn thành sửa chữa trực tiếp tại đây.</p>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <input type="text" id="bi-site-search" class="field-input" style="width:185px;background:#fff;" placeholder="🔎 Tìm mã trạm (VD: TNI0012)..." oninput="renderBiDashboard()" />
+              <select id="bi-fix-filter" class="field-input" style="width:auto;background:#fff;" onchange="renderBiDashboard()">
+                <option value="ALL">📋 Tất cả mục Lỗi / Có ảnh</option>
+                <option value="PENDING_PHOTO">⏳ Chưa cập nhật ảnh Sau sửa</option>
+                <option value="HAS_AFTER_PHOTO">✅ Đã cập nhật ảnh Sau sửa</option>
+                <option value="PENDING_TECH_VERIFY">🛡️ Chờ Phòng KT Tick xác nhận</option>
+                <option value="TECH_VERIFIED">☑️ Phòng KT Đã Tick xác nhận</option>
+              </select>
+              <select id="bi-type-filter" class="field-input" style="width:auto;background:#fff;" onchange="renderBiDashboard()">
+                <option value="ALL">Tất cả 5 loại Check List</option>
+                <option value="site_bts">1. Check Site (BTS)</option>
+                <option value="dg_gen">2. Checklist DG</option>
+                <option value="cable_route">3. Checklist Cable Route</option>
+                <option value="ug_cable">4. Checklist UG Cable</option>
+                <option value="solar">5. Checklist Solar</option>
+              </select>
+            </div>
           </div>
           <div class="comp-wall-grid" id="bi-comparison-wall"></div>
         </div>
 
         <!-- SESSIONS HISTORY TABLE -->
         <div style="border-top:1px solid var(--line);padding-top:14px;margin-top:18px;">
-          <h3 style="font-size:15px;font-weight:900;margin-bottom:10px;">📜 Lịch Sử Các Phiếu Kiểm Tra Đã Lưu Trên Google Sheet</h3>
+          <h3 style="font-size:15px;font-weight:900;margin-bottom:10px;">📜 Danh Sách Trạm Đã Kiểm Tra Trên Google Sheet (Vào Cập Nhật Sửa Chữa • Phòng KT Tick Duyệt • Xuất PDF Không Ảnh)</h3>
           <div style="overflow-x:auto;">
             <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
               <thead>
@@ -1188,11 +1256,10 @@
                   <th style="padding:9px 10px;">Loại Check List & Sheet Riêng</th>
                   <th style="padding:9px 10px;">Trạm / Tuyến</th>
                   <th style="padding:9px 10px;">Nhân Viên</th>
-                  <th style="padding:9px 10px;">Tọa Độ GPS</th>
                   <th style="padding:9px 10px;">Điểm / Kết Luận</th>
-                  <th style="padding:9px 10px;">OK / Lỗi / Đã Sửa</th>
-                  <th style="padding:9px 10px;">Folder Ảnh 2.14</th>
-                  <th style="padding:9px 10px;">Thao Tác</th>
+                  <th style="padding:9px 10px;">OK / Lỗi / Đã Sửa / KT Duyệt</th>
+                  <th style="padding:9px 10px;">Kiểm Tra Hình Ảnh (Sheet & Drive)</th>
+                  <th style="padding:9px 10px;">Cập Nhật Sửa • KT Tick • Xuất PDF</th>
                 </tr>
               </thead>
               <tbody id="bi-sessions-tbody"></tbody>
@@ -1212,6 +1279,8 @@
       </div>
       <div class="bottom-actions">
         <button type="button" class="btn-reset-form" onclick="resetCurrentChecklist()">🔄 Tạo Phiếu Mới</button>
+        <button type="button" class="btn-reset-form" style="background:#fef2f2;color:#b91c1c;border-color:#fca5a5;" onclick="exportChecklistPdfNoPhotos()">📄 Xuất PDF (Không Ảnh)</button>
+        <button type="button" class="btn-reset-form" style="background:#f5f3ff;color:#6d28d9;border-color:#c4b5fd;" onclick="jumpToPhotoAuditTab()">🔍 Tab Phúc Tra Ảnh</button>
         <button type="button" class="btn-save-cloud" id="btn-submit-checklist" onclick="submitChecklistToCloud()">
           💾 Lưu Vào Sheet Riêng & Upload Ảnh 1440×1088 Lên Drive 2.14
         </button>
@@ -1412,7 +1481,11 @@
             afterDataUrl: "",
             afterThumbUrl: "",
             afterDriveUrl: "",
-            gps: ""
+            gps: "",
+            techVerified: false,
+            techVerifiedBy: "",
+            techVerifiedEmail: "",
+            techVerifiedAt: ""
           };
         });
       });
@@ -1435,7 +1508,8 @@
       document.getElementById("lbl-site-code").textContent = t.siteCode;
       document.getElementById("lbl-inspector").textContent = t.inspector;
       document.getElementById("lbl-date").textContent = t.date;
-      document.getElementById("lbl-gps").textContent = t.gps;
+      const lblGpsEl = document.getElementById("lbl-gps");
+      if (lblGpsEl) lblGpsEl.textContent = t.gps;
       document.getElementById("lbl-extra-meta").textContent = t.extraMeta;
       document.getElementById("lbl-comment").textContent = t.comment;
       document.getElementById("fp-all").textContent = t.allItems;
@@ -1495,6 +1569,7 @@
       let okCnt = 0;
       let nokCnt = 0;
       let fixCnt = 0;
+      let techCnt = 0;
 
       tpl.items.forEach(it => {
         const st = stMap[it.code] || { status: "OK", evalPoint: it.stdPoint };
@@ -1502,8 +1577,11 @@
         if (st.status === "NOK") {
           nokCnt++;
           totalEval += Number(st.evalPoint || 0);
-          if (st.afterDataUrl || st.afterThumbUrl || String(st.fixStatus || "").indexOf("Đã sửa") === 0) {
+          if (st.afterDataUrl || st.afterThumbUrl || String(st.fixStatus || "").indexOf("Đã sửa") === 0 || st.techVerified) {
             fixCnt++;
+          }
+          if (st.techVerified) {
+            techCnt++;
           }
         } else {
           okCnt++;
@@ -1516,6 +1594,8 @@
       document.getElementById("live-ok-pill").textContent = "✅ OK: " + okCnt;
       document.getElementById("live-nok-pill").textContent = "❌ Lỗi (NOK): " + nokCnt;
       document.getElementById("live-fix-pill").textContent = "🔧 Đã sửa: " + fixCnt + "/" + nokCnt;
+      const techPill = document.getElementById("live-tech-pill");
+      if (techPill) techPill.textContent = "☑️ Phòng KT duyệt: " + techCnt + "/" + nokCnt;
       document.getElementById("bottom-summary-text").textContent =
         tpl.tabName + " • Điểm: " + scoreRounded + "/" + totalStd + " • OK: " + okCnt + " • Lỗi NOK: " + nokCnt + " (Đã sửa: " + fixCnt + ")";
     }
@@ -1653,6 +1733,13 @@
               </div>
             </div>
             ${(beforeImgSrc || afterImgSrc) ? `<button type="button" class="btn-compare-inline" onclick="openCompareModalForItem('${codeEsc}')">${t.btnCompare}</button>` : ``}
+            <div style="margin-top:6px;padding:7px 9px;border-radius:8px;border:1.5px solid ${st.techVerified ? '#10b981' : '#cbd5e1'};background:${st.techVerified ? '#dcfce7' : '#f8fafc'};">
+              <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:12px;font-weight:900;color:${st.techVerified ? '#065f46' : '#334155'};">
+                <input type="checkbox" style="width:16px;height:16px;accent-color:#059669;cursor:pointer;" ${st.techVerified ? 'checked' : ''} onchange="toggleTechVerifyItem('${codeEsc}', this.checked, this)" />
+                <span>☑️ Phòng Kỹ Thuật Tick Xác Nhận Đã Hoàn Thành Sửa Chữa</span>
+              </label>
+              ${st.techVerified ? `<div style="font-size:11px;font-weight:800;color:#047857;margin-top:3px;padding-left:23px;">🛡️ Đã xác nhận bởi: ${escHtml(st.techVerifiedBy || st.techVerifiedEmail)} (${escHtml(st.techVerifiedEmail || '')}) • ${escHtml(st.techVerifiedAt || '')}</div>` : `<div style="font-size:10.5px;color:#64748b;margin-top:2px;padding-left:23px;">(Chỉ Gmail thuộc Phòng Kỹ Thuật mới được tick xác nhận)</div>`}
+            </div>
           </div>
         </div>`;
       });
@@ -1765,6 +1852,7 @@
         const exifGps = await extractExifGpsFromFile(file);
         if (exifGps) {
           const gpsStr = exifGps.lat.toFixed(6) + ", " + exifGps.lng.toFixed(6);
+          window._lastExifGps = gpsStr;
           const gpsInp = document.getElementById("inp-gps");
           if (gpsInp && !gpsInp.value.trim()) {
             gpsInp.value = gpsStr;
@@ -1775,7 +1863,8 @@
       // 2. Resize & normalize to EXACT 1440x1088 px on HTML5 Canvas + optional GPS Timestamp watermark
       const target = pendingPhotoTarget;
       const siteCode = (document.getElementById("inp-site-code").value || "TNI-SITE").trim();
-      const gpsVal = (document.getElementById("inp-gps").value || "GPS Active").trim();
+      const gpsInpEl = document.getElementById("inp-gps");
+      const gpsVal = (gpsInpEl && gpsInpEl.value ? gpsInpEl.value : (window._lastExifGps || "Timestamp Camera")).trim();
       const stampEnabled = document.getElementById("chk-auto-stamp") ? document.getElementById("chk-auto-stamp").checked : true;
 
       const dataUrl1440 = await processImageTo1440x1088(file, {
@@ -2061,7 +2150,8 @@
       const siteCode = (document.getElementById("inp-site-code").value || "TNI-SITE").trim();
       const inspector = (document.getElementById("inp-inspector").value || "TNI-Staff").trim();
       const dateStr = document.getElementById("inp-date").value || new Date().toISOString().slice(0, 10);
-      const gpsCoords = (document.getElementById("inp-gps").value || "").trim();
+      const gpsInpEl = document.getElementById("inp-gps");
+      const gpsCoords = (gpsInpEl ? gpsInpEl.value : (window._lastExifGps || "")).trim();
       const extraMeta = (document.getElementById("inp-extra-meta").value || "TNI").trim();
       const generalComment = (document.getElementById("inp-comment").value || "").trim();
       const stMap = itemStates[currentType];
@@ -2089,7 +2179,11 @@
             afterDataUrl: "",
             afterThumbUrl: st.afterThumbUrl || "",
             afterDriveUrl: st.afterDriveUrl || "",
-            gps: st.gps || gpsCoords
+            gps: st.gps || gpsCoords,
+            techVerified: !!st.techVerified,
+            techVerifiedBy: st.techVerifiedBy || "",
+            techVerifiedEmail: st.techVerifiedEmail || "",
+            techVerifiedAt: st.techVerifiedAt || ""
           };
         });
 
@@ -2159,7 +2253,8 @@
         const tpl = CHECKLIST_TEMPLATES[currentType];
         const stMap = itemStates[currentType];
         const dateStr = document.getElementById("inp-date").value || new Date().toISOString().slice(0, 10);
-        const gpsCoords = (document.getElementById("inp-gps").value || "").trim();
+        const gpsInpEl = document.getElementById("inp-gps");
+        const gpsCoords = (gpsInpEl ? gpsInpEl.value : (window._lastExifGps || "")).trim();
         const extraMeta = (document.getElementById("inp-extra-meta").value || "TNI").trim();
         const generalComment = (document.getElementById("inp-comment").value || "").trim();
 
@@ -2199,7 +2294,11 @@
             afterDataUrl: st.afterDataUrl || "",
             afterThumbUrl: st.afterThumbUrl || "",
             afterDriveUrl: st.afterDriveUrl || "",
-            gps: st.gps || gpsCoords
+            gps: st.gps || gpsCoords,
+            techVerified: !!st.techVerified,
+            techVerifiedBy: st.techVerifiedBy || "",
+            techVerifiedEmail: st.techVerifiedEmail || "",
+            techVerifiedAt: st.techVerifiedAt || ""
           };
         });
 
@@ -2265,7 +2364,221 @@
       }
     }
 
+    // =========================================================================
+    // TECHNICAL DEPARTMENT GMAIL DIRECTORY & VERIFICATION ENGINE
+    // =========================================================================
+    const TECH_DEPT_GMAIL_MAP = {
+      "yelwin086683@gmail.com":      { name: "Ye Lwin", title: "Technical Manager (Trưởng Phòng KT)" },
+      "shingwutthmone776@gmail.com": { name: "Shing Wutt Hmone Oo", title: "CM Engineer (Phòng Kỹ Thuật)" },
+      "ppoe56591@gmail.com":         { name: "Poe Hmyin Thoun", title: "Infrastructure (Phòng Kỹ Thuật)" },
+      "heinnanda683@gmail.com":      { name: "Hein Nanda", title: "M&E Engineer (Phòng Kỹ Thuật)" },
+      "htoolaynyaw@gmail.com":       { name: "Naw Oh Nyaw", title: "PM Engineer (Phòng Kỹ Thuật)" },
+      "phonghdpxd@gmail.com":        { name: "Hà Đức Phong", title: "Master Admin / BOD" }
+    };
+
+    function getActiveTechDeptVerifier() {
+      let savedEmail = (localStorage.getItem("tni_cl_tech_gmail") || localStorage.getItem("tni_google_auth_email") || "").trim().toLowerCase();
+      if (savedEmail && TECH_DEPT_GMAIL_MAP[savedEmail]) {
+        return {
+          email: savedEmail,
+          name: TECH_DEPT_GMAIL_MAP[savedEmail].name,
+          title: TECH_DEPT_GMAIL_MAP[savedEmail].title
+        };
+      }
+      return null;
+    }
+
+    function syncTechGmailDropdowns() {
+      const verifier = getActiveTechDeptVerifier();
+      const emailVal = verifier ? verifier.email : "";
+      ["sel-tech-gmail", "sel-tech-gmail-bi"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = emailVal;
+      });
+      const badge = document.getElementById("tech-gmail-status-badge");
+      if (badge) {
+        if (verifier) {
+          badge.style.background = "#dcfce7";
+          badge.style.color = "#065f46";
+          badge.textContent = "✅ Đang xác thực quyền Phòng KT: " + verifier.name + " (" + verifier.email + ")";
+        } else {
+          badge.style.background = "#fef3c7";
+          badge.style.color = "#92400e";
+          badge.textContent = "⚠️ Chọn đúng Gmail Phòng Kỹ Thuật trước khi Tick xác nhận hoàn thành sửa chữa";
+        }
+      }
+    }
+
+    function onTechGmailChange(val) {
+      const clean = String(val || "").trim().toLowerCase();
+      if (clean && TECH_DEPT_GMAIL_MAP[clean]) {
+        localStorage.setItem("tni_cl_tech_gmail", clean);
+      } else {
+        localStorage.removeItem("tni_cl_tech_gmail");
+      }
+      syncTechGmailDropdowns();
+    }
+
+    function ensureTechVerifierOrPrompt() {
+      let verifier = getActiveTechDeptVerifier();
+      if (verifier) return verifier;
+
+      const entered = prompt(
+        "🔐 XÁC THỰC GMAIL PHÒNG KỸ THUẬT:\n" +
+        "Chỉ thành viên Phòng Kỹ Thuật trong danh sách Gmail mới được phép Tick xác nhận nhân viên hoàn thành sửa chữa.\n\n" +
+        "Danh sách Gmail Phòng Kỹ Thuật được cấp quyền:\n" +
+        "• yelwin086683@gmail.com (Ye Lwin - Technical Manager)\n" +
+        "• shingwutthmone776@gmail.com (Shing Wutt Hmone Oo - CM Engineer)\n" +
+        "• ppoe56591@gmail.com (Poe Hmyin Thoun - Infrastructure)\n" +
+        "• heinnanda683@gmail.com (Hein Nanda - M&E Engineer)\n" +
+        "• htoolaynyaw@gmail.com (Naw Oh Nyaw - PM Engineer)\n" +
+        "• phonghdpxd@gmail.com (Hà Đức Phong - BOD / Admin)\n\n" +
+        "Vui lòng nhập Gmail Phòng Kỹ Thuật của bạn:",
+        localStorage.getItem("tni_google_auth_email") || ""
+      );
+      if (!entered) return null;
+      const clean = entered.trim().toLowerCase();
+      if (!TECH_DEPT_GMAIL_MAP[clean]) {
+        alert("⛔ Gmail [" + clean + "] KHÔNG nằm trong danh sách Phòng Kỹ Thuật được quyền xác nhận hoàn thành sửa chữa!");
+        return null;
+      }
+      localStorage.setItem("tni_cl_tech_gmail", clean);
+      syncTechGmailDropdowns();
+      return getActiveTechDeptVerifier();
+    }
+
+    async function toggleTechVerifyItem(code, checked, checkboxEl) {
+      const verifier = ensureTechVerifierOrPrompt();
+      if (!verifier) {
+        if (checkboxEl) checkboxEl.checked = !checked;
+        return;
+      }
+      const st = itemStates[currentType] && itemStates[currentType][code];
+      if (!st) return;
+
+      const nowStr = new Date().toLocaleString("en-GB", { hour12: false });
+      st.techVerified = !!checked;
+      st.techVerifiedBy = checked ? (verifier.name + " (" + verifier.title + ")") : "";
+      st.techVerifiedEmail = checked ? verifier.email : "";
+      st.techVerifiedAt = checked ? nowStr : "";
+      if (checked) {
+        st.fixStatus = "Đã sửa xong (Fixed)";
+      }
+
+      saveLocalDraft();
+      recalcLiveScore();
+      renderChecklistItems();
+
+      // If editing an existing cloud session, sync directly via checklist_verify_tech endpoint
+      if (currentSessionId) {
+        try {
+          await fetch(GAS_CHECKLIST_API, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({
+              action: "checklist_verify_tech",
+              sessionId: currentSessionId,
+              itemCode: code,
+              verified: !!checked,
+              verifierEmail: verifier.email,
+              verifierName: verifier.name
+            })
+          });
+          fetchCloudSessions(false);
+        } catch (e) {
+          scheduleAutoSyncSheet(400);
+        }
+      } else {
+        scheduleAutoSyncSheet(600);
+      }
+    }
+
+    async function techVerifyAllCurrentSession(verified) {
+      const verifier = ensureTechVerifierOrPrompt();
+      if (!verifier) return;
+      const tpl = CHECKLIST_TEMPLATES[currentType];
+      if (!tpl) return;
+      const stMap = itemStates[currentType] || {};
+      const nowStr = new Date().toLocaleString("en-GB", { hour12: false });
+      let count = 0;
+
+      tpl.items.forEach(it => {
+        const st = stMap[it.code];
+        if (st && st.status === "NOK") {
+          st.techVerified = !!verified;
+          st.techVerifiedBy = verified ? (verifier.name + " (" + verifier.title + ")") : "";
+          st.techVerifiedEmail = verified ? verifier.email : "";
+          st.techVerifiedAt = verified ? nowStr : "";
+          if (verified) st.fixStatus = "Đã sửa xong (Fixed)";
+          count++;
+        }
+      });
+
+      if (count === 0) {
+        alert("ℹ️ Phiếu hiện tại có 0 mục lỗi (NOK) cần xác nhận sửa chữa.");
+        return;
+      }
+
+      saveLocalDraft();
+      recalcLiveScore();
+      renderChecklistItems();
+
+      if (currentSessionId) {
+        try {
+          await fetch(GAS_CHECKLIST_API, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({
+              action: "checklist_verify_tech",
+              sessionId: currentSessionId,
+              itemCode: "ALL",
+              verified: !!verified,
+              verifierEmail: verifier.email,
+              verifierName: verifier.name
+            })
+          });
+          await fetchCloudSessions(false);
+        } catch (e) {
+          scheduleAutoSyncSheet(400);
+        }
+      } else {
+        scheduleAutoSyncSheet(400);
+      }
+      alert("☑️ Phòng Kỹ Thuật (" + verifier.name + " - " + verifier.email + ") đã tick xác nhận hoàn thành sửa chữa cho " + count + " hạng mục lỗi!");
+    }
+
+    async function toggleTechVerifyFromBi(sessionId, itemCode, checked, checkboxEl) {
+      const verifier = ensureTechVerifierOrPrompt();
+      if (!verifier) {
+        if (checkboxEl) checkboxEl.checked = !checked;
+        return;
+      }
+      try {
+        const resp = await fetch(GAS_CHECKLIST_API, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "checklist_verify_tech",
+            sessionId: sessionId,
+            itemCode: itemCode,
+            verified: !!checked,
+            verifierEmail: verifier.email,
+            verifierName: verifier.name
+          })
+        });
+        const res = await resp.json();
+        if (!res || !res.ok) {
+          throw new Error((res && res.error) || "Lỗi xác nhận Phòng Kỹ Thuật");
+        }
+        await fetchCloudSessions(false);
+      } catch (err) {
+        if (checkboxEl) checkboxEl.checked = !checked;
+        alert("❌ Không thể lưu xác nhận Phòng Kỹ Thuật: " + err.message);
+      }
+    }
+
     async function fetchCloudSessions(showToast) {
+      syncTechGmailDropdowns();
       try {
         const resp = await fetch(GAS_CHECKLIST_API + "?action=checklist_get_all&t=" + Date.now());
         const data = await resp.json();
@@ -2273,8 +2586,15 @@
           cloudSessions = data.sessions;
           const badge = document.getElementById("bi-count-badge");
           if (badge) badge.textContent = cloudSessions.length + " phiếu";
+          populateSavedSessionsDropdown();
+          checkSiteExistingMatch();
           if (currentType === "bi_dashboard") {
             renderBiDashboard();
+          }
+          // Check URL parameters on first load (e.g. ?tab=bi_dashboard&site=TNI0012 or ?session=CL-...)
+          if (!window._urlParamsChecked) {
+            window._urlParamsChecked = true;
+            handleInitialUrlParams();
           }
           if (showToast) {
             alert("✅ Đã đồng bộ " + cloudSessions.length + " phiếu Check List từ Google Sheet!");
@@ -2285,9 +2605,496 @@
       }
     }
 
+    function handleInitialUrlParams() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const tabParam = params.get("tab");
+        const siteParam = params.get("site");
+        const sessionParam = params.get("session");
+        if (sessionParam && tabParam !== "bi_dashboard") {
+          loadSessionIntoEditor(sessionParam, true);
+          return;
+        }
+        if (tabParam === "bi_dashboard" || siteParam) {
+          if (siteParam) {
+            const biSearch = document.getElementById("bi-site-search");
+            if (biSearch) biSearch.value = siteParam;
+          }
+          switchChecklistType("bi_dashboard");
+          setTimeout(() => {
+            const el = document.getElementById("photo-audit-section");
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+          }, 250);
+        }
+      } catch (e) {}
+    }
+
+    // =========================================================================
+    // SITE SEARCH & LOAD EXISTING CHECKLIST FOR STAFF REPAIR UPDATES
+    // =========================================================================
+    function populateSavedSessionsDropdown() {
+      const sel = document.getElementById("sel-saved-sessions");
+      if (!sel) return;
+      const q = ((document.getElementById("inp-find-saved-site") && document.getElementById("inp-find-saved-site").value) || "").trim().toLowerCase();
+
+      const matches = cloudSessions.filter(s => {
+        if (!q) return true;
+        const hay = ((s.siteCode || "") + " " + (s.sessionId || "") + " " + (s.inspector || "") + " " + (s.dedicatedTabName || "")).toLowerCase();
+        return hay.indexOf(q) !== -1;
+      });
+
+      const currentVal = sel.value;
+      let html = `<option value="">-- Chọn trạm đã kiểm tra (${matches.length} phiếu) để vào cập nhật sửa chữa --</option>`;
+      matches.forEach(s => {
+        const nok = Number(s.nokCount || 0);
+        const fix = Number(s.fixedCount || 0);
+        const statusTag = nok === 0 ? "✅ 0 lỗi" : (fix >= nok ? `🌟 Đã sửa đủ ${fix}/${nok}` : `⚠️ Cần sửa: ${fix}/${nok} lỗi`);
+        const label = `[${s.siteCode || 'N/A'}] • ${s.dedicatedTabName || s.checklistType} • ${statusTag} • Điểm: ${s.totalScore} • NV: ${s.inspector || '-'} (${s.ts || ''})`;
+        html += `<option value="${escAttr(s.sessionId)}" ${s.sessionId === currentVal ? 'selected' : ''}>${escHtml(label)}</option>`;
+      });
+      sel.innerHTML = html;
+
+      if (q && matches.length > 0 && !sel.value) {
+        sel.value = matches[0].sessionId;
+      }
+    }
+
+    function onSelectSavedSessionChange() {
+      const sel = document.getElementById("sel-saved-sessions");
+      if (sel && sel.value) {
+        loadSessionIntoEditor(sel.value, true);
+      }
+    }
+
+    function loadSelectedSavedSession(filterToNok) {
+      const sel = document.getElementById("sel-saved-sessions");
+      const qInp = document.getElementById("inp-find-saved-site");
+      let targetSessionId = sel ? sel.value : "";
+
+      if (!targetSessionId && qInp && qInp.value.trim()) {
+        const q = qInp.value.trim().toLowerCase();
+        const found = cloudSessions.find(s => String(s.siteCode || "").toLowerCase().indexOf(q) !== -1 || String(s.sessionId || "").toLowerCase().indexOf(q) !== -1);
+        if (found) targetSessionId = found.sessionId;
+      }
+
+      if (!targetSessionId) {
+        alert("🔎 Vui lòng nhập Mã Trạm (VD: TNI0012) hoặc chọn một phiếu đã kiểm tra trong danh sách để nạp vào cập nhật sửa chữa!");
+        if (qInp) qInp.focus();
+        return;
+      }
+      loadSessionIntoEditor(targetSessionId, filterToNok);
+    }
+
+    function onSiteCodeInput() {
+      saveLocalDraft();
+      checkSiteExistingMatch();
+    }
+
+    function checkSiteExistingMatch() {
+      const hintEl = document.getElementById("site-existing-hint");
+      const inp = document.getElementById("inp-site-code");
+      if (!hintEl || !inp) return;
+      const code = (inp.value || "").trim().toLowerCase();
+      if (!code || code.length < 3) {
+        hintEl.style.display = "none";
+        return;
+      }
+      const match = cloudSessions.find(s =>
+        String(s.siteCode || "").trim().toLowerCase() === code &&
+        (s.checklistType === currentType || !currentType)
+      ) || cloudSessions.find(s => String(s.siteCode || "").trim().toLowerCase() === code);
+
+      if (match && match.sessionId !== currentSessionId) {
+        window._matchedSiteSessionId = match.sessionId;
+        hintEl.style.display = "block";
+        hintEl.innerHTML = `⚡ Phát hiện trạm <strong>${escHtml(match.siteCode)}</strong> đã có phiếu (${escHtml(match.dedicatedTabName || match.checklistType)} • Lỗi: ${match.nokCount || 0}, Đã sửa: ${match.fixedCount || 0}/${match.nokCount || 0}) — <u>Bấm vào đây để nạp phiếu & cập nhật sửa chữa</u>`;
+      } else {
+        hintEl.style.display = "none";
+      }
+    }
+
+    function loadMatchedSiteSession() {
+      if (window._matchedSiteSessionId) {
+        loadSessionIntoEditor(window._matchedSiteSessionId, true);
+      }
+    }
+
+    // =========================================================================
+    // JUMP TO TAB 6 (PHÚC TRA HÌNH ẢNH) OR GOOGLE SHEET
+    // =========================================================================
+    function jumpToPhotoAuditTab(siteCodeOverride) {
+      const siteCode = (siteCodeOverride !== undefined ? siteCodeOverride : (document.getElementById("inp-site-code") ? document.getElementById("inp-site-code").value : "")).trim();
+      const biSearch = document.getElementById("bi-site-search");
+      if (biSearch) {
+        biSearch.value = siteCode;
+      }
+      const biType = document.getElementById("bi-type-filter");
+      if (biType && currentType && currentType !== "bi_dashboard") {
+        biType.value = siteCode ? "ALL" : currentType;
+      }
+      switchChecklistType("bi_dashboard");
+      setTimeout(() => {
+        const el = document.getElementById("photo-audit-section");
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 120);
+    }
+
+    // =========================================================================
+    // EXPORT PDF WITHOUT PHOTOS (XUẤT FILE PDF KHÔNG CẦN HÌNH ẢNH + CÓ LINK SHEET & TAB PHÚC TRA & XÁC NHẬN PHÒNG KT)
+    // =========================================================================
+    function exportChecklistPdfNoPhotos(sessionIdOpt) {
+      let reportData = null;
+
+      if (sessionIdOpt) {
+        const sess = cloudSessions.find(x => x.sessionId === sessionIdOpt);
+        if (!sess) {
+          alert("Không tìm thấy phiếu kiểm tra: " + sessionIdOpt);
+          return;
+        }
+        const tpl = CHECKLIST_TEMPLATES[sess.checklistType] || CHECKLIST_TEMPLATES.site_bts;
+        const itemsArr = (Array.isArray(sess.items) && sess.items.length > 0) ? sess.items : (tpl ? tpl.items.map(it => ({
+          code: it.code,
+          category: it.category,
+          requirement: it.requirement,
+          stdPoint: it.stdPoint,
+          evalPoint: it.stdPoint,
+          status: "OK",
+          defectNote: "",
+          fixStatus: "Chưa sửa",
+          afterNote: "",
+          beforeThumbUrl: "",
+          afterThumbUrl: "",
+          techVerified: false,
+          techVerifiedBy: "",
+          techVerifiedEmail: "",
+          techVerifiedAt: ""
+        })) : []);
+        const techVerifiedCnt = itemsArr.filter(x => x.status === "NOK" && x.techVerified).length;
+
+        reportData = {
+          sessionId: sess.sessionId,
+          checklistType: sess.checklistType,
+          title: (tpl && tpl.title_vi) || sess.dedicatedTabName || sess.checklistType,
+          tabName: sess.dedicatedTabName || (tpl && tpl.tabName) || "Sheet",
+          gid: (tpl && tpl.gid) || 16375926,
+          passRule: (tpl && tpl.passRule) || "",
+          siteCode: sess.siteCode || "N/A",
+          inspector: sess.inspector || "N/A",
+          dateStr: sess.ts || "",
+          extraMeta: sess.branch || "TNI",
+          generalComment: sess.generalComment || "",
+          totalScore: sess.totalScore !== undefined ? sess.totalScore : 100,
+          rating: sess.rating || "Good",
+          okCount: sess.okCount || 0,
+          nokCount: sess.nokCount || 0,
+          fixedCount: sess.fixedCount || 0,
+          techVerifiedCount: techVerifiedCnt,
+          sessionFolderUrl: sess.sessionFolderUrl || DRIVE_214_FOLDER_URL,
+          items: itemsArr
+        };
+      } else {
+        const tpl = CHECKLIST_TEMPLATES[currentType] || CHECKLIST_TEMPLATES.site_bts;
+        const stMap = itemStates[currentType] || {};
+        const siteCode = (document.getElementById("inp-site-code").value || "CHƯA_NHẬP_MÃ_TRẠM").trim();
+        const inspector = (document.getElementById("inp-inspector").value || "CHƯA_NHẬP_TÊN").trim();
+        const dateStr = document.getElementById("inp-date").value || new Date().toISOString().slice(0, 10);
+        const extraMeta = (document.getElementById("inp-extra-meta").value || "TNI").trim();
+        const generalComment = (document.getElementById("inp-comment").value || "").trim();
+
+        let totalStd = 0, totalEval = 0, okCnt = 0, nokCnt = 0, fixCnt = 0, techCnt = 0;
+        const itemsList = tpl.items.map(it => {
+          const st = stMap[it.code] || { status: "OK", evalPoint: it.stdPoint };
+          totalStd += Number(it.stdPoint || 0);
+          const isFixed = !!(st.afterDataUrl || st.afterThumbUrl || String(st.fixStatus || "").indexOf("Đã sửa") === 0 || st.techVerified);
+          if (st.status === "NOK") {
+            nokCnt++;
+            totalEval += Number(st.evalPoint || 0);
+            if (isFixed) fixCnt++;
+            if (st.techVerified) techCnt++;
+          } else {
+            okCnt++;
+            totalEval += Number(st.evalPoint !== undefined ? st.evalPoint : it.stdPoint);
+          }
+          return {
+            code: it.code,
+            category: it.category,
+            requirement: it.requirement,
+            serious: it.serious,
+            fixDays: it.fixDays,
+            stdPoint: it.stdPoint,
+            evalPoint: st.evalPoint !== undefined ? st.evalPoint : it.stdPoint,
+            status: st.status || "OK",
+            defectNote: st.defectNote || "",
+            fixStatus: isFixed ? "Đã sửa xong (Fixed)" : (st.fixStatus || "Chưa sửa (Pending Fix)"),
+            afterNote: st.afterNote || "",
+            beforeThumbUrl: st.beforeDriveUrl || st.beforeThumbUrl || (st.beforeDataUrl ? "LOCAL_PHOTO" : ""),
+            afterThumbUrl: st.afterDriveUrl || st.afterThumbUrl || (st.afterDataUrl ? "LOCAL_PHOTO" : ""),
+            techVerified: !!st.techVerified,
+            techVerifiedBy: st.techVerifiedBy || "",
+            techVerifiedEmail: st.techVerifiedEmail || "",
+            techVerifiedAt: st.techVerifiedAt || ""
+          };
+        });
+
+        const scoreRounded = Math.round(totalEval * 10) / 10;
+        const rating = scoreRounded >= 95 ? "Good" : (scoreRounded >= 90 ? "Acceptable" : "Not Acceptable");
+
+        reportData = {
+          sessionId: currentSessionId || "PHIẾU-NHÁP",
+          checklistType: currentType,
+          title: tpl.title_vi,
+          tabName: tpl.tabName,
+          gid: tpl.gid,
+          passRule: tpl.passRule,
+          siteCode: siteCode,
+          inspector: inspector,
+          dateStr: dateStr,
+          extraMeta: extraMeta,
+          generalComment: generalComment,
+          totalScore: scoreRounded + " / " + totalStd,
+          rating: rating,
+          okCount: okCnt,
+          nokCount: nokCnt,
+          fixedCount: fixCnt,
+          techVerifiedCount: techCnt,
+          sessionFolderUrl: DRIVE_214_FOLDER_URL,
+          items: itemsList
+        };
+      }
+
+      const sheetUrl = "https://docs.google.com/spreadsheets/d/" + CHECKLIST_SS_ID + "/edit#gid=" + reportData.gid;
+      const baseOrigin = (window.location.origin && window.location.origin !== "null") ? window.location.origin : "https://tni-bot.vercel.app";
+      const photoAuditUrl = baseOrigin + "/checklist?tab=bi_dashboard&site=" + encodeURIComponent(reportData.siteCode) + "&session=" + encodeURIComponent(reportData.sessionId);
+
+      const nokItems = reportData.items.filter(x => x.status === "NOK");
+      const nokRowsHtml = nokItems.length === 0
+        ? `<tr><td colspan="7" style="text-align:center;color:#059669;font-weight:700;padding:10px;">✅ Tất cả các hạng mục đều đạt chuẩn (0 mục lỗi NOK).</td></tr>`
+        : nokItems.map((it, idx) => {
+            const hasBefore = !!it.beforeThumbUrl;
+            const hasAfter = !!it.afterThumbUrl;
+            const isFixed = String(it.fixStatus || "").indexOf("Đã sửa") === 0 || hasAfter || !!it.techVerified;
+            return `
+              <tr>
+                <td style="text-align:center;font-weight:700;">${idx + 1}</td>
+                <td style="font-weight:800;color:#b91c1c;">Mục ${escHtml(it.code)}</td>
+                <td>${escHtml(it.requirement || "")}</td>
+                <td style="color:#991b1b;font-weight:700;">${escHtml(it.defectNote || "Chưa ghi mô tả lỗi")}</td>
+                <td style="font-weight:800;color:${isFixed ? '#047857' : '#b91c1c'};">
+                  ${isFixed ? "✅ Đã sửa xong" : "⏳ Chưa sửa"}
+                  ${it.afterNote ? `<div style="font-size:10px;color:#334155;font-weight:600;">KQ: ${escHtml(it.afterNote)}</div>` : ""}
+                </td>
+                <td style="font-size:10px;font-weight:800;color:${it.techVerified ? '#065f46' : '#b45309'};background:${it.techVerified ? '#dcfce7' : '#fffbeb'};">
+                  ${it.techVerified
+                    ? `☑️ Đã xác nhận hoàn thành<br/><span style="font-weight:600;color:#047857;">${escHtml(it.techVerifiedBy)} (${escHtml(it.techVerifiedEmail)})</span>`
+                    : `⬜ Chờ Phòng KT tick xác nhận`
+                  }
+                </td>
+                <td style="font-size:10px;">
+                  <div>Ảnh Lỗi: <strong>${hasBefore ? "✅ Có" : "❌ Chưa"}</strong> | Ảnh Sửa: <strong style="color:${hasAfter ? '#047857' : '#dc2626'};">${hasAfter ? "✅ Đã cập nhật" : "⏳ Chưa có"}</strong></div>
+                  <div style="margin-top:2px;"><a href="${escAttr(photoAuditUrl)}" target="_blank" style="color:#2563eb;text-decoration:underline;">[Mở Tab Phúc Tra Ảnh ↗]</a></div>
+                </td>
+              </tr>
+            `;
+          }).join("");
+
+      const allRowsHtml = reportData.items.map((it, idx) => {
+        const isNok = it.status === "NOK";
+        const hasBefore = !!it.beforeThumbUrl;
+        const hasAfter = !!it.afterThumbUrl;
+        const isFixed = String(it.fixStatus || "").indexOf("Đã sửa") === 0 || hasAfter || !!it.techVerified;
+        return `
+          <tr style="${isNok ? 'background:#fff1f2;' : ''}">
+            <td style="text-align:center;">${idx + 1}</td>
+            <td style="font-weight:700;">${escHtml(it.code)}</td>
+            <td>
+              <div style="font-size:10px;color:#64748b;font-weight:700;">${escHtml(it.category || "")}</div>
+              <div>${escHtml(it.requirement || "")}</div>
+            </td>
+            <td style="text-align:center;font-weight:800;color:${isNok ? '#dc2626' : '#059669'};">${isNok ? "NOK (Lỗi)" : "OK"}</td>
+            <td style="text-align:center;font-weight:700;">${it.evalPoint !== undefined ? it.evalPoint : it.stdPoint} / ${it.stdPoint}</td>
+            <td>${escHtml(it.defectNote || "-")}</td>
+            <td style="font-weight:700;color:${isNok ? (isFixed ? '#047857' : '#b91c1c') : '#64748b'};">
+              ${isNok ? (isFixed ? "✅ Đã sửa xong" : "⏳ Chưa sửa") : "-"}
+              ${it.afterNote ? `<div style="font-size:10px;color:#334155;">${escHtml(it.afterNote)}</div>` : ""}
+            </td>
+            <td style="font-size:10px;font-weight:700;color:${it.techVerified ? '#065f46' : '#64748b'};">
+              ${isNok
+                ? (it.techVerified ? `☑️ KT Đã duyệt (${escHtml(it.techVerifiedEmail)})` : `⬜ Chờ KT duyệt`)
+                : `-`
+              }
+            </td>
+            <td style="font-size:10px;">
+              ${(hasBefore || hasAfter)
+                ? `<a href="${escAttr(sheetUrl)}" target="_blank" style="color:#1d4ed8;font-weight:700;">📊 Xem ảnh trên Sheet</a><br/><span style="color:${hasAfter ? '#047857' : '#d97706'};font-weight:700;">${hasAfter ? '✅ Đã có ảnh Sau sửa' : '⏳ Chờ ảnh Sau sửa'}</span>`
+                : `<span style="color:#94a3b8;">Không ảnh</span>`
+              }
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      const printWin = window.open("", "_blank");
+      if (!printWin) {
+        alert("⚠️ Trình duyệt đang chặn cửa sổ bật lên (Pop-up). Vui lòng cho phép Pop-up để xuất file PDF!");
+        return;
+      }
+
+      const docHtml = `<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>PDF_Checklist_${escHtml(reportData.siteCode)}_${escHtml(reportData.sessionId)}</title>
+  <style>
+    @page { size: A4 portrait; margin: 10mm; }
+    * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, Arial, sans-serif; }
+    body { margin: 0; padding: 14px; color: #0f172a; font-size: 11.5px; line-height: 1.4; background: #fff; }
+    .no-print-bar {
+      background: #0f172a; color: #fff; padding: 10px 14px; border-radius: 8px; margin-bottom: 14px;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+    }
+    .btn-p {
+      padding: 7px 14px; border-radius: 6px; font-weight: 800; font-size: 12px; cursor: pointer;
+      border: none; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
+    }
+    .hdr-box {
+      border: 2px solid #0f172a; border-radius: 8px; padding: 12px; margin-bottom: 12px;
+    }
+    .hdr-title { font-size: 16px; font-weight: 900; text-transform: uppercase; color: #0f172a; margin: 0 0 4px 0; }
+    .hdr-sub { font-size: 11px; color: #475569; font-weight: 700; }
+    .meta-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    .meta-table td { border: 1px solid #cbd5e1; padding: 6px 8px; font-size: 11.2px; }
+    .links-box {
+      background: #eff6ff; border: 1.5px solid #60a5fa; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px;
+    }
+    .links-box a { color: #1d4ed8; font-weight: 800; text-decoration: underline; }
+    table.data-tbl { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+    table.data-tbl th, table.data-tbl td { border: 1px solid #94a3b8; padding: 5px 6px; text-align: left; vertical-align: top; font-size: 10.5px; }
+    table.data-tbl th { background: #e2e8f0; color: #0f172a; font-weight: 800; }
+    .sec-title { font-size: 13px; font-weight: 900; margin: 10px 0 6px 0; color: #0f172a; text-transform: uppercase; }
+    @media print {
+      .no-print-bar { display: none !important; }
+      body { padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="no-print-bar">
+    <div>
+      <strong>📄 BẢN XUẤT PDF CHECK LIST (KHÔNG KÈM ẢNH NẶNG • CÓ LINK PHÚC TRA ẢNH & XÁC NHẬN PHÒNG KỸ THUẬT)</strong>
+      <div style="font-size:11px;color:#cbd5e1;">Chọn "Save as PDF / Lưu dưới dạng PDF" trong hộp thoại in để tải file PDF nhẹ, rõ nét.</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn-p" style="background:#dc2626;color:#fff;" onclick="window.print()">🖨️ In / Lưu File PDF Ngay</button>
+      <a class="btn-p" style="background:#059669;color:#fff;" href="${escAttr(sheetUrl)}" target="_blank">📊 Mở Sheet Kiểm Tra Hình Ảnh ↗</a>
+      <a class="btn-p" style="background:#7c3aed;color:#fff;" href="${escAttr(photoAuditUrl)}" target="_blank">🔍 Mở Tab Phúc Tra Hình Ảnh Đã Sửa ↗</a>
+    </div>
+  </div>
+
+  <div class="hdr-box">
+    <div class="hdr-title">BÁO CÁO KIỂM TRA KỸ THUẬT HIỆN TRƯỜNG — ${escHtml(reportData.title)}</div>
+    <div class="hdr-sub">TNI Field Checklist BI • Bản Báo Cáo Text (Không Đính Kèm Ảnh Nặng) • Tiêu chuẩn: ${escHtml(reportData.passRule)}</div>
+    <table class="meta-table">
+      <tr>
+        <td><strong>Mã Trạm / Tuyến:</strong> <span style="font-size:13px;font-weight:900;color:#1d4ed8;">${escHtml(reportData.siteCode)}</span></td>
+        <td><strong>Nhân Viên Kiểm Tra / Sửa:</strong> ${escHtml(reportData.inspector)}</td>
+        <td><strong>Ngày Kiểm Tra:</strong> ${escHtml(reportData.dateStr)}</td>
+        <td><strong>Mã Phiếu:</strong> ${escHtml(reportData.sessionId)}</td>
+      </tr>
+      <tr>
+        <td><strong>Tổng Điểm & Đánh Giá:</strong> <span style="font-weight:900;color:#059669;">${escHtml(String(reportData.totalScore))} (${escHtml(reportData.rating)})</span></td>
+        <td><strong>Số Mục Đạt (OK):</strong> <strong style="color:#059669;">${reportData.okCount}</strong></td>
+        <td><strong>Mục Lỗi / Đã Sửa:</strong> <strong style="color:#dc2626;">Lỗi: ${reportData.nokCount}</strong> | <strong style="color:#2563eb;">Đã sửa: ${reportData.fixedCount}/${reportData.nokCount}</strong></td>
+        <td><strong>Phòng Kỹ Thuật Xác Nhận:</strong> <strong style="color:#065f46;">☑️ Đã duyệt ${reportData.techVerifiedCount}/${reportData.nokCount} mục lỗi</strong></td>
+      </tr>
+      <tr>
+        <td colspan="4"><strong>Đơn vị / Thông tin bổ sung:</strong> ${escHtml(reportData.extraMeta)} &nbsp;|&nbsp; <strong>Ghi chú chung:</strong> ${escHtml(reportData.generalComment || "Không có")}</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="links-box">
+    <div style="font-weight:900;color:#1e3a8a;margin-bottom:4px;">🔗 LINK BẤM ĐI THẲNG ĐẾN SHEET & TAB PHÚC TRA HÌNH ẢNH (TRƯỚC & SAU KHI HOÀN THIỆN):</div>
+    <div>1. 📊 <strong>Kiểm tra hình ảnh trực tiếp trên Google Sheet (${escHtml(reportData.tabName)}):</strong> <a href="${escAttr(sheetUrl)}" target="_blank">${escHtml(sheetUrl)}</a></div>
+    <div style="margin-top:3px;">2. 🔍 <strong>Nhảy sang Tab Phúc Tra Hình Ảnh (Xem nhân viên đã cập nhật ảnh sau sửa & Phòng KT tick duyệt):</strong> <a href="${escAttr(photoAuditUrl)}" target="_blank">${escHtml(photoAuditUrl)}</a></div>
+    <div style="margin-top:3px;">3. 📁 <strong>Thư mục Google Drive 2.14 Check list photo (1440×1088):</strong> <a href="${escAttr(reportData.sessionFolderUrl)}" target="_blank">${escHtml(reportData.sessionFolderUrl)}</a></div>
+  </div>
+
+  <div class="sec-title">I. TỔNG HỢP CÁC HẠNG MỤC PHÁT HIỆN LỖI (NOK), TIẾN ĐỘ SỬA & XÁC NHẬN CỦA PHÒNG KỸ THUẬT (${nokItems.length} MỤC)</div>
+  <table class="data-tbl">
+    <thead>
+      <tr>
+        <th style="width:30px;text-align:center;">STT</th>
+        <th style="width:65px;">Mã Mục</th>
+        <th>Nội Dung Hạng Mục Kiểm Tra</th>
+        <th style="width:20%;">Mô Tả Lỗi Cần Sửa (Before)</th>
+        <th style="width:15%;">Trạng Thái Sửa (After)</th>
+        <th style="width:18%;">Phòng Kỹ Thuật Tick Xác Nhận (Gmail)</th>
+        <th style="width:16%;">Phúc Tra Ảnh Trên Sheet/Web</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${nokRowsHtml}
+    </tbody>
+  </table>
+
+  <div class="sec-title">II. BẢNG CHI TIẾT TOÀN BỘ HẠNG MỤC KIỂM TRA (${reportData.items.length} MỤC — BẢN TEXT KHÔNG ẢNH)</div>
+  <table class="data-tbl">
+    <thead>
+      <tr>
+        <th style="width:30px;text-align:center;">STT</th>
+        <th style="width:58px;">Mã Mục</th>
+        <th>Hạng Mục & Yêu Cầu Kỹ Thuật</th>
+        <th style="width:62px;text-align:center;">Kết Quả</th>
+        <th style="width:52px;text-align:center;">Điểm</th>
+        <th style="width:15%;">Ghi Chú Lỗi (Trước Sửa)</th>
+        <th style="width:13%;">Trạng Thái Sửa</th>
+        <th style="width:14%;">Phòng KT Tick Duyệt</th>
+        <th style="width:12%;">Link Kiểm Tra Ảnh</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${allRowsHtml}
+    </tbody>
+  </table>
+
+  <div style="display:flex;justify-content:space-between;margin-top:22px;padding:0 24px;font-weight:800;">
+    <div style="text-align:center;">
+      <div>NHÂN VIÊN KIỂM TRA / SỬA CHỮA</div>
+      <div style="font-size:10px;color:#64748b;font-weight:600;margin-top:36px;">${escHtml(reportData.inspector)}</div>
+    </div>
+    <div style="text-align:center;">
+      <div>PHÒNG KỸ THUẬT & BAN GIÁM ĐỐC XÁC NHẬN HOÀN THÀNH</div>
+      <div style="font-size:10px;color:#065f46;font-weight:700;margin-top:36px;">Đã đối chiếu ảnh Trước/Sau & Tick xác nhận theo danh sách Gmail Phòng Kỹ Thuật</div>
+    </div>
+  </div>
+
+  <script>
+    window.onload = function() {
+      setTimeout(function() { window.print(); }, 350);
+    };
+  <\/script>
+</body>
+</html>`;
+
+      printWin.document.open();
+      printWin.document.write(docHtml);
+      printWin.document.close();
+    }
+
     function renderBiDashboard() {
+      syncTechGmailDropdowns();
       const filterType = (document.getElementById("bi-type-filter").value || "ALL");
-      const filtered = cloudSessions.filter(s => filterType === "ALL" || s.checklistType === filterType);
+      const fixFilter = (document.getElementById("bi-fix-filter") ? document.getElementById("bi-fix-filter").value : "ALL");
+      const siteQuery = ((document.getElementById("bi-site-search") ? document.getElementById("bi-site-search").value : "") || "").trim().toLowerCase();
+
+      const filtered = cloudSessions.filter(s => {
+        if (filterType !== "ALL" && s.checklistType !== filterType) return false;
+        if (siteQuery) {
+          const hay = ((s.siteCode || "") + " " + (s.sessionId || "") + " " + (s.inspector || "")).toLowerCase();
+          if (hay.indexOf(siteQuery) === -1) return false;
+        }
+        return true;
+      });
 
       document.getElementById("bi-total-sessions").textContent = filtered.length;
       const avgScore = filtered.length > 0
@@ -2301,26 +3108,38 @@
       filtered.forEach(sess => {
         totalNok += Number(sess.nokCount || 0);
         totalFixed += Number(sess.fixedCount || 0);
+        const tpl = CHECKLIST_TEMPLATES[sess.checklistType] || CHECKLIST_TEMPLATES.site_bts;
+        const sheetUrl = "https://docs.google.com/spreadsheets/d/" + CHECKLIST_SS_ID + "/edit#gid=" + (tpl ? tpl.gid : 16375926);
         const items = Array.isArray(sess.items) ? sess.items : [];
         items.forEach(it => {
           if (it.status === "NOK" || it.beforeThumbUrl || it.afterThumbUrl) {
-            const isFixed = String(it.fixStatus || "").indexOf("Đã sửa") === 0 || !!it.afterThumbUrl;
             const beforeSrc = it.beforeThumbUrl || "";
             const afterSrc = it.afterThumbUrl || "";
+            const isFixed = String(it.fixStatus || "").indexOf("Đã sửa") === 0 || !!afterSrc || !!it.techVerified;
+
+            if (fixFilter === "PENDING_PHOTO" && afterSrc) return;
+            if (fixFilter === "HAS_AFTER_PHOTO" && !afterSrc) return;
+            if (fixFilter === "PENDING_TECH_VERIFY" && it.techVerified) return;
+            if (fixFilter === "TECH_VERIFIED" && !it.techVerified) return;
+
             defectCardsHtml.push(`
-              <div class="comp-card">
+              <div class="comp-card" style="border-color:${it.techVerified ? '#10b981' : '#cbd5e1'};">
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">
                   <div>
                     <span class="badge-code">${escHtml(sess.siteCode)} • Mục ${escHtml(it.code)}</span>
                     <span style="font-size:11.5px;font-weight:800;color:#475569;margin-left:6px;">${escHtml(sess.dedicatedTabName || sess.checklistType)}</span>
                   </div>
-                  <span style="font-size:11px;font-weight:900;padding:3px 8px;border-radius:99px;background:${isFixed ? '#d1fae5' : '#fee2e2'};color:${isFixed ? '#065f46' : '#991b1b'};">
-                    ${isFixed ? '✅ Đã sửa xong (Fixed)' : '⏳ Chưa sửa (Pending Fix)'}
-                  </span>
+                  <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+                    <span style="font-size:11px;font-weight:900;padding:3px 8px;border-radius:99px;background:${afterSrc ? '#d1fae5' : '#fee2e2'};color:${afterSrc ? '#065f46' : '#991b1b'};">
+                      ${afterSrc ? '✅ Đã có ảnh Sau sửa' : '⏳ Chưa cập nhật ảnh Sau sửa'}
+                    </span>
+                    <a href="${escAttr(sheetUrl)}" target="_blank" style="font-size:11px;font-weight:800;color:#1d4ed8;text-decoration:underline;">📊 Sheet ↗</a>
+                    <button type="button" style="font-size:11px;font-weight:800;background:#0f172a;color:#fff;border:none;border-radius:6px;padding:3px 7px;cursor:pointer;" onclick="loadSessionIntoEditor('${escAttr(sess.sessionId)}', true)">✏️ Vào Phiếu Sửa</button>
+                  </div>
                 </div>
                 <div style="font-size:12.5px;font-weight:700;color:#1e293b;margin-top:6px;">${escHtml(it.requirement || '')}</div>
                 <div style="font-size:12px;color:#b91c1c;font-weight:700;margin-top:4px;">⚠️ Vị trí lỗi cần sửa: ${escHtml(it.defectNote || 'Chưa ghi chi tiết')}</div>
-                <div style="font-size:12px;color:#047857;font-weight:700;margin-top:2px;">✅ Kết quả đã sửa: ${escHtml(it.afterNote || (isFixed ? 'Đã khắc phục' : 'Đang chờ cập nhật ảnh đã sửa'))}</div>
+                <div style="font-size:12px;color:#047857;font-weight:700;margin-top:2px;">✅ Kết quả đã sửa: ${escHtml(it.afterNote || (isFixed ? 'Đã khắc phục' : 'Đang chờ nhân viên cập nhật ảnh hoàn thiện'))}</div>
                 <div class="comp-pair">
                   <div class="comp-slot">
                     <span class="comp-tag before">📸 ẢNH LỖI (BEFORE 1440×1088)</span>
@@ -2330,11 +3149,19 @@
                     <span class="comp-tag after">🌟 ĐÃ SỬA (AFTER 1440×1088)</span>
                     ${afterSrc ? `<img src="${escAttr(afterSrc)}" alt="After" onclick="openCompareModalDirect('${escAttr(beforeSrc)}','${escAttr(afterSrc)}','${escAttr(it.defectNote || '')}','${escAttr(it.afterNote || '')}','${escAttr(sess.siteCode + ' - Mục ' + it.code)}')" style="cursor:pointer;" />` : `
                       <div style="padding:10px;">
-                        <div style="margin-bottom:6px;">Chưa có ảnh đã sửa</div>
+                        <div style="margin-bottom:6px;color:#dc2626;font-weight:800;">❌ Nhân viên chưa cập nhật ảnh sau sửa</div>
                         <button type="button" class="btn-cam-capture after-btn" onclick="triggerPhotoCapture('${escAttr(it.code)}', 'AFTER', '${escAttr(sess.sessionId)}')">📷 Chụp / Tải Ảnh Đã Sửa (1440×1088)</button>
                       </div>
                     `}
                   </div>
+                </div>
+                <!-- TECHNICAL DEPARTMENT VERIFICATION CHECKBOX ON PHOTO AUDIT CARD -->
+                <div style="margin-top:8px;padding:8px 10px;border-radius:8px;border:1.5px solid ${it.techVerified ? '#10b981' : '#cbd5e1'};background:${it.techVerified ? '#dcfce7' : '#f8fafc'};">
+                  <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:900;color:${it.techVerified ? '#065f46' : '#1e293b'};">
+                    <input type="checkbox" style="width:17px;height:17px;accent-color:#059669;cursor:pointer;" ${it.techVerified ? 'checked' : ''} onchange="toggleTechVerifyFromBi('${escAttr(sess.sessionId)}', '${escAttr(it.code)}', this.checked, this)" />
+                    <span>☑️ Phòng Kỹ Thuật Tick Xác Nhận Nhân Viên Đã Hoàn Thành Sửa Chữa</span>
+                  </label>
+                  ${it.techVerified ? `<div style="font-size:11px;font-weight:800;color:#047857;margin-top:3px;padding-left:25px;">🛡️ Đã xác nhận: ${escHtml(it.techVerifiedBy || it.techVerifiedEmail)} (${escHtml(it.techVerifiedEmail || '')}) • ${escHtml(it.techVerifiedAt || '')}</div>` : `<div style="font-size:10.5px;color:#64748b;margin-top:2px;padding-left:25px;">(Dành cho danh sách Gmail Phòng Kỹ Thuật tick nghiệm thu hoàn thành)</div>`}
                 </div>
               </div>
             `);
@@ -2348,35 +3175,48 @@
       const wallEl = document.getElementById("bi-comparison-wall");
       wallEl.innerHTML = defectCardsHtml.length > 0
         ? defectCardsHtml.join("")
-        : `<div style="grid-column:1/-1;padding:24px;text-align:center;background:#f8fafc;border-radius:12px;color:#64748b;font-weight:700;">Chưa có hạng mục lỗi (NOK) nào hoặc tất cả các mục đều đạt chuẩn 100%.</div>`;
+        : `<div style="grid-column:1/-1;padding:24px;text-align:center;background:#f8fafc;border-radius:12px;color:#64748b;font-weight:700;">Không có hạng mục lỗi (NOK) nào khớp bộ lọc hiện tại hoặc tất cả các mục đều đạt chuẩn 100%.</div>`;
 
-      // Render sessions table
+      // Render sessions table (without GPS column, with direct Sheet link, Photo Audit filter, Tech Dept Verify, Repair Load & Text PDF Export)
       const tbody = document.getElementById("bi-sessions-tbody");
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="10" style="padding:20px;text-align:center;color:#64748b;font-weight:700;">Chưa có phiếu kiểm tra nào được lưu. Hãy chọn Tab 1–5 để tạo phiếu kiểm tra đầu tiên!</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" style="padding:20px;text-align:center;color:#64748b;font-weight:700;">Chưa có phiếu kiểm tra nào khớp tìm kiếm. Hãy chọn Tab 1–5 để tạo phiếu kiểm tra!</td></tr>`;
       } else {
-        tbody.innerHTML = filtered.map(s => `
+        tbody.innerHTML = filtered.map(s => {
+          const tpl = CHECKLIST_TEMPLATES[s.checklistType] || CHECKLIST_TEMPLATES.site_bts;
+          const sheetUrl = "https://docs.google.com/spreadsheets/d/" + CHECKLIST_SS_ID + "/edit#gid=" + (tpl ? tpl.gid : 16375926);
+          const itemsArr = Array.isArray(s.items) ? s.items : [];
+          const techCnt = s.techVerifiedCount !== undefined ? s.techVerifiedCount : itemsArr.filter(x => x.status === "NOK" && x.techVerified).length;
+          return `
           <tr style="border-bottom:1px solid #e2e8f0;">
             <td style="padding:9px 10px;font-weight:800;">${escHtml(s.sessionId)}</td>
             <td style="padding:9px 10px;">${escHtml(s.ts)}</td>
             <td style="padding:9px 10px;font-weight:800;color:#1d4ed8;">${escHtml(s.dedicatedTabName || s.checklistType)}</td>
-            <td style="padding:9px 10px;font-weight:900;">${escHtml(s.siteCode)}</td>
+            <td style="padding:9px 10px;font-weight:900;color:#0f172a;">${escHtml(s.siteCode)}</td>
             <td style="padding:9px 10px;">${escHtml(s.inspector)}</td>
-            <td style="padding:9px 10px;font-size:11.5px;">${escHtml(s.gpsCoords || '-')}</td>
             <td style="padding:9px 10px;font-weight:800;">${escHtml(String(s.totalScore))} (${escHtml(s.rating)})</td>
             <td style="padding:9px 10px;">
               <span style="color:#059669;font-weight:800;">OK: ${s.okCount}</span> •
               <span style="color:#dc2626;font-weight:800;">NOK: ${s.nokCount}</span> •
-              <span style="color:#2563eb;font-weight:800;">Đã sửa: ${s.fixedCount}/${s.nokCount}</span>
+              <span style="color:#2563eb;font-weight:800;">Đã sửa: ${s.fixedCount}/${s.nokCount}</span> •
+              <span style="color:#065f46;font-weight:900;background:#dcfce7;padding:2px 6px;border-radius:6px;">☑️ KT duyệt: ${techCnt}/${s.nokCount}</span>
             </td>
             <td style="padding:9px 10px;">
-              ${s.sessionFolderUrl ? `<a href="${escAttr(s.sessionFolderUrl)}" target="_blank" style="color:#d97706;font-weight:800;">📁 Mở Folder 2.14 ↗</a>` : `-`}
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <a href="${escAttr(sheetUrl)}" target="_blank" style="color:#059669;font-weight:800;text-decoration:underline;">📊 Mở Sheet ↗</a>
+                ${s.sessionFolderUrl ? `<a href="${escAttr(s.sessionFolderUrl)}" target="_blank" style="color:#d97706;font-weight:800;text-decoration:underline;">📁 Folder 2.14 ↗</a>` : ``}
+              </div>
             </td>
             <td style="padding:9px 10px;">
-              <button type="button" class="pill-btn guide" style="background:#0f172a;padding:4px 9px;font-size:11px;" onclick="loadSessionIntoEditor('${escAttr(s.sessionId)}')">✏️ Mở / Cập Nhật Sửa</button>
+              <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                <button type="button" class="pill-btn guide" style="background:#059669;border-color:#10b981;color:#fff;padding:4px 8px;font-size:11px;cursor:pointer;" onclick="loadSessionIntoEditor('${escAttr(s.sessionId)}', true)">🔧 Vào Cập Nhật Sửa</button>
+                <button type="button" class="pill-btn guide" style="background:#0f766e;border-color:#14b8a6;color:#fff;padding:4px 8px;font-size:11px;cursor:pointer;" onclick="toggleTechVerifyFromBi('${escAttr(s.sessionId)}', 'ALL', true)">☑️ KT Tick Duyệt Trạm</button>
+                <button type="button" class="pill-btn guide" style="background:#dc2626;border-color:#f87171;color:#fff;padding:4px 8px;font-size:11px;cursor:pointer;" onclick="exportChecklistPdfNoPhotos('${escAttr(s.sessionId)}')">📄 Xuất PDF (Không Ảnh)</button>
+              </div>
             </td>
           </tr>
-        `).join("");
+        `;
+        }).join("");
       }
     }
 
@@ -2404,27 +3244,70 @@
       }
     }
 
-    function loadSessionIntoEditor(sessionId) {
+    function loadSessionIntoEditor(sessionId, focusNokForRepair) {
       const sess = cloudSessions.find(x => x.sessionId === sessionId);
       if (!sess) return;
       currentSessionId = sess.sessionId;
       document.getElementById("inp-site-code").value = sess.siteCode || "";
       document.getElementById("inp-inspector").value = sess.inspector || "";
-      document.getElementById("inp-gps").value = sess.gpsCoords || "";
+      const gpsEl = document.getElementById("inp-gps");
+      if (gpsEl) gpsEl.value = sess.gpsCoords || "";
+      window._lastExifGps = sess.gpsCoords || "";
+      if (sess.branch && document.getElementById("inp-extra-meta")) {
+        document.getElementById("inp-extra-meta").value = sess.branch;
+      }
       document.getElementById("inp-comment").value = sess.generalComment || "";
 
       const tKey = sess.checklistType || "site_bts";
-      if (itemStates[tKey] && Array.isArray(sess.items)) {
-        sess.items.forEach(it => {
-          if (itemStates[tKey][it.code]) {
-            itemStates[tKey][it.code] = Object.assign({}, itemStates[tKey][it.code], it, {
-              beforeDataUrl: "",
-              afterDataUrl: ""
-            });
-          }
+      const tpl = CHECKLIST_TEMPLATES[tKey];
+      if (tpl && itemStates[tKey]) {
+        tpl.items.forEach(it => {
+          itemStates[tKey][it.code] = {
+            status: "OK",
+            evalPoint: it.stdPoint,
+            defectNote: "",
+            beforeDataUrl: "",
+            beforeThumbUrl: "",
+            beforeDriveUrl: "",
+            fixStatus: "Chưa sửa (Pending Fix)",
+            afterNote: "",
+            afterDataUrl: "",
+            afterThumbUrl: "",
+            afterDriveUrl: "",
+            gps: "",
+            techVerified: false,
+            techVerifiedBy: "",
+            techVerifiedEmail: "",
+            techVerifiedAt: ""
+          };
         });
+        if (Array.isArray(sess.items)) {
+          sess.items.forEach(it => {
+            if (itemStates[tKey][it.code]) {
+              itemStates[tKey][it.code] = Object.assign({}, itemStates[tKey][it.code], it, {
+                beforeDataUrl: "",
+                afterDataUrl: ""
+              });
+            }
+          });
+        }
       }
+
+      const banner = document.getElementById("editing-session-banner");
+      const bannerTxt = document.getElementById("editing-session-text");
+      if (banner && bannerTxt) {
+        banner.style.display = "inline-flex";
+        bannerTxt.textContent = `✏️ Đang cập nhật sửa chữa Trạm: ${sess.siteCode} (Mã phiếu: ${sess.sessionId} • Lỗi NOK: ${sess.nokCount || 0})`;
+      }
+      const hintEl = document.getElementById("site-existing-hint");
+      if (hintEl) hintEl.style.display = "none";
+
       switchChecklistType(tKey);
+      if (focusNokForRepair && Number(sess.nokCount || 0) > 0) {
+        setItemFilter("nok");
+      } else {
+        setItemFilter("all");
+      }
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
@@ -2463,11 +3346,12 @@
 
     function saveLocalDraft() {
       try {
+        const gpsEl = document.getElementById("inp-gps");
         const meta = {
           siteCode: document.getElementById("inp-site-code").value,
           inspector: document.getElementById("inp-inspector").value,
           date: document.getElementById("inp-date").value,
-          gps: document.getElementById("inp-gps").value,
+          gps: gpsEl ? gpsEl.value : "",
           extra: document.getElementById("inp-extra-meta").value,
           comment: document.getElementById("inp-comment").value
         };
@@ -2482,7 +3366,8 @@
         const meta = JSON.parse(raw);
         if (meta.siteCode) document.getElementById("inp-site-code").value = meta.siteCode;
         if (meta.inspector) document.getElementById("inp-inspector").value = meta.inspector;
-        if (meta.gps) document.getElementById("inp-gps").value = meta.gps;
+        const gpsEl = document.getElementById("inp-gps");
+        if (meta.gps && gpsEl) gpsEl.value = meta.gps;
         if (meta.extra) document.getElementById("inp-extra-meta").value = meta.extra;
         if (meta.comment) document.getElementById("inp-comment").value = meta.comment;
       } catch (e) {}
@@ -2491,6 +3376,10 @@
     function resetCurrentChecklist() {
       if (!confirm("Tạo phiếu kiểm tra mới cho loại Check List này?")) return;
       currentSessionId = "";
+      const banner = document.getElementById("editing-session-banner");
+      if (banner) banner.style.display = "none";
+      const sel = document.getElementById("sel-saved-sessions");
+      if (sel) sel.value = "";
       const tpl = CHECKLIST_TEMPLATES[currentType];
       if (tpl) {
         tpl.items.forEach(it => {
@@ -2506,10 +3395,15 @@
             afterDataUrl: "",
             afterThumbUrl: "",
             afterDriveUrl: "",
-            gps: ""
+            gps: "",
+            techVerified: false,
+            techVerifiedBy: "",
+            techVerifiedEmail: "",
+            techVerifiedAt: ""
           };
         });
       }
+      setItemFilter("all");
       recalcLiveScore();
       renderChecklistItems();
     }
