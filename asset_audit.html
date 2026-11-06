@@ -663,16 +663,19 @@
       </div>
     </section>
 
-    <!-- 3 SCIENTIFIC NAVIGATION TABS -->
+    <!-- 4 SCIENTIFIC NAVIGATION TABS -->
     <nav class="nav-tabs">
       <button id="tabBtn1" class="tab-btn active" onclick="switchAssetTab(1)">
         📋 1. Field Asset Inventory Audit (Input Audit)
       </button>
       <button id="tabBtn2" class="tab-btn" onclick="switchAssetTab(2)">
-        ⚖️ 2. Discrepancy & Transfer Approval <span id="discCountBadge" class="badge" style="background:#fee2e2;color:#991b1b;">0</span>
+        ⚖️ 2. Discrepancy &amp; Transfer Approval <span id="discCountBadge" class="badge" style="background:#fee2e2;color:#991b1b;">0</span>
       </button>
       <button id="tabBtn3" class="tab-btn" onclick="switchAssetTab(3)">
-        📊 3. Team Audit Plan & Executive Progress
+        📊 3. Team Audit Plan &amp; Executive Progress
+      </button>
+      <button id="tabBtn4" class="tab-btn" onclick="switchAssetTab(4)">
+        🔎 4. Search Serial &amp; Product Warehouse Stock
       </button>
     </nav>
 
@@ -1035,6 +1038,148 @@
             </thead>
             <tbody id="planTableBody">
               <tr><td colspan="13" style="text-align:center;padding:18px;">Loading team audit plans...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 4: SEARCH SERIAL & PRODUCT WAREHOUSE STOCK (IMAGE 1 LAYOUT)     -->
+    <!-- =================================================================== -->
+    <section id="tabPane4" class="tab-pane">
+      <!-- SECTION A: FAST 61,000-ROW SERIAL NUMBER LOOKUP -->
+      <div class="search-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+          <div>
+            <h3 style="font-size:15px;font-weight:800;color:#1e3a8a;">
+              🔢 1. Instant Serial Number Lookup Across 61,000+ Master Assets
+            </h3>
+            <p style="font-size:12px;color:var(--muted);">
+              Type full or partial Serial Number (e.g. <code>3067986</code>, <code>400372</code>, <code>4103045198</code>) to find its exact Station / Cable / Warehouse location and formula.
+            </p>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn btn-outline" style="padding:4px 9px;font-size:11.5px;" onclick="quickSerialTabSearch('3067966')">⚡ Demo Serial: 3067966</button>
+            <button class="btn btn-outline" style="padding:4px 9px;font-size:11.5px;" onclick="quickSerialTabSearch('400372')">⚡ Demo Serial: 400372</button>
+            <button class="btn btn-outline" style="padding:4px 9px;font-size:11.5px;" onclick="quickSerialTabSearch('4103045198')">⚡ Demo Serial: 4103045198</button>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+          <input
+            id="tab4SerialInput"
+            type="text"
+            class="ac-input"
+            style="flex:1;min-width:260px;"
+            placeholder="Type full or partial Serial Number (at least 3 digits/chars) and press Enter or Search..."
+            onkeydown="if(event.key==='Enter')searchTab4Serial()"
+          />
+          <button class="btn btn-primary" style="padding:10px 20px;font-size:13.5px;" onclick="searchTab4Serial()">
+            🔍 Search Serial in 61K System
+          </button>
+        </div>
+
+        <div id="tab4SerialFormulaBanner" style="display:none;background:#dbeafe;border:2px solid #2563eb;border-radius:8px;padding:9px 14px;margin-bottom:10px;font-weight:900;font-family:monospace;font-size:13.5px;color:#1e3a8a;">
+        </div>
+
+        <div class="table-wrap" id="tab4SerialTableWrap" style="display:none;">
+          <table class="sheet-table" style="min-width:860px;">
+            <thead>
+              <tr class="col-hdr">
+                <th style="width:70px;">No</th>
+                <th style="width:210px;">Full System Serial</th>
+                <th style="width:190px;">Location (Station / Stock Code)</th>
+                <th>Equipment / Product Name</th>
+                <th style="width:90px;">Code</th>
+                <th style="width:75px;">Quantity</th>
+                <th style="width:230px;">Group Manager / Unit</th>
+                <th style="width:240px;">In System Formula</th>
+              </tr>
+            </thead>
+            <tbody id="tab4SerialResultBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SECTION B: PRODUCT NAME & CODE WAREHOUSE STOCK SUMMARY (EXACT IMAGE 1: Z | AA | AB | AC) -->
+      <div class="search-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+          <div>
+            <h3 style="font-size:15px;font-weight:800;color:#1e3a8a;">
+              📦 2. Search by Product Name / Code — Total Warehouse Quantity &amp; Per-Warehouse Breakdown (Matching Image 1)
+            </h3>
+            <p style="font-size:12px;color:var(--muted);">
+              Type any Product Name, Keyword, or Code (e.g. <code>Shoto</code>, <code>Coslight</code>, <code>AISG</code>, <code>294274</code>, <code>Battery</code>) to immediately see Total Warehouse Quantity and exact count per warehouse (`TNI_VCM_NOC_01 : 19 + TNI_VCM_NOC_02 : 22 + ...`).
+            </p>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <span id="prodStockSummaryBadge" class="badge badge-team" style="font-size:12px;padding:6px 12px;">
+              📊 Total Found: 0 Products | 0 Total Qty in Warehouses
+            </span>
+            <button class="btn btn-outline" style="padding:5px 10px;font-size:11.5px;" onclick="loadProductWarehouseStock(true)">
+              🔄 Refresh Live 61K Warehouse Stock
+            </button>
+          </div>
+        </div>
+
+        <!-- EXACT GOOGLE SHEET SEARCH ROW (COL Z: search => Quantity | COL AA: Search Input | COL AB: code | COL AC: Warehouse Breakdown) -->
+        <div class="table-wrap">
+          <table class="sheet-table" style="min-width:960px;">
+            <thead>
+              <tr style="background:#ffffff;">
+                <th style="width:110px;background:#ffff00;color:#000;font-weight:900;font-size:15px;text-align:center;border:2px solid #1e293b;">
+                  <div style="font-size:11px;font-weight:700;text-align:left;">search =&gt;</div>
+                  <div>Quantity</div>
+                </th>
+                <th style="min-width:340px;background:#ffffff;padding:6px 8px;border:2px solid #2563eb;">
+                  <input
+                    id="prodStockSearchInput"
+                    type="text"
+                    class="ac-input"
+                    style="background:#fff;border:none;box-shadow:none;padding:6px 8px;font-size:14.5px;width:100%;"
+                    placeholder="🔍 Type Product Name or Keyword here (e.g. Shoto, Acquy, AISG Cable, Anten, BBU...)..."
+                    oninput="filterProductWarehouseTable()"
+                  />
+                </th>
+                <th style="width:120px;background:#ffffff;padding:6px 8px;border:2px solid #1e293b;">
+                  <input
+                    id="prodCodeSearchInput"
+                    type="text"
+                    class="cell-input"
+                    style="font-weight:800;text-align:center;"
+                    placeholder="Filter code..."
+                    oninput="filterProductWarehouseTable()"
+                  />
+                </th>
+                <th style="min-width:380px;background:#ffffff;padding:6px 10px;border:2px solid #1e293b;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <span style="font-size:12px;font-weight:800;color:#1e3a8a;">
+                      🏬 Filter by Specific Warehouse:
+                    </span>
+                    <select id="prodWarehouseFilterSelect" class="cell-select" style="max-width:220px;font-weight:700;" onchange="filterProductWarehouseTable()">
+                      <option value="ALL">All Warehouses (Show All Stock)</option>
+                    </select>
+                    <label style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;cursor:pointer;color:#334155;">
+                      <input type="checkbox" id="chkIncludeSiteProducts" onchange="filterProductWarehouseTable()" />
+                      Include items on Sites (Warehouse Qty = 0)
+                    </label>
+                  </div>
+                </th>
+              </tr>
+              <tr class="col-hdr" style="background:#f8fafc;">
+                <th style="text-align:center;color:#1d4ed8;font-size:14px;font-weight:900;background:#eff6ff;" id="prodFilteredTotalQtyCell">0</th>
+                <th style="font-weight:800;color:#0f172a;background:#f8fafc;">Product / Equipment Name (Cable / Goods)</th>
+                <th style="text-align:center;font-weight:800;color:#0f172a;background:#f8fafc;">Code</th>
+                <th style="font-weight:800;color:#0f172a;background:#f8fafc;">Warehouse Stock Breakdown (Which Warehouse &amp; How Many Units)</th>
+              </tr>
+            </thead>
+            <tbody id="prodStockTableBody">
+              <tr>
+                <td colspan="4" style="text-align:center;padding:26px;font-weight:700;color:var(--muted);">
+                  Click <b>🔎 4. Search Serial &amp; Product Warehouse Stock</b> to load live product quantities and warehouse breakdown from the 61,000-row Master Sheet...
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -2720,15 +2865,291 @@
     }
 
     // =========================================================================
+    // TAB 4: SERIAL LOOKUP & PRODUCT WAREHOUSE STOCK (EXACT IMAGE 1: Z|AA|AB|AC)
+    // =========================================================================
+    STATE.productStockLoaded = false;
+    STATE.productStockAll = [];
+
+    function normViText(s) {
+      return String(s || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[đĐ]/g, "d")
+        .toLowerCase();
+    }
+
+    function quickSerialTabSearch(ser) {
+      const inp = document.getElementById("tab4SerialInput");
+      if (inp) inp.value = ser;
+      searchTab4Serial();
+    }
+
+    async function searchTab4Serial() {
+      const q = (document.getElementById("tab4SerialInput")?.value || "").trim();
+      if (q.length < 3) {
+        showToast("Please enter at least 3 digits or characters of the Serial Number.", "err");
+        return;
+      }
+      const banner = document.getElementById("tab4SerialFormulaBanner");
+      const wrap = document.getElementById("tab4SerialTableWrap");
+      const tbody = document.getElementById("tab4SerialResultBody");
+      if (banner) {
+        banner.style.display = "block";
+        banner.textContent = `⏳ Searching "${q}" across 61,000+ master rows...`;
+      }
+      if (wrap) wrap.style.display = "block";
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:18px;font-weight:700;color:var(--brand);">⏳ Querying 61,000-row Master Asset Database...</td></tr>`;
+      }
+
+      try {
+        const res = await apiGet({ action: "lookup_serial", q: q });
+        if (!res || !res.ok) {
+          if (banner) banner.textContent = `❌ Error: ${(res && res.error) || "Failed to lookup serial"}`;
+          return;
+        }
+        if (banner) {
+          banner.style.background = res.found ? "#dcfce7" : "#fee2e2";
+          banner.style.borderColor = res.found ? "#16a34a" : "#ef4444";
+          banner.style.color = res.found ? "#166534" : "#991b1b";
+          banner.textContent = `🔎 In System Formula Result:   ${res.formula || (q + " = Not Found")}`;
+        }
+        const matches = res.matches || [];
+        if (matches.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:18px;font-weight:800;color:var(--err);">No serial number matching "${escapeHtml(q)}" found in the 61,000-row Master Sheet.</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = matches.map(m => `
+          <tr>
+            <td style="font-weight:800;">${escapeHtml(m.no)}</td>
+            <td style="font-family:monospace;font-weight:900;color:#1d4ed8;font-size:13px;">${escapeHtml(m.serial)}</td>
+            <td>
+              <span class="badge badge-team" style="font-size:12px;">📍 ${escapeHtml(m.location)}</span>
+              ${m.stationCode ? `<button class="photo-mini-btn" style="margin-left:6px;" onclick="switchAssetTab(1);quickLoadTarget('${escapeJs(m.stationCode)}')">Audit Site</button>` : ""}
+            </td>
+            <td style="font-weight:700;">${escapeHtml(m.equipmentName)}</td>
+            <td style="font-family:monospace;font-weight:800;text-align:center;">${escapeHtml(m.code)}</td>
+            <td style="text-align:center;font-weight:900;color:#15803d;">${escapeHtml(m.quality)}</td>
+            <td style="font-size:11.5px;">${escapeHtml(m.groupManager)}</td>
+            <td class="td-formula">${escapeHtml(m.formula)}</td>
+          </tr>
+        `).join("");
+      } catch (e) {
+        if (banner) banner.textContent = "Lookup error: " + e.message;
+      }
+    }
+
+    async function loadProductWarehouseStock(forceRefresh = false) {
+      if (STATE.productStockLoaded && !forceRefresh && STATE.productStockAll.length > 0) {
+        filterProductWarehouseTable();
+        return;
+      }
+      const tbody = document.getElementById("prodStockTableBody");
+      if (tbody) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4" style="text-align:center;padding:28px;font-weight:800;color:var(--brand);">
+              ⏳ Aggregating live Product Quantities &amp; Warehouse Stock Breakdown across 61,000+ Master Rows...
+            </td>
+          </tr>
+        `;
+      }
+      try {
+        // Ultra-fast client-side GViz GROUP BY aggregation directly from Master Sheet 1 (< 1.5s)
+        const masterId = "1Q9wzp-1-HYp9FjGHQxiHbF8u6H1N59jMjIgS2Nz8DBo";
+        const tq = encodeURIComponent("select C, D, I, sum(F) where C is not null group by C, D, I");
+        const gvizUrl = `https://docs.google.com/spreadsheets/d/${masterId}/gviz/tq?tqx=out:json&tq=${tq}`;
+        const rGviz = await fetch(gvizUrl, { cache: "no-store" });
+        if (rGviz.ok) {
+          const rawTxt = await rGviz.text();
+          const jsonStr = rawTxt.substring(rawTxt.indexOf("{"), rawTxt.lastIndexOf("}") + 1);
+          const js = JSON.parse(jsonStr);
+          const rows = (js && js.table && js.table.rows) ? js.table.rows : [];
+          if (rows.length > 0) {
+            const byProd = {};
+            rows.forEach(row => {
+              const cells = row.c || [];
+              const eqName = String((cells[0] && (cells[0].f || cells[0].v)) || "").trim();
+              const eqCode = String((cells[1] && (cells[1].f || cells[1].v)) || "").replace(/\.0$/, "").trim();
+              const stkCode = String((cells[2] && (cells[2].f || cells[2].v)) || "").trim();
+              const qty = Number((cells[3] && cells[3].v) || 0) || 0;
+              if (!eqName || eqName === "Equipment name") return;
+
+              const key = eqCode + "||" + eqName;
+              if (!byProd[key]) {
+                byProd[key] = {
+                  name: eqName,
+                  code: eqCode,
+                  whTotalQty: 0,
+                  siteTotalQty: 0,
+                  grandTotalQty: 0,
+                  whMap: {}
+                };
+              }
+              const p = byProd[key];
+              p.grandTotalQty = Math.round((p.grandTotalQty + qty) * 10000) / 10000;
+              if (stkCode && stkCode !== "Stock code") {
+                p.whTotalQty = Math.round((p.whTotalQty + qty) * 10000) / 10000;
+                p.whMap[stkCode] = Math.round(((p.whMap[stkCode] || 0) + qty) * 10000) / 10000;
+              } else {
+                p.siteTotalQty = Math.round((p.siteTotalQty + qty) * 10000) / 10000;
+              }
+            });
+
+            const allItems = Object.values(byProd).map(p => {
+              const whKeys = Object.keys(p.whMap).sort();
+              return {
+                quantity: p.whTotalQty,
+                siteQuantity: p.siteTotalQty,
+                grandTotal: p.grandTotalQty,
+                name: p.name,
+                code: p.code,
+                warehouseBreakdown: whKeys.map(w => `${w} : ${p.whMap[w]}`).join(" + "),
+                warehouseMap: p.whMap
+              };
+            });
+
+            allItems.sort((a, b) => {
+              const ka = normViText(a.name);
+              const kb = normViText(b.name);
+              if (ka < kb) return -1;
+              if (ka > kb) return 1;
+              return 0;
+            });
+
+            STATE.productStockAll = allItems;
+            STATE.productStockLoaded = true;
+            populateWarehouseFilterDropdown();
+            filterProductWarehouseTable();
+            showToast(`Loaded ${allItems.filter(x => x.quantity > 0).length} warehouse products (${allItems.length} total) in <1.5s!`, "ok");
+            return;
+          }
+        }
+      } catch (eFast) {}
+
+      try {
+        const res = await apiGet({ action: "product_stock", q: "", force: forceRefresh ? "1" : "0" });
+        if (res && res.ok) {
+          STATE.productStockAll = res.items || [];
+          STATE.productStockLoaded = true;
+          populateWarehouseFilterDropdown();
+          filterProductWarehouseTable();
+          showToast(`Loaded ${STATE.productStockAll.length} product warehouse stock summaries from Master Sheet 1!`, "ok");
+        } else {
+          if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--err);font-weight:800;">Failed to load product warehouse stock.</td></tr>`;
+          }
+        }
+      } catch (e) {
+        if (tbody) {
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--err);font-weight:800;">Error: ${escapeHtml(e.message)}</td></tr>`;
+        }
+      }
+    }
+
+    function populateWarehouseFilterDropdown() {
+      const sel = document.getElementById("prodWarehouseFilterSelect");
+      if (!sel) return;
+      const whSet = new Set();
+      STATE.productStockAll.forEach(it => {
+        Object.keys(it.warehouseMap || {}).forEach(w => whSet.add(w));
+      });
+      const sortedWh = Array.from(whSet).sort();
+      const curVal = sel.value || "ALL";
+      sel.innerHTML = `<option value="ALL">All Warehouses (${sortedWh.length} Stocks)</option>` +
+        sortedWh.map(w => `<option value="${escapeHtml(w)}">🏬 ${escapeHtml(w)}</option>`).join("");
+      if (sortedWh.includes(curVal)) sel.value = curVal;
+    }
+
+    function filterProductWarehouseTable() {
+      const tbody = document.getElementById("prodStockTableBody");
+      if (!tbody) return;
+      const qName = normViText(document.getElementById("prodStockSearchInput")?.value || "");
+      const qCode = normViText(document.getElementById("prodCodeSearchInput")?.value || "");
+      const whFilter = document.getElementById("prodWarehouseFilterSelect")?.value || "ALL";
+      const includeSites = Boolean(document.getElementById("chkIncludeSiteProducts")?.checked);
+
+      let totalWhQtySum = 0;
+      const filtered = STATE.productStockAll.filter(it => {
+        const whMap = it.warehouseMap || {};
+        const whQty = whFilter === "ALL" ? Number(it.quantity || 0) : Number(whMap[whFilter] || 0);
+        if (!includeSites && whQty <= 0) return false;
+        if (whFilter !== "ALL" && !whMap[whFilter]) return false;
+
+        if (qName) {
+          const hayName = normViText(`${it.name} ${it.code} ${it.warehouseBreakdown}`);
+          if (!hayName.includes(qName)) return false;
+        }
+        if (qCode) {
+          const hayCode = normViText(it.code);
+          if (!hayCode.includes(qCode)) return false;
+        }
+        totalWhQtySum += whQty;
+        return true;
+      });
+
+      totalWhQtySum = Math.round(totalWhQtySum * 10000) / 10000;
+      const totCell = document.getElementById("prodFilteredTotalQtyCell");
+      if (totCell) totCell.textContent = totalWhQtySum.toLocaleString();
+      const badge = document.getElementById("prodStockSummaryBadge");
+      if (badge) {
+        badge.textContent = `📊 Found: ${filtered.length} Product(s) | Total Warehouse Qty: ${totalWhQtySum.toLocaleString()}`;
+      }
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4" style="text-align:center;padding:24px;font-weight:700;color:var(--muted);">
+              No product in warehouse matches your filter. Try clearing the search box or ticking "Include items on Sites".
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(it => {
+        const whMap = it.warehouseMap || {};
+        const displayQty = whFilter === "ALL" ? it.quantity : (whMap[whFilter] || 0);
+        const whChips = Object.keys(whMap).sort().map(w => {
+          const isHigh = whFilter !== "ALL" && w === whFilter;
+          return `<span style="display:inline-block;padding:2px 7px;margin:2px 3px 2px 0;border-radius:5px;font-weight:800;font-size:12px;background:${isHigh ? '#fef08a' : '#eff6ff'};border:1px solid ${isHigh ? '#eab308' : '#bfdbfe'};color:#1e3a8a;">${escapeHtml(w)} : <b style="color:#b91c1c;">${escapeHtml(whMap[w])}</b></span>`;
+        }).join(" + ");
+
+        return `
+          <tr style="background:#ffffff;">
+            <td style="text-align:center;font-weight:900;font-size:15px;color:#1d4ed8;background:#f8fafc;">
+              ${escapeHtml(displayQty)}
+            </td>
+            <td style="font-weight:700;color:#0f172a;line-height:1.4;">
+              ${escapeHtml(it.name)}
+            </td>
+            <td style="text-align:center;font-family:monospace;font-weight:800;font-size:13px;color:#0f172a;">
+              ${escapeHtml(it.code)}
+            </td>
+            <td style="font-size:12.5px;color:#0f172a;line-height:1.5;">
+              <div style="font-weight:700;margin-bottom:3px;">${escapeHtml(it.warehouseBreakdown || "-")}</div>
+              <div>${whChips}</div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    // =========================================================================
     // TAB & MODAL HELPERS
     // =========================================================================
     function switchAssetTab(num) {
-      [1, 2, 3].forEach(n => {
-        document.getElementById(`tabBtn${n}`).classList.toggle("active", n === num);
-        document.getElementById(`tabPane${n}`).classList.toggle("active", n === num);
+      [1, 2, 3, 4].forEach(n => {
+        const b = document.getElementById(`tabBtn${n}`);
+        const p = document.getElementById(`tabPane${n}`);
+        if (b) b.classList.toggle("active", n === num);
+        if (p) p.classList.toggle("active", n === num);
       });
       if (num === 2 || num === 3) {
         refreshDashboardAndDiscrepancies();
+      }
+      if (num === 4) {
+        loadProductWarehouseStock(false);
       }
     }
 
@@ -2760,6 +3181,7 @@
       loadMasterCatalog();
       quickLoadTarget("TNI0351");
       refreshDashboardAndDiscrepancies();
+      loadProductWarehouseStock(false);
     });
   </script>
 </body>
