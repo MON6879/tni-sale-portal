@@ -1412,8 +1412,44 @@
     </div>
   </div>
 
-  <!-- HIDDEN FILE INPUT FOR CAMERA / TIMESTAMP CAMERA -->
+  <!-- HIDDEN FILE INPUT FOR GALLERY / TIMESTAMP CAMERA & DIRECT CAMERA CAPTURE -->
   <input type="file" id="hidden-photo-input" accept="image/*" style="display:none;" onchange="handlePhotoFileSelected(event)" />
+  <input type="file" id="hidden-camera-direct-input" accept="image/*" capture="environment" style="display:none;" onchange="handlePhotoFileSelected(event)" />
+
+  <!-- MODAL 0: TIMESTAMP CAMERA DIRECT LAUNCH & 1-TAP ATTACH WHEN RETURNING -->
+  <div class="modal-backdrop" id="modal-tscam-return">
+    <div class="modal-box" style="max-width:520px;text-align:center;padding:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;padding-bottom:10px;margin-bottom:14px;">
+        <div style="font-size:15.5px;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:6px;">
+          <span>📍 Timestamp Camera — Chụp &amp; Đính Kèm Ảnh (1440×1088)</span>
+        </div>
+        <button class="btn-close-modal" onclick="closeModal('modal-tscam-return')">✕</button>
+      </div>
+      <div id="tscam-modal-target-badge" style="display:inline-block;background:#eff6ff;border:1.5px solid #93c5fd;color:#1e3a8a;font-weight:900;font-size:13px;padding:6px 14px;border-radius:99px;margin-bottom:12px;">
+        Mục: -
+      </div>
+      <p style="font-size:13px;color:#334155;font-weight:600;line-height:1.5;margin-bottom:14px;">
+        1️⃣ Hệ thống đã tự động mở ứng dụng <strong>Timestamp Camera</strong> trên điện thoại để bạn chụp ảnh có tọa độ GPS.<br/>
+        2️⃣ Sau khi bấm chụp xong trong ứng dụng Timestamp Camera, quay lại màn hình này và bấm nút <strong>[📥 Lấy Ảnh Vừa Chụp]</strong> bên dưới để lưu liền lên Drive 2.14:
+      </p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button type="button" style="width:100%;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,#059669,#10b981);color:#fff;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 6px 18px rgba(5,150,105,0.3);" onclick="pickPhotoAfterTimestampCam()">
+          📥 BẤM VÀO ĐÂY ĐỂ ĐÍNH KÈM ẢNH VỪA CHỤP (1440×1088)
+        </button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid #2563eb;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:800;cursor:pointer;" onclick="openNativeTimestampCameraIntent()">
+            🔄 Mở Lại App Timestamp Camera
+          </button>
+          <button type="button" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid #0f172a;background:#f8fafc;color:#0f172a;font-size:12px;font-weight:800;cursor:pointer;" onclick="captureDirectInBrowserCamera()">
+            📷 Chụp Trực Tiếp Ngay Tại Đây (Auto GPS)
+          </button>
+        </div>
+        <a href="https://play.google.com/store/apps/details?id=com.jeyluta.timestampcamerafree" target="_blank" rel="noopener" style="font-size:11.5px;color:#64748b;text-decoration:underline;margin-top:4px;">
+          📲 Chưa cài ứng dụng? Bấm tải Timestamp Camera (Google Play) tại đây ↗
+        </a>
+      </div>
+    </div>
+  </div>
 
   <!-- MODAL 1: SIDE-BY-SIDE BEFORE / AFTER 1440x1088 COMPARISON -->
   <div class="modal-backdrop" id="modal-compare">
@@ -2002,21 +2038,77 @@
     // =========================================================================
     // TIMESTAMP CAMERA DEEP LINK & 1440x1088 CANVAS PROCESSOR + EXIF GPS
     // =========================================================================
-    function launchTimestampCameraApp() {
+    // Direct Android Intent URL to open Timestamp Camera (com.jeyluta.timestampcamerafree) straight into Camera shooting mode
+    const TIMESTAMP_CAM_ANDROID_INTENT =
+      "intent://#Intent;action=android.media.action.STILL_IMAGE_CAMERA;package=com.jeyluta.timestampcamerafree;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.jeyluta.timestampcamerafree;end";
+
+    function openNativeTimestampCameraIntent() {
       const ua = navigator.userAgent || "";
       if (/android/i.test(ua)) {
-        // Launch Timestamp Camera Free / Pro on Android if installed, fallback to Play Store
-        window.location.href = "intent://#Intent;package=com.jeyluta.timestampcamerafree;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.jeyluta.timestampcamerafree;end";
+        // Pre-fetch GPS in background so if EXIF is stripped by browser, live GPS is stamped accurately
+        if (navigator.geolocation) {
+          try {
+            navigator.geolocation.getCurrentPosition(pos => {
+              window._lastExifGps = pos.coords.latitude.toFixed(6) + ", " + pos.coords.longitude.toFixed(6);
+            }, () => {}, { enableHighAccuracy: true, timeout: 6000 });
+          } catch (e) {}
+        }
+        window.location.href = TIMESTAMP_CAM_ANDROID_INTENT;
       } else if (/iphone|ipad|ipod/i.test(ua)) {
         window.open("https://apps.apple.com/app/timestamp-camera-basic/id840110184", "_blank");
       } else {
-        alert("📱 Trên điện thoại Android/iOS: Hệ thống sẽ mở ứng dụng Timestamp Camera (có tọa độ GPS) hoặc bạn bấm nút [📷 Chụp Ảnh (1440×1088)] để chọn ảnh từ Timestamp Camera / chụp trực tiếp có đóng dấu tọa độ GPS!");
+        window.open("https://play.google.com/store/apps/details?id=com.jeyluta.timestampcamerafree", "_blank");
       }
     }
 
-    function launchTimestampCameraAndPick(code, stage) {
-      // First trigger file picker so when user returns from Timestamp Camera or gallery they can pick immediately
-      triggerPhotoCapture(code, stage);
+    function launchTimestampCameraApp() {
+      openNativeTimestampCameraIntent();
+    }
+
+    function launchTimestampCameraAndPick(code, stage, sessionIdForBi) {
+      pendingPhotoTarget = {
+        type: currentType,
+        code: code,
+        stage: stage,
+        sessionIdForBi: sessionIdForBi || null,
+        fromTimestampApp: true
+      };
+      const badge = document.getElementById("tscam-modal-target-badge");
+      if (badge) {
+        const stageTxt = stage === "BEFORE" ? "📸 ẢNH LỖI (BEFORE)" : "🌟 ẢNH ĐÃ SỬA (AFTER)";
+        badge.textContent = "Mục " + code + " • " + stageTxt;
+      }
+      // Show the 1-tap attach modal so when the user finishes shooting in Timestamp Camera and returns to Chrome, they tap once to attach!
+      const modal = document.getElementById("modal-tscam-return");
+      if (modal) modal.classList.add("open");
+
+      // Immediately launch Timestamp Camera app on Android/iOS
+      openNativeTimestampCameraIntent();
+    }
+
+    function pickPhotoAfterTimestampCam() {
+      closeModal("modal-tscam-return");
+      const inp = document.getElementById("hidden-photo-input");
+      if (inp) {
+        inp.value = "";
+        inp.click();
+      }
+    }
+
+    function captureDirectInBrowserCamera() {
+      closeModal("modal-tscam-return");
+      if (navigator.geolocation) {
+        try {
+          navigator.geolocation.getCurrentPosition(pos => {
+            window._lastExifGps = pos.coords.latitude.toFixed(6) + ", " + pos.coords.longitude.toFixed(6);
+          }, () => {}, { enableHighAccuracy: true, timeout: 5000 });
+        } catch (e) {}
+      }
+      const inp = document.getElementById("hidden-camera-direct-input");
+      if (inp) {
+        inp.value = "";
+        inp.click();
+      }
     }
 
     function triggerPhotoCapture(code, stage, sessionIdForBi) {
@@ -3628,7 +3720,10 @@
                     ${afterSrc ? `<img src="${escAttr(afterSrc)}" alt="After" onclick="openCompareModalDirect('${escAttr(beforeSrc)}','${escAttr(afterSrc)}','${escAttr(it.defectNote || '')}','${escAttr(it.afterNote || '')}','${escAttr(sess.siteCode + ' - Item ' + it.code)}')" style="cursor:pointer;" />` : `
                       <div style="padding:10px;">
                         <div style="margin-bottom:6px;color:#dc2626;font-weight:800;font-size:11.5px;">❌ Pending After Photo / Chưa cập nhật ảnh sau sửa / ပြင်ဆင်ပြီးပုံ မတင်ရသေးပါ</div>
-                        <button type="button" class="btn-cam-capture after-btn" onclick="triggerPhotoCapture('${escAttr(it.code)}', 'AFTER', '${escAttr(sess.sessionId)}')">📷 Upload After Photo / Tải Ảnh Đã Sửa (1440×1088)</button>
+                        <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center;">
+                          <button type="button" class="btn-cam-capture after-btn" onclick="triggerPhotoCapture('${escAttr(it.code)}', 'AFTER', '${escAttr(sess.sessionId)}')">📷 Chọn Ảnh Đã Sửa</button>
+                          <button type="button" class="btn-cam-capture ts-app-btn" onclick="launchTimestampCameraAndPick('${escAttr(it.code)}', 'AFTER', '${escAttr(sess.sessionId)}')">📍 Mở TimestampCam</button>
+                        </div>
                       </div>
                     `}
                   </div>
