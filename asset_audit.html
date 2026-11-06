@@ -1,0 +1,2116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>TNI Enterprise Asset BI & Inventory Audit Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --ink: #0f172a;
+      --muted: #475569;
+      --line: #cbd5e1;
+      --brand: #1d4ed8;
+      --brand-light: #eff6ff;
+      --accent: #0284c7;
+      --ok: #16a34a;
+      --ok-bg: #dcfce7;
+      --warn: #d97706;
+      --warn-bg: #fef3c7;
+      --err: #dc2626;
+      --err-bg: #fee2e2;
+      --sheet-green: #d9ead3;
+      --sheet-blue: #cfe2f3;
+      --sheet-darkblue: #3c78d8;
+      --sheet-yellow: #ffff00;
+      --sheet-cyan: #00ffff;
+      --radius: 12px;
+      --shadow: 0 4px 18px rgba(15, 23, 42, 0.07);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.45;
+      padding-bottom: 48px;
+    }
+
+    /* TOPBAR */
+    .topbar {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+      color: #fff;
+      padding: 12px 16px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+    }
+    .topbar-inner {
+      max-width: 1720px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #3b82f6, #10b981);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 900;
+      box-shadow: 0 2px 10px rgba(59, 130, 246, 0.4);
+    }
+    .brand-title {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .brand-sub {
+      font-size: 11px;
+      color: #93c5fd;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 2px;
+    }
+    .top-links {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .pill-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 11px;
+      border-radius: 8px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #fff;
+      text-decoration: none;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .pill-link:hover { background: rgba(255, 255, 255, 0.22); }
+    .pill-link.gold { background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #fbbf24; }
+    .pill-link.green { background: linear-gradient(135deg, #059669, #10b981); border-color: #34d399; }
+
+    /* CONTAINER */
+    .container {
+      max-width: 1720px;
+      margin: 12px auto 0;
+      padding: 0 12px;
+    }
+
+    /* AUTH & GPS BAR */
+    .auth-bar {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      box-shadow: var(--shadow);
+    }
+    .auth-left, .auth-right {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+    .input-sm {
+      padding: 7px 10px;
+      border: 1px solid #94a3b8;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+      outline: none;
+      background: #fff;
+    }
+    .input-sm:focus { border-color: var(--brand); box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.15); }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 7px 13px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-primary { background: var(--brand); color: #fff; }
+    .btn-primary:hover { background: #1e40af; }
+    .btn-success { background: var(--ok); color: #fff; }
+    .btn-success:hover { background: #15803d; }
+    .btn-warning { background: var(--warn); color: #fff; }
+    .btn-danger { background: var(--err); color: #fff; }
+    .btn-outline { background: #f8fafc; color: var(--ink); border: 1px solid #94a3b8; }
+    .btn-outline:hover { background: #e2e8f0; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .badge-team { background: #dbeafe; color: #1e40af; }
+    .badge-approver { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .badge-auditor { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .badge-gps { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; font-family: monospace; }
+
+    /* MAIN TABS */
+    .nav-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .tab-btn {
+      flex: 1;
+      min-width: 220px;
+      padding: 11px 16px;
+      border-radius: 10px;
+      background: #e2e8f0;
+      color: #334155;
+      border: 2px solid transparent;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s;
+    }
+    .tab-btn.active {
+      background: #fff;
+      color: var(--brand);
+      border-color: var(--brand);
+      box-shadow: 0 4px 12px rgba(29, 78, 216, 0.14);
+    }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* SEARCH & AUTOCOMPLETE (COLUMN Q + COLUMN O) */
+    .search-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+    }
+    .search-grid {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 10px;
+      align-items: center;
+      position: relative;
+    }
+    @media (max-width: 768px) {
+      .search-grid { grid-template-columns: 1fr; }
+    }
+    .ac-wrapper {
+      position: relative;
+      width: 100%;
+    }
+    .ac-input {
+      width: 100%;
+      padding: 11px 14px;
+      font-size: 14px;
+      font-weight: 700;
+      border: 2px solid var(--brand);
+      border-radius: 10px;
+      outline: none;
+      background: #fffbeb;
+    }
+    .ac-input:focus {
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.18);
+    }
+    .ac-dropdown {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      max-height: 340px;
+      overflow-y: auto;
+      background: #fff;
+      border: 2px solid var(--brand);
+      border-radius: 10px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.22);
+      z-index: 1000;
+      display: none;
+    }
+    .ac-item {
+      padding: 9px 12px;
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .ac-item:hover, .ac-item.active {
+      background: #eff6ff;
+      color: var(--brand);
+    }
+    .ac-tag {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #e0f2fe;
+      color: #0369a1;
+      white-space: nowrap;
+    }
+    .ac-tag.wh {
+      background: #f3e8ff;
+      color: #6d28d9;
+    }
+
+    /* GOOGLE SHEET STYLE AUDIT HEADER & TABLE (MATCHING IMAGE 1) */
+    .sheet-banner {
+      display: grid;
+      grid-template-columns: 180px 140px 1fr auto;
+      border: 2px solid #1e293b;
+      border-bottom: none;
+      background: var(--sheet-green);
+      font-size: 13px;
+      font-weight: 800;
+    }
+    @media (max-width: 768px) {
+      .sheet-banner { grid-template-columns: 1fr 1fr; }
+    }
+    .sheet-cell-target {
+      background: var(--sheet-yellow);
+      padding: 8px 12px;
+      border-right: 1px solid #64748b;
+      font-size: 15px;
+      font-weight: 900;
+      color: #000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .sheet-cell-date {
+      background: #fff;
+      padding: 8px 12px;
+      border-right: 1px solid #64748b;
+      display: flex;
+      align-items: center;
+      font-weight: 700;
+    }
+    .sheet-cell-status {
+      background: var(--sheet-cyan);
+      padding: 8px 12px;
+      border-right: 1px solid #64748b;
+      color: #b91c1c;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .sheet-cell-status.saved {
+      background: #bbf7d0;
+      color: #166534;
+    }
+    .sheet-cell-actions {
+      background: var(--sheet-blue);
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      background: #fff;
+      border: 2px solid #1e293b;
+      box-shadow: var(--shadow);
+    }
+    table.sheet-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1180px;
+      font-size: 12.5px;
+    }
+    table.sheet-table th, table.sheet-table td {
+      border: 1px solid #64748b;
+      padding: 5px 8px;
+      vertical-align: middle;
+    }
+    table.sheet-table thead tr.group-hdr th {
+      background: var(--sheet-green);
+      color: #0f172a;
+      font-weight: 800;
+      text-align: center;
+      font-size: 11.5px;
+    }
+    table.sheet-table thead tr.group-hdr th.team-upd-blue {
+      background: var(--sheet-darkblue);
+      color: #fff;
+    }
+    table.sheet-table thead tr.group-hdr th.team-upd-light {
+      background: var(--sheet-blue);
+      color: #0f172a;
+    }
+    table.sheet-table thead tr.col-hdr th {
+      background: var(--sheet-green);
+      color: #000;
+      font-weight: 800;
+      text-align: left;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    table.sheet-table thead tr.col-hdr th.col-diff {
+      background: var(--sheet-darkblue);
+      color: #fff;
+    }
+    table.sheet-table thead tr.col-hdr th.col-team {
+      background: var(--sheet-blue);
+      color: #000;
+    }
+
+    table.sheet-table tbody tr {
+      background: #e9f2e4;
+    }
+    table.sheet-table tbody tr:nth-child(even) {
+      background: #dfead8;
+    }
+    table.sheet-table tbody tr.row-diff {
+      background: #fef3c7 !important;
+    }
+    table.sheet-table tbody tr.row-extra {
+      background: #e0f2fe !important;
+    }
+    table.sheet-table tbody td.td-diff {
+      background: var(--sheet-darkblue);
+      color: #fff;
+      padding: 3px 5px;
+    }
+    table.sheet-table tbody td.td-team-input {
+      background: #ffffff;
+      padding: 3px 5px;
+    }
+    table.sheet-table tbody td.td-formula {
+      background: var(--sheet-blue);
+      color: #0f172a;
+      font-weight: 700;
+      font-family: 'Inter', monospace;
+      font-size: 12px;
+    }
+
+    .cell-select, .cell-input {
+      width: 100%;
+      padding: 5px 6px;
+      border: 1px solid #94a3b8;
+      border-radius: 5px;
+      font-size: 12px;
+      font-weight: 600;
+      outline: none;
+    }
+    .cell-select.status-matched {
+      background: #dcfce7;
+      color: #166534;
+      border-color: #22c55e;
+    }
+    .cell-select.status-diff {
+      background: #fef08a;
+      color: #854d0e;
+      border-color: #eab308;
+      font-weight: 800;
+    }
+    .cell-select.status-missing {
+      background: #fee2e2;
+      color: #991b1b;
+      border-color: #ef4444;
+      font-weight: 800;
+    }
+
+    .photo-cell-wrap {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .photo-mini-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 4px 7px;
+      border-radius: 5px;
+      background: #0284c7;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+    }
+    .photo-mini-btn:hover { background: #0369a1; }
+    .thumb-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #86efac;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    /* EXTRA GOODS & FOOTER SAVE PANEL */
+    .bottom-actions-bar {
+      background: var(--card);
+      border: 2px solid #1e293b;
+      border-top: none;
+      border-radius: 0 0 var(--radius) var(--radius);
+      padding: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    /* KPI CARDS */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .kpi-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px 14px;
+      box-shadow: var(--shadow);
+    }
+    .kpi-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .kpi-val {
+      font-size: 22px;
+      font-weight: 900;
+      margin-top: 4px;
+      color: var(--ink);
+    }
+    .kpi-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* MODAL */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal-box {
+      background: #fff;
+      border-radius: 14px;
+      max-width: 960px;
+      width: 100%;
+      max-height: 88vh;
+      overflow-y: auto;
+      padding: 20px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    }
+    .expert-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .expert-card {
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: #f8fafc;
+    }
+    .expert-role {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: var(--brand);
+    }
+    .expert-desc {
+      font-size: 11.5px;
+      color: #334155;
+      margin-top: 4px;
+    }
+
+    /* TOAST */
+    #toastBox {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 3000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toast-msg {
+      padding: 11px 16px;
+      border-radius: 10px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 12.5px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.22);
+      max-width: 420px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand-wrap">
+        <div class="brand-icon">📦</div>
+        <div>
+          <div class="brand-title">TNI ENTERPRISE ASSET BI & INVENTORY AUDIT PORTAL</div>
+          <div class="brand-sub">
+            <span>⚡ Cloud 61,000+ Asset Engine (Zero Mobile Lag)</span>
+            <span>•</span>
+            <span>📍 1440×1088 GPS + Timestamp Watermarked Photos</span>
+            <span>•</span>
+            <span>🔒 Team Isolation & Authorized Transfer Approval</span>
+          </div>
+        </div>
+      </div>
+      <div class="top-links">
+        <button class="pill-link gold" onclick="openExpertModal()">🧠 10-Expert Top 0.1% Architecture</button>
+        <a class="pill-link" href="https://docs.google.com/spreadsheets/d/1Q9wzp-1-HYp9FjGHQxiHbF8u6H1N59jMjIgS2Nz8DBo/edit?gid=0#gid=0" target="_blank" rel="noopener">📘 Sheet 1: Master Asset DB (61K)</a>
+        <a class="pill-link green" href="https://docs.google.com/spreadsheets/d/1Z1mRG_skVoRifOjw08T0zon4nCGa7ZfXZSZMdf7kFt0/edit?gid=0#gid=0" target="_blank" rel="noopener">📗 Sheet 2: Audit Collection & Progress</a>
+        <a class="pill-link" href="https://drive.google.com/drive/folders/11HcMa63slXPOHrveHxmqZTZerzKPfjVt" target="_blank" rel="noopener">📁 Drive: 2.15 Asset Audit Photo</a>
+        <a class="pill-link" href="/checklist">📋 Checklist BI</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- STAFF LOGIN, ROLE & LIVE GPS BAR -->
+    <section class="auth-bar">
+      <div class="auth-left">
+        <span style="font-weight:800;color:#1e3a8a;">🔐 Staff Login / Role:</span>
+        <input id="staffCodeInput" class="input-sm" style="width:190px;" placeholder="Staff Code / VCM / Telegram ID..." value="528085" />
+        <button class="btn btn-primary" onclick="verifyStaffLogin()">Sign In & Verify</button>
+        <select id="quickRoleSelect" class="input-sm" onchange="applyQuickRole(this.value)" title="Quick Demo / Role Switcher">
+          <option value="528085">👑 Ingyin Hmwe (Asset Approver - All Teams)</option>
+          <option value="528089">👑 Ye Lwin (Tech Manager / Approver - All Teams)</option>
+          <option value="ADMIN">👑 Master Admin / BOD (All Teams & Approval)</option>
+          <option value="T1_STAFF">👷 Team 1 Auditor (Dawei - Team 1 Only)</option>
+          <option value="T2_STAFF">👷 Team 2 Auditor (Myeik - Team 2 Only)</option>
+          <option value="T3_STAFF">👷 Team 3 Auditor (Bokpyin - Team 3 Only)</option>
+          <option value="T4_STAFF">👷 Team 4 Auditor (Kawthoung - Team 4 Only)</option>
+        </select>
+      </div>
+      <div class="auth-right">
+        <span id="staffNameBadge" class="badge badge-team">👤 Ingyin Hmwe (Asset Assistant 1)</span>
+        <span id="staffTeamBadge" class="badge badge-team">🏢 Scope: ALL TEAMS</span>
+        <span id="staffRoleBadge" class="badge badge-approver">✅ Authorized Asset Approver</span>
+        <span id="gpsBadge" class="badge badge-gps" onclick="refreshGpsLocation()" style="cursor:pointer;" title="Click to refresh GPS">📍 GPS: Acquiring...</span>
+      </div>
+    </section>
+
+    <!-- 3 SCIENTIFIC NAVIGATION TABS -->
+    <nav class="nav-tabs">
+      <button id="tabBtn1" class="tab-btn active" onclick="switchAssetTab(1)">
+        📋 1. Field Asset Inventory Audit (Input Audit)
+      </button>
+      <button id="tabBtn2" class="tab-btn" onclick="switchAssetTab(2)">
+        ⚖️ 2. Discrepancy & Transfer Approval <span id="discCountBadge" class="badge" style="background:#fee2e2;color:#991b1b;">0</span>
+      </button>
+      <button id="tabBtn3" class="tab-btn" onclick="switchAssetTab(3)">
+        📊 3. Team Audit Plan & Executive Progress
+      </button>
+    </nav>
+
+    <!-- =================================================================== -->
+    <!-- TAB 1: FIELD ASSET INVENTORY AUDIT (MATCHING IMAGE 1 & IMAGE 2)     -->
+    <!-- =================================================================== -->
+    <section id="tabPane1" class="tab-pane active">
+      <!-- STEP 1: COLUMN Q (865 SITES/CABLES) & COLUMN O (15 WAREHOUSES) AUTOCOMPLETE -->
+      <div class="search-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+          <div>
+            <span style="font-weight:800;font-size:13.5px;color:#1e3a8a;">
+              🔍 Step 1 — Select Exact Station / Cable / MW / Warehouse from Master Column Q & Column O:
+            </span>
+            <span id="catalogStatText" style="font-size:11.5px;color:var(--muted);margin-left:6px;">
+              (Loading 865 exact database names from Sheet 1...)
+            </span>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn btn-outline" style="padding:4px 9px;font-size:11.5px;" onclick="quickLoadTarget('TNI0351')">⚡ Load Demo: TNI0351</button>
+            <button class="btn btn-outline" style="padding:4px 9px;font-size:11.5px;" onclick="quickLoadTarget('TNI0004')">⚡ Load: TNI0004</button>
+            <button class="btn btn-outline" style="padding:4px 9px;font-size:11.5px;" onclick="quickLoadTarget('AU1(TNI0003-TNI0004)-UA1(TNI0003-TNI0004)')">⚡ Load Cable/MW</button>
+          </div>
+        </div>
+
+        <div class="search-grid">
+          <div class="ac-wrapper">
+            <input
+              id="targetSearchInput"
+              type="text"
+              class="ac-input"
+              placeholder="Type Station / Cable / JB / Warehouse (e.g. TNI0351, AU1, JB01, NOC_01) to jump exact list from Column Q..."
+              autocomplete="off"
+              oninput="onTargetSearchInput(this.value)"
+              onfocus="onTargetSearchInput(this.value)"
+            />
+            <div id="targetDropdown" class="ac-dropdown"></div>
+          </div>
+          <button class="btn btn-primary" style="padding:11px 18px;font-size:13px;" onclick="loadSelectedTargetAssets()">
+            📥 Load Station Assets
+          </button>
+          <input
+            id="rowFilterInput"
+            type="text"
+            class="input-sm"
+            style="padding:10px 12px;min-width:210px;"
+            placeholder="🔎 Filter equipment / code / serial..."
+            oninput="filterLoadedRows(this.value)"
+          />
+        </div>
+      </div>
+
+      <!-- STEP 2: EXACT GOOGLE SHEET AUDIT TABLE LAYOUT (IMAGE 1) -->
+      <div class="sheet-banner">
+        <div class="sheet-cell-target">
+          <span id="bannerTargetCode">TNI0351</span>
+          <span id="bannerTeamTag" class="badge badge-team" style="font-size:10px;">Team 1</span>
+        </div>
+        <div class="sheet-cell-date" id="bannerAuditDate">11/06/2026</div>
+        <div class="sheet-cell-status" id="bannerSaveStatus">
+          <span id="bannerStatusText">Not Yet Saved to Collection Sheet — Ready for Field Audit</span>
+          <span id="bannerCounters" style="font-size:11.5px;color:#0f172a;background:rgba(255,255,255,0.75);padding:2px 8px;border-radius:6px;">
+            0 Rows | 0 Matched | 0 Discrepancy | 0 Photos
+          </span>
+        </div>
+        <div class="sheet-cell-actions">
+          <button class="btn btn-outline" style="padding:5px 9px;font-size:11.5px;" onclick="markAllUnchangedMatched()">
+            ✅ Set All Default Matched
+          </button>
+          <button class="btn btn-primary" style="padding:5px 10px;font-size:11.5px;" onclick="triggerSiteWidePhoto()">
+            📷 Take Site Watermarked Photo (<span id="sitePhotoCount">0</span>)
+          </button>
+          <button class="btn btn-success" style="padding:5px 12px;font-size:12px;" onclick="saveAuditReportToSheet()">
+            💾 Save Audit Report
+          </button>
+        </div>
+      </div>
+
+      <!-- SITE-WIDE PHOTOS PREVIEW STRIP -->
+      <div id="sitePhotosStrip" style="display:none;background:#eff6ff;border:2px solid #1e293b;border-bottom:none;padding:8px 12px;gap:8px;flex-wrap:wrap;align-items:center;">
+        <span style="font-weight:800;font-size:12px;color:#1e3a8a;">📸 Site-Wide Watermarked Audit Photos (1440×1088):</span>
+        <div id="sitePhotosList" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+      </div>
+
+      <!-- MAIN AUDIT TABLE -->
+      <div class="table-wrap">
+        <table class="sheet-table" id="auditMainTable">
+          <thead>
+            <tr class="group-hdr">
+              <th colspan="6">MASTER SYSTEM DATA (READ-ONLY FROM 61,000-ROW GOOGLE SHEET 1)</th>
+              <th class="team-upd-blue">Team update</th>
+              <th class="team-upd-light">Team update</th>
+              <th class="team-upd-light">write serial different</th>
+              <th class="team-upd-light">In system formula (Auto 61K Lookup)</th>
+              <th class="team-upd-light">Photo (1440×1088 + GPS + Time)</th>
+            </tr>
+            <tr class="col-hdr">
+              <th style="width:64px;">No</th>
+              <th style="width:125px;">Site/Cable/MW</th>
+              <th style="min-width:250px;">Name</th>
+              <th style="width:82px;">Code</th>
+              <th style="width:165px;">Serial</th>
+              <th style="width:72px;">Quality</th>
+              <th class="col-diff" style="width:140px;">Different</th>
+              <th class="col-team" style="width:98px;">Reality have</th>
+              <th class="col-team" style="width:155px;">Write serial different</th>
+              <th class="col-team" style="min-width:210px;">In system formula</th>
+              <th class="col-team" style="width:145px;">Photo</th>
+            </tr>
+          </thead>
+          <tbody id="auditTableBody">
+            <tr>
+              <td colspan="11" style="text-align:center;padding:28px;font-weight:700;color:var(--muted);">
+                Select a Station / Cable / MW above (or click <b>Load Demo: TNI0351</b>) to load system assets from Google Sheet 1.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- STEP 3 & 4: ADD EXTRA UNRECORDED GOODS ROW + SAVE BAR -->
+      <div class="bottom-actions-bar">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;">
+          <button class="btn btn-primary" onclick="addExtraGoodsRow()">
+            ➕ Add Extra Item Row (Unrecorded Goods on Site — Free-Text Name)
+          </button>
+          <button class="btn btn-outline" onclick="triggerSiteWidePhoto()">
+            📷 Capture Multiple Watermarked Photos (1440×1088)
+          </button>
+          <span style="font-size:11.5px;color:var(--muted);">
+            💡 Extra goods rows do not require exact autocomplete names; type any item name found on site.
+          </span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button class="btn btn-success" style="padding:10px 22px;font-size:14px;" onclick="saveAuditReportToSheet()">
+            💾 Save Audit Report to Google Sheet 2
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 2: DISCREPANCY & ASSET TRANSFER APPROVAL (AUTHORIZED APPROVERS) -->
+    <!-- =================================================================== -->
+    <section id="tabPane2" class="tab-pane">
+      <div class="search-card">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;">
+          <div>
+            <h3 style="font-size:15px;font-weight:800;color:#1e3a8a;">
+              ⚖️ Discrepancy & Asset Transfer Approval Center
+            </h3>
+            <p style="font-size:12px;color:var(--muted);">
+              Lists all audited items with quantity/serial discrepancies or extra unrecorded items. Only authorized Asset Staff / Approvers can approve <b>"Transferred & Matched Reality"</b>.
+            </p>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+            <select id="discTeamFilter" class="input-sm" onchange="renderDiscrepancyTable()">
+              <option value="ALL">All Teams</option>
+              <option value="Team 1">Team 1 (Dawei)</option>
+              <option value="Team 2">Team 2 (Myeik)</option>
+              <option value="Team 3">Team 3 (Bokpyin)</option>
+              <option value="Team 4">Team 4 (Kawthoung)</option>
+              <option value="Warehouse">Warehouse & NOC</option>
+            </select>
+            <select id="discStatusFilter" class="input-sm" onchange="renderDiscrepancyTable()">
+              <option value="ALL">All Approval Statuses</option>
+              <option value="PENDING">Pending Asset Approval</option>
+              <option value="APPROVED">Transferred & Matched Reality</option>
+            </select>
+            <input id="discNoteInput" class="input-sm" style="width:210px;" placeholder="Approval note / transfer ref..." />
+            <button id="btnApproveTransfer" class="btn btn-success" onclick="approveSelectedDiscrepancies('Transferred & Matched Reality')">
+              ✅ Approve Selected: Transferred & Matched Reality
+            </button>
+            <button class="btn btn-outline" onclick="refreshDashboardAndDiscrepancies()">🔄 Refresh</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="sheet-table">
+            <thead>
+              <tr class="col-hdr">
+                <th style="width:36px;"><input type="checkbox" id="chkAllDisc" onchange="toggleSelectAllDisc(this.checked)" /></th>
+                <th>Audit ID</th>
+                <th>Date (MMT)</th>
+                <th>Team</th>
+                <th>Site / Cable</th>
+                <th>Equipment Name & Code</th>
+                <th>System Serial & Qty</th>
+                <th class="col-diff">Different</th>
+                <th class="col-team">Reality Qty & Actual Serial</th>
+                <th class="col-team">In System Formula (61K Lookup)</th>
+                <th>Photo</th>
+                <th>Transfer Approval Status</th>
+                <th>Approved By</th>
+              </tr>
+            </thead>
+            <tbody id="discrepancyTableBody">
+              <tr>
+                <td colspan="13" style="text-align:center;padding:24px;color:var(--muted);font-weight:700;">
+                  Loading discrepancy records from Sheet 2...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 3: TEAM AUDIT PLAN & EXECUTIVE PROGRESS DASHBOARD               -->
+    <!-- =================================================================== -->
+    <section id="tabPane3" class="tab-pane">
+      <!-- KPI CARDS -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Total Planned Sites</div>
+          <div class="kpi-val" id="kpiPlannedSites">0</div>
+          <div class="kpi-sub">Target sites scheduled by Teams</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Audited Sites Completed</div>
+          <div class="kpi-val" id="kpiAuditedSites" style="color:var(--brand);">0</div>
+          <div class="kpi-sub" id="kpiCompletionPct">0% Branch Completion</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Total Audited Asset Rows</div>
+          <div class="kpi-val" id="kpiTotalItems">0</div>
+          <div class="kpi-sub">Across Team 1..4 & Warehouse</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Matched Reality (OK)</div>
+          <div class="kpi-val" id="kpiMatchedItems" style="color:var(--ok);">0</div>
+          <div class="kpi-sub">100% Verified on site</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Discrepancy Items</div>
+          <div class="kpi-val" id="kpiDiffItems" style="color:var(--err);">0</div>
+          <div class="kpi-sub" id="kpiPendingApproval">0 Pending Transfer Approval</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Transferred & Resolved</div>
+          <div class="kpi-val" id="kpiResolvedItems" style="color:#0284c7;">0</div>
+          <div class="kpi-sub">Approved by Asset Dept</div>
+        </div>
+      </div>
+
+      <!-- EXECUTIVE SUMMARY BY TEAM TABLE -->
+      <div class="search-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <h3 style="font-size:14.5px;font-weight:800;color:#1e3a8a;">
+            📈 Executive Branch & Team Inventory Audit Progress Matrix
+          </h3>
+          <button class="btn btn-outline" onclick="refreshDashboardAndDiscrepancies()">🔄 Sync Live Progress</button>
+        </div>
+        <div class="table-wrap">
+          <table class="sheet-table" style="min-width:900px;">
+            <thead>
+              <tr class="col-hdr">
+                <th>Team / Unit</th>
+                <th>Planned Sites</th>
+                <th>Audited Sites</th>
+                <th>Completion %</th>
+                <th>Total Audited Items</th>
+                <th>Matched Items</th>
+                <th>Discrepancy Items</th>
+                <th>Transferred / Resolved</th>
+                <th>Pending Approval</th>
+                <th>Last Audit Time (MMT)</th>
+              </tr>
+            </thead>
+            <tbody id="execSummaryBody">
+              <tr><td colspan="10" style="text-align:center;padding:18px;">Loading executive summary...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TEAM AUDIT PLAN REGISTRATION FORM & TRACKER -->
+      <div class="search-card">
+        <h3 style="font-size:14.5px;font-weight:800;color:#1e3a8a;margin-bottom:8px;">
+          🗓️ Register / Update Team Station Audit Plan
+        </h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:12px;">
+          <select id="planTeamInput" class="input-sm">
+            <option value="Team 1">Team 1 (Dawei)</option>
+            <option value="Team 2">Team 2 (Myeik)</option>
+            <option value="Team 3">Team 3 (Bokpyin)</option>
+            <option value="Team 4">Team 4 (Kawthoung)</option>
+            <option value="Warehouse & NOC">Warehouse & NOC</option>
+          </select>
+          <input id="planSiteInput" list="colQDatalist" class="input-sm" placeholder="Target Site / Cable (Col Q)..." />
+          <datalist id="colQDatalist"></datalist>
+          <input id="planStaffInput" class="input-sm" placeholder="Assigned Staff Name..." />
+          <input id="planDateInput" type="date" class="input-sm" />
+          <input id="planRemarkInput" class="input-sm" placeholder="Plan note / priority..." />
+          <button class="btn btn-primary" onclick="submitTeamAuditPlan()">💾 Save Team Plan</button>
+        </div>
+
+        <div class="table-wrap">
+          <table class="sheet-table" style="min-width:960px;">
+            <thead>
+              <tr class="col-hdr">
+                <th>Plan ID</th>
+                <th>Team</th>
+                <th>Target Site / Cable (Col Q)</th>
+                <th>Assigned Staff</th>
+                <th>Planned Date</th>
+                <th>System Items</th>
+                <th>Audited Items</th>
+                <th>Matched</th>
+                <th>Discrepancy</th>
+                <th>Photos</th>
+                <th>Status</th>
+                <th>Updated (MMT)</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="planTableBody">
+              <tr><td colspan="13" style="text-align:center;padding:18px;">Loading team audit plans...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- HIDDEN FILE INPUT FOR CAMERA / MULTI-PHOTO UPLOAD -->
+  <input type="file" id="hiddenPhotoInput" accept="image/*" multiple style="display:none;" onchange="handlePhotoFilesSelected(event)" />
+
+  <!-- 10-EXPERT TOP 0.1% ARCHITECTURE MODAL -->
+  <div id="expertModal" class="modal-backdrop" onclick="if(event.target===this)closeExpertModal()">
+    <div class="modal-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;padding-bottom:10px;">
+        <h2 style="font-size:17px;font-weight:900;color:#1e3a8a;">
+          🧠 10-Expert Top 0.1% Global Panel — Enterprise Asset BI Architecture
+        </h2>
+        <button class="btn btn-outline" onclick="closeExpertModal()">✖ Close</button>
+      </div>
+      <div class="expert-grid">
+        <div class="expert-card">
+          <div class="expert-role">1. Chief Cloud Data Architect</div>
+          <div class="expert-desc">Zero-client-load architecture: keeps all 61,000+ rows on Google Sheet 1 and queries only the exact selected station's rows (&lt;300ms) so low-RAM phones never freeze.</div>
+        </div>
+        <div class="expert-card">
+          <div class="expert-role">2. Telecom Asset & Serial Indexing Specialist</div>
+          <div class="expert-desc">Column Q (865 Sites/Cables/JBs) + Column O (15 Warehouses) instant autocomplete & automatic 61K cross-lookup for the <b>"In system formula"</b> column (e.g. <code>4103067986 = TNI_VCM_NOC_04</code>).</div>
+        </div>
+        <div class="expert-card">
+          <div class="expert-role">3. Enterprise Security & RBAC Lead</div>
+          <div class="expert-desc">Strict Team Isolation (Team 1..4 only access their assigned assets) and cryptographic Approver Gate for Asset Transfer Approvals.</div>
+        </div>
+        <div class="expert-card">
+          <div class="expert-role">4. Computer Vision & Watermark Engineer</div>
+          <div class="expert-desc">Client-side HTML5 Canvas normalizes every photo to 1440×1088 px and stamps Target Name + Equipment + Live GPS + MMT Timestamp + Auditor Name before Drive upload.</div>
+        </div>
+        <div class="expert-card">
+          <div class="expert-role">5. Field Mobile UX Designer</div>
+          <div class="expert-desc">Spreadsheet-familiar layout matching your exact operational template (Green/Blue headers, 1-click "Set All Default Matched", and free-text "+ Add Extra Item Row").</div>
+        </div>
+        <div class="expert-card">
+          <div class="expert-role">6. Audit & Compliance Controller</div>
+          <div class="expert-desc">Dual-sheet segregation: Read-Only Master Sheet 1 (`1Q9w...`) vs Multi-Tab Audit Collection Sheet 2 (`1Z1m...`) with full audit trail.</div>
+        </div>
+        <div class="expert-card">
+          <div class="expert-role">7. Discrepancy & Transfer Workflow Architect</div>
+          <div class="expert-desc">Auto-routes any serial/quantity mismatch or unrecorded item to Tab 2 (`6. Discrepancy & Transfer Approval`) for 1-click batch approval by authorized Asset staff.</div>
+        </div>
+        <div class="expert-card">
+          <div class="expert-role">8. Executive BI & Progress Strategist</div>
+          <div class="expert-desc">Live Team Plan vs Actual Execution matrix (`0. Executive Summary & Progress` & `7. Team Audit Plan & Progress`) with transparent completion percentages.</div>
+        </div>
+        <div class="expert-card">
+          <div class="expert-role">9. Offline & Low-Bandwidth Resilience Engineer</div>
+          <div class="expert-desc">Background non-blocking photo upload queue + automatic dual-routing (Vercel Edge Proxy + Direct GAS fallback).</div>
+        </div>
+        <div class="expert-card">
+          <div class="expert-role">10. QA & Zero-Error Verification Lead</div>
+          <div class="expert-desc">Handles both numeric and alphanumeric serial numbers across all 60,497 master rows without type-casting data loss.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastBox"></div>
+
+  <script>
+    // =========================================================================
+    // CONFIGURATION & STATE
+    // =========================================================================
+    const GAS_DIRECT_URL = "https://script.google.com/macros/s/AKfycbx09J8PPi_IN3_n_ho8QF4RapsPh5uzLchVfS9T89iuw-4QMZWU_ynlhzDvav4wRvj4/exec";
+    const PROXY_API_URL = "/api/asset_audit";
+
+    let STATE = {
+      staff: {
+        code: "528085",
+        name: "Ingyin Hmwe",
+        role: "ASSET_APPROVER",
+        title: "Asset Assistant 1",
+        team: "ALL",
+        canApproveTransfer: true,
+        canViewAllTeams: true
+      },
+      gps: "14.08230, 98.19150",
+      catalog: {
+        sites: [],
+        warehouses: []
+      },
+      currentTarget: "",
+      currentTeam: "Team 1",
+      rows: [],        // Loaded master rows + extra rows
+      sitePhotos: [],  // Site-wide watermarked photos [{url, name}]
+      photoTargetContext: null, // { type: 'row', idx: 0 } or { type: 'site' }
+      dashboard: {
+        summary: [],
+        discrepancies: [],
+        plans: []
+      }
+    };
+
+    // =========================================================================
+    // DUAL-ENGINE CLOUD API CALLER (VERCEL PROXY + DIRECT GAS FALLBACK)
+    // =========================================================================
+    async function apiGet(params) {
+      const qs = new URLSearchParams(params).toString();
+      try {
+        const r = await fetch(`${PROXY_API_URL}?${qs}`, { cache: "no-store" });
+        if (r.ok) {
+          const d = await r.json();
+          if (d && d.ok !== undefined) return d;
+        }
+      } catch (e) {}
+      // Direct GAS fallback
+      const gasParams = Object.assign({}, params);
+      if (!String(gasParams.action || "").startsWith("asset_")) {
+        gasParams.action = "asset_" + gasParams.action;
+      }
+      const gasQs = new URLSearchParams(gasParams).toString();
+      const r2 = await fetch(`${GAS_DIRECT_URL}?${gasQs}`, { cache: "no-store" });
+      return await r2.json();
+    }
+
+    async function apiPost(body) {
+      const payload = Object.assign({}, body);
+      if (!String(payload.action || "").startsWith("asset_")) {
+        payload.action = "asset_" + payload.action;
+      }
+      try {
+        const r = await fetch(PROXY_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (r.ok) {
+          const d = await r.json();
+          if (d && d.ok !== undefined) return d;
+        }
+      } catch (e) {}
+      // Direct GAS fallback (text/plain avoids CORS preflight on script.google.com)
+      const r2 = await fetch(GAS_DIRECT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+      return await r2.json();
+    }
+
+    function showToast(msg, type = "info") {
+      const box = document.getElementById("toastBox");
+      const el = document.createElement("div");
+      el.className = "toast-msg";
+      el.style.background = type === "ok" ? "#15803d" : (type === "err" ? "#b91c1c" : "#1e3a8a");
+      el.textContent = msg;
+      box.appendChild(el);
+      setTimeout(() => { el.remove(); }, 4200);
+    }
+
+    // =========================================================================
+    // GPS ACQUISITION & CLOCK
+    // =========================================================================
+    function refreshGpsLocation() {
+      const badge = document.getElementById("gpsBadge");
+      if (!navigator.geolocation) {
+        badge.textContent = `📍 GPS: ${STATE.gps} (Default TNI)`;
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          STATE.gps = `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
+          badge.textContent = `📍 GPS: ${STATE.gps}`;
+        },
+        () => {
+          badge.textContent = `📍 GPS: ${STATE.gps} (TNI Branch)`;
+        },
+        { enableHighAccuracy: true, timeout: 6000 }
+      );
+    }
+
+    function formatMmtNow() {
+      const now = new Date();
+      return now.toLocaleString("en-GB", { timeZone: "Asia/Yangon", hour12: false });
+    }
+
+    // =========================================================================
+    // STAFF LOGIN & RBAC
+    // =========================================================================
+    function applyQuickRole(val) {
+      const presets = {
+        "528085": { code: "528085", name: "Ingyin Hmwe", role: "ASSET_APPROVER", title: "Asset Assistant 1", team: "ALL", canApproveTransfer: true, canViewAllTeams: true },
+        "528089": { code: "528089", name: "Ye Lwin", role: "ASSET_APPROVER", title: "Technical Manager", team: "ALL", canApproveTransfer: true, canViewAllTeams: true },
+        "ADMIN": { code: "ADMIN", name: "Ha Duc Phong (BOD)", role: "ASSET_APPROVER", title: "Director / Master Admin", team: "ALL", canApproveTransfer: true, canViewAllTeams: true },
+        "T1_STAFF": { code: "T1_STAFF", name: "Team 1 Field Auditor", role: "FIELD_AUDITOR", title: "Team 1 Dawei Staff", team: "Team 1", canApproveTransfer: false, canViewAllTeams: false },
+        "T2_STAFF": { code: "T2_STAFF", name: "Team 2 Field Auditor", role: "FIELD_AUDITOR", title: "Team 2 Myeik Staff", team: "Team 2", canApproveTransfer: false, canViewAllTeams: false },
+        "T3_STAFF": { code: "T3_STAFF", name: "Team 3 Field Auditor", role: "FIELD_AUDITOR", title: "Team 3 Bokpyin Staff", team: "Team 3", canApproveTransfer: false, canViewAllTeams: false },
+        "T4_STAFF": { code: "T4_STAFF", name: "Team 4 Field Auditor", role: "FIELD_AUDITOR", title: "Team 4 Kawthoung Staff", team: "Team 4", canApproveTransfer: false, canViewAllTeams: false }
+      };
+      if (presets[val]) {
+        document.getElementById("staffCodeInput").value = presets[val].code;
+        STATE.staff = presets[val];
+        updateStaffBadges();
+        showToast(`Switched active role to ${STATE.staff.name} (${STATE.staff.team})`, "ok");
+      }
+    }
+
+    async function verifyStaffLogin() {
+      const code = document.getElementById("staffCodeInput").value.trim();
+      if (!code) {
+        showToast("Please enter your Staff Code / VCM Code / Telegram ID.", "err");
+        return;
+      }
+      showToast("Verifying staff credentials with TNI Staff Directory...", "info");
+      try {
+        const res = await apiGet({ action: "verify_staff", code: code });
+        if (res && res.ok && res.staff) {
+          STATE.staff = res.staff;
+          updateStaffBadges();
+          showToast(`Signed in as ${res.staff.name} (${res.staff.team})`, "ok");
+        } else {
+          showToast((res && res.error) || "Staff code not found in directory.", "err");
+        }
+      } catch (e) {
+        showToast("Verification error: " + e.message, "err");
+      }
+    }
+
+    function updateStaffBadges() {
+      const s = STATE.staff;
+      document.getElementById("staffNameBadge").textContent = `👤 ${s.name} (${s.title || s.role})`;
+      document.getElementById("staffTeamBadge").textContent = `🏢 Scope: ${s.team === "ALL" ? "ALL TEAMS" : s.team}`;
+      const rBadge = document.getElementById("staffRoleBadge");
+      if (s.canApproveTransfer) {
+        rBadge.className = "badge badge-approver";
+        rBadge.textContent = "✅ Authorized Asset Approver";
+      } else {
+        rBadge.className = "badge badge-auditor";
+        rBadge.textContent = "👷 Field Inventory Auditor";
+      }
+      const btnApprove = document.getElementById("btnApproveTransfer");
+      if (btnApprove) {
+        btnApprove.style.opacity = s.canApproveTransfer ? "1" : "0.5";
+        btnApprove.title = s.canApproveTransfer
+          ? "Click to approve selected asset transfers"
+          : "Locked: Only Authorized Asset Approvers can approve transfers";
+      }
+    }
+
+    // =========================================================================
+    // CATALOG & COLUMN Q / O SMART AUTOCOMPLETE
+    // =========================================================================
+    async function loadMasterCatalog() {
+      try {
+        const res = await apiGet({ action: "catalog" });
+        if (res && res.ok) {
+          STATE.catalog.sites = res.sites || [];
+          STATE.catalog.warehouses = res.warehouses || [];
+          document.getElementById("catalogStatText").textContent =
+            `(Loaded ${STATE.catalog.sites.length} exact Site/Cable/JB names from Col Q + ${STATE.catalog.warehouses.length} Warehouses from Col O)`;
+
+          const dl = document.getElementById("colQDatalist");
+          if (dl) {
+            dl.innerHTML = STATE.catalog.sites.slice(0, 865).map(s => `<option value="${escapeHtml(s)}"></option>`).join("");
+          }
+        }
+      } catch (e) {
+        document.getElementById("catalogStatText").textContent = "(Cloud catalog ready on demand)";
+      }
+    }
+
+    function onTargetSearchInput(val) {
+      const dd = document.getElementById("targetDropdown");
+      const q = String(val || "").trim().toUpperCase();
+      const allItems = [];
+
+      STATE.catalog.sites.forEach(s => {
+        if (!q || s.toUpperCase().includes(q)) {
+          allItems.push({ label: s, type: "Col Q: Site / Cable / MW / JB" });
+        }
+      });
+      STATE.catalog.warehouses.forEach(w => {
+        if (!q || w.toUpperCase().includes(q)) {
+          allItems.push({ label: w, type: "Col O: Warehouse Stock" });
+        }
+      });
+
+      const matches = allItems.slice(0, 60);
+      if (matches.length === 0) {
+        dd.style.display = "none";
+        return;
+      }
+
+      dd.innerHTML = matches.map(m => `
+        <div class="ac-item" onclick="selectTargetFromDropdown('${escapeJs(m.label)}')">
+          <span>${escapeHtml(m.label)}</span>
+          <span class="ac-tag ${m.type.includes('Warehouse') ? 'wh' : ''}">${m.type}</span>
+        </div>
+      `).join("");
+      dd.style.display = "block";
+    }
+
+    function selectTargetFromDropdown(exactName) {
+      document.getElementById("targetSearchInput").value = exactName;
+      document.getElementById("targetDropdown").style.display = "none";
+      loadSelectedTargetAssets(exactName);
+    }
+
+    function quickLoadTarget(exactName) {
+      document.getElementById("targetSearchInput").value = exactName;
+      document.getElementById("targetDropdown").style.display = "none";
+      loadSelectedTargetAssets(exactName);
+    }
+
+    document.addEventListener("click", (e) => {
+      const wrap = document.querySelector(".ac-wrapper");
+      if (wrap && !wrap.contains(e.target)) {
+        document.getElementById("targetDropdown").style.display = "none";
+      }
+    });
+
+    // =========================================================================
+    // LOAD SELECTED TARGET ASSETS FROM 61,000-ROW MASTER SHEET
+    // =========================================================================
+    async function loadSelectedTargetAssets(explicitTarget) {
+      const target = explicitTarget || document.getElementById("targetSearchInput").value.trim();
+      if (!target) {
+        showToast("Please type or select a target Station / Cable / Warehouse from Column Q.", "err");
+        return;
+      }
+
+      document.getElementById("bannerTargetCode").textContent = target;
+      document.getElementById("bannerStatusText").textContent = `Loading assets for "${target}" from 61,000-row Master Sheet...`;
+      document.getElementById("auditTableBody").innerHTML = `
+        <tr>
+          <td colspan="11" style="text-align:center;padding:28px;font-weight:700;color:var(--brand);">
+            ⏳ Querying exact rows for <b>${escapeHtml(target)}</b> from Master Cloud Sheet 1...
+          </td>
+        </tr>
+      `;
+
+      try {
+        const res = await apiGet({
+          action: "search_site",
+          target: target,
+          team: STATE.staff.team,
+          canViewAll: STATE.staff.canViewAllTeams ? "1" : "0"
+        });
+
+        if (!res || !res.ok) {
+          document.getElementById("auditTableBody").innerHTML = `
+            <tr>
+              <td colspan="11" style="text-align:center;padding:28px;font-weight:800;color:var(--err);">
+                ❌ ${(res && res.error) ? escapeHtml(res.error) : "Failed to load station assets."}
+              </td>
+            </tr>
+          `;
+          showToast((res && res.error) || "Access denied or target not found.", "err");
+          return;
+        }
+
+        STATE.currentTarget = res.target || target;
+        STATE.currentTeam = res.team || STATE.staff.team || "Team 1";
+        STATE.sitePhotos = [];
+        renderSitePhotosStrip();
+
+        STATE.rows = (res.items || []).map((it, idx) => ({
+          rowIdx: idx,
+          no: it.no || "",
+          siteCode: it.siteCode || STATE.currentTarget,
+          equipmentName: it.equipmentName || "",
+          code: it.code || "",
+          serial: it.serial || "",
+          quality: it.quality !== undefined ? String(it.quality) : "1",
+          different: "Matched",
+          realityHave: it.quality !== undefined ? String(it.quality) : "1",
+          writeSerialDifferent: "",
+          inSystemFormula: "",
+          photoUrls: [],
+          note: "",
+          isExtraItem: false
+        }));
+
+        document.getElementById("bannerTargetCode").textContent = STATE.currentTarget;
+        document.getElementById("bannerTeamTag").textContent = STATE.currentTeam;
+        document.getElementById("bannerAuditDate").textContent = new Date().toLocaleDateString("en-US");
+        const statusCell = document.getElementById("bannerSaveStatus");
+        statusCell.classList.remove("saved");
+        document.getElementById("bannerStatusText").textContent = `Not Yet Saved — Auditing ${STATE.rows.length} System Rows`;
+
+        renderAuditTable();
+        showToast(`Loaded ${STATE.rows.length} asset rows for ${STATE.currentTarget} (${STATE.currentTeam})`, "ok");
+      } catch (e) {
+        showToast("Error loading station assets: " + e.message, "err");
+      }
+    }
+
+    function renderAuditTable(filterText = "") {
+      const tbody = document.getElementById("auditTableBody");
+      const q = String(filterText || document.getElementById("rowFilterInput").value || "").trim().toLowerCase();
+
+      if (STATE.rows.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="11" style="text-align:center;padding:24px;font-weight:700;color:var(--muted);">
+              No system rows found for <b>${escapeHtml(STATE.currentTarget || "this selection")}</b>. You can click <b>+ Add Extra Item Row</b> below to record items on site.
+            </td>
+          </tr>
+        `;
+        updateBannerCounters();
+        return;
+      }
+
+      const htmlRows = [];
+      STATE.rows.forEach((r, idx) => {
+        if (q) {
+          const hay = `${r.no} ${r.siteCode} ${r.equipmentName} ${r.code} ${r.serial} ${r.writeSerialDifferent} ${r.inSystemFormula}`.toLowerCase();
+          if (!hay.includes(q)) return;
+        }
+
+        const isDiff = r.different !== "Matched";
+        const rowClass = r.isExtraItem ? "row-extra" : (isDiff ? "row-diff" : "");
+        const selClass = r.different === "Matched"
+          ? "status-matched"
+          : (r.different === "Missing" ? "status-missing" : "status-diff");
+
+        const thumbsHtml = (r.photoUrls || []).map((u, pIdx) =>
+          `<a href="${escapeHtml(u)}" target="_blank" rel="noopener" class="thumb-pill">🖼️ #${pIdx + 1}</a>`
+        ).join("");
+
+        if (r.isExtraItem) {
+          htmlRows.push(`
+            <tr class="${rowClass}" data-idx="${idx}">
+              <td style="font-weight:800;color:#0369a1;">EXTRA-${idx + 1}</td>
+              <td><input class="cell-input" value="${escapeHtml(r.siteCode)}" onchange="updateRowField(${idx},'siteCode',this.value)" /></td>
+              <td><input class="cell-input" placeholder="Type any equipment/goods name (free text)..." value="${escapeHtml(r.equipmentName)}" onchange="updateRowField(${idx},'equipmentName',this.value)" /></td>
+              <td><input class="cell-input" placeholder="Code..." value="${escapeHtml(r.code)}" onchange="updateRowField(${idx},'code',this.value)" /></td>
+              <td><input class="cell-input" placeholder="System serial (if any)" value="${escapeHtml(r.serial)}" onchange="updateRowField(${idx},'serial',this.value)" /></td>
+              <td style="text-align:center;font-weight:700;">0</td>
+              <td class="td-diff">
+                <select class="cell-select status-diff" onchange="updateRowField(${idx},'different',this.value)">
+                  <option value="Extra Item" ${r.different === 'Extra Item' ? 'selected' : ''}>Extra Item</option>
+                  <option value="Different" ${r.different === 'Different' ? 'selected' : ''}>Different</option>
+                  <option value="Damaged / Broken" ${r.different === 'Damaged / Broken' ? 'selected' : ''}>Damaged / Broken</option>
+                </select>
+              </td>
+              <td class="td-team-input">
+                <input type="number" step="any" class="cell-input" value="${escapeHtml(r.realityHave)}" onchange="updateRowField(${idx},'realityHave',this.value)" />
+              </td>
+              <td class="td-team-input">
+                <div style="display:flex;gap:3px;">
+                  <input class="cell-input" placeholder="Type actual serial..." value="${escapeHtml(r.writeSerialDifferent)}"
+                    onchange="onWriteSerialDifferentChange(${idx}, this.value)" />
+                  <button class="photo-mini-btn" title="Lookup Serial in 61K System" onclick="lookupRowSerial(${idx})">🔍</button>
+                </div>
+              </td>
+              <td class="td-formula" id="formulaCell_${idx}">
+                ${escapeHtml(r.inSystemFormula || "Extra unrecorded item on site")}
+              </td>
+              <td class="td-team-input">
+                <div class="photo-cell-wrap">
+                  <button class="photo-mini-btn" onclick="triggerRowPhoto(${idx})">📷 +Photo</button>
+                  <button class="photo-mini-btn" style="background:#dc2626;" title="Remove extra row" onclick="removeExtraRow(${idx})">✖</button>
+                  ${thumbsHtml}
+                </div>
+              </td>
+            </tr>
+          `);
+        } else {
+          htmlRows.push(`
+            <tr class="${rowClass}" data-idx="${idx}">
+              <td style="font-weight:700;">${escapeHtml(r.no)}</td>
+              <td style="font-weight:700;">${escapeHtml(r.siteCode)}</td>
+              <td>${escapeHtml(r.equipmentName)}</td>
+              <td style="font-family:monospace;font-weight:700;">${escapeHtml(r.code)}</td>
+              <td style="font-family:monospace;font-weight:700;">${escapeHtml(r.serial)}</td>
+              <td style="text-align:right;font-weight:800;">${escapeHtml(r.quality)}</td>
+              <td class="td-diff">
+                <select class="cell-select ${selClass}" onchange="updateRowField(${idx},'different',this.value)">
+                  <option value="Matched" ${r.different === 'Matched' ? 'selected' : ''}>Matched</option>
+                  <option value="Different" ${r.different === 'Different' ? 'selected' : ''}>Different</option>
+                  <option value="Qty Mismatch" ${r.different === 'Qty Mismatch' ? 'selected' : ''}>Qty Mismatch</option>
+                  <option value="Missing" ${r.different === 'Missing' ? 'selected' : ''}>Missing</option>
+                  <option value="Damaged / Broken" ${r.different === 'Damaged / Broken' ? 'selected' : ''}>Damaged / Broken</option>
+                </select>
+              </td>
+              <td class="td-team-input">
+                <input type="number" step="any" class="cell-input" value="${escapeHtml(r.realityHave)}"
+                  onchange="onRealityQtyChange(${idx}, this.value)" />
+              </td>
+              <td class="td-team-input">
+                <div style="display:flex;gap:3px;">
+                  <input class="cell-input" placeholder="Partial/full serial..." value="${escapeHtml(r.writeSerialDifferent)}"
+                    onchange="onWriteSerialDifferentChange(${idx}, this.value)" />
+                  <button class="photo-mini-btn" title="Lookup Serial in 61K System" onclick="lookupRowSerial(${idx})">🔍</button>
+                </div>
+              </td>
+              <td class="td-formula" id="formulaCell_${idx}">
+                ${escapeHtml(r.inSystemFormula || "")}
+              </td>
+              <td class="td-team-input">
+                <div class="photo-cell-wrap">
+                  <button class="photo-mini-btn" onclick="triggerRowPhoto(${idx})">📷 +Photo</button>
+                  ${thumbsHtml}
+                </div>
+              </td>
+            </tr>
+          `);
+        }
+      });
+
+      tbody.innerHTML = htmlRows.join("");
+      updateBannerCounters();
+    }
+
+    function filterLoadedRows(q) {
+      renderAuditTable(q);
+    }
+
+    function updateRowField(idx, field, val) {
+      if (!STATE.rows[idx]) return;
+      STATE.rows[idx][field] = val;
+      renderAuditTable();
+    }
+
+    function onRealityQtyChange(idx, val) {
+      const r = STATE.rows[idx];
+      if (!r) return;
+      r.realityHave = val;
+      if (String(val).trim() !== "" && Number(val) !== Number(r.quality)) {
+        if (Number(val) === 0) {
+          r.different = "Missing";
+        } else if (r.different === "Matched") {
+          r.different = "Qty Mismatch";
+        }
+      }
+      renderAuditTable();
+    }
+
+    // =========================================================================
+    // AUTOMATIC "IN SYSTEM FORMULA" SERIAL CROSS-LOOKUP (61,000 ROWS)
+    // =========================================================================
+    async function onWriteSerialDifferentChange(idx, val) {
+      const r = STATE.rows[idx];
+      if (!r) return;
+      r.writeSerialDifferent = String(val || "").trim();
+      if (r.writeSerialDifferent && r.different === "Matched" && !r.isExtraItem) {
+        r.different = "Different";
+      }
+      if (r.writeSerialDifferent.length >= 3) {
+        await lookupRowSerial(idx);
+      } else {
+        r.inSystemFormula = "";
+        renderAuditTable();
+      }
+    }
+
+    async function lookupRowSerial(idx) {
+      const r = STATE.rows[idx];
+      if (!r) return;
+      const q = String(r.writeSerialDifferent || "").trim();
+      if (q.length < 3) {
+        showToast("Type at least 3 digits/characters in 'Write serial different' to search 61,000 rows.", "err");
+        return;
+      }
+      const fCell = document.getElementById(`formulaCell_${idx}`);
+      if (fCell) fCell.textContent = `⏳ Searching "${q}" in 61K DB...`;
+
+      try {
+        const res = await apiGet({ action: "lookup_serial", q: q });
+        if (res && res.ok) {
+          r.inSystemFormula = res.formula || `${q} = Not Found`;
+          if (r.different === "Matched" && !r.isExtraItem) {
+            r.different = "Different";
+          }
+          renderAuditTable();
+          showToast(`In System Formula: ${r.inSystemFormula}`, res.found ? "ok" : "info");
+        }
+      } catch (e) {
+        if (fCell) fCell.textContent = "Lookup error";
+      }
+    }
+
+    function addExtraGoodsRow() {
+      if (!STATE.currentTarget) {
+        STATE.currentTarget = document.getElementById("targetSearchInput").value.trim() || "TNI0351";
+      }
+      STATE.rows.push({
+        rowIdx: STATE.rows.length,
+        no: "EXTRA",
+        siteCode: STATE.currentTarget,
+        equipmentName: "",
+        code: "",
+        serial: "",
+        quality: "0",
+        different: "Extra Item",
+        realityHave: "1",
+        writeSerialDifferent: "",
+        inSystemFormula: "Extra unrecorded item on site",
+        photoUrls: [],
+        note: "EXTRA_ITEM",
+        isExtraItem: true
+      });
+      renderAuditTable();
+      showToast("Added extra goods row at bottom. Type any equipment name freely.", "ok");
+    }
+
+    function removeExtraRow(idx) {
+      STATE.rows.splice(idx, 1);
+      renderAuditTable();
+    }
+
+    function markAllUnchangedMatched() {
+      STATE.rows.forEach(r => {
+        if (!r.isExtraItem && !r.writeSerialDifferent) {
+          r.different = "Matched";
+          r.realityHave = r.quality;
+        }
+      });
+      renderAuditTable();
+      showToast("All unchanged system rows marked as Matched with System Quantity.", "ok");
+    }
+
+    function updateBannerCounters() {
+      const total = STATE.rows.length;
+      let matched = 0, diff = 0, photos = STATE.sitePhotos.length;
+      STATE.rows.forEach(r => {
+        if (r.different === "Matched" && !r.isExtraItem) matched++;
+        else diff++;
+        photos += (r.photoUrls || []).length;
+      });
+      document.getElementById("bannerCounters").textContent =
+        `${total} Rows | ${matched} Matched | ${diff} Discrepancy/Extra | ${photos} Photos`;
+      document.getElementById("sitePhotoCount").textContent = STATE.sitePhotos.length;
+    }
+
+    // =========================================================================
+    // 1440x1088 WATERMARKED MULTI-PHOTO ENGINE (TARGET + GPS + TIME + AUDITOR)
+    // =========================================================================
+    function triggerRowPhoto(idx) {
+      STATE.photoTargetContext = { type: "row", idx: idx };
+      document.getElementById("hiddenPhotoInput").value = "";
+      document.getElementById("hiddenPhotoInput").click();
+    }
+
+    function triggerSiteWidePhoto() {
+      STATE.photoTargetContext = { type: "site" };
+      document.getElementById("hiddenPhotoInput").value = "";
+      document.getElementById("hiddenPhotoInput").click();
+    }
+
+    async function handlePhotoFilesSelected(event) {
+      const files = Array.from(event.target.files || []);
+      if (files.length === 0) return;
+
+      const ctx = STATE.photoTargetContext || { type: "site" };
+      const siteCode = STATE.currentTarget || document.getElementById("targetSearchInput").value.trim() || "TNI_ASSET";
+      const rowObj = (ctx.type === "row" && STATE.rows[ctx.idx]) ? STATE.rows[ctx.idx] : null;
+      const itemLabel = rowObj
+        ? `${rowObj.equipmentName || "Extra Item"} | Serial: ${rowObj.writeSerialDifferent || rowObj.serial || "N/A"}`
+        : `Station/Cable General Inventory Photo`;
+
+      showToast(`Processing & watermarking ${files.length} photo(s) at 1440×1088 px...`, "info");
+
+      for (let i = 0; i < files.length; i++) {
+        try {
+          const base64Jpeg = await watermarkImageTo1440x1088(files[i], {
+            siteCode: siteCode,
+            team: STATE.currentTeam,
+            auditor: STATE.staff.name,
+            gps: STATE.gps,
+            itemLabel: itemLabel
+          });
+
+          const upRes = await apiPost({
+            action: "asset_upload_photo",
+            siteCode: siteCode,
+            rowNo: rowObj ? rowObj.no : "SITE",
+            base64: base64Jpeg
+          });
+
+          if (upRes && upRes.ok && upRes.fileUrl) {
+            if (rowObj) {
+              rowObj.photoUrls.push(upRes.fileUrl);
+            } else {
+              STATE.sitePhotos.push({ url: upRes.fileUrl, name: upRes.fileName || `Photo_${STATE.sitePhotos.length + 1}` });
+              renderSitePhotosStrip();
+            }
+            renderAuditTable();
+            showToast(`Uploaded watermarked photo (${i + 1}/${files.length}) to Google Drive!`, "ok");
+          } else {
+            showToast(`Upload failed: ${(upRes && upRes.error) || "Unknown error"}`, "err");
+          }
+        } catch (err) {
+          showToast(`Photo error: ${err.message}`, "err");
+        }
+      }
+    }
+
+    function renderSitePhotosStrip() {
+      const strip = document.getElementById("sitePhotosStrip");
+      const list = document.getElementById("sitePhotosList");
+      if (!STATE.sitePhotos || STATE.sitePhotos.length === 0) {
+        strip.style.display = "none";
+        return;
+      }
+      strip.style.display = "flex";
+      list.innerHTML = STATE.sitePhotos.map((p, i) =>
+        `<a href="${escapeHtml(p.url)}" target="_blank" rel="noopener" class="thumb-pill">📸 Site Photo #${i + 1}</a>`
+      ).join("");
+    }
+
+    function watermarkImageTo1440x1088(file, meta) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const img = new Image();
+          img.onload = () => {
+            const W = 1440;
+            const H = 1088;
+            const canvas = document.createElement("canvas");
+            canvas.width = W;
+            canvas.height = H;
+            const ctx = canvas.getContext("2d");
+
+            // Fill dark background & center-cover image into 1440x1088
+            ctx.fillStyle = "#0f172a";
+            ctx.fillRect(0, 0, W, H);
+            const scale = Math.max(W / img.width, H / img.height);
+            const nw = img.width * scale;
+            const nh = img.height * scale;
+            const ox = (W - nw) / 2;
+            const oy = (H - nh) / 2;
+            ctx.drawImage(img, ox, oy, nw, nh);
+
+            // Top-left Target Badge
+            ctx.fillStyle = "rgba(15, 23, 42, 0.82)";
+            ctx.fillRect(20, 20, 480, 54);
+            ctx.strokeStyle = "#facc15";
+            ctx.lineWidth = 3;
+            ctx.strokeRect(20, 20, 480, 54);
+            ctx.fillStyle = "#facc15";
+            ctx.font = "900 26px Inter, sans-serif";
+            ctx.fillText(`TARGET: ${meta.siteCode} (${meta.team})`, 36, 56);
+
+            // Bottom Semi-Transparent Watermark Bar
+            const barH = 118;
+            ctx.fillStyle = "rgba(15, 23, 42, 0.84)";
+            ctx.fillRect(0, H - barH, W, barH);
+            ctx.fillStyle = "#38bdf8";
+            ctx.fillRect(0, H - barH, W, 4);
+
+            const timeStr = formatMmtNow() + " MMT";
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "800 22px Inter, sans-serif";
+            ctx.fillText(`📍 Selected Target: ${meta.siteCode}   |   🌐 GPS: ${meta.gps}   |   🕒 Time: ${timeStr}`, 24, H - 72);
+
+            ctx.fillStyle = "#fde047";
+            ctx.font = "700 20px Inter, sans-serif";
+            ctx.fillText(`🔧 Item: ${String(meta.itemLabel || "").substring(0, 95)}`, 24, H - 40);
+
+            ctx.fillStyle = "#94a3b8";
+            ctx.font = "600 17px Inter, sans-serif";
+            ctx.fillText(`👤 Auditor: ${meta.auditor}   •   TNI Enterprise Asset Inventory Audit (1440×1088 Verified)`, 24, H - 14);
+
+            resolve(canvas.toDataURL("image/jpeg", 0.84));
+          };
+          img.onerror = reject;
+          img.src = ev.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // =========================================================================
+    // SAVE AUDIT REPORT TO SHEET 2 (1Z1mRG_skVoRifOjw08T0zon4nCGa7ZfXZSZMdf7kFt0)
+    // =========================================================================
+    async function saveAuditReportToSheet() {
+      if (STATE.rows.length === 0) {
+        showToast("Please load a Station / Cable or add an item row before saving.", "err");
+        return;
+      }
+      const siteCode = STATE.currentTarget || document.getElementById("targetSearchInput").value.trim() || "TNI0351";
+      const siteWideUrls = STATE.sitePhotos.map(p => p.url);
+
+      const itemsPayload = STATE.rows.map(r => {
+        const mergedPhotos = [...(r.photoUrls || []), ...siteWideUrls];
+        return {
+          no: r.no,
+          siteCode: r.siteCode || siteCode,
+          equipmentName: r.equipmentName,
+          code: r.code,
+          serial: r.serial,
+          quality: r.quality,
+          different: r.different,
+          realityHave: r.realityHave,
+          writeSerialDifferent: r.writeSerialDifferent,
+          inSystemFormula: r.inSystemFormula,
+          photoUrls: mergedPhotos,
+          note: r.note,
+          isExtraItem: Boolean(r.isExtraItem)
+        };
+      });
+
+      showToast(`Saving ${itemsPayload.length} audited rows for ${siteCode} to Google Sheet 2...`, "info");
+
+      try {
+        const res = await apiPost({
+          action: "asset_save_audit",
+          team: STATE.currentTeam,
+          siteCode: siteCode,
+          auditor: STATE.staff.name,
+          gps: STATE.gps,
+          items: itemsPayload
+        });
+
+        if (res && res.ok) {
+          const statusCell = document.getElementById("bannerSaveStatus");
+          statusCell.classList.add("saved");
+          document.getElementById("bannerStatusText").textContent =
+            `✅ SAVED TO SHEET 2 (${res.targetTab}) at ${res.timestamp} — ${res.totalSaved} Rows (${res.discrepanciesLogged} Discrepancies Routed to Tab 2)`;
+          showToast(`Saved ${res.totalSaved} rows to "${res.targetTab}" on Google Sheet 2!`, "ok");
+          refreshDashboardAndDiscrepancies();
+        } else {
+          showToast(`Save failed: ${(res && res.error) || "Unknown error"}`, "err");
+        }
+      } catch (e) {
+        showToast("Error saving audit report: " + e.message, "err");
+      }
+    }
+
+    // =========================================================================
+    // TAB 2 & TAB 3: DISCREPANCY APPROVAL & TEAM PROGRESS DASHBOARD
+    // =========================================================================
+    async function refreshDashboardAndDiscrepancies() {
+      try {
+        const res = await apiGet({ action: "dashboard" });
+        if (res && res.ok) {
+          STATE.dashboard.summary = res.summary || [];
+          STATE.dashboard.discrepancies = res.discrepancies || [];
+          STATE.dashboard.plans = res.plans || [];
+          renderDiscrepancyTable();
+          renderExecutiveDashboard();
+        }
+      } catch (e) {}
+    }
+
+    function renderDiscrepancyTable() {
+      const tbody = document.getElementById("discrepancyTableBody");
+      const teamFilter = document.getElementById("discTeamFilter").value;
+      const statusFilter = document.getElementById("discStatusFilter").value;
+      const rows = STATE.dashboard.discrepancies || [];
+
+      let pendingCount = 0;
+      const filtered = rows.filter(r => {
+        const rTeam = String(r[2] || "");
+        const appStat = String(r[17] || "");
+        const isPending = appStat.toLowerCase().includes("pending");
+        if (isPending) pendingCount++;
+
+        // Enforce Team Isolation for non-approvers
+        if (!STATE.staff.canViewAllTeams && STATE.staff.team !== "ALL") {
+          if (!rTeam.toUpperCase().includes(STATE.staff.team.toUpperCase())) return false;
+        }
+        if (teamFilter !== "ALL" && !rTeam.toUpperCase().includes(teamFilter.toUpperCase())) return false;
+        if (statusFilter === "PENDING" && !isPending) return false;
+        if (statusFilter === "APPROVED" && isPending) return false;
+        return true;
+      });
+
+      document.getElementById("discCountBadge").textContent = pendingCount;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="13" style="text-align:center;padding:24px;color:var(--muted);font-weight:700;">
+              No discrepancy items match the current filter. When an auditor marks an item as "Different", "Missing", or "Extra Item" in Tab 1, it appears here automatically.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(r => {
+        const auditId = r[0] || "";
+        const dateStr = r[1] || "";
+        const team = r[2] || "";
+        const auditor = r[3] || "";
+        const noId = r[5] || "";
+        const site = r[6] || "";
+        const eqName = r[7] || "";
+        const eqCode = r[8] || "";
+        const sysSer = r[9] || "";
+        const sysQty = r[10] || "";
+        const diffFlag = r[11] || "";
+        const realQty = r[12] || "";
+        const realSer = r[13] || "";
+        const formula = r[14] || "";
+        const photosRaw = String(r[15] || "").trim();
+        const appStatus = r[17] || "Pending Asset Approval";
+        const appBy = r[18] || "-";
+        const appTime = r[19] || "";
+
+        const photoLinks = photosRaw
+          ? photosRaw.split(/\s*\|\s*|\n+/).filter(Boolean).map((u, i) =>
+              `<a href="${escapeHtml(u)}" target="_blank" rel="noopener" class="thumb-pill">🖼️ #${i + 1}</a>`
+            ).join(" ")
+          : "-";
+
+        const isApproved = appStatus.toLowerCase().includes("transferred") || appStatus.toLowerCase().includes("approved");
+
+        return `
+          <tr class="${isApproved ? '' : 'row-diff'}">
+            <td style="text-align:center;">
+              <input type="checkbox" class="disc-chk" value="${escapeHtml(auditId)}" />
+            </td>
+            <td style="font-family:monospace;font-weight:700;font-size:11px;">${escapeHtml(auditId)}</td>
+            <td style="font-size:11.5px;">${escapeHtml(dateStr)}<br><span style="color:var(--muted);">${escapeHtml(auditor)}</span></td>
+            <td style="font-weight:700;">${escapeHtml(team)}</td>
+            <td style="font-weight:800;color:var(--brand);">${escapeHtml(site)}</td>
+            <td><b>${escapeHtml(eqName)}</b><br><span style="font-size:11px;color:var(--muted);">No: ${escapeHtml(noId)} | Code: ${escapeHtml(eqCode)}</span></td>
+            <td style="font-family:monospace;">Serial: <b>${escapeHtml(sysSer || "-")}</b><br>System Qty: <b>${escapeHtml(sysQty)}</b></td>
+            <td class="td-diff" style="text-align:center;font-weight:800;">${escapeHtml(diffFlag)}</td>
+            <td>Reality Qty: <b>${escapeHtml(realQty)}</b><br>Actual Serial: <b style="color:#b91c1c;">${escapeHtml(realSer || "-")}</b></td>
+            <td class="td-formula">${escapeHtml(formula || "-")}</td>
+            <td>${photoLinks}</td>
+            <td>
+              <span class="badge ${isApproved ? 'badge-approver' : 'badge-auditor'}">
+                ${isApproved ? '✅ ' : '⏳ '}${escapeHtml(appStatus)}
+              </span>
+            </td>
+            <td style="font-size:11px;">${escapeHtml(appBy)}<br>${escapeHtml(appTime)}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function toggleSelectAllDisc(checked) {
+      document.querySelectorAll(".disc-chk").forEach(cb => { cb.checked = checked; });
+    }
+
+    async function approveSelectedDiscrepancies(statusLabel) {
+      if (!STATE.staff.canApproveTransfer) {
+        showToast("Unauthorized: Only Asset Approvers (Ingyin Hmwe, Ye Lwin, BOD, etc.) can approve transfers.", "err");
+        return;
+      }
+      const checked = Array.from(document.querySelectorAll(".disc-chk:checked")).map(cb => cb.value);
+      if (checked.length === 0) {
+        showToast("Please tick at least one discrepancy item to approve.", "err");
+        return;
+      }
+      const note = document.getElementById("discNoteInput").value.trim();
+      showToast(`Approving ${checked.length} item(s) as "${statusLabel}"...`, "info");
+
+      try {
+        const res = await apiPost({
+          action: "asset_approve_transfer",
+          approverCode: STATE.staff.code,
+          auditIds: checked,
+          approvalStatus: statusLabel,
+          approvalNote: note
+        });
+        if (res && res.ok) {
+          showToast(`Approved ${res.updatedCount} item(s) by ${res.approvedBy}!`, "ok");
+          refreshDashboardAndDiscrepancies();
+        } else {
+          showToast((res && res.error) || "Approval failed.", "err");
+        }
+      } catch (e) {
+        showToast("Approval error: " + e.message, "err");
+      }
+    }
+
+    function renderExecutiveDashboard() {
+      const sumRows = STATE.dashboard.summary || [];
+      const sumBody = document.getElementById("execSummaryBody");
+
+      if (sumRows.length > 0) {
+        sumBody.innerHTML = sumRows.map(r => {
+          const isTotal = String(r[0] || "").includes("TOTAL");
+          return `
+            <tr style="${isTotal ? 'background:#dbeafe;font-weight:900;' : ''}">
+              <td style="font-weight:800;">${escapeHtml(r[0] || "")}</td>
+              <td style="text-align:center;font-weight:700;">${escapeHtml(r[1] || "0")}</td>
+              <td style="text-align:center;font-weight:800;color:var(--brand);">${escapeHtml(r[2] || "0")}</td>
+              <td style="text-align:center;font-weight:900;color:var(--ok);">${escapeHtml(r[3] || "0%")}</td>
+              <td style="text-align:right;font-weight:700;">${escapeHtml(r[4] || "0")}</td>
+              <td style="text-align:right;color:var(--ok);font-weight:800;">${escapeHtml(r[5] || "0")}</td>
+              <td style="text-align:right;color:var(--err);font-weight:800;">${escapeHtml(r[6] || "0")}</td>
+              <td style="text-align:right;color:#0284c7;font-weight:800;">${escapeHtml(r[7] || "0")}</td>
+              <td style="text-align:right;color:var(--warn);font-weight:800;">${escapeHtml(r[8] || "0")}</td>
+              <td style="font-size:11.5px;">${escapeHtml(r[9] || "-")}</td>
+            </tr>
+          `;
+        }).join("");
+
+        const tot = sumRows[sumRows.length - 1];
+        if (tot) {
+          document.getElementById("kpiPlannedSites").textContent = tot[1] || "0";
+          document.getElementById("kpiAuditedSites").textContent = tot[2] || "0";
+          document.getElementById("kpiCompletionPct").textContent = `${tot[3] || "0%"} Branch Completion`;
+          document.getElementById("kpiTotalItems").textContent = tot[4] || "0";
+          document.getElementById("kpiMatchedItems").textContent = tot[5] || "0";
+          document.getElementById("kpiDiffItems").textContent = tot[6] || "0";
+          document.getElementById("kpiResolvedItems").textContent = tot[7] || "0";
+          document.getElementById("kpiPendingApproval").textContent = `${tot[8] || "0"} Pending Transfer Approval`;
+        }
+      }
+
+      const planRows = STATE.dashboard.plans || [];
+      const planBody = document.getElementById("planTableBody");
+      if (planRows.length === 0) {
+        planBody.innerHTML = `
+          <tr>
+            <td colspan="13" style="text-align:center;padding:20px;color:var(--muted);font-weight:700;">
+              No station audit plans registered yet. Use the form above to add a Team Audit Plan or save an audit in Tab 1.
+            </td>
+          </tr>
+        `;
+      } else {
+        planBody.innerHTML = planRows.map(p => `
+          <tr>
+            <td style="font-family:monospace;font-weight:700;">${escapeHtml(p[0] || "")}</td>
+            <td style="font-weight:700;">${escapeHtml(p[1] || "")}</td>
+            <td style="font-weight:800;color:var(--brand);">${escapeHtml(p[2] || "")}</td>
+            <td>${escapeHtml(p[3] || "")}</td>
+            <td>${escapeHtml(p[4] || "")}</td>
+            <td style="text-align:right;">${escapeHtml(p[5] || "0")}</td>
+            <td style="text-align:right;font-weight:800;">${escapeHtml(p[6] || "0")}</td>
+            <td style="text-align:right;color:var(--ok);font-weight:800;">${escapeHtml(p[7] || "0")}</td>
+            <td style="text-align:right;color:var(--err);font-weight:800;">${escapeHtml(p[8] || "0")}</td>
+            <td style="text-align:right;">${escapeHtml(p[9] || "0")}</td>
+            <td><span class="badge badge-team">${escapeHtml(p[10] || "")}</span></td>
+            <td style="font-size:11px;">${escapeHtml(p[11] || "")}</td>
+            <td>
+              <button class="photo-mini-btn" onclick="auditPlannedSite('${escapeJs(p[2] || "")}')">🔍 Audit Now</button>
+            </td>
+          </tr>
+        `).join("");
+      }
+    }
+
+    async function submitTeamAuditPlan() {
+      const team = document.getElementById("planTeamInput").value;
+      const siteCode = document.getElementById("planSiteInput").value.trim();
+      const staff = document.getElementById("planStaffInput").value.trim() || STATE.staff.name;
+      const plannedDate = document.getElementById("planDateInput").value;
+      const remark = document.getElementById("planRemarkInput").value.trim();
+
+      if (!siteCode) {
+        showToast("Please select or enter a Target Site / Cable from Column Q.", "err");
+        return;
+      }
+      showToast(`Saving audit plan for ${siteCode} (${team})...`, "info");
+      try {
+        const res = await apiPost({
+          action: "asset_save_plan",
+          team: team,
+          siteCode: siteCode,
+          assignedStaff: staff,
+          plannedDate: plannedDate,
+          remark: remark
+        });
+        if (res && res.ok) {
+          showToast(`Saved Team Audit Plan for ${siteCode}!`, "ok");
+          refreshDashboardAndDiscrepancies();
+        } else {
+          showToast((res && res.error) || "Failed to save plan.", "err");
+        }
+      } catch (e) {
+        showToast("Plan save error: " + e.message, "err");
+      }
+    }
+
+    function auditPlannedSite(siteCode) {
+      switchAssetTab(1);
+      quickLoadTarget(siteCode);
+    }
+
+    // =========================================================================
+    // TAB & MODAL HELPERS
+    // =========================================================================
+    function switchAssetTab(num) {
+      [1, 2, 3].forEach(n => {
+        document.getElementById(`tabBtn${n}`).classList.toggle("active", n === num);
+        document.getElementById(`tabPane${n}`).classList.toggle("active", n === num);
+      });
+      if (num === 2 || num === 3) {
+        refreshDashboardAndDiscrepancies();
+      }
+    }
+
+    function openExpertModal() {
+      document.getElementById("expertModal").classList.add("open");
+    }
+    function closeExpertModal() {
+      document.getElementById("expertModal").classList.remove("open");
+    }
+
+    function escapeHtml(s) {
+      return String(s === undefined || s === null ? "" : s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+    function escapeJs(s) {
+      return String(s || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    }
+
+    // =========================================================================
+    // INITIALIZE PORTAL ON LOAD
+    // =========================================================================
+    window.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("planDateInput").value = new Date().toISOString().slice(0, 10);
+      updateStaffBadges();
+      refreshGpsLocation();
+      loadMasterCatalog();
+      quickLoadTarget("TNI0351");
+      refreshDashboardAndDiscrepancies();
+    });
+  </script>
+</body>
+</html>

@@ -21,6 +21,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "asset_audit.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "assets/**",
       "use": "@vercel/static"
     },
@@ -100,6 +104,13 @@
       "config": {
         "maxDuration": 30
       }
+    },
+    {
+      "src": "api/asset_audit.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxDuration": 60
+      }
     }
   ],
   "routes": [
@@ -160,6 +171,20 @@
       }
     },
     {
+      "src": "/asset",
+      "dest": "asset_audit.html",
+      "headers": {
+        "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0"
+      }
+    },
+    {
+      "src": "/asset_audit.html",
+      "dest": "asset_audit.html",
+      "headers": {
+        "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0"
+      }
+    },
+    {
       "src": "/api/index",
       "dest": "api/index.py"
     },
@@ -202,6 +227,10 @@
     {
       "src": "/api/cable_bot",
       "dest": "api/cable_bot.py"
+    },
+    {
+      "src": "/api/asset_audit",
+      "dest": "api/asset_audit.py"
     },
     {
       "src": "/assets/(.*)",
