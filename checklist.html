@@ -1479,9 +1479,8 @@
     </div>
   </div>
 
-  <!-- HIDDEN FILE INPUT FOR GALLERY / PHOTO PICKER & DIRECT CAMERA CAPTURE -->
-  <input type="file" id="hidden-photo-input" accept="image/*" style="display:none;" onchange="handlePhotoFileSelected(event)" />
-  <input type="file" id="hidden-camera-direct-input" accept="image/*" capture="environment" style="display:none;" onchange="handlePhotoFileSelected(event)" />
+  <!-- HIDDEN FILE INPUT: DIRECT FILE PICKER (NO CAMERA CHOOSER) WITH MULTI-SELECT (CHỤP BAO NHIÊU ẢNH LINK BẤY NHIÊU ẢNH) -->
+  <input type="file" id="hidden-photo-input" accept=".jpg,.jpeg,.png,.webp,.heic,image/jpeg,image/png,image/webp,application/pdf" multiple style="display:none;" onchange="handlePhotoFileSelected(event)" />
 
   <!-- MODAL 1: SIDE-BY-SIDE BEFORE / AFTER 1440x1088 COMPARISON -->
   <div class="modal-backdrop" id="modal-compare">
@@ -1725,11 +1724,13 @@
             beforeDataUrl: "",
             beforeThumbUrl: "",
             beforeDriveUrl: "",
+            beforePhotos: [],
             fixStatus: "Chưa sửa (Pending Fix)",
             afterNote: "",
             afterDataUrl: "",
             afterThumbUrl: "",
             afterDriveUrl: "",
+            afterPhotos: [],
             gps: "",
             uploadingBefore: false,
             uploadErrorBefore: false,
@@ -1994,17 +1995,11 @@
             </div>
           </div>
 
-          <!-- COL 3: BEFORE / DEFECT PHOTO & LIVE UPLOAD TICK XANH AT TOP-RIGHT (HÌNH 2 POSITION) -->
+          <!-- COL 3: BEFORE / DEFECT PHOTO (MULTI-PHOTO GALLERY & TICK XANH AT HÌNH 2 POSITION) -->
           <div class="photo-col-box defect-col">
             <div class="col-box-header">
               <span>${t.colDefectTitle}</span>
-              ${st.uploadingBefore
-                ? `<span class="res-badge badge-upload-pending">⏳ Uploading... • Đang tải...</span>`
-                : (st.uploadErrorBefore
-                  ? `<button type="button" class="res-badge badge-upload-err" onclick="retrySingleItemPhotoUpload('${codeEsc}', 'BEFORE')" title="Mạng yếu chưa upload được ảnh này. Bấm để tải lại!">❌ Lỗi mạng • 🔄 Bấm gửi lại</button>`
-                  : ((st.beforeDriveUrl || st.beforeThumbUrl)
-                    ? `<span class="res-badge badge-upload-ok">✅ Uploaded • Đã lưu Drive</span>`
-                    : ``))}
+              ${renderUploadStatusBadgeHtml(st, 'BEFORE', codeEsc)}
             </div>
             <input type="text" class="note-input" placeholder="${escAttr(t.defectPlaceholder)}" value="${escAttr(st.defectNote || '')}" oninput="updateItemField('${codeEsc}', 'defectNote', this.value)" />
             <div class="photo-btn-row">
@@ -2012,33 +2007,20 @@
                 <span>📷 Capture Defect • Chụp Ảnh Lỗi</span>
                 <span style="font-size:10.5px;font-weight:700;opacity:0.95;">🇲🇲 အပျက်ပုံရိုက်ရန် (TimestampCam)</span>
               </button>
-              <button type="button" class="btn-cam-capture choose-btn" onclick="triggerPhotoCapture('${codeEsc}', 'BEFORE')" title="Chọn ảnh từ điện thoại (Choose Photo / Chọn Ảnh / ပုံရွေးရန်)">
-                <span>🖼️ Choose Photo • Chọn Ảnh</span>
-                <span style="font-size:10.5px;font-weight:700;opacity:0.95;">🇲🇲 ပုံရွေးရန်</span>
+              <button type="button" class="btn-cam-capture choose-btn" onclick="triggerPhotoCapture('${codeEsc}', 'BEFORE')" title="Mở thẳng File ảnh trong máy (Chọn 1 hoặc nhiều ảnh cùng lúc)">
+                <span>📁 Choose File • Chọn Tệp Ảnh</span>
+                <span style="font-size:10.5px;font-weight:700;opacity:0.95;">🇲🇲 ပုံဖိုင်ရွေးရန် (Chọn nhiều ảnh)</span>
               </button>
             </div>
-            <div class="thumb-wrap ${beforeImgSrc ? 'has-img' : ''}">
-              <img src="${escAttr(beforeImgSrc)}" alt="Before 1440x1088" onclick="openCompareModalForItem('${codeEsc}')" />
-              <button type="button" class="btn-del-photo" onclick="clearItemPhoto('${codeEsc}', 'BEFORE')">✕ Xóa</button>
-              <div class="thumb-meta-bar" style="background:${st.uploadingBefore ? 'rgba(217,119,6,0.92)' : (st.uploadErrorBefore ? 'rgba(220,38,38,0.95)' : 'rgba(5,150,105,0.92)')}">
-                <span>📸 ẢNH LỖI (BEFORE)</span>
-                <span>${st.uploadingBefore ? '⏳ Đang tải lên Drive 2.14...' : (st.uploadErrorBefore ? '❌ Mạng yếu chưa tải được — Bấm gửi lại ở góc trên!' : '✅ Upload Finish • Đã lưu Drive 2.14')}</span>
-              </div>
-            </div>
+            ${renderMultiPhotoGalleryHtml(st, 'BEFORE', codeEsc)}
           </div>
 
-          <!-- COL 4: AFTER / RECTIFIED PHOTO & LIVE UPLOAD TICK XANH AT TOP-RIGHT -->
+          <!-- COL 4: AFTER / RECTIFIED PHOTO (MULTI-PHOTO GALLERY & TICK XANH AT HÌNH 2 POSITION) -->
           <div class="photo-col-box fixed-col">
             <div class="col-box-header">
               <span>${t.colFixedTitle}</span>
               <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
-                ${st.uploadingAfter
-                  ? `<span class="res-badge badge-upload-pending">⏳ Uploading... • Đang tải...</span>`
-                  : (st.uploadErrorAfter
-                    ? `<button type="button" class="res-badge badge-upload-err" onclick="retrySingleItemPhotoUpload('${codeEsc}', 'AFTER')" title="Mạng yếu chưa upload được ảnh này. Bấm để tải lại!">❌ Lỗi mạng • 🔄 Bấm gửi lại</button>`
-                    : ((st.afterDriveUrl || st.afterThumbUrl)
-                      ? `<span class="res-badge badge-upload-ok">✅ Uploaded • Đã lưu Drive</span>`
-                      : ``))}
+                ${renderUploadStatusBadgeHtml(st, 'AFTER', codeEsc)}
                 <select class="fix-status-select" onchange="updateItemField('${codeEsc}', 'fixStatus', this.value); recalcLiveScore(); renderChecklistItems(); scheduleAutoSyncSheet();">
                   <option value="Chưa sửa (Pending Fix)" ${!isFixed ? 'selected' : ''}>⏳ Chưa sửa</option>
                   <option value="Đã sửa xong (Fixed)" ${isFixed ? 'selected' : ''}>✅ Đã sửa xong</option>
@@ -2051,19 +2033,12 @@
                 <span>📷 Capture Fixed • Chụp Ảnh Đã Sửa</span>
                 <span style="font-size:10.5px;font-weight:700;opacity:0.95;">🇲🇲 ပြင်ပြီးပုံရိုက်ရန် (TimestampCam)</span>
               </button>
-              <button type="button" class="btn-cam-capture choose-btn" onclick="triggerPhotoCapture('${codeEsc}', 'AFTER')" title="Chọn ảnh đã sửa từ điện thoại (Choose Photo / Chọn Ảnh / ပုံရွေးရန်)">
-                <span>🖼️ Choose Photo • Chọn Ảnh</span>
-                <span style="font-size:10.5px;font-weight:700;opacity:0.95;">🇲🇲 ပုံရွေးရန်</span>
+              <button type="button" class="btn-cam-capture choose-btn" onclick="triggerPhotoCapture('${codeEsc}', 'AFTER')" title="Mở thẳng File ảnh trong máy (Chọn 1 hoặc nhiều ảnh đã sửa cùng lúc)">
+                <span>📁 Choose File • Chọn Tệp Ảnh</span>
+                <span style="font-size:10.5px;font-weight:700;opacity:0.95;">🇲🇲 ပုံဖိုင်ရွေးရန် (Chọn nhiều ảnh)</span>
               </button>
             </div>
-            <div class="thumb-wrap ${afterImgSrc ? 'has-img' : ''}">
-              <img src="${escAttr(afterImgSrc)}" alt="After 1440x1088" onclick="openCompareModalForItem('${codeEsc}')" />
-              <button type="button" class="btn-del-photo" onclick="clearItemPhoto('${codeEsc}', 'AFTER')">✕ Xóa</button>
-              <div class="thumb-meta-bar" style="background:${st.uploadingAfter ? 'rgba(217,119,6,0.92)' : (st.uploadErrorAfter ? 'rgba(220,38,38,0.95)' : 'rgba(5,150,105,0.92)')}">
-                <span>🌟 ĐÃ SỬA (AFTER)</span>
-                <span>${st.uploadingAfter ? '⏳ Đang tải lên Drive 2.14...' : (st.uploadErrorAfter ? '❌ Mạng yếu chưa tải được — Bấm gửi lại ở góc trên!' : '✅ Upload Finish • Đã lưu Drive 2.14')}</span>
-              </div>
-            </div>
+            ${renderMultiPhotoGalleryHtml(st, 'AFTER', codeEsc)}
             ${(beforeImgSrc || afterImgSrc) ? `<button type="button" class="btn-compare-inline" onclick="openCompareModalForItem('${codeEsc}')">${t.btnCompare}</button>` : ``}
             <div style="margin-top:6px;padding:7px 9px;border-radius:8px;border:1.5px solid ${st.techVerified ? '#10b981' : '#cbd5e1'};background:${st.techVerified ? '#dcfce7' : '#f8fafc'};">
               <label style="display:flex;align-items:flex-start;gap:7px;cursor:pointer;font-size:11.5px;font-weight:900;color:${st.techVerified ? '#065f46' : '#334155'};line-height:1.35;">
@@ -2136,22 +2111,121 @@
       scheduleAutoSyncSheet(800);
     }
 
-    function clearItemPhoto(code, stage) {
+    function ensureItemPhotoArrays(st) {
+      if (!st) return;
+      if (!Array.isArray(st.beforePhotos)) {
+        st.beforePhotos = [];
+        if (st.beforeThumbUrl || st.beforeDriveUrl || st.beforeDataUrl) {
+          st.beforePhotos.push({
+            id: "legacy-b-1",
+            dataUrl: st.beforeDataUrl || "",
+            thumbUrl: st.beforeThumbUrl || "",
+            driveUrl: (st.beforeDriveUrl || "").split("\n")[0] || "",
+            uploading: !!st.uploadingBefore,
+            uploadError: !!st.uploadErrorBefore
+          });
+        }
+      }
+      if (!Array.isArray(st.afterPhotos)) {
+        st.afterPhotos = [];
+        if (st.afterThumbUrl || st.afterDriveUrl || st.afterDataUrl) {
+          st.afterPhotos.push({
+            id: "legacy-a-1",
+            dataUrl: st.afterDataUrl || "",
+            thumbUrl: st.afterThumbUrl || "",
+            driveUrl: (st.afterDriveUrl || "").split("\n")[0] || "",
+            uploading: !!st.uploadingAfter,
+            uploadError: !!st.uploadErrorAfter
+          });
+        }
+      }
+    }
+
+    function syncItemPhotoSummaryFromArrays(st) {
+      if (!st) return;
+      ensureItemPhotoArrays(st);
+      const bArr = st.beforePhotos;
+      const aArr = st.afterPhotos;
+
+      st.uploadingBefore = bArr.some(p => p.uploading);
+      st.uploadErrorBefore = bArr.some(p => p.uploadError);
+      st.beforeThumbUrl = (bArr.find(p => p.thumbUrl) || {}).thumbUrl || "";
+      st.beforeDataUrl = (bArr.find(p => p.dataUrl && !p.driveUrl) || {}).dataUrl || "";
+      st.beforeDriveUrl = bArr.filter(p => p.driveUrl || p.thumbUrl).map((p, idx) =>
+        (bArr.length > 1 ? `[Ảnh ${idx + 1}] ` : "") + (p.driveUrl || p.thumbUrl)
+      ).join("\n");
+
+      st.uploadingAfter = aArr.some(p => p.uploading);
+      st.uploadErrorAfter = aArr.some(p => p.uploadError);
+      st.afterThumbUrl = (aArr.find(p => p.thumbUrl) || {}).thumbUrl || "";
+      st.afterDataUrl = (aArr.find(p => p.dataUrl && !p.driveUrl) || {}).dataUrl || "";
+      st.afterDriveUrl = aArr.filter(p => p.driveUrl || p.thumbUrl).map((p, idx) =>
+        (aArr.length > 1 ? `[Ảnh ${idx + 1}] ` : "") + (p.driveUrl || p.thumbUrl)
+      ).join("\n");
+    }
+
+    function renderUploadStatusBadgeHtml(st, stage, codeEsc) {
+      ensureItemPhotoArrays(st);
+      const arr = stage === "BEFORE" ? st.beforePhotos : st.afterPhotos;
+      if (!arr || arr.length === 0) return "";
+      const total = arr.length;
+      const doneCnt = arr.filter(p => p.driveUrl || p.thumbUrl).length;
+      const upCnt = arr.filter(p => p.uploading).length;
+      const errCnt = arr.filter(p => p.uploadError).length;
+
+      if (upCnt > 0) {
+        return `<span class="res-badge badge-upload-pending">⏳ Uploading (${doneCnt}/${total} ảnh)...</span>`;
+      }
+      if (errCnt > 0) {
+        return `<button type="button" class="res-badge badge-upload-err" onclick="retrySingleItemPhotoUpload('${codeEsc}', '${stage}')" title="Mạng yếu chưa upload được ${errCnt}/${total} ảnh. Bấm để tải lại (Timeout 2 phút)!">❌ Lỗi mạng (${errCnt}/${total}) • 🔄 Bấm gửi lại</button>`;
+      }
+      if (doneCnt > 0) {
+        return `<span class="res-badge badge-upload-ok">✅ Uploaded (${doneCnt}/${total} ảnh) • Đã lưu Drive</span>`;
+      }
+      return "";
+    }
+
+    function renderMultiPhotoGalleryHtml(st, stage, codeEsc) {
+      ensureItemPhotoArrays(st);
+      const arr = stage === "BEFORE" ? st.beforePhotos : st.afterPhotos;
+      if (!arr || arr.length === 0) return "";
+
+      let cards = arr.map((p, i) => {
+        const imgSrc = p.dataUrl || p.thumbUrl || "";
+        const bgBar = p.uploading ? "rgba(217,119,6,0.92)" : (p.uploadError ? "rgba(220,38,38,0.95)" : "rgba(5,150,105,0.92)");
+        const statusTxt = p.uploading
+          ? `⏳ Đang tải Ảnh #${i + 1} (Chờ tối đa 2 phút)...`
+          : (p.uploadError
+            ? `❌ Lỗi mạng Ảnh #${i + 1} — Bấm gửi lại!`
+            : `✅ Ảnh #${i + 1} Đã lưu Drive`);
+        return `
+          <div class="thumb-wrap has-img" style="display:block;margin-top:6px;">
+            <img src="${escAttr(imgSrc)}" alt="${stage} Photo #${i + 1}" onclick="openCompareModalForItem('${codeEsc}', ${i})" />
+            <button type="button" class="btn-del-photo" onclick="clearItemPhoto('${codeEsc}', '${stage}', ${i})">✕ Xóa #${i + 1}</button>
+            <div class="thumb-meta-bar" style="background:${bgBar};">
+              <span>${stage === 'BEFORE' ? '📸 ẢNH LỖI' : '🌟 ĐÃ SỬA'} #${i + 1}/${arr.length}</span>
+              <span>
+                ${statusTxt}
+                ${p.driveUrl ? ` • <a href="${escAttr(p.driveUrl)}" target="_blank" style="color:#fde68a;text-decoration:underline;margin-left:4px;">🔗 Link Drive #${i + 1} ↗</a>` : ``}
+              </span>
+            </div>
+          </div>`;
+      }).join("");
+
+      return `<div style="display:flex;flex-direction:column;gap:4px;">${cards}</div>`;
+    }
+
+    function clearItemPhoto(code, stage, photoIndexOpt) {
       const st = itemStates[currentType][code];
       if (!st) return;
-      if (stage === "BEFORE") {
-        st.beforeDataUrl = "";
-        st.beforeThumbUrl = "";
-        st.beforeDriveUrl = "";
-        st.uploadingBefore = false;
-        st.uploadErrorBefore = false;
+      ensureItemPhotoArrays(st);
+      const arr = stage === "BEFORE" ? st.beforePhotos : st.afterPhotos;
+      if (photoIndexOpt !== undefined && photoIndexOpt !== null) {
+        arr.splice(photoIndexOpt, 1);
       } else {
-        st.afterDataUrl = "";
-        st.afterThumbUrl = "";
-        st.afterDriveUrl = "";
-        st.uploadingAfter = false;
-        st.uploadErrorAfter = false;
+        arr.length = 0;
       }
+      syncItemPhotoSummaryFromArrays(st);
       updateSeatAndTrainTelemetry();
       saveLocalDraft();
       recalcLiveScore();
@@ -2277,69 +2351,96 @@
     }
 
     async function handlePhotoFileSelected(ev) {
-      const file = ev.target.files && ev.target.files[0];
-      if (!file || !pendingPhotoTarget) return;
+      const rawFiles = Array.from((ev.target && ev.target.files) || []);
+      const files = rawFiles.filter(f => (f.type && f.type.indexOf("image/") === 0) || /\.(jpe?g|png|webp|heic|bmp|gif)$/i.test(f.name || ""));
+      if (files.length === 0 || !pendingPhotoTarget) return;
 
-      // 1. Try extracting EXIF GPS coordinates from the photo if present
-      try {
-        const exifGps = await extractExifGpsFromFile(file);
-        if (exifGps) {
-          const gpsStr = exifGps.lat.toFixed(6) + ", " + exifGps.lng.toFixed(6);
-          window._lastExifGps = gpsStr;
-          const gpsInp = document.getElementById("inp-gps");
-          if (gpsInp && !gpsInp.value.trim()) {
-            gpsInp.value = gpsStr;
-          }
-        }
-      } catch (e) {}
-
-      // 2. Resize & normalize to EXACT 1440x1088 px on HTML5 Canvas + optional GPS Timestamp watermark
       const target = pendingPhotoTarget;
       const siteCode = (document.getElementById("inp-site-code").value || "TNI-SITE").trim();
-      const gpsInpEl = document.getElementById("inp-gps");
-      const gpsVal = (gpsInpEl && gpsInpEl.value ? gpsInpEl.value : (window._lastExifGps || "Timestamp Camera")).trim();
       const stampEnabled = document.getElementById("chk-auto-stamp") ? document.getElementById("chk-auto-stamp").checked : true;
 
-      const dataUrl1440 = await processImageTo1440x1088(file, {
-        stamp: stampEnabled,
-        siteCode: siteCode,
-        itemCode: target.code,
-        stage: target.stage,
-        gps: gpsVal
-      });
-
-      // If this was triggered from the BI Comparison Wall to update an existing session's After photo
+      // If triggered from Tab 6 BI Comparison Wall: support uploading all selected After photos sequentially!
       if (target.sessionIdForBi) {
-        await uploadQuickFixFromBi(target.sessionIdForBi, target.code, dataUrl1440);
+        for (let i = 0; i < files.length; i++) {
+          const f = files[i];
+          const gpsInpEl = document.getElementById("inp-gps");
+          const gpsVal = (gpsInpEl && gpsInpEl.value ? gpsInpEl.value : (window._lastExifGps || "Timestamp Camera")).trim();
+          const dataUrl1440 = await processImageTo1440x1088(f, {
+            stamp: stampEnabled,
+            siteCode: siteCode,
+            itemCode: target.code,
+            stage: target.stage,
+            gps: gpsVal
+          });
+          await uploadQuickFixFromBi(target.sessionIdForBi, target.code, dataUrl1440, i > 0);
+        }
         return;
       }
 
       const st = itemStates[target.type] && itemStates[target.type][target.code];
       if (!st) return;
-
+      ensureItemPhotoArrays(st);
       ensureSessionId();
 
+      const newEntries = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        try {
+          const exifGps = await extractExifGpsFromFile(file);
+          if (exifGps) {
+            const gpsStr = exifGps.lat.toFixed(6) + ", " + exifGps.lng.toFixed(6);
+            window._lastExifGps = gpsStr;
+            const gpsInp = document.getElementById("inp-gps");
+            if (gpsInp && !gpsInp.value.trim()) gpsInp.value = gpsStr;
+          }
+        } catch (e) {}
+
+        const gpsInpEl = document.getElementById("inp-gps");
+        const gpsVal = (gpsInpEl && gpsInpEl.value ? gpsInpEl.value : (window._lastExifGps || "Timestamp Camera")).trim();
+        const dataUrl1440 = await processImageTo1440x1088(file, {
+          stamp: stampEnabled,
+          siteCode: siteCode,
+          itemCode: target.code,
+          stage: target.stage,
+          gps: gpsVal
+        });
+
+        const entry = {
+          id: "ph-" + Date.now() + "-" + i + "-" + Math.floor(Math.random() * 1000),
+          dataUrl: dataUrl1440,
+          thumbUrl: "",
+          driveUrl: "",
+          uploading: true,
+          uploadError: false
+        };
+        if (target.stage === "BEFORE") {
+          st.beforePhotos.push(entry);
+        } else {
+          st.afterPhotos.push(entry);
+        }
+        newEntries.push(entry);
+      }
+
       if (target.stage === "BEFORE") {
-        st.beforeDataUrl = dataUrl1440;
-        st.uploadingBefore = true;
-        // Auto switch item to NOK when user uploads a defect photo!
         st.status = "NOK";
         st.evalPoint = 0;
       } else {
-        st.afterDataUrl = dataUrl1440;
-        st.uploadingAfter = true;
         st.fixStatus = "Đã sửa xong (Fixed)";
         const tpl = CHECKLIST_TEMPLATES[target.type];
         const itemDef = tpl && tpl.items ? tpl.items.find(x => x.code === target.code) : null;
         if (itemDef) st.evalPoint = itemDef.stdPoint;
       }
 
+      syncItemPhotoSummaryFromArrays(st);
       saveLocalDraft();
       recalcLiveScore();
+      updateSeatAndTrainTelemetry();
       renderChecklistItems();
 
-      // 3. LƯU LIỀN TỨC THÌ ẢNH VỪA CHỤP LÊN DRIVE 2.14 & ĐỒNG BỘ SHEET NGAY (KHÔNG ĐỢI BẤM LƯU CUỐI GÂY NGHẼN)
-      await uploadSingleItemPhotoNow(target.type, target.code, target.stage, dataUrl1440);
+      // Đưa toàn bộ các ảnh vừa chọn (dù 1, 2, 5 hay 10 ảnh) vào Đoàn Tàu FIFO để tải lần lượt từng ảnh với thời gian chờ 2 phút/ảnh!
+      for (let i = 0; i < newEntries.length; i++) {
+        uploadSingleItemPhotoNow(target.type, target.code, target.stage, newEntries[i].dataUrl, newEntries[i].id);
+      }
     }
 
     // =========================================================================
@@ -2468,9 +2569,12 @@
       }
     }
 
-    async function uploadSingleItemPhotoNow(typeKey, itemCode, stage, dataUrl1440) {
+    // Thời gian chờ tối đa cho mỗi lượt tải ảnh là 2 phút (120,000 ms) để đảm bảo chụp 2 - 5 ảnh lúc mạng yếu vẫn tải lên thành công!
+    const PHOTO_UPLOAD_TIMEOUT_MS = 120000;
+
+    async function uploadSingleItemPhotoNow(typeKey, itemCode, stage, dataUrl1440, photoEntryId) {
       return new Promise((resolve) => {
-        photoTrainQueue.push({ typeKey, itemCode, stage, dataUrl1440, resolve });
+        photoTrainQueue.push({ typeKey, itemCode, stage, dataUrl1440, photoEntryId, resolve });
         processPhotoTrainQueue();
       });
     }
@@ -2480,39 +2584,51 @@
       isPhotoTrainRunning = true;
       while (photoTrainQueue.length > 0) {
         const job = photoTrainQueue.shift();
-        const ok = await executeSinglePhotoUploadCarriage(job.typeKey, job.itemCode, job.stage, job.dataUrl1440);
+        const ok = await executeSinglePhotoUploadCarriage(job.typeKey, job.itemCode, job.stage, job.dataUrl1440, job.photoEntryId);
         if (job.resolve) job.resolve(ok);
       }
       isPhotoTrainRunning = false;
     }
 
-    async function executeSinglePhotoUploadCarriage(typeKey, itemCode, stage, dataUrl1440) {
+    async function executeSinglePhotoUploadCarriage(typeKey, itemCode, stage, dataUrl1440, photoEntryId) {
       const st = itemStates[typeKey] && itemStates[typeKey][itemCode];
       if (!st || !dataUrl1440) return false;
+      ensureItemPhotoArrays(st);
+
+      const arr = stage === "BEFORE" ? st.beforePhotos : st.afterPhotos;
+      let targetEntry = photoEntryId ? arr.find(p => p.id === photoEntryId) : arr.find(p => !p.driveUrl);
+      if (!targetEntry) {
+        targetEntry = {
+          id: photoEntryId || ("ph-" + Date.now()),
+          dataUrl: dataUrl1440,
+          thumbUrl: "",
+          driveUrl: "",
+          uploading: true,
+          uploadError: false
+        };
+        arr.push(targetEntry);
+      }
+      targetEntry.uploading = true;
+      targetEntry.uploadError = false;
+      syncItemPhotoSummaryFromArrays(st);
 
       const siteCode = (document.getElementById("inp-site-code").value || "TNI-SITE").trim();
       const inspector = (document.getElementById("inp-inspector").value || "TNI-Staff").trim();
       const dateStr = document.getElementById("inp-date").value || new Date().toISOString().slice(0, 10);
 
       activePhotoUploads++;
-      if (stage === "BEFORE") {
-        st.uploadingBefore = true;
-        st.uploadErrorBefore = false;
-      } else {
-        st.uploadingAfter = true;
-        st.uploadErrorAfter = false;
-      }
       updateSeatAndTrainTelemetry();
       renderChecklistItems();
 
+      const photoIdx = arr.indexOf(targetEntry) + 1;
       const sumEl = document.getElementById("bottom-summary-text");
       if (sumEl) {
-        sumEl.textContent = "⏳ [Toa Upload FIFO] Đang tải ảnh 1440×1088 mục " + itemCode + " (" + stage + ") lên Drive 2.14...";
+        sumEl.textContent = `⏳ [Toa Upload FIFO • Timeout 2 phút] Đang tải Ảnh #${photoIdx}/${arr.length} mục ${itemCode} (${stage}) lên Drive 2.14...`;
       }
 
       try {
         const ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
-        const timerId = ctrl ? setTimeout(() => ctrl.abort(), 28000) : null;
+        const timerId = ctrl ? setTimeout(() => ctrl.abort(), PHOTO_UPLOAD_TIMEOUT_MS) : null;
         const resp = await fetch(GAS_CHECKLIST_API, {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -2522,7 +2638,7 @@
             siteCode: siteCode,
             dateStr: dateStr,
             inspector: inspector,
-            itemCode: itemCode,
+            itemCode: itemCode + "_P" + photoIdx,
             stage: stage,
             dataUrl: dataUrl1440
           }),
@@ -2531,45 +2647,35 @@
         if (timerId) clearTimeout(timerId);
         const res = await resp.json();
         if (res && res.ok && res.photo) {
-          if (stage === "BEFORE") {
-            st.beforeThumbUrl = res.photo.thumbUrl || res.photo.directUrl || "";
-            st.beforeDriveUrl = res.photo.viewUrl || "";
-            st.beforeDataUrl = "";
-            st.uploadingBefore = false;
-            st.uploadErrorBefore = false;
-          } else {
-            st.afterThumbUrl = res.photo.thumbUrl || res.photo.directUrl || "";
-            st.afterDriveUrl = res.photo.viewUrl || "";
-            st.afterDataUrl = "";
-            st.uploadingAfter = false;
-            st.uploadErrorAfter = false;
-          }
+          targetEntry.thumbUrl = res.photo.thumbUrl || res.photo.directUrl || "";
+          targetEntry.driveUrl = res.photo.viewUrl || "";
+          targetEntry.dataUrl = "";
+          targetEntry.uploading = false;
+          targetEntry.uploadError = false;
+
+          syncItemPhotoSummaryFromArrays(st);
           saveLocalDraft();
           updateSeatAndTrainTelemetry();
           renderChecklistItems();
           if (sumEl) {
-            sumEl.textContent = "✅ Đã tải xong & hiện Tick Xanh cho ảnh mục " + itemCode + " (Drive 2.14)!";
+            sumEl.textContent = `✅ Đã tải xong & hiện Tick Xanh cho Ảnh #${photoIdx}/${arr.length} mục ${itemCode} (Drive 2.14)!`;
           }
-          // Auto sync lightweight metadata + Drive photo URL to Google Sheet right away!
-          scheduleAutoSyncSheet(250);
+          // Auto sync lightweight metadata + all Drive photo URLs to Google Sheet right away!
+          scheduleAutoSyncSheet(300);
           return true;
         } else {
           throw new Error((res && res.error) || "Upload photo failed");
         }
       } catch (err) {
         console.warn("Photo upload error due to weak network:", err);
-        if (stage === "BEFORE") {
-          st.uploadingBefore = false;
-          st.uploadErrorBefore = true;
-        } else {
-          st.uploadingAfter = false;
-          st.uploadErrorAfter = true;
-        }
+        targetEntry.uploading = false;
+        targetEntry.uploadError = true;
+        syncItemPhotoSummaryFromArrays(st);
         saveLocalDraft();
         updateSeatAndTrainTelemetry();
         renderChecklistItems();
         if (sumEl) {
-          sumEl.textContent = "❌ Mạng yếu: Chưa tải được ảnh mục " + itemCode + " lên Drive! Hãy bấm [🔄 Bấm gửi lại] ở góc phải trên hộp ảnh.";
+          sumEl.textContent = `❌ Mạng yếu: Chưa tải được Ảnh #${photoIdx}/${arr.length} mục ${itemCode}! Bấm [🔄 Bấm gửi lại] ở góc phải trên hộp ảnh.`;
         }
         return false;
       } finally {
@@ -2580,9 +2686,14 @@
     async function retrySingleItemPhotoUpload(itemCode, stage) {
       const st = itemStates[currentType] && itemStates[currentType][itemCode];
       if (!st) return;
-      const dataUrl = stage === "BEFORE" ? st.beforeDataUrl : st.afterDataUrl;
-      if (!dataUrl) return;
-      await uploadSingleItemPhotoNow(currentType, itemCode, stage, dataUrl);
+      ensureItemPhotoArrays(st);
+      const arr = stage === "BEFORE" ? st.beforePhotos : st.afterPhotos;
+      for (let i = 0; i < arr.length; i++) {
+        const p = arr[i];
+        if ((p.uploadError || !p.driveUrl) && p.dataUrl) {
+          uploadSingleItemPhotoNow(currentType, itemCode, stage, p.dataUrl, p.id);
+        }
+      }
     }
 
     async function retryAllFailedPhotoUploads() {
@@ -2591,14 +2702,19 @@
         const stMap = itemStates[tKey] || {};
         for (const code of Object.keys(stMap)) {
           const st = stMap[code];
-          if (st.uploadErrorBefore && st.beforeDataUrl) {
-            count++;
-            uploadSingleItemPhotoNow(tKey, code, "BEFORE", st.beforeDataUrl);
-          }
-          if (st.uploadErrorAfter && st.afterDataUrl) {
-            count++;
-            uploadSingleItemPhotoNow(tKey, code, "AFTER", st.afterDataUrl);
-          }
+          ensureItemPhotoArrays(st);
+          st.beforePhotos.forEach(p => {
+            if ((p.uploadError || !p.driveUrl) && p.dataUrl) {
+              count++;
+              uploadSingleItemPhotoNow(tKey, code, "BEFORE", p.dataUrl, p.id);
+            }
+          });
+          st.afterPhotos.forEach(p => {
+            if ((p.uploadError || !p.driveUrl) && p.dataUrl) {
+              count++;
+              uploadSingleItemPhotoNow(tKey, code, "AFTER", p.dataUrl, p.id);
+            }
+          });
         }
       }
       if (count === 0) {
@@ -2812,11 +2928,13 @@
             beforeDataUrl: "",
             beforeThumbUrl: st.beforeThumbUrl || "",
             beforeDriveUrl: st.beforeDriveUrl || "",
+            beforePhotos: (st.beforePhotos || []).filter(p => p.thumbUrl || p.driveUrl).map(p => ({ thumbUrl: p.thumbUrl, driveUrl: p.driveUrl })),
             fixStatus: st.fixStatus || "",
             afterNote: st.afterNote || "",
             afterDataUrl: "",
             afterThumbUrl: st.afterThumbUrl || "",
             afterDriveUrl: st.afterDriveUrl || "",
+            afterPhotos: (st.afterPhotos || []).filter(p => p.thumbUrl || p.driveUrl).map(p => ({ thumbUrl: p.thumbUrl, driveUrl: p.driveUrl })),
             gps: st.gps || gpsCoords,
             techVerified: !!st.techVerified,
             techVerifiedBy: st.techVerifiedBy || "",
@@ -2927,11 +3045,13 @@
             beforeDataUrl: st.beforeDataUrl || "",
             beforeThumbUrl: st.beforeThumbUrl || "",
             beforeDriveUrl: st.beforeDriveUrl || "",
+            beforePhotos: (st.beforePhotos || []).filter(p => p.thumbUrl || p.driveUrl).map(p => ({ thumbUrl: p.thumbUrl, driveUrl: p.driveUrl })),
             fixStatus: st.fixStatus || "",
             afterNote: st.afterNote || "",
             afterDataUrl: st.afterDataUrl || "",
             afterThumbUrl: st.afterThumbUrl || "",
             afterDriveUrl: st.afterDriveUrl || "",
+            afterPhotos: (st.afterPhotos || []).filter(p => p.thumbUrl || p.driveUrl).map(p => ({ thumbUrl: p.thumbUrl, driveUrl: p.driveUrl })),
             gps: st.gps || gpsCoords,
             techVerified: !!st.techVerified,
             techVerifiedBy: st.techVerifiedBy || "",
@@ -4094,9 +4214,9 @@
                             <span>📷 Capture Fixed • Chụp Ảnh Đã Sửa</span>
                             <span style="font-size:10.5px;font-weight:700;opacity:0.95;">🇲🇲 ပြင်ပြီးပုံရိုက်ရန် (TimestampCam)</span>
                           </button>
-                          <button type="button" class="btn-cam-capture choose-btn" onclick="triggerPhotoCapture('${escAttr(it.code)}', 'AFTER', '${escAttr(sess.sessionId)}')" title="Chọn ảnh đã sửa từ máy (3 ngôn ngữ)">
-                            <span>🖼️ Choose Photo • Chọn Ảnh</span>
-                            <span style="font-size:10.5px;font-weight:700;opacity:0.95;">🇲🇲 ပုံရွေးရန်</span>
+                          <button type="button" class="btn-cam-capture choose-btn" onclick="triggerPhotoCapture('${escAttr(it.code)}', 'AFTER', '${escAttr(sess.sessionId)}')" title="Mở thẳng File ảnh trong máy (Chọn 1 hoặc nhiều ảnh đã sửa)">
+                            <span>📁 Choose File • Chọn Tệp Ảnh</span>
+                            <span style="font-size:10.5px;font-weight:700;opacity:0.95;">🇲🇲 ပုံဖိုင်ရွေးရန် (Nhiều ảnh)</span>
                           </button>
                         </div>
                       </div>
@@ -4173,8 +4293,11 @@
       }
     }
 
-    async function uploadQuickFixFromBi(sessionId, itemCode, afterDataUrl1440) {
-      const afterNote = prompt("✅ Nhập ghi chú kết quả đã sửa / thông số nghiệm thu cho mục " + itemCode + ":", "Đã khắc phục đạt chuẩn (Rectified 1440x1088)") || "Đã khắc phục đạt chuẩn";
+    async function uploadQuickFixFromBi(sessionId, itemCode, afterDataUrl1440, skipPrompt) {
+      const afterNote = skipPrompt
+        ? (window._lastBiAfterNote || "Đã khắc phục đạt chuẩn (Rectified 1440x1088)")
+        : (prompt("✅ Nhập ghi chú kết quả đã sửa / thông số nghiệm thu cho mục " + itemCode + ":", "Đã khắc phục đạt chuẩn (Rectified 1440x1088)") || "Đã khắc phục đạt chuẩn");
+      window._lastBiAfterNote = afterNote;
       try {
         const resp = await fetch(GAS_CHECKLIST_API, {
           method: "POST",
