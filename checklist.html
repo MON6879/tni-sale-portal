@@ -1040,8 +1040,11 @@
             <select id="sel-saved-sessions" class="field-input" style="flex:1;min-width:240px;padding:6px 10px;font-size:12.5px;background:#fff;" onchange="onSelectSavedSessionChange()">
               <option value="">-- Chọn trạm / phiếu đã kiểm tra trên Google Sheet --</option>
             </select>
-            <button type="button" class="pill-btn" style="background:#059669;border-color:#10b981;color:#fff;padding:7px 12px;cursor:pointer;" onclick="loadSelectedSavedSession(true)">
-              🔧 Nạp Trạm & Cập Nhật Đã Sửa
+            <button type="button" class="pill-btn" style="background:#dc2626;border-color:#f87171;color:#fff;padding:7px 11px;cursor:pointer;" onclick="loadSelectedSavedSession(true)" title="Chỉ hiện các mục đang bị lỗi NOK để sửa nhanh">
+              🔧 Nạp Chỉ Mục Lỗi Để Sửa (NOK)
+            </button>
+            <button type="button" class="pill-btn" style="background:#059669;border-color:#10b981;color:#fff;padding:7px 11px;cursor:pointer;" onclick="loadSelectedSavedSession(false)" title="Hiện đầy đủ toàn bộ 100% hạng mục của trạm">
+              📋 Nạp Xem Tất Cả Hạng Mục (Thấy Hết)
             </button>
             <button type="button" class="pill-btn" style="background:#2563eb;border-color:#60a5fa;color:#fff;padding:7px 10px;cursor:pointer;" onclick="fetchCloudSessions(true)" title="Tải lại danh sách trạm từ Sheet">
               🔄 Tải Lại
@@ -1233,11 +1236,12 @@
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
               <input type="text" id="bi-site-search" class="field-input" style="width:185px;background:#fff;" placeholder="🔎 Tìm mã trạm (VD: TNI0012)..." oninput="renderBiDashboard()" />
               <select id="bi-fix-filter" class="field-input" style="width:auto;background:#fff;" onchange="renderBiDashboard()">
-                <option value="ALL">📋 Tất cả mục Lỗi / Có ảnh</option>
+                <option value="ALL">❌ Chỉ hiện mục Lỗi (NOK) / Có ảnh (Mặc định)</option>
                 <option value="PENDING_PHOTO">⏳ Chưa cập nhật ảnh Sau sửa</option>
                 <option value="HAS_AFTER_PHOTO">✅ Đã cập nhật ảnh Sau sửa</option>
                 <option value="PENDING_TECH_VERIFY">🛡️ Chờ Phòng KT Tick xác nhận</option>
                 <option value="TECH_VERIFIED">☑️ Phòng KT Đã Tick xác nhận</option>
+                <option value="SHOW_ALL_ITEMS">📋 Xem tất cả hạng mục (Thấy hết cả mục OK &amp; NOK)</option>
               </select>
               <select id="bi-type-filter" class="field-input" style="width:auto;background:#fff;" onchange="renderBiDashboard()">
                 <option value="ALL">Tất cả 5 loại Check List</option>
@@ -1711,19 +1715,25 @@
 
       tpl.items.forEach(it => {
         const st = stMap[it.code] || { status: "OK", evalPoint: it.stdPoint };
-        totalStd += Number(it.stdPoint || 0);
+        const stdPt = Number(it.stdPoint || 0);
+        totalStd += stdPt;
         if (st.status === "NOK") {
           nokCnt++;
-          totalEval += Number(st.evalPoint || 0);
-          if (st.afterDataUrl || st.afterThumbUrl || String(st.fixStatus || "").indexOf("Đã sửa") === 0 || st.techVerified) {
+          const isFixed = !!(st.afterDataUrl || st.afterThumbUrl || String(st.fixStatus || "").indexOf("Đã sửa") === 0 || String(st.fixStatus || "").toLowerCase().indexOf("fixed") !== -1 || st.techVerified);
+          if (isFixed) {
             fixCnt++;
+            // Khi mục lỗi (NOK) đã cập nhật sửa chữa xong -> Tự động cộng lại đủ điểm chuẩn (stdPoint) để đạt 100/100 điểm!
+            st.evalPoint = stdPt;
+            totalEval += stdPt;
+          } else {
+            totalEval += Number(st.evalPoint || 0);
           }
           if (st.techVerified) {
             techCnt++;
           }
         } else {
           okCnt++;
-          totalEval += Number(st.evalPoint !== undefined ? st.evalPoint : it.stdPoint);
+          totalEval += Number(st.evalPoint !== undefined ? st.evalPoint : stdPt);
         }
       });
 
@@ -1953,11 +1963,20 @@
     }
 
     function updateItemField(code, field, val) {
+      const tpl = CHECKLIST_TEMPLATES[currentType];
+      const itemDef = tpl && tpl.items ? tpl.items.find(x => x.code === code) : null;
       const st = itemStates[currentType][code];
       if (!st) return;
       st[field] = val;
+      if (field === "fixStatus") {
+        const isFixed = String(val || "").indexOf("Đã sửa") === 0 || String(val || "").toLowerCase().indexOf("fixed") !== -1 || !!(st.afterDataUrl || st.afterThumbUrl || st.techVerified);
+        if (itemDef) {
+          st.evalPoint = isFixed ? itemDef.stdPoint : (st.status === "NOK" ? 0 : itemDef.stdPoint);
+        }
+        recalcLiveScore();
+      }
       saveLocalDraft();
-      scheduleAutoSyncSheet(1500);
+      scheduleAutoSyncSheet(800);
     }
 
     function clearItemPhoto(code, stage) {
@@ -2065,6 +2084,9 @@
         st.afterDataUrl = dataUrl1440;
         st.uploadingAfter = true;
         st.fixStatus = "Đã sửa xong (Fixed)";
+        const tpl = CHECKLIST_TEMPLATES[target.type];
+        const itemDef = tpl && tpl.items ? tpl.items.find(x => x.code === target.code) : null;
+        if (itemDef) st.evalPoint = itemDef.stdPoint;
       }
 
       saveLocalDraft();
@@ -3162,16 +3184,29 @@
         }
 
         const rawItems = (Array.isArray(sess.items) && sess.items.length > 0) ? sess.items : (tpl ? tpl.items : []);
+        let totalStd = 0, totalEval = 0, okCnt = 0, nokCnt = 0, fixCnt = 0, techVerifiedCnt = 0;
         const itemsArr = rawItems.map(it => {
           const ref = tplMap[it.code] || it;
-          const isFixed = !!(it.afterThumbUrl || String(it.fixStatus || "").indexOf("Đã sửa") === 0 || String(it.fixStatus || "").toLowerCase().indexOf("fixed") !== -1 || it.techVerified);
+          const stdPt = Number(it.stdPoint !== undefined ? it.stdPoint : (ref.stdPoint || 0));
+          totalStd += stdPt;
+          const isNok = String(it.status || "OK").toUpperCase() === "NOK";
+          const isFixed = !!(it.afterThumbUrl || it.afterDriveUrl || String(it.fixStatus || "").indexOf("Đã sửa") === 0 || String(it.fixStatus || "").toLowerCase().indexOf("fixed") !== -1 || it.techVerified);
+          const itemEvalPt = (!isNok || isFixed) ? stdPt : Number(it.evalPoint || 0);
+          totalEval += itemEvalPt;
+          if (isNok) {
+            nokCnt++;
+            if (isFixed) fixCnt++;
+            if (it.techVerified) techVerifiedCnt++;
+          } else {
+            okCnt++;
+          }
           return {
             code: it.code,
             category: ref.cat_en || ref.category || it.category || "",
             requirement: ref.req_en || ref.requirement || it.requirement || "",
-            stdPoint: it.stdPoint !== undefined ? it.stdPoint : ref.stdPoint,
-            evalPoint: it.evalPoint !== undefined ? it.evalPoint : (it.status === "NOK" ? 0 : ref.stdPoint),
-            status: it.status || "OK",
+            stdPoint: stdPt,
+            evalPoint: itemEvalPt,
+            status: isNok ? "NOK" : "OK",
             defectNote: it.defectNote || "",
             fixStatus: isFixed ? "Fixed (Rectified)" : "Pending Fix",
             afterNote: it.afterNote || "",
@@ -3183,7 +3218,10 @@
             techVerifiedAt: it.techVerifiedAt || ""
           };
         });
-        const techVerifiedCnt = itemsArr.filter(x => x.status === "NOK" && x.techVerified).length;
+
+        const scoreRounded = Math.round(totalEval * 10) / 10;
+        const pendingCnt = Math.max(0, nokCnt - fixCnt);
+        const computedRating = (scoreRounded >= 95 && pendingCnt === 0) ? "Good" : (scoreRounded >= 90 ? "Acceptable" : "Not Acceptable");
 
         reportData = {
           sessionId: sess.sessionId,
@@ -3197,11 +3235,11 @@
           dateStr: sess.ts || "",
           extraMeta: sess.branch || "TNI",
           generalComment: sess.generalComment || "",
-          totalScore: sess.totalScore !== undefined ? sess.totalScore : 100,
-          rating: sess.rating || "Good",
-          okCount: sess.okCount || 0,
-          nokCount: sess.nokCount || 0,
-          fixedCount: sess.fixedCount || 0,
+          totalScore: scoreRounded + " / " + totalStd,
+          rating: computedRating,
+          okCount: okCnt,
+          nokCount: nokCnt,
+          fixedCount: fixCnt,
           techVerifiedCount: techVerifiedCnt,
           sessionFolderUrl: sess.sessionFolderUrl || DRIVE_214_FOLDER_URL,
           items: itemsArr
@@ -3220,14 +3258,16 @@
           const st = stMap[it.code] || { status: "OK", evalPoint: it.stdPoint };
           totalStd += Number(it.stdPoint || 0);
           const isFixed = !!(st.afterDataUrl || st.afterThumbUrl || String(st.fixStatus || "").indexOf("Đã sửa") === 0 || String(st.fixStatus || "").toLowerCase().indexOf("fixed") !== -1 || st.techVerified);
+          const stdPt = Number(it.stdPoint || 0);
+          const itemEvalPt = (st.status !== "NOK" || isFixed) ? stdPt : Number(st.evalPoint || 0);
           if (st.status === "NOK") {
             nokCnt++;
-            totalEval += Number(st.evalPoint || 0);
+            totalEval += itemEvalPt;
             if (isFixed) fixCnt++;
             if (st.techVerified) techCnt++;
           } else {
             okCnt++;
-            totalEval += Number(st.evalPoint !== undefined ? st.evalPoint : it.stdPoint);
+            totalEval += itemEvalPt;
           }
           return {
             code: it.code,
@@ -3235,8 +3275,8 @@
             requirement: it.req_en || it.requirement,
             serious: it.serious,
             fixDays: it.fixDays,
-            stdPoint: it.stdPoint,
-            evalPoint: st.evalPoint !== undefined ? st.evalPoint : it.stdPoint,
+            stdPoint: stdPt,
+            evalPoint: itemEvalPt,
             status: st.status || "OK",
             defectNote: st.defectNote || "",
             fixStatus: isFixed ? "Fixed (Rectified)" : "Pending Fix",
@@ -3329,7 +3369,7 @@
               <div style="font-size:10px;color:#64748b;font-weight:700;">${escHtml(it.category || "")}</div>
               <div>${escHtml(it.requirement || "")}</div>
             </td>
-            <td style="text-align:center;font-weight:800;color:${isNok ? '#dc2626' : '#059669'};">${isNok ? "NOK (Defect)" : "OK"}</td>
+            <td style="text-align:center;font-weight:800;color:${isNok ? (isFixed ? '#059669' : '#dc2626') : '#059669'};">${isNok ? (isFixed ? "OK (Rectified)" : "NOK (Defect)") : "OK"}</td>
             <td style="text-align:center;font-weight:700;">${it.evalPoint !== undefined ? it.evalPoint : it.stdPoint} / ${it.stdPoint}</td>
             <td>${escHtml(it.defectNote || "-")}</td>
             <td style="font-weight:700;color:${isNok ? (isFixed ? '#047857' : '#b91c1c') : '#64748b'};">
@@ -3535,7 +3575,7 @@
         const sheetUrl = "https://docs.google.com/spreadsheets/d/" + CHECKLIST_SS_ID + "/edit#gid=" + (tpl ? tpl.gid : 16375926);
         const items = Array.isArray(sess.items) ? sess.items : [];
         items.forEach(it => {
-          if (it.status === "NOK" || it.beforeThumbUrl || it.afterThumbUrl) {
+          if (fixFilter === "SHOW_ALL_ITEMS" || it.status === "NOK" || it.beforeThumbUrl || it.afterThumbUrl) {
             const beforeSrc = it.beforeThumbUrl || "";
             const afterSrc = it.afterThumbUrl || "";
             const isFixed = String(it.fixStatus || "").indexOf("Đã sửa") === 0 || String(it.fixStatus || "").toLowerCase().indexOf("fixed") !== -1 || !!afterSrc || !!it.techVerified;
@@ -3651,7 +3691,8 @@
             </td>
             <td style="padding:9px 10px;">
               <div style="display:flex;gap:5px;flex-wrap:wrap;">
-                <button type="button" class="pill-btn guide" style="background:#059669;border-color:#10b981;color:#fff;padding:4px 8px;font-size:11px;cursor:pointer;" onclick="loadSessionIntoEditor('${escAttr(s.sessionId)}', true)">🔧 Vào Cập Nhật Sửa</button>
+                <button type="button" class="pill-btn guide" style="background:#dc2626;border-color:#f87171;color:#fff;padding:4px 8px;font-size:11px;cursor:pointer;" onclick="loadSessionIntoEditor('${escAttr(s.sessionId)}', true)">🔧 Sửa Mục Lỗi (NOK)</button>
+                <button type="button" class="pill-btn guide" style="background:#2563eb;border-color:#60a5fa;color:#fff;padding:4px 8px;font-size:11px;cursor:pointer;" onclick="loadSessionIntoEditor('${escAttr(s.sessionId)}', false)">📋 Xem Tất Cả (100%)</button>
                 <button type="button" class="pill-btn guide" style="background:#0f766e;border-color:#14b8a6;color:#fff;padding:4px 8px;font-size:11px;cursor:pointer;" onclick="toggleTechVerifyFromBi('${escAttr(s.sessionId)}', 'ALL', true)">☑️ KT Tick Duyệt Trạm</button>
                 <button type="button" class="pill-btn guide" style="background:#dc2626;border-color:#f87171;color:#fff;padding:4px 8px;font-size:11px;cursor:pointer;" onclick="exportChecklistPdfNoPhotos('${escAttr(s.sessionId)}')">📄 Xuất PDF (English Only)</button>
               </div>
