@@ -1586,8 +1586,8 @@ function copyTelegramReportTemplate(gName, gId, cat) {
           <div class="fg">
             <div class="f"><label>Tên Khách Hàng (Mr/Ms) *</label><input id="surv-kh" placeholder="Tên khách hàng / Chủ nhà"/></div>
             <div class="f"><label>Số Điện Thoại *</label><input id="surv-dt" placeholder="09xxxxxxx"/></div>
-            <div class="f"><label>Địa Chỉ / Thôn Bản / Khu Vực *</label><input id="surv-dc" placeholder="Thôn, Xã, Township..."/></div>
-            <div class="f"><label>Tọa Độ GPS / Google Maps Link</label><input id="surv-gps" placeholder="10.0241, 98.5420 hoặc link Maps"/></div>
+            <div class="f"><label>📍 Địa Chỉ / Thôn Bản / Khu Vực * <span style="color:#15803d;font-size:11px;font-weight:700">(Tự động từ GPS)</span></label><input id="surv-dc" oninput="this.dataset.autoGpsArea='0'" placeholder="Tự động điền từ GPS hoặc nhập thêm..."/></div>
+            <div class="f"><label>🧭 Tọa Độ GPS <span style="color:#15803d;font-size:11px;font-weight:800">(Tự Động Điền — Không Cần Nhập Tay)</span></label><input id="surv-gps" placeholder="Tự động đồng bộ Lat, Long..." style="background:#f0fdf4;font-weight:700;color:#15803d;border-color:#86efac"/></div>
             <div class="f"><label>Ngày Khảo Sát</label><input id="surv-date" type="date"/></div>
             <div class="f"><label>Kỹ Sư Khảo Sát</label><input id="surv-eng" placeholder="Họ tên kỹ sư"/></div>
             <div class="f"><label>Loại Kiến Trúc Mái</label>
@@ -2161,15 +2161,15 @@ function copyTelegramReportTemplate(gName, gId, cat) {
       <div class="pb">
         <div class="fg">
           <div class="f"><label>Tên Đại Lý *</label><input id="ks-ten" placeholder="Tên cửa hàng"/></div>
-          <div class="f"><label>Người Khảo Sát</label><input id="ks-nks" placeholder="Nhân viên"/></div>
-          <div class="f"><label>Địa Điểm</label><input id="ks-dd" placeholder="Địa chỉ"/></div>
+          <div class="f"><label>👤 Người Khảo Sát <span style="color:#15803d;font-size:11px;font-weight:700">(Tự động)</span></label><input id="ks-nks" placeholder="Nhân viên"/></div>
+          <div class="f"><label>📍 Địa Điểm / Khu Vực <span style="color:#15803d;font-size:11px;font-weight:700">(Tự động từ GPS)</span></label><input id="ks-dd" oninput="this.dataset.autoGpsArea='0'" placeholder="Tự động điền từ GPS..."/></div>
           <div class="f"><label>Ngày</label><input id="ks-ngay" type="date"/></div>
           <div class="f"><label>Nhu Cầu/tháng (cái)</label><input id="ks-nc" type="number" placeholder="0"/></div>
           <div class="f"><label>Thương Hiệu Đang Bán</label><input id="ks-th" placeholder="APC, Santak..."/></div>
           <div class="f"><label>Mức Giá Phù Hợp (₫)</label><input id="ks-mg" type="number" placeholder="0"/></div>
           <div class="f"><label>Tiềm Năng</label><select id="ks-tn"><option>Cao</option><option>Trung bình</option><option>Thấp</option></select></div>
-          <div class="f"><label>📍 Lat (Vĩ Độ - Tự bóc tách từ ảnh)</label><input id="ks-lat" placeholder="VD: 14.082345" oninput="handleCoordPasteSplit('ks')"/></div>
-          <div class="f"><label>📍 Long (Kinh Độ - Tự bóc tách từ ảnh)</label><input id="ks-lng" placeholder="VD: 98.198765" oninput="handleCoordPasteSplit('ks')"/></div>
+          <div class="f"><label>🧭 Lat (Vĩ Độ — Tự Động Điền GPS)</label><input id="ks-lat" placeholder="Tự động đồng bộ Lat..." oninput="handleCoordPasteSplit('ks')" style="background:#f0fdf4;font-weight:700;color:#15803d;border-color:#86efac"/></div>
+          <div class="f"><label>🧭 Long (Kinh Độ — Tự Động Điền GPS)</label><input id="ks-lng" placeholder="Tự động đồng bộ Long..." oninput="handleCoordPasteSplit('ks')" style="background:#f0fdf4;font-weight:700;color:#15803d;border-color:#86efac"/></div>
           <div class="f" style="grid-column:1/-1;background:linear-gradient(135deg,#eff6ff,#f0fdf4);border:1.5px solid #38bdf8;border-radius:10px;padding:14px">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
               <div>
@@ -2596,18 +2596,18 @@ function copyTelegramReportTemplate(gName, gId, cat) {
         <div class="f"><label>📋 Survey Type</label><select id="sv-type"><option>Potential Customer</option><option>Consignment Partner</option><option>New Dealer</option><option>Market Research</option><option>After-Sales Care</option></select></div>
         <div class="f"><label>👤 Customer / Partner *</label><input id="sv-kh" placeholder="Name"/></div>
         <div class="f"><label>📞 Phone</label><input id="sv-dt" placeholder="09xx xxx xxx"/></div>
-        <div class="f"><label>📍 Location / Area</label><input id="sv-dc" placeholder="District, City..."/></div>
+        <div class="f"><label>📍 Location / Area <span style="color:#15803d;font-size:11px;font-weight:700">(Tự động từ GPS)</span></label><input id="sv-dc" oninput="this.dataset.autoGpsArea='0'" placeholder="Tự động điền từ GPS..."/></div>
         <div class="f"><label>📦 Product Interest</label><select id="sv-sp"><option>UPS</option><option>Solar Panel</option><option>Inverter</option><option>Battery</option><option>Combo Solar System</option><option>Accessories</option><option>Other</option></select></div>
         <div class="f"><label>💰 Budget Range</label><select id="sv-ns"><option>Not determined</option><option>Under 5M</option><option>5M - 20M</option><option>20M - 50M</option><option>50M - 200M</option><option>Over 200M</option></select></div>
         <div class="f"><label>🔥 Interest Level</label><select id="sv-md"><option>🔴 Very interested (Hot)</option><option>🟡 Interested (Warm)</option><option>🔵 Exploring (Cool)</option><option>⚪ Undecided (Cold)</option></select></div>
         <div class="f"><label>🏪 Partnership Potential</label><select id="sv-ht"><option>Retail buyer</option><option>Tier 1 Dealer</option><option>Tier 2 Dealer</option><option>Consignment sales</option><option>Project partner</option></select></div>
         <div class="f">
-          <label>🧭 Lat (Vĩ Độ - Tự bóc tách từ hình)</label>
-          <input id="sv-lat" placeholder="VD: 14.082345" oninput="handleCoordPasteSplit('sv')" style="background:#f0fdf4;font-weight:700;color:#15803d"/>
+          <label>🧭 Lat (Vĩ Độ — Tự Động Điền GPS)</label>
+          <input id="sv-lat" placeholder="Tự động đồng bộ Lat..." oninput="handleCoordPasteSplit('sv')" style="background:#f0fdf4;font-weight:700;color:#15803d;border-color:#86efac"/>
         </div>
         <div class="f">
-          <label>🧭 Long (Kinh Độ - Tự bóc tách từ hình)</label>
-          <input id="sv-lng" placeholder="VD: 98.198765" oninput="handleCoordPasteSplit('sv')" style="background:#f0fdf4;font-weight:700;color:#15803d"/>
+          <label>🧭 Long (Kinh Độ — Tự Động Điền GPS)</label>
+          <input id="sv-lng" placeholder="Tự động đồng bộ Long..." oninput="handleCoordPasteSplit('sv')" style="background:#f0fdf4;font-weight:700;color:#15803d;border-color:#86efac"/>
         </div>
         <div class="f">
           <label>🔗 Link Folder Hình Ảnh (2.12 SALE SOLUTION - BUILDING)</label>
@@ -3653,6 +3653,9 @@ function go(id){
   if (contentEl) contentEl.scrollTop = 0;
 
   if(renders[id]) renders[id]();
+  if (typeof reapplySaleAutoCoordsAndStaff_ === 'function') {
+    setTimeout(() => reapplySaleAutoCoordsAndStaff_(), 30);
+  }
 }
 
 function toggleSidebar(){
@@ -3682,6 +3685,9 @@ function sw(el,tid){
   el.classList.add('on');
   const cur = document.getElementById(tid);
   if (cur) cur.style.display = '';
+  if (typeof reapplySaleAutoCoordsAndStaff_ === 'function') {
+    setTimeout(() => reapplySaleAutoCoordsAndStaff_(), 30);
+  }
 }
 function tog(id){const e=document.getElementById(id);e.style.display=e.style.display==='none'?'':'none';}
 
@@ -3813,7 +3819,18 @@ function tbl(hs, rows) {
   <tbody>${rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
 }
 function del(k,id,cb){DB.del(k,id);cb();al('🗑 Deleted');}
-function clrForm(prefix){document.querySelectorAll(`[id^="${prefix}"]`).forEach(e=>{if(e.tagName==='SELECT')e.selectedIndex=0;else if(e.type!=='date')e.value='';});}
+function clrForm(prefix){
+  document.querySelectorAll(`[id^="${prefix}"]`).forEach(e=>{
+    if(e.tagName==='SELECT') e.selectedIndex=0;
+    else if(e.type!=='date') {
+      e.value='';
+      if (e.dataset && e.dataset.autoGpsArea) e.dataset.autoGpsArea = '1';
+    }
+  });
+  if (typeof reapplySaleAutoCoordsAndStaff_ === 'function') {
+    setTimeout(() => reapplySaleAutoCoordsAndStaff_(), 20);
+  }
+}
 
 // ═══════════════════════════════════════════════════
 // DASHBOARD
@@ -7158,8 +7175,8 @@ async function addKS(){
     th: v('ks-th'),
     mg: v('ks-mg'),
     tn: v('ks-tn'),
-    lat: (v('ks-lat') || '').trim(),
-    lng: (v('ks-lng') || '').trim(),
+    lat: (v('ks-lat') || window._lastSaleLiveLat || '').trim(),
+    lng: (v('ks-lng') || window._lastSaleLiveLng || '').trim(),
     nx: v('ks-nx'),
     gc: v('ks-nx')
   };
@@ -9110,7 +9127,7 @@ function saveSurveySite() {
     kh: kh,
     dt: dt,
     dc: dc,
-    gps: v('surv-gps') || '',
+    gps: (v('surv-gps') || window._lastSaleLiveGps || '').trim(),
     dateStr: v('surv-date') || td(),
     eng: v('surv-eng') || getCurrentStaff(),
     roof: v('surv-roof') || 'Mái Tôn (Tin Roof)',
@@ -9148,7 +9165,8 @@ function resetSurveyForm() {
   const setV = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
   setV('surv-kh', '');
   setV('surv-dt', '');
-  setV('surv-dc', '');
+  const dcEl = document.getElementById('surv-dc');
+  if (dcEl) { dcEl.value = ''; dcEl.dataset.autoGpsArea = '1'; }
   setV('surv-gps', '');
   setV('surv-date', td());
   setV('surv-eng', getCurrentStaff());
@@ -9156,6 +9174,9 @@ function resetSurveyForm() {
   setV('surv-pv', '16 tấm Longi 620W (9.92 kWp)');
   setV('surv-cable', '45 m');
   setV('surv-notes', '');
+  if (typeof reapplySaleAutoCoordsAndStaff_ === 'function') {
+    setTimeout(() => reapplySaleAutoCoordsAndStaff_(), 20);
+  }
 }
 
 function renderSurveySites() {
@@ -11265,7 +11286,7 @@ function renderMyQuotes(){
 // ═══════════════════════════════════════════════════
 var surveyUploadedPhotos = { sv: [], ks: [] };
 
-// 1. Tự động tách khi người dùng dán cặp tọa độ "14.082345, 98.198765" vào ô Lat hoặc Long
+// 1. Tự động tách khi người dùng dán cặp tọa độ "14.082345, 98.198765" vào ô Lat hoặc Long và đồng bộ toàn bộ các ô tọa độ
 function handleCoordPasteSplit(prefix) {
   const latEl = document.getElementById(prefix + '-lat');
   const lngEl = document.getElementById(prefix + '-lng');
@@ -11273,38 +11294,45 @@ function handleCoordPasteSplit(prefix) {
   const raw = (latEl.value || '').trim();
   const m = raw.match(/^([+-]?\d{1,2}\.\d+)\s*[,;/\s]\s*([+-]?\d{1,3}\.\d+)$/);
   if (m) {
-    latEl.value = Number(m[1]).toFixed(6);
-    lngEl.value = Number(m[2]).toFixed(6);
+    const lat = Number(m[1]).toFixed(6);
+    const lng = Number(m[2]).toFixed(6);
+    latEl.value = lat;
+    lngEl.value = lng;
+    if (typeof autoFillAllSaleCoordinateFields_ === 'function') {
+      autoFillAllSaleCoordinateFields_(lat, lng, 'Tọa độ vừa nhập');
+    }
+  } else if (latEl.value.trim() && lngEl.value.trim()) {
+    const la = parseFloat(latEl.value.trim());
+    const ln = parseFloat(lngEl.value.trim());
+    if (isFinite(la) && isFinite(ln) && Math.abs(la) <= 90 && Math.abs(ln) <= 180) {
+      window._lastSaleLiveLat = la.toFixed(6);
+      window._lastSaleLiveLng = ln.toFixed(6);
+      window._lastSaleLiveGps = `${window._lastSaleLiveLat}, ${window._lastSaleLiveLng}`;
+    }
   }
 }
 
-// 2. Lấy tọa độ GPS trực tiếp từ thiết bị (Điện thoại / Máy tính)
+// 2. Lấy tọa độ GPS trực tiếp từ thiết bị (Điện thoại / Máy tính) + Fallback Geo-IP tự động 100%
 function getDeviceGpsForSurvey(prefix) {
   const isVi = currentLang === 'vi';
-  const statusEl = document.getElementById(prefix + '-gps-status');
-  if (!navigator.geolocation) {
-    al(isVi ? 'Trình duyệt không hỗ trợ định vị GPS!' : 'Geolocation not supported!', 'er');
-    return;
+  const statusEl = document.getElementById((prefix || 'sv') + '-gps-status');
+  if (statusEl) statusEl.innerHTML = `⏳ ${isVi ? 'Đang tự động đồng bộ tọa độ GPS vào tất cả các ô...' : 'Auto-syncing GPS coordinates to all fields...'}`;
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const lat = pos.coords.latitude.toFixed(6);
+        const lng = pos.coords.longitude.toFixed(6);
+        autoFillAllSaleCoordinateFields_(lat, lng, 'GPS Thiết Bị');
+        al(`📍 Đã tự động điền GPS: ${lat}, ${lng}`, 'ok');
+      },
+      err => {
+        fetchSaleGeoIpFallback_(true);
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 15000 }
+    );
+  } else {
+    fetchSaleGeoIpFallback_(true);
   }
-  if (statusEl) statusEl.innerHTML = `⏳ ${isVi ? 'Đang lấy tọa độ GPS từ thiết bị...' : 'Acquiring device GPS coordinates...'}`;
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      const lat = pos.coords.latitude.toFixed(6);
-      const lng = pos.coords.longitude.toFixed(6);
-      const latEl = document.getElementById(prefix + '-lat');
-      const lngEl = document.getElementById(prefix + '-lng');
-      if (latEl) latEl.value = lat;
-      if (lngEl) lngEl.value = lng;
-      if (statusEl) {
-        statusEl.innerHTML = `✅ ${isVi ? 'Đã lấy tọa độ GPS thiết bị:' : 'Device GPS extracted:'} <b>Lat ${lat}, Long ${lng}</b> — <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" style="color:#15803d;text-decoration:underline">🗺️ Xem Google Maps</a>`;
-      }
-      al(`📍 GPS: ${lat}, ${lng}`, 'ok');
-    },
-    err => {
-      if (statusEl) statusEl.innerHTML = `⚠️ ${isVi ? 'Không lấy được GPS thiết bị (Hãy chọn ảnh có tọa độ hoặc nhập tay): ' : 'GPS error: '}${escH_(err.message)}`;
-    },
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-  );
 }
 
 // 3. Bộ giải mã nhị phân EXIF GPS trực tiếp từ file ảnh (JPEG / TIFF)
@@ -11495,52 +11523,254 @@ function formatSaleNowTimestampStr_() {
          pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// 🧭 AUTO-FILL ALL COORDINATE & LOCATION FIELDS ENGINE (ZERO MANUAL TYPING)
+// ═══════════════════════════════════════════════════════════════════════════
+var _lastReverseGeocodeKey = '';
+
+function estimateOfflineAreaFromCoords_(latNum, lngNum) {
+  if (!isFinite(latNum) || !isFinite(lngNum)) return '';
+  const hubs = [
+    { name: 'Dawei, Tanintharyi', lat: 14.0823, lng: 98.1915, r: 0.18 },
+    { name: 'Launglon, Dawei', lat: 13.9780, lng: 98.1200, r: 0.22 },
+    { name: 'Thayetchaung, Dawei', lat: 13.8680, lng: 98.2520, r: 0.25 },
+    { name: 'Yebyu, Dawei', lat: 14.2300, lng: 98.1950, r: 0.28 },
+    { name: 'Myeik, Tanintharyi', lat: 12.4395, lng: 98.6003, r: 0.22 },
+    { name: 'Kyunsu, Myeik', lat: 12.4000, lng: 98.4500, r: 0.30 },
+    { name: 'Palaw, Myeik', lat: 12.9750, lng: 98.6450, r: 0.28 },
+    { name: 'Tanintharyi Township', lat: 12.0830, lng: 99.0160, r: 0.35 },
+    { name: 'Bokpyin, Tanintharyi', lat: 11.2640, lng: 98.7610, r: 0.38 },
+    { name: 'Kawthoung, Tanintharyi', lat: 9.9833, lng: 98.5500, r: 0.30 },
+    { name: 'Yangon, Myanmar', lat: 16.8409, lng: 96.1735, r: 0.45 },
+    { name: 'Mandalay, Myanmar', lat: 21.9588, lng: 96.0891, r: 0.40 },
+    { name: 'Naypyidaw, Myanmar', lat: 19.7633, lng: 96.0785, r: 0.40 }
+  ];
+  let best = null;
+  let minDist = 999;
+  for (let i = 0; i < hubs.length; i++) {
+    const h = hubs[i];
+    const d = Math.hypot(latNum - h.lat, lngNum - h.lng);
+    if (d < minDist && d <= h.r) {
+      minDist = d;
+      best = h.name;
+    }
+  }
+  return best || '';
+}
+
+function applyAutoAreaToInputs_(areaText) {
+  if (!areaText) return;
+  try { localStorage.setItem('tni_sale_last_area', areaText); } catch (e) {}
+  window._lastSaleLiveArea = areaText;
+  ['sv-dc', 'ks-dd', 'surv-dc'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (id === 'surv-dc' && typeof currentEditingSurveyId !== 'undefined' && currentEditingSurveyId !== null && el.value.trim()) return;
+    const cur = (el.value || '').trim();
+    if (!cur || el.dataset.autoGpsArea === '1') {
+      el.value = areaText;
+      el.dataset.autoGpsArea = '1';
+    }
+  });
+}
+
+async function reverseGeocodeAndFillArea_(lat, lng) {
+  const latNum = parseFloat(lat);
+  const lngNum = parseFloat(lng);
+  if (!isFinite(latNum) || !isFinite(lngNum)) return;
+
+  // 1. Điền ngay lập tức từ bộ nhận diện khu vực Offline (0ms)
+  const offlineArea = estimateOfflineAreaFromCoords_(latNum, lngNum);
+  if (offlineArea) applyAutoAreaToInputs_(offlineArea);
+
+  // 2. Tra cứu địa chỉ chi tiết qua OpenStreetMap Nominatim (nếu tọa độ thay đổi > 200m)
+  const key = `${latNum.toFixed(3)},${lngNum.toFixed(3)}`;
+  if (_lastReverseGeocodeKey === key && window._lastSaleLiveArea) {
+    applyAutoAreaToInputs_(window._lastSaleLiveArea);
+    return;
+  }
+  _lastReverseGeocodeKey = key;
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(latNum)}&lon=${encodeURIComponent(lngNum)}&zoom=16&accept-language=en`, {
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    const addr = data && data.address ? data.address : {};
+    const parts = [
+      addr.road || addr.neighbourhood || addr.suburb || addr.quarter || addr.village || addr.hamlet || '',
+      addr.town || addr.city || addr.municipality || addr.county || addr.state_district || '',
+      addr.state || ''
+    ].map(s => String(s || '').trim()).filter(Boolean);
+    const dedup = [];
+    parts.forEach(p => { if (!dedup.includes(p)) dedup.push(p); });
+    const niceArea = dedup.join(', ');
+    if (niceArea) applyAutoAreaToInputs_(niceArea);
+  } catch (e) {}
+}
+
+function autoFillAllSaleStaffFields_() {
+  const autoName = (
+    (typeof getStaffName === 'function' ? getStaffName() : '') ||
+    (typeof _getCurUserName === 'function' ? _getCurUserName() : '') ||
+    ''
+  ).trim();
+  if (!autoName) return;
+  ['sv-nv', 'ks-nks', 'surv-eng'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el.value.trim()) {
+      el.value = autoName;
+    }
+  });
+}
+
+function autoFillAllSaleCoordinateFields_(latRaw, lngRaw, sourceLabel) {
+  const latNum = parseFloat(latRaw);
+  const lngNum = parseFloat(lngRaw);
+  if (!isFinite(latNum) || !isFinite(lngNum) || Math.abs(latNum) > 90 || Math.abs(lngNum) > 180) return;
+  if (Math.abs(latNum) < 0.0001 && Math.abs(lngNum) < 0.0001) return;
+
+  const lat = latNum.toFixed(6);
+  const lng = lngNum.toFixed(6);
+  const coord = `${lat}, ${lng}`;
+
+  window._lastSaleLiveLat = lat;
+  window._lastSaleLiveLng = lng;
+  window._lastSaleLiveGps = coord;
+  try {
+    localStorage.setItem('tni_sale_last_lat', lat);
+    localStorage.setItem('tni_sale_last_lng', lng);
+  } catch (e) {}
+
+  // 1. Tự động điền toàn bộ các ô Lat / Long trên tất cả các tab Khảo Sát (My Surveys + CRM Khảo Sát Đại Lý)
+  ['sv', 'ks'].forEach(pfx => {
+    const latEl = document.getElementById(pfx + '-lat');
+    const lngEl = document.getElementById(pfx + '-lng');
+    if (latEl) latEl.value = lat;
+    if (lngEl) lngEl.value = lng;
+
+    const stEl = document.getElementById(pfx + '-gps-status');
+    const hasPhotos = (typeof surveyUploadedPhotos !== 'undefined' && surveyUploadedPhotos[pfx] && surveyUploadedPhotos[pfx].length > 0);
+    if (stEl && !hasPhotos) {
+      stEl.innerHTML = `✅ Đã tự động đồng bộ tọa độ (${escH_(sourceLabel || 'GPS Live')}): <b>Lat ${lat}, Long ${lng}</b> — <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" style="color:#15803d;text-decoration:underline;font-weight:800">🗺️ Xem Google Maps</a>`;
+    }
+  });
+
+  // 2. Tự động điền ô Tọa Độ GPS trong tab Field Operations -> Khảo Sát Hiện Trường (#surv-gps)
+  const survGpsEl = document.getElementById('surv-gps');
+  if (survGpsEl) {
+    const isEditingExisting = (typeof currentEditingSurveyId !== 'undefined' && currentEditingSurveyId !== null);
+    if (!isEditingExisting || !survGpsEl.value.trim()) {
+      survGpsEl.value = coord;
+    }
+  }
+
+  // 3. Tự động điền ô GPS trong Modal Camera Chụp Trực Tiếp (#sale-webcam-inp-gps)
+  const wcGps = document.getElementById('sale-webcam-inp-gps');
+  if (wcGps) wcGps.value = coord;
+
+  // 4. Tự động điền Tên Nhân Viên Khảo Sát & Địa Điểm / Khu Vực
+  autoFillAllSaleStaffFields_();
+  reverseGeocodeAndFillArea_(lat, lng);
+
+  if (typeof syncSaleWebCamOverlayText === 'function') {
+    syncSaleWebCamOverlayText();
+  }
+}
+
+function reapplySaleAutoCoordsAndStaff_() {
+  autoFillAllSaleStaffFields_();
+  let lat = window._lastSaleLiveLat || '';
+  let lng = window._lastSaleLiveLng || '';
+  if (!lat || !lng) {
+    try {
+      lat = localStorage.getItem('tni_sale_last_lat') || '';
+      lng = localStorage.getItem('tni_sale_last_lng') || '';
+    } catch (e) {}
+  }
+  if (lat && lng) {
+    autoFillAllSaleCoordinateFields_(lat, lng, 'Tự động đồng bộ');
+  } else {
+    startSaleBackgroundGpsTracker_('sv');
+  }
+}
+
+async function fetchSaleGeoIpFallback_(showToast) {
+  const endpoints = [
+    'https://ipwho.is/',
+    'https://get.geojs.io/v1/ip/geo.json',
+    'https://ipapi.co/json/'
+  ];
+  for (let i = 0; i < endpoints.length; i++) {
+    try {
+      const res = await fetch(endpoints[i]);
+      if (!res.ok) continue;
+      const d = await res.json();
+      const lat = parseFloat(d.latitude ?? d.lat);
+      const lng = parseFloat(d.longitude ?? d.lon);
+      if (isFinite(lat) && isFinite(lng) && (Math.abs(lat) > 0.01 || Math.abs(lng) > 0.01)) {
+        autoFillAllSaleCoordinateFields_(lat, lng, 'Tự động định vị mạng');
+        const city = [d.city, d.region || d.region_name].filter(Boolean).join(', ');
+        if (city) applyAutoAreaToInputs_(city);
+        if (showToast) al(`📍 Đã tự động điền tọa độ: ${lat.toFixed(6)}, ${lng.toFixed(6)}`, 'ok');
+        return true;
+      }
+    } catch (e) {}
+  }
+  return false;
+}
+
 function getSaleCurrentFormattedGps_(prefix) {
   const pfx = prefix || saleActiveSurveyPrefix_ || 'sv';
   const lat = (document.getElementById(pfx + '-lat')?.value || '').trim();
   const lng = (document.getElementById(pfx + '-lng')?.value || '').trim();
   if (lat && lng) return `${lat}, ${lng}`;
   const wcGps = (document.getElementById('sale-webcam-inp-gps')?.value || '').trim();
-  if (wcGps) return wcGps;
+  if (wcGps && wcGps !== 'Đang lấy GPS...') return wcGps;
   if (window._lastSaleLiveGps) return window._lastSaleLiveGps;
   return 'Đang lấy GPS...';
 }
 
 function startSaleBackgroundGpsTracker_(prefix) {
-  const pfx = prefix || saleActiveSurveyPrefix_ || 'sv';
-  if (!navigator.geolocation) return;
+  autoFillAllSaleStaffFields_();
+  // Khôi phục ngay tức thì tọa độ gần nhất từ bộ nhớ (0ms) để người dùng không bao giờ thấy ô trống
   try {
-    navigator.geolocation.getCurrentPosition(pos => {
-      const lat = pos.coords.latitude.toFixed(6);
-      const lng = pos.coords.longitude.toFixed(6);
-      const coord = `${lat}, ${lng}`;
-      window._lastSaleLiveGps = coord;
-      const latEl = document.getElementById(pfx + '-lat');
-      const lngEl = document.getElementById(pfx + '-lng');
-      if (latEl) latEl.value = lat;
-      if (lngEl) lngEl.value = lng;
-      const wcGps = document.getElementById('sale-webcam-inp-gps');
-      if (wcGps) wcGps.value = coord;
-      syncSaleWebCamOverlayText();
-    }, () => {}, { enableHighAccuracy: true, timeout: 10000, maximumAge: 10000 });
-
-    if (saleGpsWatchId_ === null) {
-      saleGpsWatchId_ = navigator.geolocation.watchPosition(pos => {
-        const curPfx = saleActiveSurveyPrefix_ || 'sv';
-        const lat = pos.coords.latitude.toFixed(6);
-        const lng = pos.coords.longitude.toFixed(6);
-        const coord = `${lat}, ${lng}`;
-        window._lastSaleLiveGps = coord;
-        const latEl = document.getElementById(curPfx + '-lat');
-        const lngEl = document.getElementById(curPfx + '-lng');
-        if (latEl) latEl.value = lat;
-        if (lngEl) lngEl.value = lng;
-        const wcGps = document.getElementById('sale-webcam-inp-gps');
-        if (wcGps) wcGps.value = coord;
-        syncSaleWebCamOverlayText();
-      }, () => {}, { enableHighAccuracy: true, maximumAge: 8000 });
+    const cachedLat = window._lastSaleLiveLat || localStorage.getItem('tni_sale_last_lat') || '';
+    const cachedLng = window._lastSaleLiveLng || localStorage.getItem('tni_sale_last_lng') || '';
+    const cachedArea = window._lastSaleLiveArea || localStorage.getItem('tni_sale_last_area') || '';
+    if (cachedArea) applyAutoAreaToInputs_(cachedArea);
+    if (cachedLat && cachedLng) {
+      autoFillAllSaleCoordinateFields_(cachedLat, cachedLng, 'GPS Tự Động');
     }
   } catch (e) {}
+
+  if (!navigator.geolocation) {
+    if (!window._lastSaleLiveLat) fetchSaleGeoIpFallback_(false);
+    return;
+  }
+  try {
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        autoFillAllSaleCoordinateFields_(pos.coords.latitude, pos.coords.longitude, 'GPS Thiết Bị');
+      },
+      () => {
+        if (!window._lastSaleLiveLat) fetchSaleGeoIpFallback_(false);
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 15000 }
+    );
+
+    if (saleGpsWatchId_ === null) {
+      saleGpsWatchId_ = navigator.geolocation.watchPosition(
+        pos => {
+          autoFillAllSaleCoordinateFields_(pos.coords.latitude, pos.coords.longitude, 'GPS Live');
+        },
+        () => {},
+        { enableHighAccuracy: true, maximumAge: 8000 }
+      );
+    }
+  } catch (e) {
+    if (!window._lastSaleLiveLat) fetchSaleGeoIpFallback_(false);
+  }
 }
 
 function getSalePrefixDomMap_(prefix) {
@@ -11994,8 +12224,14 @@ function confirmAndAttachSaleWebCamPhotos() {
 
   const statusEl = document.getElementById(pfx + '-gps-status');
   const lastShot = selectedShots[selectedShots.length - 1];
+  if (lastShot && lastShot.gpsStr) {
+    const parsed = parseCoordinatesFromText_(lastShot.gpsStr);
+    if (parsed && parsed.lat && parsed.lng) {
+      autoFillAllSaleCoordinateFields_(parsed.lat, parsed.lng, 'Camera 1440×1088');
+    }
+  }
   if (statusEl && lastShot) {
-    statusEl.innerHTML = `✅ Đã gắn <b>${surveyUploadedPhotos[pfx].length} ảnh chuẩn 1440×1088</b> (Đã đóng dấu KH: <b>${escH_(lastShot.customerName)}</b> • NV: <b>${escH_(lastShot.staffName)}</b> • GPS: <b>${escH_(lastShot.gpsStr)}</b> • Giờ: <b>${escH_(lastShot.timestampStr)}</b>)`;
+    statusEl.innerHTML = `✅ Đã gắn <b>${surveyUploadedPhotos[pfx].length} ảnh chuẩn 1440×1088</b> & tự điền tọa độ (KH: <b>${escH_(lastShot.customerName)}</b> • NV: <b>${escH_(lastShot.staffName)}</b> • GPS: <b>${escH_(lastShot.gpsStr)}</b> • Giờ: <b>${escH_(lastShot.timestampStr)}</b>)`;
   }
 }
 
@@ -12197,8 +12433,8 @@ async function addSurvey(){
     ns: v('sv-ns'),
     md: v('sv-md'),
     ht: v('sv-ht'),
-    lat: (v('sv-lat') || '').trim(),
-    lng: (v('sv-lng') || '').trim(),
+    lat: (v('sv-lat') || window._lastSaleLiveLat || '').trim(),
+    lng: (v('sv-lng') || window._lastSaleLiveLng || '').trim(),
     gc: v('sv-gc'),
     nx: v('sv-gc'),
     ngay: td()
@@ -15585,7 +15821,15 @@ function confirmRejectDel() {
 setTimeout(function() {
   _renderDelReqBadge();
   _renderDelReqList();
-}, 600);
+  if (typeof startSaleBackgroundGpsTracker_ === 'function') {
+    startSaleBackgroundGpsTracker_('sv');
+  }
+}, 250);
+document.addEventListener('DOMContentLoaded', function() {
+  if (typeof startSaleBackgroundGpsTracker_ === 'function') {
+    startSaleBackgroundGpsTracker_('sv');
+  }
+});
 // ════════════ END LUONG PHE DUYET ════════════
 
 </script>
