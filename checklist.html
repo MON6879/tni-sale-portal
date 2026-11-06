@@ -33,13 +33,11 @@
       background: var(--bg);
       color: var(--ink);
       line-height: 1.45;
-      padding-bottom: 92px;
+      padding-bottom: 24px;
     }
-    /* TOPBAR */
+    /* TOPBAR (NON-STICKY SO FULL SCREEN IS VISIBLE ON MOBILE & DESKTOP) */
     .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      position: relative;
       background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
       color: #fff;
       padding: 10px 16px;
@@ -372,7 +370,7 @@
       background: #0f766e;
     }
 
-    /* FILTER & SEARCH TOOLBAR */
+    /* FILTER & SEARCH TOOLBAR (NON-STICKY) */
     .filter-bar {
       background: var(--card);
       border-radius: 12px;
@@ -384,9 +382,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      position: sticky;
-      top: 58px;
-      z-index: 80;
+      position: relative;
       box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
     }
     .filter-pills {
@@ -728,19 +724,17 @@
       cursor: pointer;
     }
 
-    /* STICKY BOTTOM SUBMIT BAR */
+    /* BOTTOM SUBMIT BAR (NON-FIXED, FLOWS NATURALLY AT PAGE END) */
     .bottom-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 95;
-      background: rgba(15, 23, 42, 0.96);
-      backdrop-filter: blur(10px);
+      position: relative;
+      max-width: 1616px;
+      margin: 14px auto 20px auto;
+      border-radius: 14px;
+      background: #0f172a;
       color: #fff;
-      padding: 10px 16px;
-      border-top: 1px solid rgba(255,255,255,0.15);
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.25);
+      padding: 12px 16px;
+      border: 1px solid rgba(255,255,255,0.15);
+      box-shadow: 0 4px 18px rgba(15,23,42,0.18);
     }
     .bottom-bar-inner {
       max-width: 1640px;
