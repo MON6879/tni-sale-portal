@@ -1000,6 +1000,36 @@
 </head>
 <body>
 
+  <!-- SHARED INTERNAL STAFF LOGIN GATE (SYNCED WITH BI SALE — INTERNAL STAFF ONLY, NO PARTNERS) -->
+  <div id="cl-staff-auth-gate" style="display:none;position:fixed;inset:0;background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 50%,#0f172a 100%);z-index:100000;align-items:center;justify-content:center;flex-direction:column;padding:16px;">
+    <div style="background:rgba(255,255,255,0.08);backdrop-filter:blur(24px);border:1.5px solid rgba(255,255,255,0.2);border-radius:22px;padding:32px 26px;max-width:440px;width:100%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.6);color:#fff;">
+      <div style="font-size:42px;margin-bottom:8px;">🛡️</div>
+      <div style="font-size:21px;font-weight:900;margin-bottom:4px;letter-spacing:0.3px;">TNI Technical Check List</div>
+      <div style="font-size:12px;color:#93c5fd;font-weight:700;margin-bottom:18px;">
+        🇬🇧 Internal Staff &amp; Approver Login (Synced with BI Sale • No Partners)<br/>
+        🇲🇲 အတွင်းရေးဝန်ထမ်းနှင့် အတည်ပြုသူ ဝင်ရောက်ရန် (ပါတနာမပါ)
+      </div>
+      <div style="text-align:left;margin-bottom:12px;">
+        <label style="display:block;font-size:12px;font-weight:800;color:#e2e8f0;margin-bottom:6px;">
+          📧 Staff Email / Gmail (Nhập Gmail Nhân Sự Nội Bộ):
+        </label>
+        <input id="cl-auth-email-input" type="email" list="cl-auth-email-datalist" placeholder="e.g. name@gmail.com"
+          style="width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.3);background:rgba(15,23,42,0.65);color:#fff;font-size:14px;font-weight:800;outline:none;box-sizing:border-box;"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();verifyChecklistStaffLogin();}"
+          oninput="const e=document.getElementById('cl-auth-err');if(e)e.style.display='none';" />
+        <datalist id="cl-auth-email-datalist"></datalist>
+      </div>
+      <div id="cl-auth-err" style="display:none;color:#fecaca;font-size:12px;font-weight:800;margin-bottom:12px;background:rgba(220,38,38,0.28);padding:10px;border-radius:8px;border:1px solid rgba(248,113,113,0.5);text-align:left;"></div>
+      <button type="button" id="btn-cl-auth-submit" onclick="verifyChecklistStaffLogin()"
+        style="width:100%;padding:12px 16px;border-radius:10px;border:none;background:linear-gradient(135deg,#2563eb 0%,#059669 100%);color:#fff;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 4px 14px rgba(37,99,235,0.4);">
+        🔐 Sign In • Đăng Nhập • ဝင်ရောက်ရန်
+      </button>
+      <div style="margin-top:14px;font-size:11px;color:#cbd5e1;font-weight:700;">
+        🔒 Shared SSO with BI Sale • Internal TNI Staff Only (Partners Excluded)
+      </div>
+    </div>
+  </div>
+
   <!-- TOPBAR -->
   <header class="topbar">
     <div class="topbar-inner">
@@ -1181,8 +1211,17 @@
             <div id="site-existing-hint" style="display:none;margin-top:4px;font-size:11.5px;font-weight:800;color:#1d4ed8;background:#dbeafe;padding:4px 8px;border-radius:6px;cursor:pointer;" onclick="loadMatchedSiteSession()"></div>
           </div>
           <div class="field-group">
-            <label id="lbl-inspector">Nhân Viên Kiểm Tra / Cập Nhật Sửa (Staff) *</label>
-            <input type="text" class="field-input" id="inp-inspector" placeholder="Nhập tên nhân viên (in lên ảnh 1440×1088)..." oninput="saveLocalDraft();syncWebCamOverlayText();checkBasicStationInfoGate();" />
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;margin-bottom:3px;">
+              <label id="lbl-inspector" style="margin-bottom:0;">Nhân Viên Kiểm Tra / Cập Nhật Sửa (Staff) *</label>
+              <span id="cl-logged-in-user-chip" style="font-size:11px;font-weight:900;color:#065f46;background:#d1fae5;border:1px solid #34d399;padding:2px 8px;border-radius:99px;display:none;align-items:center;gap:5px;"></span>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <select id="sel-internal-staff-picker" class="field-input" style="flex:1;min-width:150px;background:#f8fafc;font-weight:800;" onchange="if(this.value){const inp=document.getElementById('inp-inspector');if(inp){inp.value=this.value;saveLocalDraft();syncWebCamOverlayText();checkBasicStationInfoGate();}}">
+                <option value="">-- 👤 Select Staff (BI Sale Internal) --</option>
+              </select>
+              <input type="text" class="field-input" id="inp-inspector" list="tni-internal-staff-datalist" style="flex:1.2;min-width:160px;" placeholder="Staff Name (printed on 1440×1088)..." oninput="saveLocalDraft();syncWebCamOverlayText();checkBasicStationInfoGate();" />
+              <datalist id="tni-internal-staff-datalist"></datalist>
+            </div>
           </div>
           <input type="hidden" id="inp-gps" value="" />
           <div class="field-group">
@@ -1517,10 +1556,11 @@
               </select>
             </div>
             <div class="field-group">
-              <label>🔓 Trạng Thái Quyền (Status)</label>
-              <select id="inp-app-status" class="field-input" style="background:#fff;font-weight:800;color:#059669;">
-                <option value="ACTIVE">✅ ACTIVE (Được quyền phê duyệt)</option>
-                <option value="INACTIVE">⛔ INACTIVE (Tạm ngưng quyền)</option>
+              <label>🔓 Chức Năng Check List (Role: Phê Duyệt / Nhân Viên) *</label>
+              <select id="inp-app-status" class="field-input" style="background:#fff;font-weight:900;color:#059669;">
+                <option value="ACTIVE">🛡️ Phê Duyệt (Approver — Duyệt &amp; Kiểm tra)</option>
+                <option value="STAFF">👷 Nhân Viên (Staff — Kiểm tra &amp; Sửa lỗi)</option>
+                <option value="INACTIVE">⛔ INACTIVE (Tạm khóa quyền)</option>
               </select>
             </div>
             <div class="field-group">
@@ -1538,24 +1578,37 @@
           </div>
         </div>
 
-        <!-- KHỐI 3: BẢNG DANH SÁCH GMAIL NGƯỜI PHÊ DUYỆT HIỆN HÀNH -->
+        <!-- KHỐI 3: BẢNG DANH SÁCH NHÂN SỰ NỘI BỘ (ĐỒNG BỘ TỪ BI SALE - KHÔNG LẤY ĐỐI TÁC) & CHỌN CHỨC NĂNG PHÊ DUYỆT / NHÂN VIÊN -->
         <div>
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
-            <h3 style="font-size:15px;font-weight:900;color:#0f172a;">
-              📋 Danh Sách Gmail Được Quyền Phê Duyệt Hoàn Thành Sửa Chữa (Đồng bộ trực tiếp với Sheet "6. Gmail Phê Duyệt")
-            </h3>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+            <div>
+              <h3 style="font-size:15px;font-weight:900;color:#0f172a;">
+                📋 Danh Sách Nhân Sự Nội Bộ (Đồng Bộ BI Sale • Không Lấy Đối Tác) — Chọn Chức Năng: 🛡️ Phê Duyệt hoặc 👷 Nhân Viên
+              </h3>
+              <div style="font-size:12px;color:#475569;font-weight:700;margin-top:2px;">
+                🇬🇧 Synced with BI Sale Internal Staff (Partners excluded) • Choose role per person: <b>🛡️ Approver</b> or <b>👷 Staff</b> • 🇲🇲 အတည်ပြုသူ (Approver) သို့မဟုတ် ဝန်ထမ်း (Staff) ရွေးချယ်သတ်မှတ်ရန်
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+              <button type="button" class="pill-btn" style="background:#2563eb;color:#fff;padding:7px 12px;font-size:12px;font-weight:900;cursor:pointer;" onclick="syncInternalStaffFromBiSale(true)">
+                🔄 Đồng Bộ Từ BI Sale (Không Lấy Đối Tác)
+              </button>
+              <select id="tab7-role-filter" class="field-input" style="width:auto;padding:6px 10px;font-size:12px;background:#fff;font-weight:800;" onchange="renderApproversManager()">
+                <option value="ALL">📋 Tất cả Nhân sự Nội bộ (All)</option>
+                <option value="ACTIVE">🛡️ Chỉ Người Phê Duyệt (Approvers Only)</option>
+                <option value="STAFF">👷 Chỉ Nhân Viên (Staff Only)</option>
+              </select>
+            </div>
           </div>
           <div style="overflow-x:auto;">
             <table style="width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid #cbd5e1;border-radius:10px;overflow:hidden;">
               <thead>
                 <tr style="background:#0f172a;color:#fff;text-align:left;">
                   <th style="padding:10px;width:45px;text-align:center;">STT</th>
-                  <th style="padding:10px;">Gmail Người Phê Duyệt</th>
+                  <th style="padding:10px;">Email Đăng Nhập (Gmail)</th>
                   <th style="padding:10px;">Họ Và Tên (Full Name)</th>
-                  <th style="padding:10px;">Chức Vụ / Vai Trò (Title)</th>
-                  <th style="padding:10px;">Phòng Ban (Department)</th>
-                  <th style="padding:10px;text-align:center;">Trạng Thái</th>
-                  <th style="padding:10px;">Cập Nhật Lúc</th>
+                  <th style="padding:10px;">Chức Vụ / Team (Title)</th>
+                  <th style="padding:10px;min-width:210px;">Chức Năng (Chọn Lại Phê Duyệt / Nhân Viên)</th>
                   <th style="padding:10px;">Thao Tác (Chọn Duyệt / Sửa / Xóa)</th>
                 </tr>
               </thead>
@@ -2096,6 +2149,8 @@
       });
 
       clearStationFormExceptDate();
+      initChecklistStaffAuthGate();
+      syncInternalStaffFromBiSale(false);
       startBackgroundGpsTracker();
       setLang(currentLang);
       switchChecklistType("site_bts");
@@ -4295,22 +4350,107 @@
       "phonghdpxd@gmail.com":        { name: "Hà Đức Phong", title: "Master Admin / BOD", dept: "BOD / Ban Giám Đốc", status: "ACTIVE" }
     };
 
+    const BI_SALE_GAS_API = "https://script.google.com/macros/s/AKfycbz-NZlBk8q2jWb7no6P6zWyD7a_9D3eqpZmPNqniSXJdwkfBPJMJZQ0Babbx2nX_pLEGA/exec";
+    const GAUTH_EMAIL_KEY = "tni_google_auth_email";
+    const GAUTH_USER_KEY  = "tni_google_auth_user";
+    const GAUTH_OK_KEY    = "tni_google_authed_at";
+
+    // Danh sách 30 Nhân sự Nội bộ chuẩn từ BI Sale (Đã loại bỏ 100% Đối tác / Partner)
+    const BI_SALE_INTERNAL_STAFF_DEFAULT = [
+      { email: "phonghdpxd@gmail.com", name: "Hà Đức Phong", title: "Master Admin / BOD", dept: "BOD / Ban Giám Đốc", status: "ACTIVE" },
+      { email: "yelwin086683@gmail.com", name: "Ye Lwin", title: "Technical Manager", dept: "Technical Dept (Phòng Kỹ Thuật)", status: "ACTIVE" },
+      { email: "shingwutthmone776@gmail.com", name: "Shing Wutt Hmone Oo", title: "CM Engineer", dept: "Technical Dept (Phòng Kỹ Thuật)", status: "ACTIVE" },
+      { email: "ppoe56591@gmail.com", name: "Poe Hmyin Thoun", title: "Infrastructure", dept: "Technical Dept (Phòng Kỹ Thuật)", status: "ACTIVE" },
+      { email: "heinnanda683@gmail.com", name: "Hein Nanda", title: "M&E Engineer", dept: "Technical Dept (Phòng Kỹ Thuật)", status: "ACTIVE" },
+      { email: "htoolaynyaw@gmail.com", name: "Naw Oh Nyaw", title: "PM Engineer", dept: "Technical Dept (Phòng Kỹ Thuật)", status: "ACTIVE" },
+      { email: "hlaing127592@gmail.com", name: "Hlaing Pyae Phyo", title: "HR and Finance", dept: "HR and Finance", status: "STAFF" },
+      { email: "shwe92201@gmail.com", name: "Hnin Shwe Zin Hlaing", title: "Kế toán trưởng", dept: "Finance", status: "STAFF" },
+      { email: "ingyinhmwe49@gmail.com", name: "Ingyin Hmwe", title: "Asset", dept: "Asset", status: "STAFF" },
+      { email: "bhonehtetaumg1521@gmail.com", name: "Bhone Htet Aung", title: "Team 01", dept: "Team 1", status: "STAFF" },
+      { email: "paingaungsoeayoo@gmail.com", name: "Paing Aung Soe", title: "Team 01", dept: "Team 1", status: "STAFF" },
+      { email: "thureinnaingkla@gmail.com", name: "Thu Rain Naing", title: "Team 01", dept: "Team 1", status: "STAFF" },
+      { email: "saikarkarmyo6@gmail.com", name: "Sai Kar Kar Myo", title: "Team 01", dept: "Team 1", status: "STAFF" },
+      { email: "phyohtetaung227567@gmail.com", name: "Phyo Htet Aung", title: "Team 01", dept: "Team 1", status: "STAFF" },
+      { email: "aunglapyaeoo664@gmail.com", name: "Aung La Pyae Oo", title: "Team 01", dept: "Team 1", status: "STAFF" },
+      { email: "winhtetaung851@gmail.com", name: "Win Htet Aung", title: "Team 02", dept: "Team 2", status: "STAFF" },
+      { email: "mgmg25608mm@gmail.com", name: "Maung Maung", title: "Team 02", dept: "Team 2", status: "STAFF" },
+      { email: "pyikyaw101973@gmail.com", name: "Pyi Kyaw Aung", title: "Team 02", dept: "Team 2", status: "STAFF" },
+      { email: "wanaoo348@gmail.com", name: "Wanna Oo", title: "Team 02", dept: "Team 2", status: "STAFF" },
+      { email: "naymyothu272016@gmail.com", name: "Nay Myo Thu", title: "Team 02", dept: "Team 2", status: "STAFF" },
+      { email: "mrminpaing@hotmail.com", name: "Min Paing Oo", title: "Team 02", dept: "Team 2", status: "STAFF" },
+      { email: "ct500558@gmail.com", name: "Si Thu Htun", title: "Team 03", dept: "Team 3", status: "STAFF" },
+      { email: "ko748724@gmail.com", name: "Tin Naing Lin", title: "Team 03", dept: "Team 3", status: "STAFF" },
+      { email: "pyaephyozaw2015@gmail.com", name: "Pyae Phyo Zaw", title: "Team 03", dept: "Team 3", status: "STAFF" },
+      { email: "vaydarlay650@gmail.com", name: "Myint Ko Ko Aung", title: "Team 03", dept: "Team 3", status: "STAFF" },
+      { email: "naungninage12@gamil.com", name: "Khant Si Thu", title: "Team 03", dept: "Team 3", status: "STAFF" },
+      { email: "maungwintin75@gmail.com", name: "Tin Maung Win", title: "Team 04", dept: "Team 4", status: "STAFF" },
+      { email: "nyochaw2412@gmail.com", name: "Khant Chaw Nyo", title: "Team 04", dept: "Team 4", status: "STAFF" },
+      { email: "myohtunn45@gmail.com", name: "Naing Myo Htun", title: "Team 04", dept: "Team 4", status: "STAFF" },
+      { email: "pyaephyo202126@gmail.com", name: "Pyae Phyo Hlaing", title: "Team 04", dept: "Team 4", status: "STAFF" }
+    ];
+
+    function cleanStaffEmail(raw) {
+      return String(raw || "").replace(/["'\s]/g, "").trim().toLowerCase();
+    }
+
+    function isPartnerStaffEntry(u) {
+      if (!u) return true;
+      const hay = (String(u.id || "") + " " + String(u.role || "") + " " + String(u.title || "") + " " + String(u.note || "") + " " + String(u.name || "")).toLowerCase();
+      const partnerKw = ["partner", "đối tác", "doi tac", "ký gởi", "ky goi", "consignment", "đại lý", "dai ly", "dealer"];
+      for (let i = 0; i < partnerKw.length; i++) {
+        if (hay.indexOf(partnerKw[i]) !== -1) return true;
+      }
+      return false;
+    }
+
     let cloudApproversList = [];
     let approverSheetGid = 0;
 
     function getApproversArray() {
+      const mergedMap = {};
+      BI_SALE_INTERNAL_STAFF_DEFAULT.forEach(item => {
+        if (isPartnerStaffEntry(item)) return;
+        const em = cleanStaffEmail(item.email);
+        if (!em) return;
+        mergedMap[em] = Object.assign({}, item, { email: em });
+      });
       if (Array.isArray(cloudApproversList) && cloudApproversList.length > 0) {
-        return cloudApproversList;
+        cloudApproversList.forEach(item => {
+          if (isPartnerStaffEntry(item)) return;
+          const em = cleanStaffEmail(item.email);
+          if (!em) return;
+          mergedMap[em] = Object.assign({}, mergedMap[em] || {}, item, { email: em });
+        });
       }
-      return Object.keys(TECH_DEPT_GMAIL_MAP).map(em => ({
-        email: em,
-        name: TECH_DEPT_GMAIL_MAP[em].name,
-        title: TECH_DEPT_GMAIL_MAP[em].title,
-        dept: TECH_DEPT_GMAIL_MAP[em].dept || "Technical Dept (Phòng Kỹ Thuật)",
-        status: TECH_DEPT_GMAIL_MAP[em].status || "ACTIVE",
-        note: "Được quyền Tick phê duyệt hoàn thành sửa chữa",
-        updatedAt: ""
-      }));
+      return Object.values(mergedMap).sort((a, b) => {
+        const stA = String(a.status || "STAFF").toUpperCase();
+        const stB = String(b.status || "STAFF").toUpperCase();
+        const rank = s => (s === "ACTIVE" || s === "APPROVER") ? 0 : (s === "STAFF" ? 1 : 2);
+        if (rank(stA) !== rank(stB)) return rank(stA) - rank(stB);
+        return String(a.name || "").localeCompare(String(b.name || ""));
+      });
+    }
+
+    function populateInternalStaffPickers() {
+      const allInternal = getApproversArray().filter(x => String(x.status || "STAFF").toUpperCase() !== "INACTIVE" && !isPartnerStaffEntry(x));
+      const dl = document.getElementById("tni-internal-staff-datalist");
+      if (dl) {
+        dl.innerHTML = allInternal.map(u => `<option value="${escAttr(u.name)}">${escHtml(u.name)} (${escHtml(u.title || u.dept || "")})</option>`).join("");
+      }
+      const authDl = document.getElementById("cl-auth-email-datalist");
+      if (authDl) {
+        authDl.innerHTML = allInternal.map(u => `<option value="${escAttr(u.email)}">${escHtml(u.name)} — ${escHtml(u.title || "")}</option>`).join("");
+      }
+      const sel = document.getElementById("sel-internal-staff-picker");
+      if (sel) {
+        const cur = sel.value;
+        let html = `<option value="">-- 👤 Select Staff (${allInternal.length} Internal BI Sale) --</option>`;
+        allInternal.forEach(u => {
+          const roleTag = String(u.status || "STAFF").toUpperCase() === "ACTIVE" ? "🛡️ Approver" : "👷 Staff";
+          html += `<option value="${escAttr(u.name)}" ${u.name === cur ? "selected" : ""}>${escHtml(u.name)} • ${escHtml(u.title || "")} (${roleTag})</option>`;
+        });
+        sel.innerHTML = html;
+      }
     }
 
     function applyCloudApprovers(list, sheetGid) {
@@ -4321,14 +4461,17 @@
           linkBtn.href = "https://docs.google.com/spreadsheets/d/" + CHECKLIST_SS_ID + "/edit#gid=" + sheetGid;
         }
       }
-      if (!Array.isArray(list) || list.length === 0) return;
-      cloudApproversList = list;
-      // Clear & rebuild TECH_DEPT_GMAIL_MAP from active approvers
+      if (Array.isArray(list) && list.length > 0) {
+        cloudApproversList = list.filter(x => !isPartnerStaffEntry(x));
+      }
+      const merged = getApproversArray();
+      // Clear & rebuild TECH_DEPT_GMAIL_MAP ONLY from ACTIVE Approvers (not STAFF or INACTIVE)
       Object.keys(TECH_DEPT_GMAIL_MAP).forEach(k => { delete TECH_DEPT_GMAIL_MAP[k]; });
-      list.forEach(item => {
-        const em = String(item.email || "").trim().toLowerCase();
+      merged.forEach(item => {
+        const em = cleanStaffEmail(item.email);
         if (!em) return;
-        if (String(item.status || "ACTIVE").toUpperCase() !== "INACTIVE") {
+        const st = String(item.status || "STAFF").toUpperCase();
+        if (st === "ACTIVE" || st === "APPROVER") {
           TECH_DEPT_GMAIL_MAP[em] = {
             name: item.name || em,
             title: item.title || "Approver",
@@ -4339,8 +4482,9 @@
       });
       const cntBadge = document.getElementById("approvers-count-badge");
       if (cntBadge) {
-        cntBadge.textContent = Object.keys(TECH_DEPT_GMAIL_MAP).length + " Gmail";
+        cntBadge.textContent = Object.keys(TECH_DEPT_GMAIL_MAP).length + " Duyệt / " + merged.length + " NS";
       }
+      populateInternalStaffPickers();
       syncTechGmailDropdowns();
       if (currentType === "approvers_mgr") {
         renderApproversManager();
@@ -4404,15 +4548,26 @@
 
     function renderApproversManager() {
       syncTechGmailDropdowns();
+      populateInternalStaffPickers();
       const tbody = document.getElementById("approvers-table-tbody");
       if (!tbody) return;
-      const list = getApproversArray();
+      const roleFilter = (document.getElementById("tab7-role-filter") && document.getElementById("tab7-role-filter").value) || "ALL";
+      const list = getApproversArray().filter(ap => {
+        const st = String(ap.status || "STAFF").toUpperCase();
+        if (roleFilter === "ACTIVE") return st === "ACTIVE" || st === "APPROVER";
+        if (roleFilter === "STAFF") return st === "STAFF";
+        return true;
+      });
       const activeVerifier = getActiveTechDeptVerifier();
       const activeEmail = activeVerifier ? activeVerifier.email : "";
 
       tbody.innerHTML = list.map((ap, idx) => {
         const isCurrent = ap.email === activeEmail;
-        const isActive = String(ap.status || "ACTIVE").toUpperCase() !== "INACTIVE";
+        const st = String(ap.status || "STAFF").toUpperCase();
+        const isApprover = (st === "ACTIVE" || st === "APPROVER");
+        const isStaff = (st === "STAFF");
+        const selectBg = isApprover ? "#dcfce7" : (isStaff ? "#dbeafe" : "#fee2e2");
+        const selectColor = isApprover ? "#065f46" : (isStaff ? "#1e40af" : "#991b1b");
         return `
           <tr style="border-bottom:1px solid #e2e8f0;background:${isCurrent ? '#ecfdf5' : '#fff'};">
             <td style="padding:10px;text-align:center;font-weight:800;">${idx + 1}</td>
@@ -4421,17 +4576,18 @@
               ${isCurrent ? `<span style="margin-left:6px;font-size:10.5px;background:#059669;color:#fff;padding:2px 7px;border-radius:99px;">☑️ Đang chọn duyệt</span>` : ``}
             </td>
             <td style="padding:10px;font-weight:800;color:#0f172a;">${escHtml(ap.name)}</td>
-            <td style="padding:10px;font-weight:600;color:#334155;">${escHtml(ap.title)}</td>
-            <td style="padding:10px;color:#475569;">${escHtml(ap.dept || 'Technical Dept')}</td>
-            <td style="padding:10px;text-align:center;">
-              <span style="font-size:11px;font-weight:900;padding:3px 8px;border-radius:99px;background:${isActive ? '#dcfce7' : '#fee2e2'};color:${isActive ? '#065f46' : '#991b1b'};">
-                ${isActive ? '✅ ACTIVE' : '⛔ INACTIVE'}
-              </span>
+            <td style="padding:10px;font-weight:700;color:#334155;">${escHtml(ap.title || ap.dept || 'Staff')}</td>
+            <td style="padding:10px;">
+              <select class="field-input" style="padding:6px 10px;font-size:12px;font-weight:900;background:${selectBg};color:${selectColor};border-color:#94a3b8;"
+                onchange="changeStaffChecklistRoleQuick('${escAttr(ap.email)}', this.value)">
+                <option value="ACTIVE" ${isApprover ? 'selected' : ''}>🛡️ Phê Duyệt (Approver)</option>
+                <option value="STAFF" ${isStaff ? 'selected' : ''}>👷 Nhân Viên (Staff)</option>
+                <option value="INACTIVE" ${(!isApprover && !isStaff) ? 'selected' : ''}>⛔ Tạm Khóa (Inactive)</option>
+              </select>
             </td>
-            <td style="padding:10px;font-size:11.5px;color:#64748b;">${escHtml(ap.updatedAt || 'Mặc định')}</td>
             <td style="padding:10px;">
               <div style="display:flex;gap:5px;flex-wrap:wrap;">
-                ${isActive ? `<button type="button" class="pill-btn" style="background:${isCurrent ? '#047857' : '#2563eb'};color:#fff;padding:4px 9px;font-size:11px;cursor:pointer;" onclick="selectApproverAsActive('${escAttr(ap.email)}')">☑️ ${isCurrent ? 'Đang Là Người Duyệt' : 'Chọn Làm Người Duyệt'}</button>` : ``}
+                ${isApprover ? `<button type="button" class="pill-btn" style="background:${isCurrent ? '#047857' : '#2563eb'};color:#fff;padding:4px 9px;font-size:11px;cursor:pointer;" onclick="selectApproverAsActive('${escAttr(ap.email)}')">☑️ ${isCurrent ? 'Đang Là Người Duyệt' : 'Chọn Làm Người Duyệt'}</button>` : ``}
                 <button type="button" class="pill-btn" style="background:#f59e0b;color:#fff;padding:4px 9px;font-size:11px;cursor:pointer;" onclick="editApproverRow('${escAttr(ap.email)}')">✏️ Sửa</button>
                 <button type="button" class="pill-btn" style="background:#dc2626;color:#fff;padding:4px 9px;font-size:11px;cursor:pointer;" onclick="deleteApproverFromCloud('${escAttr(ap.email)}')">🗑️ Xóa</button>
               </div>
@@ -4439,6 +4595,189 @@
           </tr>
         `;
       }).join("");
+    }
+
+    async function changeStaffChecklistRoleQuick(email, newRoleStatus) {
+      const clean = cleanStaffEmail(email);
+      const found = getApproversArray().find(x => cleanStaffEmail(x.email) === clean);
+      if (!found) return;
+      found.status = newRoleStatus;
+      const idx = cloudApproversList.findIndex(x => cleanStaffEmail(x.email) === clean);
+      if (idx >= 0) {
+        cloudApproversList[idx].status = newRoleStatus;
+      } else {
+        cloudApproversList.push(Object.assign({}, found, { status: newRoleStatus }));
+      }
+      applyCloudApprovers(cloudApproversList, approverSheetGid);
+      try {
+        const resp = await fetch(GAS_CHECKLIST_API, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "checklist_save_approver",
+            email: clean,
+            name: found.name,
+            title: found.title || "Staff",
+            dept: found.dept || found.title || "Technical Dept",
+            status: newRoleStatus,
+            note: newRoleStatus === "ACTIVE"
+              ? "🛡️ Người Phê Duyệt (Được quyền Tick Approve & Kiểm tra)"
+              : "👷 Nhân Viên (Kiểm tra & Cập nhật sửa chữa)",
+            actorEmail: (localStorage.getItem(GAUTH_EMAIL_KEY) || "phonghdpxd@gmail.com")
+          })
+        });
+        const res = await resp.json();
+        if (res && res.ok && Array.isArray(res.approvers)) {
+          applyCloudApprovers(res.approvers, res.approverSheetGid);
+        }
+      } catch (e) {
+        console.warn("changeStaffChecklistRoleQuick sync error:", e);
+      }
+    }
+
+    async function syncInternalStaffFromBiSale(showToast) {
+      try {
+        const resp = await fetch(BI_SALE_GAS_API + "?action=staff_get&t=" + Date.now());
+        const data = await resp.json();
+        if (data && data.ok && Array.isArray(data.data)) {
+          const existingMap = {};
+          getApproversArray().forEach(x => { existingMap[cleanStaffEmail(x.email)] = x; });
+          let addedCount = 0;
+          for (let i = 0; i < data.data.length; i++) {
+            const u = data.data[i];
+            if (isPartnerStaffEntry(u)) continue;
+            const em = cleanStaffEmail(u.email);
+            if (!em || em.indexOf("@") === -1) continue;
+            if (!existingMap[em]) {
+              const newEntry = {
+                email: em,
+                name: String(u.name || em).trim(),
+                title: String(u.title || "Staff").trim(),
+                dept: String(u.title || "Field Staff").trim(),
+                status: "STAFF",
+                note: "👷 Nhân viên (Đồng bộ từ BI Sale - Không lấy Đối tác)"
+              };
+              cloudApproversList.push(newEntry);
+              existingMap[em] = newEntry;
+              addedCount++;
+              fetch(GAS_CHECKLIST_API, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(Object.assign({ action: "checklist_save_approver", actorEmail: "phonghdpxd@gmail.com" }, newEntry))
+              }).catch(() => {});
+            }
+          }
+          applyCloudApprovers(cloudApproversList, approverSheetGid);
+          if (showToast) {
+            alert("✅ Đã đồng bộ danh sách Nhân sự Nội bộ từ BI Sale (đã lọc bỏ 100% Đối tác)! Tổng: " + getApproversArray().length + " nhân sự (Thêm mới: " + addedCount + ").");
+          }
+        }
+      } catch (e) {
+        if (showToast) alert("⚠️ Đang dùng danh sách 30 Nhân sự Nội bộ chuẩn từ BI Sale.");
+      }
+    }
+
+    function findInternalStaffByEmail(rawEmail) {
+      const em = cleanStaffEmail(rawEmail);
+      if (!em) return null;
+      const altEm = em.endsWith("@gmail.com") ? em.replace("@gmail.com", "@gamil.com") : (em.endsWith("@gamil.com") ? em.replace("@gamil.com", "@gmail.com") : em);
+      const all = getApproversArray();
+      return all.find(u => {
+        const uEm = cleanStaffEmail(u.email);
+        return (uEm === em || uEm === altEm) && !isPartnerStaffEntry(u);
+      }) || null;
+    }
+
+    function initChecklistStaffAuthGate() {
+      populateInternalStaffPickers();
+      const gate = document.getElementById("cl-staff-auth-gate");
+      if (!gate) return;
+      try {
+        const savedEmail = cleanStaffEmail(localStorage.getItem(GAUTH_EMAIL_KEY));
+        const rawUser = localStorage.getItem(GAUTH_USER_KEY);
+        const parsedUser = rawUser ? JSON.parse(rawUser) : null;
+        if (parsedUser && isPartnerStaffEntry(parsedUser)) {
+          gate.style.display = "flex";
+          const err = document.getElementById("cl-auth-err");
+          if (err) {
+            err.style.display = "block";
+            err.textContent = "⛔ Partner accounts are not permitted. Internal TNI Staff only! / Không cho phép tài khoản Đối tác!";
+          }
+          return;
+        }
+        const matched = findInternalStaffByEmail(savedEmail || (parsedUser && parsedUser.email));
+        if (matched && String(matched.status || "STAFF").toUpperCase() !== "INACTIVE") {
+          gate.style.display = "none";
+          applyLoggedInStaffChip(matched);
+          return;
+        }
+      } catch (e) {}
+      gate.style.display = "flex";
+      const inp = document.getElementById("cl-auth-email-input");
+      if (inp) {
+        inp.value = localStorage.getItem(GAUTH_EMAIL_KEY) || "";
+        setTimeout(() => inp.focus(), 100);
+      }
+    }
+
+    function applyLoggedInStaffChip(staffObj) {
+      const chip = document.getElementById("cl-logged-in-user-chip");
+      if (!chip || !staffObj) return;
+      const isApp = String(staffObj.status || "STAFF").toUpperCase() === "ACTIVE";
+      chip.style.display = "inline-flex";
+      chip.innerHTML = `${isApp ? '🛡️' : '👷'} ${escHtml(staffObj.name)} <button type="button" onclick="const inp=document.getElementById('inp-inspector');if(inp){inp.value='${escAttr(staffObj.name)}';checkBasicStationInfoGate();}" style="background:#059669;color:#fff;border:none;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:900;cursor:pointer;">Fill</button> <button type="button" onclick="signOutChecklistStaff()" style="background:#dc2626;color:#fff;border:none;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:900;cursor:pointer;" title="Sign out">✕</button>`;
+      if (isApp) {
+        localStorage.setItem("tni_cl_tech_gmail", cleanStaffEmail(staffObj.email));
+        syncTechGmailDropdowns();
+      }
+    }
+
+    function verifyChecklistStaffLogin() {
+      const inp = document.getElementById("cl-auth-email-input");
+      const err = document.getElementById("cl-auth-err");
+      const email = cleanStaffEmail(inp ? inp.value : "");
+      if (!email || email.indexOf("@") === -1) {
+        if (err) {
+          err.style.display = "block";
+          err.textContent = "⚠️ Please enter a valid Staff Gmail/Email! / Vui lòng nhập Gmail nhân sự nội bộ!";
+        }
+        return;
+      }
+      const matched = findInternalStaffByEmail(email);
+      if (!matched) {
+        if (err) {
+          err.style.display = "block";
+          err.textContent = "⛔ Access Denied: Email [" + email + "] is not in TNI Internal Staff list (Partners excluded) / Không thuộc danh sách Nhân sự Nội bộ!";
+        }
+        return;
+      }
+      if (String(matched.status || "STAFF").toUpperCase() === "INACTIVE") {
+        if (err) {
+          err.style.display = "block";
+          err.textContent = "⛔ Account [" + email + "] is currently INACTIVE.";
+        }
+        return;
+      }
+      const userPayload = {
+        email: cleanStaffEmail(matched.email),
+        name: matched.name,
+        title: matched.title || "Staff",
+        role: String(matched.status || "STAFF").toUpperCase() === "ACTIVE" ? "admin" : "sales",
+        source: "internal_staff_sso"
+      };
+      localStorage.setItem(GAUTH_EMAIL_KEY, userPayload.email);
+      localStorage.setItem(GAUTH_USER_KEY, JSON.stringify(userPayload));
+      localStorage.setItem(GAUTH_OK_KEY, String(Date.now()));
+      const gate = document.getElementById("cl-staff-auth-gate");
+      if (gate) gate.style.display = "none";
+      applyLoggedInStaffChip(matched);
+    }
+
+    function signOutChecklistStaff() {
+      localStorage.removeItem(GAUTH_OK_KEY);
+      localStorage.removeItem(GAUTH_USER_KEY);
+      const gate = document.getElementById("cl-staff-auth-gate");
+      if (gate) gate.style.display = "flex";
     }
 
     function selectApproverAsActive(email) {
@@ -6009,6 +6348,8 @@
 
       if (siteEl) siteEl.value = "";
       if (staffEl) staffEl.value = "";
+      const staffPicker = document.getElementById("sel-internal-staff-picker");
+      if (staffPicker) staffPicker.value = "";
       if (commentEl) commentEl.value = "";
       if (findEl) findEl.value = "";
       if (selEl) selEl.value = "";
