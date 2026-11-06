@@ -2035,17 +2035,11 @@
         await fetchCloudSessions(false);
 
         alert(
-          "✅ ĐÃ LƯU THÀNH CÔNG VÀO SHEET RIÊNG & DRIVE 2.14!
-
-" +
-          "• Mã Phiếu: " + res.sessionId + "
-" +
-          "• Sheet Lưu Riêng: " + res.dedicatedTabName + "
-" +
-          "• Điểm Số: " + res.summary.totalScore + " (" + res.summary.rating + ")
-" +
-          "• Mục Lỗi (NOK): " + res.summary.nokCount + " | Đã sửa: " + res.summary.fixedCount + "
-" +
+          "✅ ĐÃ LƯU THÀNH CÔNG VÀO SHEET RIÊNG & DRIVE 2.14!\n\n" +
+          "• Mã Phiếu: " + res.sessionId + "\n" +
+          "• Sheet Lưu Riêng: " + res.dedicatedTabName + "\n" +
+          "• Điểm Số: " + res.summary.totalScore + " (" + res.summary.rating + ")\n" +
+          "• Mục Lỗi (NOK): " + res.summary.nokCount + " | Đã sửa: " + res.summary.fixedCount + "\n" +
           "• Folder Ảnh 2.14: " + res.sessionFolderUrl
         );
       } catch (err) {
