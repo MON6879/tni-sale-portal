@@ -1,0 +1,2322 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>TNI Field Checklist BI — 5 Checklists & 1440×1088 Before/After QA/QC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Padauk:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --ink: #0f172a;
+      --muted: #475569;
+      --line: #e2e8f0;
+      --brand: #2563eb;
+      --brand-dark: #1d4ed8;
+      --ok: #10b981;
+      --ok-bg: #ecfdf5;
+      --nok: #ef4444;
+      --nok-bg: #fef2f2;
+      --warn: #f59e0b;
+      --warn-bg: #fffbeb;
+      --fix: #059669;
+      --fix-bg: #d1fae5;
+      --radius: 14px;
+      --shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.07);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Inter', 'Padauk', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.45;
+      padding-bottom: 92px;
+    }
+    /* TOPBAR */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #fff;
+      padding: 10px 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    }
+    .topbar-inner {
+      max-width: 1640px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .brand-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #3b82f6, #10b981);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 900;
+      box-shadow: 0 2px 8px rgba(59,130,246,0.4);
+    }
+    .brand-title {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .brand-sub {
+      font-size: 11px;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .pill-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 11px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .pill-btn:hover { background: rgba(255,255,255,0.18); transform: translateY(-1px); }
+    .pill-btn.sheet { background: #059669; border-color: #10b981; }
+    .pill-btn.drive { background: #d97706; border-color: #f59e0b; }
+    .pill-btn.expert { background: #7c3aed; border-color: #8b5cf6; }
+    .pill-btn.guide { background: #2563eb; border-color: #60a5fa; }
+    .lang-group {
+      display: inline-flex;
+      background: rgba(0,0,0,0.35);
+      border-radius: 8px;
+      padding: 2px;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+    .lang-btn {
+      border: none;
+      background: transparent;
+      color: #cbd5e1;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .lang-btn.active {
+      background: #3b82f6;
+      color: #fff;
+    }
+
+    /* MAIN CONTAINER */
+    .container {
+      max-width: 1640px;
+      margin: 12px auto;
+      padding: 0 12px;
+    }
+
+    /* 5 CHECKLIST TABS + BI DASHBOARD TAB */
+    .mode-tabs {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    @media (max-width: 1100px) {
+      .mode-tabs {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    @media (max-width: 640px) {
+      .mode-tabs {
+        display: flex;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        scroll-snap-type: x mandatory;
+      }
+      .mode-tab {
+        min-width: 158px;
+        scroll-snap-align: start;
+      }
+    }
+    .mode-tab {
+      background: var(--card);
+      border: 2px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: all 0.15s;
+      text-align: left;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .mode-tab:hover { border-color: #94a3b8; }
+    .mode-tab.active {
+      border-color: var(--brand);
+      background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.16);
+    }
+    .mode-tab-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+    .mode-tab-sub {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+    }
+    .sheet-chip {
+      display: inline-block;
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 99px;
+      background: #e2e8f0;
+      color: #334155;
+      font-weight: 700;
+    }
+    .mode-tab.active .sheet-chip {
+      background: #2563eb;
+      color: #fff;
+    }
+
+    /* METADATA & LIVE SCORE HEADER */
+    .meta-panel {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      padding: 14px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+    }
+    .meta-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 12px;
+    }
+    .checklist-heading {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .checklist-icon-lg {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: #eff6ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    .checklist-title-main {
+      font-size: 17px;
+      font-weight: 900;
+      color: var(--ink);
+    }
+    .checklist-pass-rule {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .score-badges {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .score-pill {
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .score-pill.pts { background: #1e293b; color: #fff; font-size: 14px; }
+    .score-pill.ok { background: var(--ok-bg); color: #065f46; border: 1px solid #a7f3d0; }
+    .score-pill.nok { background: var(--nok-bg); color: #991b1b; border: 1px solid #fecaca; }
+    .score-pill.fix { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
+      gap: 10px;
+    }
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .field-group label {
+      font-size: 11px;
+      font-weight: 800;
+      color: #334155;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    .field-input {
+      padding: 9px 11px;
+      border-radius: 9px;
+      border: 1.5px solid #cbd5e1;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      background: #f8fafc;
+      width: 100%;
+    }
+    .field-input:focus {
+      outline: none;
+      border-color: var(--brand);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+    }
+    .gps-row {
+      display: flex;
+      gap: 6px;
+    }
+    .btn-gps {
+      padding: 0 11px;
+      border-radius: 9px;
+      border: 1.5px solid #059669;
+      background: #ecfdf5;
+      color: #065f46;
+      font-weight: 800;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    /* TIMESTAMP CAMERA & 1440x1088 BANNER */
+    .camera-banner {
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: 11px;
+      background: linear-gradient(90deg, #eff6ff 0%, #ecfdf5 100%);
+      border: 1px solid #bfdbfe;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .camera-banner-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #1e3a8a;
+    }
+    .camera-banner-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn-tscam {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: 8px;
+      background: #2563eb;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn-tscam.secondary {
+      background: #0f766e;
+    }
+
+    /* FILTER & SEARCH TOOLBAR */
+    .filter-bar {
+      background: var(--card);
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      position: sticky;
+      top: 58px;
+      z-index: 80;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+    }
+    .filter-pills {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+    .f-pill {
+      padding: 6px 11px;
+      border-radius: 99px;
+      border: 1.5px solid #cbd5e1;
+      background: #f8fafc;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .f-pill.active {
+      background: #0f172a;
+      color: #fff;
+      border-color: #0f172a;
+    }
+    .f-pill.nok-pill.active {
+      background: #dc2626;
+      border-color: #dc2626;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 200px;
+      max-width: 340px;
+      position: relative;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 7px 12px 7px 30px;
+      border-radius: 8px;
+      border: 1.5px solid #cbd5e1;
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+    .search-box::before {
+      content: "🔍";
+      position: absolute;
+      left: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+    }
+
+    /* CHECKLIST ITEM ROW (RESPONSIVE DESKTOP 4-COLUMN & MOBILE CARD) */
+    .category-header {
+      background: linear-gradient(90deg, #1e293b 0%, #334155 100%);
+      color: #fff;
+      padding: 9px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 800;
+      margin: 14px 0 8px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .item-card {
+      background: var(--card);
+      border-radius: 12px;
+      border: 1.5px solid var(--line);
+      padding: 12px;
+      margin-bottom: 10px;
+      transition: all 0.15s;
+      display: grid;
+      grid-template-columns: 1.35fr 185px 1.15fr 1.15fr;
+      gap: 12px;
+      align-items: start;
+    }
+    @media (max-width: 1180px) {
+      .item-card {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    @media (max-width: 720px) {
+      .item-card {
+        grid-template-columns: 1fr;
+        padding: 12px;
+      }
+    }
+    .item-card.is-nok {
+      border-color: #f87171;
+      background: #fffafa;
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.09);
+    }
+    .item-card.is-fixed {
+      border-color: #34d399;
+      background: #f4fdf9;
+    }
+
+    /* COL 1: REQUIREMENT */
+    .item-req-col {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .item-code-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .badge-code {
+      background: #0f172a;
+      color: #fff;
+      font-size: 11.5px;
+      font-weight: 900;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+    .badge-pt {
+      background: #e0e7ff;
+      color: #1d4ed8;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 6px;
+    }
+    .badge-serious {
+      background: #fee2e2;
+      color: #b91c1c;
+      font-size: 10.5px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 6px;
+      border: 1px solid #fca5a5;
+    }
+    .item-req-text {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #1e293b;
+      line-height: 1.45;
+    }
+
+    /* COL 2: OK / NOK TOGGLE & SCORE */
+    .item-eval-col {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .ok-nok-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .btn-eval {
+      padding: 10px 8px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 900;
+      border: 2px solid #cbd5e1;
+      background: #f8fafc;
+      color: #475569;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: all 0.12s;
+    }
+    .btn-eval.ok-btn.active {
+      background: #10b981;
+      border-color: #059669;
+      color: #fff;
+      box-shadow: 0 3px 10px rgba(16, 185, 129, 0.28);
+    }
+    .btn-eval.nok-btn.active {
+      background: #ef4444;
+      border-color: #dc2626;
+      color: #fff;
+      box-shadow: 0 3px 10px rgba(239, 68, 68, 0.3);
+    }
+    .eval-pt-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--muted);
+      background: #f1f5f9;
+      padding: 5px 8px;
+      border-radius: 8px;
+    }
+    .eval-pt-input {
+      width: 54px;
+      padding: 3px 6px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      font-weight: 800;
+      text-align: center;
+      font-size: 12px;
+    }
+
+    /* COL 3 (BEFORE / DEFECT) & COL 4 (AFTER / FIXED COMPARISON) */
+    .photo-col-box {
+      border: 1.5px dashed #cbd5e1;
+      border-radius: 11px;
+      padding: 9px;
+      background: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .photo-col-box.defect-col {
+      border-color: #fca5a5;
+      background: #fff5f5;
+    }
+    .photo-col-box.fixed-col {
+      border-color: #6ee7b7;
+      background: #f0fdf4;
+    }
+    .col-box-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+      font-size: 11.5px;
+      font-weight: 900;
+    }
+    .defect-col .col-box-header { color: #b91c1c; }
+    .fixed-col .col-box-header { color: #047857; }
+    .res-badge {
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 5px;
+      background: rgba(15,23,42,0.08);
+      color: #334155;
+      font-weight: 800;
+    }
+    .note-input {
+      width: 100%;
+      padding: 7px 9px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      font-size: 12px;
+      font-weight: 600;
+      background: #fff;
+      resize: vertical;
+      min-height: 36px;
+    }
+    .photo-btn-row {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    .btn-cam-capture {
+      flex: 1;
+      padding: 7px 8px;
+      border-radius: 8px;
+      border: none;
+      font-size: 11.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      color: #fff;
+    }
+    .btn-cam-capture.before-btn { background: #dc2626; }
+    .btn-cam-capture.after-btn { background: #059669; }
+    .btn-cam-capture.ts-app-btn {
+      background: #1e293b;
+      flex: 0 0 auto;
+      padding: 7px 9px;
+    }
+    .fix-status-select {
+      padding: 4px 7px;
+      border-radius: 6px;
+      border: 1px solid #10b981;
+      font-size: 11px;
+      font-weight: 800;
+      background: #fff;
+      color: #065f46;
+    }
+
+    .thumb-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1440 / 1088;
+      background: #0f172a;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #94a3b8;
+      display: none;
+    }
+    .thumb-wrap.has-img { display: block; }
+    .thumb-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      cursor: pointer;
+    }
+    .thumb-meta-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(15, 23, 42, 0.82);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 7px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .btn-del-photo {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: rgba(220, 38, 38, 0.9);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-size: 10px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .btn-compare-inline {
+      margin-top: 2px;
+      width: 100%;
+      padding: 6px;
+      border-radius: 7px;
+      border: 1.5px solid #2563eb;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-size: 11.5px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    /* STICKY BOTTOM SUBMIT BAR */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 95;
+      background: rgba(15, 23, 42, 0.96);
+      backdrop-filter: blur(10px);
+      color: #fff;
+      padding: 10px 16px;
+      border-top: 1px solid rgba(255,255,255,0.15);
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.25);
+    }
+    .bottom-bar-inner {
+      max-width: 1640px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .bottom-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12.5px;
+      font-weight: 700;
+    }
+    .bottom-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-save-cloud {
+      padding: 10px 18px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff;
+      font-size: 13.5px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-save-cloud:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+    .btn-reset-form {
+      padding: 9px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* BI DASHBOARD & BEFORE/AFTER GALLERY VIEW */
+    .bi-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .bi-kpi-card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+    .bi-kpi-label {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .bi-kpi-val {
+      font-size: 26px;
+      font-weight: 900;
+      margin-top: 4px;
+      color: var(--ink);
+    }
+    .bi-kpi-sub {
+      font-size: 11.5px;
+      color: #64748b;
+      margin-top: 2px;
+      font-weight: 600;
+    }
+
+    .sheet-links-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .sheet-link-card {
+      background: var(--card);
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      text-decoration: none;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      transition: all 0.15s;
+    }
+    .sheet-link-card:hover {
+      border-color: var(--brand);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+
+    /* COMPARISON WALL */
+    .comp-wall-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
+      gap: 14px;
+      margin-top: 12px;
+    }
+    @media (max-width: 640px) {
+      .comp-wall-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .comp-card {
+      background: var(--card);
+      border-radius: 14px;
+      border: 1.5px solid var(--line);
+      padding: 12px;
+      box-shadow: var(--shadow);
+    }
+    .comp-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .comp-slot {
+      background: #0f172a;
+      border-radius: 10px;
+      overflow: hidden;
+      aspect-ratio: 1440 / 1088;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #94a3b8;
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+    }
+    .comp-slot img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .comp-tag {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 10.5px;
+      font-weight: 900;
+      color: #fff;
+    }
+    .comp-tag.before { background: rgba(220, 38, 38, 0.92); }
+    .comp-tag.after { background: rgba(5, 150, 105, 0.92); }
+
+    /* MODAL */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.78);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal-box {
+      background: #fff;
+      border-radius: 16px;
+      max-width: 1120px;
+      width: 100%;
+      max-height: 92vh;
+      overflow-y: auto;
+      padding: 18px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    }
+    .modal-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 14px;
+    }
+    .btn-close-modal {
+      border: none;
+      background: #f1f5f9;
+      color: #0f172a;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand-box">
+        <div class="brand-logo">☑️</div>
+        <div>
+          <div class="brand-title" id="ui-app-title">TNI Field Checklist BI — Hệ Thống Kiểm Tra & Đối Chiếu Trước/Sau (1440×1088)</div>
+          <div class="brand-sub">
+            <span>5 Dedicated Sheets SSOT</span> •
+            <span>📷 Timestamp Camera (GPS)</span> •
+            <span>🖼️ Chuẩn 1440×1088 px</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <a class="pill-btn" href="/" title="TNI Operations BI Hub">🏛️ BI Hub</a>
+        <a class="pill-btn" href="/sale" title="TNI Sale BI">💰 TNI Sale</a>
+        <a class="pill-btn sheet" id="top-sheet-link" href="https://docs.google.com/spreadsheets/d/1Y9QkgXe24kspNmkrPEVQ0AAD_GmZ4gnqMCD6ja4-9kI/edit#gid=992508475" target="_blank" rel="noopener">📊 Mở Sheet Lưu Riêng</a>
+        <a class="pill-btn drive" href="https://drive.google.com/drive/folders/1VsQapLjSaJl9QkcOrOFXbqfaKH1AJh-d" target="_blank" rel="noopener">📁 Drive 2.14 Check list photo</a>
+        <button class="pill-btn expert" onclick="openExpertModal()">🧠 5 Chuyên Gia 0.1% & SOP</button>
+        <div class="lang-group">
+          <button class="lang-btn active" id="lang-vi" onclick="setLang('vi')">🇻🇳 VN</button>
+          <button class="lang-btn" id="lang-en" onclick="setLang('en')">🇬🇧 EN</button>
+          <button class="lang-btn" id="lang-my" onclick="setLang('my')">🇲🇲 MM</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- 5 CHECKLIST TABS + 1 BI DASHBOARD TAB -->
+    <div class="mode-tabs" id="checklist-mode-tabs">
+      <button class="mode-tab active" data-type="site_bts" onclick="switchChecklistType('site_bts')">
+        <div class="mode-tab-top"><span>📡 1. Check Site (BTS)</span><span class="sheet-chip">64 mục</span></div>
+        <div class="mode-tab-sub"><span>Sheet: 1. Check Site (BTS)</span><span>100 pts</span></div>
+      </button>
+      <button class="mode-tab" data-type="dg_gen" onclick="switchChecklistType('dg_gen')">
+        <div class="mode-tab-top"><span>⚡ 2. Checklist DG</span><span class="sheet-chip">39 mục</span></div>
+        <div class="mode-tab-sub"><span>Sheet: 2. Checklist DG</span><span>10 hệ</span></div>
+      </button>
+      <button class="mode-tab" data-type="cable_route" onclick="switchChecklistType('cable_route')">
+        <div class="mode-tab-top"><span>🌐 3. Cable Route</span><span class="sheet-chip">44 mục</span></div>
+        <div class="mode-tab-sub"><span>Sheet: 3. Checklist Cable Route</span><span>≥85 đạt</span></div>
+      </button>
+      <button class="mode-tab" data-type="ug_cable" onclick="switchChecklistType('ug_cable')">
+        <div class="mode-tab-top"><span>🕳️ 4. UG Cable Route</span><span class="sheet-chip">37 mục</span></div>
+        <div class="mode-tab-sub"><span>Sheet: 4. Checklist UG Cable</span><span>≥85 đạt</span></div>
+      </button>
+      <button class="mode-tab" data-type="solar" onclick="switchChecklistType('solar')">
+        <div class="mode-tab-top"><span>☀️ 5. Checklist Solar</span><span class="sheet-chip">43 mục</span></div>
+        <div class="mode-tab-sub"><span>Sheet: 5. Checklist Solar</span><span>9 phần</span></div>
+      </button>
+      <button class="mode-tab" data-type="bi_dashboard" onclick="switchChecklistType('bi_dashboard')">
+        <div class="mode-tab-top"><span>📊 6. Web BI & So Sánh</span><span class="sheet-chip" id="bi-count-badge">Live</span></div>
+        <div class="mode-tab-sub"><span>Đối chiếu Trước / Sau</span><span>1440×1088</span></div>
+      </button>
+    </div>
+
+    <!-- VIEW 1: ACTIVE CHECKLIST INSPECTION FORM (MOBILE + DESKTOP) -->
+    <section id="view-inspection-form">
+      <div class="meta-panel">
+        <div class="meta-header">
+          <div class="checklist-heading">
+            <div class="checklist-icon-lg" id="cur-cl-icon">📡</div>
+            <div>
+              <div class="checklist-title-main" id="cur-cl-title">1. Check Site (Trạm BTS - 64 Mục)</div>
+              <div class="checklist-pass-rule" id="cur-cl-rule">Tiêu chuẩn: ≥ 95 Good | 90–94 Acceptable | < 90 Not Acceptable • Lưu riêng tại Sheet: 1. Check Site (BTS)</div>
+            </div>
+          </div>
+          <div class="score-badges">
+            <div class="score-pill pts" id="live-score-pill">🏆 Điểm: 100 / 100</div>
+            <div class="score-pill ok" id="live-ok-pill">✅ OK: 64</div>
+            <div class="score-pill nok" id="live-nok-pill">❌ Lỗi (NOK): 0</div>
+            <div class="score-pill fix" id="live-fix-pill">🔧 Đã sửa: 0/0</div>
+            <a class="pill-btn sheet" id="cur-dedicated-sheet-btn" href="https://docs.google.com/spreadsheets/d/1Y9QkgXe24kspNmkrPEVQ0AAD_GmZ4gnqMCD6ja4-9kI/edit#gid=16375926" target="_blank" rel="noopener">📄 Mở Sheet Của Check List Này</a>
+          </div>
+        </div>
+
+        <div class="meta-grid">
+          <div class="field-group">
+            <label id="lbl-site-code">Mã Trạm / Tuyến (Site / Route Code) *</label>
+            <input type="text" class="field-input" id="inp-site-code" placeholder="VD: TNI0012 / TNIDW01" oninput="saveLocalDraft()" />
+          </div>
+          <div class="field-group">
+            <label id="lbl-inspector">Nhân Viên Kiểm Tra (Inspector) *</label>
+            <input type="text" class="field-input" id="inp-inspector" placeholder="Nhập tên kỹ thuật viên..." oninput="saveLocalDraft()" />
+          </div>
+          <div class="field-group">
+            <label id="lbl-date">Ngày Kiểm Tra (Inspection Date)</label>
+            <input type="date" class="field-input" id="inp-date" onchange="saveLocalDraft()" />
+          </div>
+          <div class="field-group">
+            <label id="lbl-gps">Tọa Độ GPS (Timestamp Camera Lat, Long)</label>
+            <div class="gps-row">
+              <input type="text" class="field-input" id="inp-gps" placeholder="14.0823, 98.1915" oninput="saveLocalDraft()" />
+              <button type="button" class="btn-gps" onclick="fetchLiveGps()">📍 Lấy GPS</button>
+            </div>
+          </div>
+          <div class="field-group" id="extra-meta-container">
+            <label id="lbl-extra-meta">Thông Tin Bổ Sung (Branch / Model / KM)</label>
+            <input type="text" class="field-input" id="inp-extra-meta" value="TNI" placeholder="TNI / Denyo / 10KM" oninput="saveLocalDraft()" />
+          </div>
+          <div class="field-group">
+            <label id="lbl-comment">Ghi Chú Chung / Đề Xuất (General Comment)</label>
+            <input type="text" class="field-input" id="inp-comment" placeholder="Ghi chú tổng kết trạm/tuyến..." oninput="saveLocalDraft()" />
+          </div>
+        </div>
+
+        <!-- TIMESTAMP CAMERA & 1440x1088 TOOLBAR -->
+        <div class="camera-banner">
+          <div class="camera-banner-left">
+            <span>📸</span>
+            <div id="ts-banner-text">
+              <strong>Chuẩn Ảnh Check List: Ứng dụng Timestamp Camera (Có tọa độ GPS) & Khổ chuẩn 1440×1088 px</strong><br/>
+              <span style="font-size:11.5px;color:#475569;">Khi chụp ảnh lỗi (Cột Trước Sửa) hoặc ảnh đã khắc phục (Cột Đã Sửa), hệ thống tự động chuẩn hóa đúng <strong>1440×1088 px</strong> và lưu vào <strong>Drive: 2.14 Check list photo</strong>.</span>
+            </div>
+          </div>
+          <div class="camera-banner-actions">
+            <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;color:#0f172a;cursor:pointer;">
+              <input type="checkbox" id="chk-auto-stamp" checked />
+              <span id="lbl-auto-stamp">Tự đóng dấu GPS + Giờ + Mã Trạm lên ảnh nếu chụp thường</span>
+            </label>
+            <button type="button" class="btn-tscam" onclick="launchTimestampCameraApp()">📍 Mở App Timestamp Camera (GPS)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STICKY FILTER & SEARCH BAR -->
+      <div class="filter-bar">
+        <div class="filter-pills">
+          <button type="button" class="f-pill active" data-filter="all" onclick="setItemFilter('all')" id="fp-all">📋 Tất cả hạng mục</button>
+          <button type="button" class="f-pill nok-pill" data-filter="nok" onclick="setItemFilter('nok')" id="fp-nok">❌ Chỉ mục Lỗi (NOK)</button>
+          <button type="button" class="f-pill" data-filter="pending_fix" onclick="setItemFilter('pending_fix')" id="fp-pending">⏳ Chưa sửa</button>
+          <button type="button" class="f-pill" data-filter="fixed" onclick="setItemFilter('fixed')" id="fp-fixed">✅ Đã sửa xong</button>
+          <button type="button" class="f-pill" data-filter="has_photo" onclick="setItemFilter('has_photo')" id="fp-photo">📸 Có hình ảnh (1440×1088)</button>
+          <button type="button" class="f-pill" onclick="markAllItemsOk()" style="background:#ecfdf5;color:#047857;border-color:#6ee7b7;">⚡ Đặt tất cả = OK</button>
+        </div>
+        <div class="search-box">
+          <input type="text" id="inp-search-item" placeholder="Tìm mã mục, nội dung kiểm tra (VD: 1.2.1, grounding, closure)..." oninput="renderChecklistItems()" />
+        </div>
+      </div>
+
+      <!-- ITEMS LIST CONTAINER -->
+      <div id="checklist-items-container"></div>
+    </section>
+
+    <!-- VIEW 2: EXECUTIVE WEB BI DASHBOARD & BEFORE/AFTER PHOTO COMPARISON WALL -->
+    <section id="view-bi-dashboard" style="display:none;">
+      <div class="bi-kpi-grid">
+        <div class="bi-kpi-card">
+          <div class="bi-kpi-label">📋 Tổng Số Phiếu Kiểm Tra (Sessions)</div>
+          <div class="bi-kpi-val" id="bi-total-sessions">0</div>
+          <div class="bi-kpi-sub">Trên 5 Sheet Check List Lưu Riêng</div>
+        </div>
+        <div class="bi-kpi-card">
+          <div class="bi-kpi-label">🏆 Điểm Chất Lượng Trung Bình</div>
+          <div class="bi-kpi-val" id="bi-avg-score" style="color:#2563eb;">100%</div>
+          <div class="bi-kpi-sub">Tự động chấm điểm theo chuẩn VCM/Mytel</div>
+        </div>
+        <div class="bi-kpi-card">
+          <div class="bi-kpi-label">❌ Tổng Hạng Mục Lỗi Phát Hiện (NOK)</div>
+          <div class="bi-kpi-val" id="bi-total-nok" style="color:#dc2626;">0</div>
+          <div class="bi-kpi-sub">Có vị trí lỗi & ảnh chụp 1440×1088</div>
+        </div>
+        <div class="bi-kpi-card">
+          <div class="bi-kpi-label">✅ Đã Sửa Khắc Phục / Chờ Sửa</div>
+          <div class="bi-kpi-val" id="bi-fixed-ratio" style="color:#059669;">0 / 0</div>
+          <div class="bi-kpi-sub">Đối chiếu song song Ảnh Lỗi & Ảnh Đã Sửa</div>
+        </div>
+      </div>
+
+      <!-- 5 DEDICATED SHEETS + DRIVE 2.14 LINKS -->
+      <div class="meta-panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+          <h3 style="font-size:15px;font-weight:900;">🗂️ Hệ Thống 5 Sheet Lưu Riêng & Thư Mục Ảnh 2.14 Check list photo (1440×1088)</h3>
+          <button class="pill-btn guide" style="background:#2563eb;" onclick="fetchCloudSessions(true)">🔄 Đồng Bộ Dữ Liệu Mới Nhất Từ Google Sheet</button>
+        </div>
+        <div class="sheet-links-grid">
+          <a class="sheet-link-card" href="https://docs.google.com/spreadsheets/d/1Y9QkgXe24kspNmkrPEVQ0AAD_GmZ4gnqMCD6ja4-9kI/edit#gid=16375926" target="_blank">
+            <div><div style="font-weight:900;font-size:13px;">📡 1. Check Site (BTS)</div><div style="font-size:11px;color:#64748b;">Sheet lưu riêng Trạm BTS (64 mục)</div></div>
+            <span style="font-size:12px;font-weight:800;color:#2563eb;">Mở Sheet ↗</span>
+          </a>
+          <a class="sheet-link-card" href="https://docs.google.com/spreadsheets/d/1Y9QkgXe24kspNmkrPEVQ0AAD_GmZ4gnqMCD6ja4-9kI/edit#gid=1050845509" target="_blank">
+            <div><div style="font-weight:900;font-size:13px;">⚡ 2. Checklist DG</div><div style="font-size:11px;color:#64748b;">Sheet lưu riêng Máy Phát Điện (39 mục)</div></div>
+            <span style="font-size:12px;font-weight:800;color:#d97706;">Mở Sheet ↗</span>
+          </a>
+          <a class="sheet-link-card" href="https://docs.google.com/spreadsheets/d/1Y9QkgXe24kspNmkrPEVQ0AAD_GmZ4gnqMCD6ja4-9kI/edit#gid=1952267372" target="_blank">
+            <div><div style="font-weight:900;font-size:13px;">🌐 3. Checklist Cable Route</div><div style="font-size:11px;color:#64748b;">Sheet lưu riêng Cáp Treo (44 mục)</div></div>
+            <span style="font-size:12px;font-weight:800;color:#059669;">Mở Sheet ↗</span>
+          </a>
+          <a class="sheet-link-card" href="https://docs.google.com/spreadsheets/d/1Y9QkgXe24kspNmkrPEVQ0AAD_GmZ4gnqMCD6ja4-9kI/edit#gid=1066188442" target="_blank">
+            <div><div style="font-weight:900;font-size:13px;">🕳️ 4. Checklist UG Cable</div><div style="font-size:11px;color:#64748b;">Sheet lưu riêng Cáp Ngầm (37 mục)</div></div>
+            <span style="font-size:12px;font-weight:800;color:#7c3aed;">Mở Sheet ↗</span>
+          </a>
+          <a class="sheet-link-card" href="https://docs.google.com/spreadsheets/d/1Y9QkgXe24kspNmkrPEVQ0AAD_GmZ4gnqMCD6ja4-9kI/edit#gid=998308117" target="_blank">
+            <div><div style="font-weight:900;font-size:13px;">☀️ 5. Checklist Solar</div><div style="font-size:11px;color:#64748b;">Sheet lưu riêng Điện Mặt Trời (43 mục)</div></div>
+            <span style="font-size:12px;font-weight:800;color:#ea580c;">Mở Sheet ↗</span>
+          </a>
+          <a class="sheet-link-card" href="https://drive.google.com/drive/folders/1VsQapLjSaJl9QkcOrOFXbqfaKH1AJh-d" target="_blank" style="background:#fffbeb;border-color:#fcd34d;">
+            <div><div style="font-weight:900;font-size:13px;">📁 2.14 Check list photo</div><div style="font-size:11px;color:#92400e;">Folder Drive lưu toàn bộ ảnh 1440×1088</div></div>
+            <span style="font-size:12px;font-weight:800;color:#b45309;">Mở Drive ↗</span>
+          </a>
+        </div>
+
+        <!-- BEFORE vs AFTER PHOTO COMPARISON WALL -->
+        <div style="border-top:1px solid var(--line);padding-top:14px;margin-top:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+            <div>
+              <h3 style="font-size:15px;font-weight:900;">🔍 Bảng Đối Chiếu Trực Quan: Cột Ảnh Lỗi (Trước Sửa) vs. Cột Ảnh Đã Sửa (1440×1088)</h3>
+              <p style="font-size:12px;color:var(--muted);">Hiển thị toàn bộ các hạng mục phát hiện lỗi (NOK) hoặc có ảnh chụp để Ban Giám Đốc & Kỹ Thuật nghiệm thu Trước & Sau.</p>
+            </div>
+            <select id="bi-type-filter" class="field-input" style="width:auto;" onchange="renderBiDashboard()">
+              <option value="ALL">Tất cả 5 loại Check List</option>
+              <option value="site_bts">1. Check Site (BTS)</option>
+              <option value="dg_gen">2. Checklist DG</option>
+              <option value="cable_route">3. Checklist Cable Route</option>
+              <option value="ug_cable">4. Checklist UG Cable</option>
+              <option value="solar">5. Checklist Solar</option>
+            </select>
+          </div>
+          <div class="comp-wall-grid" id="bi-comparison-wall"></div>
+        </div>
+
+        <!-- SESSIONS HISTORY TABLE -->
+        <div style="border-top:1px solid var(--line);padding-top:14px;margin-top:18px;">
+          <h3 style="font-size:15px;font-weight:900;margin-bottom:10px;">📜 Lịch Sử Các Phiếu Kiểm Tra Đã Lưu Trên Google Sheet</h3>
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+              <thead>
+                <tr style="background:#0f172a;color:#fff;text-align:left;">
+                  <th style="padding:9px 10px;">Mã Phiếu</th>
+                  <th style="padding:9px 10px;">Thời Gian (MMT)</th>
+                  <th style="padding:9px 10px;">Loại Check List & Sheet Riêng</th>
+                  <th style="padding:9px 10px;">Trạm / Tuyến</th>
+                  <th style="padding:9px 10px;">Nhân Viên</th>
+                  <th style="padding:9px 10px;">Tọa Độ GPS</th>
+                  <th style="padding:9px 10px;">Điểm / Kết Luận</th>
+                  <th style="padding:9px 10px;">OK / Lỗi / Đã Sửa</th>
+                  <th style="padding:9px 10px;">Folder Ảnh 2.14</th>
+                  <th style="padding:9px 10px;">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody id="bi-sessions-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- STICKY BOTTOM ACTION BAR -->
+  <div class="bottom-bar">
+    <div class="bottom-bar-inner">
+      <div class="bottom-status">
+        <span id="sync-status-dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#10b981;"></span>
+        <span id="bottom-summary-text">Đang kiểm tra: 1. Check Site (BTS) • Điểm: 100/100 • 0 mục lỗi</span>
+      </div>
+      <div class="bottom-actions">
+        <button type="button" class="btn-reset-form" onclick="resetCurrentChecklist()">🔄 Tạo Phiếu Mới</button>
+        <button type="button" class="btn-save-cloud" id="btn-submit-checklist" onclick="submitChecklistToCloud()">
+          💾 Lưu Vào Sheet Riêng & Upload Ảnh 1440×1088 Lên Drive 2.14
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HIDDEN FILE INPUT FOR CAMERA / TIMESTAMP CAMERA -->
+  <input type="file" id="hidden-photo-input" accept="image/*" style="display:none;" onchange="handlePhotoFileSelected(event)" />
+
+  <!-- MODAL 1: SIDE-BY-SIDE BEFORE / AFTER 1440x1088 COMPARISON -->
+  <div class="modal-backdrop" id="modal-compare">
+    <div class="modal-box">
+      <div class="modal-hdr">
+        <div>
+          <h3 style="font-size:16px;font-weight:900;" id="comp-modal-title">🔍 So Sánh Trực Quan Trước Khi Sửa (Lỗi) & Sau Khi Sửa (1440×1088 px)</h3>
+          <div style="font-size:12px;color:#64748b;" id="comp-modal-sub">Chuẩn hình ảnh 1440×1088 • Timestamp Camera có tọa độ GPS</div>
+        </div>
+        <button class="btn-close-modal" onclick="closeModal('modal-compare')">✕</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;">
+        <div style="border:2px solid #ef4444;border-radius:12px;padding:10px;background:#fef2f2;">
+          <div style="font-weight:900;color:#b91c1c;font-size:13px;margin-bottom:6px;display:flex;justify-content:space-between;">
+            <span>📸 TRƯỚC KHI SỬA (ẢNH LỖI • BEFORE)</span>
+            <span>1440×1088 px</span>
+          </div>
+          <div style="aspect-ratio:1440/1088;background:#0f172a;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+            <img id="comp-img-before" src="" alt="Before Defect 1440x1088" style="width:100%;height:100%;object-fit:contain;" />
+          </div>
+          <div id="comp-note-before" style="margin-top:8px;font-size:12.5px;font-weight:700;color:#7f1d1d;"></div>
+        </div>
+        <div style="border:2px solid #10b981;border-radius:12px;padding:10px;background:#ecfdf5;">
+          <div style="font-weight:900;color:#047857;font-size:13px;margin-bottom:6px;display:flex;justify-content:space-between;">
+            <span>🌟 SAU KHI SỬA (ĐÃ KHẮC PHỤC • AFTER)</span>
+            <span>1440×1088 px</span>
+          </div>
+          <div style="aspect-ratio:1440/1088;background:#0f172a;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+            <img id="comp-img-after" src="" alt="After Fixed 1440x1088" style="width:100%;height:100%;object-fit:contain;" />
+          </div>
+          <div id="comp-note-after" style="margin-top:8px;font-size:12.5px;font-weight:700;color:#065f46;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: 5 WORLD-CLASS 0.1% EXPERTS ARCHITECTURE & TRILINGUAL GUIDE -->
+  <div class="modal-backdrop" id="modal-experts">
+    <div class="modal-box">
+      <div class="modal-hdr">
+        <div>
+          <h3 style="font-size:17px;font-weight:900;">🧠 Hội Đồng 5 Chuyên Gia 0.1% Thế Giới & Hướng Dẫn Thao Tác Chuẩn (VN • EN • MM)</h3>
+          <div style="font-size:12px;color:#64748b;">Giải pháp tối ưu cho Kỹ thuật viên hiện trường thao tác 1 tay trên điện thoại & Giám đốc đối chiếu Web BI</div>
+        </div>
+        <button class="btn-close-modal" onclick="closeModal('modal-experts')">✕</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px;">
+        <div style="border:1px solid #cbd5e1;border-radius:12px;padding:12px;background:#f8fafc;">
+          <div style="font-weight:900;color:#1d4ed8;font-size:13px;">👨‍💻 Chuyên Gia 1 — Mobile Field UX (Thao tác 1 ngón cái ngoài trạm)</div>
+          <p style="font-size:12px;margin-top:5px;color:#334155;">• <strong>Mặc định Đạt (Smart Default OK)</strong>: Kỹ thuật không phải bấm 64 lần cho 60 mục tốt — chỉ cần bấm <strong>❌ NOK (Lỗi)</strong> vào đúng mục bị sai.<br/>• Bộ lọc 1 chạm <strong>[❌ Chỉ mục Lỗi]</strong> và <strong>[⏳ Chưa sửa]</strong> giúp đội đi sửa mở điện thoại ra thấy ngay đúng mục cần khắc phục.</p>
+        </div>
+        <div style="border:1px solid #cbd5e1;border-radius:12px;padding:12px;background:#f8fafc;">
+          <div style="font-weight:900;color:#b45309;font-size:13px;">📸 Chuyên Gia 2 — Geo-Imaging & Timestamp Camera (1440×1088)</div>
+          <p style="font-size:12px;margin-top:5px;color:#334155;">• Tích hợp nút mở nhanh ứng dụng <strong>Timestamp Camera</strong> có tọa độ GPS.<br/>• Bộ xử lý Canvas HTML5 tự động chuẩn hóa 100% ảnh về đúng độ phân giải <strong>1440×1088 px</strong> và tự đóng dấu tọa độ GPS + Giờ MMT + Mã Trạm + Mã Hạng Mục.</p>
+        </div>
+        <div style="border:1px solid #cbd5e1;border-radius:12px;padding:12px;background:#f8fafc;">
+          <div style="font-weight:900;color:#be123c;font-size:13px;">🔍 Chuyên Gia 3 — Telecom/Energy QA/QC (2 Cột Trước & Sau Sửa)</div>
+          <p style="font-size:12px;margin-top:5px;color:#334155;">• Ngay bên cạnh mỗi hạng mục có <strong>2 cột độc lập</strong>:<br/>1️⃣ <strong>Cột Ảnh Lỗi (Trước sửa)</strong> + Ô ghi rõ sai chỗ nào để biết đường sửa.<br/>2️⃣ <strong>Cột Đã Sửa & Ảnh Đã Sửa (Sau sửa)</strong> đặt sát bên để so sánh trực quan 1440×1088.</p>
+        </div>
+        <div style="border:1px solid #cbd5e1;border-radius:12px;padding:12px;background:#f8fafc;">
+          <div style="font-weight:900;color:#047857;font-size:13px;">☁️ Chuyên Gia 4 — Cloud SSOT & Google Drive (1 Check List = 1 Sheet)</div>
+          <p style="font-size:12px;margin-top:5px;color:#334155;">• Tách 5 Check List thành <strong>5 Sheet lưu riêng biệt</strong> trên file Google Sheet <code>1Y9QkgXe24...</code> kèm công thức <code>=IMAGE(...)</code> hiển thị ảnh ngay trong ô.<br/>• Toàn bộ ảnh 1440×1088 tự động phân nhánh vào đúng folder <strong>2.14 Check list photo</strong>.</p>
+        </div>
+        <div style="border:1px solid #cbd5e1;border-radius:12px;padding:12px;background:#f8fafc;">
+          <div style="font-weight:900;color:#6d28d9;font-size:13px;">📊 Chuyên Gia 5 — Executive Web BI & Đa Ngôn Ngữ (VN • EN • MM)</div>
+          <p style="font-size:12px;margin-top:5px;color:#334155;">• Hỗ trợ 3 ngôn ngữ (Việt • Anh • Myanmar) cho nhân sự bản địa.<br/>• Tab <strong>📊 Web BI & So Sánh</strong> gom toàn bộ mục lỗi thành Bảng Đối Chiếu Trước/Sau để lãnh đạo duyệt nghiệm thu từ xa.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // CONFIG & TEMPLATES DATA (ALL 5 CHECKLISTS)
+    // =========================================================================
+    const GAS_CHECKLIST_API = "https://script.google.com/macros/s/AKfycbx09J8PPi_IN3_n_ho8QF4RapsPh5uzLchVfS9T89iuw-4QMZWU_ynlhzDvav4wRvj4/exec";
+    const CHECKLIST_SS_ID = "1Y9QkgXe24kspNmkrPEVQ0AAD_GmZ4gnqMCD6ja4-9kI";
+    const DRIVE_214_FOLDER_URL = "https://drive.google.com/drive/folders/1VsQapLjSaJl9QkcOrOFXbqfaKH1AJh-d";
+
+    const CHECKLIST_TEMPLATES = {"site_bts": {"id": "site_bts", "tabName": "1. Check Site (BTS)", "gid": 16375926, "icon": "📡", "color": "#2563eb", "title_vi": "1. Check Site (Trạm BTS - 64 Mục)", "title_en": "1. Post-Maintenance BTS Inspection (64 Items)", "title_my": "၁။ BTS စခန်း ပြုပြင်ထိန်းသိမ်းမှု စစ်ဆေးချက် (၆၄ ချက်)", "passRule": "≥ 95: Good | 90–94: Acceptable | < 90: Not Acceptable", "maxScore": 100, "metaFields": [{"key": "siteCode", "label_vi": "Mã Trạm (Site ID)", "label_en": "Site ID", "label_my": "စခန်းအမှတ် (Site ID)", "placeholder": "VD: TNI0012"}, {"key": "branch", "label_vi": "Chi Nhánh (Branch)", "label_en": "Branch", "label_my": "ဌာနခွဲ (Branch)", "default": "TNI"}, {"key": "towerType", "label_vi": "Loại Cột / Trạm", "label_en": "Tower / Site Type", "label_my": "တာဝါတိုင်အမျိုးအစား", "placeholder": "Guyed / Self-supporting / Rooftop"}], "items": [{"code": "1.1.1", "category": "1.1 Nhà trạm & Khuôn viên (Perimeter & Compound)", "stdPoint": 2, "requirement": "Perimeter fence, roof, and surrounding corridor of the station are intact, with no cracks or damage."}, {"code": "1.1.2", "category": "1.1 Nhà trạm & Khuôn viên (Perimeter & Compound)", "stdPoint": 2, "requirement": "Area within the fence and a 1-meter perimeter outside the fence is clear of bushes, tall grass, and trash."}, {"code": "1.2.1", "category": "1.2 Cột Anten & Móng Cột (Antenna & Tower Structure)", "stdPoint": 2, "requirement": "Antenna is securely mounted at the correct position with full bolts and nuts, proper tilt and azimuth, free of rust, and meets technical standards."}, {"code": "1.2.2", "category": "1.2 Cột Anten & Móng Cột (Antenna & Tower Structure)", "stdPoint": 2, "requirement": "Antenna tower is vertical, structural segments are properly aligned and firmly bolted, with no missing bolts or nuts, and free of rust."}, {"code": "1.2.3", "category": "1.2 Cột Anten & Móng Cột (Antenna & Tower Structure)", "stdPoint": 1, "requirement": "Antenna mounting pipes and brackets are complete, with no missing bolts, and free of rust."}, {"code": "1.2.4", "category": "1.2 Cột Anten & Móng Cột (Antenna & Tower Structure)", "stdPoint": 1, "requirement": "Tower base and anchor foundations are intact, not sunken, cracked, or eroded; cleared of grass and trash; anchor bolts are complete and rust-free."}, {"code": "1.2.5", "category": "1.2 Cột Anten & Móng Cột (Antenna & Tower Structure)", "stdPoint": 1, "requirement": "Guy wires are untangled, properly tensioned, and free of rust."}, {"code": "1.2.6", "category": "1.2 Cột Anten & Móng Cột (Antenna & Tower Structure)", "stdPoint": 1, "requirement": "Cable clamps are installed in the correct quantity, spaced properly, and follow technical installation standards."}, {"code": "1.2.7", "category": "1.2 Cột Anten & Móng Cột (Antenna & Tower Structure)", "stdPoint": 1, "requirement": "Turnbuckles are secure, with safety lock nuts and cotter pins in place, and free of rust."}, {"code": "1.2.8", "category": "1.2 Cột Anten & Móng Cột (Antenna & Tower Structure)", "stdPoint": 1, "requirement": "Tower base bolts, guy wire anchors, and turnbuckles are fully greased for protection."}, {"code": "1.3.1", "category": "1.3 Thang Cáp & Cáp Ngoài Trời (Outdoor Cable Ladder)", "stdPoint": 2, "requirement": "Outdoor cable ladders are securely mounted, with full bolts and nuts, and free of rust."}, {"code": "1.3.2", "category": "1.3 Thang Cáp & Cáp Ngoài Trời (Outdoor Cable Ladder)", "stdPoint": 2, "requirement": "Cables on the tower and outdoor cable trays (feeders, optical fibers, CPRI cables, grounding wires, etc.) are intact, neatly arranged, and securely tied."}, {"code": "1.4.1", "category": "1.4 Cáp Nguồn AC & Cáp Quang Vào Trạm (Incoming AC & Fiber)", "stdPoint": 2, "requirement": "Incoming AC power cables are securely fastened, safe, with no intermediate joints unless properly enclosed, and properly flagged or marked."}, {"code": "1.4.2", "category": "1.4 Cáp Nguồn AC & Cáp Quang Vào Trạm (Incoming AC & Fiber)", "stdPoint": 2, "requirement": "Incoming F8 optical cables have steel strength members cut before entering the station; spare fiber loops (if any) are neatly coiled and mounted on the tower; indoor cable routing is protected by flexible conduit."}, {"code": "1.4.3", "category": "1.4 Cáp Nguồn AC & Cáp Quang Vào Trạm (Incoming AC & Fiber)", "stdPoint": 1, "requirement": "All cables entering the station have proper drip loops and are sealed at entry points to prevent rainwater ingress."}, {"code": "1.5.1", "category": "1.5 Hệ Thống Tiếp Địa Ngoài Trời (Outdoor Grounding & AC)", "stdPoint": 2, "requirement": "Grounding system (buried cables, busbars, bolts) is intact, rust-free, and the grounding resistance meets standards (≤10 ohms)."}, {"code": "1.5.2", "category": "1.5 Hệ Thống Tiếp Địa Ngoài Trời (Outdoor Grounding & AC)", "stdPoint": 2, "requirement": "All outdoor equipment is properly grounded to the grounding busbar with clean, secure, and rust-free connections."}, {"code": "1.5.3", "category": "1.5 Hệ Thống Tiếp Địa Ngoài Trời (Outdoor Grounding & AC)", "stdPoint": 2, "requirement": "Air conditioner outdoor unit is clean, securely mounted, undamaged, operates normally, and has insulated piping intact."}, {"code": "2.1.1", "category": "2.1 Phòng Máy Indoor (Equipment Room & Shelter)", "stdPoint": 2, "requirement": "Equipment room walls and ceiling are intact, with no water leaks or cracks."}, {"code": "2.1.2", "category": "2.1 Phòng Máy Indoor (Equipment Room & Shelter)", "stdPoint": 2, "requirement": "Equipment room door is intact, opens and closes smoothly, and the lock functions properly."}, {"code": "2.1.3", "category": "2.1 Phòng Máy Indoor (Equipment Room & Shelter)", "stdPoint": 1, "requirement": "Flooring is clean, dry, and free of cracks or loose tiles."}, {"code": "2.1.4", "category": "2.1 Phòng Máy Indoor (Equipment Room & Shelter)", "stdPoint": 1, "requirement": "Cable entry holes are sealed properly to prevent water, dust, and animals from entering."}, {"code": "2.1.5", "category": "2.1 Phòng Máy Indoor (Equipment Room & Shelter)", "stdPoint": 2, "requirement": "Equipment room is clean, tidy, and free of trash, flammable materials, or personal belongings."}, {"code": "2.1.6", "category": "2.1 Phòng Máy Indoor (Equipment Room & Shelter)", "stdPoint": 2, "requirement": "Metal structures inside the room are painted with anti-corrosion coating and free of rust."}, {"code": "2.2.1", "category": "2.2 Thang Cáp & Đấu Nối Indoor (Indoor Cabling & Labels)", "stdPoint": 2, "requirement": "Indoor cable ladders and trays are securely installed, neat, and rust-free."}, {"code": "2.2.2", "category": "2.2 Thang Cáp & Đấu Nối Indoor (Indoor Cabling & Labels)", "stdPoint": 2, "requirement": "Power cables, signal cables, optical patch cords, and grounding cables are routed separately, neatly tied, and free of sharp bends."}, {"code": "2.2.3", "category": "2.2 Thang Cáp & Đấu Nối Indoor (Indoor Cabling & Labels)", "stdPoint": 2, "requirement": "All cables inside the equipment racks and on cable trays are fully and clearly labeled according to standards."}, {"code": "2.3.1", "category": "2.3 Nguồn & Tiếp Địa Thiết Bị (Power & Indoor Grounding)", "stdPoint": 2, "requirement": "Equipment power connections are tight, with proper cable lugs, heat shrink tubing, and no overheating signs."}, {"code": "2.3.2", "category": "2.3 Nguồn & Tiếp Địa Thiết Bị (Power & Indoor Grounding)", "stdPoint": 2, "requirement": "All indoor cabinets, racks, and cable trays are properly grounded to the indoor grounding bar."}, {"code": "2.3.3", "category": "2.3 Nguồn & Tiếp Địa Thiết Bị (Power & Indoor Grounding)", "stdPoint": 2, "requirement": "Equipment is connected to the correct priority/non-priority circuit breakers (CBs) in the DC distribution panel."}, {"code": "2.3.4", "category": "2.3 Nguồn & Tiếp Địa Thiết Bị (Power & Indoor Grounding)", "stdPoint": 2, "requirement": "Equipment with dual power supplies is connected to two independent DC circuit breakers (A & B) functioning normally."}, {"code": "2.4.1", "category": "2.4 Vệ Sinh Thiết Bị & Làm Mát (Cleanliness & Cooling)", "stdPoint": 2, "requirement": "Equipment surfaces, fan trays, and air filters are clean and free of dust."}, {"code": "2.4.2", "category": "2.4 Vệ Sinh Thiết Bị & Làm Mát (Cleanliness & Cooling)", "stdPoint": 1, "requirement": "Equipment cooling fans operate smoothly without abnormal noise or fault alarms."}, {"code": "2.4.3", "category": "2.4 Vệ Sinh Thiết Bị & Làm Mát (Cleanliness & Cooling)", "stdPoint": 1, "requirement": "Unused slots on equipment subracks are covered with dummy panels; cabinet doors close properly."}, {"code": "2.4.4", "category": "2.4 Vệ Sinh Thiết Bị & Làm Mát (Cleanliness & Cooling)", "stdPoint": 1, "requirement": "Ventilation system / exhaust fans operate normally, filters are clean."}, {"code": "2.4.5", "category": "2.4 Vệ Sinh Thiết Bị & Làm Mát (Cleanliness & Cooling)", "stdPoint": 1, "requirement": "Indoor air conditioner operates normally, set to 25°C, with no water leakage."}, {"code": "2.5.1", "category": "2.5 Cảnh Báo Ngoài (External Alarms)", "stdPoint": 2, "requirement": "All 6 external alarms (smoke, door open, high temperature, AC power loss, generator running, low DC voltage) are connected, tested, and reporting accurately to NOC."}, {"code": "3.1.1", "category": "3.1 Máy Phát Điện (Generator System)", "stdPoint": 2, "requirement": "Generator is securely installed on its foundation, clean, free of oil/fuel leaks, and exhaust pipe is safely routed outside."}, {"code": "3.1.2", "category": "3.1 Máy Phát Điện (Generator System)", "stdPoint": 2, "requirement": "Generator starts and runs smoothly, output voltage and frequency are stable within standard range."}, {"code": "3.1.3", "category": "3.1 Máy Phát Điện (Generator System)", "stdPoint": 1, "requirement": "Fuel tank and fuel lines are intact, with no leaks, and fuel level is sufficient."}, {"code": "3.1.4", "category": "3.1 Máy Phát Điện (Generator System)", "stdPoint": 1, "requirement": "Engine oil and coolant levels are within normal limits and clean."}, {"code": "3.1.5", "category": "3.1 Máy Phát Điện (Generator System)", "stdPoint": 1, "requirement": "Generator control and signal wires are neatly arranged and securely connected."}, {"code": "3.1.6", "category": "3.1 Máy Phát Điện (Generator System)", "stdPoint": 1, "requirement": "Generator AC output cable is properly sized, lugged, protected in conduit, and grounded."}, {"code": "3.1.7", "category": "3.1 Máy Phát Điện (Generator System)", "stdPoint": 2, "requirement": "Starting battery is clean, terminals are tight and greased, voltage is normal (≥12.5V), and charger works properly."}, {"code": "3.2.1", "category": "3.2 Hệ Thống Solar (Solar Power System)", "stdPoint": 1, "requirement": "Solar charge controller / MPPT operates normally, display works, cables are tight and labeled."}, {"code": "3.2.2", "category": "3.2 Hệ Thống Solar (Solar Power System)", "stdPoint": 2, "requirement": "Solar panels are clean, unbroken, and unobstructed by shade between 8:00 AM and 4:00 PM."}, {"code": "3.2.3", "category": "3.2 Hệ Thống Solar (Solar Power System)", "stdPoint": 1, "requirement": "Solar mounting frame and bolts are tight, rust-free, and properly grounded."}, {"code": "3.3.1", "category": "3.3 Tủ Điện AC & ATS (AC Cabinet & ATS)", "stdPoint": 2, "requirement": "AC power cabinet is clean, cable entry holes have protective rubber grommets and are sealed."}, {"code": "3.3.2", "category": "3.3 Tủ Điện AC & ATS (AC Cabinet & ATS)", "stdPoint": 1, "requirement": "MCBs/MCCBs in the AC cabinet are intact, properly rated, and clearly labeled."}, {"code": "3.3.3", "category": "3.3 Tủ Điện AC & ATS (AC Cabinet & ATS)", "stdPoint": 1, "requirement": "Manual changeover switch / mechanical interlock between grid and generator functions safely."}, {"code": "3.3.4", "category": "3.3 Tủ Điện AC & ATS (AC Cabinet & ATS)", "stdPoint": 1, "requirement": "ATS cabinet is securely installed, clean, and indicator lights work."}, {"code": "3.3.5", "category": "3.3 Tủ Điện AC & ATS (AC Cabinet & ATS)", "stdPoint": 2, "requirement": "ATS operates normally in Auto mode, switching smoothly between Grid and Generator."}, {"code": "3.3.6", "category": "3.3 Tủ Điện AC & ATS (AC Cabinet & ATS)", "stdPoint": 1, "requirement": "All terminals in AC/ATS cabinets are tight, with phase barriers and safety covers in place."}, {"code": "3.4.1", "category": "3.4 Tủ Nguồn DC, Ắc Quy & Chống Sét (DC, Battery & SPD)", "stdPoint": 2, "requirement": "Batteries are clean, not swollen or leaking, terminals are tight, corrosion-free, and numbered."}, {"code": "3.4.2", "category": "3.4 Tủ Nguồn DC, Ắc Quy & Chống Sét (DC, Battery & SPD)", "stdPoint": 1, "requirement": "Battery rack/cabinet is sturdy, clean, and temperature sensor is properly attached."}, {"code": "3.4.3", "category": "3.4 Tủ Nguồn DC, Ắc Quy & Chống Sét (DC, Battery & SPD)", "stdPoint": 2, "requirement": "Rectifier cabinet is clean, CSU controller works properly with accurate parameters (float/boost voltage, current limit, BLVD)."}, {"code": "3.4.4", "category": "3.4 Tủ Nguồn DC, Ắc Quy & Chống Sét (DC, Battery & SPD)", "stdPoint": 1, "requirement": "Rectifier modules operate normally in load-sharing mode, with sufficient N+1 redundancy and dummy covers on empty slots."}, {"code": "3.4.5", "category": "3.4 Tủ Nguồn DC, Ắc Quy & Chống Sét (DC, Battery & SPD)", "stdPoint": 2, "requirement": "DC MCBs/fuses are tight, free of overheating, and accurately labeled for each load."}, {"code": "3.4.6", "category": "3.4 Tủ Nguồn DC, Ắc Quy & Chống Sét (DC, Battery & SPD)", "stdPoint": 1, "requirement": "Surge Protection Device (SPD) is intact, status window is green (normal), and MOV insulation resistance is ≥10 MΩ."}, {"code": "3.4.7", "category": "3.4 Tủ Nguồn DC, Ắc Quy & Chống Sét (DC, Battery & SPD)", "stdPoint": 1, "requirement": "SPD wiring (phase, neutral, ground) is short (<0.5m), neat, and tightly connected."}, {"code": "3.4.8", "category": "3.4 Tủ Nguồn DC, Ắc Quy & Chống Sét (DC, Battery & SPD)", "stdPoint": 1, "requirement": "Main grounding busbar inside the power cabinet is securely connected to the station grounding ring."}, {"code": "4.1.1", "category": "4. Hệ Thống Phòng Cháy Chữa Cháy (Fire Safety)", "stdPoint": 2, "requirement": "Fire extinguishers (CO2 / dry powder) are present in required quantity, pressure gauge in green zone, safety pin intact."}, {"code": "4.2.1", "category": "4. Hệ Thống Phòng Cháy Chữa Cháy (Fire Safety)", "stdPoint": 2, "requirement": "Fire suppression balls are properly mounted above power cabinets / high-risk areas and within expiry date."}, {"code": "5.1.1", "category": "5. Thu Hồi Vật Tư Thừa / Hỏng (Material Recovery)", "stdPoint": 2, "requirement": "All unused, replaced, or damaged materials/equipment are cleared from the station and returned to the warehouse."}]}, "dg_gen": {"id": "dg_gen", "tabName": "2. Checklist DG", "gid": 1050845509, "icon": "⚡", "color": "#d97706", "title_vi": "2. Checklist Máy Phát Điện DG (39 Mục)", "title_en": "2. Generator Preventive Maintenance Checklist (39 Items)", "title_my": "၂။ မီးစက် (Generator DG) စစ်ဆေးထိန်းသိမ်းမှု ပုံစံ (၃၉ ချက်)", "passRule": "100% Pass & No Critical Leak/Fault", "maxScore": 39, "metaFields": [{"key": "siteCode", "label_vi": "Mã Trạm (Site ID)", "label_en": "Site ID", "label_my": "စခန်းအမှတ် (Site ID)", "placeholder": "VD: TNI0012"}, {"key": "genModel", "label_vi": "Model Máy Nổ & Serial", "label_en": "Generator Model & SN", "label_my": "မီးစက် မော်ဒယ်နှင့် Serial", "placeholder": "VD: Denyo / Cummins"}, {"key": "runHours", "label_vi": "Số Giờ Chạy (Operating Hours)", "label_en": "Operating Hours", "label_my": "မောင်းနှင်ချိန် (Hours)", "placeholder": "VD: 1450h"}], "items": [{"code": "DG-1.1", "category": "1. Fuel System (Hệ Thống Nhiên Liệu)", "stdPoint": 1, "requirement": "Fuel tank level — Check fuel level (%) and water/sediment drain valve."}, {"code": "DG-1.2", "category": "1. Fuel System (Hệ Thống Nhiên Liệu)", "stdPoint": 1, "requirement": "Fuel pipes & hoses — Check for cracks, hardening, or fuel leakage."}, {"code": "DG-1.3", "category": "1. Fuel System (Hệ Thống Nhiên Liệu)", "stdPoint": 1, "requirement": "Fuel filter / Water separator — Drain water, check condition & replace on schedule."}, {"code": "DG-1.4", "category": "1. Fuel System (Hệ Thống Nhiên Liệu)", "stdPoint": 1, "requirement": "Fuel injection pump & injectors — Check operation, no abnormal leakage or smoke."}, {"code": "DG-2.1", "category": "2. Lubrication System (Hệ Thống Bôi Trơn)", "stdPoint": 1, "requirement": "Engine oil level & quality — Dipstick between L and H, oil viscosity & color normal."}, {"code": "DG-2.2", "category": "2. Lubrication System (Hệ Thống Bôi Trơn)", "stdPoint": 1, "requirement": "Oil filter — Check tightness, no oil seepage, replace per maintenance cycle."}, {"code": "DG-2.3", "category": "2. Lubrication System (Hệ Thống Bôi Trơn)", "stdPoint": 1, "requirement": "Oil pressure sensor / gauge — Check oil pressure reading during operation (3.0–5.0 bar)."}, {"code": "DG-2.4", "category": "2. Lubrication System (Hệ Thống Bôi Trơn)", "stdPoint": 1, "requirement": "Crankcase breather & seals — Check for oil leaks around gaskets and seals."}, {"code": "DG-3.1", "category": "3. Cooling System (Hệ Thống Làm Mát)", "stdPoint": 1, "requirement": "Coolant level & quality — Check radiator & expansion tank level, anti-rust coolant mix."}, {"code": "DG-3.2", "category": "3. Cooling System (Hệ Thống Làm Mát)", "stdPoint": 1, "requirement": "Radiator fins & core — Clean dust/debris from radiator fins, check for leaks."}, {"code": "DG-3.3", "category": "3. Cooling System (Hệ Thống Làm Mát)", "stdPoint": 1, "requirement": "Coolant hoses & clamps — Check rubber hoses for cracks/swelling and tighten clamps."}, {"code": "DG-3.4", "category": "3. Cooling System (Hệ Thống Làm Mát)", "stdPoint": 1, "requirement": "Fan belt tension & condition — Check V-belt deflection (10-15mm) and wear/cracks."}, {"code": "DG-3.5", "category": "3. Cooling System (Hệ Thống Làm Mát)", "stdPoint": 1, "requirement": "Water pump & thermostat — Check for bearing noise, leakage, and normal temp regulation."}, {"code": "DG-4.1", "category": "4. Air Intake System (Hệ Thống Gió Nạp)", "stdPoint": 1, "requirement": "Air filter element — Clean or replace air filter element; check dust indicator."}, {"code": "DG-4.2", "category": "4. Air Intake System (Hệ Thống Gió Nạp)", "stdPoint": 1, "requirement": "Air intake duct & turbocharger — Check clamps, piping tightness, and turbo impeller sound."}, {"code": "DG-5.1", "category": "5. Exhaust System (Hệ Thống Xả)", "stdPoint": 1, "requirement": "Exhaust manifold, muffler & pipe — Check for exhaust leaks, rust, and heat insulation."}, {"code": "DG-5.2", "category": "5. Exhaust System (Hệ Thống Xả)", "stdPoint": 1, "requirement": "Exhaust smoke color — Verify clear exhaust under load (no black/blue/white heavy smoke)."}, {"code": "DG-5.3", "category": "5. Exhaust System (Hệ Thống Xả)", "stdPoint": 1, "requirement": "Rain cap / exhaust outlet — Ensure rainwater cannot enter the exhaust pipe."}, {"code": "DG-6.1", "category": "6. Engine External & Mounting (Thân Máy & Chân Đế)", "stdPoint": 1, "requirement": "Anti-vibration mounts & foundation bolts — Check rubber pads and tighten anchor bolts."}, {"code": "DG-6.2", "category": "6. Engine External & Mounting (Thân Máy & Chân Đế)", "stdPoint": 1, "requirement": "Abnormal noise & vibration — Check engine mechanical sound and vibration during run."}, {"code": "DG-6.3", "category": "6. Engine External & Mounting (Thân Máy & Chân Đế)", "stdPoint": 1, "requirement": "Engine cleanliness — Wipe clean oil/dust on engine block and canopy floor."}, {"code": "DG-7.1", "category": "7. Battery & Starting System (Ắc Quy Đề & Sạc)", "stdPoint": 1, "requirement": "Battery open-circuit & float voltage — Measure DC voltage (12.6V–13.8V / 25.2V–27.6V)."}, {"code": "DG-7.2", "category": "7. Battery & Starting System (Ắc Quy Đề & Sạc)", "stdPoint": 1, "requirement": "Battery terminals & cables — Clean sulfation, tighten clamps, apply vaseline/grease."}, {"code": "DG-7.3", "category": "7. Battery & Starting System (Ắc Quy Đề & Sạc)", "stdPoint": 1, "requirement": "Electrolyte level / SOH — Check cell health, specific gravity, and casing condition."}, {"code": "DG-7.4", "category": "7. Battery & Starting System (Ắc Quy Đề & Sạc)", "stdPoint": 1, "requirement": "Starter motor & charging alternator — Test cranking voltage (>10V) and charging current."}, {"code": "DG-8.1", "category": "8. Alternator (Đầu Phát Điện)", "stdPoint": 1, "requirement": "Alternator winding & insulation — Check cleanliness, cooling air vents, and insulation."}, {"code": "DG-8.2", "category": "8. Alternator (Đầu Phát Điện)", "stdPoint": 1, "requirement": "AVR (Automatic Voltage Regulator) — Check voltage stability (220V/380V ±2%)."}, {"code": "DG-8.3", "category": "8. Alternator (Đầu Phát Điện)", "stdPoint": 1, "requirement": "Alternator bearing — Listen for abnormal bearing noise or overheating."}, {"code": "DG-8.4", "category": "8. Alternator (Đầu Phát Điện)", "stdPoint": 1, "requirement": "Terminal box & grounding — Check main AC output lugs tightness and frame grounding."}, {"code": "DG-9.1", "category": "9. Control & Distribution Panel (Bảng Điều Khiển & Tủ Điện)", "stdPoint": 1, "requirement": "Control module (DSE / SmartGen) — Check display, alarm logs, buttons, and AUTO mode."}, {"code": "DG-9.2", "category": "9. Control & Distribution Panel (Bảng Điều Khiển & Tủ Điện)", "stdPoint": 1, "requirement": "Main circuit breaker (MCCB) — Check breaker operation and terminal temperature."}, {"code": "DG-9.3", "category": "9. Control & Distribution Panel (Bảng Điều Khiển & Tủ Điện)", "stdPoint": 1, "requirement": "Control wiring & relays — Check tightness of control terminals, fuses, and relays."}, {"code": "DG-9.4", "category": "9. Control & Distribution Panel (Bảng Điều Khiển & Tủ Điện)", "stdPoint": 1, "requirement": "Emergency Stop button — Test emergency stop functionality."}, {"code": "DG-10.1", "category": "10. Operation & Load Test (Chạy Thử Có Tải)", "stdPoint": 1, "requirement": "Auto start / stop test via ATS — Simulate grid failure and verify automatic start/transfer."}, {"code": "DG-10.2", "category": "10. Operation & Load Test (Chạy Thử Có Tải)", "stdPoint": 1, "requirement": "Output Voltage (L1-N, L2-N, L3-N / L-L) — Record voltage under load (220V/380V)."}, {"code": "DG-10.3", "category": "10. Operation & Load Test (Chạy Thử Có Tải)", "stdPoint": 1, "requirement": "Output Frequency (Hz) & RPM — Verify 50Hz ±0.5Hz (1500 RPM)."}, {"code": "DG-10.4", "category": "10. Operation & Load Test (Chạy Thử Có Tải)", "stdPoint": 1, "requirement": "Load Current (Amps) — Measure phase currents L1/L2/L3 and check phase balance."}, {"code": "DG-10.5", "category": "10. Operation & Load Test (Chạy Thử Có Tải)", "stdPoint": 1, "requirement": "Coolant Temperature under load — Verify operating temperature (75°C–90°C)."}, {"code": "DG-10.6", "category": "10. Operation & Load Test (Chạy Thử Có Tải)", "stdPoint": 1, "requirement": "Post-run inspection — Confirm zero leaks, return mode to AUTO, lock canopy."}]}, "cable_route": {"id": "cable_route", "tabName": "3. Checklist Cable Route", "gid": 1952267372, "icon": "🌐", "color": "#059669", "title_vi": "3. Checklist Tuyến Cáp Treo (Cable Route - 44 Mục)", "title_en": "3. MR WO Aerial Cable Route Checklist (44 Items)", "title_my": "၃။ မိုးပျံဖိုင်ဘာကေဘယ်လ်လမ်းကြောင်း စစ်ဆေးချက် (၄၄ ချက်)", "passRule": "≥ 85/100 Points & Zero Serious Errors (x)", "maxScore": 100, "metaFields": [{"key": "siteCode", "label_vi": "Mã Tuyến Cáp (Route Code - 7 ký tự)", "label_en": "Route Code (7 letters)", "label_my": "လမ်းကြောင်းကုဒ် (Route Code)", "placeholder": "VD: TNIDW01"}, {"key": "branch", "label_vi": "Mã Chi Nhánh (Branch)", "label_en": "Branch Code", "label_my": "ဌာနခွဲ (Branch)", "default": "TNI"}, {"key": "routeLengthKm", "label_vi": "Chiều Dài Tuyến (KM)", "label_en": "Route Length (KM)", "label_my": "အရှည် (KM)", "placeholder": "VD: 8.5 KM"}], "items": [{"code": "I.1", "category": "I. Cable Route Information (Thông Tin Tuyến & NIMS)", "stdPoint": 1, "serious": true, "fixDays": 30, "requirement": "On the field / NIMS software: Actual route code matches the route code on NIMS."}, {"code": "I.2", "category": "I. Cable Route Information (Thông Tin Tuyến & NIMS)", "stdPoint": 1, "serious": true, "fixDays": 30, "requirement": "On the field / NIMS software: Actual cable type matches the cable type on NIMS."}, {"code": "I.3", "category": "I. Cable Route Information (Thông Tin Tuyến & NIMS)", "stdPoint": 1, "serious": true, "fixDays": 30, "requirement": "On the field / NIMS software: Actual cable route length matches the cable length on NIMS."}, {"code": "I.4", "category": "I. Cable Route Information (Thông Tin Tuyến & NIMS)", "stdPoint": 1, "serious": true, "fixDays": 30, "requirement": "On the field / NIMS software: Hang / Underground deployment matches on NIMS."}, {"code": "I.5", "category": "I. Cable Route Information (Thông Tin Tuyến & NIMS)", "stdPoint": 1, "serious": true, "fixDays": 30, "requirement": "On the field / NIMS software: Actual number of fibers in use matches on NIMS."}, {"code": "I.6", "category": "I. Cable Route Information (Thông Tin Tuyến & NIMS)", "stdPoint": 1, "serious": true, "fixDays": 30, "requirement": "On the field / NIMS software: Actual number of closures matches on NIMS."}, {"code": "II.1", "category": "II. Pole Route Requirements (Yêu Cầu Tuyến Cột)", "stdPoint": 5, "serious": true, "fixDays": 14, "requirement": "Poles are vertical, sturdy, not leaning or broken; guy wires and anchors installed at angle/end poles."}, {"code": "II.2", "category": "II. Pole Route Requirements (Yêu Cầu Tuyến Cột)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Pole numbering and Mytel logo/marking are painted clearly according to regulation."}, {"code": "II.3", "category": "II. Pole Route Requirements (Thông Tin Tuyến Cột)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Pole route avoids high-risk landslide/erosion areas and follows approved design."}, {"code": "II.4", "category": "II. Pole Route Requirements (Yêu Cầu Tuyến Cột)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Pole foundation is reinforced properly in weak soil locations."}, {"code": "II.5", "category": "II. Pole Route Requirements (Yêu Cầu Tuyến Cột)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Road crossings select narrow, high-sided positions; backbone route uses longer poles (12m+); steel connecting bars only used on access routes."}, {"code": "II.6", "category": "II. Pole Route Requirements (Yêu Cầu Tuyến Cột)", "stdPoint": 2, "serious": false, "fixDays": 14, "requirement": "Pole height & surface: Access cable >8m, Backbone >10m; flat smooth surface, no cracks or steel stains."}, {"code": "II.8", "category": "II. Pole Route Requirements (Yêu Cầu Tuyến Cột)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Special crossings (road, railroad, river, gas station) use 12m or 15m poles."}, {"code": "II.9", "category": "II. Pole Route Requirements (Yêu Cầu Tuyến Cột)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Distance between poles: 8m pole = 80m ±10%; 10m pole = 80m ±10%."}, {"code": "II.10", "category": "II. Pole Route Requirements (Yêu Cầu Tuyến Cột)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Pole planting depth: 8m pole (1.8m weak/normal, 1.4m hard soil); 10m pole (1.8m weak/normal, 1.5m hard soil)."}, {"code": "II.11", "category": "II. Pole Route Requirements (Yêu Cầu Tuyến Cột)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Precast concrete block / PC Beam meets Grade 150#, stone 1x2 specification."}, {"code": "II.12", "category": "II. Pole Route Requirements (Yêu Cầu Tuyến Cột)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Minimum distance from top of pole under electrical line: ≥5m (10kV), ≥6m (35kV), ≥7m (110kV), ≥8m (220kV)."}, {"code": "III.1", "category": "III. Accessories (Phụ Kiện Treo Cáp)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "General accessories for aerial optical cable are in right quantity, good quality, and cable is stable on pole."}, {"code": "III.2", "category": "III. Accessories (Phụ Kiện Treo Cáp)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Suspension and tension clamps match the cable span and pole type."}, {"code": "III.3", "category": "III. Accessories (Phụ Kiện Treo Cáp)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "D12 clamp: Do not use D12 for any cable span > 200m."}, {"code": "III.4", "category": "III. Accessories (Phụ Kiện Treo Cáp)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Vibration damper: Installed on spans > 160m."}, {"code": "III.5", "category": "III. Accessories (Phụ Kiện Treo Cáp)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Height warning sign: Installed at road crossings and important traffic crossings."}, {"code": "III.6", "category": "III. Accessories (Phụ Kiện Treo Cáp)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Optical cable warning tag: Installed to recognize MYTEL cable."}, {"code": "IV.1", "category": "IV. Closures & Spare Cable (Măng Xông & Cáp Dự Phòng)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Spare cable: At closure pole = pole height + 5m; at site = 100m; at bridge/road under construction = 5-7m each side."}, {"code": "IV.2", "category": "IV. Closures & Spare Cable (Măng Xông & Cáp Dự Phòng)", "stdPoint": 5, "serious": true, "fixDays": 14, "requirement": "At closure position, spare cable >15m must use G7 cangue (coil diameter 60-80cm); closure inside G7 coil, never dropped on ground."}, {"code": "IV.3", "category": "IV. Closures & Spare Cable (Măng Xông & Cáp Dự Phòng)", "stdPoint": 5, "serious": true, "fixDays": 14, "requirement": "Quantity of closures ≤ 3 pcs per 1km of cable (backbone, inter-provincial cable)."}, {"code": "V.1", "category": "V. Height & Clearance of Cable Route (Độ Võng & Tĩnh Không)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Cable sag requirement: H(min) = L×1.5%, H(max) ≤ L×3% (e.g., 100m span deflection ≤1.5m)."}, {"code": "V.2", "category": "V. Height & Clearance of Cable Route (Độ Võng & Tĩnh Không)", "stdPoint": 5, "serious": true, "fixDays": 14, "requirement": "Minimum vertical distance: Cross road 4.5m (5.5m with crane), railroad 6.5m–7.5m, small street 4m, along road 3.5m."}, {"code": "V.3", "category": "V. Height & Clearance of Cable Route (Độ Võng & Tĩnh Không)", "stdPoint": 1, "serious": true, "fixDays": 14, "requirement": "Minimum vertical distance to electrical line at crossing: 2m–3m (with ground wire), 4m–5m (without ground wire)."}, {"code": "V.4", "category": "V. Height & Clearance of Cable Route (Độ Võng & Tĩnh Không)", "stdPoint": 1, "serious": true, "fixDays": 14, "requirement": "Minimum distance on shared power poles: 1.25m (1kV), 3m (22kV), 3.5m (35kV), 4m (66kV); never share 110kV pole."}, {"code": "VI.1", "category": "VI. Installation of Cable Routes (Lắp Đặt Tuyến Cáp)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Cable accessories bolts, clamps, tension and suspension sets are tightly fixed to the pole."}, {"code": "VI.2", "category": "VI. Installation of Cable Routes (Lắp Đặt Tuyến Cáp)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "At angle poles, cable is positioned on the inner turning side to avoid folding."}, {"code": "VI.3", "category": "VI. Installation of Cable Routes (Lắp Đặt Tuyến Cáp)", "stdPoint": 1, "serious": true, "fixDays": 14, "requirement": "For ADSS cable, tension clamps are used at end poles, closures, and angle poles (≤150°)."}, {"code": "VI.4", "category": "VI. Installation of Cable Routes (Lắp Đặt Tuyến Cáp)", "stdPoint": 5, "serious": true, "fixDays": 14, "requirement": "Station entry cables and aerial-to-underground transitions must have protective pipes (HDPE, PVC, D42 steel)."}, {"code": "VI.5", "category": "VI. Installation of Cable Routes (Lắp Đặt Tuyến Cáp)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Cable is not twisted, deformed, cracked, or rubbing against trees/buildings."}, {"code": "VI.6", "category": "VI. Installation of Cable Routes (Lắp Đặt Tuyến Cáp)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Road/railroad crossings have proper long-term maintenance protection solutions."}, {"code": "VI.7", "category": "VI. Installation of Cable Routes (Lắp Đặt Tuyến Cáp)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Cable never passes above HV electrical lines (must go under) and goes underground across highways."}, {"code": "VI.8", "category": "VI. Installation of Cable Routes (Lắp Đặt Tuyến Cáp)", "stdPoint": 1, "serious": true, "fixDays": 14, "requirement": "Figure-8 cable: Steel messenger wire separated ≤50cm only at angle clamping points (≤150°), intact on straight spans."}, {"code": "VI.9", "category": "VI. Installation of Cable Routes (Lắp Đặt Tuyến Cáp)", "stdPoint": 5, "serious": true, "fixDays": 14, "requirement": "Safety corridor clearance: No fallen trees, no vines wrapped around cable, no fire risk or roof rubbing."}, {"code": "VI.10", "category": "VI. Installation of Cable Routes (Lắp Đặt Tuyến Cáp)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Parallel distance to electrical lines meets safety corridor (1m–6m depending on kV)."}, {"code": "VII.1", "category": "VII. Input Cable of Station (Cáp Vào Trạm & ODF)", "stdPoint": 9, "serious": true, "fixDays": 14, "requirement": "Station input cable neatly fixed on tray/rack/ODF; F8 steel wire cut ≥50cm and isolated; G7 spare coil 60-80cm; 2-way separation; protective pipe; ODF holes sealed against rats/insects."}, {"code": "VIII.1", "category": "VIII. Cable Route Splicing (Hàn Nối Măng Xông & ODF)", "stdPoint": 5, "serious": true, "fixDays": 14, "requirement": "Fibers spliced per color code; fiber loop diameter >60mm; heat-shrink sleeves in tray; closure sealed with grommets; splice loss ≤0.1dB avg (≤0.2dB max)."}, {"code": "IX.1", "category": "IX. Cable Route Measurement (Đo Kiểm Suy Hao Quang)", "stdPoint": 10, "serious": true, "fixDays": 14, "requirement": "Abnormal/jumper attenuation ≤0.5dB; average attenuation at 1550nm ≤0.25dB/km (<1 yr), ≤0.28dB/km (1-3 yrs), ≤0.30dB/km (>3 yrs)."}, {"code": "X.1", "category": "X. Reinforce Cable Routes (Tuần Tra & Củng Cố Tuyến)", "stdPoint": 11, "serious": true, "fixDays": 14, "requirement": "Patrolling and measuring on time per MRWO; zero cable dropped on ground; reinforcement report & action plan completed."}]}, "ug_cable": {"id": "ug_cable", "tabName": "4. Checklist UG Cable", "gid": 1066188442, "icon": "🕳️", "color": "#7c3aed", "title_vi": "4. Checklist Tuyến Cáp Ngầm (UG Cable - 37 Mục)", "title_en": "4. MR WO Underground Cable Route Checklist (37 Items)", "title_my": "၄။ မြေအောက်ဖိုင်ဘာကေဘယ်လ်လမ်းကြောင်း စစ်ဆေးချက် (၃၇ ချက်)", "passRule": "≥ 85/100 Points & Zero Serious Errors (x)", "maxScore": 100, "metaFields": [{"key": "siteCode", "label_vi": "Mã Tuyến Cáp Ngầm (Route Code - 7 ký tự)", "label_en": "UG Route Code (7 letters)", "label_my": "မြေအောက်လမ်းကြောင်းကုဒ်", "placeholder": "VD: TNIUG01"}, {"key": "branch", "label_vi": "Mã Chi Nhánh (Branch)", "label_en": "Branch Code", "label_my": "ဌာနခွဲ (Branch)", "default": "TNI"}, {"key": "manholeCount", "label_vi": "Số Bể Cáp / Cột Mốc (Manholes / Milestones)", "label_en": "Manholes / Milestones", "label_my": "Manhole အရေအတွက်", "placeholder": "VD: 24 Manholes"}], "items": [{"code": "UG-I.1", "category": "I. Cable Route Information (Thông Tin Tuyến & NIMS)", "stdPoint": 1, "serious": true, "fixDays": 30, "requirement": "On the field / NIMS software: Actual route code matches the route code on NIMS."}, {"code": "UG-I.2", "category": "I. Cable Route Information (Thông Tin Tuyến & NIMS)", "stdPoint": 1, "serious": true, "fixDays": 30, "requirement": "On the field / NIMS software: Actual cable type matches the cable type on NIMS."}, {"code": "UG-I.3", "category": "I. Cable Route Information (Thông Tin Tuyến & NIMS)", "stdPoint": 1, "serious": true, "fixDays": 30, "requirement": "On the field / NIMS software: Actual cable route length matches on NIMS."}, {"code": "UG-I.4", "category": "I. Cable Route Information (Thông Tin Tuyến & NIMS)", "stdPoint": 1, "serious": true, "fixDays": 30, "requirement": "On the field / NIMS software: Hang / Underground deployment matches on NIMS."}, {"code": "UG-I.5", "category": "I. Cable Route Information (Thông Tin Tuyến & NIMS)", "stdPoint": 1, "serious": true, "fixDays": 30, "requirement": "On the field / NIMS software: Actual number of fibers using matches on NIMS."}, {"code": "UG-I.6", "category": "I. Cable Route Information (Thông Tin Tuyến & NIMS)", "stdPoint": 1, "serious": true, "fixDays": 30, "requirement": "On the field / NIMS software: Actual number of closures matches on NIMS."}, {"code": "UG-II.1", "category": "II. Manhole Requirements (Yêu Cầu Bể Cáp / Hố Ga)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Surface level of manhole matches sidewalk level and manhole wall."}, {"code": "UG-II.2", "category": "II. Manhole Requirements (Yêu Cầu Bể Cáp / Hố Ga)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Manhole on open field is 20cm higher than ground level."}, {"code": "UG-II.3", "category": "II. Manhole Requirements (Yêu Cầu Bể Cáp / Hố Ga)", "stdPoint": 5, "serious": false, "fixDays": 14, "requirement": "Manhole cover is even, safe for traffic, and prevents solid waste from entering."}, {"code": "UG-II.4", "category": "II. Manhole Requirements (Yêu Cầu Bể Cáp / Hố Ga)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Interface between plastic pipe and inside wall of manhole is smooth funnel R20mm to avoid cable damage."}, {"code": "UG-II.5", "category": "II. Manhole Requirements (Yêu Cầu Bể Cáp / Hố Ga)", "stdPoint": 5, "serious": false, "fixDays": 14, "requirement": "Manhole wall is unbroken, no subsidence, not covered by trees/grass, accessible for maintenance."}, {"code": "UG-III.1", "category": "III. Milestone Requirements (Cột Mốc Báo Hiệu Cáp Ngầm)", "stdPoint": 5, "serious": false, "fixDays": 14, "requirement": "Milestone installed every 200m on straight lines and at every direction change point."}, {"code": "UG-III.2", "category": "III. Milestone Requirements (Cột Mốc Báo Hiệu Cáp Ngầm)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Milestones are clear of grass/bushes, unbroken, and legible for rescue/maintenance."}, {"code": "UG-III.3", "category": "III. Milestone Requirements (Cột Mốc Báo Hiệu Cáp Ngầm)", "stdPoint": 5, "serious": false, "fixDays": 14, "requirement": "Milestones installed at all manholes and underground closure points."}, {"code": "UG-IV.1", "category": "IV. Closures & Spare Cables (Măng Xông & Cáp Dự Phòng)", "stdPoint": 5, "serious": true, "fixDays": 14, "requirement": "15m spare cable at each end of closure, coiled neatly (bend radius ≥20× cable diameter) and fixed to steel frame in manhole."}, {"code": "UG-IV.2", "category": "IV. Closures & Spare Cables (Măng Xông & Cáp Dự Phòng)", "stdPoint": 5, "serious": true, "fixDays": 14, "requirement": "Quantity of closures ≤ 3 pcs per 1km of cable (backbone, inter-provincial cable)."}, {"code": "UG-V.1", "category": "V. Installation of UG Cable Routes (Chôn Cáp & Vượt Chướng Ngại)", "stdPoint": 5, "serious": false, "fixDays": 14, "requirement": "Underground cable route is not eroded; cables are never exposed on the ground."}, {"code": "UG-V.2", "category": "V. Installation of UG Cable Routes (Chôn Cáp & Vượt Chướng Ngại)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Burial depth of underground cable route meets approved design."}, {"code": "UG-V.3", "category": "V. Installation of UG Cable Routes (Chôn Cáp & Vượt Chướng Ngại)", "stdPoint": 5, "serious": true, "fixDays": 14, "requirement": "Station entry cables and aerial-to-underground transitions have safety protection pipes (HDPE, PVC, D42 steel)."}, {"code": "UG-V.4", "category": "V. Installation of UG Cable Routes (Chôn Cáp & Vượt Chướng Ngại)", "stdPoint": 1, "serious": true, "fixDays": 14, "requirement": "Crossing soil road or railway: Protected by HDPE D40 / steel D42 pipe at minimum depth -1.2m."}, {"code": "UG-V.5", "category": "V. Installation of UG Cable Routes (Chôn Cáp & Vượt Chướng Ngại)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Crossing bridge: Protected in D42 steel pipe clamped with 50×5 steel plates every 1.5m–3m."}, {"code": "UG-V.6", "category": "V. Installation of UG Cable Routes (Chôn Cáp & Vượt Chướng Ngại)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Crossing lake/pond: Installed in D42 steel pipe fixed to L70×8 steel piles spaced 2m apart."}, {"code": "UG-V.7", "category": "V. Installation of UG Cable Routes (Chôn Cáp & Vượt Chướng Ngại)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Crossing existing infrastructure: Sturdy D42 steel pipe installed safely."}, {"code": "UG-V.8", "category": "V. Installation of UG Cable Routes (Chôn Cáp & Vượt Chướng Ngại)", "stdPoint": 1, "serious": true, "fixDays": 14, "requirement": "Crossing river/stream: Concrete poles at both banks with inox belt and D10 steel suspension wire."}, {"code": "UG-VI.1", "category": "VI. Input Cable of Station (Cáp Vào Trạm & ODF)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Station cable installed neatly and firmly on cable tray, rack, and ODF."}, {"code": "UG-VI.2", "category": "VI. Input Cable of Station (Cáp Vào Trạm & ODF)", "stdPoint": 1, "serious": true, "fixDays": 14, "requirement": "Figure-8 cable reinforcement steel wire cut ≥50cm before cable entry hole and isolated from tower."}, {"code": "UG-VI.3", "category": "VI. Input Cable of Station (Cáp Vào Trạm & ODF)", "stdPoint": 5, "serious": true, "fixDays": 14, "requirement": "Separate cables into 2 distinct entry paths before entering main node station."}, {"code": "UG-VI.4", "category": "VI. Input Cable of Station (Cáp Vào Trạm & ODF)", "stdPoint": 5, "serious": true, "fixDays": 14, "requirement": "Station entry and aerial/UG transition points have protective pipes."}, {"code": "UG-VI.5", "category": "VI. Input Cable of Station (Cáp Vào Trạm & ODF)", "stdPoint": 5, "serious": true, "fixDays": 14, "requirement": "All cable holes and ODF gaps are sealed to prevent rat and insect attacks."}, {"code": "UG-VII.1", "category": "VII. Cable Route Splicing (Hàn Nối Sợi Quang)", "stdPoint": 1, "serious": true, "fixDays": 14, "requirement": "All fibers and loose tubes in ODF/closure spliced according to standard color code."}, {"code": "UG-VII.2", "category": "VII. Cable Route Splicing (Hàn Nối Sợi Quang)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Coiled fiber diameter in ODF or closure is >60mm."}, {"code": "UG-VII.3", "category": "VII. Cable Route Splicing (Hàn Nối Sợi Quang)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Heat-shrink splice protection sleeves are neatly seated in closure tray."}, {"code": "UG-VII.4", "category": "VII. Cable Route Splicing (Hàn Nối Sợi Quang)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Closures sealed with rubber grommets to prevent water and sand ingress."}, {"code": "UG-VII.5", "category": "VII. Cable Route Splicing (Hàn Nối Sợi Quang)", "stdPoint": 1, "serious": false, "fixDays": 14, "requirement": "Splice attenuation: Average ≤0.1dB, Maximum ≤0.2dB."}, {"code": "UG-VIII.1", "category": "VIII. Cable Route Measurement (Đo Kiểm Suy Hao)", "stdPoint": 5, "serious": true, "fixDays": 14, "requirement": "Abnormal attenuation & jumper connection attenuation ≤0.5dB."}, {"code": "UG-VIII.2", "category": "VIII. Cable Route Measurement (Đo Kiểm Suy Hao)", "stdPoint": 5, "serious": true, "fixDays": 14, "requirement": "Average attenuation at 1550nm: ≤0.25dB/km (<1 yr), ≤0.28dB/km (1-3 yrs), ≤0.30dB/km (>3 yrs)."}, {"code": "UG-IX.1", "category": "IX. Reinforce Cable Routes (Tuần Tra & Củng Cố Tuyến Ngầm)", "stdPoint": 12, "serious": true, "fixDays": 14, "requirement": "Patrolling and measuring on time per MRWO (2 pts) + Reinforcing cable route issues & reporting (10 pts)."}]}, "solar": {"id": "solar", "tabName": "5. Checklist Solar", "gid": 998308117, "icon": "☀️", "color": "#ea580c", "title_vi": "5. Checklist Điện Mặt Trời Solar (43 Mục)", "title_en": "5. Solar System Inspection & Cleaning Checklist (43 Items)", "title_my": "၅။ ဆိုလာစနစ် (Solar System) စစ်ဆေးခြင်းနှင့် သန့်ရှင်းရေး ပုံစံ (၄၃ ချက်)", "passRule": "100% Cleaned, Checked & Parameters Recorded", "maxScore": 43, "metaFields": [{"key": "siteCode", "label_vi": "Mã Trạm Solar (Site ID)", "label_en": "Solar Site ID", "label_my": "ဆိုလာစခန်းအမှတ် (Site ID)", "placeholder": "VD: TNI0012"}, {"key": "pvCapacity", "label_vi": "Công Suất Hệ Solar (kWp / Số Tấm)", "label_en": "PV Capacity (kWp / Panels)", "label_my": "ဆိုလာပမာဏ (kWp / ပြားအရေအတွက်)", "placeholder": "VD: 12 kWp / 24 Panels"}, {"key": "weather", "label_vi": "Thời Tiết Lúc Đo (Sunny / Cloudy)", "label_en": "Weather Condition", "label_my": "ရာသီဥတု အခြေအနေ", "placeholder": "Sunny / Clear"}], "items": [{"code": "SL-1.1", "category": "1. Environment Inspection (Kiểm Tra Môi Trường & Bóng Che)", "stdPoint": 1, "requirement": "Trees shading — Check shading from 9:00 AM to 3:00 PM."}, {"code": "SL-1.2", "category": "1. Environment Inspection (Kiểm Tra Môi Trường & Bóng Che)", "stdPoint": 1, "requirement": "Leaves and debris — Check panel surface for leaves, dirt, and bird droppings."}, {"code": "SL-1.3", "category": "1. Environment Inspection (Kiểm Tra Môi Trường & Bóng Che)", "stdPoint": 1, "requirement": "Obstruction — Check antennas/cables causing shadow on solar arrays."}, {"code": "SL-1.4", "category": "1. Environment Inspection (Kiểm Tra Môi Trường & Bóng Che)", "stdPoint": 1, "requirement": "Dust level — Check dust accumulation across solar strings."}, {"code": "SL-1.5", "category": "1. Environment Inspection (Kiểm Tra Môi Trường & Bóng Che)", "stdPoint": 1, "requirement": "Corrosion risk — Check environmental corrosion on frame and bolts."}, {"code": "SL-2.1", "category": "2. Solar Panel Checking & Cleaning (Tấm Pin & Vệ Sinh)", "stdPoint": 1, "requirement": "Panel surface — Check dirt or contamination before/after washing."}, {"code": "SL-2.2", "category": "2. Solar Panel Checking & Cleaning (Tấm Pin & Vệ Sinh)", "stdPoint": 1, "requirement": "Cracked panel — Check glass surface for cracks, hotspots, or physical damage."}, {"code": "SL-2.3", "category": "2. Solar Panel Checking & Cleaning (Tấm Pin & Vệ Sinh)", "stdPoint": 1, "requirement": "Discoloration — Check for burnt marks, delamination, or EVA color change."}, {"code": "SL-2.4", "category": "2. Solar Panel Checking & Cleaning (Tấm Pin & Vệ Sinh)", "stdPoint": 1, "requirement": "Shading — Verify zero localized shadow on panels after tree trimming."}, {"code": "SL-2.5", "category": "2. Solar Panel Checking & Cleaning (Tấm Pin & Vệ Sinh)", "stdPoint": 1, "requirement": "Cleaning — Perform full water/soft-brush cleaning process (Before & After photos)."}, {"code": "SL-3.1", "category": "3. PV Electrical Measurement (Đo Kiểm Điện Áp & Dòng Chuỗi PV)", "stdPoint": 1, "requirement": "PV String Voltage — Measure open/operating DC voltage at junction box or PU input (Record V)."}, {"code": "SL-3.2", "category": "3. PV Electrical Measurement (Đo Kiểm Điện Áp & Dòng Chuỗi PV)", "stdPoint": 1, "requirement": "PV String Current — Use clamp meter to measure DC current of each string in sunlight (Record A)."}, {"code": "SL-3.3", "category": "3. PV Electrical Measurement (Đo Kiểm Điện Áp & Dòng Chuỗi PV)", "stdPoint": 1, "requirement": "String quantity — Compare active string count with station design."}, {"code": "SL-3.4", "category": "3. PV Electrical Measurement (Đo Kiểm Điện Áp & Dòng Chuỗi PV)", "stdPoint": 1, "requirement": "String imbalance — Compare current/voltage between strings to detect weak panels."}, {"code": "SL-4.1", "category": "4. Frame Structure (Khung Giàn Đỡ Pin Mặt Trời)", "stdPoint": 1, "requirement": "Frame deformation — Observe whether the solar array mounting frame is tilted or curved."}, {"code": "SL-4.2", "category": "4. Frame Structure (Khung Giàn Đỡ Pin Mặt Trời)", "stdPoint": 1, "requirement": "Bolts — Check all structural frame link bolts."}, {"code": "SL-4.3", "category": "4. Frame Structure (Khung Giàn Đỡ Pin Mặt Trời)", "stdPoint": 1, "requirement": "Tighten the bolts — Re-tighten frame and panel link points."}, {"code": "SL-4.4", "category": "4. Frame Structure (Khung Giàn Đỡ Pin Mặt Trời)", "stdPoint": 1, "requirement": "Rust frame — Check frame surface for rust and apply anti-rust paint if needed."}, {"code": "SL-4.5", "category": "4. Frame Structure (Khung Giàn Đỡ Pin Mặt Trời)", "stdPoint": 1, "requirement": "Frame and panel linking — Check middle and end panel retaining clamps."}, {"code": "SL-5.1", "category": "5. DC Cable & Junction Box (Cáp DC, MC4 & Hộp Đấu Nối)", "stdPoint": 1, "requirement": "DC cable — Check if cable from panel to junction box is broken, scratched, rubbed, or sagging."}, {"code": "SL-5.2", "category": "5. DC Cable & Junction Box (Cáp DC, MC4 & Hộp Đấu Nối)", "stdPoint": 1, "requirement": "Insulation — Observe DC cable insulation sheath integrity."}, {"code": "SL-5.3", "category": "5. DC Cable & Junction Box (Cáp DC, MC4 & Hộp Đấu Nối)", "stdPoint": 1, "requirement": "MC4 Connector — Check MC4 connectors between panels for tightness and water sealing."}, {"code": "SL-5.4", "category": "5. DC Cable & Junction Box (Cáp DC, MC4 & Hộp Đấu Nối)", "stdPoint": 1, "requirement": "Junction box — Open junction box and check PV+ / PV- terminals, fuses, and DC SPD."}, {"code": "SL-5.5", "category": "5. DC Cable & Junction Box (Cáp DC, MC4 & Hộp Đấu Nối)", "stdPoint": 1, "requirement": "Ground wire — Check grounding wire of the Solar frame and junction box."}, {"code": "SL-6.1", "category": "6. Inverter / Solar Charger MPPT (Bộ Sạc Solar / Inverter)", "stdPoint": 1, "requirement": "Inverter / MPPT Status — Check RUN/FAULT status on CSU/MPPT display."}, {"code": "SL-6.2", "category": "6. Inverter / Solar Charger MPPT (Bộ Sạc Solar / Inverter)", "stdPoint": 1, "requirement": "Error Warning — Check any historical or active error code displayed on PU."}, {"code": "SL-6.3", "category": "6. Inverter / Solar Charger MPPT (Bộ Sạc Solar / Inverter)", "stdPoint": 1, "requirement": "Temperature — Check device operating heat and cooling fan."}, {"code": "SL-6.4", "category": "6. Inverter / Solar Charger MPPT (Bộ Sạc Solar / Inverter)", "stdPoint": 1, "requirement": "Input Voltage — Record PV input voltage on solar charger display."}, {"code": "SL-6.5", "category": "6. Inverter / Solar Charger MPPT (Bộ Sạc Solar / Inverter)", "stdPoint": 1, "requirement": "Input Current — Record PV charging current on solar charger display."}, {"code": "SL-7.1", "category": "7. Electrical Cabinet (Tủ Điện Nguồn IPS / Solar)", "stdPoint": 1, "requirement": "CB/MCCB — Check CB Solar in the IPS cabinet."}, {"code": "SL-7.2", "category": "7. Electrical Cabinet (Tủ Điện Nguồn IPS / Solar)", "stdPoint": 1, "requirement": "Terminal — Check wiring connections for tightness and overheating."}, {"code": "SL-7.3", "category": "7. Electrical Cabinet (Tủ Điện Nguồn IPS / Solar)", "stdPoint": 1, "requirement": "Power connection — Check DC output busbar connection."}, {"code": "SL-7.4", "category": "7. Electrical Cabinet (Tủ Điện Nguồn IPS / Solar)", "stdPoint": 1, "requirement": "Grounding — Check cabinet grounding cable."}, {"code": "SL-7.5", "category": "7. Electrical Cabinet (Tủ Điện Nguồn IPS / Solar)", "stdPoint": 1, "requirement": "Cleaning — Clean dust inside electrical cabinet."}, {"code": "SL-8.1", "category": "8. Battery Bank (Hệ Thống Ắc Quy Lưu Trữ)", "stdPoint": 1, "requirement": "Battery Voltage — Measure total battery bank voltage (V)."}, {"code": "SL-8.2", "category": "8. Battery Bank (Hệ Thống Ắc Quy Lưu Trữ)", "stdPoint": 1, "requirement": "Internal Resistance — Check cell condition / internal resistance (mΩ)."}, {"code": "SL-8.3", "category": "8. Battery Bank (Hệ Thống Ắc Quy Lưu Trữ)", "stdPoint": 1, "requirement": "Busbar Status — Check inter-cell busbars for tightness and corrosion."}, {"code": "SL-8.4", "category": "8. Battery Bank (Hệ Thống Ắc Quy Lưu Trữ)", "stdPoint": 1, "requirement": "Cable Condition — Check main battery connection cables."}, {"code": "SL-9.1", "category": "9. Reporting & Handover (Hình Ảnh Trước/Sau & Đề Xuất)", "stdPoint": 1, "requirement": "Before photos — Take & save 1440x1088 Timestamp Camera photos before cleaning/maintenance."}, {"code": "SL-9.2", "category": "9. Reporting & Handover (Hình Ảnh Trước/Sau & Đề Xuất)", "stdPoint": 1, "requirement": "After photos — Take & save 1440x1088 Timestamp Camera photos after cleaning/maintenance."}, {"code": "SL-9.3", "category": "9. Reporting & Handover (Hình Ảnh Trước/Sau & Đề Xuất)", "stdPoint": 1, "requirement": "Video / Parameter check — Verify inverter & panel operating status."}, {"code": "SL-9.4", "category": "9. Reporting & Handover (Hình Ảnh Trước/Sau & Đề Xuất)", "stdPoint": 1, "requirement": "Fault log — Record & classify any remaining hardware errors."}, {"code": "SL-9.5", "category": "9. Reporting & Handover (Hình Ảnh Trước/Sau & Đề Xuất)", "stdPoint": 1, "requirement": "Proposal — Suggest corrective action or part replacement if needed."}]}};
+
+    const I18N = {
+      vi: {
+        appTitle: "TNI Field Checklist BI — Hệ Thống Kiểm Tra & Đối Chiếu Trước/Sau (1440×1088)",
+        siteCode: "Mã Trạm / Tuyến (Site / Route Code) *",
+        inspector: "Nhân Viên Kiểm Tra (Inspector) *",
+        date: "Ngày Kiểm Tra (Inspection Date)",
+        gps: "Tọa Độ GPS (Timestamp Camera Lat, Long)",
+        extraMeta: "Thông Tin Bổ Sung (Branch / Model / KM)",
+        comment: "Ghi Chú Chung / Đề Xuất (General Comment)",
+        allItems: "📋 Tất cả hạng mục",
+        nokOnly: "❌ Chỉ mục Lỗi (NOK)",
+        pendingFix: "⏳ Chưa sửa",
+        fixedOnly: "✅ Đã sửa xong",
+        hasPhoto: "📸 Có hình ảnh (1440×1088)",
+        colDefectTitle: "📸 CỘT 1: HÌNH ẢNH LỖI / CHƯA SỬA (BEFORE)",
+        colFixedTitle: "🌟 CỘT 2: ĐÃ SỬA & ẢNH SO SÁNH (AFTER)",
+        defectPlaceholder: "⚠️ Ghi rõ sai ở đâu / lỗi gì để biết chỗ sửa...",
+        afterPlaceholder: "✅ Ghi chú kết quả đã sửa / thông số đo...",
+        btnTakeDefect: "📷 Chụp Ảnh Lỗi (1440×1088)",
+        btnTakeFixed: "📷 Chụp Ảnh Đã Sửa (1440×1088)",
+        btnCompare: "👁️ So Sánh Ảnh Trước & Sau (1440×1088)",
+        btnSaveCloud: "💾 Lưu Vào Sheet Riêng & Upload Ảnh 1440×1088 Lên Drive 2.14"
+      },
+      en: {
+        appTitle: "TNI Field Checklist BI — Mobile QA/QC & 1440×1088 Before/After Comparison",
+        siteCode: "Site ID / Route Code *",
+        inspector: "Inspector / Staff Name *",
+        date: "Inspection Date",
+        gps: "GPS Coordinates (Timestamp Camera Lat, Long)",
+        extraMeta: "Additional Info (Branch / Model / KM)",
+        comment: "General Comments / Proposal",
+        allItems: "📋 All Items",
+        nokOnly: "❌ Defects Only (NOK)",
+        pendingFix: "⏳ Pending Fix",
+        fixedOnly: "✅ Rectified (Fixed)",
+        hasPhoto: "📸 With Photo (1440×1088)",
+        colDefectTitle: "📸 COL 1: DEFECT / BEFORE PHOTO (1440×1088)",
+        colFixedTitle: "🌟 COL 2: RECTIFIED / AFTER PHOTO (1440×1088)",
+        defectPlaceholder: "⚠️ Describe exact fault location & what needs fixing...",
+        afterPlaceholder: "✅ Describe rectification result / post-maintenance value...",
+        btnTakeDefect: "📷 Capture Defect (1440×1088)",
+        btnTakeFixed: "📷 Capture Fixed (1440×1088)",
+        btnCompare: "👁️ Compare Before & After (1440×1088)",
+        btnSaveCloud: "💾 Save to Dedicated Sheet & Upload 1440×1088 Photos to Drive 2.14"
+      },
+      my: {
+        appTitle: "TNI Field Checklist BI — မြေပြင်စစ်ဆေးမှုနှင့် မပြင်မီ/ပြင်ဆင်ပြီးပုံ (1440×1088) စနစ်",
+        siteCode: "စခန်း / လမ်းကြောင်းကုဒ် (Site / Route ID) *",
+        inspector: "စစ်ဆေးသူအမည် (Inspector) *",
+        date: "စစ်ဆေးသည့်နေ့စွဲ (Date)",
+        gps: "GPS တည်နေရာ (Timestamp Camera Lat, Long)",
+        extraMeta: "အပိုအချက်အလက် (Branch / Model / KM)",
+        comment: "အထွေထွေမှတ်ချက် (General Comment)",
+        allItems: "📋 အားလုံးပြရန်",
+        nokOnly: "❌ အပျက် (NOK) များသာ",
+        pendingFix: "⏳ ပြင်ရန်ကျန်",
+        fixedOnly: "✅ ပြင်ဆင်ပြီး",
+        hasPhoto: "📸 ပုံပါသောအချက်များ (1440×1088)",
+        colDefectTitle: "📸 ကော်လံ ၁ - အပျက်ပုံ / မပြင်မီပုံ (BEFORE)",
+        colFixedTitle: "🌟 ကော်လံ ၂ - ပြင်ဆင်ပြီးပုံ နှိုင်းယှဉ်ချက် (AFTER)",
+        defectPlaceholder: "⚠️ မှားယွင်း/ပျက်စီးနေသော နေရာနှင့် ပြင်ရမည့်အချက်ကို ရေးပါ...",
+        afterPlaceholder: "✅ ပြင်ဆင်ပြီးအခြေအနေ / တိုင်းတာချက်ကို ရေးပါ...",
+        btnTakeDefect: "📷 အပျက်ပုံရိုက်ရန် (1440×1088)",
+        btnTakeFixed: "📷 ပြင်ဆင်ပြီးပုံရိုက်ရန် (1440×1088)",
+        btnCompare: "👁️ မပြင်မီနှင့် ပြင်ပြီးပုံ နှိုင်းယှဉ်ကြည့်ရန် (1440×1088)",
+        btnSaveCloud: "💾 သီးသန့် Sheet နှင့် Drive 2.14 သို့ (1440×1088 ပုံ) သိမ်းဆည်းမည်"
+      }
+    };
+
+    let currentLang = localStorage.getItem("tni_cl_lang") || "vi";
+    let currentType = "site_bts";
+    let currentFilter = "all";
+    let currentSessionId = "";
+    let itemStates = {}; // { [type]: { [code]: { status, evalPoint, defectNote, beforeDataUrl, beforeThumbUrl, beforeDriveUrl, fixStatus, afterNote, afterDataUrl, afterThumbUrl, afterDriveUrl, gps } } }
+    let pendingPhotoTarget = null; // { type, code, stage: 'BEFORE' | 'AFTER', sessionIdForBi }
+    let cloudSessions = [];
+
+    function initApp() {
+      const today = new Date().toISOString().slice(0, 10);
+      document.getElementById("inp-date").value = today;
+
+      // Initialize state for all 5 checklists
+      Object.keys(CHECKLIST_TEMPLATES).forEach(typeKey => {
+        itemStates[typeKey] = {};
+        CHECKLIST_TEMPLATES[typeKey].items.forEach(it => {
+          itemStates[typeKey][it.code] = {
+            status: "OK",
+            evalPoint: it.stdPoint,
+            defectNote: "",
+            beforeDataUrl: "",
+            beforeThumbUrl: "",
+            beforeDriveUrl: "",
+            fixStatus: "Chưa sửa (Pending Fix)",
+            afterNote: "",
+            afterDataUrl: "",
+            afterThumbUrl: "",
+            afterDriveUrl: "",
+            gps: ""
+          };
+        });
+      });
+
+      loadLocalDraft();
+      setLang(currentLang);
+      switchChecklistType("site_bts");
+      fetchCloudSessions(false);
+    }
+
+    function setLang(lang) {
+      currentLang = lang;
+      localStorage.setItem("tni_cl_lang", lang);
+      ["vi", "en", "my"].forEach(l => {
+        const b = document.getElementById("lang-" + l);
+        if (b) b.classList.toggle("active", l === lang);
+      });
+      const t = I18N[lang] || I18N.vi;
+      document.getElementById("ui-app-title").textContent = t.appTitle;
+      document.getElementById("lbl-site-code").textContent = t.siteCode;
+      document.getElementById("lbl-inspector").textContent = t.inspector;
+      document.getElementById("lbl-date").textContent = t.date;
+      document.getElementById("lbl-gps").textContent = t.gps;
+      document.getElementById("lbl-extra-meta").textContent = t.extraMeta;
+      document.getElementById("lbl-comment").textContent = t.comment;
+      document.getElementById("fp-all").textContent = t.allItems;
+      document.getElementById("fp-nok").textContent = t.nokOnly;
+      document.getElementById("fp-pending").textContent = t.pendingFix;
+      document.getElementById("fp-fixed").textContent = t.fixedOnly;
+      document.getElementById("fp-photo").textContent = t.hasPhoto;
+      document.getElementById("btn-submit-checklist").textContent = t.btnSaveCloud;
+      if (currentType !== "bi_dashboard") {
+        updateHeaderInfo();
+        renderChecklistItems();
+      }
+    }
+
+    function switchChecklistType(typeKey) {
+      currentType = typeKey;
+      document.querySelectorAll(".mode-tab").forEach(btn => {
+        btn.classList.toggle("active", btn.getAttribute("data-type") === typeKey);
+      });
+
+      const formSec = document.getElementById("view-inspection-form");
+      const biSec = document.getElementById("view-bi-dashboard");
+
+      if (typeKey === "bi_dashboard") {
+        formSec.style.display = "none";
+        biSec.style.display = "block";
+        renderBiDashboard();
+        return;
+      }
+
+      formSec.style.display = "block";
+      biSec.style.display = "none";
+      updateHeaderInfo();
+      renderChecklistItems();
+    }
+
+    function updateHeaderInfo() {
+      const tpl = CHECKLIST_TEMPLATES[currentType];
+      if (!tpl) return;
+      document.getElementById("cur-cl-icon").textContent = tpl.icon;
+      const titleKey = currentLang === "en" ? "title_en" : (currentLang === "my" ? "title_my" : "title_vi");
+      document.getElementById("cur-cl-title").textContent = tpl[titleKey] || tpl.title_vi;
+      document.getElementById("cur-cl-rule").textContent =
+        "Tiêu chuẩn: " + tpl.passRule + " • Sheet lưu riêng: [" + tpl.tabName + "]";
+      const sheetUrl = "https://docs.google.com/spreadsheets/d/" + CHECKLIST_SS_ID + "/edit#gid=" + tpl.gid;
+      document.getElementById("cur-dedicated-sheet-btn").href = sheetUrl;
+      document.getElementById("top-sheet-link").href = sheetUrl;
+      recalcLiveScore();
+    }
+
+    function recalcLiveScore() {
+      const tpl = CHECKLIST_TEMPLATES[currentType];
+      if (!tpl) return;
+      const stMap = itemStates[currentType] || {};
+      let totalStd = 0;
+      let totalEval = 0;
+      let okCnt = 0;
+      let nokCnt = 0;
+      let fixCnt = 0;
+
+      tpl.items.forEach(it => {
+        const st = stMap[it.code] || { status: "OK", evalPoint: it.stdPoint };
+        totalStd += Number(it.stdPoint || 0);
+        if (st.status === "NOK") {
+          nokCnt++;
+          totalEval += Number(st.evalPoint || 0);
+          if (st.afterDataUrl || st.afterThumbUrl || String(st.fixStatus || "").indexOf("Đã sửa") === 0) {
+            fixCnt++;
+          }
+        } else {
+          okCnt++;
+          totalEval += Number(st.evalPoint !== undefined ? st.evalPoint : it.stdPoint);
+        }
+      });
+
+      const scoreRounded = Math.round(totalEval * 10) / 10;
+      document.getElementById("live-score-pill").textContent = "🏆 Điểm: " + scoreRounded + " / " + totalStd;
+      document.getElementById("live-ok-pill").textContent = "✅ OK: " + okCnt;
+      document.getElementById("live-nok-pill").textContent = "❌ Lỗi (NOK): " + nokCnt;
+      document.getElementById("live-fix-pill").textContent = "🔧 Đã sửa: " + fixCnt + "/" + nokCnt;
+      document.getElementById("bottom-summary-text").textContent =
+        tpl.tabName + " • Điểm: " + scoreRounded + "/" + totalStd + " • OK: " + okCnt + " • Lỗi NOK: " + nokCnt + " (Đã sửa: " + fixCnt + ")";
+    }
+
+    function setItemFilter(f) {
+      currentFilter = f;
+      document.querySelectorAll(".f-pill[data-filter]").forEach(b => {
+        b.classList.toggle("active", b.getAttribute("data-filter") === f);
+      });
+      renderChecklistItems();
+    }
+
+    function markAllItemsOk() {
+      const tpl = CHECKLIST_TEMPLATES[currentType];
+      if (!tpl) return;
+      tpl.items.forEach(it => {
+        const st = itemStates[currentType][it.code];
+        if (st) {
+          st.status = "OK";
+          st.evalPoint = it.stdPoint;
+        }
+      });
+      saveLocalDraft();
+      recalcLiveScore();
+      renderChecklistItems();
+    }
+
+    function renderChecklistItems() {
+      const tpl = CHECKLIST_TEMPLATES[currentType];
+      if (!tpl) return;
+      const container = document.getElementById("checklist-items-container");
+      const q = (document.getElementById("inp-search-item").value || "").trim().toLowerCase();
+      const stMap = itemStates[currentType] || {};
+      const t = I18N[currentLang] || I18N.vi;
+
+      let html = "";
+      let lastCategory = "";
+      let visibleCount = 0;
+
+      tpl.items.forEach((it, idx) => {
+        const st = stMap[it.code];
+        const isNok = st.status === "NOK";
+        const hasBefore = !!(st.beforeDataUrl || st.beforeThumbUrl);
+        const hasAfter = !!(st.afterDataUrl || st.afterThumbUrl);
+        const isFixed = hasAfter || String(st.fixStatus || "").indexOf("Đã sửa") === 0;
+
+        // Filter check
+        if (currentFilter === "nok" && !isNok) return;
+        if (currentFilter === "pending_fix" && (!isNok || isFixed)) return;
+        if (currentFilter === "fixed" && !(isNok && isFixed)) return;
+        if (currentFilter === "has_photo" && !hasBefore && !hasAfter) return;
+
+        if (q) {
+          const hay = (it.code + " " + it.category + " " + it.requirement + " " + (st.defectNote || "") + " " + (st.afterNote || "")).toLowerCase();
+          if (hay.indexOf(q) === -1) return;
+        }
+
+        visibleCount++;
+        if (it.category !== lastCategory) {
+          lastCategory = it.category;
+          html += `<div class="category-header"><span>📂 ${escHtml(it.category)}</span><span>${escHtml(tpl.tabName)}</span></div>`;
+        }
+
+        const beforeImgSrc = st.beforeDataUrl || st.beforeThumbUrl || "";
+        const afterImgSrc = st.afterDataUrl || st.afterThumbUrl || "";
+        const cardClass = isNok ? (isFixed ? "item-card is-fixed" : "item-card is-nok") : "item-card";
+        const codeEsc = escAttr(it.code);
+
+        html += `
+        <div class="${cardClass}" id="item-row-${codeEsc}">
+          <!-- COL 1: ITEM REQUIREMENT -->
+          <div class="item-req-col">
+            <div class="item-code-row">
+              <span class="badge-code">#${idx + 1} • Mục ${escHtml(it.code)}</span>
+              <span class="badge-pt">Điểm chuẩn: ${it.stdPoint} pt</span>
+              ${it.serious ? `<span class="badge-serious">⚠️ Lỗi Nghiêm Trọng (Serious) • Hạn sửa: ${it.fixDays || 14} ngày</span>` : ``}
+            </div>
+            <div class="item-req-text">${escHtml(it.requirement)}</div>
+          </div>
+
+          <!-- COL 2: OK / NOK TOGGLE & SCORE -->
+          <div class="item-eval-col">
+            <div class="ok-nok-group">
+              <button type="button" class="btn-eval ok-btn ${!isNok ? 'active' : ''}" onclick="setItemStatus('${codeEsc}', 'OK')">✅ OK</button>
+              <button type="button" class="btn-eval nok-btn ${isNok ? 'active' : ''}" onclick="setItemStatus('${codeEsc}', 'NOK')">❌ NOK</button>
+            </div>
+            <div class="eval-pt-row">
+              <span>Điểm đạt:</span>
+              <input type="number" step="0.5" min="0" max="${it.stdPoint}" class="eval-pt-input" value="${st.evalPoint}" onchange="setItemEvalPoint('${codeEsc}', this.value)" />
+              <span>/ ${it.stdPoint}</span>
+            </div>
+          </div>
+
+          <!-- COL 3: BEFORE / DEFECT PHOTO (1440x1088 + TIMESTAMP CAMERA) & DEFECT LOCATION -->
+          <div class="photo-col-box defect-col">
+            <div class="col-box-header">
+              <span>${t.colDefectTitle}</span>
+              <span class="res-badge">1440×1088 • GPS</span>
+            </div>
+            <input type="text" class="note-input" placeholder="${escAttr(t.defectPlaceholder)}" value="${escAttr(st.defectNote || '')}" oninput="updateItemField('${codeEsc}', 'defectNote', this.value)" />
+            <div class="photo-btn-row">
+              <button type="button" class="btn-cam-capture before-btn" onclick="triggerPhotoCapture('${codeEsc}', 'BEFORE')">${t.btnTakeDefect}</button>
+              <button type="button" class="btn-cam-capture ts-app-btn" onclick="launchTimestampCameraAndPick('${codeEsc}', 'BEFORE')" title="Mở Timestamp Camera có tọa độ GPS">📍 TimestampCam</button>
+            </div>
+            <div class="thumb-wrap ${beforeImgSrc ? 'has-img' : ''}">
+              <img src="${escAttr(beforeImgSrc)}" alt="Before 1440x1088" onclick="openCompareModalForItem('${codeEsc}')" />
+              <button type="button" class="btn-del-photo" onclick="clearItemPhoto('${codeEsc}', 'BEFORE')">✕ Xóa</button>
+              <div class="thumb-meta-bar">
+                <span>📸 ẢNH LỖI (BEFORE)</span>
+                <span>1440×1088 px ✅</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- COL 4: AFTER / RECTIFIED PHOTO (1440x1088 COMPARISON) & FIX STATUS -->
+          <div class="photo-col-box fixed-col">
+            <div class="col-box-header">
+              <span>${t.colFixedTitle}</span>
+              <select class="fix-status-select" onchange="updateItemField('${codeEsc}', 'fixStatus', this.value); recalcLiveScore(); renderChecklistItems();">
+                <option value="Chưa sửa (Pending Fix)" ${!isFixed ? 'selected' : ''}>⏳ Chưa sửa</option>
+                <option value="Đã sửa xong (Fixed)" ${isFixed ? 'selected' : ''}>✅ Đã sửa xong</option>
+              </select>
+            </div>
+            <input type="text" class="note-input" placeholder="${escAttr(t.afterPlaceholder)}" value="${escAttr(st.afterNote || '')}" oninput="updateItemField('${codeEsc}', 'afterNote', this.value)" />
+            <div class="photo-btn-row">
+              <button type="button" class="btn-cam-capture after-btn" onclick="triggerPhotoCapture('${codeEsc}', 'AFTER')">${t.btnTakeFixed}</button>
+              <button type="button" class="btn-cam-capture ts-app-btn" onclick="launchTimestampCameraAndPick('${codeEsc}', 'AFTER')" title="Mở Timestamp Camera có tọa độ GPS">📍 TimestampCam</button>
+            </div>
+            <div class="thumb-wrap ${afterImgSrc ? 'has-img' : ''}">
+              <img src="${escAttr(afterImgSrc)}" alt="After 1440x1088" onclick="openCompareModalForItem('${codeEsc}')" />
+              <button type="button" class="btn-del-photo" onclick="clearItemPhoto('${codeEsc}', 'AFTER')">✕ Xóa</button>
+              <div class="thumb-meta-bar">
+                <span>🌟 ĐÃ SỬA (AFTER)</span>
+                <span>1440×1088 px ✅</span>
+              </div>
+            </div>
+            ${(beforeImgSrc || afterImgSrc) ? `<button type="button" class="btn-compare-inline" onclick="openCompareModalForItem('${codeEsc}')">${t.btnCompare}</button>` : ``}
+          </div>
+        </div>`;
+      });
+
+      if (visibleCount === 0) {
+        html = `<div style="background:#fff;border-radius:12px;padding:28px;text-align:center;color:#64748b;font-weight:700;">Không có hạng mục nào khớp bộ lọc hiện tại.</div>`;
+      }
+      container.innerHTML = html;
+    }
+
+    function setItemStatus(code, status) {
+      const tpl = CHECKLIST_TEMPLATES[currentType];
+      const itemDef = tpl.items.find(x => x.code === code);
+      const st = itemStates[currentType][code];
+      if (!st || !itemDef) return;
+      st.status = status;
+      st.evalPoint = status === "OK" ? itemDef.stdPoint : 0;
+      saveLocalDraft();
+      recalcLiveScore();
+      renderChecklistItems();
+    }
+
+    function setItemEvalPoint(code, val) {
+      const st = itemStates[currentType][code];
+      if (!st) return;
+      st.evalPoint = Math.max(0, Number(val || 0));
+      saveLocalDraft();
+      recalcLiveScore();
+    }
+
+    function updateItemField(code, field, val) {
+      const st = itemStates[currentType][code];
+      if (!st) return;
+      st[field] = val;
+      saveLocalDraft();
+    }
+
+    function clearItemPhoto(code, stage) {
+      const st = itemStates[currentType][code];
+      if (!st) return;
+      if (stage === "BEFORE") {
+        st.beforeDataUrl = "";
+        st.beforeThumbUrl = "";
+        st.beforeDriveUrl = "";
+      } else {
+        st.afterDataUrl = "";
+        st.afterThumbUrl = "";
+        st.afterDriveUrl = "";
+      }
+      saveLocalDraft();
+      recalcLiveScore();
+      renderChecklistItems();
+    }
+
+    // =========================================================================
+    // TIMESTAMP CAMERA DEEP LINK & 1440x1088 CANVAS PROCESSOR + EXIF GPS
+    // =========================================================================
+    function launchTimestampCameraApp() {
+      const ua = navigator.userAgent || "";
+      if (/android/i.test(ua)) {
+        // Launch Timestamp Camera Free / Pro on Android if installed, fallback to Play Store
+        window.location.href = "intent://#Intent;package=com.jeyluta.timestampcamerafree;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.jeyluta.timestampcamerafree;end";
+      } else if (/iphone|ipad|ipod/i.test(ua)) {
+        window.open("https://apps.apple.com/app/timestamp-camera-basic/id840110184", "_blank");
+      } else {
+        alert("📱 Trên điện thoại Android/iOS: Hệ thống sẽ mở ứng dụng Timestamp Camera (có tọa độ GPS) hoặc bạn bấm nút [📷 Chụp Ảnh (1440×1088)] để chọn ảnh từ Timestamp Camera / chụp trực tiếp có đóng dấu tọa độ GPS!");
+      }
+    }
+
+    function launchTimestampCameraAndPick(code, stage) {
+      // First trigger file picker so when user returns from Timestamp Camera or gallery they can pick immediately
+      triggerPhotoCapture(code, stage);
+    }
+
+    function triggerPhotoCapture(code, stage, sessionIdForBi) {
+      pendingPhotoTarget = {
+        type: currentType,
+        code: code,
+        stage: stage,
+        sessionIdForBi: sessionIdForBi || null
+      };
+      const inp = document.getElementById("hidden-photo-input");
+      inp.value = "";
+      inp.click();
+    }
+
+    async function handlePhotoFileSelected(ev) {
+      const file = ev.target.files && ev.target.files[0];
+      if (!file || !pendingPhotoTarget) return;
+
+      // 1. Try extracting EXIF GPS coordinates from the photo if present
+      try {
+        const exifGps = await extractExifGpsFromFile(file);
+        if (exifGps) {
+          const gpsStr = exifGps.lat.toFixed(6) + ", " + exifGps.lng.toFixed(6);
+          const gpsInp = document.getElementById("inp-gps");
+          if (gpsInp && !gpsInp.value.trim()) {
+            gpsInp.value = gpsStr;
+          }
+        }
+      } catch (e) {}
+
+      // 2. Resize & normalize to EXACT 1440x1088 px on HTML5 Canvas + optional GPS Timestamp watermark
+      const target = pendingPhotoTarget;
+      const siteCode = (document.getElementById("inp-site-code").value || "TNI-SITE").trim();
+      const gpsVal = (document.getElementById("inp-gps").value || "GPS Active").trim();
+      const stampEnabled = document.getElementById("chk-auto-stamp") ? document.getElementById("chk-auto-stamp").checked : true;
+
+      const dataUrl1440 = await processImageTo1440x1088(file, {
+        stamp: stampEnabled,
+        siteCode: siteCode,
+        itemCode: target.code,
+        stage: target.stage,
+        gps: gpsVal
+      });
+
+      // If this was triggered from the BI Comparison Wall to update an existing session's After photo
+      if (target.sessionIdForBi) {
+        await uploadQuickFixFromBi(target.sessionIdForBi, target.code, dataUrl1440);
+        return;
+      }
+
+      const st = itemStates[target.type] && itemStates[target.type][target.code];
+      if (!st) return;
+
+      if (target.stage === "BEFORE") {
+        st.beforeDataUrl = dataUrl1440;
+        // Auto switch item to NOK when user uploads a defect photo!
+        st.status = "NOK";
+        st.evalPoint = 0;
+      } else {
+        st.afterDataUrl = dataUrl1440;
+        st.fixStatus = "Đã sửa xong (Fixed)";
+      }
+
+      saveLocalDraft();
+      recalcLiveScore();
+      renderChecklistItems();
+    }
+
+    /**
+     * Exact 1440x1088 Canvas Processor
+     */
+    function processImageTo1440x1088(file, meta) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = function() {
+            const TARGET_W = 1440;
+            const TARGET_H = 1088;
+            const canvas = document.createElement("canvas");
+            canvas.width = TARGET_W;
+            canvas.height = TARGET_H;
+            const ctx = canvas.getContext("2d");
+
+            // Dark background for clean fit or cover crop
+            ctx.fillStyle = "#0f172a";
+            ctx.fillRect(0, 0, TARGET_W, TARGET_H);
+
+            // Smart center-crop / fit so Timestamp Camera watermarks at corners are 100% preserved!
+            const srcRatio = img.width / img.height;
+            const dstRatio = TARGET_W / TARGET_H;
+            let drawW = TARGET_W, drawH = TARGET_H, offsetX = 0, offsetY = 0;
+
+            if (Math.abs(srcRatio - dstRatio) < 0.18) {
+              // Very close to 4:3 (1440x1088 is ~4:3) -> stretch/fill cleanly so zero corner watermark is clipped
+              drawW = TARGET_W;
+              drawH = TARGET_H;
+            } else if (srcRatio > dstRatio) {
+              drawW = TARGET_W;
+              drawH = Math.round(TARGET_W / srcRatio);
+              offsetY = Math.round((TARGET_H - drawH) / 2);
+            } else {
+              drawH = TARGET_H;
+              drawW = Math.round(TARGET_H * srcRatio);
+              offsetX = Math.round((TARGET_W - drawW) / 2);
+            }
+            ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+
+            // Optional Timestamp Camera GPS Overlay Banner at top-left so it never covers bottom-right Timestamp Camera text
+            if (meta && meta.stamp) {
+              const nowStr = new Date().toLocaleString("en-GB", { hour12: false });
+              const badgeColor = meta.stage === "BEFORE" ? "rgba(220, 38, 38, 0.86)" : "rgba(5, 150, 105, 0.86)";
+              const stageLabel = meta.stage === "BEFORE" ? "BEFORE (DEFECT / LỖI)" : "AFTER (FIXED / ĐÃ SỬA)";
+
+              ctx.fillStyle = "rgba(15, 23, 42, 0.72)";
+              ctx.fillRect(16, 16, 690, 74);
+              ctx.fillStyle = badgeColor;
+              ctx.fillRect(16, 16, 10, 74);
+
+              ctx.font = "bold 21px Inter, sans-serif";
+              ctx.fillStyle = "#ffffff";
+              ctx.fillText(`[${stageLabel}] Trạm/Tuyến: ${meta.siteCode} • Mục: ${meta.itemCode}`, 38, 46);
+
+              ctx.font = "600 18px Inter, sans-serif";
+              ctx.fillStyle = "#e2e8f0";
+              ctx.fillText(`📍 GPS: ${meta.gps || 'N/A'}  |  🕒 ${nowStr}  |  📐 1440×1088 px`, 38, 76);
+            }
+
+            const outDataUrl = canvas.toDataURL("image/jpeg", 0.86);
+            resolve(outDataUrl);
+          };
+          img.onerror = reject;
+          img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    /**
+     * Minimal binary EXIF GPS parser for JPEG files
+     */
+    function extractExifGpsFromFile(file) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          try {
+            const view = new DataView(e.target.result);
+            if (view.getUint16(0, false) !== 0xFFD8) return resolve(null);
+            let offset = 2;
+            const length = view.byteLength;
+            while (offset < length) {
+              const marker = view.getUint16(offset, false);
+              offset += 2;
+              if (marker === 0xFFE1) {
+                if (view.getUint32(offset + 2, false) !== 0x45786966) return resolve(null);
+                const tiffOffset = offset + 8;
+                const little = view.getUint16(tiffOffset, false) === 0x4949;
+                const firstIfd = view.getUint32(tiffOffset + 4, little);
+                const numEntries = view.getUint16(tiffOffset + firstIfd, little);
+                let gpsIfdOffset = 0;
+                for (let i = 0; i < numEntries; i++) {
+                  const entryOffset = tiffOffset + firstIfd + 2 + i * 12;
+                  if (view.getUint16(entryOffset, little) === 0x8825) {
+                    gpsIfdOffset = view.getUint32(entryOffset + 8, little);
+                    break;
+                  }
+                }
+                if (!gpsIfdOffset) return resolve(null);
+                const gpsEntries = view.getUint16(tiffOffset + gpsIfdOffset, little);
+                let latRef = "N", lonRef = "E", lat = null, lon = null;
+                const readRational3 = (valOffset) => {
+                  const d = view.getUint32(valOffset, little) / (view.getUint32(valOffset + 4, little) || 1);
+                  const m = view.getUint32(valOffset + 8, little) / (view.getUint32(valOffset + 12, little) || 1);
+                  const s = view.getUint32(valOffset + 16, little) / (view.getUint32(valOffset + 20, little) || 1);
+                  return d + m / 60 + s / 3600;
+                };
+                for (let i = 0; i < gpsEntries; i++) {
+                  const eo = tiffOffset + gpsIfdOffset + 2 + i * 12;
+                  const tag = view.getUint16(eo, little);
+                  if (tag === 1) latRef = String.fromCharCode(view.getUint8(eo + 8));
+                  if (tag === 2) lat = readRational3(tiffOffset + view.getUint32(eo + 8, little));
+                  if (tag === 3) lonRef = String.fromCharCode(view.getUint8(eo + 8));
+                  if (tag === 4) lon = readRational3(tiffOffset + view.getUint32(eo + 8, little));
+                }
+                if (lat !== null && lon !== null && !isNaN(lat) && !isNaN(lon)) {
+                  if (latRef === "S") lat = -lat;
+                  if (lonRef === "W") lon = -lon;
+                  return resolve({ lat, lng: lon });
+                }
+                return resolve(null);
+              } else if ((marker & 0xFF00) !== 0xFF00) {
+                break;
+              } else {
+                offset += view.getUint16(offset, false);
+              }
+            }
+            resolve(null);
+          } catch (err) {
+            resolve(null);
+          }
+        };
+        reader.readAsArrayBuffer(file.slice(0, 131072));
+      });
+    }
+
+    function fetchLiveGps() {
+      if (!navigator.geolocation) {
+        alert("Trình duyệt không hỗ trợ GPS.");
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          const coord = pos.coords.latitude.toFixed(6) + ", " + pos.coords.longitude.toFixed(6);
+          document.getElementById("inp-gps").value = coord;
+          saveLocalDraft();
+        },
+        err => {
+          alert("Không lấy được GPS tự động (" + err.message + "). Vui lòng bật định vị hoặc chụp bằng Timestamp Camera.");
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+
+    // =========================================================================
+    // SUBMIT TO DEDICATED GOOGLE SHEET & DRIVE 2.14 Check list photo
+    // =========================================================================
+    async function submitChecklistToCloud() {
+      const siteCode = (document.getElementById("inp-site-code").value || "").trim();
+      const inspector = (document.getElementById("inp-inspector").value || "").trim();
+      if (!siteCode) {
+        alert("⚠️ Vui lòng nhập Mã Trạm / Tuyến (Site / Route Code)!");
+        document.getElementById("inp-site-code").focus();
+        return;
+      }
+      if (!inspector) {
+        alert("⚠️ Vui lòng nhập Tên Nhân Viên Kiểm Tra (Inspector)!");
+        document.getElementById("inp-inspector").focus();
+        return;
+      }
+
+      const btn = document.getElementById("btn-submit-checklist");
+      const oldText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "⏳ Đang lưu vào Sheet riêng & Upload ảnh 1440×1088 lên Drive 2.14...";
+
+      try {
+        const tpl = CHECKLIST_TEMPLATES[currentType];
+        const stMap = itemStates[currentType];
+        const dateStr = document.getElementById("inp-date").value || new Date().toISOString().slice(0, 10);
+        const gpsCoords = (document.getElementById("inp-gps").value || "").trim();
+        const extraMeta = (document.getElementById("inp-extra-meta").value || "TNI").trim();
+        const generalComment = (document.getElementById("inp-comment").value || "").trim();
+
+        const itemsPayload = tpl.items.map(it => {
+          const st = stMap[it.code];
+          return {
+            code: it.code,
+            category: it.category,
+            requirement: it.requirement,
+            stdPoint: it.stdPoint,
+            evalPoint: st.evalPoint,
+            status: st.status,
+            defectNote: st.defectNote || "",
+            beforeDataUrl: st.beforeDataUrl || "",
+            beforeThumbUrl: st.beforeThumbUrl || "",
+            beforeDriveUrl: st.beforeDriveUrl || "",
+            fixStatus: st.fixStatus || "",
+            afterNote: st.afterNote || "",
+            afterDataUrl: st.afterDataUrl || "",
+            afterThumbUrl: st.afterThumbUrl || "",
+            afterDriveUrl: st.afterDriveUrl || "",
+            gps: st.gps || gpsCoords
+          };
+        });
+
+        const payload = {
+          action: "checklist_save",
+          sessionId: currentSessionId || "",
+          checklistType: currentType,
+          siteCode: siteCode,
+          branch: extraMeta,
+          inspector: inspector,
+          dateStr: dateStr,
+          gpsCoords: gpsCoords,
+          generalComment: generalComment,
+          items: itemsPayload
+        };
+
+        const resp = await fetch(GAS_CHECKLIST_API, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+        const res = await resp.json();
+        if (!res || !res.ok) {
+          throw new Error((res && res.error) || "Lỗi không xác định khi lưu Check List");
+        }
+
+        currentSessionId = res.sessionId;
+        // Replace base64 dataUrls with uploaded Drive URLs so subsequent saves are instant
+        if (res.summary && Array.isArray(res.summary.items)) {
+          res.summary.items.forEach(savedIt => {
+            const localIt = stMap[savedIt.code];
+            if (localIt) {
+              if (savedIt.beforeThumbUrl) {
+                localIt.beforeThumbUrl = savedIt.beforeThumbUrl;
+                localIt.beforeDriveUrl = savedIt.beforeDriveUrl;
+                localIt.beforeDataUrl = "";
+              }
+              if (savedIt.afterThumbUrl) {
+                localIt.afterThumbUrl = savedIt.afterThumbUrl;
+                localIt.afterDriveUrl = savedIt.afterDriveUrl;
+                localIt.afterDataUrl = "";
+              }
+              localIt.fixStatus = savedIt.fixStatus;
+            }
+          });
+        }
+        saveLocalDraft();
+        await fetchCloudSessions(false);
+
+        alert(
+          "✅ ĐÃ LƯU THÀNH CÔNG VÀO SHEET RIÊNG & DRIVE 2.14!
+
+" +
+          "• Mã Phiếu: " + res.sessionId + "
+" +
+          "• Sheet Lưu Riêng: " + res.dedicatedTabName + "
+" +
+          "• Điểm Số: " + res.summary.totalScore + " (" + res.summary.rating + ")
+" +
+          "• Mục Lỗi (NOK): " + res.summary.nokCount + " | Đã sửa: " + res.summary.fixedCount + "
+" +
+          "• Folder Ảnh 2.14: " + res.sessionFolderUrl
+        );
+      } catch (err) {
+        alert("❌ Lỗi khi lưu lên Cloud: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = oldText;
+      }
+    }
+
+    async function fetchCloudSessions(showToast) {
+      try {
+        const resp = await fetch(GAS_CHECKLIST_API + "?action=checklist_get_all&t=" + Date.now());
+        const data = await resp.json();
+        if (data && data.ok && Array.isArray(data.sessions)) {
+          cloudSessions = data.sessions;
+          const badge = document.getElementById("bi-count-badge");
+          if (badge) badge.textContent = cloudSessions.length + " phiếu";
+          if (currentType === "bi_dashboard") {
+            renderBiDashboard();
+          }
+          if (showToast) {
+            alert("✅ Đã đồng bộ " + cloudSessions.length + " phiếu Check List từ Google Sheet!");
+          }
+        }
+      } catch (e) {
+        console.warn("fetchCloudSessions error:", e);
+      }
+    }
+
+    function renderBiDashboard() {
+      const filterType = (document.getElementById("bi-type-filter").value || "ALL");
+      const filtered = cloudSessions.filter(s => filterType === "ALL" || s.checklistType === filterType);
+
+      document.getElementById("bi-total-sessions").textContent = filtered.length;
+      const avgScore = filtered.length > 0
+        ? Math.round((filtered.reduce((acc, s) => acc + Number(s.totalScore || 0), 0) / filtered.length) * 10) / 10
+        : 100;
+      document.getElementById("bi-avg-score").textContent = avgScore + " pt";
+
+      let totalNok = 0, totalFixed = 0;
+      const defectCardsHtml = [];
+
+      filtered.forEach(sess => {
+        totalNok += Number(sess.nokCount || 0);
+        totalFixed += Number(sess.fixedCount || 0);
+        const items = Array.isArray(sess.items) ? sess.items : [];
+        items.forEach(it => {
+          if (it.status === "NOK" || it.beforeThumbUrl || it.afterThumbUrl) {
+            const isFixed = String(it.fixStatus || "").indexOf("Đã sửa") === 0 || !!it.afterThumbUrl;
+            const beforeSrc = it.beforeThumbUrl || "";
+            const afterSrc = it.afterThumbUrl || "";
+            defectCardsHtml.push(`
+              <div class="comp-card">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">
+                  <div>
+                    <span class="badge-code">${escHtml(sess.siteCode)} • Mục ${escHtml(it.code)}</span>
+                    <span style="font-size:11.5px;font-weight:800;color:#475569;margin-left:6px;">${escHtml(sess.dedicatedTabName || sess.checklistType)}</span>
+                  </div>
+                  <span style="font-size:11px;font-weight:900;padding:3px 8px;border-radius:99px;background:${isFixed ? '#d1fae5' : '#fee2e2'};color:${isFixed ? '#065f46' : '#991b1b'};">
+                    ${isFixed ? '✅ Đã sửa xong (Fixed)' : '⏳ Chưa sửa (Pending Fix)'}
+                  </span>
+                </div>
+                <div style="font-size:12.5px;font-weight:700;color:#1e293b;margin-top:6px;">${escHtml(it.requirement || '')}</div>
+                <div style="font-size:12px;color:#b91c1c;font-weight:700;margin-top:4px;">⚠️ Vị trí lỗi cần sửa: ${escHtml(it.defectNote || 'Chưa ghi chi tiết')}</div>
+                <div style="font-size:12px;color:#047857;font-weight:700;margin-top:2px;">✅ Kết quả đã sửa: ${escHtml(it.afterNote || (isFixed ? 'Đã khắc phục' : 'Đang chờ cập nhật ảnh đã sửa'))}</div>
+                <div class="comp-pair">
+                  <div class="comp-slot">
+                    <span class="comp-tag before">📸 ẢNH LỖI (BEFORE 1440×1088)</span>
+                    ${beforeSrc ? `<img src="${escAttr(beforeSrc)}" alt="Before" onclick="openCompareModalDirect('${escAttr(beforeSrc)}','${escAttr(afterSrc)}','${escAttr(it.defectNote || '')}','${escAttr(it.afterNote || '')}','${escAttr(sess.siteCode + ' - Mục ' + it.code)}')" style="cursor:pointer;" />` : `<span>Chưa có ảnh lỗi</span>`}
+                  </div>
+                  <div class="comp-slot">
+                    <span class="comp-tag after">🌟 ĐÃ SỬA (AFTER 1440×1088)</span>
+                    ${afterSrc ? `<img src="${escAttr(afterSrc)}" alt="After" onclick="openCompareModalDirect('${escAttr(beforeSrc)}','${escAttr(afterSrc)}','${escAttr(it.defectNote || '')}','${escAttr(it.afterNote || '')}','${escAttr(sess.siteCode + ' - Mục ' + it.code)}')" style="cursor:pointer;" />` : `
+                      <div style="padding:10px;">
+                        <div style="margin-bottom:6px;">Chưa có ảnh đã sửa</div>
+                        <button type="button" class="btn-cam-capture after-btn" onclick="triggerPhotoCapture('${escAttr(it.code)}', 'AFTER', '${escAttr(sess.sessionId)}')">📷 Chụp / Tải Ảnh Đã Sửa (1440×1088)</button>
+                      </div>
+                    `}
+                  </div>
+                </div>
+              </div>
+            `);
+          }
+        });
+      });
+
+      document.getElementById("bi-total-nok").textContent = totalNok;
+      document.getElementById("bi-fixed-ratio").textContent = totalFixed + " / " + totalNok;
+
+      const wallEl = document.getElementById("bi-comparison-wall");
+      wallEl.innerHTML = defectCardsHtml.length > 0
+        ? defectCardsHtml.join("")
+        : `<div style="grid-column:1/-1;padding:24px;text-align:center;background:#f8fafc;border-radius:12px;color:#64748b;font-weight:700;">Chưa có hạng mục lỗi (NOK) nào hoặc tất cả các mục đều đạt chuẩn 100%.</div>`;
+
+      // Render sessions table
+      const tbody = document.getElementById("bi-sessions-tbody");
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" style="padding:20px;text-align:center;color:#64748b;font-weight:700;">Chưa có phiếu kiểm tra nào được lưu. Hãy chọn Tab 1–5 để tạo phiếu kiểm tra đầu tiên!</td></tr>`;
+      } else {
+        tbody.innerHTML = filtered.map(s => `
+          <tr style="border-bottom:1px solid #e2e8f0;">
+            <td style="padding:9px 10px;font-weight:800;">${escHtml(s.sessionId)}</td>
+            <td style="padding:9px 10px;">${escHtml(s.ts)}</td>
+            <td style="padding:9px 10px;font-weight:800;color:#1d4ed8;">${escHtml(s.dedicatedTabName || s.checklistType)}</td>
+            <td style="padding:9px 10px;font-weight:900;">${escHtml(s.siteCode)}</td>
+            <td style="padding:9px 10px;">${escHtml(s.inspector)}</td>
+            <td style="padding:9px 10px;font-size:11.5px;">${escHtml(s.gpsCoords || '-')}</td>
+            <td style="padding:9px 10px;font-weight:800;">${escHtml(String(s.totalScore))} (${escHtml(s.rating)})</td>
+            <td style="padding:9px 10px;">
+              <span style="color:#059669;font-weight:800;">OK: ${s.okCount}</span> •
+              <span style="color:#dc2626;font-weight:800;">NOK: ${s.nokCount}</span> •
+              <span style="color:#2563eb;font-weight:800;">Đã sửa: ${s.fixedCount}/${s.nokCount}</span>
+            </td>
+            <td style="padding:9px 10px;">
+              ${s.sessionFolderUrl ? `<a href="${escAttr(s.sessionFolderUrl)}" target="_blank" style="color:#d97706;font-weight:800;">📁 Mở Folder 2.14 ↗</a>` : `-`}
+            </td>
+            <td style="padding:9px 10px;">
+              <button type="button" class="pill-btn guide" style="background:#0f172a;padding:4px 9px;font-size:11px;" onclick="loadSessionIntoEditor('${escAttr(s.sessionId)}')">✏️ Mở / Cập Nhật Sửa</button>
+            </td>
+          </tr>
+        `).join("");
+      }
+    }
+
+    async function uploadQuickFixFromBi(sessionId, itemCode, afterDataUrl1440) {
+      const afterNote = prompt("✅ Nhập ghi chú kết quả đã sửa / thông số nghiệm thu cho mục " + itemCode + ":", "Đã khắc phục đạt chuẩn (Rectified 1440x1088)") || "Đã khắc phục đạt chuẩn";
+      try {
+        const resp = await fetch(GAS_CHECKLIST_API, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "checklist_update_fix",
+            sessionId: sessionId,
+            itemCode: itemCode,
+            afterDataUrl: afterDataUrl1440,
+            afterNote: afterNote,
+            fixedBy: (document.getElementById("inp-inspector").value || "Tech").trim()
+          })
+        });
+        const res = await resp.json();
+        if (!res || !res.ok) throw new Error((res && res.error) || "Update failed");
+        await fetchCloudSessions(false);
+        alert("✅ Đã cập nhật Ảnh Đã Sửa (1440×1088) lên Drive 2.14 & Google Sheet thành công!");
+      } catch (err) {
+        alert("❌ Lỗi cập nhật Ảnh Đã Sửa: " + err.message);
+      }
+    }
+
+    function loadSessionIntoEditor(sessionId) {
+      const sess = cloudSessions.find(x => x.sessionId === sessionId);
+      if (!sess) return;
+      currentSessionId = sess.sessionId;
+      document.getElementById("inp-site-code").value = sess.siteCode || "";
+      document.getElementById("inp-inspector").value = sess.inspector || "";
+      document.getElementById("inp-gps").value = sess.gpsCoords || "";
+      document.getElementById("inp-comment").value = sess.generalComment || "";
+
+      const tKey = sess.checklistType || "site_bts";
+      if (itemStates[tKey] && Array.isArray(sess.items)) {
+        sess.items.forEach(it => {
+          if (itemStates[tKey][it.code]) {
+            itemStates[tKey][it.code] = Object.assign({}, itemStates[tKey][it.code], it, {
+              beforeDataUrl: "",
+              afterDataUrl: ""
+            });
+          }
+        });
+      }
+      switchChecklistType(tKey);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    // =========================================================================
+    // MODALS & LOCAL DRAFT STORAGE
+    // =========================================================================
+    function openCompareModalForItem(code) {
+      const st = itemStates[currentType] && itemStates[currentType][code];
+      if (!st) return;
+      const siteCode = (document.getElementById("inp-site-code").value || "SITE").trim();
+      openCompareModalDirect(
+        st.beforeDataUrl || st.beforeThumbUrl || "",
+        st.afterDataUrl || st.afterThumbUrl || "",
+        st.defectNote || "Chưa ghi mô tả lỗi",
+        st.afterNote || "Chưa ghi kết quả sửa",
+        siteCode + " • Mục " + code
+      );
+    }
+
+    function openCompareModalDirect(beforeSrc, afterSrc, beforeNote, afterNote, title) {
+      document.getElementById("comp-modal-title").textContent = "🔍 Đối Chiếu Trước & Sau (1440×1088): " + title;
+      document.getElementById("comp-img-before").src = beforeSrc || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1440' height='1088'><rect width='100%' height='100%' fill='%231e293b'/><text x='50%' y='50%' fill='%2394a3b8' font-size='36' font-family='sans-serif' text-anchor='middle'>Chưa có Ảnh Lỗi (1440x1088)</text></svg>";
+      document.getElementById("comp-img-after").src = afterSrc || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1440' height='1088'><rect width='100%' height='100%' fill='%231e293b'/><text x='50%' y='50%' fill='%2394a3b8' font-size='36' font-family='sans-serif' text-anchor='middle'>Chưa có Ảnh Đã Sửa (1440x1088)</text></svg>";
+      document.getElementById("comp-note-before").textContent = "⚠️ Vị trí sai cần sửa: " + (beforeNote || "-");
+      document.getElementById("comp-note-after").textContent = "✅ Kết quả đã sửa: " + (afterNote || "-");
+      document.getElementById("modal-compare").classList.add("open");
+    }
+
+    function openExpertModal() {
+      document.getElementById("modal-experts").classList.add("open");
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove("open");
+    }
+
+    function saveLocalDraft() {
+      try {
+        const meta = {
+          siteCode: document.getElementById("inp-site-code").value,
+          inspector: document.getElementById("inp-inspector").value,
+          date: document.getElementById("inp-date").value,
+          gps: document.getElementById("inp-gps").value,
+          extra: document.getElementById("inp-extra-meta").value,
+          comment: document.getElementById("inp-comment").value
+        };
+        localStorage.setItem("tni_cl_meta_v1", JSON.stringify(meta));
+      } catch (e) {}
+    }
+
+    function loadLocalDraft() {
+      try {
+        const raw = localStorage.getItem("tni_cl_meta_v1");
+        if (!raw) return;
+        const meta = JSON.parse(raw);
+        if (meta.siteCode) document.getElementById("inp-site-code").value = meta.siteCode;
+        if (meta.inspector) document.getElementById("inp-inspector").value = meta.inspector;
+        if (meta.gps) document.getElementById("inp-gps").value = meta.gps;
+        if (meta.extra) document.getElementById("inp-extra-meta").value = meta.extra;
+        if (meta.comment) document.getElementById("inp-comment").value = meta.comment;
+      } catch (e) {}
+    }
+
+    function resetCurrentChecklist() {
+      if (!confirm("Tạo phiếu kiểm tra mới cho loại Check List này?")) return;
+      currentSessionId = "";
+      const tpl = CHECKLIST_TEMPLATES[currentType];
+      if (tpl) {
+        tpl.items.forEach(it => {
+          itemStates[currentType][it.code] = {
+            status: "OK",
+            evalPoint: it.stdPoint,
+            defectNote: "",
+            beforeDataUrl: "",
+            beforeThumbUrl: "",
+            beforeDriveUrl: "",
+            fixStatus: "Chưa sửa (Pending Fix)",
+            afterNote: "",
+            afterDataUrl: "",
+            afterThumbUrl: "",
+            afterDriveUrl: "",
+            gps: ""
+          };
+        });
+      }
+      recalcLiveScore();
+      renderChecklistItems();
+    }
+
+    function escHtml(s) {
+      return String(s || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+    function escAttr(s) {
+      return escHtml(s).replace(/'/g, "&#39;");
+    }
+
+    window.addEventListener("DOMContentLoaded", initApp);
+  </script>
+</body>
+</html>
