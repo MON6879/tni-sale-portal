@@ -1100,6 +1100,27 @@
           </div>
         </div>
 
+        <!-- 9TH-GRADER 3-SECOND QUICK ROLE GUIDE BAR (DESIGNED BY 12 EXPERTS + GRADE-9 STUDENT USABILITY TEST) -->
+        <div style="background:#0f172a;color:#fff;border-radius:12px;padding:9px 13px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;border:1.5px solid #38bdf8;">
+          <div style="font-size:12px;font-weight:900;color:#bae6fd;display:flex;align-items:center;gap:6px;">
+            <span>🎓 Chọn Nhanh Việc Cần Làm (3 Bước Cực Dễ):</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
+            <button type="button" onclick="quickStartRoleMode('INSPECTOR')" style="background:#2563eb;color:#fff;border:1px solid #60a5fa;border-radius:8px;padding:6px 11px;font-size:11.5px;font-weight:900;cursor:pointer;">
+              ① 👷 Đi Kiểm Tra Mới (Nhập Trạm &amp; Đánh NOK)
+            </button>
+            <button type="button" onclick="quickStartRoleMode('TECHNICIAN')" style="background:#dc2626;color:#fff;border:1px solid #f87171;border-radius:8px;padding:6px 11px;font-size:11.5px;font-weight:900;cursor:pointer;">
+              ② 🔧 Thợ Vào Sửa Lỗi (Tìm Trạm → Lọc Not OK)
+            </button>
+            <button type="button" onclick="quickStartRoleMode('APPROVER')" style="background:#059669;color:#fff;border:1px solid #34d399;border-radius:8px;padding:6px 11px;font-size:11.5px;font-weight:900;cursor:pointer;">
+              ③ 🛡️ Phòng KT Duyệt (Tick Xác Nhận Đã Sửa)
+            </button>
+            <button type="button" onclick="populateSimulated3PhotosForCurrentChecklist()" style="background:#7c3aed;color:#fff;border:1px solid #c084fc;border-radius:8px;padding:6px 11px;font-size:11.5px;font-weight:900;cursor:pointer;" title="Tạo nhanh dữ liệu giả lập mỗi mục lỗi 3 hình (1440x1088) có đủ Tên NV + Giờ + Lat, Long để test!">
+              🧪 Nạp Giả Lập (Mỗi Mục 3 Hình 1440×1088)
+            </button>
+          </div>
+        </div>
+
         <!-- QUICK SEARCH & LOAD EXISTING INSPECTED SITE FOR STAFF REPAIR UPDATES + APPROVER AUDIT (ALL 5 CHECKLISTS) -->
         <div style="background:linear-gradient(90deg,#eff6ff 0%,#ecfdf5 100%);border:2px solid #60a5fa;border-radius:12px;padding:11px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1;min-width:280px;">
@@ -1569,8 +1590,8 @@
           <button type="button" onclick="switchWebCamFacingMode()" style="background:#334155;color:#fff;border:1px solid #64748b;border-radius:9px;padding:9px 12px;font-size:12px;font-weight:800;cursor:pointer;">
             🔄 Đổi Cam Trước/Sau
           </button>
-          <button type="button" onclick="openNativeTimestampCameraIntent()" style="background:#1e293b;color:#94a3b8;border:1px solid #475569;border-radius:9px;padding:9px 10px;font-size:11px;font-weight:700;cursor:pointer;" title="Mở ứng dụng Timestamp Camera rời nếu muốn">
-            📱 Mở App TimestampCam Rời
+          <button type="button" onclick="generate3SimulatedShotsInWebCam()" style="background:#7c3aed;color:#fff;border:1px solid #c084fc;border-radius:9px;padding:9px 11px;font-size:11.5px;font-weight:900;cursor:pointer;" title="Tạo ngay 3 hình giả lập 1440x1088 có đóng dấu Tên NV + Ngày Giờ + Lat, Long (10.33532, 98.35353)">
+            🧪 Tạo Nhanh 3 Hình Giả Lập (1440×1088)
           </button>
         </div>
 
@@ -2254,32 +2275,42 @@
 
     function ensureItemPhotoArrays(st) {
       if (!st) return;
-      if (!Array.isArray(st.beforePhotos)) {
-        st.beforePhotos = [];
-        if (st.beforeThumbUrl || st.beforeDriveUrl || st.beforeDataUrl) {
-          st.beforePhotos.push({
-            id: "legacy-b-1",
-            dataUrl: st.beforeDataUrl || "",
-            thumbUrl: st.beforeThumbUrl || "",
-            driveUrl: (st.beforeDriveUrl || "").split("\n")[0] || "",
-            uploading: !!st.uploadingBefore,
-            uploadError: !!st.uploadErrorBefore
-          });
+      const normalizePhotoList = (arr, legacyData, legacyThumb, legacyDrive, isUploading, isErr, prefix) => {
+        if (Array.isArray(arr) && arr.length > 0) {
+          return arr.map((p, idx) => ({
+            id: p.id || (prefix + "-" + (idx + 1)),
+            dataUrl: p.dataUrl || "",
+            thumbUrl: p.thumbUrl || "",
+            driveUrl: p.driveUrl || "",
+            uploading: !!p.uploading,
+            uploadError: !!p.uploadError
+          }));
         }
-      }
-      if (!Array.isArray(st.afterPhotos)) {
-        st.afterPhotos = [];
-        if (st.afterThumbUrl || st.afterDriveUrl || st.afterDataUrl) {
-          st.afterPhotos.push({
-            id: "legacy-a-1",
-            dataUrl: st.afterDataUrl || "",
-            thumbUrl: st.afterThumbUrl || "",
-            driveUrl: (st.afterDriveUrl || "").split("\n")[0] || "",
-            uploading: !!st.uploadingAfter,
-            uploadError: !!st.uploadErrorAfter
-          });
+        const driveLines = String(legacyDrive || "").split("\n").map(s => s.replace(/^\[Ảnh\s*\d+\]\s*/i, "").trim()).filter(Boolean);
+        if (driveLines.length > 1) {
+          return driveLines.map((dUrl, idx) => ({
+            id: prefix + "-" + (idx + 1),
+            dataUrl: "",
+            thumbUrl: legacyThumb || dUrl,
+            driveUrl: dUrl,
+            uploading: false,
+            uploadError: false
+          }));
         }
-      }
+        if (legacyThumb || legacyDrive || legacyData) {
+          return [{
+            id: prefix + "-1",
+            dataUrl: legacyData || "",
+            thumbUrl: legacyThumb || "",
+            driveUrl: driveLines[0] || "",
+            uploading: !!isUploading,
+            uploadError: !!isErr
+          }];
+        }
+        return [];
+      };
+      st.beforePhotos = normalizePhotoList(st.beforePhotos, st.beforeDataUrl, st.beforeThumbUrl, st.beforeDriveUrl, st.uploadingBefore, st.uploadErrorBefore, "b");
+      st.afterPhotos = normalizePhotoList(st.afterPhotos, st.afterDataUrl, st.afterThumbUrl, st.afterDriveUrl, st.uploadingAfter, st.uploadErrorAfter, "a");
     }
 
     function syncItemPhotoSummaryFromArrays(st) {
@@ -2645,13 +2676,198 @@
       startWebCamVideoStream();
     }
 
-    function closeWebTimestampCameraModal() {
+    function closeWebTimestampCameraModal(skipUnattachedCheck) {
+      if (!skipUnattachedCheck && webCamCapturedShots.some(x => x.checked)) {
+        const cnt = webCamCapturedShots.filter(x => x.checked).length;
+        if (confirm("📸 Bạn vừa chụp " + cnt + " bức ảnh đã tick chọn trong khay. Bạn có muốn GẮN LUÔN " + cnt + " ảnh này vào mục kiểm tra trước khi đóng không?")) {
+          confirmAndAttachWebCamPhotos();
+          return;
+        }
+      }
       stopWebCamVideoStream();
       if (webCamClockTimer) {
         clearInterval(webCamClockTimer);
         webCamClockTimer = null;
       }
       closeModal("modal-web-timestamp-cam");
+    }
+
+    function createSimulated1440x1088DataUrl(siteCode, itemCode, stage, photoIdx, totalCount, staffName, gpsStr) {
+      const TARGET_W = 1440;
+      const TARGET_H = 1088;
+      const canvas = document.createElement("canvas");
+      canvas.width = TARGET_W;
+      canvas.height = TARGET_H;
+      const ctx = canvas.getContext("2d");
+
+      // Rich technical background
+      const grad = ctx.createLinearGradient(0, 0, TARGET_W, TARGET_H);
+      if (stage === "BEFORE") {
+        grad.addColorStop(0, "#1e1b2e");
+        grad.addColorStop(1, "#3b1c24");
+      } else {
+        grad.addColorStop(0, "#0f2922");
+        grad.addColorStop(1, "#133b2e");
+      }
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, TARGET_W, TARGET_H);
+
+      // Technical frame & simulated inspection subject
+      ctx.strokeStyle = stage === "BEFORE" ? "#ef4444" : "#10b981";
+      ctx.lineWidth = 6;
+      ctx.strokeRect(54, 146, TARGET_W - 108, TARGET_H - 310);
+
+      ctx.fillStyle = "rgba(255,255,255,0.06)";
+      ctx.fillRect(80, 174, TARGET_W - 160, TARGET_H - 366);
+
+      ctx.font = "900 38px Inter, Segoe UI, Arial, sans-serif";
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(
+        stage === "BEFORE"
+          ? `📸 HÌNH GIẢ LẬP LỖI (BEFORE) — HÌNH #${photoIdx}/${totalCount}`
+          : `🌟 HÌNH GIẢ LẬP ĐÃ SỬA (AFTER) — HÌNH #${photoIdx}/${totalCount}`,
+        120, 320
+      );
+
+      ctx.font = "800 30px Inter, Segoe UI, Arial, sans-serif";
+      ctx.fillStyle = "#fde68a";
+      ctx.fillText(`📡 Trạm / Tuyến: ${siteCode}   •   Hạng mục: ${itemCode}`, 120, 390);
+
+      ctx.font = "700 28px Inter, Segoe UI, Arial, sans-serif";
+      ctx.fillStyle = "#93c5fd";
+      ctx.fillText(`👤 Nhân viên thực hiện: ${staffName}`, 120, 455);
+
+      ctx.font = "700 28px Inter, Segoe UI, Arial, sans-serif";
+      ctx.fillStyle = "#6ee7b7";
+      ctx.fillText(`📍 Tọa độ GPS (Lat, Long): ${gpsStr}`, 120, 520);
+
+      ctx.font = "700 26px Inter, Segoe UI, Arial, sans-serif";
+      ctx.fillStyle = "#e2e8f0";
+      ctx.fillText(`📐 Kích thước chuẩn: 1440 × 1088 px (Góc chụp #${photoIdx} / ${totalCount})`, 120, 585);
+
+      const nowStr = formatNowTimestampStr();
+      drawFullTimestampWatermark1440(ctx, {
+        stamp: true,
+        siteCode: siteCode,
+        inspector: staffName,
+        itemCode: itemCode + " (Hình #" + photoIdx + "/" + totalCount + ")",
+        stage: stage,
+        gps: gpsStr,
+        nowStr: nowStr
+      });
+
+      return canvas.toDataURL("image/jpeg", 0.86);
+    }
+
+    function generate3SimulatedShotsInWebCam() {
+      const target = pendingPhotoTarget || { code: "1.1.1", stage: "BEFORE" };
+      const staff = ((document.getElementById("webcam-inp-staff") && document.getElementById("webcam-inp-staff").value) || (document.getElementById("inp-inspector") && document.getElementById("inp-inspector").value) || "Nguyễn Văn A").trim();
+      const site = ((document.getElementById("webcam-inp-site") && document.getElementById("webcam-inp-site").value) || (document.getElementById("inp-site-code") && document.getElementById("inp-site-code").value) || "TNI0012").trim();
+      const baseGps = ((document.getElementById("webcam-inp-gps") && document.getElementById("webcam-inp-gps").value) || getCurrentFormattedGps()).trim();
+
+      webCamCapturedShots = [];
+      for (let i = 1; i <= 3; i++) {
+        const dUrl = createSimulated1440x1088DataUrl(site, target.code, target.stage, i, 3, staff, baseGps);
+        webCamCapturedShots.push({
+          id: "wc-sim-" + Date.now() + "-" + i,
+          dataUrl: dUrl,
+          checked: true,
+          timestampStr: formatNowTimestampStr(),
+          gpsStr: baseGps,
+          staffName: staff
+        });
+      }
+      renderWebCamCapturedTray();
+    }
+
+    function quickStartRoleMode(role) {
+      if (role === "INSPECTOR") {
+        setItemFilter("all");
+        const siteInp = document.getElementById("inp-site-code");
+        const staffInp = document.getElementById("inp-inspector");
+        if (siteInp && !siteInp.value.trim()) {
+          siteInp.focus();
+        } else if (staffInp && !staffInp.value.trim()) {
+          staffInp.focus();
+        }
+        alert("👷 [BƯỚC 1 - ĐI KIỂM TRA TRẠM MỚI]:\n1. Nhập Mã Trạm & Tên Nhân Viên.\n2. Mục nào đạt giữ nguyên [✅ OK], mục nào lỗi bấm [❌ NOK] và bấm [📷 Chụp Ảnh Lỗi] (chụp 1–3+ hình 1440×1088).\n3. Cuối cùng bấm nút [💾 Lưu Vào Sheet Riêng]!");
+      } else if (role === "TECHNICIAN") {
+        const modeSel = document.getElementById("sel-search-filter-mode");
+        if (modeSel) modeSel.value = "nok";
+        const findInp = document.getElementById("inp-find-saved-site");
+        if (findInp) {
+          findInp.focus();
+          findInp.style.boxShadow = "0 0 0 3px rgba(220,38,38,0.35)";
+          setTimeout(() => { findInp.style.boxShadow = "none"; }, 2500);
+        }
+        alert("🔧 [BƯỚC 2 - THỢ KỸ THUẬT VÀO SỬA LỖI]:\n1. Nhập Mã Trạm vào ô [🔎 Bước 1. Tìm Trạm] (hoặc chọn trạm trong danh sách).\n2. Ô [🎯 Bước 2. Chọn Lọc] đã để sẵn [❌ Not OK].\n3. Bấm [🔎 Tìm Kiếm (Search)] -> Hệ thống hiện ra đúng các mục lỗi để bạn chụp 3 hình Đã Sửa (1440×1088)!");
+      } else if (role === "APPROVER") {
+        const v = ensureTechVerifierOrPrompt();
+        if (!v) return;
+        const modeSel = document.getElementById("sel-search-filter-mode");
+        if (modeSel) modeSel.value = "nok";
+        if (currentSessionId) {
+          setItemFilter("nok");
+        }
+        alert("🛡️ [BƯỚC 3 - PHÒNG KỸ THUẬT PHÊ DUYỆT (" + v.name + ")]:\nBạn đã xác thực Gmail phê duyệt thành công! Hãy xem 3 ảnh Trước/Sau của các vị trí Not OK và tick vào ô [🇻🇳 Phòng kỹ thuật xác nhận đã sửa xong]!");
+      }
+    }
+
+    async function populateSimulated3PhotosForCurrentChecklist() {
+      const tpl = CHECKLIST_TEMPLATES[currentType];
+      if (!tpl) return;
+      const siteInp = document.getElementById("inp-site-code");
+      const staffInp = document.getElementById("inp-inspector");
+      if (siteInp && !siteInp.value.trim()) siteInp.value = "TNI0012-" + currentType.toUpperCase();
+      if (staffInp && !staffInp.value.trim()) staffInp.value = "Kỹ Thuật Viên Lớp 9 (Test 3 Hình)";
+      const siteCode = siteInp ? siteInp.value.trim() : "TNI0012";
+      const staffName = staffInp ? staffInp.value.trim() : "TNI-Staff";
+      const gpsStr = getCurrentFormattedGps();
+
+      // Pick first 2 items of current checklist to simulate 3 Before photos + 3 After photos each
+      const targetItems = tpl.items.slice(0, 2);
+      const stMap = itemStates[currentType];
+      ensureSessionId();
+
+      for (let idx = 0; idx < targetItems.length; idx++) {
+        const it = targetItems[idx];
+        const st = stMap[it.code];
+        if (!st) continue;
+        st.status = "NOK";
+        st.defectNote = "[Test Giả Lập 3 Hình] Phát hiện lỗi tại mục " + it.code + " — Đã chụp đủ 3 góc hình lỗi (1440×1088)";
+        st.fixStatus = "Đã sửa xong (Fixed)";
+        st.afterNote = "[Học sinh lớp 9 cập nhật] Đã khắc phục xong mục " + it.code + " — Đã chụp đủ 3 góc hình sau sửa (1440×1088)";
+        st.evalPoint = it.stdPoint;
+        st.beforePhotos = [];
+        st.afterPhotos = [];
+
+        for (let p = 1; p <= 3; p++) {
+          const bData = createSimulated1440x1088DataUrl(siteCode, it.code, "BEFORE", p, 3, staffName, gpsStr);
+          const aData = createSimulated1440x1088DataUrl(siteCode, it.code, "AFTER", p, 3, staffName, gpsStr);
+          const bEntry = { id: "sim-b-" + it.code + "-" + p, dataUrl: bData, thumbUrl: "", driveUrl: "", uploading: true, uploadError: false };
+          const aEntry = { id: "sim-a-" + it.code + "-" + p, dataUrl: aData, thumbUrl: "", driveUrl: "", uploading: true, uploadError: false };
+          st.beforePhotos.push(bEntry);
+          st.afterPhotos.push(aEntry);
+        }
+        syncItemPhotoSummaryFromArrays(st);
+      }
+
+      setItemFilter("nok");
+      recalcLiveScore();
+      updateSeatAndTrainTelemetry();
+      renderChecklistItems();
+
+      // Enqueue all simulated photos into the FIFO Upload Train (2-minute timeout per photo)
+      for (let idx = 0; idx < targetItems.length; idx++) {
+        const it = targetItems[idx];
+        const st = stMap[it.code];
+        for (let p = 0; p < st.beforePhotos.length; p++) {
+          uploadSingleItemPhotoNow(currentType, it.code, "BEFORE", st.beforePhotos[p].dataUrl, st.beforePhotos[p].id);
+        }
+        for (let p = 0; p < st.afterPhotos.length; p++) {
+          uploadSingleItemPhotoNow(currentType, it.code, "AFTER", st.afterPhotos[p].dataUrl, st.afterPhotos[p].id);
+        }
+      }
     }
 
     function triggerFallbackSystemCamWithStamp() {
@@ -2853,7 +3069,7 @@
       }
 
       const target = pendingPhotoTarget;
-      closeWebTimestampCameraModal();
+      closeWebTimestampCameraModal(true);
       if (!target) return;
 
       // Nếu chụp từ Tab 6 (Phúc Tra Hình Ảnh BI):
@@ -3477,8 +3693,14 @@
       }, delayMs || 800);
     }
 
+    let hasPendingAutoSync = false;
     async function autoSyncSheetNow() {
-      if (isAutoSyncing || activePhotoUploads > 0 || currentType === "bi_dashboard") return;
+      if (currentType === "bi_dashboard" || currentType === "approvers_mgr") return;
+      if (isAutoSyncing || activePhotoUploads > 0) {
+        hasPendingAutoSync = true;
+        return;
+      }
+      hasPendingAutoSync = false;
       const tpl = CHECKLIST_TEMPLATES[currentType];
       if (!tpl) return;
 
@@ -3559,6 +3781,10 @@
         console.warn("autoSyncSheetNow error:", e);
       } finally {
         isAutoSyncing = false;
+        if (hasPendingAutoSync) {
+          hasPendingAutoSync = false;
+          scheduleAutoSyncSheet(600);
+        }
       }
     }
 
@@ -4809,27 +5035,51 @@
                 <div style="font-size:12px;color:#b91c1c;font-weight:700;margin-top:5px;">⚠️ Fault / Vị trí lỗi / အပျက်နေရာ: ${escHtml(it.defectNote || 'Not specified / Chưa ghi chi tiết')}</div>
                 <div style="font-size:12px;color:#047857;font-weight:700;margin-top:2px;">✅ Rectified / Kết quả sửa / ပြင်ဆင်ပြီးရလဒ်: ${escHtml(it.afterNote || (isFixed ? 'Rectified / Đã khắc phục / ပြင်ဆင်ပြီး' : 'Pending After Photo / Chờ cập nhật ảnh sau sửa'))}</div>
                 <div class="comp-pair">
-                  <div class="comp-slot">
-                    <span class="comp-tag before">📸 BEFORE • ẢNH LỖI • အပျက်ပုံ</span>
-                    ${beforeSrc ? `<img src="${escAttr(beforeSrc)}" alt="Before" onclick="openCompareModalDirect('${escAttr(beforeSrc)}','${escAttr(afterSrc)}','${escAttr(it.defectNote || '')}','${escAttr(it.afterNote || '')}','${escAttr(sess.siteCode + ' - Item ' + it.code)}')" style="cursor:pointer;" />` : `<span>No Before Photo / Chưa có ảnh lỗi</span>`}
-                  </div>
-                  <div class="comp-slot">
-                    <span class="comp-tag after">🌟 AFTER • ĐÃ SỬA • ပြင်ဆင်ပြီးပုံ</span>
-                    ${afterSrc ? `<img src="${escAttr(afterSrc)}" alt="After" onclick="openCompareModalDirect('${escAttr(beforeSrc)}','${escAttr(afterSrc)}','${escAttr(it.defectNote || '')}','${escAttr(it.afterNote || '')}','${escAttr(sess.siteCode + ' - Item ' + it.code)}')" style="cursor:pointer;" />` : `
-                      <div style="padding:10px;">
-                        <div style="margin-bottom:6px;color:#dc2626;font-weight:800;font-size:11.5px;">❌ Pending After Photo / Chưa cập nhật ảnh sau sửa / ပြင်ဆင်ပြီးပုံ မတင်ရသေးပါ</div>
-                        <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center;">
-                          <button type="button" class="btn-cam-capture after-btn" onclick="triggerDirectCameraCapture('${escAttr(it.code)}', 'AFTER', '${escAttr(sess.sessionId)}')" title="Mở Timestamp Camera chụp ảnh đã sửa (Nếu chưa cài sẽ tự mở CH Play)">
-                            <span>📷 Capture Fixed • Chụp Ảnh Đã Sửa</span>
-                            <span style="font-size:10.5px;font-weight:700;opacity:0.95;">🇲🇲 ပြင်ပြီးပုံရိုက်ရန် (TimestampCam)</span>
-                          </button>
-                          <button type="button" class="btn-cam-capture choose-btn" onclick="triggerPhotoCapture('${escAttr(it.code)}', 'AFTER', '${escAttr(sess.sessionId)}')" title="Mở thẳng File ảnh trong máy (Chọn 1 hoặc nhiều ảnh đã sửa)">
-                            <span>📁 Choose File • Chọn Tệp Ảnh</span>
-                            <span style="font-size:10.5px;font-weight:700;opacity:0.95;">🇲🇲 ပုံဖိုင်ရွေးရန် (Nhiều ảnh)</span>
-                          </button>
-                        </div>
+                  <div>
+                    <div class="comp-slot">
+                      <span class="comp-tag before">📸 BEFORE • ẢNH LỖI (${(it.beforePhotos && it.beforePhotos.length) || (beforeSrc ? 1 : 0)} hình)</span>
+                      ${beforeSrc ? `<img src="${escAttr(beforeSrc)}" alt="Before" onclick="openCompareModalDirect('${escAttr(beforeSrc)}','${escAttr(afterSrc)}','${escAttr(it.defectNote || '')}','${escAttr(it.afterNote || '')}','${escAttr(sess.siteCode + ' - Item ' + it.code)}')" style="cursor:pointer;" />` : `<span>No Before Photo / Chưa có ảnh lỗi</span>`}
+                    </div>
+                    ${Array.isArray(it.beforePhotos) && it.beforePhotos.length > 1 ? `
+                      <div style="display:grid;grid-template-columns:repeat(${Math.min(it.beforePhotos.length, 4)},1fr);gap:4px;margin-top:4px;">
+                        ${it.beforePhotos.map((bp, bIdx) => `
+                          <a href="${escAttr(bp.driveUrl || bp.thumbUrl || '#')}" target="_blank" style="display:block;border:1.5px solid #fca5a5;border-radius:6px;overflow:hidden;background:#0f172a;text-decoration:none;">
+                            <img src="${escAttr(bp.thumbUrl || beforeSrc)}" style="width:100%;aspect-ratio:1440/1088;object-fit:cover;display:block;" />
+                            <div style="font-size:9.5px;font-weight:800;color:#fff;background:#dc2626;text-align:center;padding:1px 2px;">Hình Lỗi #${bIdx + 1} ↗</div>
+                          </a>
+                        `).join("")}
                       </div>
-                    `}
+                    ` : ``}
+                  </div>
+                  <div>
+                    <div class="comp-slot">
+                      <span class="comp-tag after">🌟 AFTER • ĐÃ SỬA (${(it.afterPhotos && it.afterPhotos.length) || (afterSrc ? 1 : 0)} hình)</span>
+                      ${afterSrc ? `<img src="${escAttr(afterSrc)}" alt="After" onclick="openCompareModalDirect('${escAttr(beforeSrc)}','${escAttr(afterSrc)}','${escAttr(it.defectNote || '')}','${escAttr(it.afterNote || '')}','${escAttr(sess.siteCode + ' - Item ' + it.code)}')" style="cursor:pointer;" />` : `
+                        <div style="padding:10px;">
+                          <div style="margin-bottom:6px;color:#dc2626;font-weight:800;font-size:11.5px;">❌ Pending After Photo / Chưa cập nhật ảnh sau sửa</div>
+                          <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center;">
+                            <button type="button" class="btn-cam-capture after-btn" onclick="triggerDirectCameraCapture('${escAttr(it.code)}', 'AFTER', '${escAttr(sess.sessionId)}')">
+                              <span>📷 Capture Fixed • Chụp Ảnh Đã Sửa</span>
+                              <span style="font-size:10.5px;font-weight:700;opacity:0.95;">🇲🇲 ပြင်ပြီးပုံရိုက်ရန် (WebCam 1440×1088)</span>
+                            </button>
+                            <button type="button" class="btn-cam-capture choose-btn" onclick="triggerPhotoCapture('${escAttr(it.code)}', 'AFTER', '${escAttr(sess.sessionId)}')">
+                              <span>📁 Choose File • Chọn Tệp Ảnh</span>
+                              <span style="font-size:10.5px;font-weight:700;opacity:0.95;">🇲🇲 ပုံဖိုင်ရွေးရန် (Nhiều ảnh)</span>
+                            </button>
+                          </div>
+                        </div>
+                      `}
+                    </div>
+                    ${Array.isArray(it.afterPhotos) && it.afterPhotos.length > 1 ? `
+                      <div style="display:grid;grid-template-columns:repeat(${Math.min(it.afterPhotos.length, 4)},1fr);gap:4px;margin-top:4px;">
+                        ${it.afterPhotos.map((ap, aIdx) => `
+                          <a href="${escAttr(ap.driveUrl || ap.thumbUrl || '#')}" target="_blank" style="display:block;border:1.5px solid #6ee7b7;border-radius:6px;overflow:hidden;background:#0f172a;text-decoration:none;">
+                            <img src="${escAttr(ap.thumbUrl || afterSrc)}" style="width:100%;aspect-ratio:1440/1088;object-fit:cover;display:block;" />
+                            <div style="font-size:9.5px;font-weight:800;color:#fff;background:#059669;text-align:center;padding:1px 2px;">Đã Sửa #${aIdx + 1} ↗</div>
+                          </a>
+                        `).join("")}
+                      </div>
+                    ` : ``}
                   </div>
                 </div>
                 <!-- TECHNICAL DEPARTMENT VERIFICATION CHECKBOX ON PHOTO AUDIT CARD (3 CONCISE LINES) -->
@@ -4973,6 +5223,8 @@
                 beforeDataUrl: "",
                 afterDataUrl: ""
               });
+              ensureItemPhotoArrays(itemStates[tKey][it.code]);
+              syncItemPhotoSummaryFromArrays(itemStates[tKey][it.code]);
             }
           });
         }
