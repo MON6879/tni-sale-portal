@@ -574,6 +574,172 @@ def get_action_square(at_name: str) -> str:
             return sq
     return "🔹"
 
+
+DG_MATERIAL_SHEET_URL = (
+    f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}"
+    "/gviz/tq?tqx=out:csv&gid=159298579"
+)
+_DG_OIL_COOLANT_CACHE = None
+
+
+def _fmt_dg_num(val) -> str:
+    try:
+        f = round(float(val), 2)
+        if abs(f - round(f)) < 1e-6:
+            return str(int(round(f)))
+        return f"{round(f, 1):g}"
+    except Exception:
+        return "0"
+
+
+def _parse_kva_str(val_str: str) -> dict:
+    res = {"8KVA": 0.0, "12KVA": 0.0, "30KVA": 0.0, "12DKVA": 0.0}
+    if not val_str:
+        return res
+    for p in str(val_str).split("<+>"):
+        p = p.strip()
+        if ":" in p:
+            k, v = p.rsplit(":", 1)
+            k = k.strip().upper()
+            m = re.search(r"[-+]?\d*\.?\d+", v.strip())
+            try:
+                res[k] = res.get(k, 0.0) + (float(m.group(0)) if m else 0.0)
+            except Exception:
+                pass
+    return res
+
+
+def get_dg_oil_coolant_live(force_refresh: bool = False) -> dict:
+    """
+    Đọc trực tiếp dữ liệu sống từ tab gid=159298579 của Sheet 1Etd2PmbY5LgPaYhkdykT7KYXZHhB-_Qx3u-UXhFgpI8:
+    - Cột AM (index 38): T1, T1 S1, T2, T2 S1, T3, T3 S1, T4
+    - Cột CI..CL (index 86..89): Oil KVA, Sum Need, Have at Team, Diff
+    - Cột CV..CY (index 99..102): Coolant KVA, Sum Need, Have at Team, Diff
+    """
+    global _DG_OIL_COOLANT_CACHE
+    if _DG_OIL_COOLANT_CACHE is not None and not force_refresh:
+        return _DG_OIL_COOLANT_CACHE
+
+    subteams_dg = {}
+    for attempt in range(3):
+        try:
+            resp = requests.get(
+                DG_MATERIAL_SHEET_URL,
+                headers={"User-Agent": "Mozilla/5.0"},
+                timeout=30,
+            )
+            resp.raise_for_status()
+            rows = list(csv.reader(io.StringIO(resp.text)))
+            for idx, row in enumerate(rows):
+                if idx < 3 or len(row) <= 38:
+                    continue
+                team_am = str(row[38]).strip()
+                if not team_am or not team_am.startswith(("T1", "T2", "T3", "T4", "T5")):
+                    continue
+                ci_oil = str(row[86]).strip() if len(row) > 86 else ""
+                cj_need = str(row[87]).strip() if len(row) > 87 else ""
+                ck_have = str(row[88]).strip() if len(row) > 88 else ""
+                cl_diff = str(row[89]).strip() if len(row) > 89 else ""
+                cv_cool = str(row[99]).strip() if len(row) > 99 else ""
+                cw_need = str(row[100]).strip() if len(row) > 100 else ""
+                cx_have = str(row[101]).strip() if len(row) > 101 else ""
+                cy_diff = str(row[102]).strip() if len(row) > 102 else ""
+
+                if team_am not in subteams_dg and (ci_oil or cv_cool):
+                    def _to_f(s):
+                        try:
+                            return float(str(s).strip()) if str(s).strip() not in ("", "-", "nan", "None", "NaN") else 0.0
+                        except Exception:
+                            return 0.0
+
+                    subteams_dg[team_am] = {
+                        "oil_kva": _parse_kva_str(ci_oil),
+                        "oil_need": _to_f(cj_need),
+                        "oil_have": _to_f(ck_have),
+                        "oil_diff": _to_f(cl_diff),
+                        "coolant_kva": _parse_kva_str(cv_cool),
+                        "coolant_need": _to_f(cw_need),
+                        "coolant_have": _to_f(cx_have),
+                        "coolant_diff": _to_f(cy_diff),
+                    }
+            _DG_OIL_COOLANT_CACHE = subteams_dg
+            return subteams_dg
+        except Exception as e:
+            logger.warning(f"get_dg_oil_coolant_live attempt {attempt+1} failed: {e}")
+            if attempt < 2:
+                time.sleep(2)
+    return subteams_dg
+
+
+def build_dg_oil_coolant_lines(team_key_or_all: str, subteams_dg: dict = None) -> list:
+    """
+    Sinh khối Oil & Coolant cho từng Team (Team1..Team4) hoặc Total TNI ('ALL')
+    để chèn ngay dưới dòng '📅 3Day:...' trong Report 4d.
+    """
+    if subteams_dg is None:
+        subteams_dg = get_dg_oil_coolant_live()
+    if not subteams_dg:
+        return []
+
+    TEAM_PREFIX_MAP = {
+        "MYT_TNI_TEAM01_Dawei": ("T1",),
+        "MYT_TNI_TEAM02_Myeik": ("T2", "T5"),
+        "MYT_TNI_TEAM03_Bokpyin": ("T3",),
+        "MYT_TNI_TEAM04_Kawthoung": ("T4",),
+        "ALL": ("T1", "T2", "T3", "T4", "T5"),
+    }
+    prefixes = TEAM_PREFIX_MAP.get(team_key_or_all, (str(team_key_or_all),))
+    matched = sorted([st for st in subteams_dg.keys() if st.startswith(prefixes)])
+    if not matched:
+        return []
+
+    KVA_ORDER = ["8KVA", "12KVA", "30KVA", "12DKVA"]
+    oil_kva_sum = {k: 0.0 for k in KVA_ORDER}
+    cool_kva_sum = {k: 0.0 for k in KVA_ORDER}
+    oil_need_sum = oil_have_sum = oil_diff_sum = 0.0
+    cool_need_sum = cool_have_sum = cool_diff_sum = 0.0
+    oil_sub_parts = []
+    cool_sub_parts = []
+
+    for st in matched:
+        sd = subteams_dg[st]
+        for k in KVA_ORDER:
+            oil_kva_sum[k] += sd["oil_kva"].get(k, 0.0)
+            cool_kva_sum[k] += sd["coolant_kva"].get(k, 0.0)
+        on, oh, od = sd["oil_need"], sd["oil_have"], sd["oil_diff"]
+        cn, ch, cd = sd["coolant_need"], sd["coolant_have"], sd["coolant_diff"]
+        oil_need_sum += on
+        oil_have_sum += oh
+        oil_diff_sum += od
+        cool_need_sum += cn
+        cool_have_sum += ch
+        cool_diff_sum += cd
+        oil_sub_parts.append(f"{st}: {_fmt_dg_num(on)}/{_fmt_dg_num(oh)} /{_fmt_dg_num(od)}L")
+        cool_sub_parts.append(f"{st}: {_fmt_dg_num(cn)}/{_fmt_dg_num(ch)} /{_fmt_dg_num(cd)}L")
+
+    def _fmt_kva_line(kva_map: dict, dot: str) -> str:
+        parts = []
+        for k in KVA_ORDER:
+            v = kva_map.get(k, 0.0)
+            v_str = _fmt_dg_num(v)
+            if v > 0:
+                parts.append(f"{dot} {k}: {v_str}")
+            else:
+                parts.append(f"{k}: {v_str}")
+        return " <+> ".join(parts)
+
+    return [
+        "   🛢️ Sum DG KVA Need change Oil:",
+        f"     {_fmt_kva_line(oil_kva_sum, '🟠')}",
+        f"     👉 Sum Need: {_fmt_dg_num(oil_need_sum)} L | Have at Team: {_fmt_dg_num(oil_have_sum)} L | Diff: /{_fmt_dg_num(oil_diff_sum)} L",
+        f"     ↳ ({' | '.join(oil_sub_parts)})",
+        "   ❄️ Sum DG KVA Need change water Coolant:",
+        f"     {_fmt_kva_line(cool_kva_sum, '🟣')}",
+        f"     👉 Sum Need: {_fmt_dg_num(cool_need_sum)} L | Have at Team: {_fmt_dg_num(cool_have_sum)} L | Diff: /{_fmt_dg_num(cool_diff_sum)} L",
+        f"     ↳ ({' | '.join(cool_sub_parts)})",
+    ]
+
+
 def build_asset_msg(now_str, asset_data):
     """Build compact asset stats message with 3-day/7-day/month."""
     if not asset_data.get("actionTypes"):
@@ -583,6 +749,7 @@ def build_asset_msg(now_str, asset_data):
     teams = asset_data.get("teams", [])
     stats = asset_data.get("stats", {})
     grand = asset_data.get("grandTotal", {})
+    subteams_dg = asset_data.get("dg_oil_coolant") or get_dg_oil_coolant_live()
 
     TEAM_SHORT = {
         "MYT_TNI_TEAM01_Dawei": "🟠 Team1(Dawei)",
@@ -622,6 +789,7 @@ def build_asset_msg(now_str, asset_data):
             for k in PERIOD_KEYS:
                 team_total[k] += s.get(k, 0)
         lines.append(f"   📅 {fmt_period(team_total)}")
+        lines.extend(build_dg_oil_coolant_lines(tm, subteams_dg))
 
     # Grand total - Tổng hợp tất cả TNI
     lines.append(f"🏷️ 🌐 Total TNI:")
@@ -637,6 +805,7 @@ def build_asset_msg(now_str, asset_data):
         for k in PERIOD_KEYS:
             g_period[k] += g.get(k, 0)
     lines.append(f"   📅 {fmt_period(g_period)}")
+    lines.extend(build_dg_oil_coolant_lines("ALL", subteams_dg))
 
     return "\n".join(lines)
 
@@ -731,12 +900,13 @@ def build_team_asset_msg(team_key, now_str, asset_data):
         for k in PERIOD_KEYS:
             team_total[k] += s.get(k, 0)
 
+    subteams_dg = asset_data.get("dg_oil_coolant") or get_dg_oil_coolant_live()
     lines = [
         f"📦 4d. Asset progress for material – {t_name} – {now_str}",
         "━━━━━━━━━━━━━━━━━━━━"
     ] + key_lines + [
         f"   📅 {fmt_period(team_total)}"
-    ]
+    ] + build_dg_oil_coolant_lines(team_key, subteams_dg)
     return "\n".join(lines)
 
 
@@ -1633,14 +1803,18 @@ async def main():
             async with Bot(token=SEND_BOT_TOKEN) as bot:
                 if APPS_SCRIPT_URL:
                     delete_old_messages_bot(SEND_BOT_TOKEN, CONTROL_CHAT_ID, APPS_SCRIPT_URL, "CRON_ASSET_CONTROL")
-                await send_msg(bot, CONTROL_CHAT_ID, asset_msg, "ASSET_PROGRESS_31")
+                res_a, a_ids = await send_msg(bot, CONTROL_CHAT_ID, asset_msg, "ASSET_PROGRESS_4D")
+                if res_a and a_ids and APPS_SCRIPT_URL:
+                    save_msgids(APPS_SCRIPT_URL, "CRON_ASSET_CONTROL", a_ids)
                 GID_TO_TEAM = {v: k for k, v in TEAM_GROUPS.items()}
                 for gid, team_key in GID_TO_TEAM.items():
                     team_asset_msg = build_team_asset_msg(team_key, now_str, asset_data)
                     if team_asset_msg:
                         if APPS_SCRIPT_URL:
                             delete_old_messages_bot(SEND_BOT_TOKEN, gid, APPS_SCRIPT_URL, f"CRON_ASSET_{team_key}")
-                        await send_msg(bot, gid, team_asset_msg, f"TEAM_ASSET_PROGRESS_31_{team_key}")
+                        res_t, t_ids = await send_msg(bot, gid, team_asset_msg, f"TEAM_ASSET_PROGRESS_4D_{team_key}")
+                        if res_t and t_ids and APPS_SCRIPT_URL:
+                            save_msgids(APPS_SCRIPT_URL, f"CRON_ASSET_{team_key}", t_ids)
         logger.info("✅ Asset Progress 3.1 Report complete!")
         return
 
@@ -2333,8 +2507,14 @@ def send_share_eta_reminders(force: bool = False):
         "T4":    str(TELEGRAM_GROUPS.get("T4", "")),
     }
 
-    # Bot 2D (2. TNI Auto Report Daily - SEND_BOT_TOKEN)
-    token = os.getenv("SEND_BOT_TOKEN")
+    # Bot 2D (2. TNI Auto Report Daily - SEND_BOT_TOKEN) với fallback sang SEARCH_BOT_TOKEN/TELEGRAM_TOKEN nếu chạy trên Vercel
+    token = (
+        os.getenv("SEND_BOT_TOKEN")
+        or os.getenv("TELEGRAM_TOKEN")
+        or os.getenv("BOT_TOKEN")
+        or os.getenv("SEARCH_BOT_TOKEN")
+        or ""
+    ).strip()
 
     # 1. TỐC ĐỘ CAO: Nạp toàn bộ State của tất cả các Team trong 1 HTTP request duy nhất (<300ms)
     target_keys = [f"eta_reminder_{t_name.replace(' ', '_')}" for t_name, _, _ in results]
@@ -2360,7 +2540,7 @@ def send_share_eta_reminders(force: bool = False):
         state_key = f"eta_reminder_{t_name.replace(' ', '_')}"
         t_del_count = 0
 
-        # 2. Xóa tin cũ (nếu có) — tra cứu in-memory RAM siêu tốc
+        # 2. Xóa tin cũ (nếu có) — thử cả SEND_BOT_TOKEN và SEARCH_BOT_TOKEN/TELEGRAM_TOKEN để xóa sạch dù tin cũ gửi từ bot nào
         old_raw = old_states.get(state_key, "")
         if not old_raw:
             try:
@@ -2369,11 +2549,14 @@ def send_share_eta_reminders(force: bool = False):
                 pass
 
         if old_raw:
+            alt_tok = (os.getenv("TELEGRAM_TOKEN") or os.getenv("BOT_TOKEN") or os.getenv("SEARCH_BOT_TOKEN") or "").strip()
             for mid in str(old_raw).replace(";", ",").split(","):
                 mid = mid.strip()
                 if mid:
                     try:
                         tg_delete(chat_id, mid, bot_token=token)
+                        if alt_tok and alt_tok != token:
+                            tg_delete(chat_id, mid, bot_token=alt_tok)
                         t_del_count += 1
                         logger.info(f"🗑️ Đã xóa tin cũ {state_key} msg_id={mid}")
                     except Exception as del_err:
