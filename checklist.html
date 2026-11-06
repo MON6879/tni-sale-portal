@@ -613,12 +613,37 @@
     .defect-col .col-box-header { color: #b91c1c; }
     .fixed-col .col-box-header { color: #047857; }
     .res-badge {
-      font-size: 10px;
-      padding: 1px 6px;
-      border-radius: 5px;
+      font-size: 10.5px;
+      padding: 3px 8px;
+      border-radius: 99px;
       background: rgba(15,23,42,0.08);
       color: #334155;
-      font-weight: 800;
+      font-weight: 900;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .res-badge.badge-upload-ok {
+      background: #dcfce7;
+      color: #065f46;
+      border: 1.5px solid #10b981;
+      box-shadow: 0 2px 6px rgba(16, 185, 129, 0.22);
+    }
+    .res-badge.badge-upload-pending {
+      background: #fef3c7;
+      color: #b45309;
+      border: 1.5px solid #f59e0b;
+    }
+    .res-badge.badge-upload-err {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1.5px solid #ef4444;
+      cursor: pointer;
+      animation: pulseErr 1.5s infinite;
+    }
+    @keyframes pulseErr {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
     }
     .note-input {
       width: 100%;
@@ -969,7 +994,7 @@
         <a class="pill-btn" href="/sale" title="TNI Sale BI">💰 TNI Sale</a>
         <a class="pill-btn sheet" id="top-sheet-link" href="https://docs.google.com/spreadsheets/d/1Y9QkgXe24kspNmkrPEVQ0AAD_GmZ4gnqMCD6ja4-9kI/edit#gid=992508475" target="_blank" rel="noopener">📊 Mở Sheet Lưu Riêng</a>
         <a class="pill-btn drive" href="https://drive.google.com/drive/folders/1VsQapLjSaJl9QkcOrOFXbqfaKH1AJh-d" target="_blank" rel="noopener">📁 Drive 2.14 Check list photo</a>
-        <button class="pill-btn expert" onclick="openExpertModal()">🧠 5 Chuyên Gia 0.1% & SOP</button>
+        <button class="pill-btn expert" onclick="openExpertModal()">🧠 10 Chuyên Gia 1% & Giám Sát 7 Ghế</button>
         <div class="lang-group">
           <button class="lang-btn active" id="lang-en" onclick="setLang('en')">🇬🇧 EN (Std)</button>
           <button class="lang-btn" id="lang-vi" onclick="setLang('vi')">🇻🇳 VN</button>
@@ -1010,6 +1035,46 @@
         <div class="mode-tab-top"><span>🛡️ 7. Gmail Phê Duyệt</span><span class="sheet-chip" id="approvers-count-badge">6 Gmail</span></div>
         <div class="mode-tab-sub"><span>Cập nhật ai là người phê duyệt</span><span>Sheet 6</span></div>
       </button>
+    </div>
+
+    <!-- LIVE SEAT SUPERVISION & SEQUENTIAL TRAIN TELEMETRY BAR -->
+    <div id="seat-train-monitor-bar" style="background:linear-gradient(90deg,#0f172a 0%,#1e293b 100%);color:#fff;border-radius:12px;padding:9px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;box-shadow:0 4px 12px rgba(15,23,42,0.16);border:1px solid #334155;">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span id="seat-online-pill" style="background:#065f46;border:1px solid #10b981;color:#d1fae5;font-size:11.5px;font-weight:900;padding:3px 10px;border-radius:99px;display:inline-flex;align-items:center;gap:5px;">
+          🟢 ONLINE • Link Sheet &amp; Drive 2.14 Sẵn Sàng
+        </span>
+        <span id="seat-active-label" style="background:#1e3a8a;border:1px solid #60a5fa;color:#dbeafe;font-size:11.5px;font-weight:800;padding:3px 10px;border-radius:99px;">
+          🪑 Ghế 1 (SEAT-CL-01): 1. Check Site (BTS) • GID 16375926
+        </span>
+        <span id="train-queue-pill" style="background:#334155;color:#f8fafc;font-size:11.5px;font-weight:800;padding:3px 10px;border-radius:99px;">
+          🚂 Đoàn Tàu Upload Ảnh (FIFO): ✅ 0 đã lưu • ⏳ 0 đang tải
+        </span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        <button type="button" onclick="pingChecklistCloudHealth(true)" style="background:#0284c7;color:#fff;border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:800;cursor:pointer;">
+          📡 Kiểm Tra Kết Nối Sheet
+        </button>
+        <button type="button" onclick="openExpertModal()" style="background:#7c3aed;color:#fff;border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:800;cursor:pointer;">
+          🧠 Báo Cáo 10 Chuyên Gia 1%
+        </button>
+      </div>
+    </div>
+
+    <!-- WEAK NETWORK / FAILED PHOTO UPLOAD ALERT BANNER (HIDDEN UNLESS UPLOAD ERROR OCCURS) -->
+    <div id="weak-network-error-banner" style="display:none;background:#fef2f2;border:2px solid #ef4444;border-radius:12px;padding:11px 14px;margin-bottom:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;box-shadow:0 4px 14px rgba(239,68,68,0.18);">
+      <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:260px;">
+        <div style="font-size:13px;font-weight:900;color:#991b1b;" id="weak-net-title">
+          ⚠️ CẢNH BÁO MẠNG YẾU (WEAK NETWORK): Có ảnh chưa tải lên được Google Drive 2.14!
+        </div>
+        <div style="font-size:11.5px;font-weight:700;color:#b91c1c;" id="weak-net-desc">
+          Ảnh đã được giữ an toàn trong bộ nhớ máy. Khi có mạng trở lại hệ thống sẽ tự động tải lên, hoặc bấm nút [🔄 Tải Lại Ngay] bên phải / bấm vào nút đỏ ở góc trên hộp ảnh để gửi lại.
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <button type="button" onclick="retryAllFailedPhotoUploads()" style="background:#dc2626;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:900;cursor:pointer;box-shadow:0 3px 10px rgba(220,38,38,0.3);">
+          🔄 Tải Lại Tất Cả Ảnh Lỗi Mạng (Retry All)
+        </button>
+      </div>
     </div>
 
     <!-- VIEW 1: ACTIVE CHECKLIST INSPECTION FORM (MOBILE + DESKTOP) -->
@@ -1453,36 +1518,87 @@
     </div>
   </div>
 
-  <!-- MODAL 2: 5 WORLD-CLASS 0.1% EXPERTS ARCHITECTURE & TRILINGUAL GUIDE -->
+  <!-- MODAL 2: COUNCIL OF 10 WORLD-CLASS 1% EXPERTS AUDIT, 7-SEAT ARCHITECTURE & FUTURE RISK PREVENTION -->
   <div class="modal-backdrop" id="modal-experts">
-    <div class="modal-box">
+    <div class="modal-box" style="max-width:1080px;">
       <div class="modal-hdr">
         <div>
-          <h3 style="font-size:17px;font-weight:900;">🧠 Hội Đồng 5 Chuyên Gia 0.1% Thế Giới & Hướng Dẫn Thao Tác Chuẩn (VN • EN • MM)</h3>
-          <div style="font-size:12px;color:#64748b;">Giải pháp tối ưu cho Kỹ thuật viên hiện trường thao tác 1 tay trên điện thoại & Giám đốc đối chiếu Web BI</div>
+          <h3 style="font-size:17px;font-weight:900;">🧠 Hội Đồng 10 Chuyên Gia 1% Thế Giới — Biên Bản Phúc Tra 5 Check List, Kiến Trúc 7 Ghế &amp; Phòng Vệ Lỗi Tương Lai</h3>
+          <div style="font-size:12px;color:#64748b;">SSOT Google Sheet <code>1Y9QkgXe24kspNmkrPEVQ0AAD_GmZ4gnqMCD6ja4-9kI</code> • Drive <code>2.14 Check list photo</code> • GAS Deployment <code>@23</code></div>
         </div>
         <button class="btn-close-modal" onclick="closeModal('modal-experts')">✕</button>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px;">
-        <div style="border:1px solid #cbd5e1;border-radius:12px;padding:12px;background:#f8fafc;">
-          <div style="font-weight:900;color:#1d4ed8;font-size:13px;">👨‍💻 Chuyên Gia 1 — Mobile Field UX (Thao tác 1 ngón cái ngoài trạm)</div>
-          <p style="font-size:12px;margin-top:5px;color:#334155;">• <strong>Mặc định Đạt (Smart Default OK)</strong>: Kỹ thuật không phải bấm 64 lần cho 60 mục tốt — chỉ cần bấm <strong>❌ NOK (Lỗi)</strong> vào đúng mục bị sai.<br/>• Bộ lọc 1 chạm <strong>[❌ Chỉ mục Lỗi]</strong> và <strong>[⏳ Chưa sửa]</strong> giúp đội đi sửa mở điện thoại ra thấy ngay đúng mục cần khắc phục.</p>
+
+      <!-- SECTION A: 7 DEDICATED SEATS & FUTURE EXPANSION ARCHITECTURE -->
+      <div style="background:#f8fafc;border:1.5px solid #cbd5e1;border-radius:12px;padding:12px;margin-bottom:14px;">
+        <div style="font-weight:900;font-size:13.5px;color:#0f172a;margin-bottom:8px;">🪑 I. Phân Định 7 Ghế Độc Lập (7 Dedicated Seats) &amp; Khả Năng Mở Rộng Tương Lai (Ghế 8, 9, 10...)</div>
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:11.5px;">
+            <thead>
+              <tr style="background:#0f172a;color:#fff;text-align:left;">
+                <th style="padding:7px 9px;">Mã Ghế (Seat ID)</th>
+                <th style="padding:7px 9px;">Phân Hệ Check List / Chức Năng</th>
+                <th style="padding:7px 9px;">Sheet Lưu Riêng (SSOT)</th>
+                <th style="padding:7px 9px;">GID</th>
+                <th style="padding:7px 9px;">Cấu Trúc &amp; Quy Chuẩn</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:6px 9px;font-weight:900;color:#1d4ed8;">SEAT-CL-01 (Ghế 1)</td><td style="padding:6px 9px;font-weight:800;">📡 1. Check Site (BTS)</td><td style="padding:6px 9px;"><code>1. Check Site (BTS)</code></td><td style="padding:6px 9px;"><code>16375926</code></td><td style="padding:6px 9px;">64 mục • 100 điểm • ≥95 Good • Folder <code>1_Check_Site_BTS</code></td></tr>
+              <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:6px 9px;font-weight:900;color:#b45309;">SEAT-CL-02 (Ghế 2)</td><td style="padding:6px 9px;font-weight:800;">⚡ 2. Checklist DG</td><td style="padding:6px 9px;"><code>2. Checklist DG</code></td><td style="padding:6px 9px;"><code>1167502418</code></td><td style="padding:6px 9px;">39 mục (10 hệ máy nổ) • 100 điểm • Folder <code>2_Checklist_DG</code></td></tr>
+              <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:6px 9px;font-weight:900;color:#047857;">SEAT-CL-03 (Ghế 3)</td><td style="padding:6px 9px;font-weight:800;">🌐 3. Cable Route (Cáp Treo)</td><td style="padding:6px 9px;"><code>3. Checklist Cable Route</code></td><td style="padding:6px 9px;"><code>1610772768</code></td><td style="padding:6px 9px;">44 mục • 100 điểm (≥85 Pass) • Folder <code>3_Checklist_Cable_Route</code></td></tr>
+              <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:6px 9px;font-weight:900;color:#6d28d9;">SEAT-CL-04 (Ghế 4)</td><td style="padding:6px 9px;font-weight:800;">🕳️ 4. UG Cable Route (Cáp Ngầm)</td><td style="padding:6px 9px;"><code>4. Checklist UG Cable</code></td><td style="padding:6px 9px;"><code>1237701259</code></td><td style="padding:6px 9px;">37 mục • 100 điểm (≥85 Pass) • Folder <code>4_Checklist_UG_Cable</code></td></tr>
+              <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:6px 9px;font-weight:900;color:#c2410c;">SEAT-CL-05 (Ghế 5)</td><td style="padding:6px 9px;font-weight:800;">☀️ 5. Checklist Solar</td><td style="padding:6px 9px;"><code>5. Checklist Solar</code></td><td style="padding:6px 9px;"><code>1984316283</code></td><td style="padding:6px 9px;">43 mục (9 phần Solar) • 100 điểm • Folder <code>5_Checklist_Solar</code></td></tr>
+              <tr style="border-bottom:1px solid #e2e8f0;background:#eff6ff;"><td style="padding:6px 9px;font-weight:900;color:#1e40af;">SEAT-CL-06 (Ghế 6)</td><td style="padding:6px 9px;font-weight:800;">🔍 6. Ghế Giám Sát &amp; Phúc Tra Ảnh BI</td><td style="padding:6px 9px;"><code>0. Tổng Hợp BI Check List</code></td><td style="padding:6px 9px;"><code>1841227739</code></td><td style="padding:6px 9px;">Tổng hợp 100% phiếu • Đối chiếu ảnh Trước/Sau • Xuất PDF English Only</td></tr>
+              <tr style="border-bottom:1px solid #e2e8f0;background:#ecfdf5;"><td style="padding:6px 9px;font-weight:900;color:#065f46;">SEAT-CL-07 (Ghế 7)</td><td style="padding:6px 9px;font-weight:800;">🛡️ 7. Ghế Quản Lý Gmail Phê Duyệt</td><td style="padding:6px 9px;"><code>6. Gmail Phê Duyệt (Approvers)</code></td><td style="padding:6px 9px;"><code>1521044256</code></td><td style="padding:6px 9px;">Khóa bảo mật 2 lớp • Chỉ Gmail ACTIVE mới được Tick xác nhận sửa chữa</td></tr>
+              <tr style="background:#fffbeb;"><td style="padding:6px 9px;font-weight:900;color:#92400e;">SEAT-CL-08+ (Mở Rộng)</td><td style="padding:6px 9px;font-weight:800;">🚀 Dự phòng mở rộng (Battery / Core / Tower...)</td><td style="padding:6px 9px;">Tự động tạo Tab mới qua Registry</td><td style="padding:6px 9px;">Auto-GID</td><td style="padding:6px 9px;">Kiến trúc 플러그인 (Plug-and-Play): Thêm Ghế 8+ không đụng chạm 7 Ghế cũ</td></tr>
+            </tbody>
+          </table>
         </div>
-        <div style="border:1px solid #cbd5e1;border-radius:12px;padding:12px;background:#f8fafc;">
-          <div style="font-weight:900;color:#b45309;font-size:13px;">📸 Chuyên Gia 2 — Geo-Imaging & Timestamp Camera (1440×1088)</div>
-          <p style="font-size:12px;margin-top:5px;color:#334155;">• Tích hợp nút mở nhanh ứng dụng <strong>Timestamp Camera</strong> có tọa độ GPS.<br/>• Bộ xử lý Canvas HTML5 tự động chuẩn hóa 100% ảnh về đúng độ phân giải <strong>1440×1088 px</strong> và tự đóng dấu tọa độ GPS + Giờ MMT + Mã Trạm + Mã Hạng Mục.</p>
+      </div>
+
+      <!-- SECTION B: 10 WORLD-CLASS 1% EXPERTS REVIEW -->
+      <div style="font-weight:900;font-size:13.5px;color:#0f172a;margin-bottom:8px;">🧠 II. Phúc Tra Chi Tiết Của 10 Chuyên Gia 1% Thế Giới</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(285px,1fr));gap:10px;margin-bottom:14px;">
+        <div style="border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:#f8fafc;">
+          <div style="font-weight:900;color:#1d4ed8;font-size:12.5px;">1️⃣ Chuyên Gia Telecom BTS &amp; Tower QA</div>
+          <p style="font-size:11.5px;margin-top:4px;color:#334155;">Đã phúc tra đủ 64 mục Trạm BTS (từ hàng rào, móng cột, dây co, tiếp địa ≤10Ω đến nguồn DC LLVD/BLVD &amp; 6 cảnh báo ngoài). Khi sửa xong 100% lỗi NOK, điểm tự động khôi phục 100/100 (Good).</p>
         </div>
-        <div style="border:1px solid #cbd5e1;border-radius:12px;padding:12px;background:#f8fafc;">
-          <div style="font-weight:900;color:#be123c;font-size:13px;">🔍 Chuyên Gia 3 — Telecom/Energy QA/QC (2 Cột Trước & Sau Sửa)</div>
-          <p style="font-size:12px;margin-top:5px;color:#334155;">• Ngay bên cạnh mỗi hạng mục có <strong>2 cột độc lập</strong>:<br/>1️⃣ <strong>Cột Ảnh Lỗi (Trước sửa)</strong> + Ô ghi rõ sai chỗ nào để biết đường sửa.<br/>2️⃣ <strong>Cột Đã Sửa & Ảnh Đã Sửa (Sau sửa)</strong> đặt sát bên để so sánh trực quan 1440×1088.</p>
+        <div style="border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:#f8fafc;">
+          <div style="font-weight:900;color:#b45309;font-size:12.5px;">2️⃣ Chuyên Gia Cơ Điện M&amp;E (DG &amp; Solar)</div>
+          <p style="font-size:11.5px;margin-top:4px;color:#334155;">Đã chuẩn hóa 39 mục Máy nổ DG (10 hệ thống) và 43 mục Solar (9 phần). Chuẩn hóa 3 ngôn ngữ (EN chuẩn + VN + MM) cho cả kỹ thuật viên bản địa và kỹ sư Việt Nam.</p>
         </div>
-        <div style="border:1px solid #cbd5e1;border-radius:12px;padding:12px;background:#f8fafc;">
-          <div style="font-weight:900;color:#047857;font-size:13px;">☁️ Chuyên Gia 4 — Cloud SSOT & Google Drive (1 Check List = 1 Sheet)</div>
-          <p style="font-size:12px;margin-top:5px;color:#334155;">• Tách 5 Check List thành <strong>5 Sheet lưu riêng biệt</strong> trên file Google Sheet <code>1Y9QkgXe24...</code> kèm công thức <code>=IMAGE(...)</code> hiển thị ảnh ngay trong ô.<br/>• Toàn bộ ảnh 1440×1088 tự động phân nhánh vào đúng folder <strong>2.14 Check list photo</strong>.</p>
+        <div style="border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:#f8fafc;">
+          <div style="font-weight:900;color:#047857;font-size:12.5px;">3️⃣ Chuyên Gia Truyềnẫn Quang (Aerial &amp; UG Cable)</div>
+          <p style="font-size:11.5px;margin-top:4px;color:#334155;">44 mục Cáp treo và 37 mục Cáp ngầm đã gắn cờ cảnh báo <strong>Serious Defect (Lỗi nghiêm trọng • SLA 14 ngày)</strong> rõ ràng ở từng mục trọng yếu.</p>
         </div>
-        <div style="border:1px solid #cbd5e1;border-radius:12px;padding:12px;background:#f8fafc;">
-          <div style="font-weight:900;color:#6d28d9;font-size:13px;">📊 Chuyên Gia 5 — Executive Web BI & Đa Ngôn Ngữ (VN • EN • MM)</div>
-          <p style="font-size:12px;margin-top:5px;color:#334155;">• Hỗ trợ 3 ngôn ngữ (Việt • Anh • Myanmar) cho nhân sự bản địa.<br/>• Tab <strong>📊 Web BI & So Sánh</strong> gom toàn bộ mục lỗi thành Bảng Đối Chiếu Trước/Sau để lãnh đạo duyệt nghiệm thu từ xa.</p>
+        <div style="border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:#f8fafc;">
+          <div style="font-weight:900;color:#6d28d9;font-size:12.5px;">4️⃣ Chuyên Gia Kiến Trúc Đoàn Tàu &amp; Ghế (Train &amp; Seat Architect)</div>
+          <p style="font-size:11.5px;margin-top:4px;color:#334155;">Mỗi Check List ngồi đúng 1 Ghế độc lập (1 Tab Sheet riêng) + Đoàn Tàu Upload Ảnh FIFO tuần tự từng tấm hình một, không bao giờ gửi chồng chéo làm nghẽn GAS.</p>
+        </div>
+        <div style="border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:#f8fafc;">
+          <div style="font-weight:900;color:#be123c;font-size:12.5px;">5️⃣ Chuyên Gia Mạng Di Động Vùng Sâu (Weak-Network Resilience)</div>
+          <p style="font-size:11.5px;margin-top:4px;color:#334155;">Bỏ chữ tĩnh <code>1440×1088 • GPS</code> ở góc phải trên hộp ảnh, thay bằng <strong>Tick Xanh <code>✅ Uploaded</code></strong> khi ảnh lên Drive thành công và <strong>Nút Đỏ <code>❌ Lỗi mạng • 🔄 Bấm gửi lại</code></strong> khi mất sóng.</p>
+        </div>
+        <div style="border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:#f8fafc;">
+          <div style="font-weight:900;color:#065f46;font-size:12.5px;">6️⃣ Chuyên Gia Bảo Mật &amp; Phân Quyền (IAM &amp; Approver Security)</div>
+          <p style="font-size:11.5px;margin-top:4px;color:#334155;">Khóa bảo mật 2 lớp trên Sheet <code>6. Gmail Phê Duyệt</code>: (1) Chỉ Gmail ACTIVE mới tick duyệt được; (2) Chỉ Quản trị/Approver đang ACTIVE mới thêm/xóa được danh sách; khóa cứng bảo vệ tài khoản Master Admin BOD.</p>
+        </div>
+        <div style="border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:#f8fafc;">
+          <div style="font-weight:900;color:#0284c7;font-size:12.5px;">7️⃣ Chuyên Gia Xử Lý Ảnh &amp; Timestamp Camera</div>
+          <p style="font-size:11.5px;margin-top:4px;color:#334155;">2 nút trực diện 3 ngôn ngữ: <strong>[📷 Chụp Ảnh]</strong> nhảy thẳng vào app Timestamp Camera (chưa cài tự mở CH Play) và <strong>[🖼️ Chọn Ảnh]</strong> tự ép chuẩn 1440×1088 px.</p>
+        </div>
+        <div style="border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:#f8fafc;">
+          <div style="font-weight:900;color:#4f46e5;font-size:12.5px;">8️⃣ Chuyên Gia Đa Ngôn Ngữ &amp; Báo Cáo Quốc Tế (EN PDF)</div>
+          <p style="font-size:11.5px;margin-top:4px;color:#334155;">Giao diện hiện trường &amp; phúc tra hiển thị song ngữ 3 thứ tiếng (EN • VN • MM), nhưng khi xuất hồ sơ <strong>PDF nghiệm thu thì 100% Tiếng Anh chuẩn quốc tế</strong>.</p>
+        </div>
+        <div style="border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:#f8fafc;">
+          <div style="font-weight:900;color:#d97706;font-size:12.5px;">9️⃣ Chuyên Gia Chống Đụng Độ Dữ Liệu (Concurrency &amp; LockService)</div>
+          <p style="font-size:11.5px;margin-top:4px;color:#334155;">Backend GAS sử dụng <code>LockService.getScriptLock(30000)</code> và cơ chế cập nhật theo <code>sessionId</code>, giúp nhiều nhân viên cùng cập nhật sửa chữa không bao giờ ghi đè mất dữ liệu của nhau.</p>
+        </div>
+        <div style="border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:#f8fafc;">
+          <div style="font-weight:900;color:#0f766e;font-size:12.5px;">🔟 Chuyên Gia Dự Báo Mở Rộng &amp; Chống Tràn Sheet Tương Lai</div>
+          <p style="font-size:11.5px;margin-top:4px;color:#334155;">Đã dự báo và khóa chặn 4 rủi ro tương lai: (1) Mất sóng 3G khi gửi ảnh -> Hàng đợi Retry; (2) Nhân bản dòng khi lưu nhiều lần -> Deduplicate theo <code>sessionId</code>; (3) Giả mạo người duyệt -> Server-side Gmail check; (4) Mở rộng Ghế 8+ -> Dynamic Seat Registry.</p>
         </div>
       </div>
     </div>
@@ -1615,6 +1731,10 @@
             afterThumbUrl: "",
             afterDriveUrl: "",
             gps: "",
+            uploadingBefore: false,
+            uploadErrorBefore: false,
+            uploadingAfter: false,
+            uploadErrorAfter: false,
             techVerified: false,
             techVerifiedBy: "",
             techVerifiedEmail: "",
@@ -1674,6 +1794,7 @@
       const biSec = document.getElementById("view-bi-dashboard");
       const appSec = document.getElementById("view-approvers-manager");
 
+      updateSeatAndTrainTelemetry();
       if (typeKey === "bi_dashboard") {
         formSec.style.display = "none";
         biSec.style.display = "block";
@@ -1873,11 +1994,17 @@
             </div>
           </div>
 
-          <!-- COL 3: BEFORE / DEFECT PHOTO (1440x1088 + TIMESTAMP CAMERA) & DEFECT LOCATION -->
+          <!-- COL 3: BEFORE / DEFECT PHOTO & LIVE UPLOAD TICK XANH AT TOP-RIGHT (HÌNH 2 POSITION) -->
           <div class="photo-col-box defect-col">
             <div class="col-box-header">
               <span>${t.colDefectTitle}</span>
-              <span class="res-badge">1440×1088 • GPS</span>
+              ${st.uploadingBefore
+                ? `<span class="res-badge badge-upload-pending">⏳ Uploading... • Đang tải...</span>`
+                : (st.uploadErrorBefore
+                  ? `<button type="button" class="res-badge badge-upload-err" onclick="retrySingleItemPhotoUpload('${codeEsc}', 'BEFORE')" title="Mạng yếu chưa upload được ảnh này. Bấm để tải lại!">❌ Lỗi mạng • 🔄 Bấm gửi lại</button>`
+                  : ((st.beforeDriveUrl || st.beforeThumbUrl)
+                    ? `<span class="res-badge badge-upload-ok">✅ Uploaded • Đã lưu Drive</span>`
+                    : ``))}
             </div>
             <input type="text" class="note-input" placeholder="${escAttr(t.defectPlaceholder)}" value="${escAttr(st.defectNote || '')}" oninput="updateItemField('${codeEsc}', 'defectNote', this.value)" />
             <div class="photo-btn-row">
@@ -1893,21 +2020,30 @@
             <div class="thumb-wrap ${beforeImgSrc ? 'has-img' : ''}">
               <img src="${escAttr(beforeImgSrc)}" alt="Before 1440x1088" onclick="openCompareModalForItem('${codeEsc}')" />
               <button type="button" class="btn-del-photo" onclick="clearItemPhoto('${codeEsc}', 'BEFORE')">✕ Xóa</button>
-              <div class="thumb-meta-bar" style="background:${st.uploadingBefore ? 'rgba(217,119,6,0.92)' : (st.beforeDriveUrl ? 'rgba(5,150,105,0.9)' : 'rgba(15,23,42,0.82)')}">
+              <div class="thumb-meta-bar" style="background:${st.uploadingBefore ? 'rgba(217,119,6,0.92)' : (st.uploadErrorBefore ? 'rgba(220,38,38,0.95)' : 'rgba(5,150,105,0.92)')}">
                 <span>📸 ẢNH LỖI (BEFORE)</span>
-                <span>${st.uploadingBefore ? '⏳ Đang lưu liền lên Drive 2.14...' : (st.beforeDriveUrl ? '☁️ Đã lưu liền Drive 2.14 ✅' : '1440×1088 px ✅')}</span>
+                <span>${st.uploadingBefore ? '⏳ Đang tải lên Drive 2.14...' : (st.uploadErrorBefore ? '❌ Mạng yếu chưa tải được — Bấm gửi lại ở góc trên!' : '✅ Upload Finish • Đã lưu Drive 2.14')}</span>
               </div>
             </div>
           </div>
 
-          <!-- COL 4: AFTER / RECTIFIED PHOTO (1440x1088 COMPARISON) & FIX STATUS -->
+          <!-- COL 4: AFTER / RECTIFIED PHOTO & LIVE UPLOAD TICK XANH AT TOP-RIGHT -->
           <div class="photo-col-box fixed-col">
             <div class="col-box-header">
               <span>${t.colFixedTitle}</span>
-              <select class="fix-status-select" onchange="updateItemField('${codeEsc}', 'fixStatus', this.value); recalcLiveScore(); renderChecklistItems(); scheduleAutoSyncSheet();">
-                <option value="Chưa sửa (Pending Fix)" ${!isFixed ? 'selected' : ''}>⏳ Chưa sửa</option>
-                <option value="Đã sửa xong (Fixed)" ${isFixed ? 'selected' : ''}>✅ Đã sửa xong</option>
-              </select>
+              <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+                ${st.uploadingAfter
+                  ? `<span class="res-badge badge-upload-pending">⏳ Uploading... • Đang tải...</span>`
+                  : (st.uploadErrorAfter
+                    ? `<button type="button" class="res-badge badge-upload-err" onclick="retrySingleItemPhotoUpload('${codeEsc}', 'AFTER')" title="Mạng yếu chưa upload được ảnh này. Bấm để tải lại!">❌ Lỗi mạng • 🔄 Bấm gửi lại</button>`
+                    : ((st.afterDriveUrl || st.afterThumbUrl)
+                      ? `<span class="res-badge badge-upload-ok">✅ Uploaded • Đã lưu Drive</span>`
+                      : ``))}
+                <select class="fix-status-select" onchange="updateItemField('${codeEsc}', 'fixStatus', this.value); recalcLiveScore(); renderChecklistItems(); scheduleAutoSyncSheet();">
+                  <option value="Chưa sửa (Pending Fix)" ${!isFixed ? 'selected' : ''}>⏳ Chưa sửa</option>
+                  <option value="Đã sửa xong (Fixed)" ${isFixed ? 'selected' : ''}>✅ Đã sửa xong</option>
+                </select>
+              </div>
             </div>
             <input type="text" class="note-input" placeholder="${escAttr(t.afterPlaceholder)}" value="${escAttr(st.afterNote || '')}" oninput="updateItemField('${codeEsc}', 'afterNote', this.value)" />
             <div class="photo-btn-row">
@@ -1923,9 +2059,9 @@
             <div class="thumb-wrap ${afterImgSrc ? 'has-img' : ''}">
               <img src="${escAttr(afterImgSrc)}" alt="After 1440x1088" onclick="openCompareModalForItem('${codeEsc}')" />
               <button type="button" class="btn-del-photo" onclick="clearItemPhoto('${codeEsc}', 'AFTER')">✕ Xóa</button>
-              <div class="thumb-meta-bar" style="background:${st.uploadingAfter ? 'rgba(217,119,6,0.92)' : (st.afterDriveUrl ? 'rgba(5,150,105,0.9)' : 'rgba(15,23,42,0.82)')}">
+              <div class="thumb-meta-bar" style="background:${st.uploadingAfter ? 'rgba(217,119,6,0.92)' : (st.uploadErrorAfter ? 'rgba(220,38,38,0.95)' : 'rgba(5,150,105,0.92)')}">
                 <span>🌟 ĐÃ SỬA (AFTER)</span>
-                <span>${st.uploadingAfter ? '⏳ Đang lưu liền lên Drive 2.14...' : (st.afterDriveUrl ? '☁️ Đã lưu liền Drive 2.14 ✅' : '1440×1088 px ✅')}</span>
+                <span>${st.uploadingAfter ? '⏳ Đang tải lên Drive 2.14...' : (st.uploadErrorAfter ? '❌ Mạng yếu chưa tải được — Bấm gửi lại ở góc trên!' : '✅ Upload Finish • Đã lưu Drive 2.14')}</span>
               </div>
             </div>
             ${(beforeImgSrc || afterImgSrc) ? `<button type="button" class="btn-compare-inline" onclick="openCompareModalForItem('${codeEsc}')">${t.btnCompare}</button>` : ``}
@@ -2008,12 +2144,15 @@
         st.beforeThumbUrl = "";
         st.beforeDriveUrl = "";
         st.uploadingBefore = false;
+        st.uploadErrorBefore = false;
       } else {
         st.afterDataUrl = "";
         st.afterThumbUrl = "";
         st.afterDriveUrl = "";
         st.uploadingAfter = false;
+        st.uploadErrorAfter = false;
       }
+      updateSeatAndTrainTelemetry();
       saveLocalDraft();
       recalcLiveScore();
       renderChecklistItems();
@@ -2203,7 +2342,151 @@
       await uploadSingleItemPhotoNow(target.type, target.code, target.stage, dataUrl1440);
     }
 
+    // =========================================================================
+    // SEQUENTIAL FIFO PHOTO UPLOAD TRAIN & WEAK-NETWORK ERROR / TICK XANH ENGINE
+    // =========================================================================
+    const SEAT_DEFINITIONS = {
+      site_bts:      { seatId: "SEAT-CL-01 (Ghế 1)", label: "1. Check Site (BTS) • GID 16375926" },
+      dg_gen:        { seatId: "SEAT-CL-02 (Ghế 2)", label: "2. Checklist DG • GID 1167502418" },
+      cable_route:   { seatId: "SEAT-CL-03 (Ghế 3)", label: "3. Checklist Cable Route • GID 1610772768" },
+      ug_cable:      { seatId: "SEAT-CL-04 (Ghế 4)", label: "4. Checklist UG Cable • GID 1237701259" },
+      solar:         { seatId: "SEAT-CL-05 (Ghế 5)", label: "5. Checklist Solar • GID 1984316283" },
+      bi_dashboard:  { seatId: "SEAT-CL-06 (Ghế 6)", label: "0. Tổng Hợp BI & Phúc Tra Ảnh • GID 1841227739" },
+      approvers_mgr: { seatId: "SEAT-CL-07 (Ghế 7)", label: "6. Gmail Phê Duyệt (Approvers) • GID 1521044256" }
+    };
+
+    let photoTrainQueue = [];
+    let isPhotoTrainRunning = false;
+
+    function updateSeatAndTrainTelemetry() {
+      const seatDef = SEAT_DEFINITIONS[currentType] || SEAT_DEFINITIONS.site_bts;
+      const seatLblEl = document.getElementById("seat-active-label");
+      if (seatLblEl) {
+        seatLblEl.textContent = "🪑 " + seatDef.seatId + ": " + seatDef.label;
+      }
+
+      // Count uploaded (Tick Xanh), uploading, and failed across current checklist
+      let uploadedCnt = 0;
+      let uploadingCnt = 0;
+      let failedItems = [];
+
+      Object.keys(itemStates).forEach(tKey => {
+        const stMap = itemStates[tKey] || {};
+        Object.keys(stMap).forEach(code => {
+          const st = stMap[code];
+          if (st.beforeDriveUrl || st.beforeThumbUrl) uploadedCnt++;
+          if (st.afterDriveUrl || st.afterThumbUrl) uploadedCnt++;
+          if (st.uploadingBefore) uploadingCnt++;
+          if (st.uploadingAfter) uploadingCnt++;
+          if (st.uploadErrorBefore) failedItems.push({ typeKey: tKey, code: code, stage: "BEFORE" });
+          if (st.uploadErrorAfter) failedItems.push({ typeKey: tKey, code: code, stage: "AFTER" });
+        });
+      });
+
+      const trainPill = document.getElementById("train-queue-pill");
+      if (trainPill) {
+        if (failedItems.length > 0) {
+          trainPill.style.background = "#991b1b";
+          trainPill.style.color = "#fef2f2";
+          trainPill.textContent = "🚂 Đoàn Tàu Upload: ✅ " + uploadedCnt + " đã Tick Xanh • ❌ " + failedItems.length + " lỗi mạng chờ gửi lại";
+        } else if (uploadingCnt > 0) {
+          trainPill.style.background = "#b45309";
+          trainPill.style.color = "#fffbeb";
+          trainPill.textContent = "🚂 Đoàn Tàu Upload (FIFO): ⏳ Đang tải " + uploadingCnt + " ảnh... (✅ " + uploadedCnt + " xong)";
+        } else {
+          trainPill.style.background = "#334155";
+          trainPill.style.color = "#f8fafc";
+          trainPill.textContent = "🚂 Đoàn Tàu Upload Ảnh (FIFO): ✅ " + uploadedCnt + " ảnh đã Tick Xanh";
+        }
+      }
+
+      const onlinePill = document.getElementById("seat-online-pill");
+      if (onlinePill) {
+        if (!navigator.onLine || failedItems.length > 0) {
+          onlinePill.style.background = "#991b1b";
+          onlinePill.style.borderColor = "#f87171";
+          onlinePill.style.color = "#fef2f2";
+          onlinePill.textContent = !navigator.onLine
+            ? "🔴 OFFLINE (Mất kết nối mạng) • Ảnh đang giữ an toàn trong máy"
+            : ("🟠 MẠNG YẾU • Có " + failedItems.length + " ảnh chưa lên được Drive (Bấm Tải Lại)");
+        } else {
+          onlinePill.style.background = "#065f46";
+          onlinePill.style.borderColor = "#10b981";
+          onlinePill.style.color = "#d1fae5";
+          onlinePill.textContent = "🟢 ONLINE • Link Sheet & Drive 2.14 Sẵn Sàng";
+        }
+      }
+
+      const errBanner = document.getElementById("weak-network-error-banner");
+      if (errBanner) {
+        if (failedItems.length > 0) {
+          errBanner.style.display = "flex";
+          const codesStr = failedItems.map(x => "Mục " + x.code + " (" + (x.stage === "BEFORE" ? "Ảnh Lỗi" : "Ảnh Đã Sửa") + ")").join(", ");
+          const titleEl = document.getElementById("weak-net-title");
+          if (titleEl) {
+            titleEl.textContent = "⚠️ MẠNG YẾU KHÔNG UPLOAD ĐƯỢC (" + failedItems.length + " ẢNH): " + codesStr;
+          }
+        } else {
+          errBanner.style.display = "none";
+        }
+      }
+    }
+
+    async function pingChecklistCloudHealth(showAlert) {
+      const onlinePill = document.getElementById("seat-online-pill");
+      if (onlinePill) onlinePill.textContent = "⏳ Đang kiểm tra kết nối trực tuyến tới Google Sheet & Drive 2.14...";
+      try {
+        const t0 = Date.now();
+        const resp = await fetch(GAS_CHECKLIST_API + "?action=checklist_get_all&t=" + t0);
+        const data = await resp.json();
+        const ms = Date.now() - t0;
+        if (data && data.ok) {
+          updateSeatAndTrainTelemetry();
+          if (showAlert) {
+            alert(
+              "🟢 KẾT NỐI ONLINE 100% VỚI GOOGLE SHEET & DRIVE 2.14!\n\n" +
+              "• Độ trễ phản hồi: " + ms + " ms\n" +
+              "• Spreadsheet ID: " + data.spreadsheetId + "\n" +
+              "• Folder ảnh 2.14: " + data.photoRootFolderName + "\n" +
+              "• Số Ghế Sheet đang hoạt động: " + (data.tabs ? data.tabs.length : 7) + " Sheet\n" +
+              "• Tổng số phiếu trên Cloud: " + (data.sessions ? data.sessions.length : 0) + " phiếu\n" +
+              "• Số Gmail Người Phê Duyệt: " + (data.approvers ? data.approvers.length : 6) + " Gmail"
+            );
+          }
+        } else {
+          throw new Error((data && data.error) || "Phản hồi không hợp lệ");
+        }
+      } catch (err) {
+        if (onlinePill) {
+          onlinePill.style.background = "#991b1b";
+          onlinePill.style.color = "#fef2f2";
+          onlinePill.textContent = "🔴 LỖI KẾT NỐI MẠNG: Không liên lạc được Google Sheet";
+        }
+        if (showAlert) {
+          alert("❌ Mạng yếu hoặc mất kết nối tới Google Sheet: " + err.message);
+        }
+      }
+    }
+
     async function uploadSingleItemPhotoNow(typeKey, itemCode, stage, dataUrl1440) {
+      return new Promise((resolve) => {
+        photoTrainQueue.push({ typeKey, itemCode, stage, dataUrl1440, resolve });
+        processPhotoTrainQueue();
+      });
+    }
+
+    async function processPhotoTrainQueue() {
+      if (isPhotoTrainRunning) return;
+      isPhotoTrainRunning = true;
+      while (photoTrainQueue.length > 0) {
+        const job = photoTrainQueue.shift();
+        const ok = await executeSinglePhotoUploadCarriage(job.typeKey, job.itemCode, job.stage, job.dataUrl1440);
+        if (job.resolve) job.resolve(ok);
+      }
+      isPhotoTrainRunning = false;
+    }
+
+    async function executeSinglePhotoUploadCarriage(typeKey, itemCode, stage, dataUrl1440) {
       const st = itemStates[typeKey] && itemStates[typeKey][itemCode];
       if (!st || !dataUrl1440) return false;
 
@@ -2212,15 +2495,24 @@
       const dateStr = document.getElementById("inp-date").value || new Date().toISOString().slice(0, 10);
 
       activePhotoUploads++;
-      if (stage === "BEFORE") st.uploadingBefore = true;
-      else st.uploadingAfter = true;
+      if (stage === "BEFORE") {
+        st.uploadingBefore = true;
+        st.uploadErrorBefore = false;
+      } else {
+        st.uploadingAfter = true;
+        st.uploadErrorAfter = false;
+      }
+      updateSeatAndTrainTelemetry();
+      renderChecklistItems();
 
       const sumEl = document.getElementById("bottom-summary-text");
       if (sumEl) {
-        sumEl.textContent = "⏳ Đang lưu liền ảnh 1440×1088 mục " + itemCode + " (" + stage + ") lên Drive 2.14...";
+        sumEl.textContent = "⏳ [Toa Upload FIFO] Đang tải ảnh 1440×1088 mục " + itemCode + " (" + stage + ") lên Drive 2.14...";
       }
 
       try {
+        const ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+        const timerId = ctrl ? setTimeout(() => ctrl.abort(), 28000) : null;
         const resp = await fetch(GAS_CHECKLIST_API, {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -2233,8 +2525,10 @@
             itemCode: itemCode,
             stage: stage,
             dataUrl: dataUrl1440
-          })
+          }),
+          signal: ctrl ? ctrl.signal : undefined
         });
+        if (timerId) clearTimeout(timerId);
         const res = await resp.json();
         if (res && res.ok && res.photo) {
           if (stage === "BEFORE") {
@@ -2242,36 +2536,83 @@
             st.beforeDriveUrl = res.photo.viewUrl || "";
             st.beforeDataUrl = "";
             st.uploadingBefore = false;
+            st.uploadErrorBefore = false;
           } else {
             st.afterThumbUrl = res.photo.thumbUrl || res.photo.directUrl || "";
             st.afterDriveUrl = res.photo.viewUrl || "";
             st.afterDataUrl = "";
             st.uploadingAfter = false;
+            st.uploadErrorAfter = false;
           }
           saveLocalDraft();
+          updateSeatAndTrainTelemetry();
           renderChecklistItems();
           if (sumEl) {
-            sumEl.textContent = "☁️ Đã lưu liền ảnh mục " + itemCode + " (1440×1088) vào Drive 2.14 ✅";
+            sumEl.textContent = "✅ Đã tải xong & hiện Tick Xanh cho ảnh mục " + itemCode + " (Drive 2.14)!";
           }
           // Auto sync lightweight metadata + Drive photo URL to Google Sheet right away!
-          scheduleAutoSyncSheet(200);
+          scheduleAutoSyncSheet(250);
           return true;
         } else {
           throw new Error((res && res.error) || "Upload photo failed");
         }
       } catch (err) {
-        console.warn("Immediate photo upload error:", err);
-        if (stage === "BEFORE") st.uploadingBefore = false;
-        else st.uploadingAfter = false;
+        console.warn("Photo upload error due to weak network:", err);
+        if (stage === "BEFORE") {
+          st.uploadingBefore = false;
+          st.uploadErrorBefore = true;
+        } else {
+          st.uploadingAfter = false;
+          st.uploadErrorAfter = true;
+        }
+        saveLocalDraft();
+        updateSeatAndTrainTelemetry();
         renderChecklistItems();
         if (sumEl) {
-          sumEl.textContent = "⚠️ Ảnh mục " + itemCode + " đang giữ tạm ở máy, sẽ tự thử lưu lại khi bấm Lưu cuối.";
+          sumEl.textContent = "❌ Mạng yếu: Chưa tải được ảnh mục " + itemCode + " lên Drive! Hãy bấm [🔄 Bấm gửi lại] ở góc phải trên hộp ảnh.";
         }
         return false;
       } finally {
         activePhotoUploads = Math.max(0, activePhotoUploads - 1);
       }
     }
+
+    async function retrySingleItemPhotoUpload(itemCode, stage) {
+      const st = itemStates[currentType] && itemStates[currentType][itemCode];
+      if (!st) return;
+      const dataUrl = stage === "BEFORE" ? st.beforeDataUrl : st.afterDataUrl;
+      if (!dataUrl) return;
+      await uploadSingleItemPhotoNow(currentType, itemCode, stage, dataUrl);
+    }
+
+    async function retryAllFailedPhotoUploads() {
+      let count = 0;
+      for (const tKey of Object.keys(itemStates)) {
+        const stMap = itemStates[tKey] || {};
+        for (const code of Object.keys(stMap)) {
+          const st = stMap[code];
+          if (st.uploadErrorBefore && st.beforeDataUrl) {
+            count++;
+            uploadSingleItemPhotoNow(tKey, code, "BEFORE", st.beforeDataUrl);
+          }
+          if (st.uploadErrorAfter && st.afterDataUrl) {
+            count++;
+            uploadSingleItemPhotoNow(tKey, code, "AFTER", st.afterDataUrl);
+          }
+        }
+      }
+      if (count === 0) {
+        updateSeatAndTrainTelemetry();
+      }
+    }
+
+    window.addEventListener("online", () => {
+      updateSeatAndTrainTelemetry();
+      retryAllFailedPhotoUploads();
+    });
+    window.addEventListener("offline", () => {
+      updateSeatAndTrainTelemetry();
+    });
 
     /**
      * Exact 1440x1088 Canvas Processor
@@ -2877,6 +3218,12 @@
       btn.textContent = "⏳ Đang lưu Gmail người phê duyệt lên Google Sheet...";
 
       try {
+        const actor = ensureTechVerifierOrPrompt();
+        if (!actor) {
+          btn.disabled = false;
+          btn.textContent = oldTxt;
+          return;
+        }
         const resp = await fetch(GAS_CHECKLIST_API, {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -2887,7 +3234,8 @@
             title: title,
             dept: dept,
             status: status,
-            note: note
+            note: note,
+            actorEmail: actor.email
           })
         });
         const res = await resp.json();
@@ -2913,6 +3261,12 @@
     async function deleteApproverFromCloud(email) {
       const clean = String(email || "").trim().toLowerCase();
       if (!clean) return;
+      if (clean === "phonghdpxd@gmail.com") {
+        alert("⛔ Khóa Bảo Vệ: Không được phép xóa tài khoản Master Admin BOD (phonghdpxd@gmail.com)!");
+        return;
+      }
+      const actor = ensureTechVerifierOrPrompt();
+      if (!actor) return;
       if (!confirm("Bạn có chắc chắn muốn xóa Gmail [" + clean + "] khỏi danh sách Người Phê Duyệt?")) return;
 
       try {
@@ -2921,7 +3275,8 @@
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({
             action: "checklist_delete_approver",
-            email: clean
+            email: clean,
+            actorEmail: actor.email
           })
         });
         const res = await resp.json();
