@@ -638,16 +638,20 @@
     }
     .btn-cam-capture {
       flex: 1;
+      min-width: 135px;
       padding: 7px 8px;
       border-radius: 8px;
       border: none;
-      font-size: 11.5px;
+      font-size: 11px;
+      line-height: 1.35;
       font-weight: 800;
       cursor: pointer;
       display: inline-flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 4px;
+      text-align: center;
+      gap: 2px;
       color: #fff;
     }
     .btn-cam-capture.before-btn { background: #dc2626; }
@@ -1877,8 +1881,14 @@
             </div>
             <input type="text" class="note-input" placeholder="${escAttr(t.defectPlaceholder)}" value="${escAttr(st.defectNote || '')}" oninput="updateItemField('${codeEsc}', 'defectNote', this.value)" />
             <div class="photo-btn-row">
-              <button type="button" class="btn-cam-capture before-btn" onclick="triggerDirectCameraCapture('${codeEsc}', 'BEFORE')" title="Mở Camera chụp trực tiếp">${t.btnTakeDefect}</button>
-              <button type="button" class="btn-cam-capture choose-btn" onclick="triggerPhotoCapture('${codeEsc}', 'BEFORE')" title="Chọn ảnh có sẵn từ thư viện / máy">${t.btnChooseDefect || '🖼️ Chọn Ảnh'}</button>
+              <button type="button" class="btn-cam-capture before-btn" onclick="triggerDirectCameraCapture('${codeEsc}', 'BEFORE')" title="Mở ứng dụng Timestamp Camera để chụp (Nếu chưa cài sẽ tự mở CH Play)">
+                <span>📷 Capture Defect • Chụp Ảnh Lỗi</span>
+                <span style="font-size:10.5px;font-weight:700;opacity:0.95;">🇲🇲 အပျက်ပုံရိုက်ရန် (TimestampCam)</span>
+              </button>
+              <button type="button" class="btn-cam-capture choose-btn" onclick="triggerPhotoCapture('${codeEsc}', 'BEFORE')" title="Chọn ảnh từ điện thoại (Choose Photo / Chọn Ảnh / ပုံရွေးရန်)">
+                <span>🖼️ Choose Photo • Chọn Ảnh</span>
+                <span style="font-size:10.5px;font-weight:700;opacity:0.95;">🇲🇲 ပုံရွေးရန်</span>
+              </button>
             </div>
             <div class="thumb-wrap ${beforeImgSrc ? 'has-img' : ''}">
               <img src="${escAttr(beforeImgSrc)}" alt="Before 1440x1088" onclick="openCompareModalForItem('${codeEsc}')" />
@@ -1901,8 +1911,14 @@
             </div>
             <input type="text" class="note-input" placeholder="${escAttr(t.afterPlaceholder)}" value="${escAttr(st.afterNote || '')}" oninput="updateItemField('${codeEsc}', 'afterNote', this.value)" />
             <div class="photo-btn-row">
-              <button type="button" class="btn-cam-capture after-btn" onclick="triggerDirectCameraCapture('${codeEsc}', 'AFTER')" title="Mở Camera chụp trực tiếp ảnh đã sửa">${t.btnTakeFixed}</button>
-              <button type="button" class="btn-cam-capture choose-btn" onclick="triggerPhotoCapture('${codeEsc}', 'AFTER')" title="Chọn ảnh đã sửa có sẵn từ thư viện">${t.btnChooseFixed || '🖼️ Chọn Ảnh'}</button>
+              <button type="button" class="btn-cam-capture after-btn" onclick="triggerDirectCameraCapture('${codeEsc}', 'AFTER')" title="Mở ứng dụng Timestamp Camera để chụp ảnh đã sửa (Nếu chưa cài sẽ tự mở CH Play)">
+                <span>📷 Capture Fixed • Chụp Ảnh Đã Sửa</span>
+                <span style="font-size:10.5px;font-weight:700;opacity:0.95;">🇲🇲 ပြင်ပြီးပုံရိုက်ရန် (TimestampCam)</span>
+              </button>
+              <button type="button" class="btn-cam-capture choose-btn" onclick="triggerPhotoCapture('${codeEsc}', 'AFTER')" title="Chọn ảnh đã sửa từ điện thoại (Choose Photo / Chọn Ảnh / ပုံရွေးရန်)">
+                <span>🖼️ Choose Photo • Chọn Ảnh</span>
+                <span style="font-size:10.5px;font-weight:700;opacity:0.95;">🇲🇲 ပုံရွေးရန်</span>
+              </button>
             </div>
             <div class="thumb-wrap ${afterImgSrc ? 'has-img' : ''}">
               <img src="${escAttr(afterImgSrc)}" alt="After 1440x1088" onclick="openCompareModalForItem('${codeEsc}')" />
@@ -2013,6 +2029,7 @@
 
     function openNativeTimestampCameraIntent() {
       const ua = navigator.userAgent || "";
+      const playStoreUrl = "https://play.google.com/store/apps/details?id=com.jeyluta.timestampcamerafree";
       if (/android/i.test(ua)) {
         // Pre-fetch GPS in background so if EXIF is stripped by browser, live GPS is stamped accurately
         if (navigator.geolocation) {
@@ -2022,11 +2039,26 @@
             }, () => {}, { enableHighAccuracy: true, timeout: 6000 });
           } catch (e) {}
         }
-        window.location.href = TIMESTAMP_CAM_ANDROID_INTENT;
+        // Trigger Android Intent to open Timestamp Camera directly; if not installed, fallback to CH Play Store
+        const a = document.createElement("a");
+        a.href = TIMESTAMP_CAM_ANDROID_INTENT;
+        a.style.display = "none";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          try { document.body.removeChild(a); } catch (e) {}
+        }, 500);
+        // Fallback timer for in-app browsers (e.g. Telegram WebView) if intent does not switch out of browser within 1.8s
+        const t0 = Date.now();
+        setTimeout(() => {
+          if (!document.hidden && (Date.now() - t0) < 2600) {
+            window.location.href = playStoreUrl;
+          }
+        }, 1800);
       } else if (/iphone|ipad|ipod/i.test(ua)) {
         window.open("https://apps.apple.com/app/timestamp-camera-basic/id840110184", "_blank");
       } else {
-        window.open("https://play.google.com/store/apps/details?id=com.jeyluta.timestampcamerafree", "_blank");
+        window.open(playStoreUrl, "_blank");
       }
     }
 
@@ -2087,18 +2119,8 @@
         stage: stage,
         sessionIdForBi: sessionIdForBi || null
       };
-      if (navigator.geolocation) {
-        try {
-          navigator.geolocation.getCurrentPosition(pos => {
-            window._lastExifGps = pos.coords.latitude.toFixed(6) + ", " + pos.coords.longitude.toFixed(6);
-          }, () => {}, { enableHighAccuracy: true, timeout: 5000 });
-        } catch (e) {}
-      }
-      const inp = document.getElementById("hidden-camera-direct-input") || document.getElementById("hidden-photo-input");
-      if (inp) {
-        inp.value = "";
-        inp.click();
-      }
+      // Mở thẳng ứng dụng Timestamp Camera trên điện thoại; nếu chưa cài thì tự động dẫn đến CH Play tải về!
+      openNativeTimestampCameraIntent();
     }
 
     function triggerPhotoCapture(code, stage, sessionIdForBi) {
@@ -3713,8 +3735,14 @@
                       <div style="padding:10px;">
                         <div style="margin-bottom:6px;color:#dc2626;font-weight:800;font-size:11.5px;">❌ Pending After Photo / Chưa cập nhật ảnh sau sửa / ပြင်ဆင်ပြီးပုံ မတင်ရသေးပါ</div>
                         <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center;">
-                          <button type="button" class="btn-cam-capture after-btn" onclick="triggerDirectCameraCapture('${escAttr(it.code)}', 'AFTER', '${escAttr(sess.sessionId)}')">📷 Chụp Ảnh Đã Sửa</button>
-                          <button type="button" class="btn-cam-capture choose-btn" onclick="triggerPhotoCapture('${escAttr(it.code)}', 'AFTER', '${escAttr(sess.sessionId)}')">🖼️ Chọn Ảnh Đã Sửa</button>
+                          <button type="button" class="btn-cam-capture after-btn" onclick="triggerDirectCameraCapture('${escAttr(it.code)}', 'AFTER', '${escAttr(sess.sessionId)}')" title="Mở Timestamp Camera chụp ảnh đã sửa (Nếu chưa cài sẽ tự mở CH Play)">
+                            <span>📷 Capture Fixed • Chụp Ảnh Đã Sửa</span>
+                            <span style="font-size:10.5px;font-weight:700;opacity:0.95;">🇲🇲 ပြင်ပြီးပုံရိုက်ရန် (TimestampCam)</span>
+                          </button>
+                          <button type="button" class="btn-cam-capture choose-btn" onclick="triggerPhotoCapture('${escAttr(it.code)}', 'AFTER', '${escAttr(sess.sessionId)}')" title="Chọn ảnh đã sửa từ máy (3 ngôn ngữ)">
+                            <span>🖼️ Choose Photo • Chọn Ảnh</span>
+                            <span style="font-size:10.5px;font-weight:700;opacity:0.95;">🇲🇲 ပုံရွေးရန်</span>
+                          </button>
                         </div>
                       </div>
                     `}
