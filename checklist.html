@@ -1100,22 +1100,29 @@
           </div>
         </div>
 
-        <!-- QUICK SEARCH & LOAD EXISTING INSPECTED SITE FOR STAFF REPAIR UPDATES + TECH DEPT GMAIL VERIFICATION -->
-        <div style="background:linear-gradient(90deg,#eff6ff 0%,#ecfdf5 100%);border:1.5px solid #93c5fd;border-radius:12px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <!-- QUICK SEARCH & LOAD EXISTING INSPECTED SITE FOR STAFF REPAIR UPDATES + APPROVER AUDIT (ALL 5 CHECKLISTS) -->
+        <div style="background:linear-gradient(90deg,#eff6ff 0%,#ecfdf5 100%);border:2px solid #60a5fa;border-radius:12px;padding:11px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1;min-width:280px;">
-            <span style="font-size:13px;font-weight:900;color:#1e3a8a;white-space:nowrap;">🔎 Tìm Trạm Đã Kiểm Tra Để Cập Nhật Sửa Chữa:</span>
-            <input type="text" id="inp-find-saved-site" class="field-input" style="max-width:200px;padding:6px 10px;font-size:12.5px;background:#fff;" placeholder="Nhập mã trạm (VD: TNI0012)..." oninput="populateSavedSessionsDropdown()" />
-            <select id="sel-saved-sessions" class="field-input" style="flex:1;min-width:240px;padding:6px 10px;font-size:12.5px;background:#fff;" onchange="onSelectSavedSessionChange()">
+            <span style="font-size:13px;font-weight:900;color:#1e3a8a;white-space:nowrap;">🔎 Bước 1. Tìm Trạm (Search Site):</span>
+            <input type="text" id="inp-find-saved-site" class="field-input" style="max-width:190px;padding:6px 10px;font-size:12.5px;background:#fff;border-color:#3b82f6;font-weight:800;" placeholder="Nhập mã trạm (VD: TNI0012)..." oninput="populateSavedSessionsDropdown()" onkeydown="if(event.key==='Enter'){event.preventDefault();executeSiteSearchByFilterDropdown();}" />
+            <select id="sel-saved-sessions" class="field-input" style="flex:1;min-width:220px;padding:6px 10px;font-size:12px;background:#fff;" onchange="onSelectSavedSessionChange()">
               <option value="">-- Chọn trạm / phiếu đã kiểm tra trên Google Sheet --</option>
             </select>
-            <button type="button" class="pill-btn" style="background:#dc2626;border-color:#f87171;color:#fff;padding:7px 11px;cursor:pointer;" onclick="loadSelectedSavedSession(true)" title="Chỉ hiện các mục đang bị lỗi NOK để sửa nhanh">
-              🔧 Nạp Chỉ Mục Lỗi Để Sửa (NOK)
+            <span style="font-size:12.5px;font-weight:900;color:#b91c1c;white-space:nowrap;">🎯 Bước 2. Chọn Lọc:</span>
+            <select id="sel-search-filter-mode" class="field-input" style="width:auto;min-width:210px;padding:6px 10px;font-size:12px;background:#fff5f5;border-color:#f87171;color:#991b1b;font-weight:900;">
+              <option value="nok" selected>❌ Not OK (Chỉ vị trí Lỗi NOK để Sửa / Phúc tra)</option>
+              <option value="pending_approve">🔧 Đã sửa - Chờ Approve (Pending Approval)</option>
+              <option value="approved">☑️ Đã Approve hoàn thành (Approved)</option>
+              <option value="all">📋 Xem Tất Cả 100% Hạng Mục (OK &amp; Not OK)</option>
+            </select>
+            <button type="button" class="pill-btn" style="background:#dc2626;border-color:#f87171;color:#fff;padding:7px 14px;font-size:12.5px;font-weight:900;cursor:pointer;box-shadow:0 3px 10px rgba(220,38,38,0.28);" onclick="executeSiteSearchByFilterDropdown()" title="Bấm Tìm Kiếm để nạp trạm và lọc đúng trạng thái đã chọn (Not OK / Chờ Approve / Tất cả)">
+              🔎 Tìm Kiếm (Search)
             </button>
             <button type="button" class="pill-btn" style="background:#059669;border-color:#10b981;color:#fff;padding:7px 11px;cursor:pointer;" onclick="loadSelectedSavedSession(false)" title="Hiện đầy đủ toàn bộ 100% hạng mục của trạm">
-              📋 Nạp Xem Tất Cả Hạng Mục (Thấy Hết)
+              📋 Xem Tất Cả (100%)
             </button>
-            <button type="button" class="pill-btn" style="background:#2563eb;border-color:#60a5fa;color:#fff;padding:7px 10px;cursor:pointer;" onclick="fetchCloudSessions(true)" title="Tải lại danh sách trạm từ Sheet">
-              🔄 Tải Lại
+            <button type="button" class="pill-btn" style="background:#2563eb;border-color:#60a5fa;color:#fff;padding:7px 10px;cursor:pointer;" onclick="fetchCloudSessions(true)" title="Tải lại danh sách trạm mới nhất từ Google Sheet">
+              🔄 Đồng Bộ Sheet
             </button>
           </div>
           <div id="editing-session-banner" style="display:none;align-items:center;gap:8px;background:#fef3c7;border:1px solid #f59e0b;color:#92400e;padding:5px 10px;border-radius:8px;font-size:12px;font-weight:800;">
@@ -1197,8 +1204,10 @@
       <div class="filter-bar">
         <div class="filter-pills">
           <button type="button" class="f-pill active" data-filter="all" onclick="setItemFilter('all')" id="fp-all">📋 Tất cả hạng mục</button>
-          <button type="button" class="f-pill nok-pill" data-filter="nok" onclick="setItemFilter('nok')" id="fp-nok">❌ Chỉ mục Lỗi (NOK)</button>
-          <button type="button" class="f-pill" data-filter="pending_fix" onclick="setItemFilter('pending_fix')" id="fp-pending">⏳ Chưa sửa</button>
+          <button type="button" class="f-pill nok-pill" data-filter="nok" onclick="setItemFilter('nok')" id="fp-nok">❌ Not OK (Chỉ mục Lỗi NOK)</button>
+          <button type="button" class="f-pill" data-filter="pending_fix" onclick="setItemFilter('pending_fix')" id="fp-pending">⏳ Kỹ thuật Chưa sửa</button>
+          <button type="button" class="f-pill" data-filter="pending_approve" onclick="setItemFilter('pending_approve')" id="fp-pending-approve" style="border-color:#f59e0b;color:#b45309;">🔧 Đã sửa • Chờ Approve</button>
+          <button type="button" class="f-pill" data-filter="approved" onclick="setItemFilter('approved')" id="fp-approved" style="border-color:#10b981;color:#065f46;">☑️ Đã Approve hoàn thành</button>
           <button type="button" class="f-pill" data-filter="fixed" onclick="setItemFilter('fixed')" id="fp-fixed">✅ Đã sửa xong</button>
           <button type="button" class="f-pill" data-filter="has_photo" onclick="setItemFilter('has_photo')" id="fp-photo">📸 Có hình ảnh (1440×1088)</button>
           <button type="button" class="f-pill" onclick="markAllItemsOk()" style="background:#ecfdf5;color:#047857;border-color:#6ee7b7;">⚡ Đặt tất cả = OK</button>
@@ -1880,7 +1889,28 @@
     }
 
     function setItemFilter(f) {
+      // Nếu nhân viên vừa gõ Mã Trạm vào ô Tìm Trạm hoặc Mã Trạm rồi bấm chọn lọc "Not OK" (hoặc Chờ Approve) mà chưa bấm Nạp, tự động nạp luôn phiếu của trạm đó!
+      if (f !== "all" && !currentSessionId) {
+        const qFind = ((document.getElementById("inp-find-saved-site") && document.getElementById("inp-find-saved-site").value) || "").trim().toLowerCase();
+        const qSite = ((document.getElementById("inp-site-code") && document.getElementById("inp-site-code").value) || "").trim().toLowerCase();
+        const q = qFind || qSite;
+        if (q && cloudSessions.length > 0) {
+          const matched = cloudSessions.find(s => String(s.siteCode || "").trim().toLowerCase() === q && s.checklistType === currentType)
+            || cloudSessions.find(s => String(s.siteCode || "").trim().toLowerCase() === q)
+            || cloudSessions.find(s => String(s.siteCode || "").toLowerCase().indexOf(q) !== -1 && s.checklistType === currentType)
+            || cloudSessions.find(s => String(s.siteCode || "").toLowerCase().indexOf(q) !== -1);
+          if (matched) {
+            currentFilter = f;
+            loadSessionIntoEditor(matched.sessionId, false, f);
+            return;
+          }
+        }
+      }
       currentFilter = f;
+      const modeSel = document.getElementById("sel-search-filter-mode");
+      if (modeSel && ["nok", "pending_approve", "approved", "all"].indexOf(f) !== -1) {
+        modeSel.value = f;
+      }
       document.querySelectorAll(".f-pill[data-filter]").forEach(b => {
         b.classList.toggle("active", b.getAttribute("data-filter") === f);
       });
@@ -1921,9 +1951,11 @@
         const hasAfter = !!(st.afterDataUrl || st.afterThumbUrl);
         const isFixed = hasAfter || String(st.fixStatus || "").indexOf("Đã sửa") === 0;
 
-        // Filter check
+        // Filter check (Hỗ trợ đầy đủ: Not OK / Chưa sửa / Đã sửa chờ Approve / Đã Approve / Có ảnh)
         if (currentFilter === "nok" && !isNok) return;
         if (currentFilter === "pending_fix" && (!isNok || isFixed)) return;
+        if (currentFilter === "pending_approve" && (!isNok || st.techVerified)) return;
+        if (currentFilter === "approved" && !(isNok && st.techVerified)) return;
         if (currentFilter === "fixed" && !(isNok && isFixed)) return;
         if (currentFilter === "has_photo" && !hasBefore && !hasAfter) return;
 
@@ -2040,16 +2072,24 @@
             </div>
             ${renderMultiPhotoGalleryHtml(st, 'AFTER', codeEsc)}
             ${(beforeImgSrc || afterImgSrc) ? `<button type="button" class="btn-compare-inline" onclick="openCompareModalForItem('${codeEsc}')">${t.btnCompare}</button>` : ``}
-            <div style="margin-top:6px;padding:7px 9px;border-radius:8px;border:1.5px solid ${st.techVerified ? '#10b981' : '#cbd5e1'};background:${st.techVerified ? '#dcfce7' : '#f8fafc'};">
-              <label style="display:flex;align-items:flex-start;gap:7px;cursor:pointer;font-size:11.5px;font-weight:900;color:${st.techVerified ? '#065f46' : '#334155'};line-height:1.35;">
-                <input type="checkbox" style="width:16px;height:16px;margin-top:2px;accent-color:#059669;cursor:pointer;" ${st.techVerified ? 'checked' : ''} onchange="toggleTechVerifyItem('${codeEsc}', this.checked, this)" />
-                <span>
-                  ☑️ 🇬🇧 Technical Dept Verify Repair Completed<br/>
-                  <span style="font-weight:700;color:#047857;">🇻🇳 Phòng Kỹ Thuật Tick Xác Nhận Đã Hoàn Thành Sửa Chữa</span><br/>
-                  <span style="font-weight:700;color:#b45309;">🇲🇲 နည်းပညာဌာနမှ ပြင်ဆင်ပြီးကြောင်း အတည်ပြုချက်</span>
-                </span>
-              </label>
-              ${st.techVerified ? `<div style="font-size:11px;font-weight:800;color:#047857;margin-top:3px;padding-left:23px;">🛡️ Verified by / Đã xác nhận: ${escHtml(st.techVerifiedBy || st.techVerifiedEmail)} (${escHtml(st.techVerifiedEmail || '')}) • ${escHtml(st.techVerifiedAt || '')}</div>` : `<div style="font-size:10.5px;color:#64748b;margin-top:2px;padding-left:23px;">(Authorized Technical Dept Gmails Only / Chỉ Gmail Phòng Kỹ Thuật)</div>`}
+            <div style="margin-top:6px;padding:8px 10px;border-radius:9px;border:2px solid ${st.techVerified ? '#10b981' : (isFixed ? '#f59e0b' : '#cbd5e1')};background:${st.techVerified ? '#dcfce7' : (isFixed ? '#fffbeb' : '#f8fafc')};">
+              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+                <label style="display:flex;align-items:flex-start;gap:7px;cursor:pointer;font-size:11.5px;font-weight:900;color:${st.techVerified ? '#065f46' : '#334155'};line-height:1.35;flex:1;">
+                  <input type="checkbox" style="width:17px;height:17px;margin-top:2px;accent-color:#059669;cursor:pointer;" ${st.techVerified ? 'checked' : ''} onchange="toggleTechVerifyItem('${codeEsc}', this.checked, this)" />
+                  <span>
+                    🛡️ 🇬🇧 APPROVE REPAIR COMPLETED (Authorized Approvers Only)<br/>
+                    <span style="font-weight:800;color:#047857;">🇻🇳 Phê Duyệt Hoàn Thành Sửa Chữa (Chỉ Nhân Viên Trong Danh Sách Phê Duyệt)</span><br/>
+                    <span style="font-weight:700;color:#b45309;">🇲🇲 ပြင်ဆင်ပြီးကြောင်း အတည်ပြုချက် (Approve)</span>
+                  </span>
+                </label>
+                <button type="button" onclick="toggleTechVerifyItem('${codeEsc}', ${!st.techVerified}, null)" style="background:${st.techVerified ? '#059669' : '#1e3a8a'};color:#fff;border:none;border-radius:8px;padding:6px 11px;font-size:11.5px;font-weight:900;cursor:pointer;box-shadow:0 2px 6px rgba(15,23,42,0.18);">
+                  ${st.techVerified ? '☑️ APPROVED (Đã Phê Duyệt)' : '🛡️ Bấm APPROVE (Phê Duyệt)'}
+                </button>
+              </div>
+              ${st.techVerified
+                ? `<div style="font-size:11px;font-weight:900;color:#065f46;margin-top:4px;padding-left:24px;">✅ APPROVED BY / ĐÃ PHÊ DUYỆT BỞI: ${escHtml(st.techVerifiedBy || st.techVerifiedEmail)} (${escHtml(st.techVerifiedEmail || '')}) • ${escHtml(st.techVerifiedAt || '')}</div>`
+                : `<div style="font-size:10.5px;font-weight:800;color:${isFixed ? '#b45309' : '#64748b'};margin-top:3px;padding-left:24px;">${isFixed ? '⏳ Kỹ thuật đã sửa xong — Chờ Nhân Viên Trong Danh Sách Phê Duyệt vào phúc tra &amp; bấm APPROVE!' : '🔒 Khóa Bảo Mật: Ngoài danh sách Gmail Phê Duyệt (Tab 7) tuyệt đối không được bấm Approve hoàn thành!'}</div>`
+              }
             </div>
           </div>
         </div>`;
@@ -3427,23 +3467,29 @@
       let verifier = getActiveTechDeptVerifier();
       if (verifier) return verifier;
 
+      const activeList = getApproversArray().filter(x => String(x.status || "ACTIVE").toUpperCase() !== "INACTIVE");
+      const lines = activeList.map(ap => "• " + ap.email + " (" + ap.name + " - " + ap.title + ")").join("\n");
+
       const entered = prompt(
-        "🔐 XÁC THỰC GMAIL PHÒNG KỸ THUẬT:\n" +
-        "Chỉ thành viên Phòng Kỹ Thuật trong danh sách Gmail mới được phép Tick xác nhận nhân viên hoàn thành sửa chữa.\n\n" +
-        "Danh sách Gmail Phòng Kỹ Thuật được cấp quyền:\n" +
-        "• yelwin086683@gmail.com (Ye Lwin - Technical Manager)\n" +
-        "• shingwutthmone776@gmail.com (Shing Wutt Hmone Oo - CM Engineer)\n" +
-        "• ppoe56591@gmail.com (Poe Hmyin Thoun - Infrastructure)\n" +
-        "• heinnanda683@gmail.com (Hein Nanda - M&E Engineer)\n" +
-        "• htoolaynyaw@gmail.com (Naw Oh Nyaw - PM Engineer)\n" +
-        "• phonghdpxd@gmail.com (Hà Đức Phong - BOD / Admin)\n\n" +
-        "Vui lòng nhập Gmail Phòng Kỹ Thuật của bạn:",
+        "🔐 XÁC THỰC QUYỀN APPROVE (PHÊ DUYỆT HOÀN THÀNH SỬA CHỮA):\n" +
+        "🇬🇧 Only authorized Approvers in the list can APPROVE completed repairs.\n" +
+        "🇻🇳 Chỉ nhân viên CÓ TRONG DANH SÁCH PHÊ DUYỆT (Tab 7) mới được phép bấm APPROVE hoàn thành sửa chữa (Ngoài danh sách tuyệt đối không được Approve!).\n" +
+        "🇲🇲 အတည်ပြုခွင့်စာရင်းဝင် Gmail များသာ Approve ပြုလုပ်ခွင့်ရှိသည်။\n\n" +
+        "📋 Danh sách Gmail được quyền Phê Duyệt hiện hành:\n" +
+        lines + "\n\n" +
+        "Vui lòng nhập chính xác Gmail Người Phê Duyệt của bạn:",
         localStorage.getItem("tni_google_auth_email") || ""
       );
       if (!entered) return null;
       const clean = entered.trim().toLowerCase();
       if (!TECH_DEPT_GMAIL_MAP[clean]) {
-        alert("⛔ Gmail [" + clean + "] KHÔNG nằm trong danh sách Phòng Kỹ Thuật được quyền xác nhận hoàn thành sửa chữa!");
+        alert(
+          "⛔ TỪ CHỐI PHÊ DUYỆT (ACCESS DENIED — NOT IN APPROVER LIST)!\n\n" +
+          "• Gmail vừa nhập: [" + clean + "]\n" +
+          "• 🇻🇳 Gmail này KHÔNG nằm trong Danh Sách Người Phê Duyệt (Tab 7). Nhân viên kỹ thuật hoặc người ngoài danh sách tuyệt đối KHÔNG ĐƯỢC bấm Approve phê duyệt hoàn thành!\n" +
+          "• 🇬🇧 This Gmail is NOT in the Authorized Approver List. Users outside the list cannot Approve!\n" +
+          "• 🇲🇲 ဤ Gmail သည် အတည်ပြုခွင့်စာရင်းတွင် မပါဝင်သောကြောင့် Approve လုပ်ခွင့်မရှိပါ။"
+        );
         return null;
       }
       localStorage.setItem("tni_cl_tech_gmail", clean);
@@ -3668,28 +3714,50 @@
 
     function onSelectSavedSessionChange() {
       const sel = document.getElementById("sel-saved-sessions");
+      const modeSel = document.getElementById("sel-search-filter-mode");
+      const chosenFilter = modeSel ? modeSel.value : "nok";
       if (sel && sel.value) {
-        loadSessionIntoEditor(sel.value, true);
+        loadSessionIntoEditor(sel.value, chosenFilter === "nok", chosenFilter);
       }
     }
 
-    function loadSelectedSavedSession(filterToNok) {
+    function executeSiteSearchByFilterDropdown() {
+      const modeSel = document.getElementById("sel-search-filter-mode");
+      const chosenFilter = modeSel ? modeSel.value : "nok";
+      loadSelectedSavedSession(chosenFilter === "nok", chosenFilter);
+    }
+
+    function loadSelectedSavedSession(filterToNok, explicitFilterMode) {
       const sel = document.getElementById("sel-saved-sessions");
       const qInp = document.getElementById("inp-find-saved-site");
-      let targetSessionId = sel ? sel.value : "";
+      const siteInp = document.getElementById("inp-site-code");
+      const qRaw = ((qInp && qInp.value) || (siteInp && siteInp.value) || "").trim().toLowerCase();
+      let targetSessionId = "";
 
-      if (!targetSessionId && qInp && qInp.value.trim()) {
-        const q = qInp.value.trim().toLowerCase();
-        const found = cloudSessions.find(s => String(s.siteCode || "").toLowerCase().indexOf(q) !== -1 || String(s.sessionId || "").toLowerCase().indexOf(q) !== -1);
-        if (found) targetSessionId = found.sessionId;
+      // Nếu người dùng gõ mã trạm vào ô Tìm Trạm, ưu tiên tìm đúng phiếu khớp mã trạm đó (ưu tiên cùng loại Check List đang mở trước)
+      if (qRaw) {
+        const exactSameType = cloudSessions.find(s => String(s.siteCode || "").trim().toLowerCase() === qRaw && s.checklistType === currentType);
+        const exactAnyType = cloudSessions.find(s => String(s.siteCode || "").trim().toLowerCase() === qRaw);
+        const partialSameType = cloudSessions.find(s => (String(s.siteCode || "").toLowerCase().indexOf(qRaw) !== -1 || String(s.sessionId || "").toLowerCase().indexOf(qRaw) !== -1) && s.checklistType === currentType);
+        const partialAnyType = cloudSessions.find(s => String(s.siteCode || "").toLowerCase().indexOf(qRaw) !== -1 || String(s.sessionId || "").toLowerCase().indexOf(qRaw) !== -1);
+        const bestMatch = exactSameType || exactAnyType || partialSameType || partialAnyType;
+        if (bestMatch) {
+          targetSessionId = bestMatch.sessionId;
+          if (sel) sel.value = targetSessionId;
+        }
+      }
+
+      if (!targetSessionId && sel && sel.value) {
+        targetSessionId = sel.value;
       }
 
       if (!targetSessionId) {
-        alert("🔎 Vui lòng nhập Mã Trạm (VD: TNI0012) hoặc chọn một phiếu đã kiểm tra trong danh sách để nạp vào cập nhật sửa chữa!");
+        alert("🔎 Vui lòng nhập Mã Trạm (VD: TNI0012) hoặc chọn một phiếu đã kiểm tra trong danh sách rồi bấm [🔎 Tìm Kiếm]!");
         if (qInp) qInp.focus();
         return;
       }
-      loadSessionIntoEditor(targetSessionId, filterToNok);
+      const modeToApply = explicitFilterMode || (filterToNok ? "nok" : "all");
+      loadSessionIntoEditor(targetSessionId, filterToNok, modeToApply);
     }
 
     function onSiteCodeInput() {
@@ -4320,7 +4388,7 @@
       }
     }
 
-    function loadSessionIntoEditor(sessionId, focusNokForRepair) {
+    function loadSessionIntoEditor(sessionId, focusNokForRepair, explicitFilterMode) {
       const sess = cloudSessions.find(x => x.sessionId === sessionId);
       if (!sess) return;
       currentSessionId = sess.sessionId;
@@ -4379,10 +4447,11 @@
       if (hintEl) hintEl.style.display = "none";
 
       switchChecklistType(tKey);
-      if (focusNokForRepair && Number(sess.nokCount || 0) > 0) {
-        setItemFilter("nok");
-      } else {
+      const targetFilter = explicitFilterMode || (focusNokForRepair ? "nok" : "all");
+      if (targetFilter === "nok" && Number(sess.nokCount || 0) === 0) {
         setItemFilter("all");
+      } else {
+        setItemFilter(targetFilter);
       }
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
