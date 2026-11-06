@@ -1375,9 +1375,22 @@
     let currentType = "site_bts";
     let currentFilter = "all";
     let currentSessionId = "";
-    let itemStates = {}; // { [type]: { [code]: { status, evalPoint, defectNote, beforeDataUrl, beforeThumbUrl, beforeDriveUrl, fixStatus, afterNote, afterDataUrl, afterThumbUrl, afterDriveUrl, gps } } }
+    let autoSyncTimer = null;
+    let isAutoSyncing = false;
+    let activePhotoUploads = 0;
+    let itemStates = {}; // { [type]: { [code]: { status, evalPoint, defectNote, beforeDataUrl, beforeThumbUrl, beforeDriveUrl, uploadingBefore, fixStatus, afterNote, afterDataUrl, afterThumbUrl, afterDriveUrl, uploadingAfter, gps } } }
     let pendingPhotoTarget = null; // { type, code, stage: 'BEFORE' | 'AFTER', sessionIdForBi }
     let cloudSessions = [];
+
+    function ensureSessionId() {
+      if (!currentSessionId) {
+        const d = new Date();
+        const pad = n => String(n).padStart(2, "0");
+        const ts = d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + "-" + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
+        currentSessionId = "CL-" + ts + "-" + Math.floor(Math.random() * 900 + 100);
+      }
+      return currentSessionId;
+    }
 
     function initApp() {
       const today = new Date().toISOString().slice(0, 10);
@@ -1610,9 +1623,9 @@
             <div class="thumb-wrap ${beforeImgSrc ? 'has-img' : ''}">
               <img src="${escAttr(beforeImgSrc)}" alt="Before 1440x1088" onclick="openCompareModalForItem('${codeEsc}')" />
               <button type="button" class="btn-del-photo" onclick="clearItemPhoto('${codeEsc}', 'BEFORE')">✕ Xóa</button>
-              <div class="thumb-meta-bar">
+              <div class="thumb-meta-bar" style="background:${st.uploadingBefore ? 'rgba(217,119,6,0.92)' : (st.beforeDriveUrl ? 'rgba(5,150,105,0.9)' : 'rgba(15,23,42,0.82)')}">
                 <span>📸 ẢNH LỖI (BEFORE)</span>
-                <span>1440×1088 px ✅</span>
+                <span>${st.uploadingBefore ? '⏳ Đang lưu liền lên Drive 2.14...' : (st.beforeDriveUrl ? '☁️ Đã lưu liền Drive 2.14 ✅' : '1440×1088 px ✅')}</span>
               </div>
             </div>
           </div>
@@ -1621,7 +1634,7 @@
           <div class="photo-col-box fixed-col">
             <div class="col-box-header">
               <span>${t.colFixedTitle}</span>
-              <select class="fix-status-select" onchange="updateItemField('${codeEsc}', 'fixStatus', this.value); recalcLiveScore(); renderChecklistItems();">
+              <select class="fix-status-select" onchange="updateItemField('${codeEsc}', 'fixStatus', this.value); recalcLiveScore(); renderChecklistItems(); scheduleAutoSyncSheet();">
                 <option value="Chưa sửa (Pending Fix)" ${!isFixed ? 'selected' : ''}>⏳ Chưa sửa</option>
                 <option value="Đã sửa xong (Fixed)" ${isFixed ? 'selected' : ''}>✅ Đã sửa xong</option>
               </select>
@@ -1634,9 +1647,9 @@
             <div class="thumb-wrap ${afterImgSrc ? 'has-img' : ''}">
               <img src="${escAttr(afterImgSrc)}" alt="After 1440x1088" onclick="openCompareModalForItem('${codeEsc}')" />
               <button type="button" class="btn-del-photo" onclick="clearItemPhoto('${codeEsc}', 'AFTER')">✕ Xóa</button>
-              <div class="thumb-meta-bar">
+              <div class="thumb-meta-bar" style="background:${st.uploadingAfter ? 'rgba(217,119,6,0.92)' : (st.afterDriveUrl ? 'rgba(5,150,105,0.9)' : 'rgba(15,23,42,0.82)')}">
                 <span>🌟 ĐÃ SỬA (AFTER)</span>
-                <span>1440×1088 px ✅</span>
+                <span>${st.uploadingAfter ? '⏳ Đang lưu liền lên Drive 2.14...' : (st.afterDriveUrl ? '☁️ Đã lưu liền Drive 2.14 ✅' : '1440×1088 px ✅')}</span>
               </div>
             </div>
             ${(beforeImgSrc || afterImgSrc) ? `<button type="button" class="btn-compare-inline" onclick="openCompareModalForItem('${codeEsc}')">${t.btnCompare}</button>` : ``}
@@ -1646,6 +1659,17 @@
 
       if (visibleCount === 0) {
         html = `<div style="background:#fff;border-radius:12px;padding:28px;text-align:center;color:#64748b;font-weight:700;">Không có hạng mục nào khớp bộ lọc hiện tại.</div>`;
+      } else {
+        html += `
+        <div style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);border-radius:14px;padding:18px;margin:18px 0 10px 0;color:#fff;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;box-shadow:0 8px 24px rgba(15,23,42,0.18);">
+          <div>
+            <div style="font-size:15px;font-weight:900;">⚡ Cơ Chế Chống Nghẽn Tự Động: Mọi hình ảnh 1440×1088 chụp lên đều được LƯU LIỀN tức thì vào Drive 2.14 & Sheet riêng!</div>
+            <div style="font-size:12px;color:#94a3b8;margin-top:3px;" id="end-card-sync-note">Không lo nghẽn mạng hay lỗi khi chụp nhiều ảnh. Sau khi kiểm tra xong toàn bộ, bấm nút [💾 Lưu] bên phải để chốt phiếu.</div>
+          </div>
+          <button type="button" class="btn-save-cloud" onclick="submitChecklistToCloud()" style="font-size:14px;padding:12px 22px;">
+            ${t.btnSaveCloud}
+          </button>
+        </div>`;
       }
       container.innerHTML = html;
     }
@@ -1660,6 +1684,7 @@
       saveLocalDraft();
       recalcLiveScore();
       renderChecklistItems();
+      scheduleAutoSyncSheet(1200);
     }
 
     function setItemEvalPoint(code, val) {
@@ -1668,6 +1693,7 @@
       st.evalPoint = Math.max(0, Number(val || 0));
       saveLocalDraft();
       recalcLiveScore();
+      scheduleAutoSyncSheet(1200);
     }
 
     function updateItemField(code, field, val) {
@@ -1675,6 +1701,7 @@
       if (!st) return;
       st[field] = val;
       saveLocalDraft();
+      scheduleAutoSyncSheet(1500);
     }
 
     function clearItemPhoto(code, stage) {
@@ -1684,14 +1711,17 @@
         st.beforeDataUrl = "";
         st.beforeThumbUrl = "";
         st.beforeDriveUrl = "";
+        st.uploadingBefore = false;
       } else {
         st.afterDataUrl = "";
         st.afterThumbUrl = "";
         st.afterDriveUrl = "";
+        st.uploadingAfter = false;
       }
       saveLocalDraft();
       recalcLiveScore();
       renderChecklistItems();
+      scheduleAutoSyncSheet(800);
     }
 
     // =========================================================================
@@ -1765,19 +1795,96 @@
       const st = itemStates[target.type] && itemStates[target.type][target.code];
       if (!st) return;
 
+      ensureSessionId();
+
       if (target.stage === "BEFORE") {
         st.beforeDataUrl = dataUrl1440;
+        st.uploadingBefore = true;
         // Auto switch item to NOK when user uploads a defect photo!
         st.status = "NOK";
         st.evalPoint = 0;
       } else {
         st.afterDataUrl = dataUrl1440;
+        st.uploadingAfter = true;
         st.fixStatus = "Đã sửa xong (Fixed)";
       }
 
       saveLocalDraft();
       recalcLiveScore();
       renderChecklistItems();
+
+      // 3. LƯU LIỀN TỨC THÌ ẢNH VỪA CHỤP LÊN DRIVE 2.14 & ĐỒNG BỘ SHEET NGAY (KHÔNG ĐỢI BẤM LƯU CUỐI GÂY NGHẼN)
+      await uploadSingleItemPhotoNow(target.type, target.code, target.stage, dataUrl1440);
+    }
+
+    async function uploadSingleItemPhotoNow(typeKey, itemCode, stage, dataUrl1440) {
+      const st = itemStates[typeKey] && itemStates[typeKey][itemCode];
+      if (!st || !dataUrl1440) return false;
+
+      const siteCode = (document.getElementById("inp-site-code").value || "TNI-SITE").trim();
+      const inspector = (document.getElementById("inp-inspector").value || "TNI-Staff").trim();
+      const dateStr = document.getElementById("inp-date").value || new Date().toISOString().slice(0, 10);
+
+      activePhotoUploads++;
+      if (stage === "BEFORE") st.uploadingBefore = true;
+      else st.uploadingAfter = true;
+
+      const sumEl = document.getElementById("bottom-summary-text");
+      if (sumEl) {
+        sumEl.textContent = "⏳ Đang lưu liền ảnh 1440×1088 mục " + itemCode + " (" + stage + ") lên Drive 2.14...";
+      }
+
+      try {
+        const resp = await fetch(GAS_CHECKLIST_API, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "checklist_upload_photo",
+            checklistType: typeKey,
+            siteCode: siteCode,
+            dateStr: dateStr,
+            inspector: inspector,
+            itemCode: itemCode,
+            stage: stage,
+            dataUrl: dataUrl1440
+          })
+        });
+        const res = await resp.json();
+        if (res && res.ok && res.photo) {
+          if (stage === "BEFORE") {
+            st.beforeThumbUrl = res.photo.thumbUrl || res.photo.directUrl || "";
+            st.beforeDriveUrl = res.photo.viewUrl || "";
+            st.beforeDataUrl = "";
+            st.uploadingBefore = false;
+          } else {
+            st.afterThumbUrl = res.photo.thumbUrl || res.photo.directUrl || "";
+            st.afterDriveUrl = res.photo.viewUrl || "";
+            st.afterDataUrl = "";
+            st.uploadingAfter = false;
+          }
+          saveLocalDraft();
+          renderChecklistItems();
+          if (sumEl) {
+            sumEl.textContent = "☁️ Đã lưu liền ảnh mục " + itemCode + " (1440×1088) vào Drive 2.14 ✅";
+          }
+          // Auto sync lightweight metadata + Drive photo URL to Google Sheet right away!
+          scheduleAutoSyncSheet(200);
+          return true;
+        } else {
+          throw new Error((res && res.error) || "Upload photo failed");
+        }
+      } catch (err) {
+        console.warn("Immediate photo upload error:", err);
+        if (stage === "BEFORE") st.uploadingBefore = false;
+        else st.uploadingAfter = false;
+        renderChecklistItems();
+        if (sumEl) {
+          sumEl.textContent = "⚠️ Ảnh mục " + itemCode + " đang giữ tạm ở máy, sẽ tự thử lưu lại khi bấm Lưu cuối.";
+        }
+        return false;
+      } finally {
+        activePhotoUploads = Math.max(0, activePhotoUploads - 1);
+      }
     }
 
     /**
@@ -1937,8 +2044,93 @@
     }
 
     // =========================================================================
-    // SUBMIT TO DEDICATED GOOGLE SHEET & DRIVE 2.14 Check list photo
+    // AUTO-SYNC BACKGROUND & FINAL SUBMIT TO DEDICATED GOOGLE SHEET & DRIVE 2.14
     // =========================================================================
+    function scheduleAutoSyncSheet(delayMs) {
+      if (autoSyncTimer) clearTimeout(autoSyncTimer);
+      autoSyncTimer = setTimeout(() => {
+        autoSyncSheetNow();
+      }, delayMs || 800);
+    }
+
+    async function autoSyncSheetNow() {
+      if (isAutoSyncing || activePhotoUploads > 0 || currentType === "bi_dashboard") return;
+      const tpl = CHECKLIST_TEMPLATES[currentType];
+      if (!tpl) return;
+
+      const siteCode = (document.getElementById("inp-site-code").value || "TNI-SITE").trim();
+      const inspector = (document.getElementById("inp-inspector").value || "TNI-Staff").trim();
+      const dateStr = document.getElementById("inp-date").value || new Date().toISOString().slice(0, 10);
+      const gpsCoords = (document.getElementById("inp-gps").value || "").trim();
+      const extraMeta = (document.getElementById("inp-extra-meta").value || "TNI").trim();
+      const generalComment = (document.getElementById("inp-comment").value || "").trim();
+      const stMap = itemStates[currentType];
+
+      ensureSessionId();
+      isAutoSyncing = true;
+
+      try {
+        // Never send heavy base64 in background auto-sync; photos are already uploaded via uploadSingleItemPhotoNow!
+        const itemsPayload = tpl.items.map(it => {
+          const st = stMap[it.code];
+          return {
+            code: it.code,
+            category: it.category,
+            requirement: it.requirement,
+            stdPoint: it.stdPoint,
+            evalPoint: st.evalPoint,
+            status: st.status,
+            defectNote: st.defectNote || "",
+            beforeDataUrl: "",
+            beforeThumbUrl: st.beforeThumbUrl || "",
+            beforeDriveUrl: st.beforeDriveUrl || "",
+            fixStatus: st.fixStatus || "",
+            afterNote: st.afterNote || "",
+            afterDataUrl: "",
+            afterThumbUrl: st.afterThumbUrl || "",
+            afterDriveUrl: st.afterDriveUrl || "",
+            gps: st.gps || gpsCoords
+          };
+        });
+
+        const payload = {
+          action: "checklist_save",
+          sessionId: currentSessionId,
+          checklistType: currentType,
+          siteCode: siteCode,
+          branch: extraMeta,
+          inspector: inspector,
+          dateStr: dateStr,
+          gpsCoords: gpsCoords,
+          generalComment: generalComment,
+          items: itemsPayload
+        };
+
+        const resp = await fetch(GAS_CHECKLIST_API, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+        const res = await resp.json();
+        if (res && res.ok) {
+          currentSessionId = res.sessionId || currentSessionId;
+          const nowTime = new Date().toLocaleTimeString("en-GB", { hour12: false });
+          const endNote = document.getElementById("end-card-sync-note");
+          if (endNote) {
+            endNote.textContent = "☁️ Đã tự động lưu liền vào Sheet [" + tpl.tabName + "] & Drive 2.14 lúc " + nowTime + " (Mã phiếu: " + currentSessionId + "). Bấm nút [💾 Lưu] cuối trang để chốt phiếu.";
+          }
+          const sumEl = document.getElementById("bottom-summary-text");
+          if (sumEl) {
+            sumEl.textContent = "☁️ Đã lưu liền (" + nowTime + ") • " + tpl.tabName + " • Điểm: " + res.summary.totalScore + " (" + res.summary.rating + ") • Lỗi NOK: " + res.summary.nokCount;
+          }
+        }
+      } catch (e) {
+        console.warn("autoSyncSheetNow error:", e);
+      } finally {
+        isAutoSyncing = false;
+      }
+    }
+
     async function submitChecklistToCloud() {
       const siteCode = (document.getElementById("inp-site-code").value || "").trim();
       const inspector = (document.getElementById("inp-inspector").value || "").trim();
@@ -1953,10 +2145,15 @@
         return;
       }
 
+      if (autoSyncTimer) {
+        clearTimeout(autoSyncTimer);
+        autoSyncTimer = null;
+      }
+
       const btn = document.getElementById("btn-submit-checklist");
       const oldText = btn.textContent;
       btn.disabled = true;
-      btn.textContent = "⏳ Đang lưu vào Sheet riêng & Upload ảnh 1440×1088 lên Drive 2.14...";
+      btn.textContent = "⏳ Đang chốt phiếu & đồng bộ Sheet riêng...";
 
       try {
         const tpl = CHECKLIST_TEMPLATES[currentType];
@@ -1965,6 +2162,24 @@
         const gpsCoords = (document.getElementById("inp-gps").value || "").trim();
         const extraMeta = (document.getElementById("inp-extra-meta").value || "TNI").trim();
         const generalComment = (document.getElementById("inp-comment").value || "").trim();
+
+        ensureSessionId();
+
+        // Sequential safety pass: if any photo is still waiting to finish uploading, upload one-by-one first so we NEVER bottleneck!
+        for (let i = 0; i < tpl.items.length; i++) {
+          const it = tpl.items[i];
+          const st = stMap[it.code];
+          if (st.beforeDataUrl && !st.beforeDriveUrl) {
+            btn.textContent = "⏳ Đang lưu ảnh lỗi mục " + it.code + " lên Drive 2.14...";
+            await uploadSingleItemPhotoNow(currentType, it.code, "BEFORE", st.beforeDataUrl);
+          }
+          if (st.afterDataUrl && !st.afterDriveUrl) {
+            btn.textContent = "⏳ Đang lưu ảnh đã sửa mục " + it.code + " lên Drive 2.14...";
+            await uploadSingleItemPhotoNow(currentType, it.code, "AFTER", st.afterDataUrl);
+          }
+        }
+
+        btn.textContent = "⏳ Đang chốt phiếu vào Sheet [" + tpl.tabName + "]...";
 
         const itemsPayload = tpl.items.map(it => {
           const st = stMap[it.code];
@@ -1990,7 +2205,7 @@
 
         const payload = {
           action: "checklist_save",
-          sessionId: currentSessionId || "",
+          sessionId: currentSessionId,
           checklistType: currentType,
           siteCode: siteCode,
           branch: extraMeta,
