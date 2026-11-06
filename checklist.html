@@ -1166,7 +1166,14 @@
           </div>
           <div class="field-group">
             <label id="lbl-inspector">Nhân Viên Kiểm Tra / Cập Nhật Sửa (Staff) *</label>
-            <input type="text" class="field-input" id="inp-inspector" placeholder="Nhập tên kỹ thuật viên..." oninput="saveLocalDraft()" />
+            <input type="text" class="field-input" id="inp-inspector" placeholder="Nhập tên nhân viên (in lên ảnh 1440×1088)..." oninput="saveLocalDraft();syncWebCamOverlayText();" />
+          </div>
+          <div class="field-group">
+            <label id="lbl-gps">📍 Tọa Độ GPS (Lat, Long • VD: 10.33532, 98.35353)</label>
+            <div style="display:flex;gap:5px;">
+              <input type="text" class="field-input" id="inp-gps" style="flex:1;font-weight:800;color:#047857;" placeholder="10.33532, 98.35353" oninput="window._lastExifGps=this.value.trim();saveLocalDraft();syncWebCamOverlayText();" />
+              <button type="button" onclick="fetchLiveGps(true)" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:0 10px;font-size:11.5px;font-weight:900;cursor:pointer;white-space:nowrap;" title="Lấy tọa độ Lat, Long hiện tại">📍 Lấy GPS</button>
+            </div>
           </div>
           <div class="field-group">
             <label id="lbl-date">Ngày Kiểm Tra (Inspection Date)</label>
@@ -1491,6 +1498,107 @@
   <!-- HIDDEN FILE INPUT: DIRECT FILE PICKER (NO CAMERA CHOOSER) WITH MULTI-SELECT (CHỤP BAO NHIÊU ẢNH LINK BẤY NHIÊU ẢNH) -->
   <input type="file" id="hidden-photo-input" accept=".jpg,.jpeg,.png,.webp,.heic,image/jpeg,image/png,image/webp,application/pdf" multiple style="display:none;" onchange="handlePhotoFileSelected(event)" />
 
+  <!-- MODAL 0: BUILT-IN WEB LIVE TIMESTAMP CAMERA (1440x1088 PX • STAFF NAME + DATE/TIME + LAT, LONG + MULTI-SHOT & TICK SELECT) -->
+  <div class="modal-backdrop" id="modal-web-timestamp-cam" style="z-index:260;">
+    <div class="modal-box" style="max-width:860px;padding:14px;background:#0f172a;color:#fff;border:2px solid #38bdf8;">
+      <div class="modal-hdr" style="border-bottom:1px solid #334155;padding-bottom:10px;margin-bottom:10px;">
+        <div>
+          <h3 style="font-size:15.5px;font-weight:900;color:#38bdf8;display:flex;align-items:center;gap:6px;" id="webcam-modal-title">
+            📷 Web Timestamp Camera Trực Tiếp (Chuẩn 1440×1088 px • Tự Đóng Dấu Tên NV + Ngày Giờ + Lat, Long)
+          </h3>
+          <div style="font-size:11.5px;color:#cbd5e1;" id="webcam-modal-sub">
+            Chụp 1 hoặc nhiều ảnh liên tiếp (2–5+ ảnh), tick chọn ảnh ưng ý và bấm [✅ Xác Nhận &amp; Đính Kèm] để gắn thẳng vào hạng mục!
+          </div>
+        </div>
+        <button class="btn-close-modal" style="background:#ef4444;color:#fff;" onclick="closeWebTimestampCameraModal()">✕</button>
+      </div>
+
+      <!-- LIVE EDITABLE META BAR INSIDE CAMERA (STAFF NAME, SITE CODE, LAT/LONG) -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:10px;background:#1e293b;padding:9px 11px;border-radius:10px;border:1px solid #334155;">
+        <div>
+          <label style="font-size:10.5px;font-weight:800;color:#93c5fd;display:block;margin-bottom:2px;">👤 Tên Nhân Viên (In lên ảnh) *</label>
+          <input type="text" id="webcam-inp-staff" placeholder="Nhập tên nhân viên..." style="width:100%;padding:5px 8px;border-radius:6px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:12px;font-weight:800;" oninput="document.getElementById('inp-inspector').value=this.value;saveLocalDraft();syncWebCamOverlayText();" />
+        </div>
+        <div>
+          <label style="font-size:10.5px;font-weight:800;color:#93c5fd;display:block;margin-bottom:2px;">📡 Mã Trạm / Tuyến (Site ID)</label>
+          <input type="text" id="webcam-inp-site" placeholder="VD: TNI0012" style="width:100%;padding:5px 8px;border-radius:6px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:12px;font-weight:800;" oninput="document.getElementById('inp-site-code').value=this.value;saveLocalDraft();syncWebCamOverlayText();" />
+        </div>
+        <div>
+          <label style="font-size:10.5px;font-weight:800;color:#6ee7b7;display:block;margin-bottom:2px;">📍 Tọa Độ Lat, Long (VD: 10.33532, 98.35353)</label>
+          <div style="display:flex;gap:4px;">
+            <input type="text" id="webcam-inp-gps" placeholder="10.33532, 98.35353" style="flex:1;padding:5px 8px;border-radius:6px;border:1px solid #10b981;background:#0f172a;color:#34d399;font-size:12px;font-weight:800;" oninput="window._lastExifGps=this.value.trim();if(document.getElementById('inp-gps'))document.getElementById('inp-gps').value=this.value.trim();saveLocalDraft();syncWebCamOverlayText();" />
+            <button type="button" onclick="fetchLiveGps(false)" style="background:#059669;color:#fff;border:none;border-radius:6px;padding:0 8px;font-size:11px;font-weight:800;cursor:pointer;" title="Lấy lại GPS">📍</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE 4:3 (1440x1088) CAMERA VIEWPORT WITH REAL-TIME TIMESTAMP OVERLAY -->
+      <div style="position:relative;width:100%;aspect-ratio:1440/1088;background:#000;border-radius:12px;overflow:hidden;border:2px solid #475569;">
+        <video id="webcam-live-video" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;display:block;"></video>
+
+        <!-- Flash effect layer when snapping -->
+        <div id="webcam-flash-layer" style="position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity 0.15s;"></div>
+
+        <!-- Top-Left Badge Preview on Live Viewfinder -->
+        <div id="webcam-overlay-top" style="position:absolute;top:10px;left:10px;right:10px;background:rgba(15,23,42,0.76);border-left:5px solid #ef4444;padding:6px 10px;border-radius:7px;pointer-events:none;font-size:11.5px;line-height:1.35;">
+          <div style="font-weight:900;color:#fff;" id="webcam-ov-line1">[BEFORE - ẢNH LỖI] Trạm: TNI-SITE • Mục: 1.1.1</div>
+          <div style="font-weight:700;color:#fde68a;" id="webcam-ov-line2">👤 NV: - | 📐 Chuẩn: 1440×1088 px</div>
+        </div>
+
+        <!-- Bottom-Right Timestamp Camera Standard Corner Overlay on Live Viewfinder -->
+        <div style="position:absolute;bottom:10px;right:12px;text-align:right;background:rgba(15,23,42,0.72);padding:7px 11px;border-radius:8px;border:1px solid rgba(255,255,255,0.22);pointer-events:none;font-size:12px;line-height:1.4;text-shadow:0 1px 3px #000;">
+          <div style="font-weight:900;color:#fff;font-size:13px;" id="webcam-ov-clock">🕒 2026-11-06 12:45:00</div>
+          <div style="font-weight:900;color:#34d399;font-size:12.5px;" id="webcam-ov-gps">📍 Lat, Long: Đang lấy GPS...</div>
+          <div style="font-weight:800;color:#93c5fd;" id="webcam-ov-staff">👤 Staff: -</div>
+          <div style="font-weight:800;color:#fca5a5;" id="webcam-ov-siteitem">📡 Site: - • Item: - (1440×1088)</div>
+        </div>
+
+        <!-- Error/Fallback message if camera permission denied -->
+        <div id="webcam-error-box" style="display:none;position:absolute;inset:0;background:rgba(15,23,42,0.94);flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;gap:10px;">
+          <div style="font-size:14px;font-weight:900;color:#f87171;" id="webcam-error-msg">⚠️ Không mở được ống kính trực tiếp trên trình duyệt này.</div>
+          <div style="font-size:12px;color:#cbd5e1;max-width:460px;">Bạn có thể bấm nút bên dưới để chụp hoặc chọn ảnh — hệ thống vẫn tự động đóng dấu Tên Nhân Viên + Ngày Giờ + Lat, Long (10.33532, 98.35353) và chuẩn hóa 1440×1088 px!</div>
+          <button type="button" onclick="triggerFallbackSystemCamWithStamp()" style="background:#059669;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:900;cursor:pointer;">
+            📸 Chụp Bằng Camera Máy (Tự Đóng Dấu Tên + Giờ + Lat, Long 1440×1088)
+          </button>
+        </div>
+      </div>
+
+      <!-- CAMERA CONTROLS BAR: SWITCH CAM • SNAP PHOTO (1440x1088) • CONFIRM & ATTACH TICKED PHOTOS -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:10px;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <button type="button" onclick="switchWebCamFacingMode()" style="background:#334155;color:#fff;border:1px solid #64748b;border-radius:9px;padding:9px 12px;font-size:12px;font-weight:800;cursor:pointer;">
+            🔄 Đổi Cam Trước/Sau
+          </button>
+          <button type="button" onclick="openNativeTimestampCameraIntent()" style="background:#1e293b;color:#94a3b8;border:1px solid #475569;border-radius:9px;padding:9px 10px;font-size:11px;font-weight:700;cursor:pointer;" title="Mở ứng dụng Timestamp Camera rời nếu muốn">
+            📱 Mở App TimestampCam Rời
+          </button>
+        </div>
+
+        <button type="button" id="btn-webcam-snap" onclick="snapPhotoFromWebTimestampCam()" style="background:linear-gradient(135deg,#dc2626 0%,#ea580c 100%);color:#fff;border:2px solid #fca5a5;border-radius:99px;padding:11px 24px;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 4px 14px rgba(220,38,38,0.45);display:inline-flex;align-items:center;gap:7px;">
+          📸 BẤM CHỤP ẢNH (1440×1088) • SNAP
+        </button>
+
+        <button type="button" id="btn-webcam-confirm" onclick="confirmAndAttachWebCamPhotos()" style="background:linear-gradient(135deg,#10b981 0%,#059669 100%);color:#fff;border:2px solid #6ee7b7;border-radius:10px;padding:11px 18px;font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 4px 14px rgba(16,185,129,0.4);">
+          ✅ Xác Nhận &amp; Gắn (0 ảnh đã Tick)
+        </button>
+      </div>
+
+      <!-- CAPTURED PHOTOS TRAY (MULTI-SHOT PREVIEW WITH TICK CHECKBOXES) -->
+      <div style="margin-top:10px;background:#1e293b;border-radius:10px;padding:9px 11px;border:1px solid #334155;">
+        <div style="font-size:11.5px;font-weight:800;color:#93c5fd;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
+          <span id="webcam-tray-title">🖼️ Khay Ảnh Vừa Chụp Trong Lượt Này (0 ảnh) — Tick ☑️ những ảnh muốn gắn vào mục kiểm tra:</span>
+          <span style="color:#34d399;font-size:11px;">Có thể bấm [📸 BẤM CHỤP ẢNH] liên tiếp 2–5+ tấm rồi bấm [✅ Xác Nhận]!</span>
+        </div>
+        <div id="webcam-captured-tray" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px;max-height:210px;overflow-y:auto;">
+          <div style="grid-column:1/-1;text-align:center;color:#64748b;font-size:11.5px;padding:10px;">
+            Chưa chụp tấm nào. Hãy hướng camera vào vị trí kiểm tra và bấm nút <strong>[📸 BẤM CHỤP ẢNH (1440×1088)]</strong>!
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <input type="file" id="hidden-camera-direct-input" accept="image/*" capture="environment" style="display:none;" onchange="handlePhotoFileSelected(event)" />
+
   <!-- MODAL 1: SIDE-BY-SIDE BEFORE / AFTER 1440x1088 COMPARISON -->
   <div class="modal-backdrop" id="modal-compare">
     <div class="modal-box">
@@ -1754,6 +1862,7 @@
       });
 
       loadLocalDraft();
+      startBackgroundGpsTracker();
       setLang(currentLang);
       switchChecklistType("site_bts");
       fetchCloudSessions(false);
@@ -2365,6 +2474,449 @@
       }
     }
 
+    // =========================================================================
+    // BUILT-IN WEB LIVE TIMESTAMP CAMERA ENGINE (1440x1088 + STAFF + TIME + LAT,LONG)
+    // =========================================================================
+    let webCamStream = null;
+    let webCamFacingMode = "environment";
+    let webCamClockTimer = null;
+    let webCamCapturedShots = []; // [{ id, dataUrl, checked, timestampStr, gpsStr, staffName }]
+    let gpsWatchId = null;
+
+    function formatLatLongDecimal(lat, lng) {
+      const la = Number(lat);
+      const ln = Number(lng);
+      if (isNaN(la) || isNaN(ln)) return "";
+      return la.toFixed(5) + ", " + ln.toFixed(5);
+    }
+
+    function getCurrentFormattedGps() {
+      const gpsInp = document.getElementById("inp-gps");
+      if (gpsInp && gpsInp.value && gpsInp.value.trim()) {
+        return gpsInp.value.trim();
+      }
+      if (window._lastExifGps && String(window._lastExifGps).trim()) {
+        return String(window._lastExifGps).trim();
+      }
+      return "12.43532, 98.60353";
+    }
+
+    function startBackgroundGpsTracker() {
+      if (!navigator.geolocation) return;
+      try {
+        navigator.geolocation.getCurrentPosition(pos => {
+          const coord = formatLatLongDecimal(pos.coords.latitude, pos.coords.longitude);
+          if (coord) {
+            window._lastExifGps = coord;
+            const gpsInp = document.getElementById("inp-gps");
+            if (gpsInp && !gpsInp.value.trim()) gpsInp.value = coord;
+            const wcGps = document.getElementById("webcam-inp-gps");
+            if (wcGps) wcGps.value = coord;
+            syncWebCamOverlayText();
+          }
+        }, () => {}, { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
+
+        if (gpsWatchId === null) {
+          gpsWatchId = navigator.geolocation.watchPosition(pos => {
+            const coord = formatLatLongDecimal(pos.coords.latitude, pos.coords.longitude);
+            if (coord) {
+              window._lastExifGps = coord;
+              const gpsInp = document.getElementById("inp-gps");
+              if (gpsInp && !gpsInp.value.trim()) gpsInp.value = coord;
+              const wcGps = document.getElementById("webcam-inp-gps");
+              if (wcGps && (!wcGps.value.trim() || wcGps.value.indexOf("Đang") !== -1)) wcGps.value = coord;
+              syncWebCamOverlayText();
+            }
+          }, () => {}, { enableHighAccuracy: true, maximumAge: 15000 });
+        }
+      } catch (e) {}
+    }
+
+    function formatNowTimestampStr() {
+      const d = new Date();
+      const pad = (n) => String(n).padStart(2, "0");
+      return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + " " +
+             pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+    }
+
+    function syncWebCamOverlayText() {
+      const target = pendingPhotoTarget || { code: "1.1.1", stage: "BEFORE" };
+      const staff = ((document.getElementById("webcam-inp-staff") && document.getElementById("webcam-inp-staff").value) || (document.getElementById("inp-inspector") && document.getElementById("inp-inspector").value) || "TNI-Staff").trim();
+      const site = ((document.getElementById("webcam-inp-site") && document.getElementById("webcam-inp-site").value) || (document.getElementById("inp-site-code") && document.getElementById("inp-site-code").value) || "TNI-SITE").trim();
+      const gps = ((document.getElementById("webcam-inp-gps") && document.getElementById("webcam-inp-gps").value) || getCurrentFormattedGps()).trim();
+      const nowStr = formatNowTimestampStr();
+      const isBefore = target.stage === "BEFORE";
+
+      const topBox = document.getElementById("webcam-overlay-top");
+      if (topBox) {
+        topBox.style.borderLeftColor = isBefore ? "#ef4444" : "#10b981";
+      }
+      const l1 = document.getElementById("webcam-ov-line1");
+      if (l1) {
+        l1.textContent = (isBefore ? "[BEFORE • ẢNH LỖI]" : "[AFTER • ẢNH ĐÃ SỬA]") + " Trạm: " + site + " • Mục: " + target.code;
+      }
+      const l2 = document.getElementById("webcam-ov-line2");
+      if (l2) {
+        l2.textContent = "👤 NV: " + staff + "  |  📍 Lat, Long: " + gps + "  |  📐 1440×1088 px";
+      }
+      const clk = document.getElementById("webcam-ov-clock");
+      if (clk) clk.textContent = "🕒 " + nowStr;
+      const gpsEl = document.getElementById("webcam-ov-gps");
+      if (gpsEl) gpsEl.textContent = "📍 Lat, Long: " + gps;
+      const stEl = document.getElementById("webcam-ov-staff");
+      if (stEl) stEl.textContent = "👤 Staff / NV: " + staff;
+      const siEl = document.getElementById("webcam-ov-siteitem");
+      if (siEl) siEl.textContent = "📡 Site: " + site + " • Item: " + target.code + " (1440×1088)";
+    }
+
+    async function openWebTimestampCameraModal() {
+      const modal = document.getElementById("modal-web-timestamp-cam");
+      if (!modal || !pendingPhotoTarget) return;
+
+      webCamCapturedShots = [];
+      renderWebCamCapturedTray();
+
+      // Sync inputs from main form into Camera Modal
+      const mainStaff = (document.getElementById("inp-inspector") && document.getElementById("inp-inspector").value) || "";
+      const mainSite = (document.getElementById("inp-site-code") && document.getElementById("inp-site-code").value) || "";
+      const wcStaff = document.getElementById("webcam-inp-staff");
+      const wcSite = document.getElementById("webcam-inp-site");
+      const wcGps = document.getElementById("webcam-inp-gps");
+      if (wcStaff) wcStaff.value = mainStaff;
+      if (wcSite) wcSite.value = mainSite;
+      if (wcGps) wcGps.value = getCurrentFormattedGps();
+
+      startBackgroundGpsTracker();
+      syncWebCamOverlayText();
+
+      if (webCamClockTimer) clearInterval(webCamClockTimer);
+      webCamClockTimer = setInterval(syncWebCamOverlayText, 1000);
+
+      modal.classList.add("open");
+      await startWebCamVideoStream();
+    }
+
+    async function startWebCamVideoStream() {
+      stopWebCamVideoStream();
+      const videoEl = document.getElementById("webcam-live-video");
+      const errBox = document.getElementById("webcam-error-box");
+      if (errBox) errBox.style.display = "none";
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        if (errBox) errBox.style.display = "flex";
+        return;
+      }
+
+      try {
+        webCamStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: webCamFacingMode },
+            width: { ideal: 1920 },
+            height: { ideal: 1440 }
+          },
+          audio: false
+        });
+        if (videoEl) {
+          videoEl.srcObject = webCamStream;
+          await videoEl.play().catch(() => {});
+        }
+      } catch (err) {
+        try {
+          webCamStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          if (videoEl) {
+            videoEl.srcObject = webCamStream;
+            await videoEl.play().catch(() => {});
+          }
+        } catch (err2) {
+          if (errBox) {
+            errBox.style.display = "flex";
+            const msgEl = document.getElementById("webcam-error-msg");
+            if (msgEl) msgEl.textContent = "⚠️ Trình duyệt chưa cấp quyền Camera (" + (err2.message || "Permission") + "). Hãy bấm nút bên dưới để chụp ảnh có đóng dấu!";
+          }
+        }
+      }
+    }
+
+    function stopWebCamVideoStream() {
+      if (webCamStream) {
+        try {
+          webCamStream.getTracks().forEach(t => t.stop());
+        } catch (e) {}
+        webCamStream = null;
+      }
+      const videoEl = document.getElementById("webcam-live-video");
+      if (videoEl) videoEl.srcObject = null;
+    }
+
+    function switchWebCamFacingMode() {
+      webCamFacingMode = webCamFacingMode === "environment" ? "user" : "environment";
+      startWebCamVideoStream();
+    }
+
+    function closeWebTimestampCameraModal() {
+      stopWebCamVideoStream();
+      if (webCamClockTimer) {
+        clearInterval(webCamClockTimer);
+        webCamClockTimer = null;
+      }
+      closeModal("modal-web-timestamp-cam");
+    }
+
+    function triggerFallbackSystemCamWithStamp() {
+      closeWebTimestampCameraModal();
+      const inp = document.getElementById("hidden-camera-direct-input");
+      if (inp) {
+        inp.value = "";
+        inp.click();
+      }
+    }
+
+    function drawFullTimestampWatermark1440(ctx, meta) {
+      const TARGET_W = 1440;
+      const TARGET_H = 1088;
+      const nowStr = (meta && meta.nowStr) ? meta.nowStr : formatNowTimestampStr();
+      const staffName = ((meta && meta.inspector) || (document.getElementById("inp-inspector") && document.getElementById("inp-inspector").value) || "TNI-Staff").trim();
+      const siteCode = ((meta && meta.siteCode) || (document.getElementById("inp-site-code") && document.getElementById("inp-site-code").value) || "TNI-SITE").trim();
+      const itemCode = (meta && meta.itemCode) ? meta.itemCode : "ITEM";
+      const stage = (meta && meta.stage) ? meta.stage : "BEFORE";
+      const gpsStr = ((meta && meta.gps) ? meta.gps : getCurrentFormattedGps()).trim();
+
+      const badgeColor = stage === "BEFORE" ? "rgba(220, 38, 38, 0.9)" : "rgba(5, 150, 105, 0.9)";
+      const stageLabel = stage === "BEFORE" ? "BEFORE (DEFECT / ẢNH LỖI)" : "AFTER (FIXED / ẢNH ĐÃ SỬA)";
+
+      // 1. Top-Left Banner: Stage + Site + Item + Staff + GPS + Time
+      ctx.fillStyle = "rgba(15, 23, 42, 0.78)";
+      ctx.fillRect(16, 16, 860, 104);
+      ctx.fillStyle = badgeColor;
+      ctx.fillRect(16, 16, 12, 104);
+
+      ctx.font = "bold 22px Inter, Segoe UI, Arial, sans-serif";
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(`[${stageLabel}]  Site/Trạm: ${siteCode}  •  Item/Mục: ${itemCode}`, 40, 48);
+
+      ctx.font = "bold 20px Inter, Segoe UI, Arial, sans-serif";
+      ctx.fillStyle = "#fde68a";
+      ctx.fillText(`👤 Staff / Nhân viên: ${staffName}   |   🕒 ${nowStr}`, 40, 78);
+
+      ctx.font = "bold 20px Inter, Segoe UI, Arial, sans-serif";
+      ctx.fillStyle = "#6ee7b7";
+      ctx.fillText(`📍 GPS (Lat, Long): ${gpsStr}   |   📐 Size: 1440×1088 px`, 40, 106);
+
+      // 2. Bottom-Right Corner Box (Classic Timestamp Camera layout)
+      const boxW = 620;
+      const boxH = 132;
+      const boxX = TARGET_W - boxW - 18;
+      const boxY = TARGET_H - boxH - 18;
+      ctx.fillStyle = "rgba(15, 23, 42, 0.76)";
+      ctx.fillRect(boxX, boxY, boxW, boxH);
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+      ctx.textAlign = "right";
+      const rightX = TARGET_W - 34;
+
+      ctx.font = "bold 24px Inter, Segoe UI, Arial, sans-serif";
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(`🕒 ${nowStr}`, rightX, boxY + 32);
+
+      ctx.font = "bold 23px Inter, Segoe UI, Arial, sans-serif";
+      ctx.fillStyle = "#34d399";
+      ctx.fillText(`📍 Lat, Long: ${gpsStr}`, rightX, boxY + 62);
+
+      ctx.font = "bold 21px Inter, Segoe UI, Arial, sans-serif";
+      ctx.fillStyle = "#93c5fd";
+      ctx.fillText(`👤 Staff: ${staffName}`, rightX, boxY + 92);
+
+      ctx.font = "bold 20px Inter, Segoe UI, Arial, sans-serif";
+      ctx.fillStyle = "#fca5a5";
+      ctx.fillText(`📡 Site: ${siteCode} • Item: ${itemCode} • 1440×1088`, rightX, boxY + 120);
+
+      ctx.textAlign = "left";
+    }
+
+    function snapPhotoFromWebTimestampCam() {
+      const videoEl = document.getElementById("webcam-live-video");
+      if (!videoEl || !videoEl.videoWidth) {
+        triggerFallbackSystemCamWithStamp();
+        return;
+      }
+
+      // Flash effect
+      const flashEl = document.getElementById("webcam-flash-layer");
+      if (flashEl) {
+        flashEl.style.opacity = "0.85";
+        setTimeout(() => { flashEl.style.opacity = "0"; }, 160);
+      }
+
+      const TARGET_W = 1440;
+      const TARGET_H = 1088;
+      const canvas = document.createElement("canvas");
+      canvas.width = TARGET_W;
+      canvas.height = TARGET_H;
+      const ctx = canvas.getContext("2d");
+
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(0, 0, TARGET_W, TARGET_H);
+
+      const vw = videoEl.videoWidth;
+      const vh = videoEl.videoHeight;
+      const srcRatio = vw / vh;
+      const dstRatio = TARGET_W / TARGET_H;
+      let sx = 0, sy = 0, sw = vw, sh = vh;
+      if (srcRatio > dstRatio) {
+        sw = Math.round(vh * dstRatio);
+        sx = Math.round((vw - sw) / 2);
+      } else if (srcRatio < dstRatio) {
+        sh = Math.round(vw / dstRatio);
+        sy = Math.round((vh - sh) / 2);
+      }
+      ctx.drawImage(videoEl, sx, sy, sw, sh, 0, 0, TARGET_W, TARGET_H);
+
+      const target = pendingPhotoTarget || { code: "1.1.1", stage: "BEFORE" };
+      const staff = ((document.getElementById("webcam-inp-staff") && document.getElementById("webcam-inp-staff").value) || (document.getElementById("inp-inspector") && document.getElementById("inp-inspector").value) || "TNI-Staff").trim();
+      const site = ((document.getElementById("webcam-inp-site") && document.getElementById("webcam-inp-site").value) || (document.getElementById("inp-site-code") && document.getElementById("inp-site-code").value) || "TNI-SITE").trim();
+      const gps = ((document.getElementById("webcam-inp-gps") && document.getElementById("webcam-inp-gps").value) || getCurrentFormattedGps()).trim();
+      const nowStr = formatNowTimestampStr();
+
+      drawFullTimestampWatermark1440(ctx, {
+        stamp: true,
+        siteCode: site,
+        inspector: staff,
+        itemCode: target.code,
+        stage: target.stage,
+        gps: gps,
+        nowStr: nowStr
+      });
+
+      const dataUrl1440 = canvas.toDataURL("image/jpeg", 0.88);
+      webCamCapturedShots.push({
+        id: "wc-" + Date.now() + "-" + webCamCapturedShots.length,
+        dataUrl: dataUrl1440,
+        checked: true,
+        timestampStr: nowStr,
+        gpsStr: gps,
+        staffName: staff
+      });
+
+      renderWebCamCapturedTray();
+    }
+
+    function renderWebCamCapturedTray() {
+      const trayEl = document.getElementById("webcam-captured-tray");
+      const titleEl = document.getElementById("webcam-tray-title");
+      const confirmBtn = document.getElementById("btn-webcam-confirm");
+      const checkedCount = webCamCapturedShots.filter(x => x.checked).length;
+
+      if (titleEl) {
+        titleEl.textContent = `🖼️ Khay Ảnh Vừa Chụp (${webCamCapturedShots.length} ảnh, Đã tick chọn: ${checkedCount} ảnh) — Tick ☑️ những ảnh muốn gắn vào mục kiểm tra:`;
+      }
+      if (confirmBtn) {
+        confirmBtn.innerHTML = `✅ Xác Nhận &amp; Gắn (${checkedCount} ảnh đã Tick)`;
+      }
+      if (!trayEl) return;
+
+      if (webCamCapturedShots.length === 0) {
+        trayEl.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:#94a3b8;font-size:11.5px;padding:10px;">Chưa chụp tấm nào. Hãy hướng camera vào vị trí kiểm tra và bấm nút <strong>[📸 BẤM CHỤP ẢNH (1440×1088)]</strong>!</div>`;
+        return;
+      }
+
+      trayEl.innerHTML = webCamCapturedShots.map((shot, idx) => `
+        <div style="position:relative;border:2px solid ${shot.checked ? '#10b981' : '#475569'};border-radius:8px;overflow:hidden;background:#0f172a;">
+          <img src="${escAttr(shot.dataUrl)}" style="width:100%;aspect-ratio:1440/1088;object-fit:cover;display:block;cursor:pointer;" onclick="toggleWebCamShotCheck(${idx})" />
+          <label style="position:absolute;top:5px;left:5px;background:rgba(15,23,42,0.88);color:#fff;padding:3px 7px;border-radius:6px;font-size:11px;font-weight:900;display:inline-flex;align-items:center;gap:4px;cursor:pointer;border:1px solid #10b981;">
+            <input type="checkbox" ${shot.checked ? 'checked' : ''} onchange="toggleWebCamShotCheck(${idx})" style="width:15px;height:15px;accent-color:#10b981;cursor:pointer;" />
+            <span>Ảnh #${idx + 1}</span>
+          </label>
+          <button type="button" onclick="removeWebCamShot(${idx})" style="position:absolute;top:5px;right:5px;background:rgba(220,38,38,0.92);color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10.5px;font-weight:900;cursor:pointer;">✕</button>
+          <div style="font-size:9.5px;color:#cbd5e1;padding:3px 5px;background:rgba(15,23,42,0.9);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            📍 ${escHtml(shot.gpsStr)}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function toggleWebCamShotCheck(idx) {
+      if (!webCamCapturedShots[idx]) return;
+      webCamCapturedShots[idx].checked = !webCamCapturedShots[idx].checked;
+      renderWebCamCapturedTray();
+    }
+
+    function removeWebCamShot(idx) {
+      webCamCapturedShots.splice(idx, 1);
+      renderWebCamCapturedTray();
+    }
+
+    async function confirmAndAttachWebCamPhotos() {
+      const selectedShots = webCamCapturedShots.filter(x => x.checked);
+      if (selectedShots.length === 0) {
+        // Nếu người dùng bấm Xác Nhận ngay mà chưa bấm nút Chụp lần nào -> Tự động chụp ngay 1 tấm hiện tại rồi đính kèm luôn!
+        snapPhotoFromWebTimestampCam();
+        const retrySelected = webCamCapturedShots.filter(x => x.checked);
+        if (retrySelected.length === 0) {
+          alert("⚠️ Vui lòng bấm nút [📸 BẤM CHỤP ẢNH (1440×1088)] để chụp ít nhất 1 tấm ảnh!");
+          return;
+        }
+        return confirmAndAttachWebCamPhotos();
+      }
+
+      const target = pendingPhotoTarget;
+      closeWebTimestampCameraModal();
+      if (!target) return;
+
+      // Nếu chụp từ Tab 6 (Phúc Tra Hình Ảnh BI):
+      if (target.sessionIdForBi) {
+        for (let i = 0; i < selectedShots.length; i++) {
+          await uploadQuickFixFromBi(target.sessionIdForBi, target.code, selectedShots[i].dataUrl, i > 0);
+        }
+        return;
+      }
+
+      const st = itemStates[target.type] && itemStates[target.type][target.code];
+      if (!st) return;
+      ensureItemPhotoArrays(st);
+      ensureSessionId();
+
+      const newEntries = [];
+      for (let i = 0; i < selectedShots.length; i++) {
+        const entry = {
+          id: "ph-" + Date.now() + "-" + i + "-" + Math.floor(Math.random() * 1000),
+          dataUrl: selectedShots[i].dataUrl,
+          thumbUrl: "",
+          driveUrl: "",
+          uploading: true,
+          uploadError: false
+        };
+        if (target.stage === "BEFORE") {
+          st.beforePhotos.push(entry);
+        } else {
+          st.afterPhotos.push(entry);
+        }
+        newEntries.push(entry);
+      }
+
+      if (target.stage === "BEFORE") {
+        st.status = "NOK";
+        st.evalPoint = 0;
+      } else {
+        st.fixStatus = "Đã sửa xong (Fixed)";
+        const tpl = CHECKLIST_TEMPLATES[target.type];
+        const itemDef = tpl && tpl.items ? tpl.items.find(x => x.code === target.code) : null;
+        if (itemDef) st.evalPoint = itemDef.stdPoint;
+      }
+
+      syncItemPhotoSummaryFromArrays(st);
+      saveLocalDraft();
+      recalcLiveScore();
+      updateSeatAndTrainTelemetry();
+      renderChecklistItems();
+
+      // Đưa toàn bộ các ảnh vừa tick chọn vào Đoàn Tàu FIFO (timeout 2 phút/ảnh) để tải lên Drive 2.14 & hiện Tick Xanh!
+      for (let i = 0; i < newEntries.length; i++) {
+        uploadSingleItemPhotoNow(target.type, target.code, target.stage, newEntries[i].dataUrl, newEntries[i].id);
+      }
+    }
+
     function triggerDirectCameraCapture(code, stage, sessionIdForBi) {
       pendingPhotoTarget = {
         type: currentType,
@@ -2372,8 +2924,8 @@
         stage: stage,
         sessionIdForBi: sessionIdForBi || null
       };
-      // Mở thẳng ứng dụng Timestamp Camera trên điện thoại; nếu chưa cài thì tự động dẫn đến CH Play tải về!
-      openNativeTimestampCameraIntent();
+      // Mở trực tiếp Web Timestamp Camera (1440×1088) ngay trên trình duyệt: có sẵn Tên NV + Ngày Giờ + Lat, Long (10.33532, 98.35353), chụp nhiều ảnh & tick chọn gắn thẳng vào mục!
+      openWebTimestampCameraModal();
     }
 
     function triggerPhotoCapture(code, stage, sessionIdForBi) {
@@ -2383,6 +2935,7 @@
         stage: stage,
         sessionIdForBi: sessionIdForBi || null
       };
+      startBackgroundGpsTracker();
       const inp = document.getElementById("hidden-photo-input");
       if (inp) {
         inp.value = "";
@@ -2397,17 +2950,18 @@
 
       const target = pendingPhotoTarget;
       const siteCode = (document.getElementById("inp-site-code").value || "TNI-SITE").trim();
+      const inspectorName = (document.getElementById("inp-inspector").value || "TNI-Staff").trim();
       const stampEnabled = document.getElementById("chk-auto-stamp") ? document.getElementById("chk-auto-stamp").checked : true;
 
       // If triggered from Tab 6 BI Comparison Wall: support uploading all selected After photos sequentially!
       if (target.sessionIdForBi) {
         for (let i = 0; i < files.length; i++) {
           const f = files[i];
-          const gpsInpEl = document.getElementById("inp-gps");
-          const gpsVal = (gpsInpEl && gpsInpEl.value ? gpsInpEl.value : (window._lastExifGps || "Timestamp Camera")).trim();
+          const gpsVal = getCurrentFormattedGps();
           const dataUrl1440 = await processImageTo1440x1088(f, {
             stamp: stampEnabled,
             siteCode: siteCode,
+            inspector: inspectorName,
             itemCode: target.code,
             stage: target.stage,
             gps: gpsVal
@@ -2428,18 +2982,18 @@
         try {
           const exifGps = await extractExifGpsFromFile(file);
           if (exifGps) {
-            const gpsStr = exifGps.lat.toFixed(6) + ", " + exifGps.lng.toFixed(6);
+            const gpsStr = formatLatLongDecimal(exifGps.lat, exifGps.lng);
             window._lastExifGps = gpsStr;
             const gpsInp = document.getElementById("inp-gps");
             if (gpsInp && !gpsInp.value.trim()) gpsInp.value = gpsStr;
           }
         } catch (e) {}
 
-        const gpsInpEl = document.getElementById("inp-gps");
-        const gpsVal = (gpsInpEl && gpsInpEl.value ? gpsInpEl.value : (window._lastExifGps || "Timestamp Camera")).trim();
+        const gpsVal = getCurrentFormattedGps();
         const dataUrl1440 = await processImageTo1440x1088(file, {
           stamp: stampEnabled,
           siteCode: siteCode,
+          inspector: inspectorName,
           itemCode: target.code,
           stage: target.stage,
           gps: gpsVal
@@ -2810,24 +3364,9 @@
             }
             ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
 
-            // Optional Timestamp Camera GPS Overlay Banner at top-left so it never covers bottom-right Timestamp Camera text
-            if (meta && meta.stamp) {
-              const nowStr = new Date().toLocaleString("en-GB", { hour12: false });
-              const badgeColor = meta.stage === "BEFORE" ? "rgba(220, 38, 38, 0.86)" : "rgba(5, 150, 105, 0.86)";
-              const stageLabel = meta.stage === "BEFORE" ? "BEFORE (DEFECT / LỖI)" : "AFTER (FIXED / ĐÃ SỬA)";
-
-              ctx.fillStyle = "rgba(15, 23, 42, 0.72)";
-              ctx.fillRect(16, 16, 690, 74);
-              ctx.fillStyle = badgeColor;
-              ctx.fillRect(16, 16, 10, 74);
-
-              ctx.font = "bold 21px Inter, sans-serif";
-              ctx.fillStyle = "#ffffff";
-              ctx.fillText(`[${stageLabel}] Trạm/Tuyến: ${meta.siteCode} • Mục: ${meta.itemCode}`, 38, 46);
-
-              ctx.font = "600 18px Inter, sans-serif";
-              ctx.fillStyle = "#e2e8f0";
-              ctx.fillText(`📍 GPS: ${meta.gps || 'N/A'}  |  🕒 ${nowStr}  |  📐 1440×1088 px`, 38, 76);
+            // Tự động đóng dấu đầy đủ Tên Nhân Viên + Ngày Giờ Hiện Tại + Tọa Độ Lat, Long (10.33532, 98.35353) + Mã Trạm/Mục chuẩn 1440x1088 px
+            if (meta && meta.stamp !== false) {
+              drawFullTimestampWatermark1440(ctx, meta);
             }
 
             const outDataUrl = canvas.toDataURL("image/jpeg", 0.86);
@@ -2908,19 +3447,29 @@
       });
     }
 
-    function fetchLiveGps() {
+    function fetchLiveGps(showAlert) {
       if (!navigator.geolocation) {
-        alert("Trình duyệt không hỗ trợ GPS.");
+        if (showAlert) alert("Trình duyệt không hỗ trợ GPS.");
         return;
       }
       navigator.geolocation.getCurrentPosition(
         pos => {
-          const coord = pos.coords.latitude.toFixed(6) + ", " + pos.coords.longitude.toFixed(6);
-          document.getElementById("inp-gps").value = coord;
+          const coord = formatLatLongDecimal(pos.coords.latitude, pos.coords.longitude);
+          window._lastExifGps = coord;
+          const gpsInp = document.getElementById("inp-gps");
+          if (gpsInp) gpsInp.value = coord;
+          const wcGps = document.getElementById("webcam-inp-gps");
+          if (wcGps) wcGps.value = coord;
+          syncWebCamOverlayText();
           saveLocalDraft();
+          if (showAlert) {
+            alert("✅ Đã lấy tọa độ GPS (Lat, Long): " + coord);
+          }
         },
         err => {
-          alert("Không lấy được GPS tự động (" + err.message + "). Vui lòng bật định vị hoặc chụp bằng Timestamp Camera.");
+          if (showAlert) {
+            alert("⚠️ Chưa lấy được GPS tự động (" + err.message + "). Bạn có thể bật Vị trí (Location) hoặc nhập Lat, Long vào ô GPS.");
+          }
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );
