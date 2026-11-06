@@ -138,10 +138,10 @@
       padding: 0 12px;
     }
 
-    /* 5 CHECKLIST TABS + BI DASHBOARD TAB */
+    /* 5 CHECKLIST TABS + BI DASHBOARD TAB + GMAIL APPROVERS TAB */
     .mode-tabs {
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
+      grid-template-columns: repeat(7, 1fr);
       gap: 8px;
       margin-bottom: 12px;
     }
@@ -1003,6 +1003,10 @@
         <div class="mode-tab-top"><span>🔍 6. Phúc Tra Hình Ảnh & BI</span><span class="sheet-chip" id="bi-count-badge">Live</span></div>
         <div class="mode-tab-sub"><span>Kiểm tra ảnh & Phòng KT Tick duyệt</span><span>1440×1088</span></div>
       </button>
+      <button class="mode-tab" data-type="approvers_mgr" onclick="switchChecklistType('approvers_mgr')">
+        <div class="mode-tab-top"><span>🛡️ 7. Gmail Phê Duyệt</span><span class="sheet-chip" id="approvers-count-badge">6 Gmail</span></div>
+        <div class="mode-tab-sub"><span>Cập nhật ai là người phê duyệt</span><span>Sheet 6</span></div>
+      </button>
     </div>
 
     <!-- VIEW 1: ACTIVE CHECKLIST INSPECTION FORM (MOBILE + DESKTOP) -->
@@ -1063,12 +1067,17 @@
               <option value="phonghdpxd@gmail.com">Hà Đức Phong — Master Admin / BOD (phonghdpxd@gmail.com)</option>
             </select>
             <span id="tech-gmail-status-badge" style="font-size:11.5px;font-weight:800;color:#047857;background:#dcfce7;padding:4px 9px;border-radius:99px;">
-              Chỉ Gmail trong danh sách Phòng Kỹ Thuật mới được tick xác nhận hoàn thành sửa chữa
+              Chỉ Gmail trong danh sách Người Phê Duyệt mới được tick xác nhận hoàn thành sửa chữa
             </span>
           </div>
-          <button type="button" class="pill-btn" style="background:#047857;border-color:#10b981;color:#fff;padding:6px 12px;font-size:12px;cursor:pointer;" onclick="techVerifyAllCurrentSession(true)">
-            ☑️ Phòng KT Tick Xác Nhận Hoàn Thành Tất Cả Mục Lỗi Của Trạm Này
-          </button>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <button type="button" class="pill-btn" style="background:#0f172a;border-color:#334155;color:#fff;padding:6px 11px;font-size:12px;cursor:pointer;" onclick="switchChecklistType('approvers_mgr')">
+              ⚙️ Cập Nhật Gmail Người Phê Duyệt (Tab 7)
+            </button>
+            <button type="button" class="pill-btn" style="background:#047857;border-color:#10b981;color:#fff;padding:6px 12px;font-size:12px;cursor:pointer;" onclick="techVerifyAllCurrentSession(true)">
+              ☑️ Tick Phê Duyệt Tất Cả Mục Lỗi Trạm Này
+            </button>
+          </div>
         </div>
 
         <div class="meta-grid">
@@ -1208,7 +1217,12 @@
                 <option value="phonghdpxd@gmail.com">Hà Đức Phong — Master Admin / BOD (phonghdpxd@gmail.com)</option>
               </select>
             </div>
-            <span style="font-size:11.5px;color:#047857;font-weight:800;">☑️ Tick vào ô xác nhận trên từng mục ảnh bên dưới để xác nhận nhân viên đã hoàn thành sửa chữa</span>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="font-size:11.5px;color:#047857;font-weight:800;">☑️ Tick vào ô xác nhận trên từng mục ảnh bên dưới để duyệt hoàn thành</span>
+              <button type="button" class="pill-btn" style="background:#0f172a;border-color:#334155;color:#fff;padding:5px 10px;font-size:11.5px;cursor:pointer;" onclick="switchChecklistType('approvers_mgr')">
+                ⚙️ Cập Nhật Gmail Người Phê Duyệt (Tab 7)
+              </button>
+            </div>
           </div>
 
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:#f8fafc;padding:12px;border-radius:12px;border:1px solid #cbd5e1;">
@@ -1257,6 +1271,118 @@
                 </tr>
               </thead>
               <tbody id="bi-sessions-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: TAB 7 — QUẢN LÝ & CẬP NHẬT GMAIL NGƯỜI PHÊ DUYỆT (APPROVERS MANAGEMENT) -->
+    <section id="view-approvers-manager" style="display:none;">
+      <div class="meta-panel" style="border:2px solid #10b981;background:linear-gradient(180deg,#f0fdf4 0%,#ffffff 160px);">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-bottom:12px;border-bottom:1px solid #cbd5e1;margin-bottom:14px;">
+          <div>
+            <h2 style="font-size:18px;font-weight:900;color:#065f46;display:flex;align-items:center;gap:8px;">
+              <span>🛡️ Tab 7: Quản Lý & Cập Nhật Gmail Người Phê Duyệt (Approver Gmail Management)</span>
+            </h2>
+            <p style="font-size:12.5px;color:#334155;font-weight:600;margin-top:3px;">
+              🇬🇧 Manage who is authorized to verify &amp; approve completed repairs • 🇻🇳 Cập nhật danh sách Gmail ai là người phê duyệt hoàn thành sửa chữa • 🇲🇲 ပြင်ဆင်ပြီးကြောင်း အတည်ပြုခွင့်ရှိသူများ၏ Gmail စာရင်း
+            </p>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <a id="btn-open-approver-sheet" class="pill-btn sheet" href="https://docs.google.com/spreadsheets/d/1Y9QkgXe24kspNmkrPEVQ0AAD_GmZ4gnqMCD6ja4-9kI/edit" target="_blank" rel="noopener">
+              📊 Mở Tab Sheet "6. Gmail Phê Duyệt" ↗
+            </a>
+            <button type="button" class="pill-btn guide" onclick="fetchCloudSessions(true)">
+              🔄 Đồng Bộ Danh Sách Gmail Từ Google Sheet
+            </button>
+          </div>
+        </div>
+
+        <!-- KHỐI 1: CHỌN NGƯỜI ĐANG PHÊ DUYỆT TRÊN THIẾT BỊ NÀY -->
+        <div style="background:#ecfdf5;border:1.5px solid #6ee7b7;border-radius:12px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:1;">
+            <span style="font-size:13.5px;font-weight:900;color:#065f46;">👤 Người Đang Phê Duyệt Trên Máy Này (Current Active Approver):</span>
+            <select id="sel-tech-gmail-tab7" class="field-input" style="max-width:420px;background:#fff;font-weight:800;color:#065f46;" onchange="onTechGmailChange(this.value)">
+              <option value="">-- Chọn Gmail Người Phê Duyệt đang thao tác --</option>
+            </select>
+          </div>
+          <div id="tab7-active-approver-pill" style="font-size:12px;font-weight:900;padding:6px 12px;border-radius:99px;background:#dcfce7;color:#065f46;">
+            Chưa chọn Gmail phê duyệt
+          </div>
+        </div>
+
+        <!-- KHỐI 2: FORM THÊM MỚI / CẬP NHẬT GMAIL NGƯỜI PHÊ DUYỆT LÊN SHEET -->
+        <div style="background:#f8fafc;border:1.5px solid #cbd5e1;border-radius:12px;padding:14px;margin-bottom:16px;">
+          <div style="font-size:14px;font-weight:900;color:#0f172a;margin-bottom:10px;">
+            ➕ Thêm Mới Hoặc Cập Nhật Gmail Người Phê Duyệt (Add / Update Approver Gmail)
+          </div>
+          <div class="meta-grid" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr));">
+            <div class="field-group">
+              <label>📧 Địa Chỉ Gmail Phê Duyệt (Approver Gmail) *</label>
+              <input type="email" id="inp-app-email" class="field-input" style="background:#fff;" placeholder="VD: ten.nhanvien@gmail.com" />
+            </div>
+            <div class="field-group">
+              <label>👤 Họ Và Tên Người Phê Duyệt (Full Name) *</label>
+              <input type="text" id="inp-app-name" class="field-input" style="background:#fff;" placeholder="VD: Ye Lwin / Nguyễn Văn A" />
+            </div>
+            <div class="field-group">
+              <label>🎖️ Chức Vụ / Vai Trò (Title / Role)</label>
+              <input type="text" id="inp-app-title" class="field-input" style="background:#fff;" placeholder="VD: Technical Manager (Trưởng Phòng KT)" value="Technical Approver (Phòng Kỹ Thuật)" />
+            </div>
+            <div class="field-group">
+              <label>🏢 Phòng Ban / Bộ Phận (Department)</label>
+              <select id="inp-app-dept" class="field-input" style="background:#fff;">
+                <option value="Technical Dept (Phòng Kỹ Thuật)">Technical Dept (Phòng Kỹ Thuật)</option>
+                <option value="BOD / Ban Giám Đốc">BOD / Ban Giám Đốc</option>
+                <option value="NOC / QA-QC">NOC / QA-QC</option>
+                <option value="Infrastructure & M&E">Infrastructure &amp; M&amp;E</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label>🔓 Trạng Thái Quyền (Status)</label>
+              <select id="inp-app-status" class="field-input" style="background:#fff;font-weight:800;color:#059669;">
+                <option value="ACTIVE">✅ ACTIVE (Được quyền phê duyệt)</option>
+                <option value="INACTIVE">⛔ INACTIVE (Tạm ngưng quyền)</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label>📝 Ghi Chú Quyền Hạn (Note)</label>
+              <input type="text" id="inp-app-note" class="field-input" style="background:#fff;" value="Được quyền Tick phê duyệt hoàn thành sửa chữa Check List" />
+            </div>
+          </div>
+          <div style="margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <button type="button" id="btn-save-approver" class="pill-btn" style="background:#059669;border-color:#10b981;color:#fff;padding:9px 16px;font-size:13px;cursor:pointer;" onclick="saveApproverToCloud()">
+              💾 Lưu / Cập Nhật Gmail Người Phê Duyệt Lên Google Sheet
+            </button>
+            <button type="button" class="pill-btn" style="background:#64748b;border-color:#94a3b8;color:#fff;padding:9px 14px;font-size:12.5px;cursor:pointer;" onclick="clearApproverForm()">
+              🧹 Xóa Trắng Ô Nhập
+            </button>
+          </div>
+        </div>
+
+        <!-- KHỐI 3: BẢNG DANH SÁCH GMAIL NGƯỜI PHÊ DUYỆT HIỆN HÀNH -->
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+            <h3 style="font-size:15px;font-weight:900;color:#0f172a;">
+              📋 Danh Sách Gmail Được Quyền Phê Duyệt Hoàn Thành Sửa Chữa (Đồng bộ trực tiếp với Sheet "6. Gmail Phê Duyệt")
+            </h3>
+          </div>
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid #cbd5e1;border-radius:10px;overflow:hidden;">
+              <thead>
+                <tr style="background:#0f172a;color:#fff;text-align:left;">
+                  <th style="padding:10px;width:45px;text-align:center;">STT</th>
+                  <th style="padding:10px;">Gmail Người Phê Duyệt</th>
+                  <th style="padding:10px;">Họ Và Tên (Full Name)</th>
+                  <th style="padding:10px;">Chức Vụ / Vai Trò (Title)</th>
+                  <th style="padding:10px;">Phòng Ban (Department)</th>
+                  <th style="padding:10px;text-align:center;">Trạng Thái</th>
+                  <th style="padding:10px;">Cập Nhật Lúc</th>
+                  <th style="padding:10px;">Thao Tác (Chọn Duyệt / Sửa / Xóa)</th>
+                </tr>
+              </thead>
+              <tbody id="approvers-table-tbody"></tbody>
             </table>
           </div>
         </div>
@@ -1533,16 +1659,27 @@
 
       const formSec = document.getElementById("view-inspection-form");
       const biSec = document.getElementById("view-bi-dashboard");
+      const appSec = document.getElementById("view-approvers-manager");
 
       if (typeKey === "bi_dashboard") {
         formSec.style.display = "none";
         biSec.style.display = "block";
+        if (appSec) appSec.style.display = "none";
         renderBiDashboard();
+        return;
+      }
+
+      if (typeKey === "approvers_mgr") {
+        formSec.style.display = "none";
+        biSec.style.display = "none";
+        if (appSec) appSec.style.display = "block";
+        renderApproversManager();
         return;
       }
 
       formSec.style.display = "block";
       biSec.style.display = "none";
+      if (appSec) appSec.style.display = "none";
       updateHeaderInfo();
       renderChecklistItems();
     }
@@ -2400,13 +2537,65 @@
     // TECHNICAL DEPARTMENT GMAIL DIRECTORY & VERIFICATION ENGINE
     // =========================================================================
     const TECH_DEPT_GMAIL_MAP = {
-      "yelwin086683@gmail.com":      { name: "Ye Lwin", title: "Technical Manager (Trưởng Phòng KT)" },
-      "shingwutthmone776@gmail.com": { name: "Shing Wutt Hmone Oo", title: "CM Engineer (Phòng Kỹ Thuật)" },
-      "ppoe56591@gmail.com":         { name: "Poe Hmyin Thoun", title: "Infrastructure (Phòng Kỹ Thuật)" },
-      "heinnanda683@gmail.com":      { name: "Hein Nanda", title: "M&E Engineer (Phòng Kỹ Thuật)" },
-      "htoolaynyaw@gmail.com":       { name: "Naw Oh Nyaw", title: "PM Engineer (Phòng Kỹ Thuật)" },
-      "phonghdpxd@gmail.com":        { name: "Hà Đức Phong", title: "Master Admin / BOD" }
+      "yelwin086683@gmail.com":      { name: "Ye Lwin", title: "Technical Manager (Trưởng Phòng KT)", dept: "Technical Dept (Phòng Kỹ Thuật)", status: "ACTIVE" },
+      "shingwutthmone776@gmail.com": { name: "Shing Wutt Hmone Oo", title: "CM Engineer (Phòng Kỹ Thuật)", dept: "Technical Dept (Phòng Kỹ Thuật)", status: "ACTIVE" },
+      "ppoe56591@gmail.com":         { name: "Poe Hmyin Thoun", title: "Infrastructure (Phòng Kỹ Thuật)", dept: "Technical Dept (Phòng Kỹ Thuật)", status: "ACTIVE" },
+      "heinnanda683@gmail.com":      { name: "Hein Nanda", title: "M&E Engineer (Phòng Kỹ Thuật)", dept: "Technical Dept (Phòng Kỹ Thuật)", status: "ACTIVE" },
+      "htoolaynyaw@gmail.com":       { name: "Naw Oh Nyaw", title: "PM Engineer (Phòng Kỹ Thuật)", dept: "Technical Dept (Phòng Kỹ Thuật)", status: "ACTIVE" },
+      "phonghdpxd@gmail.com":        { name: "Hà Đức Phong", title: "Master Admin / BOD", dept: "BOD / Ban Giám Đốc", status: "ACTIVE" }
     };
+
+    let cloudApproversList = [];
+    let approverSheetGid = 0;
+
+    function getApproversArray() {
+      if (Array.isArray(cloudApproversList) && cloudApproversList.length > 0) {
+        return cloudApproversList;
+      }
+      return Object.keys(TECH_DEPT_GMAIL_MAP).map(em => ({
+        email: em,
+        name: TECH_DEPT_GMAIL_MAP[em].name,
+        title: TECH_DEPT_GMAIL_MAP[em].title,
+        dept: TECH_DEPT_GMAIL_MAP[em].dept || "Technical Dept (Phòng Kỹ Thuật)",
+        status: TECH_DEPT_GMAIL_MAP[em].status || "ACTIVE",
+        note: "Được quyền Tick phê duyệt hoàn thành sửa chữa",
+        updatedAt: ""
+      }));
+    }
+
+    function applyCloudApprovers(list, sheetGid) {
+      if (sheetGid) {
+        approverSheetGid = sheetGid;
+        const linkBtn = document.getElementById("btn-open-approver-sheet");
+        if (linkBtn) {
+          linkBtn.href = "https://docs.google.com/spreadsheets/d/" + CHECKLIST_SS_ID + "/edit#gid=" + sheetGid;
+        }
+      }
+      if (!Array.isArray(list) || list.length === 0) return;
+      cloudApproversList = list;
+      // Clear & rebuild TECH_DEPT_GMAIL_MAP from active approvers
+      Object.keys(TECH_DEPT_GMAIL_MAP).forEach(k => { delete TECH_DEPT_GMAIL_MAP[k]; });
+      list.forEach(item => {
+        const em = String(item.email || "").trim().toLowerCase();
+        if (!em) return;
+        if (String(item.status || "ACTIVE").toUpperCase() !== "INACTIVE") {
+          TECH_DEPT_GMAIL_MAP[em] = {
+            name: item.name || em,
+            title: item.title || "Approver",
+            dept: item.dept || "Technical Dept",
+            status: "ACTIVE"
+          };
+        }
+      });
+      const cntBadge = document.getElementById("approvers-count-badge");
+      if (cntBadge) {
+        cntBadge.textContent = Object.keys(TECH_DEPT_GMAIL_MAP).length + " Gmail";
+      }
+      syncTechGmailDropdowns();
+      if (currentType === "approvers_mgr") {
+        renderApproversManager();
+      }
+    }
 
     function getActiveTechDeptVerifier() {
       let savedEmail = (localStorage.getItem("tni_cl_tech_gmail") || localStorage.getItem("tni_google_auth_email") || "").trim().toLowerCase();
@@ -2423,21 +2612,201 @@
     function syncTechGmailDropdowns() {
       const verifier = getActiveTechDeptVerifier();
       const emailVal = verifier ? verifier.email : "";
-      ["sel-tech-gmail", "sel-tech-gmail-bi"].forEach(id => {
+      const activeList = getApproversArray().filter(x => String(x.status || "ACTIVE").toUpperCase() !== "INACTIVE");
+
+      ["sel-tech-gmail", "sel-tech-gmail-bi", "sel-tech-gmail-tab7"].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.value = emailVal;
+        if (!el) return;
+        let opts = `<option value="">-- Chọn Gmail Người Phê Duyệt để Tick xác nhận --</option>`;
+        activeList.forEach(ap => {
+          const selAttr = ap.email === emailVal ? "selected" : "";
+          opts += `<option value="${escAttr(ap.email)}" ${selAttr}>${escHtml(ap.name)} — ${escHtml(ap.title)} (${escHtml(ap.email)})</option>`;
+        });
+        el.innerHTML = opts;
+        el.value = emailVal;
       });
+
       const badge = document.getElementById("tech-gmail-status-badge");
       if (badge) {
         if (verifier) {
           badge.style.background = "#dcfce7";
           badge.style.color = "#065f46";
-          badge.textContent = "✅ Đang xác thực quyền Phòng KT: " + verifier.name + " (" + verifier.email + ")";
+          badge.textContent = "✅ Người phê duyệt hiện tại: " + verifier.name + " (" + verifier.email + ")";
         } else {
           badge.style.background = "#fef3c7";
           badge.style.color = "#92400e";
-          badge.textContent = "⚠️ Chọn đúng Gmail Phòng Kỹ Thuật trước khi Tick xác nhận hoàn thành sửa chữa";
+          badge.textContent = "⚠️ Chọn đúng Gmail Người Phê Duyệt trước khi Tick xác nhận hoàn thành sửa chữa";
         }
+      }
+      const tab7Pill = document.getElementById("tab7-active-approver-pill");
+      if (tab7Pill) {
+        if (verifier) {
+          tab7Pill.style.background = "#dcfce7";
+          tab7Pill.style.color = "#065f46";
+          tab7Pill.textContent = "✅ Đang chọn làm Người Phê Duyệt: " + verifier.name + " (" + verifier.email + ")";
+        } else {
+          tab7Pill.style.background = "#fef3c7";
+          tab7Pill.style.color = "#92400e";
+          tab7Pill.textContent = "⚠️ Chưa chọn Gmail người phê duyệt trên máy này";
+        }
+      }
+    }
+
+    function renderApproversManager() {
+      syncTechGmailDropdowns();
+      const tbody = document.getElementById("approvers-table-tbody");
+      if (!tbody) return;
+      const list = getApproversArray();
+      const activeVerifier = getActiveTechDeptVerifier();
+      const activeEmail = activeVerifier ? activeVerifier.email : "";
+
+      tbody.innerHTML = list.map((ap, idx) => {
+        const isCurrent = ap.email === activeEmail;
+        const isActive = String(ap.status || "ACTIVE").toUpperCase() !== "INACTIVE";
+        return `
+          <tr style="border-bottom:1px solid #e2e8f0;background:${isCurrent ? '#ecfdf5' : '#fff'};">
+            <td style="padding:10px;text-align:center;font-weight:800;">${idx + 1}</td>
+            <td style="padding:10px;font-weight:900;color:#1d4ed8;">
+              ${escHtml(ap.email)}
+              ${isCurrent ? `<span style="margin-left:6px;font-size:10.5px;background:#059669;color:#fff;padding:2px 7px;border-radius:99px;">☑️ Đang chọn duyệt</span>` : ``}
+            </td>
+            <td style="padding:10px;font-weight:800;color:#0f172a;">${escHtml(ap.name)}</td>
+            <td style="padding:10px;font-weight:600;color:#334155;">${escHtml(ap.title)}</td>
+            <td style="padding:10px;color:#475569;">${escHtml(ap.dept || 'Technical Dept')}</td>
+            <td style="padding:10px;text-align:center;">
+              <span style="font-size:11px;font-weight:900;padding:3px 8px;border-radius:99px;background:${isActive ? '#dcfce7' : '#fee2e2'};color:${isActive ? '#065f46' : '#991b1b'};">
+                ${isActive ? '✅ ACTIVE' : '⛔ INACTIVE'}
+              </span>
+            </td>
+            <td style="padding:10px;font-size:11.5px;color:#64748b;">${escHtml(ap.updatedAt || 'Mặc định')}</td>
+            <td style="padding:10px;">
+              <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                ${isActive ? `<button type="button" class="pill-btn" style="background:${isCurrent ? '#047857' : '#2563eb'};color:#fff;padding:4px 9px;font-size:11px;cursor:pointer;" onclick="selectApproverAsActive('${escAttr(ap.email)}')">☑️ ${isCurrent ? 'Đang Là Người Duyệt' : 'Chọn Làm Người Duyệt'}</button>` : ``}
+                <button type="button" class="pill-btn" style="background:#f59e0b;color:#fff;padding:4px 9px;font-size:11px;cursor:pointer;" onclick="editApproverRow('${escAttr(ap.email)}')">✏️ Sửa</button>
+                <button type="button" class="pill-btn" style="background:#dc2626;color:#fff;padding:4px 9px;font-size:11px;cursor:pointer;" onclick="deleteApproverFromCloud('${escAttr(ap.email)}')">🗑️ Xóa</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function selectApproverAsActive(email) {
+      onTechGmailChange(email);
+      renderApproversManager();
+      const v = getActiveTechDeptVerifier();
+      if (v) {
+        alert("✅ Đã chọn [" + v.name + " — " + v.email + "] làm Người Phê Duyệt hiện tại trên thiết bị này!");
+      }
+    }
+
+    function editApproverRow(email) {
+      const clean = String(email || "").trim().toLowerCase();
+      const found = getApproversArray().find(x => x.email === clean);
+      if (!found) return;
+      document.getElementById("inp-app-email").value = found.email || "";
+      document.getElementById("inp-app-name").value = found.name || "";
+      document.getElementById("inp-app-title").value = found.title || "";
+      const deptEl = document.getElementById("inp-app-dept");
+      if (deptEl && found.dept) deptEl.value = found.dept;
+      const stEl = document.getElementById("inp-app-status");
+      if (stEl) stEl.value = String(found.status || "ACTIVE").toUpperCase() === "INACTIVE" ? "INACTIVE" : "ACTIVE";
+      const noteEl = document.getElementById("inp-app-note");
+      if (noteEl && found.note) noteEl.value = found.note;
+      document.getElementById("inp-app-name").focus();
+    }
+
+    function clearApproverForm() {
+      document.getElementById("inp-app-email").value = "";
+      document.getElementById("inp-app-name").value = "";
+      document.getElementById("inp-app-title").value = "Technical Approver (Phòng Kỹ Thuật)";
+      document.getElementById("inp-app-status").value = "ACTIVE";
+      document.getElementById("inp-app-note").value = "Được quyền Tick phê duyệt hoàn thành sửa chữa Check List";
+    }
+
+    async function saveApproverToCloud() {
+      const email = (document.getElementById("inp-app-email").value || "").trim().toLowerCase();
+      const name = (document.getElementById("inp-app-name").value || "").trim();
+      const title = (document.getElementById("inp-app-title").value || "Technical Approver").trim();
+      const dept = (document.getElementById("inp-app-dept").value || "Technical Dept (Phòng Kỹ Thuật)").trim();
+      const status = (document.getElementById("inp-app-status").value || "ACTIVE").trim();
+      const note = (document.getElementById("inp-app-note").value || "").trim();
+
+      if (!email || email.indexOf("@") === -1) {
+        alert("⚠️ Vui lòng nhập đúng địa chỉ Gmail của người phê duyệt (VD: ten@gmail.com)!");
+        document.getElementById("inp-app-email").focus();
+        return;
+      }
+      if (!name) {
+        alert("⚠️ Vui lòng nhập Họ và Tên của người phê duyệt!");
+        document.getElementById("inp-app-name").focus();
+        return;
+      }
+
+      const btn = document.getElementById("btn-save-approver");
+      const oldTxt = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "⏳ Đang lưu Gmail người phê duyệt lên Google Sheet...";
+
+      try {
+        const resp = await fetch(GAS_CHECKLIST_API, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "checklist_save_approver",
+            email: email,
+            name: name,
+            title: title,
+            dept: dept,
+            status: status,
+            note: note
+          })
+        });
+        const res = await resp.json();
+        if (!res || !res.ok) {
+          throw new Error((res && res.error) || "Lỗi khi lưu Gmail phê duyệt");
+        }
+        applyCloudApprovers(res.approvers, res.approverSheetGid);
+        if (status === "ACTIVE") {
+          localStorage.setItem("tni_cl_tech_gmail", email);
+        }
+        syncTechGmailDropdowns();
+        renderApproversManager();
+        clearApproverForm();
+        alert("✅ Đã cập nhật Gmail người phê duyệt [" + name + " — " + email + "] vào Sheet '6. Gmail Phê Duyệt' thành công!");
+      } catch (err) {
+        alert("❌ Không thể lưu Gmail phê duyệt: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = oldTxt;
+      }
+    }
+
+    async function deleteApproverFromCloud(email) {
+      const clean = String(email || "").trim().toLowerCase();
+      if (!clean) return;
+      if (!confirm("Bạn có chắc chắn muốn xóa Gmail [" + clean + "] khỏi danh sách Người Phê Duyệt?")) return;
+
+      try {
+        const resp = await fetch(GAS_CHECKLIST_API, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "checklist_delete_approver",
+            email: clean
+          })
+        });
+        const res = await resp.json();
+        if (!res || !res.ok) {
+          throw new Error((res && res.error) || "Lỗi khi xóa Gmail phê duyệt");
+        }
+        if (localStorage.getItem("tni_cl_tech_gmail") === clean) {
+          localStorage.removeItem("tni_cl_tech_gmail");
+        }
+        applyCloudApprovers(res.approvers, res.approverSheetGid);
+        renderApproversManager();
+      } catch (err) {
+        alert("❌ Lỗi khi xóa Gmail phê duyệt: " + err.message);
       }
     }
 
@@ -2616,6 +2985,9 @@
         const data = await resp.json();
         if (data && data.ok && Array.isArray(data.sessions)) {
           cloudSessions = data.sessions;
+          if (Array.isArray(data.approvers)) {
+            applyCloudApprovers(data.approvers, data.approverSheetGid);
+          }
           const badge = document.getElementById("bi-count-badge");
           if (badge) badge.textContent = cloudSessions.length + " phiếu";
           populateSavedSessionsDropdown();
