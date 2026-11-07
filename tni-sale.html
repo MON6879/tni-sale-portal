@@ -733,14 +733,12 @@ function copyTelegramReportTemplate(gName, gId, cat) {
   </div>
   <div id="topbar-actions">
     <button type="button" class="btn b-sm" onclick="go('guide')" style="background:#eff6ff;color:#1d4ed8;border:1.5px solid #93c5fd;font-weight:800;display:inline-flex;align-items:center;gap:5px" title="Mở Hướng Dẫn Sử Dụng Toàn Hệ Thống (Ghế AUDITOR-SALE-GUIDE Online 24/7)">📖 Guide (SOP)</button>
-      <a href="/checklist" target="_blank" style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:8px;background:#ecfdf5;color:#047857;border:1px solid #6ee7b7;font-size:11.5px;font-weight:800;text-decoration:none;cursor:pointer;white-space:nowrap" title="Mở Web BI Check List 5 Phân Hệ (1440x1088)">☑️ Check List BI</a>
     <!-- 📁 NÚT XEM KHO ẢNH DRIVE (1 LINK XEM HẾT TẤT CẢ HÌNH ẢNH) -->
     <a href="https://drive.google.com/drive/folders/12V-UaZM1cSha8LihCjBHTOU_BEAk74p-" target="_blank" class="btn b-sm" style="background:#fef3c7;color:#92400e;border:1.5px solid #fde68a;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:6px" title="Xem tất cả hình ảnh thu thập theo template trên Google Drive">
       📁 <span>Kho Ảnh Drive (Photos)</span>
     </a>
     <!-- Cài đặt % Lợi Nhuận & Thuế Nộp Tổng Công Ty (Ẩn UI theo yêu cầu người dùng) -->
     <input id="cfg-cty-rate" type="hidden" value="17"/>
-    <a href="https://docs.google.com/spreadsheets/d/1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA/edit?gid=491845137#gid=491845137" target="_blank" class="btn b-bl b-sm" style="text-decoration:none" title="Mở Google Sheet: TNI Bán hàng — TNI Sale">📊 Sheet: TNI Bán hàng</a>
     <button id="cloud-sync-badge" class="btn b-sm" onclick="DB.pullAll(true)" title="Bấm để đồng bộ 2 chiều trực tiếp với Google Sheet ngay lập tức" style="background:#dcfce7;color:#15803d;border:1.5px solid #86efac;font-weight:700;font-size:11.5px;display:inline-flex;align-items:center;gap:5px">☁️ Sheet SSOT</button>
     <!-- 👤 USER PROFILE BADGE (GOOGLE AUTH) -->
     <div id="user-profile-badge"></div>
@@ -3117,7 +3115,6 @@ function copyTelegramReportTemplate(gName, gId, cat) {
         </div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <a href="https://docs.google.com/spreadsheets/d/1s-V0owHlwub4qrCxTUvKmXp4PWZthzk5oKhi5m_wQBA/edit" target="_blank" class="btn b-sm" style="background:#38bdf8;color:#0f172a;font-weight:800;text-decoration:none">📊 Mở Sheet [Guide] (3 Ngôn Ngữ)</a>
         <button type="button" class="btn b-sm" onclick="syncSaleGuideNow()" style="background:#fff;color:#1e3a8a;font-weight:800">🔄 Đồng Bộ &amp; Kiểm Tra Guide Ngay</button>
       </div>
     </div>
@@ -10840,7 +10837,6 @@ function translateDOM(lang) {
     }
   });
 
-  // 3. Document Title (Đồng bộ 100% với tên Google Sheet: TNI Bán hàng — TNI Sale)
   if (lang === 'my') {
     document.title = 'TNI Bán hàng — TNI Sale (ကုန်ပစ္စည်းစီမံခန့်ခွဲမှုနှင့် အမြတ်ခွဲဝေမှုစနစ်)';
   } else if (lang === 'vi') {
