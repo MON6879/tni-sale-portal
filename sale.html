@@ -3119,16 +3119,26 @@ function copyTelegramReportTemplate(gName, gId, cat) {
   <div class="panel">
     <div class="ph" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <h3 style="margin:0;font-size:14px">📚 12 Quy Trình Chuẩn (SOP):</h3>
+        <h3 style="margin:0;font-size:14px">🌳 Sơ Đồ Cây &amp; 12 Quy Trình Chuẩn (SOP):</h3>
         <div id="guide-lang-btns" style="display:inline-flex;gap:6px;background:#f1f5f9;padding:4px;border-radius:8px;border:1px solid #cbd5e1">
           <button type="button" class="btn b-sm" id="glang-all" onclick="setGuideLang('all')" style="background:#1e3a8a;color:#fff;font-weight:800;padding:4px 10px;font-size:11.5px">🌐 Cả 3 Ngôn Ngữ (VN•EN•MM)</button>
           <button type="button" class="btn b-sm" id="glang-vi" onclick="setGuideLang('vi')" style="background:#fff;color:#0f172a;font-weight:700;padding:4px 10px;font-size:11.5px">🇻🇳 Tiếng Việt</button>
           <button type="button" class="btn b-sm" id="glang-en" onclick="setGuideLang('en')" style="background:#fff;color:#0f172a;font-weight:700;padding:4px 10px;font-size:11.5px">🇬🇧 English</button>
           <button type="button" class="btn b-sm" id="glang-my" onclick="setGuideLang('my')" style="background:#fff;color:#0f172a;font-weight:700;padding:4px 10px;font-size:11.5px">🇲🇲 မြန်မာဘာသာ</button>
         </div>
+        <div id="guide-view-btns" style="display:inline-flex;gap:5px;background:#eff6ff;padding:4px;border-radius:8px;border:1px solid #93c5fd">
+          <button type="button" class="btn b-sm" id="gview-both" onclick="setGuideViewMode('both')" style="background:#059669;color:#fff;font-weight:800;padding:4px 10px;font-size:11.5px">🌳+📋 Sơ Đồ Cây &amp; Bảng</button>
+          <button type="button" class="btn b-sm" id="gview-tree" onclick="setGuideViewMode('tree')" style="background:#fff;color:#0f172a;font-weight:700;padding:4px 10px;font-size:11.5px">🌳 Chỉ Sơ Đồ Cây (Tree)</button>
+          <button type="button" class="btn b-sm" id="gview-table" onclick="setGuideViewMode('table')" style="background:#fff;color:#0f172a;font-weight:700;padding:4px 10px;font-size:11.5px">📋 Chỉ Bảng (Table)</button>
+        </div>
       </div>
-      <input id="guide-search-q" placeholder="🔍 Tìm quy trình / Search / ရှာဖွေရန် (RMA, GPS, Solar...)" oninput="rGuide()" style="padding:6px 12px;border:1.5px solid #3b82f6;border-radius:8px;font-size:12.5px;width:320px"/>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <button type="button" class="btn b-sm" onclick="toggleAllGuideTreeBranches(true)" style="background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;font-weight:800;padding:5px 9px;font-size:11px">📂 Mở Hết Nhánh</button>
+        <button type="button" class="btn b-sm" onclick="toggleAllGuideTreeBranches(false)" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;font-weight:800;padding:5px 9px;font-size:11px">📁 Thu Gọn Nhánh</button>
+        <input id="guide-search-q" placeholder="🔍 Tìm trên sơ đồ cây / Search / ရှာဖွေရန် (RMA, GPS, Solar...)" oninput="rGuide()" style="padding:6px 12px;border:1.5px solid #3b82f6;border-radius:8px;font-size:12.5px;width:290px"/>
+      </div>
     </div>
+    <div class="pb" id="t-guide-tree" style="padding:16px;background:#f8fafc;border-bottom:2px solid #e2e8f0"></div>
     <div class="pb tw" id="t-guide-table"></div>
   </div>
 </div>
@@ -13375,6 +13385,254 @@ function rBaoHanh() {
 }
 
 var _guideLangMode = 'all';
+var _guideViewMode = 'both';
+var _guideCollapsedBranches = {};
+
+function setGuideViewMode(vMode) {
+  _guideViewMode = vMode || 'both';
+  ['both', 'tree', 'table'].forEach(k => {
+    const btn = document.getElementById('gview-' + k);
+    if (!btn) return;
+    if (k === _guideViewMode) {
+      btn.style.background = '#059669';
+      btn.style.color = '#fff';
+      btn.style.fontWeight = '800';
+    } else {
+      btn.style.background = '#fff';
+      btn.style.color = '#0f172a';
+      btn.style.fontWeight = '700';
+    }
+  });
+  rGuide();
+}
+
+function toggleGuideTreeBranch(branchId) {
+  _guideCollapsedBranches[branchId] = !_guideCollapsedBranches[branchId];
+  rGuide();
+}
+
+function toggleAllGuideTreeBranches(expand) {
+  ['B1', 'B2', 'B3', 'B4', 'B5', 'B6'].forEach(id => {
+    _guideCollapsedBranches[id] = !expand;
+  });
+  rGuide();
+}
+
+var GUIDE_TREE_BRANCHES = [
+  {
+    id: 'B1',
+    icon: '📦',
+    color: '#1d4ed8',
+    bg: '#eff6ff',
+    border: '#93c5fd',
+    title_vi: 'NHÁNH 1: CHUỖI CUNG ỨNG, NHẬP HÀNG & QUẢN LÝ KHO',
+    title_en: 'BRANCH 1: SUPPLY CHAIN, GOODS INTAKE & INVENTORY CONTROL',
+    title_my: 'ကဏ္ဍ (၁) — ပစ္စည်းအဝင်နှင့် ဂိုဒေါင်လက်ကျန် စီမံခန့်ခွဲမှု',
+    nodes: [
+      { stt: '02', tabKey: 'intake', btn_vi: 'Mở Nhập Hàng', btn_en: 'Open Intake', btn_my: 'ပစ္စည်းအဝင်ဖွင့်ရန်' },
+      { stt: '03', tabKey: 'inv', btn_vi: 'Mở Tồn Kho', btn_en: 'Open Inventory', btn_my: 'လက်ကျန်စာရင်းဖွင့်ရန်' },
+      { stt: '04', tabKey: 'adv', btn_vi: 'Mở Tạm Ứng / Kiểm Kê', btn_en: 'Open Advance / Audit', btn_my: 'ယာယီထုတ်ယူ/စစ်ဆေးမှု' }
+    ]
+  },
+  {
+    id: 'B2',
+    icon: '🛒',
+    color: '#047857',
+    bg: '#ecfdf5',
+    border: '#6ee7b7',
+    title_vi: 'NHÁNH 2: LẬP BÁO GIÁ, BÁN HÀNG XUẤT KHO & ĐẠI LÝ KÝ GỞI 17%',
+    title_en: 'BRANCH 2: QUOTATIONS, SALES DISPATCH & 17% CONSIGNMENT DEALERS',
+    title_my: 'ကဏ္ဍ (၂) — ဈေးနှုန်းတွက်ချက်လွှာ၊ အရောင်းနှင့် ကိုယ်စားလှယ် အပ်နှံပစ္စည်း',
+    nodes: [
+      { stt: '07', tabKey: 'q-ups', btn_vi: 'Mở Báo Giá UPS/Solar', btn_en: 'Open Quotes', btn_my: 'ဈေးနှုန်းလွှာဖွင့်ရန်' },
+      { stt: '06', tabKey: 'orders', btn_vi: 'Mở Bán Hàng & Xuất Kho', btn_en: 'Open Sales & Dispatch', btn_my: 'အရောင်းစာရင်းဖွင့်ရန်' },
+      { stt: '09', tabKey: 'dealers', btn_vi: 'Mở Đại Lý & Ký Gởi', btn_en: 'Open Dealers & Consign', btn_my: 'ကိုယ်စားလှယ်စာရင်း' }
+    ]
+  },
+  {
+    id: 'B3',
+    icon: '🚀',
+    color: '#b45309',
+    bg: '#fffbeb',
+    border: '#fcd34d',
+    title_vi: 'NHÁNH 3: CRM KHẢO SÁT THỰC ĐỊA (AUTO-GPS) & TEAM THỰC THI NGHIỆM THU',
+    title_en: 'BRANCH 3: CRM AUTO-GPS FIELD SURVEYS & INSTALLATION ACCEPTANCE',
+    title_my: 'ကဏ္ဍ (၃) — ကွင်းဆင်းစစ်ဆေးခြင်း (Auto-GPS) နှင့် တပ်ဆင်အတည်ပြုခြင်း',
+    nodes: [
+      { stt: '10', tabKey: 'my-surveys', btn_vi: 'Mở Khảo Sát & CRM', btn_en: 'Open Field Surveys', btn_my: 'ကွင်းဆင်းစာရင်းဖွင့်ရန်' },
+      { stt: '08', tabKey: 'ops-team', btn_vi: 'Mở Team Thực Thi & Nghiệm Thu', btn_en: 'Open Field Ops & Accept', btn_my: 'တပ်ဆင်ရေးနှင့် အတည်ပြုချက်' }
+    ]
+  },
+  {
+    id: 'B4',
+    icon: '🛠️',
+    color: '#be123c',
+    bg: '#fff1f2',
+    border: '#fda4af',
+    title_vi: 'NHÁNH 4: BẢO HÀNH KHÁCH HÀNG & QUY TRÌNH ĐỔI TRẢ RMA 4 BƯỚC',
+    title_en: 'BRANCH 4: CUSTOMER WARRANTY CLAIMS & 4-STAGE RMA WORKFLOW',
+    title_my: 'ကဏ္ဍ (၄) — ဝယ်ယူသူ ပစ္စည်းအာမခံနှင့် ပြုပြင်လဲလှယ်မှု (RMA ၄ ဆင့်)',
+    nodes: [
+      { stt: '05', tabKey: 'warranty', btn_vi: 'Mở Bảo Hành (RMA)', btn_en: 'Open Warranty (RMA)', btn_my: 'အာမခံ (RMA) ဖွင့်ရန်' }
+    ]
+  },
+  {
+    id: 'B5',
+    icon: '💰',
+    color: '#6d28d9',
+    bg: '#f5f3ff',
+    border: '#c4b5fd',
+    title_vi: 'NHÁNH 5: TÀI CHÍNH, LỢI NHUẬN RÒNG & TỜ TRÌNH QUYẾT TOÁN VCM 83%',
+    title_en: 'BRANCH 5: FINANCIALS, NET PROFIT & 83% VCM SETTLEMENT STATEMENT',
+    title_my: 'ကဏ္ဍ (၅) — ဘဏ္ဍာရေး၊ အသားတင်အမြတ်နှင့် VCM 83% စာရင်းရှင်းတမ်း',
+    nodes: [
+      { stt: '11', tabKey: 'vcm-settle', btn_vi: 'Mở Quyết Toán VCM', btn_en: 'Open VCM Settlement', btn_my: 'VCM စာရင်းရှင်းတမ်း' }
+    ]
+  },
+  {
+    id: 'B6',
+    icon: '🛡️',
+    color: '#0f766e',
+    bg: '#f0fdfa',
+    border: '#5eead4',
+    title_vi: 'NHÁNH 6: ĐỒNG BỘ SSOT 24 SHEET, PHÂN QUYỀN 6 VAI TRÒ & GHẾ GIÁM SÁT 24/7',
+    title_en: 'BRANCH 6: 24-SHEET SSOT SYNC, 6-ROLE RBAC & 24/7 SENTINEL SEAT',
+    title_my: 'ကဏ္ဍ (၆) — Sheet ၂၄ ခု ချိတ်ဆက်မှု၊ လုပ်ပိုင်ခွင့် (RBAC) နှင့် ၂၄ နာရီ စောင့်ကြည့်စနစ်',
+    nodes: [
+      { stt: '01', tabKey: 'dash', btn_vi: 'Mở Tổng Quan BI', btn_en: 'Open BI Dashboard', btn_my: 'ပင်မစာမျက်နှာဖွင့်ရန်' },
+      { stt: '12', tabKey: 'rbac', btn_vi: 'Mở Phân Quyền RBAC', btn_en: 'Open RBAC Roles', btn_my: 'လုပ်ပိုင်ခွင့် (RBAC) ဖွင့်ရန်' }
+    ]
+  }
+];
+
+function renderGuideTreeDiagram(filteredRows, q) {
+  const treeEl = document.getElementById('t-guide-tree');
+  if (!treeEl) return;
+  if (_guideViewMode === 'table') {
+    treeEl.style.display = 'none';
+    return;
+  }
+  treeEl.style.display = 'block';
+
+  const rowMap = {};
+  filteredRows.forEach(r => { rowMap[r.stt] = r; });
+  const showVi = (_guideLangMode === 'all' || _guideLangMode === 'vi');
+  const showEn = (_guideLangMode === 'all' || _guideLangMode === 'en');
+  const showMy = (_guideLangMode === 'all' || _guideLangMode === 'my');
+
+  const splitSteps = (txt) => String(txt || '').split('\n').map(s => s.trim()).filter(Boolean);
+
+  let branchesHtml = '';
+  GUIDE_TREE_BRANCHES.forEach((b, bIdx) => {
+    const activeNodes = b.nodes.filter(n => !!rowMap[n.stt]);
+    if (activeNodes.length === 0) return;
+    const isCollapsed = !!_guideCollapsedBranches[b.id] && !q;
+    const isLastBranch = (bIdx === GUIDE_TREE_BRANCHES.length - 1);
+    const branchPrefix = isLastBranch ? '└──' : '├──';
+
+    let nodesHtml = '';
+    if (!isCollapsed) {
+      nodesHtml = activeNodes.map((n, nIdx) => {
+        const r = rowMap[n.stt];
+        const isLastNode = (nIdx === activeNodes.length - 1);
+        const nodeConn = isLastNode ? '└──' : '├──';
+        const stepsVi = splitSteps(r.steps_vi);
+        const stepsEn = splitSteps(r.steps_en);
+        const stepsMy = splitSteps(r.steps_my);
+        const maxSteps = Math.max(
+          showVi ? stepsVi.length : 0,
+          showEn ? stepsEn.length : 0,
+          showMy ? stepsMy.length : 0
+        );
+
+        let stepLeavesHtml = '';
+        for (let i = 0; i < maxSteps; i++) {
+          const isLastStep = (i === maxSteps - 1);
+          const stepPrefix = isLastStep ? '└──' : '├──';
+          stepLeavesHtml += `
+            <div style="display:flex;align-items:flex-start;gap:8px;padding:6px 10px;border-left:2.5px dashed ${b.border};margin-left:18px;margin-top:5px;background:#ffffff;border-radius:8px;border:1px solid #e2e8f0">
+              <span style="font-family:monospace;font-weight:900;color:${b.color};font-size:13px;white-space:nowrap;margin-top:1px">${stepPrefix} 🌿</span>
+              <div style="flex:1;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px">
+                ${showVi && stepsVi[i] ? `<div style="font-size:11.8px;color:#0f172a;line-height:1.5"><span style="font-weight:800;color:#b91c1c">🇻🇳 VN:</span> ${esc(stepsVi[i])}</div>` : ''}
+                ${showEn && stepsEn[i] ? `<div style="font-size:11.8px;color:#1e3a8a;line-height:1.5;background:#f8fafc;padding:2px 6px;border-radius:5px"><span style="font-weight:800;color:#1d4ed8">🇬🇧 EN:</span> ${esc(stepsEn[i])}</div>` : ''}
+                ${showMy && stepsMy[i] ? `<div style="font-size:11.8px;color:#065f46;line-height:1.6"><span style="font-weight:800;color:#047857">🇲🇲 MM:</span> ${esc(stepsMy[i])}</div>` : ''}
+              </div>
+            </div>`;
+        }
+
+        const btnLabel = _guideLangMode === 'en' ? n.btn_en : (_guideLangMode === 'my' ? n.btn_my : `${n.btn_vi} / ${n.btn_en}`);
+
+        return `
+          <div style="margin-left:22px;margin-top:10px;padding-left:12px;border-left:3px solid ${b.color}">
+            <div style="background:#fff;border:1.5px solid ${b.border};border-radius:10px;padding:10px 12px;box-shadow:0 2px 6px rgba(15,23,42,0.05)">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+                <div style="display:flex;align-items:flex-start;gap:8px;flex:1;min-width:250px">
+                  <span style="font-family:monospace;font-weight:900;color:${b.color};font-size:14px">${nodeConn} [${esc(r.stt)}]</span>
+                  <div style="display:flex;flex-direction:column;gap:3px">
+                    ${showVi ? `<div style="font-weight:900;font-size:13px;color:#0f172a">🇻🇳 ${esc(r.module_vi)}</div>` : ''}
+                    ${showEn ? `<div style="font-weight:800;font-size:12px;color:#0369a1">🇬🇧 ${esc(r.module_en)}</div>` : ''}
+                    ${showMy ? `<div style="font-weight:800;font-size:12px;color:#047857;line-height:1.5">🇲🇲 ${esc(r.module_my)}</div>` : ''}
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                  <span class="badge b-bl" style="font-size:10.5px">📊 Sheet: ${esc(r.sheetTab)}</span>
+                  <button type="button" class="btn b-sm" onclick="go('${n.tabKey}')" style="background:${b.color};color:#fff;font-weight:800;padding:4px 10px;font-size:11px;border-radius:6px;cursor:pointer">
+                    ↗ ${esc(btnLabel)}
+                  </button>
+                </div>
+              </div>
+              ${stepLeavesHtml}
+              <div style="margin-left:18px;margin-top:6px;padding:6px 10px;border-radius:7px;background:#fffbeb;border-left:4px solid #f59e0b;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:6px;font-size:11px;font-weight:700">
+                ${showVi ? `<div style="color:#b45309">🔒 🇻🇳 ${esc(r.notes_vi)}</div>` : ''}
+                ${showEn ? `<div style="color:#1d4ed8">🔒 🇬🇧 ${esc(r.notes_en)}</div>` : ''}
+                ${showMy ? `<div style="color:#047857">🔒 🇲🇲 ${esc(r.notes_my)}</div>` : ''}
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    branchesHtml += `
+      <div style="margin-top:12px">
+        <div onclick="toggleGuideTreeBranch('${b.id}')" style="background:${b.bg};border:2px solid ${b.border};border-left:6px solid ${b.color};border-radius:10px;padding:10px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;box-shadow:0 2px 8px rgba(15,23,42,0.06)">
+          <div style="display:flex;align-items:flex-start;gap:10px;flex:1">
+            <span style="font-family:monospace;font-size:15px;font-weight:900;color:${b.color};margin-top:2px">${branchPrefix} ${b.icon}</span>
+            <div style="display:flex;flex-direction:column;gap:2px">
+              ${showVi ? `<div style="font-weight:900;font-size:13.5px;color:#0f172a">🇻🇳 ${esc(b.title_vi)}</div>` : ''}
+              ${showEn ? `<div style="font-weight:800;font-size:12px;color:#1e3a8a">🇬🇧 ${esc(b.title_en)}</div>` : ''}
+              ${showMy ? `<div style="font-weight:800;font-size:12px;color:#065f46;line-height:1.5">🇲🇲 ${esc(b.title_my)}</div>` : ''}
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="background:${b.color};color:#fff;font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px">${activeNodes.length} Phân hệ (Modules)</span>
+            <span style="font-size:12px;font-weight:900;color:${b.color};background:#fff;padding:3px 8px;border-radius:6px;border:1px solid ${b.border}">${isCollapsed ? '➕ Mở nhánh' : '➖ Thu gọn'}</span>
+          </div>
+        </div>
+        ${nodesHtml}
+      </div>`;
+  });
+
+  treeEl.innerHTML = `
+    <div style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);color:#fff;border-radius:12px;padding:14px 18px;border:2px solid #3b82f6;box-shadow:0 6px 18px rgba(15,23,42,0.18)">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <div style="display:flex;align-items:flex-start;gap:12px">
+          <span style="font-size:28px">🌳</span>
+          <div>
+            ${showVi ? `<div style="font-size:15px;font-weight:900;color:#fde047">🇻🇳 GỐC SƠ ĐỒ CÂY: HỆ THỐNG QUẢN TRỊ BÁN HÀNG, KHO, BẢO HÀNH &amp; TÀI CHÍNH — TNI SALE BI (SSOT 24 SHEETS)</div>` : ''}
+            ${showEn ? `<div style="font-size:13px;font-weight:800;color:#93c5fd;margin-top:2px">🇬🇧 ROOT TREE: TNI SALE BI — END-TO-END SALES, INVENTORY, RMA &amp; FINANCIAL MANAGEMENT SYSTEM</div>` : ''}
+            ${showMy ? `<div style="font-size:13px;font-weight:800;color:#6ee7b7;margin-top:3px;line-height:1.5">🇲🇲 ပင်မသစ်ပင်ပုံစံ (ROOT): TNI SALE BI — အရောင်း၊ ဂိုဒေါင်၊ အာမခံ (RMA) နှင့် ဘဏ္ဍာရေး စီမံခန့်ခွဲမှုဗဟိုစနစ် (Sheet ၂၄ ခု)</div>` : ''}
+          </div>
+        </div>
+        <span style="background:#2563eb;color:#fff;font-size:11px;font-weight:900;padding:5px 11px;border-radius:99px;border:1px solid #93c5fd">
+          6 Nhánh Chính • 12 Quy Trình SOP • 3 Ngôn Ngữ
+        </span>
+      </div>
+    </div>
+    <div style="padding-left:10px;border-left:4px solid #1e3a8a;margin-left:14px">
+      ${branchesHtml}
+    </div>
+  `;
+}
 
 function setGuideLang(mode) {
   _guideLangMode = mode || 'all';
@@ -13563,6 +13821,13 @@ function rGuide() {
     r.steps_vi, r.steps_en, r.steps_my,
     r.notes_vi, r.notes_en, r.notes_my
   ].some(v => String(v || '').toLowerCase().includes(q)));
+
+  renderGuideTreeDiagram(rows, q);
+  if (_guideViewMode === 'tree') {
+    tb.style.display = 'none';
+    return;
+  }
+  tb.style.display = 'block';
 
   if (_guideLangMode === 'all') {
     tb.innerHTML = `<table style="width:100%;border-collapse:collapse">
