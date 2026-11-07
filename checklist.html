@@ -996,6 +996,81 @@
       color: #fef08a !important;
       font-weight: 900 !important;
     }
+
+    /* SMART AUTOCOMPLETE DROPDOWN FOR SITE ID / ROUTE CODE (SYNCED WITH ASSET AUDIT COL Q & COL O) */
+    .site-ac-wrap {
+      position: relative;
+      width: 100%;
+    }
+    .site-ac-dropdown {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      min-width: 310px;
+      max-height: 330px;
+      overflow-y: auto;
+      background: #ffffff;
+      border: 2px solid #2563eb;
+      border-radius: 10px;
+      box-shadow: 0 14px 32px rgba(15, 23, 42, 0.24);
+      z-index: 2500;
+      display: none;
+    }
+    .site-ac-hdr {
+      position: sticky;
+      top: 0;
+      background: #eff6ff;
+      color: #1e40af;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 6px 11px;
+      border-bottom: 1px solid #bfdbfe;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 2;
+    }
+    .site-ac-item {
+      padding: 8px 11px;
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12.8px;
+      font-weight: 700;
+      color: #0f172a;
+      transition: background 0.1s;
+    }
+    .site-ac-item:hover, .site-ac-item.active {
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+    .site-ac-tag {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 5px;
+      background: #e0f2fe;
+      color: #0369a1;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .site-ac-tag.route {
+      background: #dcfce7;
+      color: #047857;
+    }
+    .site-ac-tag.wh {
+      background: #f3e8ff;
+      color: #6d28d9;
+    }
+    .site-ac-tag.inspected {
+      background: #fef3c7;
+      color: #b45309;
+      border: 1px solid #fcd34d;
+    }
   </style>
 </head>
 <body>
@@ -1148,7 +1223,10 @@
         <div style="background:linear-gradient(90deg,#eff6ff 0%,#ecfdf5 100%);border:2px solid #60a5fa;border-radius:12px;padding:11px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1;min-width:280px;">
             <span id="ui-step1-search-lbl" style="font-size:13px;font-weight:900;color:#1e3a8a;white-space:nowrap;">🔎 Step 1. Search Site (Tìm Trạm / စခန်းရှာရန်):</span>
-            <input type="text" id="inp-find-saved-site" class="field-input" style="max-width:195px;padding:6px 10px;font-size:12.5px;background:#fff;border-color:#3b82f6;font-weight:800;" placeholder="Site ID (e.g. TNI0012)..." onfocus="autoRefreshCloudSessionsIfNeeded()" oninput="populateSavedSessionsDropdown(true)" onchange="if(this.value.trim()){executeSiteSearchByFilterDropdown();}" onkeydown="if(event.key==='Enter'){event.preventDefault();executeSiteSearchByFilterDropdown();}" />
+            <div class="site-ac-wrap" id="find-site-ac-wrap" style="max-width:215px;flex:1;min-width:175px;">
+              <input type="text" id="inp-find-saved-site" class="field-input" autocomplete="off" style="width:100%;padding:6px 10px;font-size:12.5px;background:#fff;border-color:#3b82f6;font-weight:800;" placeholder="Site ID (e.g. TNI0012)..." onfocus="autoRefreshCloudSessionsIfNeeded();onFindSiteAutocomplete(this.value);" oninput="populateSavedSessionsDropdown(true);onFindSiteAutocomplete(this.value);" onchange="if(this.value.trim()){executeSiteSearchByFilterDropdown();}" onkeydown="handleSiteAcKeydown(event, 'find')" />
+              <div class="site-ac-dropdown" id="find-site-ac-dropdown" style="min-width:340px;"></div>
+            </div>
             <select id="sel-saved-sessions" class="field-input" style="flex:1;min-width:220px;padding:6px 10px;font-size:12px;background:#fff;" onfocus="autoRefreshCloudSessionsIfNeeded()" onchange="onSelectSavedSessionChange()">
               <option value="">-- Select inspected site from Google Sheet --</option>
             </select>
@@ -1207,8 +1285,15 @@
 
         <div class="meta-grid">
           <div class="field-group">
-            <label id="lbl-site-code">Mã Trạm / Tuyến (Site / Route Code) *</label>
-            <input type="text" class="field-input" id="inp-site-code" placeholder="VD: TNI0012 / TNIDW01" oninput="onSiteCodeInput();checkBasicStationInfoGate();" />
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:4px;">
+              <label id="lbl-site-code" style="margin-bottom:0;">Mã Trạm / Tuyến (Site / Route Code) *</label>
+              <span id="site-catalog-count-chip" style="font-size:10px;font-weight:800;color:#0369a1;background:#e0f2fe;padding:1px 6px;border-radius:99px;">880 Site/Route</span>
+            </div>
+            <div class="site-ac-wrap" id="site-code-ac-wrap">
+              <input type="text" class="field-input" id="inp-site-code" autocomplete="off" placeholder="VD: TNI0012 / TNI0001-TNI0002" onfocus="onSiteCodeAutocomplete(this.value)" oninput="onSiteCodeInput();checkBasicStationInfoGate();onSiteCodeAutocomplete(this.value);" onkeydown="handleSiteAcKeydown(event, 'main')" />
+              <div class="site-ac-dropdown" id="site-code-ac-dropdown"></div>
+            </div>
+            <datalist id="master-site-route-datalist"></datalist>
             <div id="site-existing-hint" style="display:none;margin-top:4px;font-size:11.5px;font-weight:800;color:#1d4ed8;background:#dbeafe;padding:4px 8px;border-radius:6px;cursor:pointer;" onclick="loadMatchedSiteSession()"></div>
           </div>
           <div class="field-group">
@@ -1383,7 +1468,7 @@
             </div>
 
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-              <input type="text" id="bi-site-search" class="field-input" style="width:210px;background:#fff;font-weight:800;" placeholder="🔎 Tìm Mã Trạm / NV (VD: TNI0012)..." oninput="renderBiDashboard()" />
+              <input type="text" id="bi-site-search" list="master-site-route-datalist" class="field-input" style="width:210px;background:#fff;font-weight:800;" placeholder="🔎 Tìm Mã Trạm / NV (VD: TNI0012)..." oninput="renderBiDashboard()" />
               <select id="bi-type-filter" class="field-input" style="width:auto;background:#fff;font-weight:800;" onchange="renderBiDashboard()">
                 <option value="ALL">📋 Tất cả 5 Check List (A → Z)</option>
                 <option value="site_bts">1. Check Site (BTS)</option>
@@ -1661,7 +1746,7 @@
         </div>
         <div>
           <label style="font-size:10.5px;font-weight:800;color:#93c5fd;display:block;margin-bottom:2px;">📡 Mã Trạm / Tuyến (Site ID)</label>
-          <input type="text" id="webcam-inp-site" placeholder="VD: TNI0012" style="width:100%;padding:5px 8px;border-radius:6px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:12px;font-weight:800;" oninput="document.getElementById('inp-site-code').value=this.value;saveLocalDraft();syncWebCamOverlayText();" />
+          <input type="text" id="webcam-inp-site" list="master-site-route-datalist" placeholder="VD: TNI0012" style="width:100%;padding:5px 8px;border-radius:6px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:12px;font-weight:800;" oninput="document.getElementById('inp-site-code').value=this.value;saveLocalDraft();syncWebCamOverlayText();" />
         </div>
         <input type="hidden" id="webcam-inp-gps" value="" />
       </div>
@@ -2148,6 +2233,7 @@
 
       clearStationFormExceptDate();
       initChecklistStaffAuthGate();
+      loadMasterSiteRouteCatalog();
       syncInternalStaffFromBiSale(false);
       startBackgroundGpsTracker();
       setLang(currentLang);
@@ -5231,6 +5317,314 @@
       const modeToApply = explicitFilterMode || (filterToNok ? "nok" : "all");
       loadSessionIntoEditor(targetSessionId, filterToNok, modeToApply);
     }
+
+    // =========================================================================
+    // MASTER SITE / CABLE ROUTE / MW / JB / WAREHOUSE SMART AUTOCOMPLETE (865 COL Q + 15 COL O, SYNCED WITH ASSET AUDIT)
+    // =========================================================================
+    const MASTER_SITE_ROUTE_CATALOG = {
+      sites: ["AU1(TNI0003-TNI0004)-UA1(TNI0003-TNI0004)", "AU1(TNI0354-JB(TNI0003-TNI0004))- UA1(TNI0354-JB(TNI0003-TNI0004))", "AU2(TNI0004-TNI0008)-UA2(TNI0004-TNI0008)", "AU3(TNI0004-TNI0008)-UA3(TNI0004-TNI0008)", "JB(TNI0146-TNI0366)-JB(TNI0013-TNI0006)", "JB01(TNI0003-TNI0007)-JB02(TNI0007-TNI0003)", "JB01(TNI0004-TNI0008)-JB02(TNI0004-TNI0008)", "JB01(TNI0009-TNI0015)-JB02(TNI0009-TNI0015)", "JB01(TNI0213-TNIM059)-JB02(TNI0213-TNIM059)", "JB01(TNI0401-JB(TNI0012-TNI0015))-JB02(TNI0401-JB(TNI0012-TNI0015))", "JB03(MON0002-TNI0006)-JB04(MON0002-TNI0006)", "JB03(TNI0004-TNI0008)-JB04(TNI0004-TNI0008)", "JB03(TNI0009-TNI0015)-JB04(TNI0009-TNI0015)", "JB05(MON0002-TNI0006)-JB06(MON0002-TNI0006)", "JB05(TNI0004-TNI0008)-JB06(TNI0004-TNI0008)", "JB05(TNI0009-TNI0015)-JB06(TNI0009-TNI0015)", "JB05(TNI0009-TNI0015)-JB18(TNI0009-TNI0015)", "JB07(TNI0004-TNI0008)-JB08(TNI0004-TNI0008)", "JB07(TNI0009-TNI0015)-JB08(TNI0009-TNI0015)", "JB09(TNI0004-TNI0008)-JB10(TNI0004-TNI0008)", "JB09(TNI0009-TNI0015)-JB10(TNI0009-TNI0015)", "JB1(TNI0006-MON0002)-JB2(TNI0006-MON0002)", "JB1(TNI0012-THAILAND)-JB2(TNI0012-THAILAND)", "JB1(TNI0012-TNI0015)-JB2(TNI0012-TNI0015)", "JB11(TNI0004-TNI0008)-JB12(TNI0004-TNI0008)", "JB11(TNI0009-TNI0015)-JB12(TNI0009-TNI0015)", "JB13(TNI0004-TNI0008)-JB14(TNI0004-TNI0008)", "JB13(TNI0009-TNI0015)-JB14(TNI0009-TNI0015)", "JB15(TNI0009-TNI0015)-JB16(TNI0009-TNI0015)", "JB17(TNI0009-TNI0015)-JB18(TNI0009-TNI0015)", "JB19(TNI0009-TNI0015)-JB20(TNI0009-TNI0015)", "JB3(TNI0012-Thailand)-JB4(TNI0012-Thailand)", "Station code", "TNI0001", "TNI0001-TNI0002", "TNI0001-TNI0003", "TNI0001-TNI0036", "TNI0001-TNI0236", "TNI0001-TNI0269", "TNI0001-TNIM001", "TNI0002", "TNI0002-AU1(TNI0002-TNI0003)", "TNI0002-TNI0048", "TNI0002-TNI0077", "TNI0002-TNI0232", "TNI0002-TNI0239", "TNI0003", "TNI0003-TNI0028", "TNI0003-TNI0029", "TNI0003-TNIM002", "TNI0003-TNIM003", "TNI0004", "TNI0004_01", "TNI0004-JB01(TNI0004-TNI0008)", "TNI0004-TNI0003", "TNI0004-TNI0004_01", "TNI0004-TNIM005", "TNI0004-TNIM006", "TNI0005", "TNI0005-TNI0007", "TNI0005-TNI0013", "TNI0005-TNIDOS57", "TNI0005-TNIM007", "TNI0005-TNIM008", "TNI0006", "TNI0006-JB(MON0002-TNI0006)", "TNI0006-JB01(TNI0006-TNI0013)", "TNI0006-MON0002_TNI0006_001", "TNI0006-TNI0013", "TNI0006-TNIDOS51", "TNI0006-TNIM009", "TNI0006-TNIM010", "TNI0007", "TNI0007-TNI0003", "TNI0007-TNI0097", "TNI0007-TNIM011", "TNI0007-TNIM012", "TNI0008", "TNI0008-TNI0004", "TNI0008-TNI0009", "TNI0008-TNIM013", "TNI0008-TNIM014", "TNI0009", "TNI0009-TNI0015", "TNI0009-TNIM015", "TNI0009-TNIM016", "TNI0010", "TNI0010-THAILAND", "TNI0010-TNI0004", "TNI0011", "TNI0011-TNI0012", "TNI0011-TNI0016", "TNI0011-TNI0230", "TNI0011-TNI0244", "TNI0011-TNIDOS54", "TNI0011-TNIM017", "TNI0012", "TNI0012-JB1(TNI0012-THAILAND)", "TNI0012-THAILAN", "TNI0012-TNIDOS53", "TNI0012-TNIM018", "TNI0012-TNIM019", "TNI0013", "TNI0013-TNI_OFFICE", "TNI0013-TNI0069", "TNI0013-TNI0070", "TNI0013-TNI0250", "TNI0013-TNI0256", "TNI0013-TNIM020", "TNI0013-TNIM021", "TNI0014", "TNI0014-JB(TNI0014-TNI0058)", "TNI0014-TNI0054", "TNI0014-TNI0058", "TNI0014-TNI0250", "TNI0015", "TNI0015-TNI0012", "TNI0015-TNIM022", "TNI0015-TNIM023", "TNI0016", "TNI0016-TNI0235", "TNI0017", "TNI0017-JB(TNI0017-TNI0229)", "TNI0017-TNI0229", "TNI0017-TNI0259", "TNI0018", "TNI0018_01", "TNI0018-TNI0018_01", "TNI0018-TNI0055", "TNI0018-TNI0207", "TNI0018-TNI0216", "TNI0019", "TNI0019-TNIM024", "TNI0020", "TNI0020-TNI0025", "TNI0020-TNI0047", "TNI0021", "TNI0021-TNI0240", "TNI0021-TNI0242", "TNI0022", "TNI0022-TNI0233", "TNI0023", "TNI0023-TNI0266", "TNI0024", "TNI0024-TNI0241", "TNI0024-TNI0258", "TNI0024-TNI0267", "TNI0025", "TNI0025-TNI0081", "TNI0025-TNI0258", "TNI0025-TNI0269", "TNI0026", "TNI0026-TNI0030", "TNI0027", "TNI0027-TNI0042", "TNI0027-TNI0248", "TNI0028", "TNI0028-TNI0044", "TNI0029", "TNI0029-TNI0042", "TNI0030", "TNI0030-TNI0076", "TNI0030-TNI0242", "TNI0031", "TNI0031-TNI0306", "TNI0031-TNI0428", "TNI0032", "TNI0032-TNI0233", "TNI0032-TNI0259", "TNI0033", "TNI0033-TNI0075", "TNI0034", "TNI0034-TNI0252", "TNI0034-TNI0255", "TNI0035", "TNI0035-TNI0038", "TNI0036", "TNI0036-JB(TNI0036-TNI0270)", "TNI0036-TNI0270", "TNI0037", "TNI0037-TNI0230", "TNI0037-TNI0254", "TNI0038", "TNI0038-TNI0051", "TNI0039", "TNI0039-TNIM025", "TNI0040", "TNI0040-JB(TNI0005-TNI0013)", "TNI0040-TNIM026", "TNI0041", "TNI0041-TNI0035", "TNI0041-TNI0333", "TNI0041-TNI0334", "TNI0042", "TNI0043", "TNI0044", "TNI0044-TNIM027", "TNI0045-TNIM080", "TNI0046", "TNI0046-JB(TNI0005-TNI0013)", "TNI0046-TNIM028", "TNI0047", "TNI0047-TNI0267", "TNI0048", "TNI0048-TNI0241", "TNI0049", "TNI0049-TNI0050", "TNI0049-TNI0061", "TNI0049-TNIDOS56", "TNI0050", "TNI0050-TNI0058", "TNI0051", "TNI0051-TNI0055", "TNI0052", "TNI0052-TNI0201", "TNI0052-TNI0305", "TNI0052-TNI0329", "TNI0052-TNI0335", "TNI0053", "TNI0053-TNI0058", "TNI0053-TNI0060", "TNI0054", "TNI0054-TNI0250", "TNI0054-TNI0253", "TNI0055", "TNI0055-TNI0056", "TNI0056", "TNI0056-TNI0245", "TNI0056-TNI0253", "TNI0057", "TNI0057-TNI0080", "TNI0057-TNI0337", "TNI0057-TNIM029", "TNI0058", "TNI0058-JB(TNI0050-TNI0058)", "TNI0059", "TNI0059-TNI0073", "TNI0059-TNI0250", "TNI0060", "TNI0060-TNI0072", "TNI0060-TNI0231", "TNI0060-TNI0238", "TNI0061", "TNI0061-TNI0231", "TNI0062", "TNI0062-JB(TNI0062-TNI0250)", "TNI0062-TNI0250", "TNI0062-TNI0251", "TNI0063", "TNI0063-JB(TNI0011-TNI0012)", "TNI0063-TNIM030", "TNI0064", "TNI0064-JB(TNI0011-TNI0012)", "TNI0064-TNI0233", "TNI0064-TNIM081", "TNI0065", "TNI0065-JB(TNI0065-TNI0238)", "TNI0065-TNI0072", "TNI0065-TNI0238", "TNI0065-TNI0271", "TNI0066", "TNI0066-TNI0256", "TNI0066-TNI0265", "TNI0067", "TNI0067-JB(TNI0067-TNI0069)", "TNI0067-TNI0069", "TNI0067-TNI0251", "TNI0068", "TNI0068-TNI0069", "TNI0068-TNI0264", "TNI0069", "TNI0070", "TNI0070-TNI0245", "TNI0071", "TNI0071-JB(TNI0071-TNI0250)", "TNI0071-TNI0250", "TNI0071-TNI0264", "TNI0072", "TNI0073", "TNI0073-TNI0247", "TNI0074-TNI0232", "TNI0074-TNI0260", "TNI0074-TNI0294", "TNI0075", "TNI0075-TNI0163", "TNI0075-TNIM031", "TNI0076", "TNI0076-TNI0255", "TNI0077", "TNI0077-TNI0248", "TNI0077-TNI0252", "TNI0078", "TNI0078-TNIM032", "TNI0079", "TNI0079-TNI0156", "TNI0079-TNIM033", "TNI0080", "TNI0080-JB(TNI0080-TNI0249)", "TNI0080-TNI0249", "TNI0081", "TNI0081-TNI0268", "TNI0088", "TNI0088-TNI0109", "TNI0089", "TNI0089-TNI0275", "TNI0089-TNIM035", "TNI0090", "TNI0090-TNI0218", "TNI0091", "TNI0091-TNI0159", "TNI0095", "TNI0095-TNI0040", "TNI0095-TNI0187", "TNI0095-TNI0335", "TNI0097", "TNI0097-TNI0163", "TNI0097-TNIM036", "TNI0100", "TNI0100-TNIM037", "TNI0103", "TNI0103-TNI0418", "TNI0103-TNIM082", "TNI0105", "TNI0105-TNIM083", "TNI0107", "TNI0107-TNI0003", "TNI0108", "TNI0108-TNIM038", "TNI0109", "TNI0109-TNI0290", "TNI0110", "TNI0110-TNI0109", "TNI0112", "TNI0112-TNI0224", "TNI0114", "TNI0114-TNI0156", "TNI0115", "TNI0115-TNI0275", "TNI0116", "TNI0116-TNIM039", "TNI0118", "TNI0118-TNI0196", "TNI0120", "TNI0120-TNI0202", "TNI0120-TNI0404", "TNI0122", "TNI0122-TNIM040", "TNI0123", "TNI0123-JB(TNI0012-TNI0015)", "TNI0123-TNI0227", "TNI0123-TNIM041", "TNI0124", "TNI0124-JB(TNI0009-TNI0015)", "TNI0124-TNIM084", "TNI0127", "TNI0127-TNIM042", "TNI0129", "TNI0129-TNIM043", "TNI0136", "TNI0136-TNI0196", "TNI0136-TNIM085", "TNI0137", "TNI0137-TNI0047", "TNI0144", "TNI0144-TNI0231", "TNI0144-TNI0285", "TNI0146", "TNI0146-JB(TNI0170-TNI0147)", "TNI0146-TNI0208", "TNI0146-TNI0366", "TNI0147", "TNI0147-TNI0148", "TNI0147-TNI0170", "TNI0148", "TNI0148_01", "TNI0148-TNI0148_01", "TNI0148-TNI0150", "TNI0149", "TNI0149-TNI0220", "TNI0150", "TNI0150-TNI0206", "TNI0151", "TNI0151-JB(TNI0010-TNI0004)", "TNI0153", "TNI0153_01", "TNI0153_02", "TNI0153-JB(TNI0206-TNI0153)", "TNI0153-TNI0153_01", "TNI0153-TNI0153_02", "TNI0153-TNI0206", "TNI0154", "TNI0154-JB(TNI0154-TNIM087)", "TNI0154-TNIM087", "TNI0156", "TNI0156-TNI0004", "TNI0156-TNI0221", "TNI0159", "TNI0159-TNI0339", "TNI0159-TNIM044", "TNI0161", "TNI0161-TNI0255", "TNI0163", "TNI0163-TNI0033", "TNI0164", "TNI0164-TNIM045", "TNI0165", "TNI0165-TNIM046", "TNI0166", "TNI0166-TNIM047", "TNI0167", "TNI0167-TNIM048", "TNI0169", "TNI0169-JB(TNI0003-TNI0004)", "TNI0170", "TNI0170-TNI0207", "TNI0173", "TNI0173-TNI0079", "TNI0178", "TNI0178-TNI0367", "TNI0179", "TNI0179-JB(TNI0010-TNI0004)", "TNI0179-TNI0221", "TNI0185", "TNI0185-JB(MON0002-TNI0006)", "TNI0185-TNIM050", "TNI0187", "TNI0187-TNI0046", "TNI0187-TNI0191", "TNI0188", "TNI0188-JB(MON0002-TNI0006)", "TNI0188-TNIM051", "TNI0189", "TNI0189-TNIM052", "TNI0191", "TNI0192", "TNI0192-TNI0285", "TNI0192-TNI0287", "TNI0194", "TNI0194-TNIM053", "TNI0196", "TNI0196-TNIM089", "TNI0197", "TNI0197-JB(TNI0005-TNI0013)", "TNI0197-JB(TNI0006-TNI0013)", "TNI0197-TNIM054", "TNI0198", "TNI0198-TNIM055", "TNI0199", "TNI0199-JB(TNI0088-TNI0109)", "TNI0199-TNI0090", "TNI0200", "TNI0200-TNI0107", "TNI0200-TNI0371", "TNI0201", "TNI0201-TNIM056", "TNI0202", "TNI0202_01", "TNI0202-JB(TNI0011-TNI0012)", "TNI0202-TNIM090", "TNI0206", "TNI0206-TNI0213", "TNI0206-TNI0220", "TNI0207", "TNI0207-TNI0452", "TNI0208", "TNI0208-TNIM057", "TNI0209", "TNI0209-TNI0196", "TNI0209-TNI0423", "TNI0210", "TNI0210-TNI0322", "TNI0211", "TNI0211-TNI0066", "TNI0212", "TNI0212-JB(TNI0212-TNI0389)", "TNI0212-TNIM058", "TNI0213", "TNI0213_01", "TNI0213-TNI0213_01", "TNI0213-TNI0430", "TNI0213-TNIM059", "TNI0214", "TNI0214-JB(TNI0005-TNI0013)", "TNI0214-TNI0198", "TNI0215", "TNI0215-TNIM060", "TNI0216", "TNI0216-TNI0366", "TNI0217", "TNI0217-TNI0224", "TNI0218", "TNI0218-JB(TNI0005-TNI0013)", "TNI0218-TNIM061", "TNI0219", "TNI0219-TNI0201", "TNI0220", "TNI0221", "TNI0224", "TNI0224-TNI0114", "TNI0224-TNI0173", "TNI0225", "TNI0225-TNI0115", "TNI0227", "TNI0228", "TNI0228-TNI0077", "TNI0228-TNI0267", "TNI0229", "TNI0229-TNI0244", "TNI0229-TNI0372", "TNI0230", "TNI0230-TNI0235", "TNI0231", "TNI0232", "TNI0232-TNI0263", "TNI0233", "TNI0233-JB(TNI0032-TNI0233)", "TNI0234", "TNI0234-TNI0159", "TNI0235", "TNI0236", "TNI0236-TNI0262", "TNI0237", "TNI0237-TNI0260", "TNI0237-TNI0261", "TNI0238", "TNI0239", "TNI0239-TNI0242", "TNI0240", "TNI0240-TNI0266", "TNI0241", "TNI0242", "TNI0243", "TNI0243-TNI0249", "TNI0243-TNI0254", "TNI0244", "TNI0245", "TNI0246", "TNI0246-TNI0042", "TNI0246-TNI0248", "TNI0247", "TNI0247-TNI0257", "TNI0248", "TNI0249", "TNI0250", "TNI0251", "TNI0252", "TNI0253", "TNI0254", "TNI0255", "TNI0256", "TNI0257", "TNI0257-TNI0271", "TNI0258", "TNI0259", "TNI0260", "TNI0261", "TNI0261-TNI0262", "TNI0262", "TNI0263", "TNI0263-TNI0268", "TNI0264", "TNI0264_01", "TNI0264-TNI0264_01", "TNI0265", "TNI0265-JB(TNI0066-TNI0265)", "TNI0265-TNI0271", "TNI0266", "TNI0266-TNI0270", "TNI0267", "TNI0268", "TNI0269", "TNI0270", "TNI0271", "TNI0272", "TNI0272-TNIM062", "TNI0273", "TNI0273-TNIM063", "TNI0275", "TNI0276", "TNI0276-TNI0276_01", "TNI0276-TNI0427", "TNI0276-TNIM064", "TNI0277", "TNI0277-TNIM065", "TNI0278", "TNI0278-JB(TNI0278-TNIM066)", "TNI0278-TNIM066", "TNI0279", "TNI0279-TNIM067", "TNI0280", "TNI0280-TNI0352", "TNI0280-TNIM068", "TNI0281", "TNI0281-TNIM069", "TNI0282", "TNI0282-JB(TNI0011-TNI0012)", "TNI0282-TNIM070", "TNI0283", "TNI0283-TNIM071", "TNI0284", "TNI0284-TNIM072", "TNI0285", "TNI0287", "TNI0288", "TNI0288-TNI0309", "TNI0288-TNI0361", "TNI0288-TNIM073", "TNI0289", "TNI0289-TNIM074", "TNI0290", "TNI0290-TNI0039", "TNI0290-TNIM075", "TNI0291", "TNI0291-TNIM076", "TNI0292", "TNI0292-TNIM077", "TNI0294", "TNI0295", "TNI0295-JB(TNI0012-TNI0015)", "TNI0305", "TNI0305-TNI0306", "TNI0306", "TNI0306-JB(TNI0052-TNI0329)", "TNI0306-TNI0211", "TNI0308", "TNI0308-JB(TNI0003-TNI0004)", "TNI0309", "TNI0309-JB(TNI0005-TNI0013)", "TNI0310", "TNI0310-JB(TNI0008-TNI0009)", "TNI0311", "TNI0311-JB(TNI0009-TNI0015)", "TNI0311-JB(TNI0311-JB(TNI0009-TNI0015))", "TNI0312", "TNI0312-JB(TNI0006-TNI0013)", "TNI0313", "TNI0313-TNI0147", "TNI0313-TNI0356", "TNI0314", "TNI0314-JB(TNI0147-TNI0148)", "TNI0316", "TNI0316-TNI0170", "TNI0318", "TNI0318-JB(TNI0192-TNI0387)", "TNI0319", "TNI0319-JB(TNI0005-TNI0013)", "TNI0320", "TNI0320-TNI0011", "TNI0321", "TNI0321-TNI0210", "TNI0322", "TNI0322-JB(TNI0005-TNI0013)", "TNI0323", "TNI0323-JB(TNI0005-TNI0007)", "TNI0324", "TNI0324-JB(TNI0003-TNI0004)", "TNI0324-TNI0324_01", "TNI0324-TNI0354", "TNI0325", "TNI0326", "TNI0326-JB(MON0002-TNI0006)", "TNI0327", "TNI0327-TNI0007", "TNI0328", "TNI0328-TNI0031", "TNI0329", "TNI0330", "TNI0330-JB3(MON0002-TNI0006)", "TNI0330-MON0073", "TNI0331", "TNI0331-JB(MON0002-TNI0006)", "TNI0333", "TNI0333-TNI0031", "TNI0334", "TNI0334-TNI0089", "TNI0335", "TNI0335_01", "TNI0335_01-JB(TNI0095-TNI0335)", "TNI0336", "TNI0336-JB(TNI0005-TNI0007)", "TNI0337", "TNI0338-JB(TNI0009-TNI0015)", "TNI0339", "TNI0339-JB(TNI0005-TNI0007)", "TNI0340", "TNI0340-JB(TNI0008-TNI0009)", "TNI0341", "TNI0341-JB(TNI0008-TNI0004)", "TNI0342", "TNI0342-JB(TNI0004-TNI0010)", "TNI0343", "TNI0343-TNI0008", "TNI0345", "TNI0345_01", "TNI0345-JB(TNI0009-TNI0015)", "TNI0345-TNI0345_01", "TNI0346", "TNI0346-JB(TNI0007-TNI0003)", "TNI0348", "TNI0348-JB(TNI0004-TNI0010)", "TNI0349", "TNI0349-JB(TNI0003-TNI0007)", "TNI0350", "TNI0350-JB(TNI0011-TNI0012)", "TNI0351", "TNI0351-JB(TNI0006-TNI0013)", "TNI0352", "TNI0352-TNI0354", "TNI0354", "TNI0354-TNI0519", "TNI0355", "TNI0355-JB(TNI0012-TNI0015)", "TNI0356", "TNI0356-JB(TNI0147-TNI0170)", "TNI0357", "TNI0360", "TNI0360-TNI0191", "TNI0360-TNI0210", "TNI0361", "TNI0361-JB(TNI0187-TNI0191)", "TNI0363", "TNI0365", "TNI0365-TNI0308", "TNI0366", "TNI0367", "TNI0367-TNI0217", "TNI0370", "TNI0370-TNI0267", "TNI0371", "TNI0371-TNI0077", "TNI0371-TNI0324", "TNI0372", "TNI0372-TNI0011", "TNI0379", "TNI0379-TNI0001", "TNI0380", "TNI0380-TNI0137", "TNI0381", "TNI0381-TNI0209", "TNI0382", "TNI0382-TNI0381", "TNI0383", "TNI0383-TNI0124", "TNI0384", "TNI0384-TNI0380", "TNI0385", "TNI0385-TNI0384", "TNI0386", "TNI0386-TNI0380", "TNI0388", "TNI0388-JB(TNI0003-TNI0007)", "TNI0388-TNI0122", "TNI0389", "TNI0389-JB(TNI0212-TNI0389)", "TNI0390", "TNI0390-JB(MON0002-TNI0006)", "TNI0391", "TNI0391-TNI0007", "TNI0392", "TNI0392-TNI0404", "TNI0393", "TNI0393-TNI0146", "TNI0394", "TNI0394-TNI0210", "TNI0398", "TNI0398-TNI0399", "TNI0399", "TNI0399-TNI0386", "TNI0401", "TNI0401-JB(TNI0012-TNI0015)", "TNI0402", "TNI0402-TNI0383", "TNI0402-TNI0417", "TNI0404", "TNI0404-TNI0022", "TNI0406", "TNI0406-TNI0379", "TNI0410", "TNI0410-TNI0388", "TNI0411", "TNI0411-TNI0137", "TNI0411-TNI0200", "TNI0412", "TNI0412-TNI0411", "TNI0413", "TNI0413-TNI0423", "TNI0415", "TNI0415-TNI0381", "TNI0416", "TNI0416-TNI0417", "TNI0417", "TNI0417-TNI0009", "TNI0418", "TNI0422", "TNI0422-TNI0023", "TNI0423", "TNI0423-TNI0386", "TNI0424", "TNI0424-TNIM034", "TNI0425", "TNI0425-JB(TNI0008-TNI0009)", "TNI0426", "TNI0426-TNI0285", "TNI0427", "TNI0427-TNI0216", "TNI0427-TNI0426", "TNI0428", "TNI0429", "TNI0429-TNI0285", "TNI0430", "TNI0434", "TNI0434-TNI0435", "TNI0435", "TNI0435-JB(TNI0012-THAILAND)", "TNI0438", "TNI0438-JB(TNI0079-TNI0156)", "TNI0440", "TNI0440-TNI0324", "TNI0440-TNI0365", "TNI0442", "TNI0442-TNI0127", "TNI0447", "TNI0447-JB(TNI0003-TNI0007)", "TNI0448", "TNI0448-TNI0088", "TNI0449", "TNI0449-TNI0003", "TNI0449-TNI0391", "TNI0450-TNI0281", "TNI0451", "TNI0451-JB(TNI0170-TNI0357)", "TNI0452", "TNI0453", "TNI0453-TNI0144", "TNI0454", "TNI0454-TNI0064", "TNI0454-TNI0154", "TNI0498", "TNI0498-TNI0220", "TNI0505", "TNI0505-JB(TNI0292-TNIM077)", "TNI0506-TNI0392", "TNI0507", "TNI0507-JB(TNI0004-TNI0008)", "TNI0509", "TNI0509-JB(TNI0011-TNI0012)", "TNI0510", "TNI0510-JB(TNI0015-TNI0012)", "TNI0511", "TNI0511-TNI0309", "TNI0515", "TNI0515-TNI0199", "TNI0516", "TNI0516-TNI0324", "TNI0517", "TNI0519", "TNI0519-TNI0447", "TNI0520", "TNI0520-TNI0255", "TNI0521", "TNI0522", "TNI0523", "TNI3001", "UA1(TNI0004-TNI0010)-AU1(TNI0004-TNI0010)", "UA1(TNI0012-THAILAND)-AU1(TNI0012-THAILAND)"],
+      warehouses: ["Tanintharyi VCM Team 01 (Dawei Township) -", "Tanintharyi VCM Team 01 (Dawei Township) - TNI_VCM_NOC_01", "Tanintharyi VCM Team 01 (Dawei Township) - TNI_VCM_ROT_01", "Tanintharyi VCM Team 02 (Myeik Township) -", "Tanintharyi VCM Team 02 (Myeik Township) - TNI_VCM_NOC_02", "Tanintharyi VCM Team 02 (Myeik Township) - TNI_VCM_ROT_02", "Tanintharyi VCM Team 03 (Bokpyin Township) -", "Tanintharyi VCM Team 03 (Bokpyin Township) - TNI_VCM_NOC_03", "Tanintharyi VCM Team 03 (Bokpyin Township) - TNI_VCM_ROT_03", "Tanintharyi VCM Team 04 (Kawthoung Township) -", "Tanintharyi VCM Team 04 (Kawthoung Township) - TNI_VCM_NOC_04", "Tanintharyi VCM Team 04 (Kawthoung Township) - TNI_VCM_ROT_04", "Tanintharyi Viettel Construction Myanmar -", "Tanintharyi Viettel Construction Myanmar - TNI_VCM_NOC", "Tanintharyi Viettel Construction Myanmar - TNI_VCM_ROT"]
+    };
+    let _siteAcActiveIdx = { main: -1, find: -1 };
+
+    function isCableOrRouteName(name) {
+      const s = String(name || "").trim().toUpperCase();
+      return s.indexOf("-") !== -1 || s.startsWith("AU") || s.startsWith("UA") || s.startsWith("JB");
+    }
+
+    function classifyCatalogEntry(label, isWh) {
+      if (isWh) return { tag: "🏭 Warehouse (Col O)", cls: "wh", isRoute: false };
+      if (isCableOrRouteName(label)) return { tag: "🌐 Cable / Route / JB", cls: "route", isRoute: true };
+      return { tag: "📡 Site / BTS (Col Q)", cls: "", isRoute: false };
+    }
+
+    function populateMasterSiteRouteDatalist() {
+      const dl = document.getElementById("master-site-route-datalist");
+      if (!dl) return;
+      const all = MASTER_SITE_ROUTE_CATALOG.sites.concat(MASTER_SITE_ROUTE_CATALOG.warehouses);
+      dl.innerHTML = all.map(s => `<option value="${escAttr(s)}"></option>`).join("");
+      const chip = document.getElementById("site-catalog-count-chip");
+      if (chip) {
+        chip.textContent = MASTER_SITE_ROUTE_CATALOG.sites.length + " Site/Route";
+      }
+    }
+
+    async function loadMasterSiteRouteCatalog() {
+      populateMasterSiteRouteDatalist();
+      const urls = [
+        "/api/asset_audit?action=catalog",
+        GAS_CHECKLIST_API + "?action=asset_catalog"
+      ];
+      for (let i = 0; i < urls.length; i++) {
+        try {
+          const resp = await fetch(urls[i]);
+          if (!resp.ok) continue;
+          const data = await resp.json();
+          if (data && data.ok && Array.isArray(data.sites) && data.sites.length > 0) {
+            MASTER_SITE_ROUTE_CATALOG.sites = data.sites;
+            if (Array.isArray(data.warehouses) && data.warehouses.length > 0) {
+              MASTER_SITE_ROUTE_CATALOG.warehouses = data.warehouses;
+            }
+            populateMasterSiteRouteDatalist();
+            break;
+          }
+        } catch (e) {}
+      }
+    }
+
+    function buildSiteRouteMatches(rawQuery, preferInspectedFirst) {
+      const q = String(rawQuery || "").trim().toUpperCase();
+      const isCableMode = (currentType === "cable_route" || currentType === "ug_cable");
+      const inspectedMap = {};
+      cloudSessions.forEach(s => {
+        const codeUp = String(s.siteCode || "").trim().toUpperCase();
+        if (!codeUp) return;
+        if (!inspectedMap[codeUp] || s.checklistType === currentType) {
+          inspectedMap[codeUp] = s;
+        }
+      });
+
+      const pool = [];
+      const seen = new Set();
+
+      // Add any custom inspected site codes from cloudSessions first if not in catalog
+      cloudSessions.forEach(s => {
+        const label = String(s.siteCode || "").trim();
+        const up = label.toUpperCase();
+        if (!label || seen.has(up)) return;
+        if (!q || up.indexOf(q) !== -1) {
+          seen.add(up);
+          pool.push({
+            label: label,
+            up: up,
+            isWh: false,
+            inspectedSess: inspectedMap[up] || s
+          });
+        }
+      });
+
+      MASTER_SITE_ROUTE_CATALOG.sites.forEach(s => {
+        const label = String(s || "").trim();
+        const up = label.toUpperCase();
+        if (!label || seen.has(up)) return;
+        if (!q || up.indexOf(q) !== -1) {
+          seen.add(up);
+          pool.push({
+            label: label,
+            up: up,
+            isWh: false,
+            inspectedSess: inspectedMap[up] || null
+          });
+        }
+      });
+
+      MASTER_SITE_ROUTE_CATALOG.warehouses.forEach(w => {
+        const label = String(w || "").trim();
+        const up = label.toUpperCase();
+        if (!label || seen.has(up)) return;
+        if (!q || up.indexOf(q) !== -1) {
+          seen.add(up);
+          pool.push({
+            label: label,
+            up: up,
+            isWh: true,
+            inspectedSess: inspectedMap[up] || null
+          });
+        }
+      });
+
+      pool.sort((a, b) => {
+        // 1. If in Step 1 Search Site, prioritize already-inspected sites
+        if (preferInspectedFirst) {
+          const ia = a.inspectedSess ? 0 : 1;
+          const ib = b.inspectedSess ? 0 : 1;
+          if (ia !== ib) return ia - ib;
+        }
+        // 2. Exact match first
+        if (q) {
+          const exA = (a.up === q) ? 0 : 1;
+          const exB = (b.up === q) ? 0 : 1;
+          if (exA !== exB) return exA - exB;
+          // 3. Starts-with match next
+          const swA = a.up.startsWith(q) ? 0 : 1;
+          const swB = b.up.startsWith(q) ? 0 : 1;
+          if (swA !== swB) return swA - swB;
+        }
+        // 4. Prioritize Cable Routes when on Tab 3/4, or Sites when on Tab 1/2/5
+        const routeA = isCableOrRouteName(a.label);
+        const routeB = isCableOrRouteName(b.label);
+        if (isCableMode && routeA !== routeB) return routeA ? -1 : 1;
+        if (!isCableMode && routeA !== routeB) return routeA ? 1 : -1;
+        return a.label.localeCompare(b.label, undefined, { numeric: true, sensitivity: "base" });
+      });
+
+      return pool.slice(0, 80);
+    }
+
+    function highlightMatchText(text, query) {
+      const s = String(text || "");
+      const q = String(query || "").trim();
+      if (!q) return escHtml(s);
+      const idx = s.toUpperCase().indexOf(q.toUpperCase());
+      if (idx === -1) return escHtml(s);
+      const before = s.slice(0, idx);
+      const match = s.slice(idx, idx + q.length);
+      const after = s.slice(idx + q.length);
+      return escHtml(before) + `<span style="background:#fef08a;color:#b91c1c;padding:0 2px;border-radius:3px;font-weight:900;">` + escHtml(match) + `</span>` + escHtml(after);
+    }
+
+    function onSiteCodeAutocomplete(val) {
+      const dd = document.getElementById("site-code-ac-dropdown");
+      if (!dd) return;
+      const q = String(val !== undefined ? val : (document.getElementById("inp-site-code") ? document.getElementById("inp-site-code").value : "")).trim();
+      const matches = buildSiteRouteMatches(q, false);
+      _siteAcActiveIdx.main = -1;
+      if (matches.length === 0) {
+        dd.style.display = "none";
+        return;
+      }
+      const hdrHtml = `<div class="site-ac-hdr"><span>📡 Col Q Site / Cable Route / JB (${MASTER_SITE_ROUTE_CATALOG.sites.length} chuẩn Asset)</span><span>Gõ để lọc • Click để chọn</span></div>`;
+      dd.innerHTML = hdrHtml + matches.map((m, idx) => {
+        const info = classifyCatalogEntry(m.label, m.isWh);
+        const inspBadge = m.inspectedSess
+          ? `<span class="site-ac-tag inspected">📋 Đã KT (${m.inspectedSess.nokCount || 0} NOK)</span>`
+          : ``;
+        return `
+          <div class="site-ac-item" data-idx="${idx}" onmousedown="event.preventDefault();selectSiteCodeFromAutocomplete('${escAttr(m.label)}', 'main')">
+            <span style="word-break:break-all;">${highlightMatchText(m.label, q)}</span>
+            <span style="display:inline-flex;align-items:center;gap:4px;flex-shrink:0;">
+              ${inspBadge}
+              <span class="site-ac-tag ${info.cls}">${info.tag}</span>
+            </span>
+          </div>
+        `;
+      }).join("");
+      dd.style.display = "block";
+    }
+
+    function onFindSiteAutocomplete(val) {
+      const dd = document.getElementById("find-site-ac-dropdown");
+      if (!dd) return;
+      const q = String(val !== undefined ? val : (document.getElementById("inp-find-saved-site") ? document.getElementById("inp-find-saved-site").value : "")).trim();
+      const matches = buildSiteRouteMatches(q, true);
+      _siteAcActiveIdx.find = -1;
+      if (matches.length === 0) {
+        dd.style.display = "none";
+        return;
+      }
+      const hdrHtml = `<div class="site-ac-hdr"><span>🔎 Chọn Trạm / Tuyến Cáp (${MASTER_SITE_ROUTE_CATALOG.sites.length} Site/Route)</span><span>Ưu tiên Trạm Đã KT lên đầu</span></div>`;
+      dd.innerHTML = hdrHtml + matches.map((m, idx) => {
+        const info = classifyCatalogEntry(m.label, m.isWh);
+        const inspBadge = m.inspectedSess
+          ? `<span class="site-ac-tag inspected">✅ Đã KT • NOK: ${m.inspectedSess.fixedCount || 0}/${m.inspectedSess.nokCount || 0}</span>`
+          : ``;
+        return `
+          <div class="site-ac-item" data-idx="${idx}" onmousedown="event.preventDefault();selectSiteCodeFromAutocomplete('${escAttr(m.label)}', 'find')">
+            <span style="word-break:break-all;">${highlightMatchText(m.label, q)}</span>
+            <span style="display:inline-flex;align-items:center;gap:4px;flex-shrink:0;">
+              ${inspBadge}
+              <span class="site-ac-tag ${info.cls}">${info.tag}</span>
+            </span>
+          </div>
+        `;
+      }).join("");
+      dd.style.display = "block";
+    }
+
+    function selectSiteCodeFromAutocomplete(exactName, targetMode) {
+      if (targetMode === "find") {
+        const findInp = document.getElementById("inp-find-saved-site");
+        const dd = document.getElementById("find-site-ac-dropdown");
+        if (findInp) findInp.value = exactName;
+        if (dd) dd.style.display = "none";
+        populateSavedSessionsDropdown(true);
+        // Also fill #inp-site-code if empty and not yet in a session
+        const siteInp = document.getElementById("inp-site-code");
+        if (siteInp && !currentSessionId && !siteInp.value.trim()) {
+          siteInp.value = exactName;
+          onSiteCodeInput();
+          checkBasicStationInfoGate();
+        }
+        return;
+      }
+
+      const siteInp = document.getElementById("inp-site-code");
+      const dd = document.getElementById("site-code-ac-dropdown");
+      if (siteInp) siteInp.value = exactName;
+      const wcSite = document.getElementById("webcam-inp-site");
+      if (wcSite) wcSite.value = exactName;
+      if (dd) dd.style.display = "none";
+
+      // Auto-fill Team if this site already has a known Team in cloudSessions and Team is not yet selected
+      const teamEl = document.getElementById("inp-extra-meta");
+      if (teamEl && !normalizeTeamName(teamEl.value)) {
+        const matchedSess = cloudSessions.find(s => String(s.siteCode || "").trim().toUpperCase() === String(exactName || "").trim().toUpperCase());
+        if (matchedSess && normalizeTeamName(matchedSess.branch)) {
+          selectInspectionTeam(normalizeTeamName(matchedSess.branch));
+        }
+      }
+
+      onSiteCodeInput();
+      checkBasicStationInfoGate();
+      if (typeof syncWebCamOverlayText === "function") {
+        try { syncWebCamOverlayText(); } catch (e) {}
+      }
+    }
+
+    function handleSiteAcKeydown(ev, mode) {
+      const ddId = mode === "find" ? "find-site-ac-dropdown" : "site-code-ac-dropdown";
+      const dd = document.getElementById(ddId);
+      if (!dd || dd.style.display === "none") {
+        if (ev.key === "Enter" && mode === "find") {
+          ev.preventDefault();
+          executeSiteSearchByFilterDropdown();
+        }
+        return;
+      }
+      const items = dd.querySelectorAll(".site-ac-item");
+      if (!items.length) return;
+
+      if (ev.key === "ArrowDown") {
+        ev.preventDefault();
+        _siteAcActiveIdx[mode] = Math.min(items.length - 1, (_siteAcActiveIdx[mode] || -1) + 1);
+        items.forEach((el, idx) => {
+          el.classList.toggle("active", idx === _siteAcActiveIdx[mode]);
+          if (idx === _siteAcActiveIdx[mode]) el.scrollIntoView({ block: "nearest" });
+        });
+      } else if (ev.key === "ArrowUp") {
+        ev.preventDefault();
+        _siteAcActiveIdx[mode] = Math.max(0, (_siteAcActiveIdx[mode] || 0) - 1);
+        items.forEach((el, idx) => {
+          el.classList.toggle("active", idx === _siteAcActiveIdx[mode]);
+          if (idx === _siteAcActiveIdx[mode]) el.scrollIntoView({ block: "nearest" });
+        });
+      } else if (ev.key === "Enter") {
+        ev.preventDefault();
+        const activeIdx = _siteAcActiveIdx[mode] >= 0 ? _siteAcActiveIdx[mode] : 0;
+        const targetEl = items[activeIdx];
+        if (targetEl) {
+          targetEl.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }));
+        }
+        if (mode === "find") {
+          executeSiteSearchByFilterDropdown();
+        }
+      } else if (ev.key === "Escape") {
+        dd.style.display = "none";
+      }
+    }
+
+    document.addEventListener("click", (ev) => {
+      const mainWrap = document.getElementById("site-code-ac-wrap");
+      const mainDd = document.getElementById("site-code-ac-dropdown");
+      if (mainWrap && mainDd && !mainWrap.contains(ev.target)) {
+        mainDd.style.display = "none";
+      }
+      const findWrap = document.getElementById("find-site-ac-wrap");
+      const findDd = document.getElementById("find-site-ac-dropdown");
+      if (findWrap && findDd && !findWrap.contains(ev.target)) {
+        findDd.style.display = "none";
+      }
+    });
 
     function onSiteCodeInput() {
       saveLocalDraft();
